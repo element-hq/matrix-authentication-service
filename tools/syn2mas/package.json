@@ -2,7 +2,7 @@
   "name": "@matrix-org/syn2mas",
   "version": "0.11.0",
   "description": "A tool to migrate Synapse users and sessions to the Matrix Authentication Service",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "author": "Matrix.org",
   "type": "module",
   "repository": {
