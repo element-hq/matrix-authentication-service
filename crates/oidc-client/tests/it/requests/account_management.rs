@@ -1,4 +1,4 @@
-// Copyright (C) 2024 New Vector Ltd.
+// Copyright 2024 New Vector Ltd.
 // Copyright 2024 Kévin Commaille.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
