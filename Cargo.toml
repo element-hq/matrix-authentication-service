@@ -7,7 +7,7 @@ resolver = "2"
 package.version = "0.11.0"
 
 package.license = "AGPL-3.0-only"
-package.authors = ["Quentin Gliech <quenting@element.io>"]
+package.authors = ["Element Backend Team"]
 package.edition = "2021"
 package.homepage = "https://element-hq.github.io/matrix-authentication-service/"
 package.repository = "https://github.com/element-hq/matrix-authentication-service/"
