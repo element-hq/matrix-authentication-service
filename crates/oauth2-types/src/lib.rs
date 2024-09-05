@@ -10,7 +10,7 @@
 //!
 //! [OAuth 2.0]: https://oauth.net/2/
 //! [OpenID Connect]: https://openid.net/connect/
-//! [Matrix Authentication Service]: https://github.com/matrix-org/matrix-authentication-service
+//! [Matrix Authentication Service]: https://github.com/element-hq/matrix-authentication-service
 
 #![deny(missing_docs)]
 #![allow(clippy::module_name_repetitions)]

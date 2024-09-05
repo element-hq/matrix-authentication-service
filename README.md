@@ -4,7 +4,7 @@ MAS (Matrix Authentication Service) is an OAuth 2.0 and OpenID Provider server f
 
 It has been created to support the migration of Matrix to an OpenID Connect (OIDC) based authentication layer as per [MSC3861](https://github.com/matrix-org/matrix-doc/pull/3861).
 
-See the [Documentation](https://matrix-org.github.io/matrix-authentication-service/index.html) for information on installation and use.
+See the [Documentation](https://element-hq.github.io/matrix-authentication-service/index.html) for information on installation and use.
 
 You can learn more about Matrix and OIDC at [areweoidcyet.com](https://areweoidcyet.com/).
 
@@ -17,7 +17,7 @@ You can learn more about Matrix and OIDC at [areweoidcyet.com](https://areweoidc
 - Authentication methods:
   - ✅ Upstream OIDC
   - 🚧 Local password
-  - ‼️ [Application Services login](https://matrix-org.github.io/matrix-authentication-service/as-login.html) (**Encrypted bridges**)
+  - ‼️ [Application Services login](https://element-hq.github.io/matrix-authentication-service/as-login.html) (**Encrypted bridges**)
 - Migration support
   - ✅ Compatibility layer for legacy Matrix authentication
   - ✅ Advisor on migration readiness

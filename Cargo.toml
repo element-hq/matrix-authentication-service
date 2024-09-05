@@ -9,8 +9,8 @@ package.version = "0.11.0"
 package.license = "AGPL-3.0-only"
 package.authors = ["Quentin Gliech <quenting@element.io>"]
 package.edition = "2021"
-package.homepage = "https://matrix-org.github.io/matrix-authentication-service/"
-package.repository = "https://github.com/matrix-org/matrix-authentication-service/"
+package.homepage = "https://element-hq.github.io/matrix-authentication-service/"
+package.repository = "https://github.com/element-hq/matrix-authentication-service/"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

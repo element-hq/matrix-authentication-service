@@ -93,7 +93,7 @@ server {
     }
 
     # Forward to Synapse
-    # as per https://matrix-org.github.io/synapse/latest/reverse_proxy.html#nginx
+    # as per https://element-hq.github.io/synapse/latest/reverse_proxy.html#nginx
     location ~ ^(/_matrix|/_synapse/client) {
         proxy_pass http://localhost:8008;
         proxy_set_header X-Forwarded-For $remote_addr;

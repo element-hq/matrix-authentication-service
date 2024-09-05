@@ -4,7 +4,7 @@ Thank you for taking the time to contribute to Matrix!
 
 This is the repository for MAS (Matrix Authentication Service), an OAuth 2.0 and OpenID Provider server for Matrix.
 
-Please see the [contributors' guide](https://matrix-org.github.io/matrix-authentication-service/development/contributing.html) in our rendered documentation.
+Please see the [contributors' guide](https://element-hq.github.io/matrix-authentication-service/development/contributing.html) in our rendered documentation.
 
 ## Sign off
 

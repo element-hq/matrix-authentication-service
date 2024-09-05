@@ -22,7 +22,7 @@ use tracing::{error, info, info_span, warn};
 use url::{Host, Url};
 
 /// Base URL for the human-readable documentation
-const DOCS_BASE: &str = "https://matrix-org.github.io/matrix-authentication-service";
+const DOCS_BASE: &str = "https://element-hq.github.io/matrix-authentication-service";
 
 #[derive(Parser, Debug)]
 pub(super) struct Options {}

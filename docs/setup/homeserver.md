@@ -1,7 +1,7 @@
 # Homeserver configuration
 
 The `matrix-authentication-service` is designed to be run alongside a Matrix homeserver.
-It currently only supports [Synapse](https://github.com/matrix-org/synapse) through the experimental OAuth delegation feature.
+It currently only supports [Synapse](https://github.com/element-hq/synapse) through the experimental OAuth delegation feature.
 The authentication service needs to be able to call the Synapse admin API to provision users through a shared secret, and Synapse needs to be able to call the service to verify access tokens using the OAuth 2.0 token introspection endpoint.
 
 ## Provision a client for the Homeserver to use

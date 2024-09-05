@@ -41,7 +41,7 @@
 //!
 //! [OpenID Connect]: https://openid.net/connect/
 //! [Matrix]: https://matrix.org/
-//! [Matrix Authentication Service]: https://github.com/matrix-org/matrix-authentication-service
+//! [Matrix Authentication Service]: https://github.com/element-hq/matrix-authentication-service
 //! [MSC3861]: https://github.com/matrix-org/matrix-spec-proposals/pull/3861
 //! [OAuth 2.0]: https://oauth.net/2/
 
