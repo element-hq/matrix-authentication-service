@@ -20,10 +20,10 @@ The deployment is non-trivial so it is important to read through and understand 
 
 ### Get `syn2mas`
 
-The easiest way to get `syn2mas` is through [`npm`](https://www.npmjs.com/package/@matrix-org/syn2mas):
+The easiest way to get `syn2mas` is through [`npm`](https://www.npmjs.com/package/@vector-im/syn2mas):
 
 ```sh
-npm install -g @matrix-org/syn2mas
+npm install -g @vector-im/syn2mas
 ```
 
 ### Run the migration advisor

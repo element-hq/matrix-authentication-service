@@ -1,5 +1,5 @@
 {
-  "name": "@matrix-org/syn2mas",
+  "name": "@vectorim/syn2mas",
   "version": "0.11.0",
   "description": "A tool to migrate Synapse users and sessions to the Matrix Authentication Service",
   "license": "AGPL-3.0-only",
@@ -7,7 +7,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/matrix-org/matrix-authentication-service"
+    "url": "https://github.com/element-hq/matrix-authentication-service"
   },
   "bin": {
     "syn2mas": "dist/index.js"
