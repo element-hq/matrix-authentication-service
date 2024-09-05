@@ -23,9 +23,9 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
-  IMAGE: ghcr.io/matrix-org/matrix-authentication-service
-  IMAGE_SYN2MAS: ghcr.io/matrix-org/matrix-authentication-service/syn2mas
-  BUILDCACHE: ghcr.io/matrix-org/matrix-authentication-service/buildcache
+  IMAGE: ghcr.io/element-hq/matrix-authentication-service
+  IMAGE_SYN2MAS: ghcr.io/element-hq/matrix-authentication-service/syn2mas
+  BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
   DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
 jobs:

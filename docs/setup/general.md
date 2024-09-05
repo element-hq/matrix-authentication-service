@@ -18,7 +18,7 @@ mas-cli config generate > config.yaml
 If you're using the docker container, the command `mas-cli` can be invoked with `docker run`:
 
 ```sh
-docker run ghcr.io/matrix-org/matrix-authentication-service config generate > config.yaml
+docker run ghcr.io/element-hq/matrix-authentication-service config generate > config.yaml
 ```
 
 This applies to all of the `mas-cli` commands in this document.

@@ -42,7 +42,7 @@ curl -sL "$URL" | tar xzC /path/to/mas
 
 ## Using the Docker image
 
-A pre-built Docker image is available here: [`ghcr.io/matrix-org/matrix-authentication-service:latest`](https://ghcr.io/matrix-org/matrix-authentication-service:latest)
+A pre-built Docker image is available here: [`ghcr.io/element-hq/matrix-authentication-service:latest`](https://ghcr.io/element-hq/matrix-authentication-service:latest)
 
 The `latest` tag is built using the latest release.
 The `main` tag is built from the `main` branch, and each commit on the `main` branch is also tagged with a stable `sha-<commit sha>` tag.
