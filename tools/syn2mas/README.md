@@ -12,5 +12,5 @@ The tool has two modes of operation:
 Pre-migration advisor:
 
 ```sh
-npx @vectorim/syn2mas --command=advisor --synapseConfigFile homeserver.yaml
+npx @vector-im/syn2mas --command=advisor --synapseConfigFile homeserver.yaml
 ```
