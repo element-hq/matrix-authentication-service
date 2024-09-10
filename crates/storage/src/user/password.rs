@@ -55,6 +55,34 @@ pub trait UserPasswordRepository: Send + Sync {
         hashed_password: String,
         upgraded_from: Option<&Password>,
     ) -> Result<Password, Self::Error>;
+
+    /// Update an existing password's hashed value (or insert it if it doesn't exist)
+    ///
+    /// This method updates the hashed password for a specific password identified by
+    /// its unique identifier.
+    ///
+    /// Returns the updated [`Password`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock used to generate timestamps
+    /// * `user`: The user to update the password for
+    /// * `version`: The version of the hashing scheme
+    /// * `new_hashed_password`: The new hashed password value to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if underlying repository fails or if the password
+    /// with the given `password_id` does not exist
+    async fn upsert(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user: &User,
+        version: u16,
+        new_hashed_password: String,
+    ) -> Result<Password, Self::Error>;
 }
 
 repository_impl!(UserPasswordRepository:
@@ -67,5 +95,14 @@ repository_impl!(UserPasswordRepository:
         version: u16,
         hashed_password: String,
         upgraded_from: Option<&Password>,
+    ) -> Result<Password, Self::Error>;
+
+    async fn upsert(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user: &User,
+        version: u16,
+        new_hashed_password: String,
     ) -> Result<Password, Self::Error>;
 );

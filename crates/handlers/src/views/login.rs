@@ -17,23 +17,25 @@ use mas_axum_utils::{
 };
 use mas_data_model::{BrowserSession, UserAgent};
 use mas_i18n::DataLocale;
+use mas_matrix::{BoxHomeserverConnection, HomeserverConnection};
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
+    job::{JobRepositoryExt, ProvisionUserJob},
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxClock, BoxRepository, BoxRng, Clock, Repository, RepositoryAccess, RepositoryError,
 };
 use mas_templates::{
     FieldError, FormError, LoginContext, LoginFormField, TemplateContext, Templates, ToFormState,
 };
 use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
-use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
 use crate::{
-    passwords::PasswordManager, BoundActivityTracker, Limiter, PreferredLanguage,
-    RequesterFingerprint, SiteConfig,
+    compat::login::{authenticate_via_rest_api, start_new_session, user_password_login},
+    passwords::PasswordManager,
+    BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -112,6 +114,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(limiter): State<Limiter>,
+    State(homeserver): State<BoxHomeserverConnection>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
@@ -172,6 +175,7 @@ pub(crate) async fn post(
         &form.username,
         &form.password,
         user_agent,
+        homeserver,
     )
     .await
     {
@@ -207,7 +211,7 @@ pub(crate) async fn post(
 // TODO: move that logic elsewhere?
 async fn login(
     password_manager: PasswordManager,
-    repo: &mut impl RepositoryAccess,
+    repo: &mut Box<dyn Repository<RepositoryError> + Send + Sync>,
     mut rng: impl Rng + CryptoRng + Send,
     clock: &impl Clock,
     limiter: Limiter,
@@ -215,67 +219,104 @@ async fn login(
     username: &str,
     password: &str,
     user_agent: Option<UserAgent>,
+    homeserver: Box<dyn HomeserverConnection<Error = anyhow::Error>>,
 ) -> Result<BrowserSession, FormError> {
     // XXX: we're loosing the error context here
-    // First, lookup the user
-    let user = repo
-        .user()
-        .find_by_username(username)
-        .await
-        .map_err(|_e| FormError::Internal)?
-        .filter(mas_data_model::User::is_valid)
-        .ok_or(FormError::InvalidCredentials)?;
+    let mxid: String = homeserver.mxid(&username);
+    let user = if let Ok(Some(rest_auth_provider)) = password_manager.get_rest_auth_provider() {
+        // If rest_auth_provider is enabled, authenticate via REST API
+        let authenticated =
+            authenticate_via_rest_api(mxid.clone(), password.to_owned(), rest_auth_provider)
+                .await
+                .map_err(|_err| FormError::InvalidCredentials)?;
+        if authenticated {
+            let user = repo
+                .user()
+                .find_by_username(&username)
+                .await
+                .map_err(|_err| FormError::Internal)?
+                .filter(mas_data_model::User::is_valid);
 
-    // Check the rate limit
-    limiter.check_password(requester, &user).map_err(|e| {
-        tracing::warn!(error = &e as &dyn std::error::Error);
-        FormError::RateLimitExceeded
-    })?;
+            let user = match user {
+                Some(user) => {
+                    // User found: proceed
+                    user
+                }
+                None => {
+                    // User not found while existing in the provider: create it
+                    let homeserver_available = homeserver
+                        .is_localpart_available(&mxid)
+                        .await
+                        .map_err(|_err| FormError::Internal)?;
+                    if !homeserver_available {
+                        return Err(FormError::Internal);
+                    }
 
-    // And its password
-    let user_password = repo
-        .user_password()
-        .active(&user)
-        .await
-        .map_err(|_e| FormError::Internal)?
-        .ok_or(FormError::InvalidCredentials)?;
+                    let new_user = repo
+                        .user()
+                        .add(&mut rng, clock, mxid.clone())
+                        .await
+                        .map_err(|_err| FormError::Internal)?;
 
-    let password = Zeroizing::new(password.as_bytes().to_vec());
+                    // Schedule any jobs or additional steps for the new user
+                    repo.job()
+                        .schedule_job(ProvisionUserJob::new(&new_user))
+                        .await
+                        .map_err(|_err| FormError::Internal)?;
 
-    // Verify the password, and upgrade it on-the-fly if needed
-    let new_password_hash = password_manager
-        .verify_and_upgrade(
+                    new_user
+                }
+            };
+            // Update the password if needed
+            let result = password_manager
+                .hash(&mut rng, password.to_string().into_bytes().into())
+                .await;
+            let (version, hashed_password) = match result {
+                Ok((version, hashed_password)) => (version, hashed_password),
+                Err(_err) => return Err(FormError::Internal),
+            };
+            repo.user_password()
+                .upsert(&mut rng, clock, &user, version, hashed_password)
+                .await
+                .map_err(|_err| FormError::Internal)?;
+
+            user
+        } else {
+            return Err(FormError::InvalidCredentials);
+        }
+    } else {
+        // If rest_auth_provider is not enabled, proceed with the normal authentication
+        user_password_login(
             &mut rng,
-            user_password.version,
-            password,
-            user_password.hashed_password.clone(),
+            clock,
+            &password_manager,
+            &limiter,
+            requester,
+            repo,
+            username.to_string(),
+            password.to_string(),
         )
         .await
-        .map_err(|_| FormError::InvalidCredentials)?;
-
-    let user_password = if let Some((version, new_password_hash)) = new_password_hash {
-        // Save the upgraded password
-        repo.user_password()
-            .add(
-                &mut rng,
-                clock,
-                &user,
-                version,
-                new_password_hash,
-                Some(&user_password),
-            )
-            .await
-            .map_err(|_| FormError::Internal)?
-    } else {
-        user_password
+        .map_err(|_err| FormError::InvalidCredentials)?
     };
 
+    // Start a new compat session without verifying the password again
+    start_new_session(&mut rng, clock, repo, user.clone(), None)
+        .await
+        .map_err(|_err| FormError::Internal)?;
     // Start a new session
     let user_session = repo
         .browser_session()
         .add(&mut rng, clock, &user, user_agent)
         .await
         .map_err(|_| FormError::Internal)?;
+
+    let user_password = repo
+        .user_password()
+        .active(&user)
+        .await
+        .map_err(|_| FormError::InvalidCredentials)?
+        .ok_or(FormError::InvalidCredentials)?;
 
     // And mark it as authenticated by the password
     repo.browser_session()

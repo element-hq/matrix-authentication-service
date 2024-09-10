@@ -31,6 +31,22 @@ fn default_minimum_complexity() -> u8 {
     3
 }
 
+/// Configuration for REST password provider
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct RestAuthProviderConfig {
+    /// The base URL where the identity service is implemented
+    pub url: String,
+    /// Implemented version of the identity service ("v1", "v2")
+    pub version: String,
+}
+
+impl RestAuthProviderConfig {
+    /// Constructor for RestAuthProviderConfig
+    pub fn new(url: String, version: String) -> Self {
+        Self { url, version }
+    }
+}
+
 /// User password hashing config
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PasswordsConfig {
@@ -52,6 +68,10 @@ pub struct PasswordsConfig {
     /// - 4: any more than that
     #[serde(default = "default_minimum_complexity")]
     minimum_complexity: u8,
+
+    /// The REST authentication provider URL
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rest_auth_provider: Option<RestAuthProviderConfig>,
 }
 
 impl Default for PasswordsConfig {
@@ -60,6 +80,7 @@ impl Default for PasswordsConfig {
             enabled: default_enabled(),
             schemes: default_schemes(),
             minimum_complexity: default_minimum_complexity(),
+            rest_auth_provider: None,
         }
     }
 }
@@ -151,6 +172,12 @@ impl PasswordsConfig {
         }
 
         Ok(mapped_result)
+    }
+
+    /// Get the REST authentication config, if set.
+    #[must_use]
+    pub fn rest_auth_provider(&self) -> Option<&RestAuthProviderConfig> {
+        self.rest_auth_provider.as_ref()
     }
 }
 

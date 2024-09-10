@@ -9,6 +9,7 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::Context;
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use futures_util::future::OptionFuture;
+use mas_config::RestAuthProviderConfig;
 use pbkdf2::Pbkdf2;
 use rand::{CryptoRng, Rng, RngCore, SeedableRng};
 use thiserror::Error;
@@ -35,6 +36,9 @@ struct InnerPasswordManager {
 
     /// A map of "old" hashers used only for verification
     other_hashers: HashMap<SchemeVersion, Hasher>,
+
+    /// The REST authentication provider URL, if any
+    rest_auth_provider: Option<RestAuthProviderConfig>,
 }
 
 impl PasswordManager {
@@ -59,6 +63,7 @@ impl PasswordManager {
     /// Returns an error if the iterator was empty
     pub fn new<I: IntoIterator<Item = (SchemeVersion, Hasher)>>(
         minimum_complexity: u8,
+        rest_auth_provider: Option<RestAuthProviderConfig>,
         iter: I,
     ) -> Result<Self, anyhow::Error> {
         let mut iter = iter.into_iter();
@@ -77,6 +82,7 @@ impl PasswordManager {
                 current_hasher,
                 current_version,
                 other_hashers,
+                rest_auth_provider,
             })),
         })
     }
@@ -212,6 +218,11 @@ impl PasswordManager {
         let new_hash = new_hash_res.transpose()?;
 
         Ok(new_hash)
+    }
+
+    pub fn get_rest_auth_provider(&self) -> Result<Option<RestAuthProviderConfig>, anyhow::Error> {
+        let inner = self.get_inner()?;
+        Ok(inner.rest_auth_provider.clone())
     }
 }
 
@@ -474,6 +485,7 @@ mod tests {
 
         let manager = PasswordManager::new(
             0,
+            None,
             [
                 // Start with one hashing scheme: the one used by synapse, bcrypt + pepper
                 (
@@ -526,6 +538,7 @@ mod tests {
 
         let manager = PasswordManager::new(
             0,
+            None,
             [
                 (2, Hasher::argon2id(None)),
                 (
@@ -582,6 +595,7 @@ mod tests {
 
         let manager = PasswordManager::new(
             0,
+            None,
             [
                 (3, Hasher::argon2id(Some(b"a-secret-pepper".to_vec()))),
                 (2, Hasher::argon2id(None)),

@@ -146,4 +146,72 @@ impl<'c> UserPasswordRepository for PgUserPasswordRepository<'c> {
             created_at,
         })
     }
+
+    #[tracing::instrument(
+        name = "db.user_password.upsert",
+        skip_all,
+        fields(
+            db.query.text,
+            %user.id,
+        ),
+        err,
+    )]
+    async fn upsert(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user: &User,
+        version: u16,
+        new_hashed_password: String,
+    ) -> Result<Password, Self::Error> {
+        // Check if the user already has a password
+        let existing_password = sqlx::query!(
+            r#"
+                SELECT user_password_id 
+                FROM user_passwords 
+                WHERE user_id = $1
+                ORDER BY created_at DESC
+                LIMIT 1
+            "#,
+            Uuid::from(user.id)
+        )
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        // If a password entry exists, update it
+        if let Some(row) = existing_password {
+            let res = sqlx::query_as!(
+                UserPasswordLookup,
+                r#"
+                    UPDATE user_passwords
+                    SET hashed_password = $1, version = $2
+                    WHERE user_password_id = $3
+                    RETURNING user_password_id, hashed_password, version, upgraded_from_id, created_at
+                "#,
+                new_hashed_password,
+                i32::from(version),
+                row.user_password_id,
+            )
+            .traced()
+            .fetch_one(&mut *self.conn)
+            .await?;
+
+            Ok(Password {
+                id: Ulid::from(res.user_password_id),
+                hashed_password: res.hashed_password,
+                version: res.version.try_into().map_err(|e| {
+                    DatabaseInconsistencyError::on("user_passwords")
+                        .column("version")
+                        .row(Ulid::from(res.user_password_id))
+                        .source(e)
+                })?,
+                upgraded_from_id: res.upgraded_from_id.map(Ulid::from),
+                created_at: res.created_at,
+            })
+        } else {
+            // Otherwise, insert a new one
+            self.add(rng, clock, user, version, new_hashed_password, None)
+                .await
+        }
+    }
 }

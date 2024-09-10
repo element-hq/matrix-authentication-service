@@ -46,7 +46,11 @@ pub async fn password_manager_from_config(
             (version, hasher)
         });
 
-    PasswordManager::new(config.minimum_complexity(), schemes)
+    PasswordManager::new(
+        config.minimum_complexity(),
+        config.rest_auth_provider().cloned(),
+        schemes,
+    )
 }
 
 pub fn mailer_from_config(

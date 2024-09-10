@@ -26,7 +26,7 @@ pub use ulid::Ulid;
 pub use self::{
     compat::{
         CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
-        CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device,
+        CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device, InvalidDeviceID,
     },
     oauth2::{
         AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, DeviceCodeGrant,

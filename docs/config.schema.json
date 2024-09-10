@@ -1548,6 +1548,22 @@
           "type": "integer",
           "format": "uint8",
           "minimum": 0.0
+        },
+        "rest_auth_provider": {
+          "description": "The REST authentication provider configuration",
+          "type": "object",
+          "properties": {
+            "url": {
+              "description": "The base URL where the identity service is implemented",
+              "type": "string"
+            },
+            "version": {
+              "description": "Implemented version of the identity service (e.g., 'v1', 'v2')",
+              "type": "string"
+            }
+          },
+          "required": ["url", "version"],
+          "nullable": true
         }
       }
     },
