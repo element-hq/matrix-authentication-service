@@ -587,7 +587,10 @@ pub async fn user_password_login(
         .ok_or(RouteError::UserNotFound)?;
 
     // Check the rate limit
-    limiter.check_password(requester, &user)?;
+    limiter.check_password(requester, &user).map_err(|e| {
+        tracing::warn!(error = &e as &dyn std::error::Error);
+        RouteError::RateLimited(e)
+    })?;
 
     // Lookup its password
     let user_password = repo
@@ -863,7 +866,7 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v1".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
         let result = authenticate_via_rest_api(
             "@alice:example.com".to_string(),
             "password123".to_string(),
@@ -898,7 +901,7 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v1".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
         let result = authenticate_via_rest_api(
             "@alice:example.com".to_string(),
             "wrongpassword".to_string(),
@@ -918,7 +921,7 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v1".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
         let result = authenticate_via_rest_api(
             "@alice:example.com".to_string(),
             "password123".to_string(),

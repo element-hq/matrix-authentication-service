@@ -32,7 +32,9 @@ use serde::{Deserialize, Serialize};
 
 use super::shared::OptionalPostAuthAction;
 use crate::{
-    compat::login::{authenticate_via_rest_api, start_new_session, user_password_login},
+    compat::login::{
+        authenticate_via_rest_api, start_new_session, user_password_login, RouteError,
+    },
     passwords::PasswordManager,
     BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
 };
@@ -285,7 +287,7 @@ async fn login(
         }
     } else {
         // If rest_auth_provider is not enabled, proceed with the normal authentication
-        user_password_login(
+        let user = user_password_login(
             &mut rng,
             clock,
             &password_manager,
@@ -296,7 +298,14 @@ async fn login(
             password.to_string(),
         )
         .await
-        .map_err(|_err| FormError::InvalidCredentials)?
+        .map_err(|err| match err {
+            RouteError::RateLimited(_) => FormError::RateLimitExceeded,
+            RouteError::PasswordVerificationFailed(_)
+            | RouteError::UserNotFound
+            | RouteError::NoPassword => FormError::InvalidCredentials,
+            _ => FormError::Internal,
+        })?;
+        user
     };
 
     // Start a new compat session without verifying the password again
