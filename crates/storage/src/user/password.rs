@@ -56,10 +56,11 @@ pub trait UserPasswordRepository: Send + Sync {
         upgraded_from: Option<&Password>,
     ) -> Result<Password, Self::Error>;
 
-    /// Update an existing password's hashed value (or insert it if it doesn't exist)
+    /// Update an existing password's hashed value (or insert it if it doesn't
+    /// exist)
     ///
-    /// This method updates the hashed password for a specific password identified by
-    /// its unique identifier.
+    /// This method updates the hashed password for a specific password
+    /// identified by its unique identifier.
     ///
     /// Returns the updated [`Password`]
     ///
@@ -73,8 +74,8 @@ pub trait UserPasswordRepository: Send + Sync {
     ///
     /// # Errors
     ///
-    /// Returns [`Self::Error`] if underlying repository fails or if the password
-    /// with the given `password_id` does not exist
+    /// Returns [`Self::Error`] if underlying repository fails or if the
+    /// password with the given `password_id` does not exist
     async fn upsert(
         &mut self,
         rng: &mut (dyn RngCore + Send),
