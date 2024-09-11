@@ -34,7 +34,7 @@
     "classnames": "^2.5.1",
     "date-fns": "^3.6.0",
     "graphql": "^16.9.0",
-    "i18next": "^23.14.0",
+    "i18next": "^23.15.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.1",
