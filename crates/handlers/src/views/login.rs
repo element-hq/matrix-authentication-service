@@ -17,10 +17,9 @@ use mas_axum_utils::{
 };
 use mas_data_model::{BrowserSession, UserAgent};
 use mas_i18n::DataLocale;
-use mas_matrix::{BoxHomeserverConnection, HomeserverConnection};
+use mas_matrix::{BoxHomeserverConnection, HomeserverConnection, ProvisionRequest};
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, Clock, Repository, RepositoryAccess, RepositoryError,
@@ -258,11 +257,11 @@ async fn login(
                         .await
                         .map_err(|_err| FormError::Internal)?;
 
-                    // Schedule any jobs or additional steps for the new user
-                    repo.job()
-                        .schedule_job(ProvisionUserJob::new(&new_user))
+                    // Replicate in Synapse
+                    homeserver
+                        .provision_user(&ProvisionRequest::new(mxid.clone(), username.to_string()))
                         .await
-                        .map_err(|_err| FormError::Internal)?;
+                        .unwrap();
 
                     new_user
                 }
