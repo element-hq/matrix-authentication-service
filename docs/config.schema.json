@@ -1550,20 +1550,12 @@
           "minimum": 0.0
         },
         "rest_auth_provider": {
-          "description": "The REST authentication provider configuration",
-          "type": "object",
-          "properties": {
-            "url": {
-              "description": "The base URL where the identity service is implemented",
-              "type": "string"
-            },
-            "version": {
-              "description": "Implemented version of the identity service (e.g., 'v1', 'v2')",
-              "type": "string"
+          "description": "The REST authentication provider URL",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RestAuthProviderConfig"
             }
-          },
-          "required": ["url", "version"],
-          "nullable": true
+          ]
         }
       }
     },
@@ -1622,6 +1614,24 @@
           ]
         }
       ]
+    },
+    "RestAuthProviderConfig": {
+      "description": "Configuration for REST password provider",
+      "type": "object",
+      "required": [
+        "url",
+        "version"
+      ],
+      "properties": {
+        "url": {
+          "description": "The base URL where the identity service is implemented",
+          "type": "string"
+        },
+        "version": {
+          "description": "Implemented version of the identity service (\"v1\", \"v2\")",
+          "type": "string"
+        }
+      }
     },
     "MatrixConfig": {
       "description": "Configuration related to the Matrix homeserver",
