@@ -49,9 +49,6 @@ pub struct Client {
     /// declaring that it will restrict itself to using.
     pub grant_types: Vec<GrantType>,
 
-    /// Array of e-mail addresses of people responsible for this Client
-    pub contacts: Vec<String>,
-
     /// Name of the Client to be presented to the End-User
     pub client_name: Option<String>, // TODO: translations
 
@@ -141,7 +138,6 @@ impl Client {
                 ],
                 response_types: vec![OAuthAuthorizationEndpointResponseType::Code],
                 grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
-                contacts: vec!["foo@client1.example.com".to_owned()],
                 client_name: Some("Client 1".to_owned()),
                 client_uri: Some(Url::parse("https://client1.example.com").unwrap()),
                 logo_uri: Some(Url::parse("https://client1.example.com/logo.png").unwrap()),
@@ -165,7 +161,6 @@ impl Client {
                 redirect_uris: vec![Url::parse("https://client2.example.com/redirect").unwrap()],
                 response_types: vec![OAuthAuthorizationEndpointResponseType::Code],
                 grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
-                contacts: vec!["foo@client2.example.com".to_owned()],
                 client_name: None,
                 client_uri: None,
                 logo_uri: None,

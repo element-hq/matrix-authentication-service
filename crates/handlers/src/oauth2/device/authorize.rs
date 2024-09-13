@@ -181,7 +181,6 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "none",
                 "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
                 "response_types": [],

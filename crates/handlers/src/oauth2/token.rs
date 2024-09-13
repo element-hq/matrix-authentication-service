@@ -801,7 +801,6 @@ mod tests {
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/callback"],
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "none",
                 "response_types": ["code"],
                 "grant_types": ["authorization_code"],
@@ -1011,7 +1010,6 @@ mod tests {
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/callback"],
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "none",
                 "response_types": ["code"],
                 "grant_types": ["authorization_code", "refresh_token"],
@@ -1133,7 +1131,6 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "client_secret_post",
                 "grant_types": ["client_credentials"],
             }));
@@ -1260,7 +1257,6 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "none",
                 "grant_types": ["urn:ietf:params:oauth:grant-type:device_code", "refresh_token"],
                 "response_types": [],
@@ -1447,7 +1443,6 @@ mod tests {
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/callback"],
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "client_secret_post",
                 "grant_types": ["password"],
                 "response_types": [],

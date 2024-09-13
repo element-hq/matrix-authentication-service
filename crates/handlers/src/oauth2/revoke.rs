@@ -250,7 +250,6 @@ mod tests {
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/callback"],
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "client_secret_post",
                 "response_types": ["code"],
                 "grant_types": ["authorization_code", "refresh_token"],

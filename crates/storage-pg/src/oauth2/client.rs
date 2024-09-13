@@ -46,7 +46,7 @@ impl<'c> PgOAuth2ClientRepository<'c> {
     }
 }
 
-// XXX: response_types & contacts
+// XXX: response_types
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 struct OAuth2ClientLookup {
@@ -59,7 +59,6 @@ struct OAuth2ClientLookup {
     grant_type_refresh_token: bool,
     grant_type_client_credentials: bool,
     grant_type_device_code: bool,
-    contacts: Vec<String>,
     client_name: Option<String>,
     logo_uri: Option<String>,
     client_uri: Option<String>,
@@ -256,7 +255,6 @@ impl TryInto<Client> for OAuth2ClientLookup {
             redirect_uris,
             response_types,
             grant_types,
-            contacts: self.contacts,
             client_name: self.client_name,
             logo_uri,
             client_uri,
@@ -297,7 +295,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
-                     , contacts
                      , client_name
                      , logo_uri
                      , client_uri
@@ -349,7 +346,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
-                     , contacts
                      , client_name
                      , logo_uri
                      , client_uri
@@ -400,7 +396,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
         encrypted_client_secret: Option<String>,
         application_type: Option<ApplicationType>,
         grant_types: Vec<GrantType>,
-        contacts: Vec<String>,
         client_name: Option<String>,
         logo_uri: Option<Url>,
         client_uri: Option<Url>,
@@ -504,7 +499,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
                 OAuthAuthorizationEndpointResponseType::None,
             ],
             grant_types,
-            contacts,
             client_name,
             logo_uri,
             client_uri,
@@ -614,7 +608,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
                 GrantType::RefreshToken,
                 GrantType::ClientCredentials,
             ],
-            contacts: Vec::new(),
             client_name: None,
             logo_uri: None,
             client_uri: None,
@@ -649,7 +642,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
-                     , contacts
                      , client_name
                      , logo_uri
                      , client_uri

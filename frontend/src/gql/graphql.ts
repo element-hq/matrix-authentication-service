@@ -658,8 +658,6 @@ export type Oauth2Client = Node & {
   clientName?: Maybe<Scalars['String']['output']>;
   /** Client URI advertised by the client. */
   clientUri?: Maybe<Scalars['Url']['output']>;
-  /** List of contacts advertised by the client. */
-  contacts: Array<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** Logo URI advertised by the client. */
