@@ -263,7 +263,6 @@ pub(crate) async fn post(
             metadata.application_type.clone(),
             //&metadata.response_types(),
             metadata.grant_types().to_vec(),
-            metadata.contacts.clone().unwrap_or_default(),
             metadata
                 .client_name
                 .clone()
@@ -362,7 +361,6 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "application_type": "web",
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["http://this-is-insecure.com/"],
             }));
@@ -375,7 +373,6 @@ mod tests {
         // Incoherent response types
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["id_token"],
@@ -390,7 +387,6 @@ mod tests {
         // Using a public suffix
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://github.io/",
                 "redirect_uris": ["https://github.io/"],
                 "response_types": ["code"],
@@ -410,7 +406,6 @@ mod tests {
         // Using a public suffix in a translated URL
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "client_uri#fr-FR": "https://github.io/",
                 "redirect_uris": ["https://example.com/"],
@@ -438,7 +433,6 @@ mod tests {
         // secret
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["code"],
@@ -455,7 +449,6 @@ mod tests {
         // return a client secret
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["code"],

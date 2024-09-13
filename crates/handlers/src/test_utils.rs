@@ -277,7 +277,6 @@ impl TestState {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
-                "contacts": ["contact@example.com"],
                 "token_endpoint_auth_method": "client_secret_post",
                 "grant_types": ["client_credentials"],
             }));

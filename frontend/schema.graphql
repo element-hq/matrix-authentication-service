@@ -881,10 +881,6 @@ type Oauth2Client implements Node {
   """
   redirectUris: [Url!]!
   """
-  List of contacts advertised by the client.
-  """
-  contacts: [String!]!
-  """
   The application type advertised by the client.
   """
   applicationType: Oauth2ApplicationType

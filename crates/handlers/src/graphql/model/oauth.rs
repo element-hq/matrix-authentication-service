@@ -182,11 +182,6 @@ impl OAuth2Client {
         &self.0.redirect_uris
     }
 
-    /// List of contacts advertised by the client.
-    pub async fn contacts(&self) -> &[String] {
-        &self.0.contacts
-    }
-
     /// The application type advertised by the client.
     pub async fn application_type(&self) -> Option<OAuth2ApplicationType> {
         match self.0.application_type.as_ref()? {
