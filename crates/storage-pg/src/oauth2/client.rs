@@ -12,10 +12,7 @@ use std::{
 
 use async_trait::async_trait;
 use mas_data_model::{Client, JwksOrJwksUri, User};
-use mas_iana::{
-    jose::JsonWebSignatureAlg,
-    oauth::{OAuthAuthorizationEndpointResponseType, OAuthClientAuthenticationMethod},
-};
+use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use mas_storage::{oauth2::OAuth2ClientRepository, Clock};
 use oauth2_types::{
@@ -46,7 +43,6 @@ impl<'c> PgOAuth2ClientRepository<'c> {
     }
 }
 
-// XXX: response_types
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 struct OAuth2ClientLookup {
@@ -54,7 +50,6 @@ struct OAuth2ClientLookup {
     encrypted_client_secret: Option<String>,
     application_type: Option<String>,
     redirect_uris: Vec<String>,
-    // response_types: Vec<String>,
     grant_type_authorization_code: bool,
     grant_type_refresh_token: bool,
     grant_type_client_credentials: bool,
@@ -99,20 +94,6 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .row(id)
                     .source(e)
             })?;
-
-        let response_types = vec![
-            OAuthAuthorizationEndpointResponseType::Code,
-            OAuthAuthorizationEndpointResponseType::IdToken,
-            OAuthAuthorizationEndpointResponseType::None,
-        ];
-        /* XXX
-        let response_types: Result<Vec<OAuthAuthorizationEndpointResponseType>, _> =
-            self.response_types.iter().map(|s| s.parse()).collect();
-        let response_types = response_types.map_err(|source| ClientFetchError::ParseField {
-            field: "response_types",
-            source,
-        })?;
-        */
 
         let mut grant_types = Vec::new();
         if self.grant_type_authorization_code {
@@ -253,7 +234,6 @@ impl TryInto<Client> for OAuth2ClientLookup {
             encrypted_client_secret: self.encrypted_client_secret,
             application_type,
             redirect_uris,
-            response_types,
             grant_types,
             client_name: self.client_name,
             logo_uri,
@@ -493,11 +473,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
             encrypted_client_secret,
             application_type,
             redirect_uris,
-            response_types: vec![
-                OAuthAuthorizationEndpointResponseType::Code,
-                OAuthAuthorizationEndpointResponseType::IdToken,
-                OAuthAuthorizationEndpointResponseType::None,
-            ],
             grant_types,
             client_name,
             logo_uri,
@@ -598,11 +573,6 @@ impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
             encrypted_client_secret,
             application_type: None,
             redirect_uris,
-            response_types: vec![
-                OAuthAuthorizationEndpointResponseType::Code,
-                OAuthAuthorizationEndpointResponseType::IdToken,
-                OAuthAuthorizationEndpointResponseType::None,
-            ],
             grant_types: vec![
                 GrantType::AuthorizationCode,
                 GrantType::RefreshToken,

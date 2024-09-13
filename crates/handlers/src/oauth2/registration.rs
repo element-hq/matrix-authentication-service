@@ -15,10 +15,12 @@ use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     registration::{
         ClientMetadata, ClientMetadataVerificationError, ClientRegistrationResponse, Localized,
+        VerifiedClientMetadata,
     },
 };
 use psl::Psl;
 use rand::distributions::{Alphanumeric, DistString};
+use serde::Serialize;
 use thiserror::Error;
 use tracing::info;
 use url::Url;
@@ -147,6 +149,14 @@ impl IntoResponse for RouteError {
 
         (SentryEventID::from(event_id), response).into_response()
     }
+}
+
+#[derive(Serialize)]
+struct RouteResponse {
+    #[serde(flatten)]
+    response: ClientRegistrationResponse,
+    #[serde(flatten)]
+    metadata: VerifiedClientMetadata,
 }
 
 /// Check if the host of the given URL is a public suffix
@@ -282,15 +292,21 @@ pub(crate) async fn post(
         )
         .await?;
 
-    repo.save().await?;
-
     let response = ClientRegistrationResponse {
-        client_id: client.client_id,
+        client_id: client.client_id.clone(),
         client_secret,
         // XXX: we should have a `created_at` field on the clients
         client_id_issued_at: Some(client.id.datetime().into()),
         client_secret_expires_at: None,
     };
+
+    // We round-trip back to the metadata to output it in the response
+    // This should never fail, as the client is valid
+    let metadata = client.into_metadata().validate()?;
+
+    repo.save().await?;
+
+    let response = RouteResponse { response, metadata };
 
     Ok((StatusCode::CREATED, Json(response)))
 }

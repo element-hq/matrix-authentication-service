@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Violation {
     pub msg: String,
+    pub redirect_uri: Option<String>,
     pub field: Option<String>,
 }
 
