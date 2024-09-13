@@ -372,8 +372,6 @@ policy:
       allow_insecure_uris: false
       # don't require clients to provide a client_uri. default: false
       allow_missing_client_uri: false
-      # don't require clients to provide a contacts field. default: false
-      allow_missing_contacts: false
 
     # Restrict emails on registration to a specific domain
     # Items in this array are evaluated as a glob
