@@ -32,10 +32,10 @@
     "start": "node dist/index.js"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.2",
+    "@tsconfig/node22": "^22.0.0",
     "@tsconfig/strictest": "^2.0.2",
     "@types/command-line-args": "^5.2.2",
-    "@types/node": "^18.18.7",
+    "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.52.0",
