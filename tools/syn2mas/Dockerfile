@@ -1,6 +1,6 @@
 
 # Build Node.js app
-FROM --platform=${BUILDPLATFORM} docker.io/library/node:18-bookworm AS builder
+FROM --platform=${BUILDPLATFORM} docker.io/library/node:22-bookworm AS builder
 
 WORKDIR /syn2mas
 
@@ -10,7 +10,7 @@ RUN --network=default \
   npm ci
 
 # Install the production dependencies for each architecture we support
-FROM --platform=${BUILDPLATFORM} docker.io/library/node:18-bookworm AS deps
+FROM --platform=${BUILDPLATFORM} docker.io/library/node:22-bookworm AS deps
 
 WORKDIR /deps/arm64
 
