@@ -117,8 +117,8 @@ export async function advisor(): Promise<void> {
     );
   }
   if (synapseConfig.enable_registration_captcha) {
-    error(
-      "Synapse config has registration CAPTCHA enabled which isn't supported by MAS: https://github.com/element-hq/matrix-authentication-service/issues/138",
+    warn(
+      "Synapse config has registration CAPTCHA enabled which will need to configured in MAS",
     );
   }
   if (synapseConfig.user_consent) {
