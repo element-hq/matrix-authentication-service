@@ -192,13 +192,7 @@ export async function migrate(): Promise<void> {
     );
   }
 
-  // Get all Synapse users, except appservice owned users who don't need to be migrated
-  const synapseUsers = await synapse
-    .select("*")
-    .from<SUser>("users")
-    .whereNull("appservice_id");
-  log.info(`Found ${synapseUsers.length} users in Synapse`);
-  for (const user of synapseUsers) {
+  async function migrateUser(user: SUser): Promise<void> {
     const localpart = user.name.split(":")[0].substring(1);
     log.info(`Processing user ${user.name} as ${localpart}`);
 
@@ -430,10 +424,43 @@ export async function migrate(): Promise<void> {
       }
     }
   }
+
+  // this is a workaround to get the list of columns that we care about from the SUser type
+  const SUserColumns: Record<keyof SUser, undefined> = {
+    name: undefined,
+    password_hash: undefined,
+    admin: undefined,
+    is_guest: undefined,
+    deactivated: undefined,
+    creation_ts: undefined,
+    appservice_id: undefined,
+  };
+
+  // Get all Synapse users, except appservice owned users who don't need to be migrated
+  const synapseUserQuery = synapse
+    .select(Object.keys(SUserColumns) as (keyof SUser)[])
+    .from<SUser>("users")
+    .whereNull("appservice_id");
+
+  let synapseUsers = 0;
+  if (synapseConfig.database.name === "sqlite3") {
+    // SQLite doesn't support streaming
+    const synapseUserRows = (await synapseUserQuery) as unknown as SUser[];
+    for (const user of synapseUserRows) {
+      synapseUsers += 1;
+      await migrateUser(user);
+    }
+  } else {
+    // Stream users from the database
+    const synapseUserStream = synapseUserQuery.stream();
+    for await (const user of synapseUserStream) {
+      synapseUsers += 1;
+      await migrateUser(user as unknown as SUser);
+    }
+  }
+
   log.info(
-    `Completed migration ${args.dryRun ? "dry-run " : ""}of ${
-      synapseUsers.length
-    } users with ${fatals} fatals and ${warnings.length} warnings:`,
+    `Completed migration ${args.dryRun ? "dry-run " : ""}of ${synapseUsers} users with ${fatals} fatals and ${warnings.length} warnings:`,
   );
   warnings.forEach((w) => log.warn(w));
   if (fatals > 0) {
