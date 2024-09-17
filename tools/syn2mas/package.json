@@ -57,6 +57,7 @@
     "knex": "^3.0.1",
     "log4js": "^6.9.1",
     "pg": "^8.11.3",
+    "pg-query-stream": "^4.6.0",
     "sqlite3": "^5.1.6",
     "ts-command-line-args": "^2.5.1",
     "yaml": "^2.3.3",
