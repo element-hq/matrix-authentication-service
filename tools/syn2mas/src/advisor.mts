@@ -96,17 +96,17 @@ export async function advisor(): Promise<void> {
   );
   if (guestUsers > 0) {
     error(
-      `Synapse database contains ${guestUsers} guest users which aren't supported by MAS: https://github.com/matrix-org/matrix-authentication-service/issues/1445`,
+      `Synapse database contains ${guestUsers} guest users which aren't supported by MAS: https://github.com/element-hq/matrix-authentication-service/issues/1445`,
     );
   }
   if (synapseConfig.allow_guest_access) {
     if (guestUsers > 0) {
       error(
-        "Synapse config allows guest access which isn't supported by MAS: https://github.com/matrix-org/matrix-authentication-service/issues/1445",
+        "Synapse config allows guest access which isn't supported by MAS: https://github.com/element-hq/matrix-authentication-service/issues/1445",
       );
     } else {
       error(
-        "Synapse config allows guest access which isn't supported by MAS, but no guest users were found in the database so the option could be disabled: https://github.com/matrix-org/matrix-authentication-service/issues/1445",
+        "Synapse config allows guest access which isn't supported by MAS, but no guest users were found in the database so the option could be disabled: https://github.com/element-hq/matrix-authentication-service/issues/1445",
       );
     }
   }
@@ -117,8 +117,8 @@ export async function advisor(): Promise<void> {
     );
   }
   if (synapseConfig.enable_registration_captcha) {
-    error(
-      "Synapse config has registration CAPTCHA enabled which isn't supported by MAS: https://github.com/matrix-org/matrix-authentication-service/issues/138",
+    warn(
+      "Synapse config has registration CAPTCHA enabled which will need to configured in MAS",
     );
   }
   if (synapseConfig.user_consent) {
@@ -140,7 +140,7 @@ export async function advisor(): Promise<void> {
   );
   if (usersWithoutEmailAddress > 0) {
     warn(
-      `Synapse database contains ${usersWithoutEmailAddress} users without a verified email address who will need to verify their email address before they can login after migration: https://github.com/matrix-org/matrix-authentication-service/issues/1505`,
+      `Synapse database contains ${usersWithoutEmailAddress} users without a verified email address who will need to verify their email address before they can login after migration: https://github.com/element-hq/matrix-authentication-service/issues/1505`,
     );
   }
 
