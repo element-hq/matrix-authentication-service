@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 use super::shared::OptionalPostAuthAction;
 use crate::{
     compat::login::{
-        authenticate_via_rest_api, start_new_session, user_password_login, RouteError,
+        authenticate_via_rest_api, start_new_session, user_login_with_password, RouteError,
     },
     passwords::PasswordManager,
     BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
@@ -223,7 +223,7 @@ async fn login(
     homeserver: Box<dyn HomeserverConnection<Error = anyhow::Error>>,
 ) -> Result<BrowserSession, FormError> {
     // XXX: we're loosing the error context here
-    let mxid: String = homeserver.mxid(&username);
+    let mxid: String = homeserver.mxid(username);
     let user = if let Ok(Some(rest_auth_provider)) = password_manager.get_rest_auth_provider() {
         // If rest_auth_provider is enabled, authenticate via REST API
         let authenticated =
@@ -233,44 +233,41 @@ async fn login(
         if authenticated {
             let user = repo
                 .user()
-                .find_by_username(&username)
+                .find_by_username(username)
                 .await
                 .map_err(|_err| FormError::Internal)?
                 .filter(mas_data_model::User::is_valid);
 
-            let user = match user {
-                Some(user) => {
-                    // User found: proceed
-                    user
+            let user = if let Some(user) = user {
+                // User found: proceed
+                user
+            } else {
+                // User not found while existing in the provider: create it
+                let homeserver_available = homeserver
+                    .is_localpart_available(&mxid)
+                    .await
+                    .map_err(|_err| FormError::Internal)?;
+                if !homeserver_available {
+                    return Err(FormError::Internal);
                 }
-                None => {
-                    // User not found while existing in the provider: create it
-                    let homeserver_available = homeserver
-                        .is_localpart_available(&mxid)
-                        .await
-                        .map_err(|_err| FormError::Internal)?;
-                    if !homeserver_available {
-                        return Err(FormError::Internal);
-                    }
 
-                    let new_user = repo
-                        .user()
-                        .add(&mut rng, clock, mxid.clone())
-                        .await
-                        .map_err(|_err| FormError::Internal)?;
+                let new_user = repo
+                    .user()
+                    .add(&mut rng, clock, mxid.clone())
+                    .await
+                    .map_err(|_err| FormError::Internal)?;
 
-                    // Replicate in Synapse
-                    homeserver
-                        .provision_user(&ProvisionRequest::new(mxid.clone(), username.to_string()))
-                        .await
-                        .unwrap();
+                // Replicate in Synapse
+                homeserver
+                    .provision_user(&ProvisionRequest::new(mxid.clone(), username.to_owned()))
+                    .await
+                    .unwrap();
 
-                    new_user
-                }
+                new_user
             };
             // Update the password if needed
             let result = password_manager
-                .hash(&mut rng, password.to_string().into_bytes().into())
+                .hash(&mut rng, password.to_owned().into_bytes().into())
                 .await;
             let (version, hashed_password) = match result {
                 Ok((version, hashed_password)) => (version, hashed_password),
@@ -287,15 +284,15 @@ async fn login(
         }
     } else {
         // If rest_auth_provider is not enabled, proceed with the normal authentication
-        let user = user_password_login(
+        user_login_with_password(
             &mut rng,
             clock,
             &password_manager,
             &limiter,
             requester,
             repo,
-            username.to_string(),
-            password.to_string(),
+            username.to_owned(),
+            password.to_owned(),
         )
         .await
         .map_err(|err| match err {
@@ -304,8 +301,7 @@ async fn login(
             | RouteError::UserNotFound
             | RouteError::NoPassword => FormError::InvalidCredentials,
             _ => FormError::Internal,
-        })?;
-        user
+        })?
     };
 
     // Start a new compat session without verifying the password again

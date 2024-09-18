@@ -288,12 +288,11 @@ pub async fn authenticate_via_rest_api(
         if auth_response.auth.success {
             info!("Authentication successful for user: {}", mxid);
             return Ok(true);
-        } else {
-            info!("Authentication failed for user: {}", mxid);
-            return Err(RouteError::PasswordVerificationFailed(anyhow::Error::msg(
-                "Authentication failed",
-            )));
         }
+        info!("Authentication failed for user: {}", mxid);
+        return Err(RouteError::PasswordVerificationFailed(anyhow::Error::msg(
+            "Authentication failed",
+        )));
     }
 
     error!(
@@ -316,13 +315,10 @@ pub async fn start_new_session(
     repo.user().acquire_lock_for_sync(&user).await?;
 
     // Now that the user credentials have been verified, start a new compat session
-    let device = match device_id {
-        Some(id) => Device::try_from(id).map_err(|e| RouteError::InvalidDeviceID(e))?,
-        None => {
-            // Generate a new device ID only if not provided
-            let device: Device = Device::generate(rng);
-            device
-        }
+    let device = if let Some(id) = device_id { Device::try_from(id).map_err(RouteError::InvalidDeviceID)? } else {
+        // Generate a new device ID only if not provided
+        let device: Device = Device::generate(rng);
+        device
     };
 
     // If an existing session is found, use it
@@ -333,11 +329,10 @@ pub async fn start_new_session(
     let existing_sessions = repo.compat_session().list(filter, pagination).await?;
 
     let session: CompatSession = if existing_sessions.edges.is_empty() {
-        let new_session = repo
+        repo
             .compat_session()
             .add(rng, clock, &user, device, None, false)
-            .await?;
-        new_session
+            .await?
     } else {
         let session = &existing_sessions.edges[0].0;
         session.to_owned()
@@ -384,27 +379,24 @@ pub(crate) async fn post(
                         .await?
                         .filter(mas_data_model::User::is_valid);
 
-                    let user = match user {
-                        Some(user) => {
-                            // User found : proceed
-                            user
-                        }
-                        None => {
-                            // User not found while existing in the provider: create it
-                            let new_user =
-                                repo.user().add(&mut rng, &clock, username.clone()).await?;
+                    let user = if let Some(user) = user {
+                        // User found : proceed
+                        user
+                    } else {
+                        // User not found while existing in the provider: create it
+                        let new_user =
+                            repo.user().add(&mut rng, &clock, username.clone()).await?;
 
-                            // Replicate in Synapse
-                            homeserver
-                                .provision_user(&ProvisionRequest::new(
-                                    mxid.clone(),
-                                    username.clone(),
-                                ))
-                                .await
-                                .unwrap();
+                        // Replicate in Synapse
+                        homeserver
+                            .provision_user(&ProvisionRequest::new(
+                                mxid.clone(),
+                                username.clone(),
+                            ))
+                            .await
+                            .unwrap();
 
-                            new_user
-                        }
+                        new_user
                     };
                     // Update the password if needed
                     let result = password_manager
@@ -427,7 +419,7 @@ pub(crate) async fn post(
                 }
             } else {
                 // If rest_auth_provider is not enabled, proceed with the normal authentication
-                let user = user_password_login(
+                let user = user_login_with_password(
                     &mut rng,
                     &clock,
                     &password_manager,
@@ -568,7 +560,7 @@ async fn token_login(
     Ok((session, user))
 }
 
-pub async fn user_password_login(
+pub async fn user_login_with_password(
     mut rng: &mut (impl RngCore + CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
@@ -723,7 +715,7 @@ mod tests {
     /// Test that a user can login with a password using the Matrix
     /// compatibility API.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_user_password_login(pool: PgPool) {
+    async fn test_user_login_with_password(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
@@ -866,16 +858,16 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
         let result = authenticate_via_rest_api(
-            "@alice:example.com".to_string(),
-            "password123".to_string(),
+            "@alice:example.com".to_owned(),
+            "password123".to_owned(),
             rest_auth_provider,
         )
         .await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
     }
 
     #[tokio::test]
@@ -901,10 +893,10 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
         let result = authenticate_via_rest_api(
-            "@alice:example.com".to_string(),
-            "wrongpassword".to_string(),
+            "@alice:example.com".to_owned(),
+            "wrongpassword".to_owned(),
             rest_auth_provider,
         )
         .await;
@@ -921,10 +913,10 @@ mod tests {
             .create_async()
             .await;
 
-        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_string());
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
         let result = authenticate_via_rest_api(
-            "@alice:example.com".to_string(),
-            "password123".to_string(),
+            "@alice:example.com".to_owned(),
+            "password123".to_owned(),
             rest_auth_provider,
         )
         .await;

@@ -41,7 +41,8 @@ pub struct RestAuthProviderConfig {
 }
 
 impl RestAuthProviderConfig {
-    /// Constructor for RestAuthProviderConfig
+    /// Constructor for `RestAuthProviderConfig`
+    #[must_use]
     pub fn new(url: String, version: String) -> Self {
         Self { url, version }
     }

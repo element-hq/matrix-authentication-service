@@ -220,6 +220,10 @@ impl PasswordManager {
         Ok(new_hash)
     }
 
+    /// Returns the `RestAuthProviderConfig` if available.
+    ///
+    /// # Errors
+    /// Returns an error if retrieving the inner configuration fails.
     pub fn get_rest_auth_provider(&self) -> Result<Option<RestAuthProviderConfig>, anyhow::Error> {
         let inner = self.get_inner()?;
         Ok(inner.rest_auth_provider.clone())
