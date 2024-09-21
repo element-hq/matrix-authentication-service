@@ -27,10 +27,12 @@ const ADD_EMAIL_MUTATION = graphql(/* GraphQL */ `
   }
 `);
 
-const AddEmailForm: React.FC<{
+type Props = {
   userId: string;
   onAdd: (id: string) => Promise<void>;
-}> = ({ userId, onAdd }) => {
+};
+
+const AddEmailForm: React.FC<Props> = ({ userId, onAdd }: Props) => {
   const { t } = useTranslation();
   const [addEmailResult, addEmail] = useMutation(ADD_EMAIL_MUTATION);
   if (addEmailResult.error) throw addEmailResult.error;

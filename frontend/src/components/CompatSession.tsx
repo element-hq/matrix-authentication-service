@@ -54,7 +54,7 @@ export const simplifyUrl = (url: string): string => {
   let parsed: URL;
   try {
     parsed = new URL(url);
-  } catch (e) {
+  } catch {
     // Not a valid URL, return the original
     return url;
   }

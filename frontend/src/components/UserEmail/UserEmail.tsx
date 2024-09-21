@@ -7,8 +7,7 @@
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
 import IconEmail from "@vector-im/compound-design-tokens/assets/web/icons/email";
 import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
-import { ComponentProps, ReactNode } from "react";
-import { Translation, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
 import { FragmentType, graphql, useFragment } from "../../gql";
@@ -61,30 +60,33 @@ const SET_PRIMARY_EMAIL_MUTATION = graphql(/* GraphQL */ `
   }
 `);
 
-const DeleteButton: React.FC<{ disabled?: boolean; onClick?: () => void }> = ({
+type DeleteButtonProps = { disabled?: boolean; onClick?: () => void };
+
+const DeleteButton: React.FC<DeleteButtonProps> = ({
   disabled,
   onClick,
-}) => (
-  <Translation>
-    {(t): ReactNode => (
-      <Tooltip label={t("frontend.user_email.delete_button_title")}>
-        <IconButton
-          type="button"
-          disabled={disabled}
-          className="m-2"
-          onClick={onClick}
-          size="var(--cpd-space-8x)"
-        >
-          <IconDelete className={styles.userEmailDeleteIcon} />
-        </IconButton>
-      </Tooltip>
-    )}
-  </Translation>
-);
+}: DeleteButtonProps) => {
+  const t = useTranslation();
+  return (
+    <Tooltip label={t("frontend.user_email.delete_button_title")}>
+      <IconButton
+        type="button"
+        disabled={disabled}
+        className="m-2"
+        onClick={onClick}
+        size="var(--cpd-space-8x)"
+      >
+        <IconDelete className={styles.userEmailDeleteIcon} />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
+type DeleteButtonWithConfirmationProps = DeleteButtonProps & { email: string };
 
 const DeleteButtonWithConfirmation: React.FC<
-  ComponentProps<typeof DeleteButton> & { email: string }
-> = ({ email, onClick, ...rest }) => {
+  DeleteButtonWithConfirmationProps
+> = ({ email, onClick, ...rest }: DeleteButtonWithConfirmationProps) => {
   const { t } = useTranslation();
   const onConfirm = (): void => {
     onClick?.();
@@ -123,12 +125,19 @@ const DeleteButtonWithConfirmation: React.FC<
   );
 };
 
-const UserEmail: React.FC<{
+type Props = {
   email: FragmentType<typeof FRAGMENT>;
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
   onRemove?: () => void;
   isPrimary?: boolean;
-}> = ({ email, siteConfig, isPrimary, onRemove }) => {
+};
+
+const UserEmail: React.FC<Props> = ({
+  email,
+  siteConfig,
+  isPrimary,
+  onRemove,
+}: Props) => {
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, email);
   const { emailChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);

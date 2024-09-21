@@ -74,9 +74,13 @@ const BackButton: React.FC = () => {
   );
 };
 
-const VerifyEmail: React.FC<{
+type VerifyEmailProps = {
   email: FragmentType<typeof FRAGMENT>;
-}> = ({ email }) => {
+};
+
+const VerifyEmail: React.FC<VerifyEmailProps> = ({
+  email,
+}: VerifyEmailProps) => {
   const data = useFragment(FRAGMENT, email);
   const [verifyEmailResult, verifyEmail] = useMutation(VERIFY_EMAIL_MUTATION);
   const [resendVerificationEmailResult, resendVerificationEmail] = useMutation(

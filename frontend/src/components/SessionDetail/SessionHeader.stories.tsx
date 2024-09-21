@@ -11,7 +11,7 @@ import SessionHeader from "./SessionHeader";
 
 type Props = PropsWithChildren;
 
-const Template: React.FC<Props> = ({ children }) => {
+const Template: React.FC<Props> = ({ children }: Props) => {
   return <SessionHeader to="/">{children}</SessionHeader>;
 };
 

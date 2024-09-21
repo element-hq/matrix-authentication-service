@@ -11,13 +11,7 @@ import IconClose from "@vector-im/compound-design-tokens/assets/web/icons/close"
 import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
 import IconKeyOffSolid from "@vector-im/compound-design-tokens/assets/web/icons/key-off-solid";
 import { Button, Text } from "@vector-im/compound-web";
-import {
-  ForwardRefExoticComponent,
-  RefAttributes,
-  SVGProps,
-  useState,
-  MouseEvent,
-} from "react";
+import { useState, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "urql";
 
@@ -61,7 +55,7 @@ export const Route = createLazyFileRoute("/reset-cross-signing")({
 // https://github.com/element-hq/synapse/blob/34b758644611721911a223814a7b35d8e14067e6/synapse/rest/admin/users.py#L1335
 const CROSS_SIGNING_REPLACEMENT_PERIOD_MS = 10 * 60 * 1000; // 10 minutes
 
-function ResetCrossSigning(): React.ReactNode {
+function ResetCrossSigning() {
   const { deepLink } = Route.useSearch();
   const { t } = useTranslation();
   const [viewer] = useQuery({ query: CURRENT_VIEWER_QUERY });
@@ -81,7 +75,7 @@ function ResetCrossSigning(): React.ReactNode {
       // https://spec.matrix.org/v1.11/client-server-api/#fallback
       if (window.onAuthDone) {
         window.onAuthDone();
-      } else if (window.opener && window.opener.postMessage) {
+      } else if (window.opener?.postMessage) {
         window.opener.postMessage("authDone", "*");
       }
     });
@@ -112,49 +106,72 @@ function ResetCrossSigning(): React.ReactNode {
     );
   }
 
-  let Icon: ForwardRefExoticComponent<
-    Omit<SVGProps<SVGSVGElement>, "ref" | "children"> &
-      RefAttributes<SVGSVGElement>
-  >;
-  let title: string;
-  let body: JSX.Element;
-
   if (cancelled) {
-    Icon = IconKeyOffSolid;
-    title = t("frontend.reset_cross_signing.cancelled.heading");
-    body = (
-      <>
-        <Text className="text-center text-secondary" size="lg">
-          {t("frontend.reset_cross_signing.cancelled.description_1")}
-        </Text>
-        <Text className="text-center text-secondary" size="lg">
-          {t("frontend.reset_cross_signing.cancelled.description_2")}
-        </Text>
-      </>
+    return (
+      <Layout>
+        <BlockList>
+          <PageHeading
+            Icon={IconKeyOffSolid}
+            title={t("frontend.reset_cross_signing.cancelled.heading")}
+          />
+
+          <Text className="text-center text-secondary" size="lg">
+            {t("frontend.reset_cross_signing.cancelled.description_1")}
+          </Text>
+          <Text className="text-center text-secondary" size="lg">
+            {t("frontend.reset_cross_signing.cancelled.description_2")}
+          </Text>
+          {cancelButton}
+        </BlockList>
+      </Layout>
     );
-  } else if (success) {
-    Icon = IconCheckCircleSolid;
-    title = t("frontend.reset_cross_signing.success.heading");
-    body = (
-      <Text className="text-center text-secondary" size="lg">
-        {t("frontend.reset_cross_signing.success.description", {
-          minutes: CROSS_SIGNING_REPLACEMENT_PERIOD_MS / (60 * 1000),
-        })}
-      </Text>
+  }
+
+  if (success) {
+    return (
+      <Layout>
+        <BlockList>
+          <PageHeading
+            Icon={IconCheckCircleSolid}
+            title={t("frontend.reset_cross_signing.success.heading")}
+          />
+
+          <Text className="text-center text-secondary" size="lg">
+            {t("frontend.reset_cross_signing.success.description", {
+              minutes: CROSS_SIGNING_REPLACEMENT_PERIOD_MS / (60 * 1000),
+            })}
+          </Text>
+          {cancelButton}
+        </BlockList>
+      </Layout>
     );
-  } else if (error) {
-    Icon = IconError;
-    title = t("frontend.reset_cross_signing.failure.heading");
-    body = (
-      <Text className="text-center text-secondary" size="lg">
-        {t("frontend.reset_cross_signing.failure.description")}
-      </Text>
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <BlockList>
+          <PageHeading
+            Icon={IconError}
+            title={t("frontend.reset_cross_signing.failure.heading")}
+          />
+
+          <Text className="text-center text-secondary" size="lg">
+            {t("frontend.reset_cross_signing.failure.description")}
+          </Text>
+          {cancelButton}
+        </BlockList>
+      </Layout>
     );
-  } else {
-    Icon = IconError;
-    title = t("frontend.reset_cross_signing.heading");
-    body = (
-      <>
+  }
+
+  return (
+    <Layout>
+      <BlockList>
+        <PageHeading
+          Icon={IconError}
+          title={t("frontend.reset_cross_signing.heading")}
+        />
         <Text className="text-center text-secondary" size="lg">
           {t("frontend.reset_cross_signing.description")}
         </Text>
@@ -187,21 +204,6 @@ function ResetCrossSigning(): React.ReactNode {
           {!!result.fetching && <LoadingSpinner inline />}
           {t("frontend.reset_cross_signing.button")}
         </Button>
-      </>
-    );
-  }
-
-  return (
-    <Layout>
-      <BlockList>
-        <PageHeading
-          Icon={Icon}
-          title={title}
-          invalid={!success}
-          success={success}
-        />
-
-        {body}
         {cancelButton}
       </BlockList>
     </Layout>

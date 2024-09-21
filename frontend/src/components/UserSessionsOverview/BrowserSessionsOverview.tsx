@@ -22,9 +22,11 @@ export const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const BrowserSessionsOverview: React.FC<{
+type Props = {
   user: FragmentType<typeof FRAGMENT>;
-}> = ({ user }) => {
+};
+
+const BrowserSessionsOverview: React.FC<Props> = ({ user }: Props) => {
   const data = useFragment(FRAGMENT, user);
   const { t } = useTranslation();
 

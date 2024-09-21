@@ -28,7 +28,7 @@ const cache = cacheExchange({
   },
   updates: {
     Mutation: {
-      addEmail: (result, args: MutationAddEmailArgs, cache, _info) => {
+      addEmail: (result, args: MutationAddEmailArgs, cache) => {
         const key = cache.keyOfEntity({
           __typename: "User",
           id: args.input.userId,
@@ -47,7 +47,6 @@ const cache = cacheExchange({
         result: { removeEmail?: RemoveEmailPayload },
         args: MutationRemoveEmailArgs,
         cache,
-        _info,
       ) => {
         // Invalidate the email entity
         cache.invalidate({
@@ -77,7 +76,6 @@ const cache = cacheExchange({
         result: { verifyEmail?: VerifyEmailPayload },
         args: MutationVerifyEmailArgs,
         cache,
-        _info,
       ) => {
         // Invalidate the email entity
         cache.invalidate({

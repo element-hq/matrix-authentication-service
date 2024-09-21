@@ -16,11 +16,17 @@ import {
 
 import UserGreeting, { CONFIG_FRAGMENT, FRAGMENT } from "./UserGreeting";
 
-const Template: React.FC<{
+type Props = {
   displayName?: string;
   mxid: string;
   displayNameChangeAllowed: boolean;
-}> = ({ displayName, mxid, displayNameChangeAllowed }) => {
+};
+
+const Template: React.FC<Props> = ({
+  displayName,
+  mxid,
+  displayNameChangeAllowed,
+}: Props) => {
   const userId = "user id";
 
   const mockClient = {

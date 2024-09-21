@@ -12,7 +12,7 @@ type Props = React.PropsWithChildren<{
   className?: string;
 }>;
 
-const BlockList: React.FC<Props> = ({ className, children }) => {
+const BlockList: React.FC<Props> = ({ className, children }: Props) => {
   return <div className={cx(styles.blockList, className)}>{children}</div>;
 };
 

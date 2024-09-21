@@ -16,7 +16,12 @@ type Props = React.PropsWithChildren<{
   highlight?: boolean;
 }>;
 
-const Block: React.FC<Props> = ({ children, className, highlight, title }) => {
+const Block: React.FC<Props> = ({
+  children,
+  className,
+  highlight,
+  title,
+}: Props) => {
   return (
     <div className={cx(styles.block, className)} data-active={highlight}>
       {title && (

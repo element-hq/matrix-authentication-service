@@ -40,7 +40,7 @@ const Typography: React.FC<Props> = ({
   bold,
   justified,
   className: extraClassName,
-}) => {
+}: Props) => {
   const element = elementMap[variant];
   const boldClass = bold ? "font-semibold" : "";
   const justifiedClass = justified ? "text-justify" : "";
@@ -50,27 +50,31 @@ const Typography: React.FC<Props> = ({
 
 type SimpleProps = { children: React.ReactNode };
 
-export const Bold: React.FC<SimpleProps> = ({ children }) => (
+export const Bold: React.FC<SimpleProps> = ({ children }: SimpleProps) => (
   <strong className="font-semibold">{children}</strong>
 );
 
-export const Code: React.FC<SimpleProps> = ({ children }) => (
+export const Code: React.FC<SimpleProps> = ({ children }: SimpleProps) => (
   <code className="font-mono text-sm">{children}</code>
 );
 
-export const Title: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="title" children={children} />
+export const Title: React.FC<SimpleProps> = ({ children }: SimpleProps) => (
+  <Typography variant="title">{children}</Typography>
 );
 
-export const Subtitle: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="subtitle" children={children} />
+export const Subtitle: React.FC<SimpleProps> = ({ children }: SimpleProps) => (
+  <Typography variant="subtitle">{children}</Typography>
 );
 
-export const Body: React.FC<{
-  children: React.ReactNode;
-  justified?: boolean;
-}> = ({ children, justified }) => (
-  <Typography variant="body" children={children} justified={justified} />
+type BodyProps = { children: React.ReactNode; justified?: boolean };
+
+export const Body: React.FC<BodyProps> = ({
+  children,
+  justified,
+}: BodyProps) => (
+  <Typography variant="body" justified={justified}>
+    {children}
+  </Typography>
 );
 
 export default Typography;

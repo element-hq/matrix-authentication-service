@@ -10,10 +10,9 @@ import { H3 } from "@vector-im/compound-web";
 
 import styles from "./SessionHeader.module.css";
 
-const SessionHeader: React.FC<React.ComponentProps<typeof Link>> = ({
-  children,
-  ...rest
-}) => {
+type Props = React.ComponentProps<typeof Link>;
+
+const SessionHeader: React.FC<Props> = ({ children, ...rest }: Props) => {
   return (
     <header className={styles.header}>
       <Link className={styles.backButton} {...rest}>

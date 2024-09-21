@@ -64,10 +64,12 @@ const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const UserEmailList: React.FC<{
+type Props = {
   user: FragmentType<typeof FRAGMENT>;
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
-}> = ({ user, siteConfig }) => {
+};
+
+const UserEmailList: React.FC<Props> = ({ user, siteConfig }: Props) => {
   const data = useFragment(FRAGMENT, user);
   const config = useFragment(CONFIG_FRAGMENT, siteConfig);
   const [pending, startTransition] = useTransition();

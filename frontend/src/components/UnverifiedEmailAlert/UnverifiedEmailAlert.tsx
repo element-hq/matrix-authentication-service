@@ -22,9 +22,11 @@ export const UNVERIFIED_EMAILS_FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const UnverifiedEmailAlert: React.FC<{
+type Props = {
   user?: FragmentType<typeof UNVERIFIED_EMAILS_FRAGMENT>;
-}> = ({ user }) => {
+};
+
+const UnverifiedEmailAlert: React.FC<Props> = ({ user }: Props) => {
   const data = useFragment(UNVERIFIED_EMAILS_FRAGMENT, user);
   const [dismiss, setDismiss] = useState(false);
   const { t } = useTranslation();

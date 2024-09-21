@@ -56,30 +56,34 @@ const SET_DISPLAYNAME_MUTATION = graphql(/* GraphQL */ `
   }
 `);
 
+type Props = { label: string } & ComponentPropsWithoutRef<"button">;
+
 // This needs to be its own component because else props and refs aren't passed properly in the trigger
-const EditButton = forwardRef<
-  HTMLButtonElement,
-  { label: string } & ComponentPropsWithoutRef<"button">
->(({ label, ...props }, ref) => (
-  <Tooltip label={label}>
-    <IconButton
-      ref={ref}
-      type="button"
-      size="var(--cpd-space-6x)"
-      className={styles.editButton}
-      {...props}
-    >
-      <IconEdit />
-    </IconButton>
-  </Tooltip>
-));
+const EditButton = forwardRef<HTMLButtonElement, Props>(function EditButton(
+  { label, ...props }: Props,
+  ref,
+) {
+  return (
+    <Tooltip label={label}>
+      <IconButton
+        ref={ref}
+        type="button"
+        size="var(--cpd-space-6x)"
+        className={styles.editButton}
+        {...props}
+      >
+        <IconEdit />
+      </IconButton>
+    </Tooltip>
+  );
+});
 
 type Props = {
   user: FragmentType<typeof FRAGMENT>;
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
 };
 
-const UserGreeting: React.FC<Props> = ({ user, siteConfig }) => {
+const UserGreeting: React.FC<Props> = ({ user, siteConfig }: Props) => {
   const fieldRef = useRef<HTMLInputElement>(null);
   const data = useFragment(FRAGMENT, user);
   const { displayNameChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);

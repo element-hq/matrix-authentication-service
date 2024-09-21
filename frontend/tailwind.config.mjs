@@ -8,7 +8,7 @@
 
 /** @type {import('tailwindcss').Config} */
 
-module.exports = {
+export default {
   mode: "jit",
   content: ["./src/**/*.tsx", "./index.html", "../templates/**/*.html"],
   theme: {

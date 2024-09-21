@@ -8,25 +8,29 @@ import { Text } from "@vector-im/compound-web";
 import {
   FC,
   ForwardRefExoticComponent,
-  ReactNode,
+  PropsWithChildren,
   RefAttributes,
   SVGProps,
 } from "react";
 
 import styles from "./VisualList.module.css";
 
-type Props = {
-  children: ReactNode;
-};
+type Props = PropsWithChildren;
 
-export const VisualListItem: FC<{
+type ItemProps = {
   Icon: ForwardRefExoticComponent<
     Omit<SVGProps<SVGSVGElement>, "ref" | "children"> &
       RefAttributes<SVGSVGElement>
   >;
   iconColor?: string;
   label: string;
-}> = ({ Icon, iconColor, label }) => {
+};
+
+export const VisualListItem: FC<ItemProps> = ({
+  Icon,
+  iconColor,
+  label,
+}: ItemProps) => {
   return (
     <li className={styles.item}>
       <Icon color={iconColor ?? "var(--cpd-color-icon-tertiary)"} />
@@ -37,6 +41,6 @@ export const VisualListItem: FC<{
   );
 };
 
-export const VisualList: React.FC<Props> = ({ children }) => {
+export const VisualList: React.FC<Props> = ({ children }: Props) => {
   return <ul className={styles.list}>{children}</ul>;
 };

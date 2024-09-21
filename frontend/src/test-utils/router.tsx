@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import type { FC, PropsWithChildren } from "react";
+
 import {
   RouterContextProvider,
   createMemoryHistory,
@@ -20,9 +22,7 @@ const router = createRouter({
   routeTree: rootRoute.addChildren([index]),
 });
 
-export const DummyRouter: React.FC<React.PropsWithChildren> = ({
-  children,
-}) => (
+export const DummyRouter: FC<PropsWithChildren> = ({ children }) => (
   /** @ts-expect-error: The router we pass doesn't match the "real" router, which is fine for tests */
   <RouterContextProvider router={router}>{children}</RouterContextProvider>
 );

@@ -32,7 +32,8 @@ type Props = {
   details?: Detail[];
 };
 
-const Scope: React.FC<{ scope: string }> = ({ scope }) => {
+type ScopeProps = { scope: string };
+const Scope: React.FC<ScopeProps> = ({ scope }: ScopeProps) => {
   const { t } = useTranslation();
   // Filter out "urn:matrix:org.matrix.msc2967.client:device:"
   if (scope.startsWith("urn:matrix:org.matrix.msc2967.client:device:")) {
@@ -67,10 +68,8 @@ const Scope: React.FC<{ scope: string }> = ({ scope }) => {
   );
 };
 
-const Datum: React.FC<{ label: string; value: ReactNode }> = ({
-  label,
-  value,
-}) => {
+type DatumProps = { label: string; value: ReactNode };
+const Datum: React.FC<DatumProps> = ({ label, value }: DatumProps) => {
   return (
     <div className={styles.datum}>
       <Text size="sm" weight="regular" as="h5">
@@ -95,7 +94,7 @@ const SessionDetails: React.FC<Props> = ({
   ipAddress,
   details,
   scopes,
-}) => {
+}: Props) => {
   const { t } = useTranslation();
 
   return (

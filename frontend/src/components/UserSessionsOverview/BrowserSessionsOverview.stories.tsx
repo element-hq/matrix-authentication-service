@@ -15,7 +15,7 @@ type Props = {
   browserSessions: number;
 };
 
-const Template: React.FC<Props> = ({ browserSessions }) => {
+const Template: React.FC<Props> = ({ browserSessions }: Props) => {
   const data = makeFragmentData(
     {
       id: "user:123",
