@@ -62,6 +62,9 @@ pub(super) struct Options {
 
 #[derive(Parser, Debug)]
 enum Subcommand {
+    /// Add an email address to the specified user
+    AddEmail { username: String, email: String },
+
     /// Mark email address as verified
     VerifyEmail { username: String, email: String },
 
@@ -215,6 +218,49 @@ impl Options {
 
                 info!(%user.id, %user.username, "Password changed");
                 repo.into_inner().commit().await?;
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::AddEmail { username, email } => {
+                let _span = info_span!(
+                    "cli.manage.add_email",
+                    user.username = username,
+                    user_email.email = email
+                )
+                .entered();
+
+                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let user = repo
+                    .user()
+                    .find_by_username(&username)
+                    .await?
+                    .context("User not found")?;
+
+                // Find any existing email address
+                let existing_email = repo.user_email().find(&user, &email).await?;
+                let email = if let Some(email) = existing_email {
+                    info!(%email.id, "Email already exists, makring as verified");
+                    email
+                } else {
+                    repo.user_email()
+                        .add(&mut rng, &clock, &user, email)
+                        .await?
+                };
+
+                let email = repo.user_email().mark_as_verified(&clock, email).await?;
+
+                // If the user has no primary email, set this one as primary.
+                if user.primary_user_email_id.is_none() {
+                    repo.user_email().set_as_primary(&email).await?;
+                }
+
+                repo.into_inner().commit().await?;
+                info!(?email, "Email added and marked as verified");
 
                 Ok(ExitCode::SUCCESS)
             }
