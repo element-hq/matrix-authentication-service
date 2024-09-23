@@ -3262,15 +3262,15 @@ dependencies = [
  "mas-templates",
  "mas-tower",
  "oauth2-types",
- "opentelemetry",
- "opentelemetry-http",
+ "opentelemetry 0.24.0",
+ "opentelemetry-http 0.13.0",
  "opentelemetry-jaeger-propagator",
  "opentelemetry-otlp",
  "opentelemetry-prometheus",
  "opentelemetry-resource-detectors",
  "opentelemetry-semantic-conventions",
  "opentelemetry-stdout",
- "opentelemetry_sdk",
+ "opentelemetry_sdk 0.24.1",
  "prometheus",
  "rand",
  "rand_chacha",
@@ -3397,7 +3397,7 @@ dependencies = [
  "minijinja",
  "nonzero_ext",
  "oauth2-types",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "opentelemetry-semantic-conventions",
  "pbkdf2",
  "psl",
@@ -3440,7 +3440,7 @@ dependencies = [
  "hyper-rustls",
  "hyper-util",
  "mas-tower",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "opentelemetry-semantic-conventions",
  "pin-project-lite",
  "rustls",
@@ -3717,7 +3717,7 @@ dependencies = [
  "mas-iana",
  "mas-jose",
  "oauth2-types",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "rand_core",
  "serde",
  "serde_json",
@@ -3776,7 +3776,7 @@ dependencies = [
  "mas-storage-pg",
  "mas-templates",
  "mas-tower",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "rand",
  "rand_chacha",
  "serde",
@@ -3824,8 +3824,8 @@ name = "mas-tower"
 version = "0.12.0"
 dependencies = [
  "http",
- "opentelemetry",
- "opentelemetry-http",
+ "opentelemetry 0.24.0",
+ "opentelemetry-http 0.13.0",
  "opentelemetry-semantic-conventions",
  "pin-project-lite",
  "tower",
@@ -4171,6 +4171,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "803801d3d3b71cd026851a53f974ea03df3d179cb758b260136a6c9e22e196af"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "once_cell",
+ "pin-project-lite",
+ "thiserror",
+]
+
+[[package]]
 name = "opentelemetry-http"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4182,32 +4196,44 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "tokio",
 ]
 
 [[package]]
-name = "opentelemetry-jaeger-propagator"
-version = "0.3.0"
+name = "opentelemetry-http"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc0a68a13b92fc708d875ad659b08b35d08b8ef2403e01944b39ca21e5b08b17"
+checksum = "88d8c2b76e5f7848a289aa9666dbe56b16f8a22a4c5246ef37a14941818d2913"
 dependencies = [
- "opentelemetry",
+ "async-trait",
+ "bytes",
+ "http",
+ "opentelemetry 0.25.0",
+]
+
+[[package]]
+name = "opentelemetry-jaeger-propagator"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ca4418db06b49e0c150b3cba4643d3848ccd71200345082e273adbd697864f2"
+dependencies = [
+ "opentelemetry 0.25.0",
 ]
 
 [[package]]
 name = "opentelemetry-otlp"
-version = "0.17.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b925a602ffb916fb7421276b86756027b37ee708f9dce2dbdcc51739f07e727"
+checksum = "596b1719b3cab83addb20bcbffdf21575279d9436d9ccccfe651a3bf0ab5ab06"
 dependencies = [
  "async-trait",
  "futures-core",
  "http",
- "opentelemetry",
- "opentelemetry-http",
+ "opentelemetry 0.25.0",
+ "opentelemetry-http 0.25.0",
  "opentelemetry-proto",
- "opentelemetry_sdk",
+ "opentelemetry_sdk 0.25.0",
  "prost",
  "thiserror",
 ]
@@ -4219,20 +4245,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc4191ce34aa274621861a7a9d68dbcf618d5b6c66b10081631b61fd81fbc015"
 dependencies = [
  "once_cell",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.24.0",
+ "opentelemetry_sdk 0.24.1",
  "prometheus",
  "protobuf",
 ]
 
 [[package]]
 name = "opentelemetry-proto"
-version = "0.7.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30ee9f20bff9c984511a02f082dc8ede839e4a9bf15cc2487c8d6fea5ad850d9"
+checksum = "2c43620e8f93359eb7e627a3b16ee92d8585774986f24f2ab010817426c5ce61"
 dependencies = [
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.25.0",
+ "opentelemetry_sdk 0.25.0",
  "prost",
  "tonic",
 ]
@@ -4243,9 +4269,9 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00a7e965924ad5234917f135243605ef6f2ae3f4da8d3363065d679b2c150f2a"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "opentelemetry-semantic-conventions",
- "opentelemetry_sdk",
+ "opentelemetry_sdk 0.24.1",
 ]
 
 [[package]]
@@ -4256,15 +4282,15 @@ checksum = "1cefe0543875379e47eb5f1e68ff83f45cc41366a92dfd0d073d513bf68e9a05"
 
 [[package]]
 name = "opentelemetry-stdout"
-version = "0.5.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d408d4345b8be6129a77c46c3bfc75f0d3476f3091909c7dd99c1f3d78582287"
+checksum = "f76e2ded3f6e5d8b51e7aefc267022e7586975c00763aab70f807ad2cc156e94"
 dependencies = [
  "async-trait",
  "chrono",
  "futures-util",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.25.0",
+ "opentelemetry_sdk 0.25.0",
  "ordered-float",
  "serde",
  "serde_json",
@@ -4283,13 +4309,32 @@ dependencies = [
  "futures-util",
  "glob",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "percent-encoding",
  "rand",
  "serde_json",
  "thiserror",
  "tokio",
  "tokio-stream",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0da0d6b47a3dbc6e9c9e36a0520e25cf943e046843818faaa3f87365a548c82"
+dependencies = [
+ "async-trait",
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "glob",
+ "once_cell",
+ "opentelemetry 0.25.0",
+ "percent-encoding",
+ "rand",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -6570,8 +6615,8 @@ checksum = "a9784ed4da7d921bc8df6963f8c80a0e4ce34ba6ba76668acadd3edbd985ff3b"
 dependencies = [
  "js-sys",
  "once_cell",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.24.0",
+ "opentelemetry_sdk 0.24.1",
  "tracing",
  "tracing-core",
  "tracing-subscriber",
