@@ -21,6 +21,7 @@ import * as Collapsible from "../components/Collapsible";
 import LoadingSpinner from "../components/LoadingSpinner";
 import UserEmail from "../components/UserEmail";
 import AddEmailForm from "../components/UserProfile/AddEmailForm";
+import UpstreamProviderList from "../components/UserProfile/UpstreamProviderList";
 import UserEmailList from "../components/UserProfile/UserEmailList";
 
 import { QUERY } from "./_account.index";
@@ -71,6 +72,12 @@ function Index(): React.ReactElement {
           )}
         </div>
 
+        <BlockList>
+          <Separator />
+          <Suspense fallback={<LoadingSpinner mini className="self-center" />}>
+            <UpstreamProviderList />
+          </Suspense>
+        </BlockList>
         {siteConfig.passwordLoginEnabled && (
           <>
             <Separator />

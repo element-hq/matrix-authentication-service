@@ -117,6 +117,25 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
         subject: &str,
     ) -> Result<Option<UpstreamOAuthLink>, Self::Error>;
 
+    /// Find an upstream OAuth link for a provider by the associated user id
+    ///
+    /// Returns `None` if no matching upstream OAuth link was found
+    ///
+    /// # Parameters
+    ///
+    /// * `upstream_oauth_provider`: The upstream OAuth provider on which to
+    ///  find the link
+    /// * `user_id`: The user id of the upstream OAuth link to find
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_by_user_id(
+        &mut self,
+        upstream_oauth_provider: &UpstreamOAuthProvider,
+        user_id: Ulid,
+    ) -> Result<Option<UpstreamOAuthLink>, Self::Error>;
+
     /// Add a new upstream OAuth link
     ///
     /// Returns the newly created upstream OAuth link
@@ -193,6 +212,12 @@ repository_impl!(UpstreamOAuthLinkRepository:
         &mut self,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: &str,
+    ) -> Result<Option<UpstreamOAuthLink>, Self::Error>;
+
+    async fn find_by_user_id(
+        &mut self,
+        upstream_oauth_provider: &UpstreamOAuthProvider,
+        user_id: Ulid,
     ) -> Result<Option<UpstreamOAuthLink>, Self::Error>;
 
     async fn add(

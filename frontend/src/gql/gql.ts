@@ -29,6 +29,7 @@ const documents = {
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    userAgent {\n      name\n      os\n      model\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.CompatSession_DetailFragmentDoc,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UnverifiedEmailAlert_user on User {\n    id\n    unverifiedEmails: emails(first: 0, state: PENDING) {\n      totalCount\n    }\n  }\n": types.UnverifiedEmailAlert_UserFragmentDoc,
+    "\n  fragment UpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n": types.UpstreamProvider_ProviderFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n": types.UserEmail_EmailFragmentDoc,
     "\n  fragment UserEmail_siteConfig on SiteConfig {\n    id\n    emailChangeAllowed\n  }\n": types.UserEmail_SiteConfigFragmentDoc,
     "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
@@ -37,6 +38,7 @@ const documents = {
     "\n  fragment UserGreeting_siteConfig on SiteConfig {\n    id\n    displayNameChangeAllowed\n  }\n": types.UserGreeting_SiteConfigFragmentDoc,
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n      user {\n        id\n        matrix {\n          displayName\n        }\n      }\n    }\n  }\n": types.SetDisplayNameDocument,
     "\n  mutation AddEmail($userId: ID!, $email: String!) {\n    addEmail(input: { userId: $userId, email: $email }) {\n      status\n      violations\n      email {\n        id\n        ...UserEmail_email\n      }\n    }\n  }\n": types.AddEmailDocument,
+    "\n  query UpstreamProviderListQuery(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    upstreamOauth2Providers(\n      first: $first\n      after: $after\n      last: $last\n      before: $before\n    ) {\n      edges {\n        cursor\n        node {\n          id\n          ...UpstreamProvider_provider\n        }\n      }\n      totalCount\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n": types.UpstreamProviderListQueryDocument,
     "\n  query UserEmailListQuery(\n    $userId: ID!\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    user(id: $userId) {\n      id\n\n      emails(first: $first, after: $after, last: $last, before: $before) {\n        edges {\n          cursor\n          node {\n            id\n            ...UserEmail_email\n          }\n        }\n        totalCount\n        pageInfo {\n          hasNextPage\n          hasPreviousPage\n          startCursor\n          endCursor\n        }\n      }\n    }\n  }\n": types.UserEmailListQueryDocument,
     "\n  fragment UserEmailList_user on User {\n    id\n    primaryEmail {\n      id\n    }\n  }\n": types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    id\n    ...UserEmail_siteConfig\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
@@ -138,6 +140,10 @@ export function graphql(source: "\n  fragment UnverifiedEmailAlert_user on User 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  fragment UpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  fragment UpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n"): (typeof documents)["\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -167,6 +173,10 @@ export function graphql(source: "\n  mutation SetDisplayName($userId: ID!, $disp
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AddEmail($userId: ID!, $email: String!) {\n    addEmail(input: { userId: $userId, email: $email }) {\n      status\n      violations\n      email {\n        id\n        ...UserEmail_email\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation AddEmail($userId: ID!, $email: String!) {\n    addEmail(input: { userId: $userId, email: $email }) {\n      status\n      violations\n      email {\n        id\n        ...UserEmail_email\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query UpstreamProviderListQuery(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    upstreamOauth2Providers(\n      first: $first\n      after: $after\n      last: $last\n      before: $before\n    ) {\n      edges {\n        cursor\n        node {\n          id\n          ...UpstreamProvider_provider\n        }\n      }\n      totalCount\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n"): (typeof documents)["\n  query UpstreamProviderListQuery(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    upstreamOauth2Providers(\n      first: $first\n      after: $after\n      last: $last\n      before: $before\n    ) {\n      edges {\n        cursor\n        node {\n          id\n          ...UpstreamProvider_provider\n        }\n      }\n      totalCount\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

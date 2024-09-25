@@ -180,6 +180,47 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
     }
 
     #[tracing::instrument(
+        name = "db.upstream_oauth_link.find_by_user_id",
+        skip_all,
+        fields(
+            db.query.text,
+            upstream_oauth_link.user_id = user_id.0,
+            %upstream_oauth_provider.id,
+            %upstream_oauth_provider.issuer,
+            %upstream_oauth_provider.client_id,
+        ),
+        err,
+    )]
+    async fn find_by_user_id(
+        &mut self,
+        upstream_oauth_provider: &UpstreamOAuthProvider,
+        user_id: Ulid,
+    ) -> Result<Option<UpstreamOAuthLink>, Self::Error> {
+        let res = sqlx::query_as!(
+            LinkLookup,
+            r#"
+                SELECT
+                    upstream_oauth_link_id,
+                    upstream_oauth_provider_id,
+                    user_id,
+                    subject,
+                    created_at
+                FROM upstream_oauth_links
+                WHERE upstream_oauth_provider_id = $1
+                  AND user_id = $2
+            "#,
+            Uuid::from(upstream_oauth_provider.id),
+            Uuid::from(user_id),
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?
+        .map(Into::into);
+
+        Ok(res)
+    }
+
+    #[tracing::instrument(
         name = "db.upstream_oauth_link.add",
         skip_all,
         fields(
