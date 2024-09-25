@@ -2942,6 +2942,14 @@ export default {
             "args": []
           },
           {
+            "name": "humanName",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Any"
+            },
+            "args": []
+          },
+          {
             "name": "id",
             "type": {
               "kind": "NON_NULL",
@@ -2959,6 +2967,24 @@ export default {
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "upstreamOauth2LinksForUser",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "UpstreamOAuth2Link",
+                    "ofType": null
+                  }
+                }
               }
             },
             "args": []

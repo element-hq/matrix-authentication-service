@@ -1594,6 +1594,14 @@ type UpstreamOAuth2Provider implements Node & CreationEvent {
   Client ID used for this provider.
   """
   clientId: String!
+  """
+  The human-readable name of the provider.
+  """
+  humanName: String
+  """
+  UpstreamOAuth2Links associated with this provider for the current user.
+  """
+  upstreamOauth2LinksForUser: [UpstreamOAuth2Link!]!
 }
 
 type UpstreamOAuth2ProviderConnection {
