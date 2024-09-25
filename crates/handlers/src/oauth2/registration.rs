@@ -15,10 +15,12 @@ use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     registration::{
         ClientMetadata, ClientMetadataVerificationError, ClientRegistrationResponse, Localized,
+        VerifiedClientMetadata,
     },
 };
 use psl::Psl;
 use rand::distributions::{Alphanumeric, DistString};
+use serde::Serialize;
 use thiserror::Error;
 use tracing::info;
 use url::Url;
@@ -149,6 +151,14 @@ impl IntoResponse for RouteError {
     }
 }
 
+#[derive(Serialize)]
+struct RouteResponse {
+    #[serde(flatten)]
+    response: ClientRegistrationResponse,
+    #[serde(flatten)]
+    metadata: VerifiedClientMetadata,
+}
+
 /// Check if the host of the given URL is a public suffix
 fn host_is_public_suffix(url: &Url) -> bool {
     let host = url.host_str().unwrap_or_default().as_bytes();
@@ -263,7 +273,6 @@ pub(crate) async fn post(
             metadata.application_type.clone(),
             //&metadata.response_types(),
             metadata.grant_types().to_vec(),
-            metadata.contacts.clone().unwrap_or_default(),
             metadata
                 .client_name
                 .clone()
@@ -283,15 +292,21 @@ pub(crate) async fn post(
         )
         .await?;
 
-    repo.save().await?;
-
     let response = ClientRegistrationResponse {
-        client_id: client.client_id,
+        client_id: client.client_id.clone(),
         client_secret,
         // XXX: we should have a `created_at` field on the clients
         client_id_issued_at: Some(client.id.datetime().into()),
         client_secret_expires_at: None,
     };
+
+    // We round-trip back to the metadata to output it in the response
+    // This should never fail, as the client is valid
+    let metadata = client.into_metadata().validate()?;
+
+    repo.save().await?;
+
+    let response = RouteResponse { response, metadata };
 
     Ok((StatusCode::CREATED, Json(response)))
 }
@@ -362,7 +377,6 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "application_type": "web",
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["http://this-is-insecure.com/"],
             }));
@@ -375,7 +389,6 @@ mod tests {
         // Incoherent response types
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["id_token"],
@@ -390,7 +403,6 @@ mod tests {
         // Using a public suffix
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://github.io/",
                 "redirect_uris": ["https://github.io/"],
                 "response_types": ["code"],
@@ -410,7 +422,6 @@ mod tests {
         // Using a public suffix in a translated URL
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "client_uri#fr-FR": "https://github.io/",
                 "redirect_uris": ["https://example.com/"],
@@ -438,7 +449,6 @@ mod tests {
         // secret
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["code"],
@@ -455,7 +465,6 @@ mod tests {
         // return a client secret
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
-                "contacts": ["hello@example.com"],
                 "client_uri": "https://example.com/",
                 "redirect_uris": ["https://example.com/"],
                 "response_types": ["code"],

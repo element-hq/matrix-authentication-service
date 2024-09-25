@@ -38,7 +38,6 @@ async fn create_test_client(state: &TestState) -> Client {
             None,
             None,
             vec![],
-            vec![],
             None,
             None,
             None,
@@ -358,7 +357,6 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     let request =
         Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
             "client_uri": "https://example.com/",
-            "contacts": ["contact@example.com"],
             "token_endpoint_auth_method": "client_secret_post",
             "grant_types": ["client_credentials"],
         }));
@@ -582,7 +580,6 @@ async fn test_add_user(pool: PgPool) {
     let request =
         Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
             "client_uri": "https://example.com/",
-            "contacts": ["contact@example.com"],
             "token_endpoint_auth_method": "client_secret_post",
             "grant_types": ["client_credentials"],
         }));

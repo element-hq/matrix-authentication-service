@@ -69,8 +69,6 @@ mod tests {
                 None,
                 None,
                 vec![GrantType::AuthorizationCode],
-                Vec::new(), // TODO: contacts are not yet saved
-                // vec!["contact@example.com".to_owned()],
                 Some("Test client".to_owned()),
                 Some("https://example.com/logo.png".parse().unwrap()),
                 Some("https://example.com/".parse().unwrap()),
@@ -424,8 +422,6 @@ mod tests {
                 None,
                 None,
                 vec![GrantType::AuthorizationCode],
-                Vec::new(), // TODO: contacts are not yet saved
-                // vec!["contact@first.example.com".to_owned()],
                 Some("First client".to_owned()),
                 Some("https://first.example.com/logo.png".parse().unwrap()),
                 Some("https://first.example.com/".parse().unwrap()),
@@ -450,8 +446,6 @@ mod tests {
                 None,
                 None,
                 vec![GrantType::AuthorizationCode],
-                Vec::new(), // TODO: contacts are not yet saved
-                // vec!["contact@second.example.com".to_owned()],
                 Some("Second client".to_owned()),
                 Some("https://second.example.com/logo.png".parse().unwrap()),
                 Some("https://second.example.com/".parse().unwrap()),
@@ -751,8 +745,6 @@ mod tests {
                 None,
                 None,
                 vec![GrantType::AuthorizationCode],
-                Vec::new(), // TODO: contacts are not yet saved
-                // vec!["contact@example.com".to_owned()],
                 Some("Example".to_owned()),
                 Some("https://example.com/logo.png".parse().unwrap()),
                 Some("https://example.com/".parse().unwrap()),

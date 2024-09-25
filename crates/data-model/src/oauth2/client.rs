@@ -5,12 +5,13 @@
 // Please see LICENSE in the repository root for full details.
 
 use chrono::{DateTime, Utc};
-use mas_iana::{
-    jose::JsonWebSignatureAlg,
-    oauth::{OAuthAuthorizationEndpointResponseType, OAuthClientAuthenticationMethod},
-};
+use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
-use oauth2_types::{oidc::ApplicationType, requests::GrantType};
+use oauth2_types::{
+    oidc::ApplicationType,
+    registration::{ClientMetadata, Localized},
+    requests::GrantType,
+};
 use rand::RngCore;
 use serde::Serialize;
 use thiserror::Error;
@@ -41,16 +42,9 @@ pub struct Client {
     /// Array of Redirection URI values used by the Client
     pub redirect_uris: Vec<Url>,
 
-    /// Array containing a list of the OAuth 2.0 `response_type` values that the
-    /// Client is declaring that it will restrict itself to using
-    pub response_types: Vec<OAuthAuthorizationEndpointResponseType>,
-
     /// Array containing a list of the OAuth 2.0 Grant Types that the Client is
     /// declaring that it will restrict itself to using.
     pub grant_types: Vec<GrantType>,
-
-    /// Array of e-mail addresses of people responsible for this Client
-    pub contacts: Vec<String>,
 
     /// Name of the Client to be presented to the End-User
     pub client_name: Option<String>, // TODO: translations
@@ -126,6 +120,55 @@ impl Client {
         }
     }
 
+    /// Create a client metadata object for this client
+    pub fn into_metadata(self) -> ClientMetadata {
+        let (jwks, jwks_uri) = match self.jwks {
+            Some(JwksOrJwksUri::Jwks(jwks)) => (Some(jwks), None),
+            Some(JwksOrJwksUri::JwksUri(jwks_uri)) => (None, Some(jwks_uri)),
+            _ => (None, None),
+        };
+        ClientMetadata {
+            redirect_uris: Some(self.redirect_uris.clone()),
+            response_types: None,
+            grant_types: Some(self.grant_types.into_iter().map(Into::into).collect()),
+            application_type: self.application_type.clone(),
+            client_name: self.client_name.map(|n| Localized::new(n, [])),
+            logo_uri: self.logo_uri.map(|n| Localized::new(n, [])),
+            client_uri: self.client_uri.map(|n| Localized::new(n, [])),
+            policy_uri: self.policy_uri.map(|n| Localized::new(n, [])),
+            tos_uri: self.tos_uri.map(|n| Localized::new(n, [])),
+            jwks_uri,
+            jwks,
+            id_token_signed_response_alg: self.id_token_signed_response_alg,
+            userinfo_signed_response_alg: self.userinfo_signed_response_alg,
+            token_endpoint_auth_method: self.token_endpoint_auth_method,
+            token_endpoint_auth_signing_alg: self.token_endpoint_auth_signing_alg,
+            initiate_login_uri: self.initiate_login_uri,
+            contacts: None,
+            software_id: None,
+            software_version: None,
+            sector_identifier_uri: None,
+            subject_type: None,
+            id_token_encrypted_response_alg: None,
+            id_token_encrypted_response_enc: None,
+            userinfo_encrypted_response_alg: None,
+            userinfo_encrypted_response_enc: None,
+            request_object_signing_alg: None,
+            request_object_encryption_alg: None,
+            request_object_encryption_enc: None,
+            default_max_age: None,
+            require_auth_time: None,
+            default_acr_values: None,
+            request_uris: None,
+            require_signed_request_object: None,
+            require_pushed_authorization_requests: None,
+            introspection_signed_response_alg: None,
+            introspection_encrypted_response_alg: None,
+            introspection_encrypted_response_enc: None,
+            post_logout_redirect_uris: None,
+        }
+    }
+
     #[doc(hidden)]
     pub fn samples(now: DateTime<Utc>, rng: &mut impl RngCore) -> Vec<Client> {
         vec![
@@ -139,9 +182,7 @@ impl Client {
                     Url::parse("https://client1.example.com/redirect").unwrap(),
                     Url::parse("https://client1.example.com/redirect2").unwrap(),
                 ],
-                response_types: vec![OAuthAuthorizationEndpointResponseType::Code],
                 grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
-                contacts: vec!["foo@client1.example.com".to_owned()],
                 client_name: Some("Client 1".to_owned()),
                 client_uri: Some(Url::parse("https://client1.example.com").unwrap()),
                 logo_uri: Some(Url::parse("https://client1.example.com/logo.png").unwrap()),
@@ -163,9 +204,7 @@ impl Client {
                 encrypted_client_secret: None,
                 application_type: Some(ApplicationType::Native),
                 redirect_uris: vec![Url::parse("https://client2.example.com/redirect").unwrap()],
-                response_types: vec![OAuthAuthorizationEndpointResponseType::Code],
                 grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
-                contacts: vec!["foo@client2.example.com".to_owned()],
                 client_name: None,
                 client_uri: None,
                 logo_uri: None,

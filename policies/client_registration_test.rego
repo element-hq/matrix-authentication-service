@@ -5,20 +5,13 @@ test_valid {
 		"grant_types": ["authorization_code"],
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/callback"],
-		"contacts": ["contact@example.com"],
 	}
 }
 
 test_missing_client_uri {
-	not allow with input.client_metadata as {
-		"grant_types": [],
-		"contacts": ["contact@example.com"],
-	}
+	not allow with input.client_metadata as {"grant_types": []}
 
-	allow with input.client_metadata as {
-		"grant_types": [],
-		"contacts": ["contact@example.com"],
-	}
+	allow with input.client_metadata as {"grant_types": []}
 		with data.client_registration.allow_missing_client_uri as true
 }
 
@@ -26,7 +19,6 @@ test_insecure_client_uri {
 	not allow with input.client_metadata as {
 		"grant_types": [],
 		"client_uri": "http://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 }
 
@@ -35,7 +27,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "https://example.com/tos",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure
@@ -43,7 +34,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "http://example.com/tos",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure, but allowed by the config
@@ -51,7 +41,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "http://example.com/tos",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_insecure_uris as true
 
@@ -60,7 +49,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "https://example.org/tos",
-		"contacts": ["contact@example.com"],
 	}
 
 	# TOS on a subdomain of the client_uri host is allowed
@@ -68,7 +56,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "https://tos.example.com/",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Host mistmatch, but allowed by the config
@@ -76,7 +63,6 @@ test_tos_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"tos_uri": "https://example.org/tos",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_host_mismatch as true
 }
@@ -86,7 +72,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "https://example.com/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure
@@ -94,7 +79,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "http://example.com/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure, but allowed by the config
@@ -102,7 +86,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "http://example.com/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_insecure_uris as true
 
@@ -111,7 +94,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "https://example.org/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Logo on a subdomain of the client_uri host is allowed
@@ -119,7 +101,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "https://static.example.com/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Host mistmatch, but allowed by the config
@@ -127,7 +108,6 @@ test_logo_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"logo_uri": "https://example.org/logo.png",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_host_mismatch as true
 }
@@ -137,7 +117,6 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "https://example.com/policy",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure
@@ -145,7 +124,6 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "http://example.com/policy",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure, but allowed by the config
@@ -153,7 +131,6 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "http://example.com/policy",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_insecure_uris as true
 
@@ -162,7 +139,6 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "https://example.org/policy",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Policy on a subdomain of the client_uri host is allowed
@@ -170,7 +146,6 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "https://policy.example.com/",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Host mistmatch, but allowed by the config
@@ -178,51 +153,42 @@ test_policy_uri {
 		"grant_types": [],
 		"client_uri": "https://example.com/",
 		"policy_uri": "https://example.org/policy",
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_host_mismatch as true
 }
 
 test_redirect_uris {
 	# Missing redirect_uris
-	not allow with input.client_metadata as {
-		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
-	}
+	not allow with input.client_metadata as {"client_uri": "https://example.com/"}
 
 	# redirect_uris is not an array
 	not allow with input.client_metadata as {
 		"client_uri": "https://example.com/",
 		"redirect_uris": "https://example.com/callback",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Empty redirect_uris
 	not allow with input.client_metadata as {
 		"client_uri": "https://example.com/",
 		"redirect_uris": [],
-		"contacts": ["contact@example.com"],
 	}
 
 	# Not required for the client_credentials grant
 	allow with input.client_metadata as {
 		"grant_types": ["client_credentials"],
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Required for the authorization_code grant
 	not allow with input.client_metadata as {
 		"grant_types": ["client_credentials", "refresh_token", "authorization_code"],
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Required for the implicit grant
 	not allow with input.client_metadata as {
 		"grant_types": ["client_credentials", "implicit"],
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 }
 
@@ -231,7 +197,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure URL
@@ -239,7 +204,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://example.com/callback", "https://example.com/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# Insecure URL, but allowed by the config
@@ -247,7 +211,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://example.com/callback", "https://example.com/callback"],
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_insecure_uris as true
 
@@ -256,7 +219,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/second/callback", "https://example.org/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# Host mismatch, but allowed by the config
@@ -264,7 +226,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/second/callback", "https://example.org/callback"],
-		"contacts": ["contact@example.com"],
 	}
 		with data.client_registration.allow_host_mismatch as true
 
@@ -273,7 +234,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://app.example.com/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# No custom scheme allowed
@@ -281,7 +241,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["com.example.app:/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# localhost not allowed
@@ -289,7 +248,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://locahost:1234/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# localhost not allowed
@@ -297,7 +255,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://127.0.0.1:1234/callback"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# localhost not allowed
@@ -305,7 +262,6 @@ test_web_redirect_uri {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://[::1]:1234/callback"],
-		"contacts": ["contact@example.com"],
 	}
 }
 
@@ -323,7 +279,6 @@ test_native_redirect_uri {
 			"http://[::1]/callback",
 			"http://[::1]:1234/callback",
 		],
-		"contacts": ["contact@example.com"],
 	}
 
 	# We still allow matching URLs for native apps
@@ -331,7 +286,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# But not insecure
@@ -339,7 +293,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://example.com/"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# And not a mismatch
@@ -347,7 +300,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://bad.com/"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# We don't allow HTTPS on localhost
@@ -355,7 +307,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://localhost:1234/"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# Ensure we're not allowing localhost as a prefix
@@ -363,7 +314,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://localhost.com/"],
-		"contacts": ["contact@example.com"],
 	}
 
 	# For custom schemes, it should match the client_uri hostname
@@ -371,7 +321,6 @@ test_native_redirect_uri {
 		"application_type": "native",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["org.example.app:/callback"],
-		"contacts": ["contact@example.com"],
 	}
 }
 
@@ -381,48 +330,17 @@ test_reverse_dns_match {
 	reverse_dns_match(client_uri.host, redirect_uri.scheme)
 }
 
-test_contacts {
-	# Missing contacts
-	not allow with input.client_metadata as {
-		"grant_types": [],
-		"client_uri": "https://example.com/",
-	}
-
-	# Missing contacts, but allowed by config
-	allow with input.client_metadata as {
-		"grant_types": [],
-		"client_uri": "https://example.com/",
-	}
-		with data.client_registration.allow_missing_contacts as true
-
-	# contacts is not an array
-	not allow with input.client_metadata as {
-		"grant_types": [],
-		"client_uri": "https://example.com/",
-		"contacts": "contact@example.com",
-	}
-
-	# Empty contacts
-	not allow with input.client_metadata as {
-		"grant_types": [],
-		"client_uri": "https://example.com/",
-		"contacts": [],
-	}
-}
-
 test_client_credentials_grant {
 	# Allowed for confidential clients
 	allow with input.client_metadata as {
 		"grant_types": ["client_credentials"],
 		"token_endpoint_auth_method": "client_secret_basic",
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 	allow with input.client_metadata as {
 		"grant_types": ["client_credentials"],
 		# If omitted, defaults to "client_secret_basic"
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 
 	# Disallowed for public clients
@@ -430,7 +348,6 @@ test_client_credentials_grant {
 		"grant_types": ["client_credentials"],
 		"token_endpoint_auth_method": "none",
 		"client_uri": "https://example.com/",
-		"contacts": ["contact@example.com"],
 	}
 }
 

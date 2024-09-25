@@ -477,7 +477,6 @@ mod tests {
 
         // Provision a client which will be used to do introspection requests
         let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
-            "contacts": ["hello@introspecting.com"],
             "client_uri": "https://introspecting.com/",
             "grant_types": [],
             "token_endpoint_auth_method": "client_secret_basic",
@@ -491,7 +490,6 @@ mod tests {
 
         // Provision a client which will be used to generate tokens
         let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
-            "contacts": ["hello@client.com"],
             "client_uri": "https://client.com/",
             "redirect_uris": ["https://client.com/"],
             "response_types": ["code"],
@@ -683,7 +681,6 @@ mod tests {
 
         // Provision a client which will be used to do introspection requests
         let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
-            "contacts": ["hello@introspecting.com"],
             "client_uri": "https://introspecting.com/",
             "grant_types": [],
             "token_endpoint_auth_method": "client_secret_basic",

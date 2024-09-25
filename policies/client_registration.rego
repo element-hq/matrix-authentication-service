@@ -96,19 +96,6 @@ violation[{"msg": "logo_uri not on the same host as the client_uri"}] {
 	not host_matches_client_uri(input.client_metadata.logo_uri)
 }
 
-violation[{"msg": "missing contacts"}] {
-	not data.client_registration.allow_missing_contacts
-	not input.client_metadata.contacts
-}
-
-violation[{"msg": "invalid contacts"}] {
-	not is_array(input.client_metadata.contacts)
-}
-
-violation[{"msg": "empty contacts"}] {
-	count(input.client_metadata.contacts) == 0
-}
-
 # If the grant_types is missing, we assume it is authorization_code
 uses_grant_type("authorization_code") {
 	not input.client_metadata.grant_types
@@ -143,11 +130,11 @@ violation[{"msg": "missing redirect_uris"}] {
 	not input.client_metadata.redirect_uris
 }
 
-violation[{"msg": "invalid redirect_uris"}] {
+violation[{"msg": "invalid redirect_uris: it must be an array"}] {
 	not is_array(input.client_metadata.redirect_uris)
 }
 
-violation[{"msg": "empty redirect_uris"}] {
+violation[{"msg": "invalid redirect_uris: it must have at least one redirect_uri"}] {
 	requires_redirect_uris
 	count(input.client_metadata.redirect_uris) == 0
 }

@@ -74,7 +74,6 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// * `encrypted_client_secret`: The encrypted client secret, if any
     /// * `application_type`: The application type of this client
     /// * `grant_types`: The list of grant types this client can use
-    /// * `contacts`: The list of contacts for this client
     /// * `client_name`: The human-readable name of this client, if given
     /// * `logo_uri`: The URI of the logo of this client, if given
     /// * `client_uri`: The URI of a website of this client, if given
@@ -105,7 +104,6 @@ pub trait OAuth2ClientRepository: Send + Sync {
         encrypted_client_secret: Option<String>,
         application_type: Option<ApplicationType>,
         grant_types: Vec<GrantType>,
-        contacts: Vec<String>,
         client_name: Option<String>,
         logo_uri: Option<Url>,
         client_uri: Option<Url>,
@@ -236,7 +234,6 @@ repository_impl!(OAuth2ClientRepository:
         encrypted_client_secret: Option<String>,
         application_type: Option<ApplicationType>,
         grant_types: Vec<GrantType>,
-        contacts: Vec<String>,
         client_name: Option<String>,
         logo_uri: Option<Url>,
         client_uri: Option<Url>,

@@ -560,8 +560,6 @@ mod tests {
                 None,
                 None,
                 vec![GrantType::AuthorizationCode],
-                Vec::new(), // TODO: contacts are not yet saved
-                // vec!["contact@example.com".to_owned()],
                 Some("First client".to_owned()),
                 Some("https://example.com/logo.png".parse().unwrap()),
                 Some("https://example.com/".parse().unwrap()),
