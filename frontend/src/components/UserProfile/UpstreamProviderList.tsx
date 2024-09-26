@@ -30,6 +30,12 @@ const QUERY = graphql(/* GraphQL */ `
         cursor
         node {
           id
+          upstreamOauth2LinksForUser {
+            id
+            provider {
+              id
+            }
+          }
           ...UpstreamProvider_provider
         }
       }
