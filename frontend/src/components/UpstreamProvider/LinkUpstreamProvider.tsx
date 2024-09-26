@@ -7,14 +7,14 @@
 import IconUserAdd from "@vector-im/compound-design-tokens/assets/web/icons/user-add";
 import { Button } from "@vector-im/compound-web";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { FragmentType, graphql, useFragment } from "../../gql";
 import LoadingSpinner from "../LoadingSpinner";
 
 const FRAGMENT = graphql(/* GraphQL */ `
-  fragment UpstreamProvider_provider on UpstreamOAuth2Provider {
+  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {
     id
-    createdAt
     humanName
     upstreamOauth2LinksForUser {
       id
@@ -25,12 +25,13 @@ const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const UpstreamProvider: React.FC<{
+const LinkUpstreamProvider: React.FC<{
   upstreamProvider: FragmentType<typeof FRAGMENT>;
   disabled?: boolean;
 }> = ({ upstreamProvider, disabled }) => {
   const data = useFragment(FRAGMENT, upstreamProvider);
   const [inProgress, setInProgress] = useState(false);
+  const { t } = useTranslation();
 
   const onConfirm = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -53,10 +54,12 @@ const UpstreamProvider: React.FC<{
         Icon={disabled ?? inProgress ? undefined : IconUserAdd}
       >
         {inProgress && <LoadingSpinner inline />}
-        {data?.humanName ?? "Unknown"}
+        {t("frontend.link_upstream_button.text", {
+          provider: data?.humanName ?? "Unknown",
+        })}
       </Button>
     </>
   );
 };
 
-export default UpstreamProvider;
+export default LinkUpstreamProvider;
