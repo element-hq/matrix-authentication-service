@@ -35,12 +35,14 @@
         "title": "Edit profile",
         "username_label": "Username"
       },
+      "linked_upstreams": "Linked Upstream Providers",
       "password": {
         "change": "Change password",
         "change_disabled": "Password changes are disabled by the administrator.",
         "label": "Password"
       },
-      "title": "Your account"
+      "title": "Your account",
+      "unlinked_upstreams": "Unlinked Upstream Providers"
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",
@@ -90,6 +92,9 @@
       "active_date": "Active {{relativeDate}}",
       "active_now": "Active now",
       "inactive_90_days": "Inactive for 90+ days"
+    },
+    "link_upstream_button": {
+      "text": "Link {{provider}}"
     },
     "nav": {
       "devices": "Devices",
@@ -231,6 +236,10 @@
         "text": "This session does not exist, or is no longer active.",
         "title": "Cannot find session: {{deviceId}}"
       }
+    },
+    "unlink_upstream_button": {
+      "confirmation_modal_title": "Unlink your {{provider}} account?",
+      "text": "Unlink {{provider}}"
     },
     "unverified_email_alert": {
       "button": "Review and verify",

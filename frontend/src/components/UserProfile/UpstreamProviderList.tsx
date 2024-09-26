@@ -6,12 +6,14 @@
 
 import { H5 } from "@vector-im/compound-web";
 import { useTransition } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "urql";
 
 import { graphql } from "../../gql";
 import { Pagination, usePages, usePagination } from "../../pagination";
 import PaginationControls from "../PaginationControls";
-import UpstreamProvider from "../UpstreamProvider";
+import LinkUpstreamProvider from "../UpstreamProvider/LinkUpstreamProvider";
+import UnlinkUpstreamProvider from "../UpstreamProvider/UnlinkUpstreamProvider";
 
 const QUERY = graphql(/* GraphQL */ `
   query UpstreamProviderListQuery(
@@ -36,7 +38,8 @@ const QUERY = graphql(/* GraphQL */ `
               id
             }
           }
-          ...UpstreamProvider_provider
+          ...LinkUpstreamProvider_provider
+          ...UnlinkUpstreamProvider_provider
         }
       }
       totalCount
@@ -52,6 +55,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 const UpstreamProviderList: React.FC<{}> = () => {
   const [pending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   const [pagination, setPagination] = usePagination();
   const [result] = useQuery({
@@ -71,7 +75,7 @@ const UpstreamProviderList: React.FC<{}> = () => {
 
   return (
     <>
-      <H5>Unlinked Upstream Providers</H5>
+      <H5>{t("frontend.account.unlinked_upstreams")}</H5>
       {links.edges
         .filter(
           (edge) =>
@@ -80,9 +84,12 @@ const UpstreamProviderList: React.FC<{}> = () => {
             ),
         )
         .map((edge) => (
-          <UpstreamProvider upstreamProvider={edge.node} key={edge.cursor} />
+          <LinkUpstreamProvider
+            upstreamProvider={edge.node}
+            key={edge.cursor}
+          />
         ))}
-      <H5>Linked Upstream Providers</H5>
+      <H5>{t("frontend.account.linked_upstreams")}</H5>
       {links.edges
         .filter((edge) =>
           edge.node.upstreamOauth2LinksForUser.some(
@@ -90,9 +97,8 @@ const UpstreamProviderList: React.FC<{}> = () => {
           ),
         )
         .map((edge) => (
-          <UpstreamProvider
+          <UnlinkUpstreamProvider
             upstreamProvider={edge.node}
-            disabled
             key={edge.cursor}
           />
         ))}
