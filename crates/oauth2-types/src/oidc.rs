@@ -624,6 +624,17 @@ pub struct ProviderMetadata {
     ///
     /// This is a Matrix extension introduced in [MSC2965](https://github.com/matrix-org/matrix-spec-proposals/pull/2965).
     pub account_management_actions_supported: Option<Vec<AccountManagementAction>>,
+
+    /// Indicates whether the authorization server supports back-channel logout.
+    ///
+    /// Defaults to `false`.
+    pub backchannel_logout_supported: Option<bool>,
+
+    /// Indicates whether the OP can pass a session ID claim in the logout token
+    /// to identify the RP session with the OP.
+    ///
+    /// Defaults to `false`.
+    pub backchannel_logout_session_supported: Option<bool>,
 }
 
 impl ProviderMetadata {
