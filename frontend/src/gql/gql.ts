@@ -31,6 +31,7 @@ const documents = {
     "\n  fragment UnverifiedEmailAlert_user on User {\n    id\n    unverifiedEmails: emails(first: 0, state: PENDING) {\n      totalCount\n    }\n  }\n": types.UnverifiedEmailAlert_UserFragmentDoc,
     "\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n": types.LinkUpstreamProvider_ProviderFragmentDoc,
     "\n  fragment UnlinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n": types.UnlinkUpstreamProvider_ProviderFragmentDoc,
+    "\n  mutation RemoveUpstreamLink($id: ID!) {\n    removeUpstreamLink(input: { upstreamLinkId: $id }) {\n      status\n    }\n  }\n": types.RemoveUpstreamLinkDocument,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n": types.UserEmail_EmailFragmentDoc,
     "\n  fragment UserEmail_siteConfig on SiteConfig {\n    id\n    emailChangeAllowed\n  }\n": types.UserEmail_SiteConfigFragmentDoc,
     "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
@@ -146,6 +147,10 @@ export function graphql(source: "\n  fragment LinkUpstreamProvider_provider on U
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment UnlinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  fragment UnlinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveUpstreamLink($id: ID!) {\n    removeUpstreamLink(input: { upstreamLinkId: $id }) {\n      status\n    }\n  }\n"): (typeof documents)["\n  mutation RemoveUpstreamLink($id: ID!) {\n    removeUpstreamLink(input: { upstreamLinkId: $id }) {\n      status\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
