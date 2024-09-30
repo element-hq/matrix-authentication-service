@@ -184,6 +184,17 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error>;
+
+    /// Delete a [`UpstreamOAuthLink`]
+    ///
+    /// # Parameters
+    ///
+    /// * `upstream_oauth_link`: The [`UpstreamOAuthLink`] to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn remove(&mut self, upstream_oauth_link: UpstreamOAuthLink) -> Result<(), Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthLinkRepository:
@@ -216,4 +227,6 @@ repository_impl!(UpstreamOAuthLinkRepository:
     ) -> Result<Page<UpstreamOAuthLink>, Self::Error>;
 
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error>;
+
+    async fn remove(&mut self, upstream_oauth_link: UpstreamOAuthLink) -> Result<(), Self::Error>;
 );

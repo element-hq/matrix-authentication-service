@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { H5 } from "@vector-im/compound-web";
-import { useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "urql";
 
@@ -58,7 +58,7 @@ const UpstreamProviderList: React.FC<{}> = () => {
   const { t } = useTranslation();
 
   const [pagination, setPagination] = usePagination();
-  const [result] = useQuery({
+  const [result, update] = useQuery({
     query: QUERY,
     variables: { ...pagination },
   });
@@ -72,6 +72,10 @@ const UpstreamProviderList: React.FC<{}> = () => {
       setPagination(pagination);
     });
   };
+
+  const onUnlinked = useCallback(() => {
+    update({ requestPolicy: "network-only" });
+  }, [update]);
 
   return (
     <>
@@ -99,6 +103,7 @@ const UpstreamProviderList: React.FC<{}> = () => {
         .map((edge) => (
           <UnlinkUpstreamProvider
             upstreamProvider={edge.node}
+            onUnlinked={onUnlinked}
             key={edge.cursor}
           />
         ))}
