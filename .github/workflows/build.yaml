@@ -203,7 +203,7 @@ jobs:
       # For pull-requests, only read from the cache, do not try to push to the
       # cache or the image itself
       - name: Build
-        uses: docker/bake-action@v5.7.0
+        uses: docker/bake-action@v5.9.0
         if: github.event_name == 'pull_request'
         with:
           files: |
@@ -218,7 +218,7 @@ jobs:
 
       - name: Build and push
         id: bake
-        uses: docker/bake-action@v5.7.0
+        uses: docker/bake-action@v5.9.0
         if: github.event_name != 'pull_request'
         with:
           files: |
