@@ -14,7 +14,7 @@ use mas_storage::{
 use rand::RngCore;
 use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use sqlx::PgConnection;
+use sqlx::{Connection, PgConnection};
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -368,6 +368,8 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
         err,
     )]
     async fn remove(&mut self, upstream_oauth_link: UpstreamOAuthLink) -> Result<(), Self::Error> {
+        let mut tx = self.conn.begin().await?;
+
         // Unset the authorization sessions first, as they have a foreign key
         // constraint on the links.
         sqlx::query!(
@@ -378,7 +380,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
             Uuid::from(upstream_oauth_link.id),
         )
         .traced()
-        .execute(&mut *self.conn)
+        .execute(&mut *tx)
         .await?;
 
         // Then delete the link itself
@@ -390,10 +392,12 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
             Uuid::from(upstream_oauth_link.id),
         )
         .traced()
-        .execute(&mut *self.conn)
+        .execute(&mut *tx)
         .await?;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        tx.commit().await?;
 
         Ok(())
     }
