@@ -28,7 +28,7 @@ jobs:
           rustup default stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2.0.0
