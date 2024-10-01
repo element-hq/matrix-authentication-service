@@ -202,7 +202,7 @@ features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder
 [workspace.dependencies.sea-query-binder]
-version = "0.7.0-rc.1"
+version = "0.7.0-rc.2"
 features = [
     "sqlx",
     "sqlx-postgres",
@@ -311,8 +311,3 @@ sha2.opt-level = 3
 digest.opt-level = 3
 block-buffer.opt-level = 3
 generic-array.opt-level = 3
-
-[patch.crates-io]
-# Waiting for https://github.com/SeaQL/sea-query/pull/810
-sea-query = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
-sea-query-binder = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
