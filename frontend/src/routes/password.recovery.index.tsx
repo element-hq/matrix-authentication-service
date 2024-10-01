@@ -5,6 +5,8 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createFileRoute } from "@tanstack/react-router";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
+import * as z from "zod";
 
 import { graphql } from "../gql";
 
@@ -17,11 +19,13 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+const schema = z.object({
+  ticket: z.string(),
+});
+
 export const Route = createFileRoute("/password/recovery/")({
-  validateSearch: (search) =>
-    search as {
-      ticket: string;
-    },
+  validateSearch: zodSearchValidator(schema),
+
   async loader({ context, abortController: { signal } }) {
     const queryResult = await context.client.query(
       QUERY,

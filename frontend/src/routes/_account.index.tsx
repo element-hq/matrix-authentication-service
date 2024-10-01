@@ -5,6 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
 
 import { graphql } from "../gql";
@@ -36,9 +37,6 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-// XXX: we probably shouldn't have to specify the search parameters on /sessions/
-const PAGE_SIZE = 6;
-
 const actionSchema = z
   .discriminatedUnion("action", [
     z.object({
@@ -65,7 +63,7 @@ const actionSchema = z
   .catch({ action: undefined });
 
 export const Route = createFileRoute("/_account/")({
-  validateSearch: actionSchema,
+  validateSearch: zodSearchValidator(actionSchema),
 
   beforeLoad({ search }) {
     switch (search.action) {
@@ -75,7 +73,7 @@ export const Route = createFileRoute("/_account/")({
 
       case "sessions_list":
       case "org.matrix.sessions_list":
-        throw redirect({ to: "/sessions", search: { last: PAGE_SIZE } });
+        throw redirect({ to: "/sessions" });
 
       case "session_view":
       case "org.matrix.session_view":
@@ -84,7 +82,7 @@ export const Route = createFileRoute("/_account/")({
             to: "/devices/$",
             params: { _splat: search.device_id },
           });
-        throw redirect({ to: "/sessions", search: { last: PAGE_SIZE } });
+        throw redirect({ to: "/sessions" });
 
       case "session_end":
       case "org.matrix.session_end":
@@ -93,7 +91,7 @@ export const Route = createFileRoute("/_account/")({
             to: "/devices/$",
             params: { _splat: search.device_id },
           });
-        throw redirect({ to: "/sessions", search: { last: PAGE_SIZE } });
+        throw redirect({ to: "/sessions" });
 
       case "org.matrix.cross_signing_reset":
         throw redirect({

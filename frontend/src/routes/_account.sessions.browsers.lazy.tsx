@@ -14,13 +14,12 @@ import BrowserSession from "../components/BrowserSession";
 import { ButtonLink } from "../components/ButtonLink";
 import EmptyState from "../components/EmptyState";
 import Filter from "../components/Filter";
-import { type BackwardPagination, usePages } from "../pagination";
+import { usePages } from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
 
 import { QUERY } from "./_account.sessions.browsers";
 
 const PAGE_SIZE = 6;
-const DEFAULT_PAGE: BackwardPagination = { last: PAGE_SIZE };
 
 export const Route = createLazyFileRoute("/_account/sessions/browsers")({
   component: BrowserSessions,
@@ -28,7 +27,7 @@ export const Route = createLazyFileRoute("/_account/sessions/browsers")({
 
 function BrowserSessions(): React.ReactElement {
   const { t } = useTranslation();
-  const { inactive, ...pagination } = Route.useLoaderDeps();
+  const { inactive, pagination } = Route.useLoaderDeps();
 
   const variables = {
     lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
@@ -59,7 +58,7 @@ function BrowserSessions(): React.ReactElement {
         <Filter
           to="/sessions/browsers"
           enabled={inactive}
-          search={{ ...DEFAULT_PAGE, inactive: inactive ? undefined : true }}
+          search={{ inactive: inactive ? undefined : true }}
         >
           {t("frontend.last_active.inactive_90_days")}
         </Filter>

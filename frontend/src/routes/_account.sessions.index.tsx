@@ -5,18 +5,14 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
 
 import { graphql } from "../gql";
-import {
-  type BackwardPagination,
-  type Pagination,
-  paginationSchema,
-} from "../pagination";
+import { anyPaginationSchema, normalizePagination } from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
 
 const PAGE_SIZE = 6;
-const DEFAULT_PAGE: BackwardPagination = { last: PAGE_SIZE };
 
 export const QUERY = graphql(/* GraphQL */ `
   query SessionsOverviewQuery {
@@ -74,22 +70,23 @@ export const LIST_QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-const searchSchema = z.object({
-  inactive: z.literal(true).optional().catch(undefined),
-});
-
-type Search = z.infer<typeof searchSchema>;
+const searchSchema = z
+  .object({
+    inactive: z.literal(true).optional(),
+  })
+  .and(anyPaginationSchema);
 
 export const Route = createFileRoute("/_account/sessions/")({
-  // We paginate backwards, so we need to validate the `last` parameter by default
-  validateSearch: paginationSchema.catch(DEFAULT_PAGE).and(searchSchema),
+  validateSearch: zodSearchValidator(searchSchema),
 
-  loaderDeps: ({ search }): Pagination & Search =>
-    paginationSchema.and(searchSchema).parse(search),
+  loaderDeps: ({ search: { inactive, ...pagination } }) => ({
+    inactive,
+    pagination: normalizePagination(pagination, PAGE_SIZE, "backward"),
+  }),
 
   async loader({
     context,
-    deps: { inactive, ...pagination },
+    deps: { inactive, pagination },
     abortController: { signal },
   }) {
     const variables = {
