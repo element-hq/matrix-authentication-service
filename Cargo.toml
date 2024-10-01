@@ -312,7 +312,7 @@ digest.opt-level = 3
 block-buffer.opt-level = 3
 generic-array.opt-level = 3
 
-[patch.crates-io]
-# Waiting for https://github.com/SeaQL/sea-query/pull/810
-sea-query = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
-sea-query-binder = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
+# [patch.crates-io]
+# # Waiting for https://github.com/SeaQL/sea-query/pull/810
+# sea-query = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
+# sea-query-binder = { git = "https://github.com/sandhose/sea-query", branch = "binder/relax-sqlx-dependency" }
