@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Download translation files
         uses: localazy/download@v1.1.0
