@@ -22,6 +22,7 @@
     "@radix-ui/react-collapsible": "1.0.3",
     "@radix-ui/react-dialog": "^1.0.5",
     "@tanstack/react-router": "^1.58.15",
+    "@tanstack/router-zod-adapter": "^1.58.15",
     "@urql/core": "^5.0.6",
     "@urql/devtools": "^2.0.3",
     "@urql/exchange-graphcache": "^7.1.3",

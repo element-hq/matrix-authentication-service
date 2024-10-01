@@ -7,29 +7,43 @@
 import { useState } from "react";
 import * as z from "zod";
 
-import { PageInfo } from "./gql/graphql";
+import type { PageInfo } from "./gql/graphql";
 
 export const FIRST_PAGE = Symbol("FIRST_PAGE");
 export const LAST_PAGE = Symbol("LAST_PAGE");
+
+export const anyPaginationSchema = z.object({
+  first: z.number().optional(),
+  after: z.string().optional(),
+  last: z.number().optional(),
+  before: z.string().optional(),
+});
 
 export const forwardPaginationSchema = z.object({
   first: z.number(),
   after: z.string().optional(),
 });
 
-export const backwardPaginationSchema = z.object({
+const backwardPaginationSchema = z.object({
   last: z.number(),
   before: z.string().optional(),
 });
 
-export const paginationSchema = z.union([
+const paginationSchema = z.union([
   forwardPaginationSchema,
   backwardPaginationSchema,
 ]);
 
-export type ForwardPagination = z.infer<typeof forwardPaginationSchema>;
-export type BackwardPagination = z.infer<typeof backwardPaginationSchema>;
+type ForwardPagination = z.infer<typeof forwardPaginationSchema>;
+type BackwardPagination = z.infer<typeof backwardPaginationSchema>;
 export type Pagination = z.infer<typeof paginationSchema>;
+export type AnyPagination = z.infer<typeof anyPaginationSchema>;
+
+// Check if the pagination is a valid pagination
+export const isValidPagination = (
+  pagination: AnyPagination,
+): pagination is Pagination =>
+  typeof pagination.first === "number" || typeof pagination.last === "number";
 
 // Check if the pagination is forward pagination.
 export const isForwardPagination = (
@@ -47,26 +61,40 @@ export const isBackwardPagination = (
 
 type Action = typeof FIRST_PAGE | typeof LAST_PAGE | Pagination;
 
+// Normalize pagination parameters to a valid pagination object
+export const normalizePagination = (
+  pagination: AnyPagination,
+  pageSize = 6,
+  type: "forward" | "backward" = "forward",
+): Pagination => {
+  if (isValidPagination(pagination)) {
+    return pagination;
+  }
+
+  if (type === "forward") {
+    return { first: pageSize } satisfies ForwardPagination;
+  }
+
+  return { last: pageSize } satisfies BackwardPagination;
+};
+
 // Hook to handle pagination state.
 export const usePagination = (
   pageSize = 6,
 ): [Pagination, (action: Action) => void] => {
   const [pagination, setPagination] = useState<Pagination>({
     first: pageSize,
-    after: undefined,
   });
 
   const handlePagination = (action: Action): void => {
     if (action === FIRST_PAGE) {
       setPagination({
         first: pageSize,
-        after: undefined,
-      });
+      } satisfies ForwardPagination);
     } else if (action === LAST_PAGE) {
       setPagination({
         last: pageSize,
-        before: undefined,
-      });
+      } satisfies BackwardPagination);
     } else {
       setPagination(action);
     }
@@ -78,7 +106,7 @@ export const usePagination = (
 // Compute the next backward and forward pagination parameters based on the current pagination and the page info.
 export const usePages = (
   currentPagination: Pagination,
-  pageInfo: PageInfo | null,
+  pageInfo: PageInfo,
   pageSize = 6,
 ): [BackwardPagination | null, ForwardPagination | null] => {
   const hasProbablyPreviousPage =
@@ -90,17 +118,17 @@ export const usePages = (
 
   let previousPagination: BackwardPagination | null = null;
   let nextPagination: ForwardPagination | null = null;
-  if (pageInfo?.hasPreviousPage || hasProbablyPreviousPage) {
+  if (pageInfo.hasPreviousPage || hasProbablyPreviousPage) {
     previousPagination = {
       last: pageSize,
-      before: pageInfo?.startCursor ?? undefined,
+      before: pageInfo.startCursor ?? undefined,
     };
   }
 
-  if (pageInfo?.hasNextPage || hasProbablyNextPage) {
+  if (pageInfo.hasNextPage || hasProbablyNextPage) {
     nextPagination = {
       first: pageSize,
-      after: pageInfo?.endCursor ?? undefined,
+      after: pageInfo.endCursor ?? undefined,
     };
   }
 
