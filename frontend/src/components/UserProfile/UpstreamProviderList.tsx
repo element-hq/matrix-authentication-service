@@ -76,9 +76,19 @@ const UpstreamProviderList: React.FC<{}> = () => {
     update({ requestPolicy: "network-only" });
   }, [update]);
 
+  const linkedUpstreams = links.edges.filter((edge) =>
+    edge.node.upstreamOauth2LinksForUser.some(
+      (link) => link.provider.id === edge.node.id,
+    ),
+  );
+
+  if (links.totalCount === 0) {
+    return <></>;
+  }
+
   return (
     <>
-      <H5>{t("frontend.account.unlinked_upstreams")}</H5>
+      <H5>{t("frontend.account.available_upstreams")}</H5>
       {links.edges
         .filter(
           (edge) =>
@@ -92,20 +102,18 @@ const UpstreamProviderList: React.FC<{}> = () => {
             key={edge.cursor}
           />
         ))}
-      <H5>{t("frontend.account.linked_upstreams")}</H5>
-      {links.edges
-        .filter((edge) =>
-          edge.node.upstreamOauth2LinksForUser.some(
-            (link) => link.provider.id === edge.node.id,
-          ),
-        )
-        .map((edge) => (
-          <UnlinkUpstreamProvider
-            upstreamProvider={edge.node}
-            onUnlinked={onUnlinked}
-            key={edge.cursor}
-          />
-        ))}
+      {linkedUpstreams.length > 0 && (
+        <>
+          <H5>{t("frontend.account.linked_upstreams")}</H5>
+          {linkedUpstreams.map((edge) => (
+            <UnlinkUpstreamProvider
+              upstreamProvider={edge.node}
+              onUnlinked={onUnlinked}
+              key={edge.cursor}
+            />
+          ))}
+        </>
+      )}
       <PaginationControls
         autoHide
         count={links.totalCount ?? 0}
