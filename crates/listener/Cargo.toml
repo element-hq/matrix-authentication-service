@@ -18,7 +18,7 @@ futures-util = "0.3.30"
 http-body.workspace = true
 hyper = { workspace = true, features = ["server"] }
 hyper-util.workspace = true
-libc = "0.2.158"
+libc = "0.2.159"
 pin-project-lite = "0.2.14"
 socket2 = "0.5.7"
 thiserror.workspace = true
