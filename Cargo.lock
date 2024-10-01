@@ -5380,7 +5380,8 @@ dependencies = [
 [[package]]
 name = "sea-query"
 version = "0.32.0-rc.1"
-source = "git+https://github.com/sandhose/sea-query?branch=binder/relax-sqlx-dependency#513cee7ea623fd5d26a80fbd6132ace8d17acf22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fba498acd58ce434669f273505cd07737065472eb541c3f813c7f4ce33993f5"
 dependencies = [
  "chrono",
  "inherent",
@@ -5392,7 +5393,8 @@ dependencies = [
 [[package]]
 name = "sea-query-attr"
 version = "0.1.2"
-source = "git+https://github.com/sandhose/sea-query?branch=binder/relax-sqlx-dependency#513cee7ea623fd5d26a80fbd6132ace8d17acf22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "168a31e0ef5a791ad26aa97c502eaed8d2a1ffdc22b3249f9947c1e12be6b477"
 dependencies = [
  "darling 0.14.4",
  "heck 0.4.1",
@@ -5402,8 +5404,9 @@ dependencies = [
 
 [[package]]
 name = "sea-query-binder"
-version = "0.7.0-rc.1"
-source = "git+https://github.com/sandhose/sea-query?branch=binder/relax-sqlx-dependency#513cee7ea623fd5d26a80fbd6132ace8d17acf22"
+version = "0.7.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "643c2e6fbba4440ff0075c405d37079a7da1a46892623b1cc8f06e05233eee1b"
 dependencies = [
  "chrono",
  "sea-query",
@@ -5414,7 +5417,8 @@ dependencies = [
 [[package]]
 name = "sea-query-derive"
 version = "0.4.1"
-source = "git+https://github.com/sandhose/sea-query?branch=binder/relax-sqlx-dependency#513cee7ea623fd5d26a80fbd6132ace8d17acf22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25a82fcb49253abcb45cdcb2adf92956060ec0928635eb21b4f7a6d8f25ab0bc"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
