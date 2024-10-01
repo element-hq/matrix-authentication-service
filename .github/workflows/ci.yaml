@@ -150,7 +150,7 @@ jobs:
           rustup default stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Install Node
         uses: actions/setup-node@v4.0.4
@@ -209,7 +209,7 @@ jobs:
         run: make
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Run clippy
         run: |
@@ -271,7 +271,7 @@ jobs:
         run: make
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Test
         id: test
