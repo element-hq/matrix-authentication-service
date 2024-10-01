@@ -21,7 +21,10 @@ trait AsInjector {
 }
 
 impl<B> AsInjector for Request<B> {
-    type Injector<'a> = HeaderInjector<'a> where Self: 'a;
+    type Injector<'a>
+        = HeaderInjector<'a>
+    where
+        Self: 'a;
 
     fn as_injector(&mut self) -> Self::Injector<'_> {
         HeaderInjector(self.headers_mut())
