@@ -42,7 +42,7 @@
         "label": "Password"
       },
       "title": "Your account",
-      "unlinked_upstreams": "Unlinked Upstream Providers"
+      "available_upstreams": "Available Upstream Providers"
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",
