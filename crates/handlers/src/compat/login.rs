@@ -315,7 +315,9 @@ pub async fn start_new_session(
     repo.user().acquire_lock_for_sync(&user).await?;
 
     // Now that the user credentials have been verified, start a new compat session
-    let device = if let Some(id) = device_id { Device::try_from(id).map_err(RouteError::InvalidDeviceID)? } else {
+    let device = if let Some(id) = device_id {
+        Device::try_from(id).map_err(RouteError::InvalidDeviceID)?
+    } else {
         // Generate a new device ID only if not provided
         let device: Device = Device::generate(rng);
         device
@@ -329,8 +331,7 @@ pub async fn start_new_session(
     let existing_sessions = repo.compat_session().list(filter, pagination).await?;
 
     let session: CompatSession = if existing_sessions.edges.is_empty() {
-        repo
-            .compat_session()
+        repo.compat_session()
             .add(rng, clock, &user, device, None, false)
             .await?
     } else {
@@ -384,15 +385,11 @@ pub(crate) async fn post(
                         user
                     } else {
                         // User not found while existing in the provider: create it
-                        let new_user =
-                            repo.user().add(&mut rng, &clock, username.clone()).await?;
+                        let new_user = repo.user().add(&mut rng, &clock, username.clone()).await?;
 
                         // Replicate in Synapse
                         homeserver
-                            .provision_user(&ProvisionRequest::new(
-                                mxid.clone(),
-                                username.clone(),
-                            ))
+                            .provision_user(&ProvisionRequest::new(mxid.clone(), username.clone()))
                             .await
                             .unwrap();
 
