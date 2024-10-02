@@ -23,7 +23,7 @@ icu_provider = { version = "1.4.0", features = ["std", "sync"] }
 icu_provider_adapters = { version = "1.4.0", features = ["std"] }
 icu_relativetime = { version = "0.1.4", features = ["compiled_data", "std"] }
 pad = "0.1.6"
-pest = "2.7.11"
+pest = "2.7.13"
 pest_derive = "2.7.11"
 serde.workspace = true
 serde_json.workspace = true
