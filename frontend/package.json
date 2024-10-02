@@ -33,7 +33,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "graphql": "^16.9.0",
     "i18next": "^23.15.1",
     "react": "^18.3.1",
