@@ -7,10 +7,10 @@
 import { useTransition } from "react";
 import { useQuery } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import {
   FIRST_PAGE,
-  Pagination,
+  type Pagination,
   usePages,
   usePagination,
 } from "../../pagination";

@@ -204,21 +204,138 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  AccountRoute: AccountRoute.addChildren({
-    AccountIndexRoute,
-    AccountSessionsIdRoute,
-    AccountSessionsBrowsersRoute,
-    AccountSessionsIndexRoute,
-  }),
-  ResetCrossSigningRoute,
-  ClientsIdRoute,
-  DevicesSplatRoute,
-  EmailsIdVerifyRoute,
-  PasswordChangeSuccessLazyRoute,
-  PasswordChangeIndexRoute,
-  PasswordRecoveryIndexRoute,
-})
+interface AccountRouteChildren {
+  AccountIndexRoute: typeof AccountIndexRoute
+  AccountSessionsIdRoute: typeof AccountSessionsIdRoute
+  AccountSessionsBrowsersRoute: typeof AccountSessionsBrowsersRoute
+  AccountSessionsIndexRoute: typeof AccountSessionsIndexRoute
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountIndexRoute: AccountIndexRoute,
+  AccountSessionsIdRoute: AccountSessionsIdRoute,
+  AccountSessionsBrowsersRoute: AccountSessionsBrowsersRoute,
+  AccountSessionsIndexRoute: AccountSessionsIndexRoute,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
+
+export interface FileRoutesByFullPath {
+  '': typeof AccountRouteWithChildren
+  '/reset-cross-signing': typeof ResetCrossSigningRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/devices/$': typeof DevicesSplatRoute
+  '/': typeof AccountIndexRoute
+  '/sessions/$id': typeof AccountSessionsIdRoute
+  '/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/verify': typeof EmailsIdVerifyRoute
+  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/sessions': typeof AccountSessionsIndexRoute
+  '/password/change': typeof PasswordChangeIndexRoute
+  '/password/recovery': typeof PasswordRecoveryIndexRoute
+}
+
+export interface FileRoutesByTo {
+  '/reset-cross-signing': typeof ResetCrossSigningRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/devices/$': typeof DevicesSplatRoute
+  '/': typeof AccountIndexRoute
+  '/sessions/$id': typeof AccountSessionsIdRoute
+  '/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/verify': typeof EmailsIdVerifyRoute
+  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/sessions': typeof AccountSessionsIndexRoute
+  '/password/change': typeof PasswordChangeIndexRoute
+  '/password/recovery': typeof PasswordRecoveryIndexRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/_account': typeof AccountRouteWithChildren
+  '/reset-cross-signing': typeof ResetCrossSigningRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/devices/$': typeof DevicesSplatRoute
+  '/_account/': typeof AccountIndexRoute
+  '/_account/sessions/$id': typeof AccountSessionsIdRoute
+  '/_account/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/verify': typeof EmailsIdVerifyRoute
+  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/_account/sessions/': typeof AccountSessionsIndexRoute
+  '/password/change/': typeof PasswordChangeIndexRoute
+  '/password/recovery/': typeof PasswordRecoveryIndexRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | ''
+    | '/reset-cross-signing'
+    | '/clients/$id'
+    | '/devices/$'
+    | '/'
+    | '/sessions/$id'
+    | '/sessions/browsers'
+    | '/emails/$id/verify'
+    | '/password/change/success'
+    | '/sessions'
+    | '/password/change'
+    | '/password/recovery'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/reset-cross-signing'
+    | '/clients/$id'
+    | '/devices/$'
+    | '/'
+    | '/sessions/$id'
+    | '/sessions/browsers'
+    | '/emails/$id/verify'
+    | '/password/change/success'
+    | '/sessions'
+    | '/password/change'
+    | '/password/recovery'
+  id:
+    | '__root__'
+    | '/_account'
+    | '/reset-cross-signing'
+    | '/clients/$id'
+    | '/devices/$'
+    | '/_account/'
+    | '/_account/sessions/$id'
+    | '/_account/sessions/browsers'
+    | '/emails/$id/verify'
+    | '/password/change/success'
+    | '/_account/sessions/'
+    | '/password/change/'
+    | '/password/recovery/'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  AccountRoute: typeof AccountRouteWithChildren
+  ResetCrossSigningRoute: typeof ResetCrossSigningRoute
+  ClientsIdRoute: typeof ClientsIdRoute
+  DevicesSplatRoute: typeof DevicesSplatRoute
+  EmailsIdVerifyRoute: typeof EmailsIdVerifyRoute
+  PasswordChangeSuccessLazyRoute: typeof PasswordChangeSuccessLazyRoute
+  PasswordChangeIndexRoute: typeof PasswordChangeIndexRoute
+  PasswordRecoveryIndexRoute: typeof PasswordRecoveryIndexRoute
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  AccountRoute: AccountRouteWithChildren,
+  ResetCrossSigningRoute: ResetCrossSigningRoute,
+  ClientsIdRoute: ClientsIdRoute,
+  DevicesSplatRoute: DevicesSplatRoute,
+  EmailsIdVerifyRoute: EmailsIdVerifyRoute,
+  PasswordChangeSuccessLazyRoute: PasswordChangeSuccessLazyRoute,
+  PasswordChangeIndexRoute: PasswordChangeIndexRoute,
+  PasswordRecoveryIndexRoute: PasswordRecoveryIndexRoute,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 

@@ -22,7 +22,7 @@ exports[`BrowserSessionsOverview > renders with no browser sessions 1`] = `
     <a
       class="_link_1mzip_17"
       data-kind="primary"
-      href="/sessions/browsers?first=6"
+      href="/sessions/browsers"
       rel="noreferrer noopener"
     >
       View all
@@ -53,7 +53,7 @@ exports[`BrowserSessionsOverview > renders with sessions 1`] = `
     <a
       class="_link_1mzip_17"
       data-kind="primary"
-      href="/sessions/browsers?first=6"
+      href="/sessions/browsers"
       rel="noreferrer noopener"
     >
       View all

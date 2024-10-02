@@ -31,9 +31,7 @@ function NotFound(): React.ReactElement {
       title={t("frontend.session_detail.alert.title", { deviceId: id })}
     >
       {t("frontend.session_detail.alert.text")}
-      <Link to="/sessions" search={{ first: 6 }}>
-        {t("frontend.session_detail.alert.button")}
-      </Link>
+      <Link to="/sessions">{t("frontend.session_detail.alert.button")}</Link>
     </Alert>
   );
 }

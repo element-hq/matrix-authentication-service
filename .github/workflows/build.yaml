@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2.2.0
@@ -53,7 +53,7 @@ jobs:
             aarch64-unknown-linux-gnu
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2
@@ -64,7 +64,7 @@ jobs:
         run: curl -L https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.19.1/cargo-zigbuild-v0.19.1.x86_64-unknown-linux-musl.tar.gz | tar -z -x -C /usr/local/bin
 
       - name: Install frontend Node
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.0.4
         with:
           node-version: 20
 
@@ -134,7 +134,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Docker meta
         id: meta
@@ -203,7 +203,7 @@ jobs:
       # For pull-requests, only read from the cache, do not try to push to the
       # cache or the image itself
       - name: Build
-        uses: docker/bake-action@v5.7.0
+        uses: docker/bake-action@v5.9.0
         if: github.event_name == 'pull_request'
         with:
           files: |
@@ -218,7 +218,7 @@ jobs:
 
       - name: Build and push
         id: bake
-        uses: docker/bake-action@v5.7.0
+        uses: docker/bake-action@v5.9.0
         if: github.event_name != 'pull_request'
         with:
           files: |
@@ -264,10 +264,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.0.4
         with:
           node-version-file: ./tools/syn2mas/.nvmrc
 

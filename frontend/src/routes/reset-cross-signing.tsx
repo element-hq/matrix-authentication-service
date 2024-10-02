@@ -5,6 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { notFound, createFileRoute } from "@tanstack/react-router";
+import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
 
 import { graphql } from "../gql";
@@ -35,5 +36,5 @@ export const Route = createFileRoute("/reset-cross-signing")({
     if (viewer.data?.viewer.__typename !== "User") throw notFound();
   },
 
-  validateSearch: searchSchema,
+  validateSearch: zodSearchValidator(searchSchema),
 });
