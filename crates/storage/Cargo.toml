@@ -17,7 +17,7 @@ chrono.workspace = true
 thiserror.workspace = true
 futures-util = "0.3.30"
 
-apalis-core = { version = "0.4.9", features = ["tokio-comp"] }
+apalis-core.workspace = true
 opentelemetry.workspace = true
 rand_core = "0.6.4"
 serde.workspace = true

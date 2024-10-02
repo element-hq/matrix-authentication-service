@@ -61,6 +61,15 @@ oauth2-types = { path = "./crates/oauth2-types/", version = "=0.12.0" }
 version = "0.13.4"
 features = ["axum", "axum-headers", "macros"]
 
+# Background tasks
+[workspace.dependencies.apalis-core]
+version = "0.4.9"
+features = ["extensions", "tokio-comp", "storage"]
+
+# Recurring background tasks
+[workspace.dependencies.apalis-cron]
+version = "0.4.9"
+
 # GraphQL server
 [workspace.dependencies.async-graphql]
 version = "7.0.9"
