@@ -19,8 +19,8 @@
   "dependencies": {
     "@fontsource/inconsolata": "^5.1.0",
     "@fontsource/inter": "^5.1.0",
-    "@radix-ui/react-collapsible": "1.0.3",
-    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-collapsible": "^1.1.1",
+    "@radix-ui/react-dialog": "^1.1.2",
     "@tanstack/react-router": "^1.58.15",
     "@tanstack/router-zod-adapter": "^1.58.15",
     "@urql/core": "^5.0.6",
@@ -29,7 +29,7 @@
     "@urql/exchange-refocus": "^1.1.0",
     "@urql/exchange-request-policy": "^1.2.0",
     "@vector-im/compound-design-tokens": "1.8.0",
-    "@vector-im/compound-web": "^6.0.0",
+    "@vector-im/compound-web": "^6.3.0",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
@@ -41,7 +41,7 @@
     "react-i18next": "^15.0.2",
     "swagger-ui-react": "^5.17.14",
     "urql": "^4.1.0",
-    "vaul": "^0.9.1",
+    "vaul": "^1.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
