@@ -196,40 +196,51 @@ checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
 
 [[package]]
 name = "apalis-core"
-version = "0.4.9"
+version = "0.6.0-rc.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1deb48475efcdece1f23a0553209ee842f264c2a5e9bcc4928bfa6a15a044cde"
+checksum = "1f7959df1edc75df26a1ee13a46d1b59fd63ba6642a6c29039583f5aedfd13aa"
 dependencies = [
- "async-stream",
- "async-trait",
- "chrono",
+ "async-oneshot",
  "futures",
- "graceful-shutdown",
- "http",
- "log",
+ "futures-timer",
  "pin-project-lite",
  "serde",
- "strum 0.25.0",
+ "serde_json",
  "thiserror",
- "tokio",
  "tower",
- "tracing",
  "ulid",
 ]
 
 [[package]]
 name = "apalis-cron"
-version = "0.4.9"
+version = "0.6.0-rc.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43310b7e0132f9520b09224fb6faafb32eec82a672aa79c09e46b5b488ed505b"
+checksum = "821d4b219ed2fa48e6ff722f23a97db3a70dcb0beeb96d3cf9391d88d23050c2"
 dependencies = [
  "apalis-core",
  "async-stream",
  "chrono",
  "cron",
  "futures",
- "tokio",
  "tower",
+]
+
+[[package]]
+name = "apalis-sql"
+version = "0.6.0-rc.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a9e94665abfe932ffa198c93391583375e3e6a9ca5836a54b8e509adbd0f738"
+dependencies = [
+ "apalis-core",
+ "async-stream",
+ "chrono",
+ "futures",
+ "futures-lite 2.3.0",
+ "log",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
 ]
 
 [[package]]
@@ -385,7 +396,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "strum 0.26.3",
+ "strum",
  "syn 2.0.68",
  "thiserror",
 ]
@@ -471,6 +482,15 @@ dependencies = [
  "event-listener 5.3.1",
  "event-listener-strategy",
  "pin-project-lite",
+]
+
+[[package]]
+name = "async-oneshot"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae47de2a02d543205f3f5457a90b6ecbc9494db70557bd29590ec8f1ddff5463"
+dependencies = [
+ "futures-micro",
 ]
 
 [[package]]
@@ -2081,6 +2101,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-micro"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b460264b3593d68b16a7bc35f7bc226ddfebdf9a1c8db1ed95d5cc6b7168c826"
+dependencies = [
+ "pin-project-lite",
+]
+
+[[package]]
 name = "futures-sink"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2212,17 +2241,6 @@ dependencies = [
  "rand",
  "smallvec",
  "spinning_top",
-]
-
-[[package]]
-name = "graceful-shutdown"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3effbaf774a1da3462925bb182ccf975c284cf46edca5569ea93420a657af484"
-dependencies = [
- "futures-core",
- "pin-project-lite",
- "tokio",
 ]
 
 [[package]]
@@ -3762,6 +3780,7 @@ dependencies = [
  "anyhow",
  "apalis-core",
  "apalis-cron",
+ "apalis-sql",
  "async-stream",
  "async-trait",
  "chrono",
@@ -6127,33 +6146,11 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
-dependencies = [
- "strum_macros 0.25.3",
-]
-
-[[package]]
-name = "strum"
 version = "0.26.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
 dependencies = [
- "strum_macros 0.26.4",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.25.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23dc1fa9ac9c169a78ba62f0b841814b7abae11bdd047b9c58f893439e309ea0"
-dependencies = [
- "heck 0.4.1",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn 2.0.68",
+ "strum_macros",
 ]
 
 [[package]]

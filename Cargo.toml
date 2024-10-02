@@ -63,12 +63,16 @@ features = ["axum", "axum-headers", "macros"]
 
 # Background tasks
 [workspace.dependencies.apalis-core]
-version = "0.4.9"
-features = ["extensions", "tokio-comp", "storage"]
+version = "0.6.0-rc.7"
 
 # Recurring background tasks
 [workspace.dependencies.apalis-cron]
-version = "0.4.9"
+version = "0.6.0-rc.7"
+
+# SQL store for background tasks
+[workspace.dependencies.apalis-sql]
+version = "0.6.0-rc.7"
+features = ["postgres", "tokio-comp"]
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
