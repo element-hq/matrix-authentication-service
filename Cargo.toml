@@ -121,7 +121,7 @@ version = "1.1.0"
 
 # HTTP body trait
 [workspace.dependencies.http-body]
-version = "1.0.0"
+version = "1.0.1"
 
 # http-body utilities
 [workspace.dependencies.http-body-util]
