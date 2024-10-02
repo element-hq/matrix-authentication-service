@@ -252,7 +252,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "1.0.63"
+version = "1.0.64"
 
 # Async runtime
 [workspace.dependencies.tokio]
