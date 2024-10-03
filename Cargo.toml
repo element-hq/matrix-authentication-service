@@ -85,7 +85,7 @@ features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Bytes
 [workspace.dependencies.bytes]
-version = "1.7.1"
+version = "1.7.2"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
