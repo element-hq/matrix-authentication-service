@@ -195,6 +195,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
 
 [[package]]
+name = "apalis"
+version = "0.6.0-rc.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fe9f6044555ce7984b4dff510f869c25ee8258d13277eadcfee11efa0a827a0"
+dependencies = [
+ "apalis-core",
+ "futures",
+ "pin-project-lite",
+ "serde",
+ "thiserror",
+ "tokio",
+ "tower",
+ "tracing",
+ "tracing-futures",
+]
+
+[[package]]
 name = "apalis-core"
 version = "0.6.0-rc.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3778,6 +3795,7 @@ name = "mas-tasks"
 version = "0.12.0"
 dependencies = [
  "anyhow",
+ "apalis",
  "apalis-core",
  "apalis-cron",
  "apalis-sql",

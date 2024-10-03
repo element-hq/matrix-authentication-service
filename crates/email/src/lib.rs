@@ -12,11 +12,13 @@ mod mailer;
 mod transport;
 
 pub use lettre::{
-    message::Mailbox, transport::smtp::authentication::Credentials as SmtpCredentials, Address,
+    address::{Address, AddressError},
+    message::Mailbox,
+    transport::smtp::authentication::Credentials as SmtpCredentials,
 };
 pub use mas_templates::EmailVerificationContext;
 
 pub use self::{
-    mailer::Mailer,
+    mailer::{Error, Mailer},
     transport::{SmtpMode, Transport as MailTransport},
 };

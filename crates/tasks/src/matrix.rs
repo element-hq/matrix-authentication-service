@@ -6,8 +6,9 @@
 
 use std::collections::HashSet;
 
-use anyhow::Context;
-use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor};
+use apalis::utils::TokioExecutor;
+use apalis_core::{layers::extensions::Data, monitor::Monitor};
+use apalis_sql::postgres::PgListen;
 use mas_data_model::Device;
 use mas_matrix::ProvisionRequest;
 use mas_storage::{
@@ -18,11 +19,30 @@ use mas_storage::{
     },
     oauth2::OAuth2SessionFilter,
     user::{UserEmailRepository, UserRepository},
-    Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess, RepositoryError,
 };
+use mas_storage_pg::DatabaseError;
+use sqlx::PgPool;
+use thiserror::Error;
 use tracing::info;
+use ulid::Ulid;
 
-use crate::{storage::PostgresStorageFactory, JobContextExt, State};
+use crate::State;
+
+#[derive(Debug, Error)]
+enum MatrixJobError {
+    #[error("User {0} not found")]
+    UserNotFound(Ulid),
+
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
+
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
+
+    #[error("Failed to communicate with the Matrix homeserver")]
+    Matrix(#[source] anyhow::Error),
+}
 
 /// Job to provision a user on the Matrix homeserver.
 /// This works by doing a PUT request to the /_synapse/admin/v2/users/{user_id}
@@ -35,9 +55,8 @@ use crate::{storage::PostgresStorageFactory, JobContextExt, State};
 )]
 async fn provision_user(
     job: JobWithSpanContext<ProvisionUserJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), MatrixJobError> {
     let matrix = state.matrix_connection();
     let mut repo = state.repository().await?;
 
@@ -45,7 +64,7 @@ async fn provision_user(
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(MatrixJobError::UserNotFound(job.user_id()))?;
 
     let mxid = matrix.mxid(&user.username);
     let emails = repo
@@ -62,7 +81,10 @@ async fn provision_user(
         request = request.set_displayname(display_name.to_owned());
     }
 
-    let created = matrix.provision_user(&request).await?;
+    let created = matrix
+        .provision_user(&request)
+        .await
+        .map_err(MatrixJobError::Matrix)?;
 
     if created {
         info!(%user.id, %mxid, "User created");
@@ -93,16 +115,15 @@ async fn provision_user(
 )]
 async fn provision_device(
     job: JobWithSpanContext<ProvisionDeviceJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), MatrixJobError> {
     let mut repo = state.repository().await?;
 
     let user = repo
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(MatrixJobError::UserNotFound(job.user_id()))?;
 
     // Schedule a device sync job
     repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
@@ -124,16 +145,15 @@ async fn provision_device(
 )]
 async fn delete_device(
     job: JobWithSpanContext<DeleteDeviceJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), MatrixJobError> {
     let mut repo = state.repository().await?;
 
     let user = repo
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(MatrixJobError::UserNotFound(job.user_id()))?;
 
     // Schedule a device sync job
     repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
@@ -150,9 +170,8 @@ async fn delete_device(
 )]
 async fn sync_devices(
     job: JobWithSpanContext<SyncDevicesJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), MatrixJobError> {
     let matrix = state.matrix_connection();
     let mut repo = state.repository().await?;
 
@@ -160,7 +179,7 @@ async fn sync_devices(
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(MatrixJobError::UserNotFound(job.user_id()))?;
 
     // Lock the user sync to make sure we don't get into a race condition
     repo.user().acquire_lock_for_sync(&user).await?;
@@ -215,7 +234,10 @@ async fn sync_devices(
     }
 
     let mxid = matrix.mxid(&user.username);
-    matrix.sync_devices(&mxid, devices).await?;
+    matrix
+        .sync_devices(&mxid, devices)
+        .await
+        .map_err(MatrixJobError::Matrix)?;
 
     // We kept the connection until now, so that we still hold the lock on the user
     // throughout the sync
@@ -228,16 +250,16 @@ pub(crate) fn register(
     suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
-    storage_factory: &PostgresStorageFactory,
+    listener: &mut PgListen,
+    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
     let provision_user_worker =
-        crate::build!(ProvisionUserJob => provision_user, suffix, state, storage_factory);
-    let provision_device_worker =
-        crate::build!(ProvisionDeviceJob => provision_device, suffix, state, storage_factory);
+        crate::build!(ProvisionUserJob => provision_user, suffix, state, pool.clone(), listener);
+    let provision_device_worker = crate::build!(ProvisionDeviceJob => provision_device, suffix, state, pool.clone(), listener);
     let delete_device_worker =
-        crate::build!(DeleteDeviceJob => delete_device, suffix, state, storage_factory);
+        crate::build!(DeleteDeviceJob => delete_device, suffix, state, pool.clone(), listener);
     let sync_devices_worker =
-        crate::build!(SyncDevicesJob => sync_devices, suffix, state, storage_factory);
+        crate::build!(SyncDevicesJob => sync_devices, suffix, state, pool, listener);
 
     monitor
         .register(provision_user_worker)

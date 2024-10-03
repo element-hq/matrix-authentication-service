@@ -4,17 +4,46 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use anyhow::Context;
-use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor};
+use apalis::utils::TokioExecutor;
+use apalis_core::{layers::extensions::Data, monitor::Monitor};
+use apalis_sql::postgres::PgListen;
 use chrono::Duration;
-use mas_email::{Address, Mailbox};
+use mas_email::{Address, AddressError, Mailbox};
 use mas_i18n::locale;
-use mas_storage::job::{JobWithSpanContext, VerifyEmailJob};
+use mas_storage::{
+    job::{JobWithSpanContext, VerifyEmailJob},
+    RepositoryError,
+};
+use mas_storage_pg::DatabaseError;
 use mas_templates::{EmailVerificationContext, TemplateContext};
 use rand::{distributions::Uniform, Rng};
+use sqlx::PgPool;
+use thiserror::Error;
 use tracing::info;
+use ulid::Ulid;
 
-use crate::{storage::PostgresStorageFactory, JobContextExt, State};
+use crate::State;
+
+#[derive(Debug, Error)]
+enum VerifyEmailError {
+    #[error("User email {0} not found")]
+    UserEmailNotFound(Ulid),
+
+    #[error("User {0} not found")]
+    UserNotFound(Ulid),
+
+    #[error("Invalid email address")]
+    InvalidEmailAddress(#[from] AddressError),
+
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
+
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
+
+    #[error("Failed to send email")]
+    Mailer(#[from] mas_email::Error),
+}
 
 #[tracing::instrument(
     name = "job.verify_email",
@@ -24,9 +53,8 @@ use crate::{storage::PostgresStorageFactory, JobContextExt, State};
 )]
 async fn verify_email(
     job: JobWithSpanContext<VerifyEmailJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), VerifyEmailError> {
     let mut repo = state.repository().await?;
     let mut rng = state.rng();
     let mailer = state.mailer();
@@ -42,14 +70,14 @@ async fn verify_email(
         .user_email()
         .lookup(job.user_email_id())
         .await?
-        .context("User email not found")?;
+        .ok_or(VerifyEmailError::UserEmailNotFound(job.user_email_id()))?;
 
     // Lookup the user associated with the email
     let user = repo
         .user()
         .lookup(user_email.user_id)
         .await?
-        .context("User not found")?;
+        .ok_or(VerifyEmailError::UserNotFound(user_email.user_id))?;
 
     // Generate a verification code
     let range = Uniform::<u32>::from(0..1_000_000);
@@ -92,10 +120,11 @@ pub(crate) fn register(
     suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
-    storage_factory: &PostgresStorageFactory,
+    listener: &mut PgListen,
+    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
     let verify_email_worker =
-        crate::build!(VerifyEmailJob => verify_email, suffix, state, storage_factory);
+        crate::build!(VerifyEmailJob => verify_email, suffix, state, pool, listener);
 
     monitor.register(verify_email_worker)
 }

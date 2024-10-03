@@ -8,7 +8,7 @@
 
 use std::{num::ParseIntError, ops::Deref};
 
-pub use apalis_core::job::{Job, JobId};
+pub use apalis_core::task::task_id::TaskId;
 use async_trait::async_trait;
 use opentelemetry::trace::{SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,14 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 use crate::repository_impl;
 
+/// A trait to determine the namespace of a task
+pub trait TaskNamespace {
+    /// Namespace of a task when saved in the database
+    const NAMESPACE: &'static str;
+}
+
 /// A job submission to be scheduled through the repository.
-pub struct JobSubmission {
+pub struct TaskSubmission {
     name: &'static str,
     payload: Value,
 }
@@ -74,8 +80,8 @@ impl<J> From<J> for JobWithSpanContext<J> {
     }
 }
 
-impl<J: Job> Job for JobWithSpanContext<J> {
-    const NAME: &'static str = J::NAME;
+impl<J: TaskNamespace> TaskNamespace for JobWithSpanContext<J> {
+    const NAMESPACE: &'static str = J::NAMESPACE;
 }
 
 impl<T> Deref for JobWithSpanContext<T> {
@@ -101,18 +107,18 @@ impl<T> JobWithSpanContext<T> {
     }
 }
 
-impl JobSubmission {
+impl TaskSubmission {
     /// Create a new job submission out of a [`Job`].
     ///
     /// # Panics
     ///
     /// Panics if the job cannot be serialized.
     #[must_use]
-    pub fn new<J: Job + Serialize>(job: J) -> Self {
+    pub fn new<J: TaskNamespace + Serialize>(job: J) -> Self {
         let payload = serde_json::to_value(job).expect("Could not serialize job");
 
         Self {
-            name: J::NAME,
+            name: J::NAMESPACE,
             payload,
         }
     }
@@ -123,14 +129,24 @@ impl JobSubmission {
     ///
     /// Panics if the job cannot be serialized.
     #[must_use]
-    pub fn new_with_span_context<J: Job + Serialize>(job: J, span_context: &SpanContext) -> Self {
+    pub fn new_with_span_context<J: TaskNamespace + Serialize>(
+        job: J,
+        span_context: &SpanContext,
+    ) -> Self {
         // Serialize the span context alongside the job.
         let span_context = SerializableSpanContext::from(span_context);
 
-        Self::new(JobWithSpanContext {
+        let job = JobWithSpanContext {
             payload: job,
             span_context: Some(span_context),
-        })
+        };
+
+        let payload = serde_json::to_value(job).expect("Could not serialize job");
+
+        Self {
+            name: J::NAMESPACE,
+            payload,
+        }
     }
 
     /// The name of the job.
@@ -163,12 +179,12 @@ pub trait JobRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn schedule_submission(
         &mut self,
-        submission: JobSubmission,
-    ) -> Result<JobId, Self::Error>;
+        submission: TaskSubmission,
+    ) -> Result<TaskId, Self::Error>;
 }
 
 repository_impl!(JobRepository:
-    async fn schedule_submission(&mut self, submission: JobSubmission) -> Result<JobId, Self::Error>;
+    async fn schedule_submission(&mut self, submission: TaskSubmission) -> Result<TaskId, Self::Error>;
 );
 
 /// An extension trait for [`JobRepository`] to schedule jobs directly.
@@ -186,10 +202,10 @@ pub trait JobRepositoryExt {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    async fn schedule_job<J: Job + Serialize + Send>(
+    async fn schedule_job<J: TaskNamespace + Serialize + Send>(
         &mut self,
         job: J,
-    ) -> Result<JobId, Self::Error>;
+    ) -> Result<TaskId, Self::Error>;
 }
 
 #[async_trait]
@@ -203,29 +219,30 @@ where
         name = "db.job.schedule_job",
         skip_all,
         fields(
-            job.name = J::NAME,
+            job.name = J::NAMESPACE,
         ),
     )]
-    async fn schedule_job<J: Job + Serialize + Send>(
+    async fn schedule_job<J: TaskNamespace + Serialize + Send>(
         &mut self,
         job: J,
-    ) -> Result<JobId, Self::Error> {
+    ) -> Result<TaskId, Self::Error> {
         let span = tracing::Span::current();
         let ctx = span.context();
         let span = ctx.span();
         let span_context = span.span_context();
 
-        self.schedule_submission(JobSubmission::new_with_span_context(job, span_context))
+        self.schedule_submission(TaskSubmission::new_with_span_context(job, span_context))
             .await
     }
 }
 
 mod jobs {
     // XXX: Move this somewhere else?
-    use apalis_core::job::Job;
     use mas_data_model::{Device, User, UserEmail, UserRecoverySession};
     use serde::{Deserialize, Serialize};
     use ulid::Ulid;
+
+    use super::TaskNamespace;
 
     /// A job to verify an email address.
     #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -264,8 +281,8 @@ mod jobs {
         }
     }
 
-    impl Job for VerifyEmailJob {
-        const NAME: &'static str = "verify-email";
+    impl TaskNamespace for VerifyEmailJob {
+        const NAMESPACE: &'static str = "verify-email";
     }
 
     /// A job to provision the user on the homeserver.
@@ -314,8 +331,8 @@ mod jobs {
         }
     }
 
-    impl Job for ProvisionUserJob {
-        const NAME: &'static str = "provision-user";
+    impl TaskNamespace for ProvisionUserJob {
+        const NAMESPACE: &'static str = "provision-user";
     }
 
     /// A job to provision a device for a user on the homeserver.
@@ -342,8 +359,8 @@ mod jobs {
         }
     }
 
-    impl Job for ProvisionDeviceJob {
-        const NAME: &'static str = "provision-device";
+    impl TaskNamespace for ProvisionDeviceJob {
+        const NAMESPACE: &'static str = "provision-device";
     }
 
     /// A job to delete a device for a user on the homeserver.
@@ -379,8 +396,8 @@ mod jobs {
         }
     }
 
-    impl Job for DeleteDeviceJob {
-        const NAME: &'static str = "delete-device";
+    impl TaskNamespace for DeleteDeviceJob {
+        const NAMESPACE: &'static str = "delete-device";
     }
 
     /// A job which syncs the list of devices of a user with the homeserver
@@ -404,8 +421,8 @@ mod jobs {
         }
     }
 
-    impl Job for SyncDevicesJob {
-        const NAME: &'static str = "sync-devices";
+    impl TaskNamespace for SyncDevicesJob {
+        const NAMESPACE: &'static str = "sync-devices";
     }
 
     /// A job to deactivate and lock a user
@@ -443,8 +460,8 @@ mod jobs {
         }
     }
 
-    impl Job for DeactivateUserJob {
-        const NAME: &'static str = "deactivate-user";
+    impl TaskNamespace for DeactivateUserJob {
+        const NAMESPACE: &'static str = "deactivate-user";
     }
 
     /// A job to reactivate a user
@@ -471,8 +488,8 @@ mod jobs {
         }
     }
 
-    impl Job for ReactivateUserJob {
-        const NAME: &'static str = "reactivate-user";
+    impl TaskNamespace for ReactivateUserJob {
+        const NAMESPACE: &'static str = "reactivate-user";
     }
 
     /// Send account recovery emails
@@ -503,8 +520,8 @@ mod jobs {
         }
     }
 
-    impl Job for SendAccountRecoveryEmailsJob {
-        const NAME: &'static str = "send-account-recovery-email";
+    impl TaskNamespace for SendAccountRecoveryEmailsJob {
+        const NAMESPACE: &'static str = "send-account-recovery-email";
     }
 }
 

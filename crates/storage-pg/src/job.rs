@@ -7,7 +7,7 @@
 //! A module containing the PostgreSQL implementation of the [`JobRepository`].
 
 use async_trait::async_trait;
-use mas_storage::job::{JobId, JobRepository, JobSubmission};
+use mas_storage::job::{JobRepository, TaskId, TaskSubmission};
 use sqlx::PgConnection;
 
 use crate::{DatabaseError, ExecuteExt};
@@ -41,10 +41,10 @@ impl<'c> JobRepository for PgJobRepository<'c> {
     )]
     async fn schedule_submission(
         &mut self,
-        submission: JobSubmission,
-    ) -> Result<JobId, Self::Error> {
+        submission: TaskSubmission,
+    ) -> Result<TaskId, Self::Error> {
         // XXX: This does not use the clock nor the rng
-        let id = JobId::new();
+        let id = TaskId::new();
         tracing::Span::current().record("job.id", tracing::field::display(&id));
 
         let res = sqlx::query!(

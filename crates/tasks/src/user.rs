@@ -4,18 +4,38 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use anyhow::Context;
-use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor};
+use apalis::utils::TokioExecutor;
+use apalis_core::{layers::extensions::Data, monitor::Monitor};
+use apalis_sql::postgres::PgListen;
 use mas_storage::{
     compat::CompatSessionFilter,
     job::{DeactivateUserJob, JobWithSpanContext, ReactivateUserJob},
     oauth2::OAuth2SessionFilter,
     user::{BrowserSessionFilter, UserRepository},
-    RepositoryAccess,
+    RepositoryAccess, RepositoryError,
 };
+use mas_storage_pg::DatabaseError;
+use sqlx::PgPool;
+use thiserror::Error;
 use tracing::info;
+use ulid::Ulid;
 
-use crate::{storage::PostgresStorageFactory, JobContextExt, State};
+use crate::State;
+
+#[derive(Debug, Error)]
+enum UserJobError {
+    #[error("User {0} not found")]
+    UserNotFound(Ulid),
+
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
+
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
+
+    #[error("Failed to communicate with the Matrix homeserver")]
+    Matrix(#[source] anyhow::Error),
+}
 
 /// Job to deactivate a user, both locally and on the Matrix homeserver.
 #[tracing::instrument(
@@ -26,9 +46,8 @@ use crate::{storage::PostgresStorageFactory, JobContextExt, State};
 )]
 async fn deactivate_user(
     job: JobWithSpanContext<DeactivateUserJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), UserJobError> {
     let clock = state.clock();
     let matrix = state.matrix_connection();
     let mut repo = state.repository().await?;
@@ -37,14 +56,10 @@ async fn deactivate_user(
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(UserJobError::UserNotFound(job.user_id()))?;
 
     // Let's first lock the user
-    let user = repo
-        .user()
-        .lock(&clock, user)
-        .await
-        .context("Failed to lock user")?;
+    let user = repo.user().lock(&clock, user).await?;
 
     // Kill all sessions for the user
     let n = repo
@@ -80,7 +95,10 @@ async fn deactivate_user(
 
     let mxid = matrix.mxid(&user.username);
     info!("Deactivating user {} on homeserver", mxid);
-    matrix.delete_user(&mxid, job.hs_erase()).await?;
+    matrix
+        .delete_user(&mxid, job.hs_erase())
+        .await
+        .map_err(UserJobError::Matrix)?;
 
     Ok(())
 }
@@ -94,9 +112,8 @@ async fn deactivate_user(
 )]
 pub async fn reactivate_user(
     job: JobWithSpanContext<ReactivateUserJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), UserJobError> {
     let matrix = state.matrix_connection();
     let mut repo = state.repository().await?;
 
@@ -104,11 +121,14 @@ pub async fn reactivate_user(
         .user()
         .lookup(job.user_id())
         .await?
-        .context("User not found")?;
+        .ok_or(UserJobError::UserNotFound(job.user_id()))?;
 
     let mxid = matrix.mxid(&user.username);
     info!("Reactivating user {} on homeserver", mxid);
-    matrix.reactivate_user(&mxid).await?;
+    matrix
+        .reactivate_user(&mxid)
+        .await
+        .map_err(UserJobError::Matrix)?;
 
     // We want to unlock the user from our side only once it has been reactivated on
     // the homeserver
@@ -122,13 +142,14 @@ pub(crate) fn register(
     suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
-    storage_factory: &PostgresStorageFactory,
+    listener: &mut PgListen,
+    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
     let deactivate_user_worker =
-        crate::build!(DeactivateUserJob => deactivate_user, suffix, state, storage_factory);
+        crate::build!(DeactivateUserJob => deactivate_user, suffix, state, pool.clone(), listener);
 
     let reactivate_user_worker =
-        crate::build!(ReactivateUserJob => reactivate_user, suffix, state, storage_factory);
+        crate::build!(ReactivateUserJob => reactivate_user, suffix, state, pool, listener);
 
     monitor
         .register(deactivate_user_worker)

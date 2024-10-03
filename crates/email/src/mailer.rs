@@ -24,11 +24,17 @@ pub struct Mailer {
     reply_to: Mailbox,
 }
 
+/// Error sending an email
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum Error {
+    /// Transport failed to send the email
     Transport(#[from] crate::transport::Error),
+
+    /// Template failed to render the email
     Templates(#[from] mas_templates::TemplateError),
+
+    /// Invalid email content
     Content(#[from] lettre::error::Error),
 }
 

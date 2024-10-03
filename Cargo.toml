@@ -62,6 +62,10 @@ version = "0.13.4"
 features = ["axum", "axum-headers", "macros"]
 
 # Background tasks
+[workspace.dependencies.apalis]
+version = "0.6.0-rc.7"
+
+# Background tasks
 [workspace.dependencies.apalis-core]
 version = "0.6.0-rc.7"
 

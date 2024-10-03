@@ -4,20 +4,48 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use anyhow::Context;
-use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor};
-use mas_email::{Address, Mailbox};
+use apalis::utils::TokioExecutor;
+use apalis_core::{layers::extensions::Data, monitor::Monitor};
+use apalis_sql::postgres::PgListen;
+use mas_email::{Address, AddressError, Mailbox};
 use mas_i18n::DataLocale;
 use mas_storage::{
     job::{JobWithSpanContext, SendAccountRecoveryEmailsJob},
     user::{UserEmailFilter, UserRecoveryRepository},
-    Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess, RepositoryError,
 };
+use mas_storage_pg::DatabaseError;
 use mas_templates::{EmailRecoveryContext, TemplateContext};
 use rand::distributions::{Alphanumeric, DistString};
+use sqlx::PgPool;
 use tracing::{error, info};
+use ulid::Ulid;
 
-use crate::{storage::PostgresStorageFactory, JobContextExt, State};
+use crate::State;
+
+#[derive(Debug, thiserror::Error)]
+enum RecoveryJobError {
+    #[error("User recovery session {0} not found")]
+    UserRecoverySessionNotFound(Ulid),
+
+    #[error("User email {0} not found")]
+    UserEmailNotFound(Ulid),
+
+    #[error("User {0} not found")]
+    UserNotFound(Ulid),
+
+    #[error("Invalid email address")]
+    InvalidEmailAddress(#[from] AddressError),
+
+    #[error("Invalid locale in database on recovery session")]
+    InvalidLocale,
+
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
+
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
+}
 
 /// Job to send account recovery emails for a given recovery session.
 #[tracing::instrument(
@@ -31,9 +59,8 @@ use crate::{storage::PostgresStorageFactory, JobContextExt, State};
 )]
 async fn send_account_recovery_email_job(
     job: JobWithSpanContext<SendAccountRecoveryEmailsJob>,
-    ctx: JobContext,
-) -> Result<(), anyhow::Error> {
-    let state = ctx.state();
+    state: Data<State>,
+) -> Result<(), RecoveryJobError> {
     let clock = state.clock();
     let mailer = state.mailer();
     let url_builder = state.url_builder();
@@ -44,7 +71,9 @@ async fn send_account_recovery_email_job(
         .user_recovery()
         .lookup_session(job.user_recovery_session_id())
         .await?
-        .context("User recovery session not found")?;
+        .ok_or(RecoveryJobError::UserRecoverySessionNotFound(
+            job.user_recovery_session_id(),
+        ))?;
 
     tracing::Span::current().record("user_recovery_session.email", &session.email);
 
@@ -58,7 +87,7 @@ async fn send_account_recovery_email_job(
     let lang: DataLocale = session
         .locale
         .parse()
-        .context("Invalid locale in database on recovery session")?;
+        .map_err(|_| RecoveryJobError::InvalidLocale)?;
 
     loop {
         let page = repo
@@ -83,13 +112,13 @@ async fn send_account_recovery_email_job(
                 .user_email()
                 .lookup(email.id)
                 .await?
-                .context("User email not found")?;
+                .ok_or(RecoveryJobError::UserEmailNotFound(email.id))?;
 
             let user = repo
                 .user()
                 .lookup(user_email.user_id)
                 .await?
-                .context("User not found")?;
+                .ok_or(RecoveryJobError::UserNotFound(user_email.user_id))?;
 
             let url = url_builder.account_recovery_link(ticket.ticket);
 
@@ -125,9 +154,10 @@ pub(crate) fn register(
     suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
-    storage_factory: &PostgresStorageFactory,
+    listener: &mut PgListen,
+    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
-    let send_user_recovery_email_worker = crate::build!(SendAccountRecoveryEmailsJob => send_account_recovery_email_job, suffix, state, storage_factory);
+    let send_user_recovery_email_worker = crate::build!(SendAccountRecoveryEmailsJob => send_account_recovery_email_job, suffix, state, pool, listener);
 
     monitor.register(send_user_recovery_email_worker)
 }

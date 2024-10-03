@@ -6,7 +6,9 @@
 
 use std::sync::Arc;
 
-use apalis_core::{executor::TokioExecutor, layers::extensions::Extension, monitor::Monitor};
+use apalis::utils::TokioExecutor;
+use apalis_core::monitor::Monitor;
+use apalis_sql::postgres::PgListen;
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
@@ -14,15 +16,12 @@ use mas_storage::{BoxClock, BoxRepository, SystemClock};
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
-use tracing::debug;
-
-use crate::storage::PostgresStorageFactory;
+use tracing::{debug, error};
 
 mod database;
 mod email;
 mod matrix;
 mod recovery;
-mod storage;
 mod user;
 mod utils;
 
@@ -50,10 +49,6 @@ impl State {
             homeserver: Arc::new(homeserver),
             url_builder,
         }
-    }
-
-    pub fn inject(&self) -> Extension<Self> {
-        Extension(self.clone())
     }
 
     pub fn pool(&self) -> &Pool<Postgres> {
@@ -89,39 +84,23 @@ impl State {
     }
 }
 
-trait JobContextExt {
-    fn state(&self) -> State;
-}
-
-impl JobContextExt for apalis_core::context::JobContext {
-    fn state(&self) -> State {
-        self.data_opt::<State>()
-            .expect("state not injected in job context")
-            .clone()
-    }
-}
-
 /// Helper macro to build a storage-backed worker.
 macro_rules! build {
-    ($job:ty => $fn:ident, $suffix:expr, $state:expr, $factory:expr) => {{
-        let storage = $factory.build();
-        let worker_name = format!(
-            "{job}-{suffix}",
-            job = <$job as ::apalis_core::job::Job>::NAME,
-            suffix = $suffix
-        );
+    ($job:ty => $fn:ident, $suffix:expr, $state:expr, $pool:expr, $listener:expr) => {{
+        use ::apalis_core::builder::WorkerFactory;
+        let namespace = <$job as ::mas_storage::job::TaskNamespace>::NAMESPACE;
+        let config = ::apalis_sql::Config::new(namespace)
+            .set_poll_interval(std::time::Duration::from_secs(10));
+        let mut pg = ::apalis_sql::postgres::PostgresStorage::new_with_config($pool, config);
+        $listener.subscribe_with(&mut pg);
+        let worker_name = format!("{job}-{suffix}", job = namespace, suffix = $suffix);
 
-        let builder = ::apalis_core::builder::WorkerBuilder::new(worker_name)
-            .layer($state.inject())
+        ::apalis_core::builder::WorkerBuilder::new(worker_name)
+            .data($state.clone())
             .layer(crate::utils::trace_layer())
-            .layer(crate::utils::metrics_layer());
-
-        let builder = ::apalis_core::storage::builder::WithStorage::with_storage_config(
-            builder,
-            storage,
-            |c| c.fetch_interval(std::time::Duration::from_secs(1)),
-        );
-        ::apalis_core::builder::WorkerFactory::build(builder, ::apalis_core::job_fn::job_fn($fn))
+            .layer(crate::utils::metrics_layer())
+            .backend(pg)
+            .build(::apalis_core::service_fn::service_fn($fn))
     }};
 }
 
@@ -146,15 +125,23 @@ pub async fn init(
         homeserver,
         url_builder,
     );
-    let factory = PostgresStorageFactory::new(pool.clone());
-    let monitor = Monitor::new().executor(TokioExecutor::new());
+    let mut listener = PgListen::new(pool.clone()).await?;
+    let monitor = Monitor::new();
     let monitor = self::database::register(name, monitor, &state);
-    let monitor = self::email::register(name, monitor, &state, &factory);
-    let monitor = self::matrix::register(name, monitor, &state, &factory);
-    let monitor = self::user::register(name, monitor, &state, &factory);
-    let monitor = self::recovery::register(name, monitor, &state, &factory);
+    let monitor = self::email::register(name, monitor, &state, &mut listener, pool.clone());
+    let monitor = self::matrix::register(name, monitor, &state, &mut listener, pool.clone());
+    let monitor = self::user::register(name, monitor, &state, &mut listener, pool.clone());
+    let monitor = self::recovery::register(name, monitor, &state, &mut listener, pool.clone());
     // TODO: we might want to grab the join handle here
-    factory.listen().await?;
+    tokio::spawn(async {
+        if let Err(e) = listener.listen().await {
+            error!(
+                error = &e as &dyn std::error::Error,
+                "Task listener crashed",
+            );
+        }
+    });
+
     debug!(?monitor, "workers registered");
     Ok(monitor)
 }

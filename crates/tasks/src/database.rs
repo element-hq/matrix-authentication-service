@@ -8,22 +8,22 @@
 
 use std::str::FromStr;
 
+use apalis::utils::TokioExecutor;
 use apalis_core::{
     builder::{WorkerBuilder, WorkerFactoryFn},
-    context::JobContext,
-    executor::TokioExecutor,
-    job::Job,
+    layers::extensions::Data,
     monitor::Monitor,
-    utils::timer::TokioTimer,
 };
 use apalis_cron::CronStream;
 use chrono::{DateTime, Utc};
-use mas_storage::{oauth2::OAuth2AccessTokenRepository, RepositoryAccess};
+use mas_storage::{
+    job::TaskNamespace, oauth2::OAuth2AccessTokenRepository, RepositoryAccess, RepositoryError,
+};
 use tracing::{debug, info};
 
 use crate::{
     utils::{metrics_layer, trace_layer, TracedJob},
-    JobContextExt, State,
+    State,
 };
 
 #[derive(Default, Clone)]
@@ -37,21 +37,23 @@ impl From<DateTime<Utc>> for CleanupExpiredTokensJob {
     }
 }
 
-impl Job for CleanupExpiredTokensJob {
-    const NAME: &'static str = "cleanup-expired-tokens";
+impl TaskNamespace for CleanupExpiredTokensJob {
+    const NAMESPACE: &'static str = "cleanup-expired-tokens";
 }
 
 impl TracedJob for CleanupExpiredTokensJob {}
 
 pub async fn cleanup_expired_tokens(
     job: CleanupExpiredTokensJob,
-    ctx: JobContext,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    state: Data<State>,
+) -> Result<(), RepositoryError> {
     debug!("cleanup expired tokens job scheduled at {}", job.scheduled);
 
-    let state = ctx.state();
     let clock = state.clock();
-    let mut repo = state.repository().await?;
+    let mut repo = state
+        .repository()
+        .await
+        .map_err(RepositoryError::from_error)?;
 
     let count = repo.oauth2_access_token().cleanup_expired(&clock).await?;
     repo.save().await?;
@@ -71,12 +73,12 @@ pub(crate) fn register(
     state: &State,
 ) -> Monitor<TokioExecutor> {
     let schedule = apalis_cron::Schedule::from_str("*/15 * * * * *").unwrap();
-    let worker_name = format!("{job}-{suffix}", job = CleanupExpiredTokensJob::NAME);
+    let worker_name = format!("{job}-{suffix}", job = CleanupExpiredTokensJob::NAMESPACE);
     let worker = WorkerBuilder::new(worker_name)
-        .stream(CronStream::new(schedule).timer(TokioTimer).to_stream())
-        .layer(state.inject())
-        .layer(metrics_layer())
-        .layer(trace_layer())
+        .data(state.clone())
+        //.layer(metrics_layer())
+        //.layer(trace_layer())
+        .backend(CronStream::new(schedule))
         .build_fn(cleanup_expired_tokens);
 
     monitor.register(worker)
