@@ -31,7 +31,7 @@ serde_with = { version = "3.9.0", features = ["hex", "chrono"] }
 serde_json.workspace = true
 
 pem-rfc7468 = "0.7.0"
-rustls-pki-types = "1.8.0"
+rustls-pki-types = "1.9.0"
 rustls-pemfile = "2.1.3"
 rand.workspace = true
 rand_chacha = "0.3.1"
