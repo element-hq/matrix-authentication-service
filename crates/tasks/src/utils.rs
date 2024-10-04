@@ -5,7 +5,6 @@
 // Please see LICENSE in the repository root for full details.
 
 use apalis_core::request::Request;
-use apalis_sql::context::SqlContext;
 use mas_storage::job::{JobWithSpanContext, TaskNamespace};
 use mas_tower::{
     make_span_fn, DurationRecorderLayer, FnWrapper, IdentityLayer, InFlightCounterLayer,
@@ -36,7 +35,7 @@ impl<J: TaskNamespace> TracedJob for JobWithSpanContext<J> {
     }
 }
 
-fn make_span_for_job_request<J: TracedJob>(req: &Request<J, SqlContext>) -> tracing::Span {
+fn make_span_for_job_request<J: TracedJob, C>(req: &Request<J, C>) -> tracing::Span {
     let span = info_span!(
         "job.run",
         "otel.kind" = "consumer",
@@ -53,30 +52,27 @@ fn make_span_for_job_request<J: TracedJob>(req: &Request<J, SqlContext>) -> trac
     span
 }
 
-type TraceLayerForJob<J> = TraceLayer<
-    FnWrapper<fn(&Request<J, SqlContext>) -> tracing::Span>,
-    KV<&'static str>,
-    KV<&'static str>,
->;
+pub(crate) type TraceLayerForJob<J, C> =
+    TraceLayer<FnWrapper<fn(&Request<J, C>) -> tracing::Span>, KV<&'static str>, KV<&'static str>>;
 
-pub(crate) fn trace_layer<J>() -> TraceLayerForJob<J>
+pub(crate) fn trace_layer<J, C>() -> TraceLayerForJob<J, C>
 where
     J: TracedJob,
 {
     TraceLayer::new(make_span_fn(
-        make_span_for_job_request::<J> as fn(&Request<J, SqlContext>) -> tracing::Span,
+        make_span_for_job_request::<J, C> as fn(&Request<J, C>) -> tracing::Span,
     ))
     .on_response(KV("otel.status_code", "OK"))
     .on_error(KV("otel.status_code", "ERROR"))
 }
 
-type MetricsLayerForJob<J> = (
-    IdentityLayer<Request<J, SqlContext>>,
+pub(crate) type MetricsLayerForJob<J, C> = (
+    IdentityLayer<Request<J, C>>,
     DurationRecorderLayer<KeyValue, KeyValue, KeyValue>,
     InFlightCounterLayer<KeyValue>,
 );
 
-pub(crate) fn metrics_layer<J>() -> MetricsLayerForJob<J>
+pub(crate) fn metrics_layer<J, C>() -> MetricsLayerForJob<J, C>
 where
     J: TaskNamespace,
 {

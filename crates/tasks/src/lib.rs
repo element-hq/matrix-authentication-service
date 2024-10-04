@@ -4,18 +4,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::{marker::Sync, sync::Arc};
 
-use apalis::utils::TokioExecutor;
-use apalis_core::monitor::Monitor;
-use apalis_sql::postgres::PgListen;
+use apalis::{
+    prelude::{Data, Request},
+    utils::TokioExecutor,
+};
+use apalis_core::{builder::WorkerBuilder, layers::Identity, monitor::Monitor};
+use apalis_sql::{
+    context::SqlContext,
+    postgres::{PgListen, PostgresStorage},
+};
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, SystemClock};
+use mas_storage::{job::TaskNamespace, BoxClock, BoxRepository, SystemClock};
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::SeedableRng;
+use serde::{de::DeserializeOwned, ser::Serialize};
 use sqlx::{Pool, Postgres};
+use tower::{layer::util::Stack, Service};
 use tracing::{debug, error};
 
 mod database;
@@ -25,8 +33,17 @@ mod recovery;
 mod user;
 mod utils;
 
+use self::utils::{metrics_layer, trace_layer, MetricsLayerForJob, TraceLayerForJob, TracedJob};
+
+type LayerForJob<T, C = SqlContext> = (
+    Data<State>,
+    MetricsLayerForJob<T, C>,
+    TraceLayerForJob<T, C>,
+);
+
 #[derive(Clone)]
 struct State {
+    suffix: String,
     pool: Pool<Postgres>,
     mailer: Mailer,
     clock: SystemClock,
@@ -36,6 +53,7 @@ struct State {
 
 impl State {
     pub fn new(
+        suffix: &str,
         pool: Pool<Postgres>,
         clock: SystemClock,
         mailer: Mailer,
@@ -43,12 +61,17 @@ impl State {
         url_builder: UrlBuilder,
     ) -> Self {
         Self {
+            suffix: suffix.to_owned(),
             pool,
             mailer,
             clock,
             homeserver: Arc::new(homeserver),
             url_builder,
         }
+    }
+
+    pub fn worker_name<T: TaskNamespace>(&self) -> String {
+        format!("{}-{}", T::NAMESPACE, self.suffix)
     }
 
     pub fn pool(&self) -> &Pool<Postgres> {
@@ -82,29 +105,40 @@ impl State {
     pub fn url_builder(&self) -> &UrlBuilder {
         &self.url_builder
     }
-}
 
-/// Helper macro to build a storage-backed worker.
-macro_rules! build {
-    ($job:ty => $fn:ident, $suffix:expr, $state:expr, $pool:expr, $listener:expr) => {{
-        use ::apalis_core::builder::WorkerFactory;
-        let namespace = <$job as ::mas_storage::job::TaskNamespace>::NAMESPACE;
-        let config = ::apalis_sql::Config::new(namespace)
+    pub fn pg_worker<T, S>(
+        &self,
+        listener: &mut PgListen,
+    ) -> apalis_core::builder::WorkerBuilder<
+        T,
+        SqlContext,
+        PostgresStorage<T>,
+        Stack<LayerForJob<T>, Identity>,
+        S,
+    >
+    where
+        T: TaskNamespace + TracedJob + Serialize + DeserializeOwned + Send + Sync + Unpin + 'static,
+        S: Service<Request<T, SqlContext>> + Send + Sync + 'static,
+        S::Response: Send + Sync + 'static,
+    {
+        let pool = self.pool();
+        let worker_name = self.worker_name::<T>();
+        let config = apalis_sql::Config::new(T::NAMESPACE)
             .set_poll_interval(std::time::Duration::from_secs(10));
-        let mut pg = ::apalis_sql::postgres::PostgresStorage::new_with_config($pool, config);
-        $listener.subscribe_with(&mut pg);
-        let worker_name = format!("{job}-{suffix}", job = namespace, suffix = $suffix);
+        let mut pg = apalis_sql::postgres::PostgresStorage::new_with_config(pool.clone(), config);
+        {
+            let mut pg = pg.clone();
+            tokio::spawn(async move {
+                pg.reenqueue_orphaned(5).await.unwrap();
+            });
+        }
+        listener.subscribe_with(&mut pg);
 
-        ::apalis_core::builder::WorkerBuilder::new(worker_name)
-            .data($state.clone())
-            .layer(crate::utils::trace_layer())
-            .layer(crate::utils::metrics_layer())
+        WorkerBuilder::new(worker_name)
+            .layer((Data::new(self.clone()), metrics_layer(), trace_layer()))
             .backend(pg)
-            .build(::apalis_core::service_fn::service_fn($fn))
-    }};
+    }
 }
-
-pub(crate) use build;
 
 /// Initialise the workers.
 ///
@@ -119,6 +153,7 @@ pub async fn init(
     url_builder: UrlBuilder,
 ) -> Result<Monitor<TokioExecutor>, sqlx::Error> {
     let state = State::new(
+        name,
         pool.clone(),
         SystemClock::default(),
         mailer.clone(),
@@ -127,11 +162,11 @@ pub async fn init(
     );
     let mut listener = PgListen::new(pool.clone()).await?;
     let monitor = Monitor::new();
-    let monitor = self::database::register(name, monitor, &state);
-    let monitor = self::email::register(name, monitor, &state, &mut listener, pool.clone());
-    let monitor = self::matrix::register(name, monitor, &state, &mut listener, pool.clone());
-    let monitor = self::user::register(name, monitor, &state, &mut listener, pool.clone());
-    let monitor = self::recovery::register(name, monitor, &state, &mut listener, pool.clone());
+    let monitor = self::database::register(monitor, &state);
+    let monitor = self::email::register(monitor, &state, &mut listener);
+    let monitor = self::matrix::register(monitor, &state, &mut listener);
+    let monitor = self::user::register(monitor, &state, &mut listener);
+    let monitor = self::recovery::register(monitor, &state, &mut listener);
     // TODO: we might want to grab the join handle here
     tokio::spawn(async {
         if let Err(e) = listener.listen().await {

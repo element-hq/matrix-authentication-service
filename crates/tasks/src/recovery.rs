@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use apalis::utils::TokioExecutor;
+use apalis::{prelude::WorkerFactoryFn, utils::TokioExecutor};
 use apalis_core::{layers::extensions::Data, monitor::Monitor};
 use apalis_sql::postgres::PgListen;
 use mas_email::{Address, AddressError, Mailbox};
@@ -17,7 +17,6 @@ use mas_storage::{
 use mas_storage_pg::DatabaseError;
 use mas_templates::{EmailRecoveryContext, TemplateContext};
 use rand::distributions::{Alphanumeric, DistString};
-use sqlx::PgPool;
 use tracing::{error, info};
 use ulid::Ulid;
 
@@ -151,13 +150,13 @@ async fn send_account_recovery_email_job(
 }
 
 pub(crate) fn register(
-    suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
     listener: &mut PgListen,
-    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
-    let send_user_recovery_email_worker = crate::build!(SendAccountRecoveryEmailsJob => send_account_recovery_email_job, suffix, state, pool, listener);
+    let send_user_recovery_email_worker = state
+        .pg_worker(listener)
+        .build_fn(send_account_recovery_email_job);
 
     monitor.register(send_user_recovery_email_worker)
 }

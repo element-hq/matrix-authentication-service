@@ -67,17 +67,13 @@ pub async fn cleanup_expired_tokens(
     Ok(())
 }
 
-pub(crate) fn register(
-    suffix: &str,
-    monitor: Monitor<TokioExecutor>,
-    state: &State,
-) -> Monitor<TokioExecutor> {
+pub(crate) fn register(monitor: Monitor<TokioExecutor>, state: &State) -> Monitor<TokioExecutor> {
     let schedule = apalis_cron::Schedule::from_str("*/15 * * * * *").unwrap();
-    let worker_name = format!("{job}-{suffix}", job = CleanupExpiredTokensJob::NAMESPACE);
+    let worker_name = state.worker_name::<CleanupExpiredTokensJob>();
     let worker = WorkerBuilder::new(worker_name)
         .data(state.clone())
-        //.layer(metrics_layer())
-        //.layer(trace_layer())
+        .layer(metrics_layer())
+        .layer(trace_layer())
         .backend(CronStream::new(schedule))
         .build_fn(cleanup_expired_tokens);
 

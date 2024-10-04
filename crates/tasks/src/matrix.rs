@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use apalis::utils::TokioExecutor;
+use apalis::{prelude::WorkerFactoryFn, utils::TokioExecutor};
 use apalis_core::{layers::extensions::Data, monitor::Monitor};
 use apalis_sql::postgres::PgListen;
 use mas_data_model::Device;
@@ -22,7 +22,6 @@ use mas_storage::{
     Pagination, RepositoryAccess, RepositoryError,
 };
 use mas_storage_pg::DatabaseError;
-use sqlx::PgPool;
 use thiserror::Error;
 use tracing::info;
 use ulid::Ulid;
@@ -247,19 +246,14 @@ async fn sync_devices(
 }
 
 pub(crate) fn register(
-    suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
     listener: &mut PgListen,
-    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
-    let provision_user_worker =
-        crate::build!(ProvisionUserJob => provision_user, suffix, state, pool.clone(), listener);
-    let provision_device_worker = crate::build!(ProvisionDeviceJob => provision_device, suffix, state, pool.clone(), listener);
-    let delete_device_worker =
-        crate::build!(DeleteDeviceJob => delete_device, suffix, state, pool.clone(), listener);
-    let sync_devices_worker =
-        crate::build!(SyncDevicesJob => sync_devices, suffix, state, pool, listener);
+    let provision_user_worker = state.pg_worker(listener).build_fn(provision_user);
+    let provision_device_worker = state.pg_worker(listener).build_fn(provision_device);
+    let delete_device_worker = state.pg_worker(listener).build_fn(delete_device);
+    let sync_devices_worker = state.pg_worker(listener).build_fn(sync_devices);
 
     monitor
         .register(provision_user_worker)

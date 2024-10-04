@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use apalis::utils::TokioExecutor;
+use apalis::{prelude::WorkerFactoryFn, utils::TokioExecutor};
 use apalis_core::{layers::extensions::Data, monitor::Monitor};
 use apalis_sql::postgres::PgListen;
 use chrono::Duration;
@@ -17,7 +17,6 @@ use mas_storage::{
 use mas_storage_pg::DatabaseError;
 use mas_templates::{EmailVerificationContext, TemplateContext};
 use rand::{distributions::Uniform, Rng};
-use sqlx::PgPool;
 use thiserror::Error;
 use tracing::info;
 use ulid::Ulid;
@@ -117,14 +116,11 @@ async fn verify_email(
 }
 
 pub(crate) fn register(
-    suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
     listener: &mut PgListen,
-    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
-    let verify_email_worker =
-        crate::build!(VerifyEmailJob => verify_email, suffix, state, pool, listener);
+    let verify_email_worker = state.pg_worker(listener).build_fn(verify_email);
 
     monitor.register(verify_email_worker)
 }

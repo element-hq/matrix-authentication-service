@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use apalis::utils::TokioExecutor;
+use apalis::{prelude::WorkerFactoryFn, utils::TokioExecutor};
 use apalis_core::{layers::extensions::Data, monitor::Monitor};
 use apalis_sql::postgres::PgListen;
 use mas_storage::{
@@ -15,7 +15,6 @@ use mas_storage::{
     RepositoryAccess, RepositoryError,
 };
 use mas_storage_pg::DatabaseError;
-use sqlx::PgPool;
 use thiserror::Error;
 use tracing::info;
 use ulid::Ulid;
@@ -139,17 +138,12 @@ pub async fn reactivate_user(
 }
 
 pub(crate) fn register(
-    suffix: &str,
     monitor: Monitor<TokioExecutor>,
     state: &State,
     listener: &mut PgListen,
-    pool: PgPool,
 ) -> Monitor<TokioExecutor> {
-    let deactivate_user_worker =
-        crate::build!(DeactivateUserJob => deactivate_user, suffix, state, pool.clone(), listener);
-
-    let reactivate_user_worker =
-        crate::build!(ReactivateUserJob => reactivate_user, suffix, state, pool, listener);
+    let deactivate_user_worker = state.pg_worker(listener).build_fn(deactivate_user);
+    let reactivate_user_worker = state.pg_worker(listener).build_fn(reactivate_user);
 
     monitor
         .register(deactivate_user_worker)
