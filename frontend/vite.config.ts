@@ -71,7 +71,7 @@ export default defineConfig((env) => ({
     tanStackRouter(),
 
     codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      enableBundleAnalysis: process.env.UPLOAD_CODECOV_BUNDLE === "true",
       bundleName: "mas-frontend",
       gitService: "github",
       oidc: {
