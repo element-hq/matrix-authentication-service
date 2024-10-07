@@ -7,14 +7,11 @@ updates:
       - "Z-Deps-Backend"
     schedule:
       interval: "daily"
+    ignore:
+      # We plan to remove apalis soon, let's ignore it for now
+      - dependency-name: "apalis"
+      - dependency-name: "apalis-*"
     groups:
-      apalis:
-        patterns:
-          - "apalis"
-          - "apalis-*"
-      aws:
-        patterns:
-          - "aws-*"
       axum:
         patterns:
           - "axum"
@@ -58,6 +55,12 @@ updates:
       - "Z-Deps-Frontend"
     schedule:
       interval: "daily"
+    ignore:
+      # We don't want to migrate to eslint 9 for now
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-*"
+        update-types: ["version-update:semver-major"]
     groups:
       storybook:
         patterns:
@@ -123,6 +126,11 @@ updates:
     ignore:
       # Ignore @types/node until we can upgrade to Node 20
       - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # We don't want to migrate to eslint 9 for now
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-*"
         update-types: ["version-update:semver-major"]
     groups:
       production:
