@@ -3185,7 +3185,7 @@ dependencies = [
  "serde_with",
  "thiserror",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tracing",
  "ulid",
  "url",
@@ -3252,7 +3252,7 @@ dependencies = [
  "serde_yaml",
  "sqlx",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tower-http",
  "tracing",
  "tracing-appender",
@@ -3384,7 +3384,7 @@ dependencies = [
  "thiserror",
  "time",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -3420,7 +3420,7 @@ dependencies = [
  "serde_urlencoded",
  "thiserror",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tower-http",
  "tracing",
  "tracing-opentelemetry",
@@ -3567,7 +3567,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tokio-test",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -3597,7 +3597,7 @@ dependencies = [
  "mas-matrix",
  "serde",
  "serde_json",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tracing",
  "url",
  "urlencoding",
@@ -3633,7 +3633,7 @@ dependencies = [
  "serde_with",
  "thiserror",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tracing",
  "url",
  "wiremock",
@@ -3754,7 +3754,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tracing",
  "tracing-opentelemetry",
  "ulid",
@@ -3798,7 +3798,7 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
  "pin-project-lite",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tracing",
  "tracing-opentelemetry",
 ]
@@ -6399,8 +6399,6 @@ dependencies = [
  "futures-util",
  "pin-project",
  "pin-project-lite",
- "tokio",
- "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -6417,6 +6415,7 @@ dependencies = [
  "pin-project-lite",
  "sync_wrapper 0.1.2",
  "tokio",
+ "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -6424,9 +6423,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.5.2"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
+checksum = "8437150ab6bbc8c5f0f519e3d5ed4aa883a83dd4cdd3d1b21f9482936046cb97"
 dependencies = [
  "bitflags 2.6.0",
  "bytes",
@@ -6443,7 +6442,7 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-util",
- "tower 0.4.13",
+ "tower 0.5.1",
  "tower-layer",
  "tower-service",
  "tracing",
