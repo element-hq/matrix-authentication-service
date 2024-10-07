@@ -158,7 +158,7 @@ features = ["yaml", "json"]
 
 # Email sending
 [workspace.dependencies.lettre]
-version = "0.11.7"
+version = "0.11.9"
 default-features = false
 features = [
     "tokio1-rustls-tls",
