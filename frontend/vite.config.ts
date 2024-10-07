@@ -73,9 +73,11 @@ export default defineConfig((env) => ({
     codecovVitePlugin({
       debug: true,
       enableBundleAnalysis: process.env.UPLOAD_CODECOV_BUNDLE === "true",
-      uploadToken: process.env.CODECOV_TOKEN,
       bundleName: "mas-frontend",
       gitService: "github",
+      oidc: {
+        useGitHubOIDC: true,
+      },
     }),
 
     // Custom plugin to make sure that each asset has an entry in the manifest
