@@ -25,6 +25,7 @@ const Template: React.FC<{
 
   const mockClient = {
     /* This will resolve after a small delay */
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     executeMutation: () =>
       pipe(
         fromValue({
