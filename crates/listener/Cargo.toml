@@ -30,7 +30,7 @@ tracing.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
-rustls-pemfile = "2.1.3"
+rustls-pemfile = "2.2.0"
 tokio.workspace = true
 tokio-test = "0.4.4"
 tracing-subscriber.workspace = true
