@@ -4081,9 +4081,9 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
 name = "opa-wasm"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f4b727ebe10814d69fb4c1f538e1a0772e1f9b258d30c5a097d04158f8d6017"
+checksum = "51a191d24f220928f33cb9b0c0627c4165a588b7b768ae53017ad31bb7caf099"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
