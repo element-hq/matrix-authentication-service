@@ -48,7 +48,7 @@ sqlx.workspace = true
 
 # Various structure (de)serialization
 serde.workspace = true
-serde_with = { version = "3.9.0", features = ["hex", "chrono"] }
+serde_with = { version = "3.11.0", features = ["hex", "chrono"] }
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
 
