@@ -15,7 +15,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
     FancyError, SessionInfoExt,
 };
-use mas_data_model::{BrowserSession, UserAgent, oauth2::LoginHint};
+use mas_data_model::{oauth2::LoginHint, BrowserSession, UserAgent};
 use mas_i18n::DataLocale;
 use mas_matrix::BoxHomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
@@ -25,7 +25,8 @@ use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use mas_templates::{
-    FieldError, FormError, LoginContext, LoginFormField, PostAuthContext, PostAuthContextInner, TemplateContext, Templates, ToFormState
+    FieldError, FormError, LoginContext, LoginFormField, PostAuthContext, PostAuthContextInner,
+    TemplateContext, Templates, ToFormState,
 };
 use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
@@ -292,11 +293,17 @@ async fn login(
     Ok(user_session)
 }
 
-fn handle_login_hint(ctx: &mut LoginContext, next: &PostAuthContext, homeserver: BoxHomeserverConnection) {
+fn handle_login_hint(
+    ctx: &mut LoginContext,
+    next: &PostAuthContext,
+    homeserver: BoxHomeserverConnection,
+) {
     let form_state = ctx.form_state_mut();
 
     // Do not override username if coming from a failed login attempt
-    if form_state.has_value(LoginFormField::Username) { return; }
+    if form_state.has_value(LoginFormField::Username) {
+        return;
+    }
 
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
         let value = match grant.parse_login_hint(homeserver) {

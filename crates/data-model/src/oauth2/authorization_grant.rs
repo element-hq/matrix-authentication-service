@@ -210,9 +210,9 @@ impl AuthorizationGrant {
                 }
 
                 LoginHint::MXID(mxid)
-            },
+            }
             // Unknown hint type, treat as none
-            _ => LoginHint::None
+            _ => LoginHint::None,
         }
     }
 
@@ -279,16 +279,16 @@ impl AuthorizationGrant {
             response_type_id_token: false,
             created_at: now,
             requires_consent: false,
-            login_hint: Some(String::from("mxid:@example-user:example.com"))
+            login_hint: Some(String::from("mxid:@example-user:example.com")),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use mas_matrix::MockHomeserverConnection;
     use rand::thread_rng;
-    use super::*;
 
     fn get_homeserver() -> BoxHomeserverConnection {
         Box::new(MockHomeserverConnection::new("example.com"))

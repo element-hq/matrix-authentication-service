@@ -173,7 +173,10 @@ impl<K: FormField> FormState<K> {
 
     /// Checks if a field contains a value
     pub fn has_value(&self, field: K) -> bool {
-        self.fields.get(&field).map(|f| f.value.is_some()).unwrap_or(false)
+        self.fields
+            .get(&field)
+            .map(|f| f.value.is_some())
+            .unwrap_or(false)
     }
 
     /// Returns `true` if the form has no error attached to it
