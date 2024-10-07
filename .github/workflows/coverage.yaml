@@ -71,7 +71,7 @@ jobs:
         working-directory: ./frontend
         run: npm run coverage
         env:
-          UPLOAD_CODECOV_BUNDLE: true
+          UPLOAD_CODECOV_BUNDLE: "true"
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4.6.0
