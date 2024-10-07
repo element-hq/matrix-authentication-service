@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 # Async runtime
 tokio.workspace = true
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 async-trait.workspace = true
 
 # Logging and tracing

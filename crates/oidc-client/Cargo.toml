@@ -20,7 +20,7 @@ base64ct = { version = "1.6.0", features = ["std"] }
 bytes.workspace = true
 chrono.workspace = true
 form_urlencoded = "1.2.1"
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 headers.workspace = true
 http.workspace = true
 language-tags = "0.3.2"

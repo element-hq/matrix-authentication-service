@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 bytes.workspace = true
 event-listener = "5.3.1"
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 http-body.workspace = true
 hyper = { workspace = true, features = ["server"] }
 hyper-util.workspace = true
