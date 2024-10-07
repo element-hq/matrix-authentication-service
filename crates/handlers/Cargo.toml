@@ -32,7 +32,7 @@ hyper.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 axum.workspace = true
-axum-macros = "0.4.1"
+axum-macros = "0.4.2"
 axum-extra.workspace = true
 rustls.workspace = true
 
