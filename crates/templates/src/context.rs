@@ -482,6 +482,11 @@ impl LoginContext {
         Self { form, ..self }
     }
 
+    /// Mutably borrow the form state
+    pub fn form_state_mut(&mut self) -> &mut FormState<LoginFormField> {
+        &mut self.form
+    }
+
     /// Set the upstream OAuth 2.0 providers
     #[must_use]
     pub fn with_upstream_providers(self, providers: Vec<UpstreamOAuthProvider>) -> Self {

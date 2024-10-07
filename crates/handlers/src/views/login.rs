@@ -15,8 +15,9 @@ use mas_axum_utils::{
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
     FancyError, SessionInfoExt,
 };
-use mas_data_model::{BrowserSession, UserAgent};
+use mas_data_model::{BrowserSession, UserAgent, oauth2::LoginHint};
 use mas_i18n::DataLocale;
+use mas_matrix::BoxHomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
     upstream_oauth2::UpstreamOAuthProviderRepository,
@@ -24,7 +25,7 @@ use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use mas_templates::{
-    FieldError, FormError, LoginContext, LoginFormField, TemplateContext, Templates, ToFormState,
+    FieldError, FormError, LoginContext, LoginFormField, PostAuthContext, PostAuthContextInner, TemplateContext, Templates, ToFormState
 };
 use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
@@ -54,6 +55,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
+    State(homeserver): State<BoxHomeserverConnection>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
@@ -96,6 +98,7 @@ pub(crate) async fn get(
         csrf_token,
         &mut repo,
         &templates,
+        homeserver,
     )
     .await?;
 
@@ -112,6 +115,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(limiter): State<Limiter>,
+    State(homeserver): State<BoxHomeserverConnection>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
@@ -156,6 +160,7 @@ pub(crate) async fn post(
             csrf_token,
             &mut repo,
             &templates,
+            homeserver,
         )
         .await?;
 
@@ -196,6 +201,7 @@ pub(crate) async fn post(
                 csrf_token,
                 &mut repo,
                 &templates,
+                homeserver,
             )
             .await?;
 
@@ -286,16 +292,34 @@ async fn login(
     Ok(user_session)
 }
 
+fn handle_login_hint(ctx: &mut LoginContext, next: &PostAuthContext, homeserver: BoxHomeserverConnection) {
+    let form_state = ctx.form_state_mut();
+
+    // Do not override username if coming from a failed login attempt
+    if form_state.has_value(LoginFormField::Username) { return; }
+
+    if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
+        let value = match grant.parse_login_hint(homeserver) {
+            LoginHint::MXID(mxid) => Some(mxid.localpart().to_string()),
+            LoginHint::None => None,
+        };
+        form_state.set_value(LoginFormField::Username, value);
+    }
+}
+
 async fn render(
     locale: DataLocale,
-    ctx: LoginContext,
+    mut ctx: LoginContext,
     action: OptionalPostAuthAction,
     csrf_token: CsrfToken,
     repo: &mut impl RepositoryAccess,
     templates: &Templates,
+    homeserver: BoxHomeserverConnection,
 ) -> Result<String, FancyError> {
     let next = action.load_context(repo).await?;
     let ctx = if let Some(next) = next {
+        handle_login_hint(&mut ctx, &next, homeserver);
+
         ctx.with_post_action(next)
     } else {
         ctx
