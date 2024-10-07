@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , max_age\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , requires_consent\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE authorization_code = $1\n            ",
+  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , max_age\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , requires_consent\n                     , login_hint\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -95,13 +95,18 @@
       },
       {
         "ordinal": 18,
+        "name": "login_hint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -123,8 +128,9 @@
       true,
       true,
       false,
+      true,
       true
     ]
   },
-  "hash": "6a3b543ec53ce242866d1e84de26728e6dd275cae745f9c646e3824d859c5384"
+  "hash": "e0d3be7e741581430e3e4719c7e19596837234c94a398570bdac42652c2c4652"
 }
