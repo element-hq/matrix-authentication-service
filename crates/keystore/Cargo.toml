@@ -17,7 +17,7 @@ const-oid = { version = "0.9.6", features = ["std"] }
 der = { version = "0.7.9", features = ["std"] }
 ecdsa = { version = "0.16.9", features = ["std"] }
 elliptic-curve = { version = "0.13.8", features = ["std", "pem", "sec1"] }
-k256 = { version = "0.13.3", features = ["std"] }
+k256 = { version = "0.13.4", features = ["std"] }
 p256 = { version = "0.13.2", features = ["std"] }
 p384 = { version = "0.13.0", features = ["std"] }
 pem-rfc7468 = { version = "0.7.0", features = ["std"] }
