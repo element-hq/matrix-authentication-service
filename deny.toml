@@ -54,7 +54,6 @@ multiple-versions = "deny"
 
 skip = [
     { name = "base64", version = "0.21.7" },         # many dependencies depends on this old version
-    { name = "syn", version = "1.0.109" },           # sea-query, sqlx depend on the old version
     { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
     { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "regex-automata", version = "0.2.0" },  # icu_list depends on this old version
@@ -62,10 +61,6 @@ skip = [
     { name = "hashbrown" },                          # Too many versions :(
     # axum-macros, sqlx-macros and sea-query-attr use an old version
     { name = "heck", version = "0.4.1" },
-    # sea-query-attr uses an old version of darling
-    { name = "darling", version = "0.14.4" },
-    { name = "darling_core", version = "0.14.4" },
-    { name = "darling_macro", version = "0.14.4" },
     # async-graphql -> toml_edit depends on this old version
     { name = "winnow", version = "0.5.40" },
     # wasmtime -> cranelift is depending on this old version
