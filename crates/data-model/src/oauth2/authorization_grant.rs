@@ -8,6 +8,7 @@ use std::num::NonZeroU32;
 
 use chrono::{DateTime, Duration, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
+use mas_matrix::BoxHomeserverConnection;
 use oauth2_types::{
     pkce::{CodeChallengeError, CodeChallengeMethodExt},
     requests::ResponseMode,
@@ -17,6 +18,7 @@ use rand::{
     distributions::{Alphanumeric, DistString},
     RngCore,
 };
+use ruma_common::{OwnedUserId, UserId};
 use serde::Serialize;
 use ulid::Ulid;
 use url::Url;
@@ -141,6 +143,11 @@ impl AuthorizationGrantStage {
     }
 }
 
+pub enum LoginHint {
+    MXID(OwnedUserId),
+    None,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AuthorizationGrant {
     pub id: Ulid,
@@ -157,6 +164,7 @@ pub struct AuthorizationGrant {
     pub response_type_id_token: bool,
     pub created_at: DateTime<Utc>,
     pub requires_consent: bool,
+    pub login_hint: Option<String>,
 }
 
 impl std::ops::Deref for AuthorizationGrant {
@@ -177,6 +185,35 @@ impl AuthorizationGrant {
             .and_then(|x| Duration::try_seconds(x.get().into()))
             .unwrap_or(DEFAULT_MAX_AGE);
         self.created_at - max_age
+    }
+
+    pub fn parse_login_hint(&self, homeserver: BoxHomeserverConnection) -> LoginHint {
+        let Some(login_hint) = &self.login_hint else {
+            return LoginHint::None;
+        };
+
+        // Return none if the format is incorrect
+        let Some((prefix, value)) = login_hint.split_once(":") else {
+            return LoginHint::None;
+        };
+
+        match prefix {
+            "mxid" => {
+                // Instead of erroring just return none
+                let Ok(mxid) = UserId::parse(value) else {
+                    return LoginHint::None;
+                };
+
+                // Only handle MXIDs for current homeserver
+                if mxid.server_name() != homeserver.homeserver() {
+                    return LoginHint::None;
+                }
+
+                LoginHint::MXID(mxid)
+            },
+            // Unknown hint type, treat as none
+            _ => LoginHint::None
+        }
     }
 
     /// Mark the authorization grant as exchanged.
@@ -242,6 +279,93 @@ impl AuthorizationGrant {
             response_type_id_token: false,
             created_at: now,
             requires_consent: false,
+            login_hint: Some(String::from("mxid:@example-user:example.com"))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use mas_matrix::MockHomeserverConnection;
+    use rand::thread_rng;
+    use super::*;
+
+    fn get_homeserver() -> BoxHomeserverConnection {
+        Box::new(MockHomeserverConnection::new("example.com"))
+    }
+
+    #[test]
+    fn no_login_hint() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        let grant = AuthorizationGrant {
+            login_hint: None,
+            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+        };
+
+        let hint = grant.parse_login_hint(get_homeserver());
+
+        assert!(matches!(hint, LoginHint::None));
+    }
+
+    #[test]
+    fn valid_login_hint() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("mxid:@example-user:example.com")),
+            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+        };
+
+        let hint = grant.parse_login_hint(get_homeserver());
+
+        assert!(matches!(hint, LoginHint::MXID(mxid) if mxid.localpart() == "example-user"));
+    }
+
+    #[test]
+    fn invalid_login_hint() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("example-user")),
+            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+        };
+
+        let hint = grant.parse_login_hint(get_homeserver());
+
+        assert!(matches!(hint, LoginHint::None));
+    }
+
+    #[test]
+    fn valid_login_hint_for_wrong_homeserver() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("mxid:@example-user:matrix.org")),
+            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+        };
+
+        let hint = grant.parse_login_hint(get_homeserver());
+
+        assert!(matches!(hint, LoginHint::None));
+    }
+
+    #[test]
+    fn unknown_login_hint_type() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("something:anything")),
+            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+        };
+
+        let hint = grant.parse_login_hint(get_homeserver());
+
+        assert!(matches!(hint, LoginHint::None));
     }
 }
