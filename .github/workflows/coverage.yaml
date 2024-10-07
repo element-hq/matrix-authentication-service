@@ -47,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -56,11 +57,17 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4.0.4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Node dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: Build the frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          UPLOAD_CODECOV_BUNDLE: "true"
 
       - name: Test
         working-directory: ./frontend
@@ -112,7 +119,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4.0.4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Node dependencies
         working-directory: ./frontend
