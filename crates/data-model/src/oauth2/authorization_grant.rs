@@ -187,13 +187,14 @@ impl AuthorizationGrant {
         self.created_at - max_age
     }
 
-    pub fn parse_login_hint(&self, homeserver: BoxHomeserverConnection) -> LoginHint {
+    #[must_use]
+    pub fn parse_login_hint(&self, homeserver: &BoxHomeserverConnection) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
 
         // Return none if the format is incorrect
-        let Some((prefix, value)) = login_hint.split_once(":") else {
+        let Some((prefix, value)) = login_hint.split_once(':') else {
             return LoginHint::None;
         };
 
@@ -304,7 +305,7 @@ mod tests {
             ..AuthorizationGrant::sample(Utc::now(), &mut rng)
         };
 
-        let hint = grant.parse_login_hint(get_homeserver());
+        let hint = grant.parse_login_hint(&get_homeserver());
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -319,7 +320,7 @@ mod tests {
             ..AuthorizationGrant::sample(Utc::now(), &mut rng)
         };
 
-        let hint = grant.parse_login_hint(get_homeserver());
+        let hint = grant.parse_login_hint(&get_homeserver());
 
         assert!(matches!(hint, LoginHint::MXID(mxid) if mxid.localpart() == "example-user"));
     }
@@ -334,7 +335,7 @@ mod tests {
             ..AuthorizationGrant::sample(Utc::now(), &mut rng)
         };
 
-        let hint = grant.parse_login_hint(get_homeserver());
+        let hint = grant.parse_login_hint(&get_homeserver());
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -349,7 +350,7 @@ mod tests {
             ..AuthorizationGrant::sample(Utc::now(), &mut rng)
         };
 
-        let hint = grant.parse_login_hint(get_homeserver());
+        let hint = grant.parse_login_hint(&get_homeserver());
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -364,7 +365,7 @@ mod tests {
             ..AuthorizationGrant::sample(Utc::now(), &mut rng)
         };
 
-        let hint = grant.parse_login_hint(get_homeserver());
+        let hint = grant.parse_login_hint(&get_homeserver());
 
         assert!(matches!(hint, LoginHint::None));
     }
