@@ -3084,7 +3084,6 @@ version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
 dependencies = [
- "cc",
  "pkg-config",
  "vcpkg",
 ]
@@ -5883,20 +5882,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b9b39299b249ad65f3b7e96443bad61c02ca5cd3589f46cb6d610a0fd6c0d6a"
 
 [[package]]
-name = "sqlformat"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bba3a93db0cc4f7bdece8bb09e77e2e785c20bfebf79eb8340ed80708048790"
-dependencies = [
- "nom",
- "unicode_categories",
-]
-
-[[package]]
 name = "sqlx"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93334716a037193fac19df402f8571269c84a00852f6a7066b5d2616dcd64d3e"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -5908,31 +5896,25 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d8060b456358185f7d50c55d9b5066ad956956fddec42ee2e8567134a8936e"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
- "atoi",
- "byteorder",
  "bytes",
  "chrono",
  "crc",
  "crossbeam-queue",
  "either",
  "event-listener 5.3.1",
- "futures-channel",
  "futures-core",
  "futures-intrusive",
  "futures-io",
  "futures-util",
  "hashbrown 0.14.5",
  "hashlink",
- "hex",
  "indexmap 2.6.0",
  "ipnetwork",
  "log",
  "memchr",
  "once_cell",
- "paste",
  "percent-encoding",
  "rustls",
  "rustls-pemfile",
@@ -5940,8 +5922,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "smallvec",
- "sqlformat",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -5953,8 +5934,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cac0692bcc9de3b073e8d747391827297e075c7710ff6276d9f7a1f3d58c6657"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5966,8 +5946,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1804e8a7c7865599c9c79be146dc8a9fd8cc86935fa641d3ea58e5f0688abaa5"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "dotenvy",
  "either",
@@ -5992,8 +5971,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64bb4714269afa44aef2755150a0fc19d756fb580a67db8885608cf02f47d06a"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -6027,7 +6005,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
  "uuid",
  "whoami",
@@ -6036,8 +6014,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fa91a732d854c5d7726349bb4bb879bb9478993ceb764247660aee25f67c2f8"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -6049,7 +6026,6 @@ dependencies = [
  "etcetera",
  "futures-channel",
  "futures-core",
- "futures-io",
  "futures-util",
  "hex",
  "hkdf",
@@ -6068,7 +6044,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
  "uuid",
  "whoami",
@@ -6077,8 +6053,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5b2cf34a45953bfd3daaf3db0f7a7878ab9b7a6b91b422d24a7a9e4c857b680"
+source = "git+https://github.com/launchbadge/sqlx.git?branch=main#42ce24dab87aad98f041cafb35cf9a7d5b2b09a7"
 dependencies = [
  "atoi",
  "chrono",
@@ -6776,12 +6751,6 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
-
-[[package]]
-name = "unicode_categories"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
 
 [[package]]
 name = "universal-hash"
