@@ -301,9 +301,12 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let mut rng = thread_rng();
 
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
         let grant = AuthorizationGrant {
             login_hint: None,
-            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+            ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint(&get_homeserver());
@@ -316,9 +319,12 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let mut rng = thread_rng();
 
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:example.com")),
-            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+            ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint(&get_homeserver());
@@ -331,9 +337,12 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let mut rng = thread_rng();
 
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("example-user")),
-            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+            ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint(&get_homeserver());
@@ -346,9 +355,12 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let mut rng = thread_rng();
 
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:matrix.org")),
-            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+            ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint(&get_homeserver());
@@ -361,9 +373,12 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let mut rng = thread_rng();
 
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("something:anything")),
-            ..AuthorizationGrant::sample(Utc::now(), &mut rng)
+            ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint(&get_homeserver());
