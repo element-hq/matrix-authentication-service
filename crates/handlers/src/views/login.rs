@@ -296,7 +296,7 @@ async fn login(
 fn handle_login_hint(
     ctx: &mut LoginContext,
     next: &PostAuthContext,
-    homeserver: BoxHomeserverConnection,
+    homeserver: &BoxHomeserverConnection,
 ) {
     let form_state = ctx.form_state_mut();
 
@@ -307,7 +307,7 @@ fn handle_login_hint(
 
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
         let value = match grant.parse_login_hint(homeserver) {
-            LoginHint::MXID(mxid) => Some(mxid.localpart().to_string()),
+            LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
             LoginHint::None => None,
         };
         form_state.set_value(LoginFormField::Username, value);
@@ -325,7 +325,7 @@ async fn render(
 ) -> Result<String, FancyError> {
     let next = action.load_context(repo).await?;
     let ctx = if let Some(next) = next {
-        handle_login_hint(&mut ctx, &next, homeserver);
+        handle_login_hint(&mut ctx, &next, &homeserver);
 
         ctx.with_post_action(next)
     } else {

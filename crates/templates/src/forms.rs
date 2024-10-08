@@ -175,8 +175,7 @@ impl<K: FormField> FormState<K> {
     pub fn has_value(&self, field: K) -> bool {
         self.fields
             .get(&field)
-            .map(|f| f.value.is_some())
-            .unwrap_or(false)
+            .is_some_and(|f| f.value.is_some())
     }
 
     /// Returns `true` if the form has no error attached to it
