@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM upstream_oauth_links\n                WHERE upstream_oauth_link_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cc60ad934d347fb4546205d1fe07e9d2f127cb15b1bb650d1ea3805a4c55b196"
+}

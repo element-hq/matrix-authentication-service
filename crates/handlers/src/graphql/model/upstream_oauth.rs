@@ -7,7 +7,11 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Object, ID};
 use chrono::{DateTime, Utc};
-use mas_storage::{upstream_oauth2::UpstreamOAuthProviderRepository, user::UserRepository};
+use mas_storage::{
+    upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthProviderRepository},
+    user::UserRepository,
+    Pagination,
+};
 
 use super::{NodeType, User};
 use crate::graphql::state::ContextExt;
@@ -44,6 +48,41 @@ impl UpstreamOAuth2Provider {
     /// Client ID used for this provider.
     pub async fn client_id(&self) -> &str {
         &self.provider.client_id
+    }
+
+    /// The human-readable name of the provider.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.provider.human_name.as_deref()
+    }
+
+    /// UpstreamOAuth2Links associated with this provider for the current user.
+    pub async fn upstream_oauth2_links_for_user(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Vec<UpstreamOAuth2Link>, async_graphql::Error> {
+        let state = ctx.state();
+        let user = ctx
+            .requester()
+            .user()
+            .ok_or_else(|| async_graphql::Error::new("User ID not found in the request context"))?;
+
+        let mut repo = state.repository().await?;
+        let filter = UpstreamOAuthLinkFilter::new()
+            .for_provider(&self.provider)
+            .for_user(&user);
+        let links = repo
+            .upstream_oauth_link()
+            // Hardcoded limit of 100 links. We do not expect reasonably more links
+            // See also https://github.com/element-hq/matrix-authentication-service/pull/3245#discussion_r1776850096
+            .list(filter, Pagination::first(100))
+            .await?;
+        repo.cancel().await?;
+
+        Ok(links
+            .edges
+            .into_iter()
+            .map(UpstreamOAuth2Link::new)
+            .collect())
     }
 }
 
