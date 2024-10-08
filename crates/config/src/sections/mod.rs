@@ -38,7 +38,7 @@ pub use self::{
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
     },
     matrix::MatrixConfig,
-    passwords::{Algorithm as PasswordAlgorithm, PasswordsConfig},
+    passwords::{Algorithm as PasswordAlgorithm, PasswordsConfig, RestAuthProviderConfig},
     policy::PolicyConfig,
     rate_limiting::RateLimitingConfig,
     secrets::SecretsConfig,
