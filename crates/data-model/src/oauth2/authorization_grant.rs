@@ -287,9 +287,10 @@ impl AuthorizationGrant {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use mas_matrix::MockHomeserverConnection;
     use rand::thread_rng;
+
+    use super::*;
 
     fn get_homeserver() -> BoxHomeserverConnection {
         Box::new(MockHomeserverConnection::new("example.com"))
