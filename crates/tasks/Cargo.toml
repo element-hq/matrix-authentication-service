@@ -15,7 +15,7 @@ workspace = true
 anyhow.workspace = true
 apalis-core = { version = "0.4.9", features = ["extensions", "tokio-comp", "storage"] }
 apalis-cron = "0.4.9"
-async-stream = "0.3.5"
+async-stream.workspace = true
 async-trait.workspace = true
 chrono.workspace = true
 event-listener = "5.3.1"
