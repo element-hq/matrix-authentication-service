@@ -3083,7 +3083,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -5800,8 +5800,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93334716a037193fac19df402f8571269c84a00852f6a7066b5d2616dcd64d3e"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -5813,8 +5812,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d8060b456358185f7d50c55d9b5066ad956956fddec42ee2e8567134a8936e"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "atoi",
  "byteorder",
@@ -5858,8 +5856,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cac0692bcc9de3b073e8d747391827297e075c7710ff6276d9f7a1f3d58c6657"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5871,8 +5868,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros-core"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1804e8a7c7865599c9c79be146dc8a9fd8cc86935fa641d3ea58e5f0688abaa5"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "dotenvy",
  "either",
@@ -5897,8 +5893,7 @@ dependencies = [
 [[package]]
 name = "sqlx-mysql"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64bb4714269afa44aef2755150a0fc19d756fb580a67db8885608cf02f47d06a"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -5941,8 +5936,7 @@ dependencies = [
 [[package]]
 name = "sqlx-postgres"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fa91a732d854c5d7726349bb4bb879bb9478993ceb764247660aee25f67c2f8"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -5982,8 +5976,7 @@ dependencies = [
 [[package]]
 name = "sqlx-sqlite"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5b2cf34a45953bfd3daaf3db0f7a7878ab9b7a6b91b422d24a7a9e4c857b680"
+source = "git+https://github.com/sandhose/sqlx.git?branch=quenting/pglistener-executor#ce8d83f431f2d0925810cd53eafa2d56c0d927bd"
 dependencies = [
  "atoi",
  "chrono",
@@ -7138,7 +7131,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
