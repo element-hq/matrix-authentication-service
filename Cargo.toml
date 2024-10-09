@@ -259,6 +259,11 @@ version = "1.0.64"
 version = "1.40.0"
 features = ["full"]
 
+# Useful async utilities
+[workspace.dependencies.tokio-util]
+version = "0.7.12"
+features = ["rt"]
+
 # Tower services
 [workspace.dependencies.tower]
 version = "0.5.1"

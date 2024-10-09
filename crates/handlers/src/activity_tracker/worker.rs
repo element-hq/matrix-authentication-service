@@ -13,6 +13,7 @@ use opentelemetry::{
     Key,
 };
 use sqlx::PgPool;
+use tokio_util::sync::CancellationToken;
 use ulid::Ulid;
 
 use crate::activity_tracker::{Message, SessionKind};
@@ -88,9 +89,30 @@ impl Worker {
         }
     }
 
-    pub(super) async fn run(mut self, mut receiver: tokio::sync::mpsc::Receiver<Message>) {
-        let mut shutdown_notifier = None;
-        while let Some(message) = receiver.recv().await {
+    pub(super) async fn run(
+        mut self,
+        mut receiver: tokio::sync::mpsc::Receiver<Message>,
+        cancellation_token: CancellationToken,
+    ) {
+        loop {
+            let message = tokio::select! {
+                // Because we want the cancellation token to trigger only once,
+                // we looked whether we closed the channel or not
+                () = cancellation_token.cancelled(), if !receiver.is_closed() => {
+                    // We only close the channel, which will make it flush all
+                    // the pending messages
+                    receiver.close();
+                    tracing::debug!("Shutting down activity tracker");
+                    continue;
+                },
+
+                message = receiver.recv()  => {
+                    // We consumed all the messages, break out of the loop
+                    let Some(message) = message else { break };
+                    message
+                }
+            };
+
             match message {
                 Message::Record {
                     kind,
@@ -129,37 +151,18 @@ impl Worker {
 
                     record.end_time = date_time.max(record.end_time);
                 }
+
                 Message::Flush(tx) => {
                     self.message_counter.add(1, &[TYPE.string("flush")]);
 
                     self.flush().await;
                     let _ = tx.send(());
                 }
-                Message::Shutdown(tx) => {
-                    self.message_counter.add(1, &[TYPE.string("shutdown")]);
-
-                    let old_tx = shutdown_notifier.replace(tx);
-                    if let Some(old_tx) = old_tx {
-                        tracing::warn!("Activity tracker shutdown requested while another shutdown was already in progress");
-                        // Still send the shutdown signal to the previous notifier. This means we
-                        // send the shutdown signal before we flush the activity tracker, but that
-                        // should be fine, since there should not be multiple shutdown requests.
-                        let _ = old_tx.send(());
-                    }
-                    receiver.close();
-                }
             }
         }
 
+        // Flush one last time
         self.flush().await;
-
-        if let Some(shutdown_notifier) = shutdown_notifier {
-            let _ = shutdown_notifier.send(());
-        } else {
-            // This should never happen, since we set the shutdown notifier when we receive
-            // the first shutdown message
-            tracing::warn!("Activity tracker shutdown requested but no shutdown notifier was set");
-        }
     }
 
     /// Flush the activity tracker.

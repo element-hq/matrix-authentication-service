@@ -7,13 +7,12 @@
 use std::{
     future::Future,
     pin::Pin,
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
     task::{Context, Poll},
     time::Duration,
 };
 
-use event_listener::{Event, EventListener};
-use futures_util::{stream::SelectAll, Stream, StreamExt};
+use futures_util::{stream::SelectAll, StreamExt};
 use hyper::{Request, Response};
 use hyper_util::{
     rt::{TokioExecutor, TokioIo},
@@ -23,6 +22,7 @@ use hyper_util::{
 use pin_project_lite::pin_project;
 use thiserror::Error;
 use tokio_rustls::rustls::ServerConfig;
+use tokio_util::sync::{CancellationToken, WaitForCancellationFutureOwned};
 use tower::Service;
 use tower_http::add_extension::AddExtension;
 use tracing::Instrument;
@@ -84,18 +84,24 @@ impl<S> Server<S> {
     }
 
     /// Run a single server
-    pub async fn run<B, SD>(self, shutdown: SD)
-    where
+    pub async fn run<B>(
+        self,
+        soft_shutdown_token: CancellationToken,
+        hard_shutdown_token: CancellationToken,
+    ) where
         S: Service<Request<hyper::body::Incoming>, Response = Response<B>> + Clone + Send + 'static,
         S::Future: Send + 'static,
         S::Error: std::error::Error + Send + Sync + 'static,
         B: http_body::Body + Send + 'static,
         B::Data: Send,
         B::Error: std::error::Error + Send + Sync + 'static,
-        SD: Stream + Unpin,
-        SD::Item: std::fmt::Display,
     {
-        run_servers(std::iter::once(self), shutdown).await;
+        run_servers(
+            std::iter::once(self),
+            soft_shutdown_token,
+            hard_shutdown_token,
+        )
+        .await;
     }
 }
 
@@ -252,18 +258,16 @@ pin_project! {
         #[pin]
         connection: C,
         #[pin]
-        shutdown_listener: EventListener,
-        shutdown_in_progress: Arc<AtomicBool>,
+        cancellation_future: WaitForCancellationFutureOwned,
         did_start_shutdown: bool,
     }
 }
 
 impl<C> AbortableConnection<C> {
-    fn new(connection: C, shutdown_in_progress: &Arc<AtomicBool>, event: &Arc<Event>) -> Self {
+    fn new(connection: C, cancellation_token: CancellationToken) -> Self {
         Self {
             connection,
-            shutdown_listener: event.listen(),
-            shutdown_in_progress: Arc::clone(shutdown_in_progress),
+            cancellation_future: cancellation_token.cancelled_owned(),
             did_start_shutdown: false,
         }
     }
@@ -286,19 +290,11 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut this = self.project();
 
-        // Poll the shutdown signal, so that wakers get registered.
-        // XXX: I don't think we care about the result of this poll, since it's only
-        // really to register wakers. But I'm not sure if it's safe to
-        // ignore the result.
-        let _ = this.shutdown_listener.poll(cx);
-
-        if !*this.did_start_shutdown
-            && this
-                .shutdown_in_progress
-                .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            *this.did_start_shutdown = true;
-            this.connection.as_mut().graceful_shutdown();
+        if let Poll::Ready(()) = this.cancellation_future.poll(cx) {
+            if !*this.did_start_shutdown {
+                *this.did_start_shutdown = true;
+                this.connection.as_mut().graceful_shutdown();
+            }
         }
 
         this.connection.poll(cx)
@@ -306,16 +302,17 @@ where
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn run_servers<S, B, SD>(listeners: impl IntoIterator<Item = Server<S>>, mut shutdown: SD)
-where
+pub async fn run_servers<S, B>(
+    listeners: impl IntoIterator<Item = Server<S>>,
+    soft_shutdown_token: CancellationToken,
+    hard_shutdown_token: CancellationToken,
+) where
     S: Service<Request<hyper::body::Incoming>, Response = Response<B>> + Clone + Send + 'static,
     S::Future: Send + 'static,
     S::Error: std::error::Error + Send + Sync + 'static,
     B: http_body::Body + Send + 'static,
     B::Data: Send,
     B::Error: std::error::Error + Send + Sync + 'static,
-    SD: Stream + Unpin,
-    SD::Item: std::fmt::Display,
 {
     // Create a stream of accepted connections out of the listeners
     let mut accept_stream: SelectAll<_> = listeners
@@ -344,19 +341,13 @@ where
     // A JoinSet which collects connections that are being served
     let mut connection_tasks = tokio::task::JoinSet::new();
 
-    // A shared atomic boolean to tell all connections to shutdown
-    let shutdown_in_progress = Arc::new(AtomicBool::new(false));
-    let shutdown_event = Arc::new(Event::new());
-
     loop {
         tokio::select! {
             biased;
 
             // First look for the shutdown signal
-            res = shutdown.next() => {
-                let why = res.map_or_else(|| String::from("???"), |why| format!("{why}"));
-                tracing::info!("Received shutdown signal ({why})");
-
+            () = soft_shutdown_token.cancelled() => {
+                tracing::debug!("Shutting down listeners");
                 break;
             },
 
@@ -365,7 +356,7 @@ where
                 match res {
                     Some(Ok(Ok(connection))) => {
                         tracing::trace!("Accepted connection");
-                        let conn = AbortableConnection::new(connection, &shutdown_in_progress, &shutdown_event);
+                        let conn = AbortableConnection::new(connection, soft_shutdown_token.child_token());
                         connection_tasks.spawn(conn);
                     },
                     Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
@@ -385,9 +376,8 @@ where
             },
 
             // Look for connections to accept
-            res = accept_stream.next(), if !accept_stream.is_empty() => {
-                // SAFETY: We shouldn't reach this branch if the stream set is empty
-                let Some(res) = res else { unreachable!() };
+            res = accept_stream.next() => {
+                let Some(res) = res else { continue };
 
                 // Spawn the connection in the set, so we don't have to wait for the handshake to
                 // accept the next connection. This allows us to keep track of active connections
@@ -400,10 +390,6 @@ where
             },
         };
     }
-
-    // Tell the active connections to shutdown
-    shutdown_in_progress.store(true, std::sync::atomic::Ordering::Relaxed);
-    shutdown_event.notify(usize::MAX);
 
     // Wait for connections to cleanup
     if !accept_tasks.is_empty() || !connection_tasks.is_empty() {
@@ -422,7 +408,7 @@ where
                     match res {
                         Some(Ok(Ok(connection))) => {
                             tracing::trace!("Accepted connection");
-                            let conn = AbortableConnection::new(connection, &shutdown_in_progress, &shutdown_event);
+                            let conn = AbortableConnection::new(connection, soft_shutdown_token.child_token());
                             connection_tasks.spawn(conn);
                         }
                         Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
@@ -441,11 +427,10 @@ where
                     }
                 },
 
-                // Handle when we receive the shutdown signal again
-                res = shutdown.next() => {
-                    let why = res.map_or_else(|| String::from("???"), |why| format!("{why}"));
+                // Handle when we are asked to hard shutdown
+                () = hard_shutdown_token.cancelled() => {
                     tracing::warn!(
-                        "Received shutdown signal again ({why}), forcing shutdown ({active} active connections, {pending} pending connections)",
+                        "Forcing shutdown ({active} active connections, {pending} pending connections)",
                         active = connection_tasks.len(),
                         pending = accept_tasks.len(),
                     );
@@ -457,5 +442,4 @@ where
 
     accept_tasks.shutdown().await;
     connection_tasks.shutdown().await;
-    tracing::info!("Shutdown complete");
 }

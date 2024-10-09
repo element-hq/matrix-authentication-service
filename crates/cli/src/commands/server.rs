@@ -14,7 +14,7 @@ use mas_config::{
     AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
 };
 use mas_handlers::{ActivityTracker, CookieManager, HttpClientFactory, Limiter, MetadataCache};
-use mas_listener::{server::Server, shutdown::ShutdownStream};
+use mas_listener::server::Server;
 use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
@@ -24,11 +24,11 @@ use rand::{
     thread_rng,
 };
 use sqlx::migrate::Migrate;
-use tokio::signal::unix::SignalKind;
 use tracing::{info, info_span, warn, Instrument};
 
 use crate::{
     app_state::AppState,
+    shutdown::ShutdownManager,
     util::{
         database_pool_from_config, mailer_from_config, password_manager_from_config,
         policy_factory_from_config, register_sighup, site_config_from_config,
@@ -61,6 +61,7 @@ impl Options {
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
+        let shutdown = ShutdownManager::new()?;
         let config = AppConfig::extract(figment)?;
 
         if self.migrate {
@@ -173,8 +174,21 @@ impl Options {
                 url_builder.clone(),
             )
             .await?;
-            // TODO: grab the handle
-            tokio::spawn(monitor.run());
+
+            // XXX: The monitor from apalis is a bit annoying to use for graceful shutdowns,
+            // ideally we'd just give it a cancellation token
+            let shutdown_future = shutdown.soft_shutdown_token().cancelled_owned();
+            shutdown.task_tracker().spawn(async move {
+                if let Err(e) = monitor
+                    .run_with_signal(async move {
+                        shutdown_future.await;
+                        Ok(())
+                    })
+                    .await
+                {
+                    tracing::error!(error = &e as &dyn std::error::Error, "Task worker failed");
+                }
+            });
         }
 
         let listeners_config = config.http.listeners.clone();
@@ -186,7 +200,12 @@ impl Options {
 
         // Initialize the activity tracker
         // Activity is flushed every minute
-        let activity_tracker = ActivityTracker::new(pool.clone(), Duration::from_secs(60));
+        let activity_tracker = ActivityTracker::new(
+            pool.clone(),
+            Duration::from_secs(60),
+            shutdown.task_tracker(),
+            shutdown.soft_shutdown_token(),
+        );
         let trusted_proxies = config.http.trusted_proxies.clone();
 
         // Build a rate limiter.
@@ -302,16 +321,17 @@ impl Options {
             .flatten_ok()
             .collect::<Result<Vec<_>, _>>()?;
 
-        let shutdown = ShutdownStream::default()
-            .with_timeout(Duration::from_secs(60))
-            .with_signal(SignalKind::terminate())?
-            .with_signal(SignalKind::interrupt())?;
-
         span.exit();
 
-        mas_listener::server::run_servers(servers, shutdown).await;
+        shutdown
+            .task_tracker()
+            .spawn(mas_listener::server::run_servers(
+                servers,
+                shutdown.soft_shutdown_token(),
+                shutdown.hard_shutdown_token(),
+            ));
 
-        state.activity_tracker.shutdown().await;
+        shutdown.run().await;
 
         Ok(ExitCode::SUCCESS)
     }
