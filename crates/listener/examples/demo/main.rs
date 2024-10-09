@@ -14,9 +14,9 @@ use std::{
 
 use anyhow::Context;
 use hyper::{Request, Response};
-use mas_listener::{server::Server, shutdown::ShutdownStream, ConnectionInfo};
-use tokio::signal::unix::SignalKind;
+use mas_listener::{server::Server, ConnectionInfo};
 use tokio_rustls::rustls::{server::WebPkiClientVerifier, RootCertStore, ServerConfig};
+use tokio_util::sync::CancellationToken;
 use tower::service_fn;
 
 static CA_CERT_PEM: &[u8] = include_bytes!("./certs/ca.pem");
@@ -53,12 +53,23 @@ async fn main() -> Result<(), anyhow::Error> {
 
     tracing::info!("Listening on http://127.0.0.1:3000, http(proxy)://127.0.0.1:3001, https://127.0.0.1:3002 and https(proxy)://127.0.0.1:3003");
 
-    let shutdown = ShutdownStream::default()
-        .with_timeout(Duration::from_secs(1))
-        .with_signal(SignalKind::interrupt())?
-        .with_signal(SignalKind::terminate())?;
+    let hard_shutdown = CancellationToken::new();
+    let soft_shutdown = hard_shutdown.child_token();
 
-    mas_listener::server::run_servers(servers, shutdown).await;
+    {
+        let hard_shutdown = hard_shutdown.clone();
+        let soft_shutdown = soft_shutdown.clone();
+        tokio::spawn(async move {
+            tokio::signal::ctrl_c().await.unwrap();
+            tracing::info!("Ctrl-C received, performing soft-shutdown");
+            soft_shutdown.cancel();
+            tokio::signal::ctrl_c().await.unwrap();
+            tracing::info!("Ctrl-C received again, shutting down");
+            hard_shutdown.cancel();
+        });
+    }
+
+    mas_listener::server::run_servers(servers, hard_shutdown, soft_shutdown).await;
 
     Ok(())
 }

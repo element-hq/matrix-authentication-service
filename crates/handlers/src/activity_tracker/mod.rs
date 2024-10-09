@@ -13,6 +13,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, CompatSession, Session};
 use mas_storage::Clock;
 use sqlx::PgPool;
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use ulid::Ulid;
 
 pub use self::bound::Bound;
@@ -45,7 +46,6 @@ enum Message {
         ip: Option<IpAddr>,
     },
     Flush(tokio::sync::oneshot::Sender<()>),
-    Shutdown(tokio::sync::oneshot::Sender<()>),
 }
 
 #[derive(Clone)]
@@ -54,16 +54,29 @@ pub struct ActivityTracker {
 }
 
 impl ActivityTracker {
-    /// Create a new activity tracker, spawning the worker.
+    /// Create a new activity tracker
+    ///
+    /// It will spawn the background worker and a loop to flush the tracker on
+    /// the task tracker, and both will shut themselves down, flushing one last
+    /// time, when the cancellation token is cancelled.
     #[must_use]
-    pub fn new(pool: PgPool, flush_interval: std::time::Duration) -> Self {
+    pub fn new(
+        pool: PgPool,
+        flush_interval: std::time::Duration,
+        task_tracker: &TaskTracker,
+        cancellation_token: CancellationToken,
+    ) -> Self {
         let worker = Worker::new(pool);
         let (sender, receiver) = tokio::sync::mpsc::channel(MESSAGE_QUEUE_SIZE);
         let tracker = ActivityTracker { channel: sender };
 
         // Spawn the flush loop and the worker
-        tokio::spawn(tracker.clone().flush_loop(flush_interval));
-        tokio::spawn(worker.run(receiver));
+        task_tracker.spawn(
+            tracker
+                .clone()
+                .flush_loop(flush_interval, cancellation_token.clone()),
+        );
+        task_tracker.spawn(worker.run(receiver, cancellation_token));
 
         tracker
     }
@@ -148,49 +161,46 @@ impl ActivityTracker {
         match res {
             Ok(()) => {
                 if let Err(e) = rx.await {
-                    tracing::error!("Failed to flush activity tracker: {}", e);
+                    tracing::error!(
+                        error = &e as &dyn std::error::Error,
+                        "Failed to flush activity tracker"
+                    );
                 }
             }
             Err(e) => {
-                tracing::error!("Failed to flush activity tracker: {}", e);
+                tracing::error!(
+                    error = &e as &dyn std::error::Error,
+                    "Failed to flush activity tracker"
+                );
             }
         }
     }
 
     /// Regularly flush the activity tracker.
-    async fn flush_loop(self, interval: std::time::Duration) {
+    async fn flush_loop(
+        self,
+        interval: std::time::Duration,
+        cancellation_token: CancellationToken,
+    ) {
         loop {
             tokio::select! {
                 biased;
 
+                () = cancellation_token.cancelled() => {
+                    // The cancellation token was cancelled, so we should exit
+                    return;
+                }
+
                 // First check if the channel is closed, then check if the timer expired
                 () = self.channel.closed() => {
                     // The channel was closed, so we should exit
-                    break;
+                    return;
                 }
+
 
                 () = tokio::time::sleep(interval) => {
                     self.flush().await;
                 }
-            }
-        }
-    }
-
-    /// Shutdown the activity tracker.
-    ///
-    /// This will wait for all pending messages to be processed.
-    pub async fn shutdown(&self) {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let res = self.channel.send(Message::Shutdown(tx)).await;
-
-        match res {
-            Ok(()) => {
-                if let Err(e) = rx.await {
-                    tracing::error!("Failed to shutdown activity tracker: {}", e);
-                }
-            }
-            Err(e) => {
-                tracing::error!("Failed to shutdown activity tracker: {}", e);
             }
         }
     }

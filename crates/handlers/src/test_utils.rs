@@ -44,6 +44,10 @@ use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use serde::{de::DeserializeOwned, Serialize};
 use sqlx::PgPool;
+use tokio_util::{
+    sync::{CancellationToken, DropGuard},
+    task::TaskTracker,
+};
 use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
@@ -105,6 +109,9 @@ pub(crate) struct TestState {
     pub limiter: Limiter,
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
+
+    #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
+    cancellation_drop_guard: Arc<DropGuard>,
 }
 
 fn workspace_root() -> camino::Utf8PathBuf {
@@ -146,6 +153,9 @@ impl TestState {
         site_config: SiteConfig,
     ) -> Result<Self, anyhow::Error> {
         let workspace_root = workspace_root();
+
+        let task_tracker = TaskTracker::new();
+        let shutdown_token = CancellationToken::new();
 
         let url_builder = UrlBuilder::new("https://example.com/".parse()?, None, None);
 
@@ -204,8 +214,12 @@ impl TestState {
 
         let graphql_schema = graphql::schema_builder().data(state).finish();
 
-        let activity_tracker =
-            ActivityTracker::new(pool.clone(), std::time::Duration::from_secs(1));
+        let activity_tracker = ActivityTracker::new(
+            pool.clone(),
+            std::time::Duration::from_secs(60),
+            &task_tracker,
+            shutdown_token.child_token(),
+        );
 
         let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
 
@@ -227,6 +241,7 @@ impl TestState {
             limiter,
             clock,
             rng,
+            cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
     }
 

@@ -16,7 +16,6 @@ pub mod maybe_tls;
 pub mod proxy_protocol;
 pub mod rewind;
 pub mod server;
-pub mod shutdown;
 pub mod unix_or_tcp;
 
 #[derive(Debug, Clone)]
