@@ -79,11 +79,7 @@ impl<'c> QueueWorkerRepository for PgQueueWorkerRepository<'c> {
         ),
         err,
     )]
-    async fn heartbeat(
-        &mut self,
-        clock: &dyn Clock,
-        worker: Worker,
-    ) -> Result<Worker, Self::Error> {
+    async fn heartbeat(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error> {
         let now = clock.now();
         let res = sqlx::query!(
             r#"
@@ -101,7 +97,7 @@ impl<'c> QueueWorkerRepository for PgQueueWorkerRepository<'c> {
         // If no row was updated, the worker was shutdown so we return an error
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        Ok(worker)
+        Ok(())
     }
 
     #[tracing::instrument(
