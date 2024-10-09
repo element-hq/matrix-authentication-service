@@ -15,7 +15,7 @@ pub async fn run(state: State) -> Result<(), RepositoryError> {
     let mut rng = state.rng();
     let clock = state.clock();
 
-    let mut worker = repo.queue_worker().register(&mut rng, &clock).await?;
+    let worker = repo.queue_worker().register(&mut rng, &clock).await?;
     span.record("worker.id", tracing::field::display(worker.id));
     repo.save().await?;
 
@@ -44,7 +44,7 @@ pub async fn run(state: State) -> Result<(), RepositoryError> {
         // on a logged table
         if now - last_heartbeat >= chrono::Duration::minutes(1) {
             tracing::info!("Sending heartbeat");
-            worker = repo.queue_worker().heartbeat(&clock, worker).await?;
+            repo.queue_worker().heartbeat(&clock, &worker).await?;
             last_heartbeat = now;
         }
 

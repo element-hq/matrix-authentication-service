@@ -40,14 +40,11 @@ pub trait QueueWorkerRepository: Send + Sync {
 
     /// Send a heartbeat for the given worker.
     ///
-    /// Returns the updated worker.
-    ///
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails or if the worker was
     /// shutdown.
-    async fn heartbeat(&mut self, clock: &dyn Clock, worker: Worker)
-        -> Result<Worker, Self::Error>;
+    async fn heartbeat(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error>;
 
     /// Mark the given worker as shutdown.
     ///
@@ -102,8 +99,8 @@ repository_impl!(QueueWorkerRepository:
     async fn heartbeat(
         &mut self,
         clock: &dyn Clock,
-        worker: Worker,
-    ) -> Result<Worker, Self::Error>;
+        worker: &Worker,
+    ) -> Result<(), Self::Error>;
 
     async fn shutdown(
         &mut self,
