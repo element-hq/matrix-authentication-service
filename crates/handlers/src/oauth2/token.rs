@@ -855,6 +855,7 @@ mod tests {
                 ResponseMode::Query,
                 false,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -955,6 +956,7 @@ mod tests {
                 ResponseMode::Query,
                 false,
                 false,
+                None,
             )
             .await
             .unwrap();

@@ -9,7 +9,7 @@
 use thiserror::Error;
 
 pub(crate) mod compat;
-pub(crate) mod oauth2;
+pub mod oauth2;
 mod site_config;
 pub(crate) mod tokens;
 pub(crate) mod upstream_oauth2;
