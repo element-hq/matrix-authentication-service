@@ -40,6 +40,7 @@ use crate::{
         PgOAuth2ClientRepository, PgOAuth2DeviceCodeGrantRepository,
         PgOAuth2RefreshTokenRepository, PgOAuth2SessionRepository,
     },
+    queue::worker::PgQueueWorkerRepository,
     upstream_oauth2::{
         PgUpstreamOAuthLinkRepository, PgUpstreamOAuthProviderRepository,
         PgUpstreamOAuthSessionRepository,
@@ -262,5 +263,11 @@ where
 
     fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c> {
         Box::new(PgJobRepository::new(self.conn.as_mut()))
+    }
+
+    fn queue_worker<'c>(
+        &'c mut self,
+    ) -> Box<dyn mas_storage::queue::QueueWorkerRepository<Error = Self::Error> + 'c> {
+        Box::new(PgQueueWorkerRepository::new(self.conn.as_mut()))
     }
 }

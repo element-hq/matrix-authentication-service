@@ -18,6 +18,7 @@ use crate::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
+    queue::QueueWorkerRepository,
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
@@ -191,6 +192,9 @@ pub trait RepositoryAccess: Send {
 
     /// Get a [`JobRepository`]
     fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`QueueWorkerRepository`]
+    fn queue_worker<'c>(&'c mut self) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c>;
 }
 
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
@@ -211,6 +215,7 @@ mod impls {
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
             OAuth2SessionRepository,
         },
+        queue::QueueWorkerRepository,
         upstream_oauth2::{
             UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
             UpstreamOAuthSessionRepository,
@@ -405,6 +410,12 @@ mod impls {
         fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.job(), &mut self.mapper))
         }
+
+        fn queue_worker<'c>(
+            &'c mut self,
+        ) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.queue_worker(), &mut self.mapper))
+        }
     }
 
     impl<R: RepositoryAccess + ?Sized> RepositoryAccess for Box<R> {
@@ -526,6 +537,12 @@ mod impls {
 
         fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c> {
             (**self).job()
+        }
+
+        fn queue_worker<'c>(
+            &'c mut self,
+        ) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
+            (**self).queue_worker()
         }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE queue_workers\n                SET shutdown_at = $1\n                WHERE shutdown_at IS NULL\n                  AND last_seen_at < $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6bd38759f569fcf972924d12f565b531b9873f4139eadcbf1450e726b9a27379"
+}

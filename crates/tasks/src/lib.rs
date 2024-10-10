@@ -10,8 +10,8 @@ use apalis_core::{executor::TokioExecutor, layers::extensions::Extension, monito
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, SystemClock};
-use mas_storage_pg::{DatabaseError, PgRepository};
+use mas_storage::{BoxClock, BoxRepository, RepositoryError, SystemClock};
+use mas_storage_pg::PgRepository;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tracing::debug;
@@ -21,6 +21,7 @@ use crate::storage::PostgresStorageFactory;
 mod database;
 mod email;
 mod matrix;
+mod new_queue;
 mod recovery;
 mod storage;
 mod user;
@@ -74,8 +75,11 @@ impl State {
         rand_chacha::ChaChaRng::from_rng(rand::thread_rng()).expect("failed to seed rng")
     }
 
-    pub async fn repository(&self) -> Result<BoxRepository, DatabaseError> {
-        let repo = PgRepository::from_pool(self.pool()).await?.boxed();
+    pub async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
+        let repo = PgRepository::from_pool(self.pool())
+            .await
+            .map_err(RepositoryError::from_error)?
+            .boxed();
 
         Ok(repo)
     }
@@ -156,5 +160,17 @@ pub async fn init(
     // TODO: we might want to grab the join handle here
     factory.listen().await?;
     debug!(?monitor, "workers registered");
+
+    // TODO: this is just spawning the task in the background, we probably actually
+    // want to wrap that in a structure, and handle graceful shutdown correctly
+    tokio::spawn(async move {
+        if let Err(e) = self::new_queue::run(state).await {
+            tracing::error!(
+                error = &e as &dyn std::error::Error,
+                "Failed to run new queue"
+            );
+        }
+    });
+
     Ok(monitor)
 }
