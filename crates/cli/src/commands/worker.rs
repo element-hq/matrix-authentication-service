@@ -17,8 +17,12 @@ use rand::{
 };
 use tracing::{info, info_span};
 
-use crate::util::{
-    database_pool_from_config, mailer_from_config, site_config_from_config, templates_from_config,
+use crate::{
+    shutdown::ShutdownManager,
+    util::{
+        database_pool_from_config, mailer_from_config, site_config_from_config,
+        templates_from_config,
+    },
 };
 
 #[derive(Parser, Debug, Default)]
@@ -26,6 +30,7 @@ pub(super) struct Options {}
 
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
+        let shutdown = ShutdownManager::new()?;
         let span = info_span!("cli.worker.init").entered();
         let config = AppConfig::extract(figment)?;
 
@@ -71,11 +76,35 @@ impl Options {
         let worker_name = Alphanumeric.sample_string(&mut rng, 10);
 
         info!(worker_name, "Starting task scheduler");
-        let monitor = mas_tasks::init(&worker_name, &pool, &mailer, conn, url_builder).await?;
+        let monitor = mas_tasks::init(
+            &worker_name,
+            &pool,
+            &mailer,
+            conn,
+            url_builder,
+            shutdown.soft_shutdown_token(),
+            shutdown.task_tracker(),
+        )
+        .await?;
 
+        // XXX: The monitor from apalis is a bit annoying to use for graceful shutdowns,
+        // ideally we'd just give it a cancellation token
+        let shutdown_future = shutdown.soft_shutdown_token().cancelled_owned();
+        shutdown.task_tracker().spawn(async move {
+            if let Err(e) = monitor
+                .run_with_signal(async move {
+                    shutdown_future.await;
+                    Ok(())
+                })
+                .await
+            {
+                tracing::error!(error = &e as &dyn std::error::Error, "Task worker failed");
+            }
+        });
         span.exit();
 
-        monitor.run().await?;
+        shutdown.run().await;
+
         Ok(ExitCode::SUCCESS)
     }
 }

@@ -51,7 +51,7 @@ pub trait QueueWorkerRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
-    async fn shutdown(&mut self, clock: &dyn Clock, worker: Worker) -> Result<(), Self::Error>;
+    async fn shutdown(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error>;
 
     /// Find dead workers and shut them down.
     ///
@@ -105,7 +105,7 @@ repository_impl!(QueueWorkerRepository:
     async fn shutdown(
         &mut self,
         clock: &dyn Clock,
-        worker: Worker,
+        worker: &Worker,
     ) -> Result<(), Self::Error>;
 
     async fn shutdown_dead_workers(

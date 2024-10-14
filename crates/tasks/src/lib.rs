@@ -15,6 +15,7 @@ use mas_storage_pg::PgRepository;
 use new_queue::QueueRunnerError;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::debug;
 
 use crate::storage::PostgresStorageFactory;
@@ -143,6 +144,8 @@ pub async fn init(
     mailer: &Mailer,
     homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
     url_builder: UrlBuilder,
+    cancellation_token: CancellationToken,
+    task_tracker: &TaskTracker,
 ) -> Result<Monitor<TokioExecutor>, QueueRunnerError> {
     let state = State::new(
         pool.clone(),
@@ -166,11 +169,9 @@ pub async fn init(
         .map_err(QueueRunnerError::SetupListener)?;
     debug!(?monitor, "workers registered");
 
-    let mut worker = self::new_queue::QueueWorker::new(state).await?;
+    let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
 
-    // TODO: this is just spawning the task in the background, we probably actually
-    // want to wrap that in a structure, and handle graceful shutdown correctly
-    tokio::spawn(async move {
+    task_tracker.spawn(async move {
         if let Err(e) = worker.run().await {
             tracing::error!(
                 error = &e as &dyn std::error::Error,
