@@ -284,10 +284,12 @@ pub async fn config_sync(
                         encrypted_client_secret,
                         claims_imports: map_claims_imports(&provider.claims_imports),
                         token_endpoint_override: provider.token_endpoint,
+                        userinfo_endpoint_override: provider.userinfo_endpoint,
                         authorization_endpoint_override: provider.authorization_endpoint,
                         jwks_uri_override: provider.jwks_uri,
                         discovery_mode,
                         pkce_mode,
+                        fetch_userinfo: provider.fetch_userinfo,
                         response_mode,
                         additional_authorization_parameters: provider
                             .additional_authorization_parameters

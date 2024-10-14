@@ -108,6 +108,7 @@ pub enum UpstreamOAuthProviders {
     JwksUriOverride,
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
+    UserinfoEndpointOverride,
 }
 
 #[derive(sea_query::Iden)]

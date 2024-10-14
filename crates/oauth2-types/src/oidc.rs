@@ -950,6 +950,15 @@ impl VerifiedProviderMetadata {
         }
     }
 
+    /// TODO
+    #[must_use]
+    pub fn userinfo_endpoint(&self) -> &Url {
+        match &self.userinfo_endpoint {
+            Some(u) => u,
+            None => unreachable!(),
+        }
+    }
+
     /// URL of the authorization server's token endpoint.
     #[must_use]
     pub fn token_endpoint(&self) -> &Url {

@@ -108,6 +108,18 @@ impl<'a> LazyProviderInfos<'a> {
         Ok(self.load().await?.token_endpoint())
     }
 
+    /// Get the userinfo endpoint for the provider.
+    ///
+    /// Uses [`UpstreamOAuthProvider.userinfo_endpoint_override`] if set,
+    /// otherwise uses the one from discovery.
+    pub async fn userinfo_endpoint(&mut self) -> Result<&Url, DiscoveryError> {
+        if let Some(userinfo_endpoint) = &self.provider.userinfo_endpoint_override {
+            return Ok(userinfo_endpoint);
+        }
+
+        Ok(self.load().await?.userinfo_endpoint())
+    }
+
     /// Get the PKCE methods supported by the provider.
     ///
     /// If the mode is set to auto, it will use the ones from discovery,
@@ -387,9 +399,11 @@ mod tests {
             brand_name: None,
             discovery_mode: UpstreamOAuthProviderDiscoveryMode::Insecure,
             pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
+            fetch_userinfo: false,
             jwks_uri_override: None,
             authorization_endpoint_override: None,
             scope: Scope::from_iter([OPENID]),
+            userinfo_endpoint_override: None,
             token_endpoint_override: None,
             client_id: "client_id".to_owned(),
             encrypted_client_secret: None,

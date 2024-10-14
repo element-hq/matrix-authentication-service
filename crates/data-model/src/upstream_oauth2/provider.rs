@@ -228,6 +228,8 @@ pub struct UpstreamOAuthProvider {
     pub authorization_endpoint_override: Option<Url>,
     pub scope: Scope,
     pub token_endpoint_override: Option<Url>,
+    pub userinfo_endpoint_override: Option<Url>,
+    pub fetch_userinfo: bool,
     pub client_id: String,
     pub encrypted_client_secret: Option<String>,
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,

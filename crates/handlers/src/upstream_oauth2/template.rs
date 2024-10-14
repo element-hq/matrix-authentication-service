@@ -23,6 +23,7 @@ use minijinja::{
 pub(crate) struct AttributeMappingContext {
     id_token_claims: Option<HashMap<String, serde_json::Value>>,
     extra_callback_parameters: Option<serde_json::Value>,
+    userinfo_claims: Option<serde_json::Value>,
 }
 
 impl AttributeMappingContext {
@@ -46,6 +47,11 @@ impl AttributeMappingContext {
         self
     }
 
+    pub fn with_userinfo_claims(mut self, userinfo_claims: serde_json::Value) -> Self {
+        self.userinfo_claims = Some(userinfo_claims);
+        self
+    }
+
     pub fn build(self) -> Value {
         Value::from_object(self)
     }
@@ -54,7 +60,25 @@ impl AttributeMappingContext {
 impl Object for AttributeMappingContext {
     fn get_value(self: &Arc<Self>, name: &Value) -> Option<Value> {
         match name.as_str()? {
-            "user" | "id_token_claims" => self.id_token_claims.as_ref().map(Value::from_serialize),
+            "user" => {
+                if self.id_token_claims.is_none() && self.userinfo_claims.is_none() {
+                    return None;
+                }
+                let mut merged_user: HashMap<String, serde_json::Value> = HashMap::new();
+                if let serde_json::Value::Object(userinfo) = self
+                    .userinfo_claims
+                    .clone()
+                    .unwrap_or(serde_json::Value::Null)
+                {
+                    merged_user.extend(userinfo);
+                }
+                if let Some(id_token) = self.id_token_claims.clone() {
+                    merged_user.extend(id_token);
+                }
+                Some(Value::from_serialize(merged_user))
+            }
+            "id_token_claims" => self.id_token_claims.as_ref().map(Value::from_serialize),
+            "userinfo_claims" => self.userinfo_claims.as_ref().map(Value::from_serialize),
             "extra_callback_parameters" => self
                 .extra_callback_parameters
                 .as_ref()
@@ -64,17 +88,20 @@ impl Object for AttributeMappingContext {
     }
 
     fn enumerate(self: &Arc<Self>) -> Enumerator {
-        match (
-            self.id_token_claims.is_some(),
-            self.extra_callback_parameters.is_some(),
-        ) {
-            (true, true) => {
-                Enumerator::Str(&["user", "id_token_claims", "extra_callback_parameters"])
-            }
-            (true, false) => Enumerator::Str(&["user", "id_token_claims"]),
-            (false, true) => Enumerator::Str(&["extra_callback_parameters"]),
-            (false, false) => Enumerator::Str(&["user"]),
+        let mut attrs = Vec::new();
+        if self.id_token_claims.is_some() || self.userinfo_claims.is_none() {
+            attrs.push(minijinja::Value::from("user"));
         }
+        if self.id_token_claims.is_some() {
+            attrs.push(minijinja::Value::from("id_token_claims"));
+        }
+        if self.userinfo_claims.is_some() {
+            attrs.push(minijinja::Value::from("userinfo_claims"));
+        }
+        if self.extra_callback_parameters.is_some() {
+            attrs.push(minijinja::Value::from("extra_callback_parameters"));
+        }
+        Enumerator::Values(attrs)
     }
 }
 

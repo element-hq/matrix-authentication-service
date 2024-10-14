@@ -42,6 +42,10 @@ pub struct UpstreamOAuthProviderParams {
     /// `private_key_jwt` authentication methods are used
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
 
+    /// Whether to fetch the user profile from the userinfo endpoint,
+    /// or to rely on the data returned in the id_token from the token_endpoint.
+    pub fetch_userinfo: bool,
+
     /// The client ID to use when authenticating to the upstream
     pub client_id: String,
 
@@ -58,6 +62,10 @@ pub struct UpstreamOAuthProviderParams {
     /// The URL to use as the token endpoint. If `None`, the URL will be
     /// discovered
     pub token_endpoint_override: Option<Url>,
+
+    /// The URL to use as the userinfo endpoint. If `None`, the URL will be
+    /// discovered
+    pub userinfo_endpoint_override: Option<Url>,
 
     /// The URL to use when fetching JWKS. If `None`, the URL will be discovered
     pub jwks_uri_override: Option<Url>,

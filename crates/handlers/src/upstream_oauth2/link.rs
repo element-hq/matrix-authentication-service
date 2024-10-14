@@ -344,6 +344,9 @@ pub(crate) async fn get(
             if let Some(extra_callback_parameters) = upstream_session.extra_callback_parameters() {
                 context = context.with_extra_callback_parameters(extra_callback_parameters.clone());
             }
+            if let Some(userinfo) = upstream_session.userinfo() {
+                context = context.with_userinfo_claims(userinfo.clone());
+            }
             let context = context.build();
 
             let ctx = if provider.claims_imports.displayname.ignore() {
@@ -581,6 +584,9 @@ pub(crate) async fn post(
             }
             if let Some(extra_callback_parameters) = upstream_session.extra_callback_parameters() {
                 context = context.with_extra_callback_parameters(extra_callback_parameters.clone());
+            }
+            if let Some(userinfo) = upstream_session.userinfo() {
+                context = context.with_userinfo_claims(userinfo.clone());
             }
             let context = context.build();
 
@@ -921,6 +927,8 @@ mod tests {
                     claims_imports,
                     authorization_endpoint_override: None,
                     token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
                     jwks_uri_override: None,
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
@@ -957,6 +965,7 @@ mod tests {
                 session,
                 &link,
                 Some(id_token.into_string()),
+                None,
                 None,
             )
             .await

@@ -20,6 +20,7 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         link_id: Ulid,
         id_token: Option<String>,
         extra_callback_parameters: Option<serde_json::Value>,
+        userinfo: Option<serde_json::Value>,
     },
     Consumed {
         completed_at: DateTime<Utc>,
@@ -27,6 +28,7 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         link_id: Ulid,
         id_token: Option<String>,
         extra_callback_parameters: Option<serde_json::Value>,
+        userinfo: Option<serde_json::Value>,
     },
 }
 
@@ -45,6 +47,7 @@ impl UpstreamOAuthAuthorizationSessionState {
         link: &UpstreamOAuthLink,
         id_token: Option<String>,
         extra_callback_parameters: Option<serde_json::Value>,
+        userinfo: Option<serde_json::Value>,
     ) -> Result<Self, InvalidTransitionError> {
         match self {
             Self::Pending => Ok(Self::Completed {
@@ -52,6 +55,7 @@ impl UpstreamOAuthAuthorizationSessionState {
                 link_id: link.id,
                 id_token,
                 extra_callback_parameters,
+                userinfo,
             }),
             Self::Completed { .. } | Self::Consumed { .. } => Err(InvalidTransitionError),
         }
@@ -72,12 +76,14 @@ impl UpstreamOAuthAuthorizationSessionState {
                 link_id,
                 id_token,
                 extra_callback_parameters,
+                userinfo,
             } => Ok(Self::Consumed {
                 completed_at,
                 link_id,
                 consumed_at,
                 id_token,
                 extra_callback_parameters,
+                userinfo,
             }),
             Self::Pending | Self::Consumed { .. } => Err(InvalidTransitionError),
         }
@@ -148,6 +154,14 @@ impl UpstreamOAuthAuthorizationSessionState {
                 extra_callback_parameters,
                 ..
             } => extra_callback_parameters.as_ref(),
+        }
+    }
+
+    #[must_use]
+    pub fn userinfo(&self) -> Option<&serde_json::Value> {
+        match self {
+            Self::Pending => None,
+            Self::Completed { userinfo, .. } | Self::Consumed { userinfo, .. } => userinfo.as_ref(),
         }
     }
 
@@ -229,10 +243,15 @@ impl UpstreamOAuthAuthorizationSession {
         link: &UpstreamOAuthLink,
         id_token: Option<String>,
         extra_callback_parameters: Option<serde_json::Value>,
+        userinfo: Option<serde_json::Value>,
     ) -> Result<Self, InvalidTransitionError> {
-        self.state =
-            self.state
-                .complete(completed_at, link, id_token, extra_callback_parameters)?;
+        self.state = self.state.complete(
+            completed_at,
+            link,
+            id_token,
+            extra_callback_parameters,
+            userinfo,
+        )?;
         Ok(self)
     }
 
