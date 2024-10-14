@@ -109,7 +109,7 @@ impl<'c> QueueWorkerRepository for PgQueueWorkerRepository<'c> {
         ),
         err,
     )]
-    async fn shutdown(&mut self, clock: &dyn Clock, worker: Worker) -> Result<(), Self::Error> {
+    async fn shutdown(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error> {
         let now = clock.now();
         let res = sqlx::query!(
             r#"
@@ -125,6 +125,30 @@ impl<'c> QueueWorkerRepository for PgQueueWorkerRepository<'c> {
         .await?;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        // Remove the leader lease if we were holding it
+        let res = sqlx::query!(
+            r#"
+                DELETE FROM queue_leader
+                WHERE queue_worker_id = $1
+            "#,
+            Uuid::from(worker.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        // If we were holding the leader lease, notify workers
+        if res.rows_affected() > 0 {
+            sqlx::query!(
+                r#"
+                    NOTIFY queue_leader_stepdown
+                "#,
+            )
+            .traced()
+            .execute(&mut *self.conn)
+            .await?;
+        }
 
         Ok(())
     }

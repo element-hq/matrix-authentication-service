@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM queue_leader\n                WHERE queue_worker_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "399e261027fe6c9167511636157ab747a469404533f59ff6fbd56e9eb5ad38e1"
+}
