@@ -36,7 +36,7 @@ jobs:
         run: make coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: policies/coverage.json
@@ -47,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -56,18 +57,24 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4.0.4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Node dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: Build the frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          UPLOAD_CODECOV_BUNDLE: "true"
 
       - name: Test
         working-directory: ./frontend
         run: npm run coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: frontend/coverage/
@@ -112,7 +119,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4.0.4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Node dependencies
         working-directory: ./frontend
@@ -155,7 +162,7 @@ jobs:
           grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/coverage/*.lcov

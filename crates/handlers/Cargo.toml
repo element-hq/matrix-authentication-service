@@ -14,7 +14,8 @@ workspace = true
 [dependencies]
 # Async runtime
 tokio.workspace = true
-futures-util = "0.3.30"
+tokio-util.workspace = true
+futures-util = "0.3.31"
 async-trait.workspace = true
 
 # Logging and tracing
@@ -32,7 +33,7 @@ hyper.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 axum.workspace = true
-axum-macros = "0.4.1"
+axum-macros = "0.4.2"
 axum-extra.workspace = true
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 rustls.workspace = true
@@ -49,7 +50,7 @@ sqlx.workspace = true
 
 # Various structure (de)serialization
 serde.workspace = true
-serde_with = { version = "3.9.0", features = ["hex", "chrono"] }
+serde_with = { version = "3.11.0", features = ["hex", "chrono"] }
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
 
@@ -69,7 +70,7 @@ base64ct = "1.6.0"
 camino.workspace = true
 chrono.workspace = true
 governor.workspace = true
-indexmap = "2.5.0"
+indexmap = "2.6.0"
 psl = "2.1.55"
 time = "0.3.36"
 url.workspace = true

@@ -7,6 +7,7 @@
 import { readFile, writeFile } from "fs/promises";
 import { resolve } from "path";
 
+import { codecovVitePlugin } from "@codecov/vite-plugin";
 import { TanStackRouterVite as tanStackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
@@ -68,6 +69,15 @@ export default defineConfig((env) => ({
     react(),
 
     tanStackRouter(),
+
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.UPLOAD_CODECOV_BUNDLE === "true",
+      bundleName: "mas-frontend",
+      gitService: "github",
+      oidc: {
+        useGitHubOIDC: true,
+      },
+    }),
 
     // Custom plugin to make sure that each asset has an entry in the manifest
     // This is needed so that the preloading & asset integrity generation works

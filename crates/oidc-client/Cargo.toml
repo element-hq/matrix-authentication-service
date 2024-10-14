@@ -20,7 +20,7 @@ base64ct = { version = "1.6.0", features = ["std"] }
 bytes.workspace = true
 chrono.workspace = true
 form_urlencoded = "1.2.1"
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 headers.workspace = true
 http.workspace = true
 language-tags = "0.3.2"
@@ -29,7 +29,7 @@ rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
-serde_with = "3.9.0"
+serde_with = "3.11.0"
 thiserror.workspace = true
 tower.workspace = true
 tracing.workspace = true

@@ -22,6 +22,7 @@ mod app_state;
 mod commands;
 mod sentry_transport;
 mod server;
+mod shutdown;
 mod sync;
 mod telemetry;
 mod util;
