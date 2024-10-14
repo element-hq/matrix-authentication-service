@@ -3,79 +3,207 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use chrono::Duration;
-use mas_storage::{RepositoryAccess, RepositoryError};
+use chrono::{DateTime, Duration, Utc};
+use mas_storage::{queue::Worker, Clock, RepositoryAccess, RepositoryError};
+use mas_storage_pg::{DatabaseError, PgRepository};
+use rand::{distributions::Uniform, Rng};
+use rand_chacha::ChaChaRng;
+use sqlx::PgPool;
+use thiserror::Error;
 
 use crate::State;
 
-pub async fn run(state: State) -> Result<(), RepositoryError> {
-    let span = tracing::info_span!("worker.init", worker.id = tracing::field::Empty);
-    let guard = span.enter();
-    let mut repo = state.repository().await?;
-    let mut rng = state.rng();
-    let clock = state.clock();
+#[derive(Debug, Error)]
+pub enum QueueRunnerError {
+    #[error("Failed to setup listener")]
+    SetupListener(#[source] sqlx::Error),
 
-    let worker = repo.queue_worker().register(&mut rng, &clock).await?;
-    span.record("worker.id", tracing::field::display(worker.id));
-    repo.save().await?;
+    #[error("Failed to start transaction")]
+    StartTransaction(#[source] sqlx::Error),
 
-    tracing::info!("Registered worker");
-    drop(guard);
+    #[error("Failed to commit transaction")]
+    CommitTransaction(#[source] sqlx::Error),
 
-    let mut was_i_the_leader = false;
+    #[error(transparent)]
+    Repository(#[from] RepositoryError),
 
-    // Record when we last sent a heartbeat
-    let mut last_heartbeat = clock.now();
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
 
-    loop {
-        // This is to make sure we wake up every second to do the maintenance tasks
-        // Later we might wait on other events, like a PG notification
-        let wakeup_sleep = tokio::time::sleep(std::time::Duration::from_secs(1));
-        wakeup_sleep.await;
+    #[error("Worker is not the leader")]
+    NotLeader,
+}
 
-        let span = tracing::info_span!("worker.tick", %worker.id);
-        let _guard = span.enter();
+const MIN_SLEEP_DURATION: std::time::Duration = std::time::Duration::from_millis(900);
+const MAX_SLEEP_DURATION: std::time::Duration = std::time::Duration::from_millis(1100);
 
-        tracing::debug!("Tick");
+pub struct QueueWorker {
+    rng: ChaChaRng,
+    clock: Box<dyn Clock + Send>,
+    pool: PgPool,
+    registration: Worker,
+    am_i_leader: bool,
+    last_heartbeat: DateTime<Utc>,
+}
+
+impl QueueWorker {
+    #[tracing::instrument(
+        name = "worker.init",
+        skip_all,
+        fields(worker.id)
+    )]
+    pub async fn new(state: State) -> Result<Self, QueueRunnerError> {
+        let mut rng = state.rng();
+        let clock = state.clock();
+        let pool = state.pool().clone();
+
+        let txn = pool
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+        let mut repo = PgRepository::from_conn(txn);
+
+        let registration = repo.queue_worker().register(&mut rng, &clock).await?;
+        tracing::Span::current().record("worker.id", tracing::field::display(registration.id));
+        repo.into_inner()
+            .commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
+
+        tracing::info!("Registered worker");
         let now = clock.now();
-        let mut repo = state.repository().await?;
+
+        Ok(Self {
+            rng,
+            clock,
+            pool,
+            registration,
+            am_i_leader: false,
+            last_heartbeat: now,
+        })
+    }
+
+    pub async fn run(&mut self) -> Result<(), QueueRunnerError> {
+        loop {
+            self.run_loop().await?;
+        }
+    }
+
+    #[tracing::instrument(name = "worker.run_loop", skip_all, err)]
+    async fn run_loop(&mut self) -> Result<(), QueueRunnerError> {
+        self.wait_until_wakeup().await?;
+        self.tick().await?;
+
+        if self.am_i_leader {
+            self.perform_leader_duties().await?;
+        }
+
+        Ok(())
+    }
+
+    #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all, err)]
+    async fn wait_until_wakeup(&mut self) -> Result<(), QueueRunnerError> {
+        // This is to make sure we wake up every second to do the maintenance tasks
+        // We add a little bit of random jitter to the duration, so that we don't get
+        // fully synced workers waking up at the same time after each notification
+        let sleep_duration = self
+            .rng
+            .sample(Uniform::new(MIN_SLEEP_DURATION, MAX_SLEEP_DURATION));
+        tokio::time::sleep(sleep_duration).await;
+        tracing::debug!("Woke up from sleep");
+
+        Ok(())
+    }
+
+    fn set_new_leader_state(&mut self, state: bool) {
+        // Do nothing if we were already on that state
+        if state == self.am_i_leader {
+            return;
+        }
+
+        // If we flipped state, log it
+        self.am_i_leader = state;
+        if self.am_i_leader {
+            tracing::info!("I'm the leader now");
+        } else {
+            tracing::warn!("I am no longer the leader");
+        }
+    }
+
+    #[tracing::instrument(
+        name = "worker.tick",
+        skip_all,
+        fields(worker.id = %self.registration.id),
+        err,
+    )]
+    async fn tick(&mut self) -> Result<(), QueueRunnerError> {
+        tracing::debug!("Tick");
+        let now = self.clock.now();
+
+        let txn = self
+            .pool
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+        let mut repo = PgRepository::from_conn(txn);
 
         // We send a heartbeat every minute, to avoid writing to the database too often
         // on a logged table
-        if now - last_heartbeat >= chrono::Duration::minutes(1) {
+        if now - self.last_heartbeat >= chrono::Duration::minutes(1) {
             tracing::info!("Sending heartbeat");
-            repo.queue_worker().heartbeat(&clock, &worker).await?;
-            last_heartbeat = now;
+            repo.queue_worker()
+                .heartbeat(&self.clock, &self.registration)
+                .await?;
+            self.last_heartbeat = now;
         }
 
         // Remove any dead worker leader leases
         repo.queue_worker()
-            .remove_leader_lease_if_expired(&clock)
+            .remove_leader_lease_if_expired(&self.clock)
             .await?;
 
         // Try to become (or stay) the leader
-        let am_i_the_leader = repo
+        let leader = repo
             .queue_worker()
-            .try_get_leader_lease(&clock, &worker)
+            .try_get_leader_lease(&self.clock, &self.registration)
             .await?;
 
-        // Log any changes in leadership
-        if !was_i_the_leader && am_i_the_leader {
-            tracing::info!("I'm the leader now");
-        } else if was_i_the_leader && !am_i_the_leader {
-            tracing::warn!("I am no longer the leader");
-        }
-        was_i_the_leader = am_i_the_leader;
+        repo.into_inner()
+            .commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
 
-        // The leader does all the maintenance work
-        if am_i_the_leader {
-            // We also check if the worker is dead, and if so, we shutdown all the dead
-            // workers that haven't checked in the last two minutes
-            repo.queue_worker()
-                .shutdown_dead_workers(&clock, Duration::minutes(2))
-                .await?;
+        // Save the new leader state
+        self.set_new_leader_state(leader);
+
+        Ok(())
+    }
+
+    #[tracing::instrument(name = "worker.perform_leader_duties", skip_all, err)]
+    async fn perform_leader_duties(&mut self) -> Result<(), QueueRunnerError> {
+        // This should have been checked by the caller, but better safe than sorry
+        if !self.am_i_leader {
+            return Err(QueueRunnerError::NotLeader);
         }
 
-        repo.save().await?;
+        let txn = self
+            .pool
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+        let mut repo = PgRepository::from_conn(txn);
+
+        // We also check if the worker is dead, and if so, we shutdown all the dead
+        // workers that haven't checked in the last two minutes
+        repo.queue_worker()
+            .shutdown_dead_workers(&self.clock, Duration::minutes(2))
+            .await?;
+
+        repo.into_inner()
+            .commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
+
+        Ok(())
     }
 }
