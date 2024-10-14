@@ -42,6 +42,7 @@ pub use self::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
         UpstreamOAuthProviderImportAction, UpstreamOAuthProviderImportPreference,
         UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderSubjectPreference,
+        UpstreamOAuthProviderUserProfileMethod,
     },
     user_agent::{DeviceType, UserAgent},
     users::{
