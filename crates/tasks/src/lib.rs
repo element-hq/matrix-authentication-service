@@ -12,6 +12,7 @@ use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, RepositoryError, SystemClock};
 use mas_storage_pg::PgRepository;
+use new_queue::QueueRunnerError;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tracing::debug;
@@ -142,7 +143,7 @@ pub async fn init(
     mailer: &Mailer,
     homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
     url_builder: UrlBuilder,
-) -> Result<Monitor<TokioExecutor>, sqlx::Error> {
+) -> Result<Monitor<TokioExecutor>, QueueRunnerError> {
     let state = State::new(
         pool.clone(),
         SystemClock::default(),
@@ -158,13 +159,19 @@ pub async fn init(
     let monitor = self::user::register(name, monitor, &state, &factory);
     let monitor = self::recovery::register(name, monitor, &state, &factory);
     // TODO: we might want to grab the join handle here
-    factory.listen().await?;
+    // TODO: this error isn't right, I just want that to compile
+    factory
+        .listen()
+        .await
+        .map_err(QueueRunnerError::SetupListener)?;
     debug!(?monitor, "workers registered");
+
+    let mut worker = self::new_queue::QueueWorker::new(state).await?;
 
     // TODO: this is just spawning the task in the background, we probably actually
     // want to wrap that in a structure, and handle graceful shutdown correctly
     tokio::spawn(async move {
-        if let Err(e) = self::new_queue::run(state).await {
+        if let Err(e) = worker.run().await {
             tracing::error!(
                 error = &e as &dyn std::error::Error,
                 "Failed to run new queue"
