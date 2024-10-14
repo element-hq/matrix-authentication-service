@@ -3758,6 +3758,7 @@ dependencies = [
  "sqlx",
  "thiserror 2.0.3",
  "tokio",
+ "tokio-util",
  "tower 0.5.1",
  "tracing",
  "tracing-opentelemetry",

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    NOTIFY queue_leader_stepdown\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "6ecad60e565367a6cfa539b4c32dabe674ea853e0d47eb5c713705cb0130c758"
+}
