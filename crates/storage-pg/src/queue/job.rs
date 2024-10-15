@@ -7,10 +7,7 @@
 //! [`QueueJobRepository`].
 
 use async_trait::async_trait;
-use mas_storage::{
-    queue::{Job, QueueJobRepository, Worker},
-    Clock,
-};
+use mas_storage::{queue::QueueJobRepository, Clock};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -75,76 +72,5 @@ impl<'c> QueueJobRepository for PgQueueJobRepository<'c> {
         .await?;
 
         Ok(())
-    }
-
-    #[tracing::instrument(
-        name = "db.queue_job.get_available",
-        fields(
-            db.query.text,
-        ),
-        skip_all,
-        err,
-    )]
-    async fn get_available(
-        &mut self,
-        clock: &dyn Clock,
-        worker: &Worker,
-        queues: &[&str],
-        max_count: usize,
-    ) -> Result<Vec<Job>, Self::Error> {
-        let now = clock.now();
-        let max_count = i64::try_from(max_count).unwrap_or(i64::MAX);
-        let queues: Vec<String> = queues.iter().map(|&s| s.to_owned()).collect();
-        sqlx::query!(
-            r#"
-                -- We first grab a few jobs that are available,
-                -- using a FOR UPDATE SKIP LOCKED so that this can be run concurrently
-                -- and we don't get multiple workers grabbing the same jobs
-                WITH locked_jobs AS (
-                    SELECT queue_job_id
-                    FROM queue_jobs
-                    WHERE
-                        status = 'available'
-                        AND queue_name = ANY($1)
-                    ORDER BY queue_job_id ASC
-                    LIMIT $2
-                    FOR UPDATE
-                    SKIP LOCKED
-                )
-                -- then we update the status of those jobs to 'running', returning the job details
-                UPDATE queue_jobs
-                SET status = 'running', started_at = $3, started_by = $4
-                FROM locked_jobs
-                WHERE queue_jobs.queue_job_id = locked_jobs.queue_job_id
-                RETURNING
-                    queue_jobs.queue_job_id,
-                    queue_jobs.payload,
-                    queue_jobs.metadata
-            "#,
-            &queues,
-            max_count,
-            now,
-            Uuid::from(worker.id),
-        )
-        .traced()
-        .fetch_all(&mut *self.conn)
-        .await?;
-
-        todo!()
-    }
-
-    #[tracing::instrument(
-        name = "db.queue_job.mark_completed",
-        fields(
-            queue_job.id = %job.id,
-            db.query.text,
-        ),
-        skip_all,
-        err,
-    )]
-    async fn mark_completed(&mut self, clock: &dyn Clock, job: Job) -> Result<(), Self::Error> {
-        let _ = clock;
-        let _ = job;
-        todo!()
     }
 }

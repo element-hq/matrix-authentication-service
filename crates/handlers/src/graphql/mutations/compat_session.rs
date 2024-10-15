@@ -7,9 +7,7 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Enum, InputObject, Object, ID};
 use mas_storage::{
-    compat::CompatSessionRepository,
-    job::{JobRepositoryExt, SyncDevicesJob},
-    RepositoryAccess,
+    compat::CompatSessionRepository, job::JobRepositoryExt, queue::SyncDevicesJob, RepositoryAccess,
 };
 
 use crate::graphql::{

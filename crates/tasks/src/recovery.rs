@@ -9,7 +9,8 @@ use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor
 use mas_email::{Address, Mailbox};
 use mas_i18n::DataLocale;
 use mas_storage::{
-    job::{JobWithSpanContext, SendAccountRecoveryEmailsJob},
+    job::JobWithSpanContext,
+    queue::SendAccountRecoveryEmailsJob,
     user::{UserEmailFilter, UserRecoveryRepository},
     Pagination, RepositoryAccess,
 };

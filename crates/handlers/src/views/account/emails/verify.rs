@@ -16,9 +16,8 @@ use mas_axum_utils::{
 };
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
-    user::UserEmailRepository,
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
+    job::JobRepositoryExt, queue::ProvisionUserJob, user::UserEmailRepository, BoxClock,
+    BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{EmailVerificationPageContext, TemplateContext, Templates};
 use serde::Deserialize;

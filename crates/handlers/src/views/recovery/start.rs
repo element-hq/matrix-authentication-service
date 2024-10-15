@@ -21,8 +21,7 @@ use mas_axum_utils::{
 use mas_data_model::{SiteConfig, UserAgent};
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, SendAccountRecoveryEmailsJob},
-    BoxClock, BoxRepository, BoxRng,
+    job::JobRepositoryExt, queue::SendAccountRecoveryEmailsJob, BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{
     EmptyContext, FieldError, FormError, FormState, RecoveryStartContext, RecoveryStartFormField,

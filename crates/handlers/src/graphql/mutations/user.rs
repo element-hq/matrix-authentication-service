@@ -7,7 +7,8 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    job::{DeactivateUserJob, JobRepositoryExt, ProvisionUserJob},
+    job::JobRepositoryExt,
+    queue::{DeactivateUserJob, ProvisionUserJob},
     user::UserRepository,
 };
 use tracing::{info, warn};

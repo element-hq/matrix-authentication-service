@@ -9,11 +9,12 @@ use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use chrono::Duration;
 use mas_data_model::{Device, TokenType};
 use mas_storage::{
-    job::{JobRepositoryExt, SyncDevicesJob},
+    job::JobRepositoryExt,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2ClientRepository, OAuth2RefreshTokenRepository,
         OAuth2SessionRepository,
     },
+    queue::SyncDevicesJob,
     user::UserRepository,
     RepositoryAccess,
 };

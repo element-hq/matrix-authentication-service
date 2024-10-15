@@ -12,7 +12,8 @@ use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::TokenType;
 use mas_storage::{
     compat::{CompatAccessTokenRepository, CompatSessionRepository},
-    job::{JobRepositoryExt, SyncDevicesJob},
+    job::JobRepositoryExt,
+    queue::SyncDevicesJob,
     BoxClock, BoxRepository, Clock, RepositoryAccess,
 };
 use thiserror::Error;
