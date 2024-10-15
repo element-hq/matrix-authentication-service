@@ -20,10 +20,9 @@ use mas_matrix::HomeserverConnection;
 use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
-    job::{
-        DeactivateUserJob, JobRepositoryExt, ProvisionUserJob, ReactivateUserJob, SyncDevicesJob,
-    },
+    job::JobRepositoryExt,
     oauth2::OAuth2SessionFilter,
+    queue::{DeactivateUserJob, ProvisionUserJob, ReactivateUserJob, SyncDevicesJob},
     user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
     Clock, RepositoryAccess, SystemClock,
 };

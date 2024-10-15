@@ -18,8 +18,7 @@ use mas_axum_utils::{
 use mas_data_model::SiteConfig;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, SendAccountRecoveryEmailsJob},
-    BoxClock, BoxRepository, BoxRng,
+    job::JobRepositoryExt, queue::SendAccountRecoveryEmailsJob, BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{EmptyContext, RecoveryProgressContext, TemplateContext, Templates};
 use ulid::Ulid;

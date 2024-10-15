@@ -24,7 +24,8 @@ use mas_matrix::BoxHomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob, VerifyEmailJob},
+    job::JobRepositoryExt,
+    queue::{ProvisionUserJob, VerifyEmailJob},
     user::{BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
