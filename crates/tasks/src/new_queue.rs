@@ -3,11 +3,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::collections::HashMap;
+
+use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_storage::{queue::Worker, Clock, RepositoryAccess, RepositoryError};
+use mas_storage::{
+    queue::{InsertableJob, Job, Worker},
+    Clock, RepositoryAccess, RepositoryError,
+};
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{distributions::Uniform, Rng};
 use rand_chacha::ChaChaRng;
+use serde::de::DeserializeOwned;
 use sqlx::{
     postgres::{PgAdvisoryLock, PgListener},
     Acquire, Either,
@@ -16,6 +23,30 @@ use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
 use crate::State;
+
+pub trait FromJob {
+    fn from_job(job: &Job) -> Result<Self, anyhow::Error>
+    where
+        Self: Sized;
+}
+
+impl<T> FromJob for T
+where
+    T: DeserializeOwned,
+{
+    fn from_job(job: &Job) -> Result<Self, anyhow::Error> {
+        serde_json::from_value(job.payload.clone()).map_err(Into::into)
+    }
+}
+
+#[async_trait]
+pub trait RunnableJob: FromJob + Send + 'static {
+    async fn run(&self, state: &State) -> Result<(), anyhow::Error>;
+}
+
+fn box_runnable_job<T: RunnableJob + 'static>(job: T) -> Box<dyn RunnableJob> {
+    Box::new(job)
+}
 
 #[derive(Debug, Error)]
 pub enum QueueRunnerError {
@@ -48,6 +79,8 @@ pub enum QueueRunnerError {
 const MIN_SLEEP_DURATION: std::time::Duration = std::time::Duration::from_millis(900);
 const MAX_SLEEP_DURATION: std::time::Duration = std::time::Duration::from_millis(1100);
 
+type JobFactory = Box<dyn FnMut(&Job) -> Box<dyn RunnableJob> + Send>;
+
 pub struct QueueWorker {
     rng: ChaChaRng,
     clock: Box<dyn Clock + Send>,
@@ -56,6 +89,7 @@ pub struct QueueWorker {
     am_i_leader: bool,
     last_heartbeat: DateTime<Utc>,
     cancellation_token: CancellationToken,
+    factories: HashMap<&'static str, JobFactory>,
 }
 
 impl QueueWorker {
@@ -105,7 +139,15 @@ impl QueueWorker {
             am_i_leader: false,
             last_heartbeat: now,
             cancellation_token,
+            factories: HashMap::new(),
         })
+    }
+
+    pub fn register_handler<T: RunnableJob + InsertableJob>(&mut self) -> &mut Self {
+        // TODO: error handling
+        let factory = |job: &Job| box_runnable_job(T::from_job(job).unwrap());
+        self.factories.insert(T::QUEUE_NAME, Box::new(factory));
+        self
     }
 
     pub async fn run(&mut self) -> Result<(), QueueRunnerError> {
