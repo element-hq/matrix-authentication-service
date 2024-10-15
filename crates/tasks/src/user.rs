@@ -8,8 +8,9 @@ use anyhow::Context;
 use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor};
 use mas_storage::{
     compat::CompatSessionFilter,
-    job::{DeactivateUserJob, JobWithSpanContext, ReactivateUserJob},
+    job::JobWithSpanContext,
     oauth2::OAuth2SessionFilter,
+    queue::{DeactivateUserJob, ReactivateUserJob},
     user::{BrowserSessionFilter, UserRepository},
     RepositoryAccess,
 };

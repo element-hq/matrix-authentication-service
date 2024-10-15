@@ -13,12 +13,6 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-apalis-core = { version = "0.4.9", features = [
-    "extensions",
-    "tokio-comp",
-    "storage",
-] }
-apalis-cron = "0.4.9"
 async-stream = "0.3.6"
 async-trait.workspace = true
 chrono.workspace = true

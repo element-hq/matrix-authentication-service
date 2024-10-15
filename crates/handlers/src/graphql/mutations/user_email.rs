@@ -7,7 +7,7 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob, VerifyEmailJob},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _, VerifyEmailJob},
     user::{UserEmailRepository, UserRepository},
     RepositoryAccess,
 };
@@ -376,6 +376,8 @@ impl UserEmailMutations {
         let state = ctx.state();
         let id = NodeType::User.extract_ulid(&input.user_id)?;
         let requester = ctx.requester();
+        let clock = state.clock();
+        let mut rng = state.rng();
 
         if !requester.is_owner_or_admin(&UserId(id)) {
             return Err(async_graphql::Error::new("Unauthorized"));
@@ -427,9 +429,6 @@ impl UserEmailMutations {
         let (added, mut user_email) = if let Some(user_email) = existing_user_email {
             (false, user_email)
         } else {
-            let clock = state.clock();
-            let mut rng = state.rng();
-
             let user_email = repo
                 .user_email()
                 .add(&mut rng, &clock, &user, input.email)
@@ -447,8 +446,8 @@ impl UserEmailMutations {
                     .await?;
             } else {
                 // TODO: figure out the locale
-                repo.job()
-                    .schedule_job(VerifyEmailJob::new(&user_email))
+                repo.queue_job()
+                    .schedule_job(&mut rng, &clock, VerifyEmailJob::new(&user_email))
                     .await?;
             }
         }
@@ -470,6 +469,8 @@ impl UserEmailMutations {
         input: SendVerificationEmailInput,
     ) -> Result<SendVerificationEmailPayload, async_graphql::Error> {
         let state = ctx.state();
+        let clock = state.clock();
+        let mut rng = state.rng();
         let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
         let requester = ctx.requester();
 
@@ -489,8 +490,8 @@ impl UserEmailMutations {
         let needs_verification = user_email.confirmed_at.is_none();
         if needs_verification {
             // TODO: figure out the locale
-            repo.job()
-                .schedule_job(VerifyEmailJob::new(&user_email))
+            repo.queue_job()
+                .schedule_job(&mut rng, &clock, VerifyEmailJob::new(&user_email))
                 .await?;
         }
 
@@ -515,6 +516,7 @@ impl UserEmailMutations {
         let requester = ctx.requester();
 
         let clock = state.clock();
+        let mut rng = state.rng();
         let mut repo = state.repository().await?;
 
         let user_email = repo
@@ -567,8 +569,8 @@ impl UserEmailMutations {
             .mark_as_verified(&clock, user_email)
             .await?;
 
-        repo.job()
-            .schedule_job(ProvisionUserJob::new(&user))
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
             .await?;
 
         repo.save().await?;
@@ -586,6 +588,8 @@ impl UserEmailMutations {
         let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
         let requester = ctx.requester();
 
+        let mut rng = state.rng();
+        let clock = state.clock();
         let mut repo = state.repository().await?;
 
         let user_email = repo.user_email().lookup(user_email_id).await?;
@@ -616,8 +620,8 @@ impl UserEmailMutations {
         repo.user_email().remove(user_email.clone()).await?;
 
         // Schedule a job to update the user
-        repo.job()
-            .schedule_job(ProvisionUserJob::new(&user))
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
             .await?;
 
         repo.save().await?;
