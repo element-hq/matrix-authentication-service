@@ -18,7 +18,8 @@ use mas_axum_utils::{
 use mas_data_model::SiteConfig;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::JobRepositoryExt, queue::SendAccountRecoveryEmailsJob, BoxClock, BoxRepository, BoxRng,
+    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
+    BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{EmptyContext, RecoveryProgressContext, TemplateContext, Templates};
 use ulid::Ulid;
@@ -135,8 +136,12 @@ pub(crate) async fn post(
     }
 
     // Schedule a new batch of emails
-    repo.job()
-        .schedule_job(SendAccountRecoveryEmailsJob::new(&recovery_session))
+    repo.queue_job()
+        .schedule_job(
+            &mut rng,
+            &clock,
+            SendAccountRecoveryEmailsJob::new(&recovery_session),
+        )
         .await?;
 
     repo.save().await?;

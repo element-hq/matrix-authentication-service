@@ -13,12 +13,11 @@ use crate::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
-    job::JobRepository,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
-    queue::QueueWorkerRepository,
+    queue::{QueueJobRepository, QueueWorkerRepository},
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
@@ -190,11 +189,11 @@ pub trait RepositoryAccess: Send {
         &'c mut self,
     ) -> Box<dyn CompatRefreshTokenRepository<Error = Self::Error> + 'c>;
 
-    /// Get a [`JobRepository`]
-    fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c>;
-
     /// Get a [`QueueWorkerRepository`]
     fn queue_worker<'c>(&'c mut self) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`QueueJobRepository`]
+    fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c>;
 }
 
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
@@ -209,13 +208,12 @@ mod impls {
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
             CompatSsoLoginRepository,
         },
-        job::JobRepository,
         oauth2::{
             OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository,
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
             OAuth2SessionRepository,
         },
-        queue::QueueWorkerRepository,
+        queue::{QueueJobRepository, QueueWorkerRepository},
         upstream_oauth2::{
             UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
             UpstreamOAuthSessionRepository,
@@ -407,14 +405,14 @@ mod impls {
             ))
         }
 
-        fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c> {
-            Box::new(MapErr::new(self.inner.job(), &mut self.mapper))
-        }
-
         fn queue_worker<'c>(
             &'c mut self,
         ) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.queue_worker(), &mut self.mapper))
+        }
+
+        fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.queue_job(), &mut self.mapper))
         }
     }
 
@@ -535,14 +533,14 @@ mod impls {
             (**self).compat_refresh_token()
         }
 
-        fn job<'c>(&'c mut self) -> Box<dyn JobRepository<Error = Self::Error> + 'c> {
-            (**self).job()
-        }
-
         fn queue_worker<'c>(
             &'c mut self,
         ) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
             (**self).queue_worker()
+        }
+
+        fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c> {
+            (**self).queue_job()
         }
     }
 }

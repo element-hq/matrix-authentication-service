@@ -16,8 +16,9 @@ use mas_axum_utils::{
 };
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::JobRepositoryExt, queue::ProvisionUserJob, user::UserEmailRepository, BoxClock,
-    BoxRepository, BoxRng, RepositoryAccess,
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
+    user::UserEmailRepository,
+    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{EmailVerificationPageContext, TemplateContext, Templates};
 use serde::Deserialize;
@@ -93,6 +94,7 @@ pub(crate) async fn get(
 )]
 pub(crate) async fn post(
     clock: BoxClock,
+    mut rng: BoxRng,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
@@ -140,8 +142,8 @@ pub(crate) async fn post(
         .mark_as_verified(&clock, user_email)
         .await?;
 
-    repo.job()
-        .schedule_job(ProvisionUserJob::new(&session.user))
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&session.user))
         .await?;
 
     repo.save().await?;

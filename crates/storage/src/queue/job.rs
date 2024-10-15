@@ -112,7 +112,7 @@ pub trait QueueJobRepositoryExt: QueueJobRepository {
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
-    async fn schedule<J: InsertableJob>(
+    async fn schedule_job<J: InsertableJob>(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
@@ -132,7 +132,7 @@ where
         ),
         skip_all,
     )]
-    async fn schedule<J: InsertableJob>(
+    async fn schedule_job<J: InsertableJob>(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,

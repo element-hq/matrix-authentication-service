@@ -21,7 +21,8 @@ use mas_axum_utils::{
 use mas_data_model::{SiteConfig, UserAgent};
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::JobRepositoryExt, queue::SendAccountRecoveryEmailsJob, BoxClock, BoxRepository, BoxRng,
+    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
+    BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{
     EmptyContext, FieldError, FormError, FormState, RecoveryStartContext, RecoveryStartFormField,
@@ -144,8 +145,12 @@ pub(crate) async fn post(
         )
         .await?;
 
-    repo.job()
-        .schedule_job(SendAccountRecoveryEmailsJob::new(&session))
+    repo.queue_job()
+        .schedule_job(
+            &mut rng,
+            &clock,
+            SendAccountRecoveryEmailsJob::new(&session),
+        )
         .await?;
 
     repo.save().await?;

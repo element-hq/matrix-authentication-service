@@ -21,9 +21,11 @@ use mas_matrix::HomeserverConnection;
 use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
-    job::JobRepositoryExt,
     oauth2::OAuth2SessionFilter,
-    queue::{DeactivateUserJob, ProvisionUserJob, ReactivateUserJob, SyncDevicesJob},
+    queue::{
+        DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _, ReactivateUserJob,
+        SyncDevicesJob,
+    },
     user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
     Clock, RepositoryAccess, SystemClock,
 };
@@ -320,7 +322,7 @@ impl Options {
                     let id = id.into();
                     info!(user.id = %id, "Scheduling provisioning job");
                     let job = ProvisionUserJob::new_for_id(id);
-                    repo.job().schedule_job(job).await?;
+                    repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
                 }
 
                 repo.into_inner().commit().await?;
@@ -383,7 +385,9 @@ impl Options {
 
                 // Schedule a job to sync the devices of the user with the homeserver
                 warn!("Scheduling job to sync devices for the user");
-                repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
+                repo.queue_job()
+                    .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+                    .await?;
 
                 let txn = repo.into_inner();
                 if dry_run {
@@ -421,8 +425,8 @@ impl Options {
 
                 if deactivate {
                     warn!(%user.id, "Scheduling user deactivation");
-                    repo.job()
-                        .schedule_job(DeactivateUserJob::new(&user, false))
+                    repo.queue_job()
+                        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, false))
                         .await?;
                 }
 
@@ -445,8 +449,8 @@ impl Options {
                     .context("User not found")?;
 
                 warn!(%user.id, "User scheduling user reactivation");
-                repo.job()
-                    .schedule_job(ReactivateUserJob::new(&user))
+                repo.queue_job()
+                    .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
                     .await?;
 
                 repo.into_inner().commit().await?;
@@ -928,7 +932,9 @@ impl UserCreationRequest<'_> {
             provision_job = provision_job.set_display_name(display_name);
         }
 
-        repo.job().schedule_job(provision_job).await?;
+        repo.queue_job()
+            .schedule_job(rng, clock, provision_job)
+            .await?;
 
         Ok(user)
     }
