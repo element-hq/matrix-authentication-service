@@ -9,7 +9,7 @@ use apalis_core::{context::JobContext, executor::TokioExecutor, monitor::Monitor
 use chrono::Duration;
 use mas_email::{Address, Mailbox};
 use mas_i18n::locale;
-use mas_storage::job::{JobWithSpanContext, VerifyEmailJob};
+use mas_storage::{job::JobWithSpanContext, queue::VerifyEmailJob};
 use mas_templates::{EmailVerificationContext, TemplateContext};
 use rand::{distributions::Uniform, Rng};
 use tracing::info;

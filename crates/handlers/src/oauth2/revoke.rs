@@ -14,8 +14,7 @@ use mas_data_model::TokenType;
 use mas_iana::oauth::OAuthTokenTypeHint;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    job::{JobRepositoryExt, SyncDevicesJob},
-    BoxClock, BoxRepository, RepositoryAccess,
+    job::JobRepositoryExt, queue::SyncDevicesJob, BoxClock, BoxRepository, RepositoryAccess,
 };
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},

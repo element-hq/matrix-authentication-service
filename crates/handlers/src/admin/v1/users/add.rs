@@ -8,10 +8,7 @@ use aide::{transform::TransformOperation, NoApi, OperationIo};
 use axum::{extract::State, response::IntoResponse, Json};
 use hyper::StatusCode;
 use mas_matrix::BoxHomeserverConnection;
-use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
-    BoxRng,
-};
+use mas_storage::{job::JobRepositoryExt, queue::ProvisionUserJob, BoxRng};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::warn;

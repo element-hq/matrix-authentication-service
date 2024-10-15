@@ -7,7 +7,8 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob, VerifyEmailJob},
+    job::JobRepositoryExt,
+    queue::{ProvisionUserJob, VerifyEmailJob},
     user::{UserEmailRepository, UserRepository},
     RepositoryAccess,
 };

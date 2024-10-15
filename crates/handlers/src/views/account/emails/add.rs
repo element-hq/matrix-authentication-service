@@ -17,9 +17,8 @@ use mas_data_model::SiteConfig;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, VerifyEmailJob},
-    user::UserEmailRepository,
-    BoxClock, BoxRepository, BoxRng,
+    job::JobRepositoryExt, queue::VerifyEmailJob, user::UserEmailRepository, BoxClock,
+    BoxRepository, BoxRng,
 };
 use mas_templates::{EmailAddContext, ErrorContext, TemplateContext, Templates};
 use serde::Deserialize;

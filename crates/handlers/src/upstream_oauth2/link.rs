@@ -23,7 +23,8 @@ use mas_matrix::BoxHomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
+    job::JobRepositoryExt,
+    queue::ProvisionUserJob,
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository},
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,

@@ -7,7 +7,7 @@
 use aide::{transform::TransformOperation, OperationIo};
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
-use mas_storage::job::{DeactivateUserJob, JobRepositoryExt};
+use mas_storage::{job::JobRepositoryExt, queue::DeactivateUserJob};
 use tracing::info;
 use ulid::Ulid;
 

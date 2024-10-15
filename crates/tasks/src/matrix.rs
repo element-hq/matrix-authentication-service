@@ -12,11 +12,9 @@ use mas_data_model::Device;
 use mas_matrix::ProvisionRequest;
 use mas_storage::{
     compat::CompatSessionFilter,
-    job::{
-        DeleteDeviceJob, JobRepositoryExt as _, JobWithSpanContext, ProvisionDeviceJob,
-        ProvisionUserJob, SyncDevicesJob,
-    },
+    job::{JobRepositoryExt as _, JobWithSpanContext},
     oauth2::OAuth2SessionFilter,
+    queue::{DeleteDeviceJob, ProvisionDeviceJob, ProvisionUserJob, SyncDevicesJob},
     user::{UserEmailRepository, UserRepository},
     Pagination, RepositoryAccess,
 };
