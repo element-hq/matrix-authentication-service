@@ -11,10 +11,6 @@ use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
 use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
-use rand::{
-    distributions::{Alphanumeric, DistString},
-    thread_rng,
-};
 use tracing::{info, info_span};
 
 use crate::{
@@ -71,13 +67,8 @@ impl Options {
 
         drop(config);
 
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-        let worker_name = Alphanumeric.sample_string(&mut rng, 10);
-
-        info!(worker_name, "Starting task scheduler");
-        let monitor = mas_tasks::init(
-            &worker_name,
+        info!("Starting task scheduler");
+        mas_tasks::init(
             &pool,
             &mailer,
             conn,
@@ -87,20 +78,6 @@ impl Options {
         )
         .await?;
 
-        // XXX: The monitor from apalis is a bit annoying to use for graceful shutdowns,
-        // ideally we'd just give it a cancellation token
-        let shutdown_future = shutdown.soft_shutdown_token().cancelled_owned();
-        shutdown.task_tracker().spawn(async move {
-            if let Err(e) = monitor
-                .run_with_signal(async move {
-                    shutdown_future.await;
-                    Ok(())
-                })
-                .await
-            {
-                tracing::error!(error = &e as &dyn std::error::Error, "Task worker failed");
-            }
-        });
         span.exit();
 
         shutdown.run().await;

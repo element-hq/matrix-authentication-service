@@ -9,12 +9,11 @@ use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use chrono::Duration;
 use mas_data_model::{Device, TokenType};
 use mas_storage::{
-    job::JobRepositoryExt,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2ClientRepository, OAuth2RefreshTokenRepository,
         OAuth2SessionRepository,
     },
-    queue::SyncDevicesJob,
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
     user::UserRepository,
     RepositoryAccess,
 };
@@ -218,6 +217,7 @@ impl OAuth2SessionMutations {
 
         let mut repo = state.repository().await?;
         let clock = state.clock();
+        let mut rng = state.rng();
 
         let session = repo.oauth2_session().lookup(oauth2_session_id).await?;
         let Some(session) = session else {
@@ -236,7 +236,9 @@ impl OAuth2SessionMutations {
                 .context("Could not load user")?;
 
             // Schedule a job to sync the devices of the user with the homeserver
-            repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
+            repo.queue_job()
+                .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+                .await?;
         }
 
         let session = repo.oauth2_session().finish(&clock, session).await?;

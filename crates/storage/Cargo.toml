@@ -14,18 +14,16 @@ workspace = true
 [dependencies]
 async-trait.workspace = true
 chrono.workspace = true
-thiserror.workspace = true
 futures-util.workspace = true
-
-apalis-core = { version = "0.4.9", features = ["tokio-comp"] }
 opentelemetry.workspace = true
 rand_core = "0.6.4"
 serde.workspace = true
 serde_json.workspace = true
-tracing.workspace = true
+thiserror.workspace = true
 tracing-opentelemetry.workspace = true
-url.workspace = true
+tracing.workspace = true
 ulid.workspace = true
+url.workspace = true
 
 oauth2-types.workspace = true
 mas-data-model.workspace = true

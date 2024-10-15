@@ -46,11 +46,6 @@ impl VerifyEmailJob {
     }
 }
 
-// Implemented for compatibility
-impl apalis_core::job::Job for VerifyEmailJob {
-    const NAME: &'static str = "verify-email";
-}
-
 impl InsertableJob for VerifyEmailJob {
     const QUEUE_NAME: &'static str = "verify-email";
 }
@@ -101,11 +96,6 @@ impl ProvisionUserJob {
     }
 }
 
-// Implemented for compatibility
-impl apalis_core::job::Job for ProvisionUserJob {
-    const NAME: &'static str = "provision-user";
-}
-
 impl InsertableJob for ProvisionUserJob {
     const QUEUE_NAME: &'static str = "provision-user";
 }
@@ -132,11 +122,6 @@ impl ProvisionDeviceJob {
     pub fn device_id(&self) -> &str {
         &self.device_id
     }
-}
-
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for ProvisionDeviceJob {
-    const NAME: &'static str = "provision-device";
 }
 
 impl InsertableJob for ProvisionDeviceJob {
@@ -176,11 +161,6 @@ impl DeleteDeviceJob {
     }
 }
 
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for DeleteDeviceJob {
-    const NAME: &'static str = "delete-device";
-}
-
 impl InsertableJob for DeleteDeviceJob {
     const QUEUE_NAME: &'static str = "delete-device";
 }
@@ -204,11 +184,6 @@ impl SyncDevicesJob {
     pub fn user_id(&self) -> Ulid {
         self.user_id
     }
-}
-
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for SyncDevicesJob {
-    const NAME: &'static str = "sync-devices";
 }
 
 impl InsertableJob for SyncDevicesJob {
@@ -250,11 +225,6 @@ impl DeactivateUserJob {
     }
 }
 
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for DeactivateUserJob {
-    const NAME: &'static str = "deactivate-user";
-}
-
 impl InsertableJob for DeactivateUserJob {
     const QUEUE_NAME: &'static str = "deactivate-user";
 }
@@ -281,11 +251,6 @@ impl ReactivateUserJob {
     pub fn user_id(&self) -> Ulid {
         self.user_id
     }
-}
-
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for ReactivateUserJob {
-    const NAME: &'static str = "reactivate-user";
 }
 
 impl InsertableJob for ReactivateUserJob {
@@ -318,11 +283,6 @@ impl SendAccountRecoveryEmailsJob {
     pub fn user_recovery_session_id(&self) -> Ulid {
         self.user_recovery_session_id
     }
-}
-
-// Implemented for compatibility with older versions
-impl apalis_core::job::Job for SendAccountRecoveryEmailsJob {
-    const NAME: &'static str = "send-account-recovery-email";
 }
 
 impl InsertableJob for SendAccountRecoveryEmailsJob {

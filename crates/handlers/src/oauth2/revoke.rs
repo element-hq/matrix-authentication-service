@@ -14,7 +14,8 @@ use mas_data_model::TokenType;
 use mas_iana::oauth::OAuthTokenTypeHint;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    job::JobRepositoryExt, queue::SyncDevicesJob, BoxClock, BoxRepository, RepositoryAccess,
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
+    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
@@ -109,6 +110,7 @@ impl From<mas_data_model::TokenFormatError> for RouteError {
 )]
 pub(crate) async fn post(
     clock: BoxClock,
+    mut rng: BoxRng,
     State(http_client): State<reqwest::Client>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -208,7 +210,9 @@ pub(crate) async fn post(
             .ok_or(RouteError::UnknownToken)?;
 
         // Schedule a job to sync the devices of the user with the homeserver
-        repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .await?;
     }
 
     // Now that we checked everything, we can end the session.

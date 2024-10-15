@@ -12,9 +12,8 @@ use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::TokenType;
 use mas_storage::{
     compat::{CompatAccessTokenRepository, CompatSessionRepository},
-    job::JobRepositoryExt,
-    queue::SyncDevicesJob,
-    BoxClock, BoxRepository, Clock, RepositoryAccess,
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use thiserror::Error;
 
@@ -66,6 +65,7 @@ impl IntoResponse for RouteError {
 #[tracing::instrument(name = "handlers.compat.logout.post", skip_all, err)]
 pub(crate) async fn post(
     clock: BoxClock,
+    mut rng: BoxRng,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     maybe_authorization: Option<TypedHeader<Authorization<Bearer>>>,
@@ -105,7 +105,9 @@ pub(crate) async fn post(
         .ok_or(RouteError::InvalidAuthorization)?;
 
     // Schedule a job to sync the devices of the user with the homeserver
-    repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+        .await?;
 
     repo.compat_session().finish(&clock, session).await?;
 
