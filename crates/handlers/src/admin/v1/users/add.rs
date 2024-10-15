@@ -8,7 +8,10 @@ use aide::{transform::TransformOperation, NoApi, OperationIo};
 use axum::{extract::State, response::IntoResponse, Json};
 use hyper::StatusCode;
 use mas_matrix::BoxHomeserverConnection;
-use mas_storage::{job::JobRepositoryExt, queue::ProvisionUserJob, BoxRng};
+use mas_storage::{
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
+    BoxRng,
+};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::warn;
@@ -161,8 +164,8 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
-    repo.job()
-        .schedule_job(ProvisionUserJob::new(&user))
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
         .await?;
 
     repo.save().await?;

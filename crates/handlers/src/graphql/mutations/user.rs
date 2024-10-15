@@ -7,8 +7,7 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    job::JobRepositoryExt,
-    queue::{DeactivateUserJob, ProvisionUserJob},
+    queue::{DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _},
     user::UserRepository,
 };
 use tracing::{info, warn};
@@ -399,8 +398,8 @@ impl UserMutations {
 
         let user = repo.user().add(&mut rng, &clock, input.username).await?;
 
-        repo.job()
-            .schedule_job(ProvisionUserJob::new(&user))
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
             .await?;
 
         repo.save().await?;
@@ -415,6 +414,8 @@ impl UserMutations {
         input: LockUserInput,
     ) -> Result<LockUserPayload, async_graphql::Error> {
         let state = ctx.state();
+        let clock = state.clock();
+        let mut rng = state.rng();
         let requester = ctx.requester();
 
         if !requester.is_admin() {
@@ -436,8 +437,8 @@ impl UserMutations {
 
         if deactivate {
             info!("Scheduling deactivation of user {}", user.id);
-            repo.job()
-                .schedule_job(DeactivateUserJob::new(&user, deactivate))
+            repo.queue_job()
+                .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, deactivate))
                 .await?;
         }
 

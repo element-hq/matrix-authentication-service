@@ -17,8 +17,9 @@ use mas_data_model::SiteConfig;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::JobRepositoryExt, queue::VerifyEmailJob, user::UserEmailRepository, BoxClock,
-    BoxRepository, BoxRng,
+    queue::{QueueJobRepositoryExt as _, VerifyEmailJob},
+    user::UserEmailRepository,
+    BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{EmailAddContext, ErrorContext, TemplateContext, Templates};
 use serde::Deserialize;
@@ -136,8 +137,12 @@ pub(crate) async fn post(
     // If the email was not confirmed, send a confirmation email & redirect to the
     // verify page
     let next = if user_email.confirmed_at.is_none() {
-        repo.job()
-            .schedule_job(VerifyEmailJob::new(&user_email).with_language(locale.to_string()))
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                VerifyEmailJob::new(&user_email).with_language(locale.to_string()),
+            )
             .await?;
 
         let next = mas_router::AccountVerifyEmail::new(user_email.id);

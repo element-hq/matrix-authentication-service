@@ -4,10 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
+use aide::{transform::TransformOperation, NoApi, OperationIo};
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
-use mas_storage::{job::JobRepositoryExt, queue::DeactivateUserJob};
+use mas_storage::{
+    queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
+    BoxRng,
+};
 use tracing::info;
 use ulid::Ulid;
 
@@ -69,6 +72,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
@@ -83,8 +87,8 @@ pub async fn handler(
     }
 
     info!("Scheduling deactivation of user {}", user.id);
-    repo.job()
-        .schedule_job(DeactivateUserJob::new(&user, true))
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
         .await?;
 
     repo.save().await?;
@@ -133,11 +137,12 @@ mod tests {
 
         // It should have scheduled a deactivation job for the user
         // XXX: we don't have a good way to look for the deactivation job
-        let job: Json<serde_json::Value> =
-            sqlx::query_scalar("SELECT job FROM apalis.jobs WHERE job_type = 'deactivate-user'")
-                .fetch_one(&pool)
-                .await
-                .expect("Deactivation job to be scheduled");
+        let job: Json<serde_json::Value> = sqlx::query_scalar(
+            "SELECT payload FROM queue_jobs WHERE queue_name = 'deactivate-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Deactivation job to be scheduled");
         assert_eq!(job["user_id"], serde_json::json!(user.id));
     }
 
@@ -174,11 +179,12 @@ mod tests {
 
         // It should have scheduled a deactivation job for the user
         // XXX: we don't have a good way to look for the deactivation job
-        let job: Json<serde_json::Value> =
-            sqlx::query_scalar("SELECT job FROM apalis.jobs WHERE job_type = 'deactivate-user'")
-                .fetch_one(&pool)
-                .await
-                .expect("Deactivation job to be scheduled");
+        let job: Json<serde_json::Value> = sqlx::query_scalar(
+            "SELECT payload FROM queue_jobs WHERE queue_name = 'deactivate-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Deactivation job to be scheduled");
         assert_eq!(job["user_id"], serde_json::json!(user.id));
     }
 
