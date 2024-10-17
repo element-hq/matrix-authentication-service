@@ -818,6 +818,12 @@ type Mutation {
   Set the display name of a user
   """
   setDisplayName(input: SetDisplayNameInput!): SetDisplayNamePayload!
+  """
+  Remove an upstream linked account
+  """
+  removeUpstreamLink(
+    input: RemoveUpstreamLinkInput!
+  ): RemoveUpstreamLinkPayload!
 }
 
 """
@@ -1157,6 +1163,52 @@ enum RemoveEmailStatus {
   PRIMARY
   """
   The email address was not found
+  """
+  NOT_FOUND
+}
+
+"""
+The input for the `removeEmail` mutation
+"""
+input RemoveUpstreamLinkInput {
+  """
+  The ID of the upstream link to remove
+  """
+  upstreamLinkId: ID!
+}
+
+"""
+The payload of the `removeEmail` mutation
+"""
+type RemoveUpstreamLinkPayload {
+  """
+  Status of the operation
+  """
+  status: RemoveUpstreamLinkStatus!
+  """
+  The upstream link that was removed
+  """
+  upstreamLink: UpstreamOAuth2Link
+  """
+  The provider to which the upstream link belonged
+  """
+  provider: UpstreamOAuth2Provider
+  """
+  The user to whom the upstream link belonged
+  """
+  user: User
+}
+
+"""
+The status of the `removeEmail` mutation
+"""
+enum RemoveUpstreamLinkStatus {
+  """
+  The upstream link was removed
+  """
+  REMOVED
+  """
+  The upstream link was not found
   """
   NOT_FOUND
 }
@@ -1594,6 +1646,14 @@ type UpstreamOAuth2Provider implements Node & CreationEvent {
   Client ID used for this provider.
   """
   clientId: String!
+  """
+  The human-readable name of the provider.
+  """
+  humanName: String
+  """
+  UpstreamOAuth2Links associated with this provider for the current user.
+  """
+  upstreamOauth2LinksForUser: [UpstreamOAuth2Link!]!
 }
 
 type UpstreamOAuth2ProviderConnection {

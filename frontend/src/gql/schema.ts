@@ -1405,6 +1405,29 @@ export default {
             ]
           },
           {
+            "name": "removeUpstreamLink",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "RemoveUpstreamLinkPayload",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "input",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
             "name": "sendVerificationEmail",
             "type": {
               "kind": "NON_NULL",
@@ -2447,6 +2470,51 @@ export default {
       },
       {
         "kind": "OBJECT",
+        "name": "RemoveUpstreamLinkPayload",
+        "fields": [
+          {
+            "name": "provider",
+            "type": {
+              "kind": "OBJECT",
+              "name": "UpstreamOAuth2Provider",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "status",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "upstreamLink",
+            "type": {
+              "kind": "OBJECT",
+              "name": "UpstreamOAuth2Link",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "user",
+            "type": {
+              "kind": "OBJECT",
+              "name": "User",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
         "name": "SendVerificationEmailPayload",
         "fields": [
           {
@@ -2942,6 +3010,14 @@ export default {
             "args": []
           },
           {
+            "name": "humanName",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Any"
+            },
+            "args": []
+          },
+          {
             "name": "id",
             "type": {
               "kind": "NON_NULL",
@@ -2959,6 +3035,24 @@ export default {
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "upstreamOauth2LinksForUser",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "UpstreamOAuth2Link",
+                    "ofType": null
+                  }
+                }
               }
             },
             "args": []
