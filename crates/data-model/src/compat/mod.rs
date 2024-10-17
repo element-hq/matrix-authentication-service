@@ -12,7 +12,7 @@ mod session;
 mod sso_login;
 
 pub use self::{
-    device::Device,
+    device::{Device, InvalidDeviceID},
     session::{CompatSession, CompatSessionState},
     sso_login::{CompatSsoLogin, CompatSsoLoginState},
 };

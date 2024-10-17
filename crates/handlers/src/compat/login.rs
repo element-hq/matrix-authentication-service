@@ -9,22 +9,26 @@ use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
+use mas_config::RestAuthProviderConfig;
 use mas_data_model::{
-    CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User, UserAgent,
+    CompatSession, CompatSsoLoginState, Device, InvalidDeviceID, SiteConfig, TokenType, User,
+    UserAgent,
 };
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::{BoxHomeserverConnection, ProvisionRequest};
 use mas_storage::{
     compat::{
-        CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
-        CompatSsoLoginRepository,
+        CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionFilter,
+        CompatSessionRepository, CompatSsoLoginRepository,
     },
     user::{UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxClock, BoxRepository, BoxRng, Clock, Pagination, RepositoryAccess,
 };
 use rand::{CryptoRng, RngCore};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, skip_serializing_none, DurationMilliSeconds};
 use thiserror::Error;
+use tracing::{error, info};
 use zeroize::Zeroizing;
 
 use super::MatrixError;
@@ -64,6 +68,27 @@ struct LoginTypes {
     flows: Vec<LoginType>,
 }
 
+#[derive(Serialize)]
+struct AuthRequest {
+    user: AuthUser,
+}
+
+#[derive(Serialize)]
+struct AuthUser {
+    id: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct AuthResponse {
+    auth: AuthResult,
+}
+
+#[derive(Deserialize)]
+struct AuthResult {
+    success: bool,
+}
+
 #[tracing::instrument(name = "handlers.compat.login.get", skip_all)]
 pub(crate) async fn get(State(password_manager): State<PasswordManager>) -> impl IntoResponse {
     let flows = if password_manager.is_enabled() {
@@ -97,6 +122,9 @@ pub struct RequestBody {
 
     #[serde(default)]
     refresh_token: bool,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    device_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -166,8 +194,8 @@ pub enum RouteError {
     #[error("invalid login token")]
     InvalidLoginToken,
 
-    #[error("failed to provision device")]
-    ProvisionDeviceFailed(#[source] anyhow::Error),
+    #[error("invalid device ID: {0}")]
+    InvalidDeviceID(#[from] InvalidDeviceID),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -176,13 +204,11 @@ impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
         let response = match self {
-            Self::Internal(_) | Self::SessionNotFound | Self::ProvisionDeviceFailed(_) => {
-                MatrixError {
-                    errcode: "M_UNKNOWN",
-                    error: "Internal server error",
-                    status: StatusCode::INTERNAL_SERVER_ERROR,
-                }
-            }
+            Self::Internal(_) | Self::SessionNotFound => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Internal server error",
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+            },
             Self::RateLimited(_) => MatrixError {
                 errcode: "M_LIMIT_EXCEEDED",
                 error: "Too many login attempts",
@@ -191,6 +217,11 @@ impl IntoResponse for RouteError {
             Self::Unsupported => MatrixError {
                 errcode: "M_UNRECOGNIZED",
                 error: "Invalid login type",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidDeviceID(_) => MatrixError {
+                errcode: "M_UNRECOGNIZED",
+                error: "Invalid device ID",
                 status: StatusCode::BAD_REQUEST,
             },
             Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed(_) => {
@@ -216,6 +247,101 @@ impl IntoResponse for RouteError {
     }
 }
 
+pub async fn authenticate_via_rest_api(
+    mxid: String,
+    password: String,
+    rest_auth_provider: RestAuthProviderConfig,
+) -> Result<bool, RouteError> {
+    let client = Client::new();
+    let auth_url = format!(
+        "{}/_matrix-internal/identity/{}/check_credentials",
+        rest_auth_provider.url, rest_auth_provider.version
+    );
+
+    let request_body = AuthRequest {
+        user: AuthUser {
+            id: mxid.clone(),
+            password,
+        },
+    };
+
+    info!("Sending authentication request for user: {}", mxid);
+
+    let response = client
+        .post(auth_url)
+        .json(&request_body)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to send authentication request: {}", e);
+            RouteError::Internal(Box::new(e))
+        })?;
+
+    if response.status().is_success() {
+        info!("Received successful response for user: {}", mxid);
+
+        let auth_response: AuthResponse = response.json().await.map_err(|e| {
+            error!("Failed to parse authentication response: {}", e);
+            RouteError::Internal(Box::new(e))
+        })?;
+
+        if auth_response.auth.success {
+            info!("Authentication successful for user: {}", mxid);
+            return Ok(true);
+        }
+        info!("Authentication failed for user: {}", mxid);
+        return Err(RouteError::PasswordVerificationFailed(anyhow::Error::msg(
+            "Authentication failed",
+        )));
+    }
+
+    error!(
+        "Authentication request returned an invalid response status for user: {}",
+        mxid
+    );
+    Err(RouteError::PasswordVerificationFailed(anyhow::Error::msg(
+        "Invalid response status",
+    )))
+}
+
+pub async fn start_new_session(
+    rng: &mut (impl RngCore + CryptoRng + Send),
+    clock: &impl Clock,
+    repo: &mut BoxRepository,
+    user: User,
+    device_id: Option<String>,
+) -> Result<(CompatSession, User), RouteError> {
+    // Lock the user sync to make sure we don't get into a race condition
+    repo.user().acquire_lock_for_sync(&user).await?;
+
+    // Now that the user credentials have been verified, start a new compat session
+    let device = if let Some(id) = device_id {
+        Device::try_from(id).map_err(RouteError::InvalidDeviceID)?
+    } else {
+        // Generate a new device ID only if not provided
+        let device: Device = Device::generate(rng);
+        device
+    };
+
+    // If an existing session is found, use it
+    let filter = CompatSessionFilter::new()
+        .for_user(&user)
+        .for_device(&device);
+    let pagination = Pagination::first(1);
+    let existing_sessions = repo.compat_session().list(filter, pagination).await?;
+
+    let session: CompatSession = if existing_sessions.edges.is_empty() {
+        repo.compat_session()
+            .add(rng, clock, &user, device, None, false)
+            .await?
+    } else {
+        let session = &existing_sessions.edges[0].0;
+        session.to_owned()
+    };
+
+    Ok((session, user))
+}
+
 #[tracing::instrument(name = "handlers.compat.login.post", skip_all, err)]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -235,22 +361,74 @@ pub(crate) async fn post(
         (
             true,
             Credentials::Password {
-                identifier: Identifier::User { user },
+                identifier: Identifier::User { user: username },
                 password,
             },
         ) => {
-            user_password_login(
-                &mut rng,
-                &clock,
-                &password_manager,
-                &limiter,
-                requester,
-                &mut repo,
-                &homeserver,
-                user,
-                password,
-            )
-            .await?
+            let device_id = input.device_id;
+            let mxid: String = homeserver.mxid(&username);
+            // Check if rest_auth_provider is set
+            if let Ok(Some(rest_auth_url)) = password_manager.get_rest_auth_provider() {
+                // If rest_auth_provider is enabled, authenticate via REST API
+                let authenticated =
+                    authenticate_via_rest_api(mxid.clone(), password.clone(), rest_auth_url)
+                        .await?;
+                if authenticated {
+                    let user = repo
+                        .user()
+                        .find_by_username(&username)
+                        .await?
+                        .filter(mas_data_model::User::is_valid);
+
+                    let user = if let Some(user) = user {
+                        // User found : proceed
+                        user
+                    } else {
+                        // User not found while existing in the provider: create it
+                        let new_user = repo.user().add(&mut rng, &clock, username.clone()).await?;
+
+                        // Replicate in Synapse
+                        homeserver
+                            .provision_user(&ProvisionRequest::new(mxid.clone(), username.clone()))
+                            .await
+                            .unwrap();
+
+                        new_user
+                    };
+                    // Update the password if needed
+                    let result = password_manager
+                        .hash(&mut rng, password.into_bytes().into())
+                        .await;
+                    let (version, hashed_password) = match result {
+                        Ok((version, hashed_password)) => (version, hashed_password),
+                        Err(err) => return Err(RouteError::Internal(err.into())),
+                    };
+                    repo.user_password()
+                        .upsert(&mut rng, &clock, &user, version, hashed_password)
+                        .await?;
+
+                    // Start a new compat session without verifying the password again
+                    start_new_session(&mut rng, &clock, &mut repo, user, device_id).await?
+                } else {
+                    return Err(RouteError::PasswordVerificationFailed(anyhow::Error::msg(
+                        "Authentication failed via REST API",
+                    )));
+                }
+            } else {
+                // If rest_auth_provider is not enabled, proceed with the normal authentication
+                let user = user_login_with_password(
+                    &mut rng,
+                    &clock,
+                    &password_manager,
+                    &limiter,
+                    requester,
+                    &mut repo,
+                    username,
+                    password,
+                )
+                .await?;
+                start_new_session(&mut rng, &clock, &mut repo, user, device_id).await?
+            }
         }
 
         (_, Credentials::Token { token }) => token_login(&mut repo, &clock, &token).await?,
@@ -294,6 +472,10 @@ pub(crate) async fn post(
     };
 
     repo.save().await?;
+    info!(
+        "Session and tokens saved successfully for user: {}",
+        user.username
+    );
 
     activity_tracker
         .record_compat_session(&clock, &session)
@@ -375,17 +557,16 @@ async fn token_login(
     Ok((session, user))
 }
 
-async fn user_password_login(
+pub async fn user_login_with_password(
     mut rng: &mut (impl RngCore + CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
     limiter: &Limiter,
     requester: RequesterFingerprint,
     repo: &mut BoxRepository,
-    homeserver: &BoxHomeserverConnection,
     username: String,
     password: String,
-) -> Result<(CompatSession, User), RouteError> {
+) -> Result<User, RouteError> {
     // Find the user
     let user = repo
         .user()
@@ -395,7 +576,10 @@ async fn user_password_login(
         .ok_or(RouteError::UserNotFound)?;
 
     // Check the rate limit
-    limiter.check_password(requester, &user)?;
+    limiter.check_password(requester, &user).map_err(|e| {
+        tracing::warn!(error = &e as &dyn std::error::Error);
+        RouteError::RateLimited(e)
+    })?;
 
     // Lookup its password
     let user_password = repo
@@ -431,30 +615,16 @@ async fn user_password_login(
             .await?;
     }
 
-    // Lock the user sync to make sure we don't get into a race condition
-    repo.user().acquire_lock_for_sync(&user).await?;
-
-    // Now that the user credentials have been verified, start a new compat session
-    let device = Device::generate(&mut rng);
-    let mxid = homeserver.mxid(&user.username);
-    homeserver
-        .create_device(&mxid, device.as_str())
-        .await
-        .map_err(RouteError::ProvisionDeviceFailed)?;
-
-    let session = repo
-        .compat_session()
-        .add(&mut rng, clock, &user, device, None, false)
-        .await?;
-
-    Ok((session, user))
+    Ok(user)
 }
 
 #[cfg(test)]
 mod tests {
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
+    use mockito::{Matcher, Server};
     use rand::distributions::{Alphanumeric, DistString};
+    use serde_json::json;
     use sqlx::PgPool;
 
     use super::*;
@@ -542,7 +712,7 @@ mod tests {
     /// Test that a user can login with a password using the Matrix
     /// compatibility API.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_user_password_login(pool: PgPool) {
+    async fn test_user_login_with_password(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
@@ -660,6 +830,95 @@ mod tests {
         // The response should be the same as the previous one, so that we don't leak if
         // it's the user that is invalid or the password.
         assert_eq!(body, old_body);
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_via_rest_api_success() {
+        let mut server = Server::new_async().await;
+        let _m = server
+            .mock("POST", "/_matrix-internal/identity/v2/check_credentials")
+            .match_body(Matcher::PartialJson(json!({
+                "user": {
+                    "id": "@alice:example.com",
+                    "password": "password123"
+                }
+            })))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "auth": {
+                        "success": true
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
+        let result = authenticate_via_rest_api(
+            "@alice:example.com".to_owned(),
+            "password123".to_owned(),
+            rest_auth_provider,
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert!(result.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_via_rest_api_failure() {
+        let mut server = Server::new_async().await;
+        let _m = server
+            .mock("POST", "/_matrix-internal/identity/v2/check_credentials")
+            .match_body(Matcher::PartialJson(json!({
+                "user": {
+                    "id": "@alice:example.com",
+                    "password": "wrongpassword"
+                }
+            })))
+            .with_status(200)
+            .with_body(
+                json!({
+                    "auth": {
+                        "success": false
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
+        let result = authenticate_via_rest_api(
+            "@alice:example.com".to_owned(),
+            "wrongpassword".to_owned(),
+            rest_auth_provider,
+        )
+        .await;
+
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_via_rest_api_invalid_status() {
+        let mut server = Server::new_async().await;
+        let _m = server
+            .mock("POST", "/_matrix-internal/identity/v2/check_credentials")
+            .with_status(500)
+            .create_async()
+            .await;
+
+        let rest_auth_provider = RestAuthProviderConfig::new(server.url(), "v2".to_owned());
+        let result = authenticate_via_rest_api(
+            "@alice:example.com".to_owned(),
+            "password123".to_owned(),
+            rest_auth_provider,
+        )
+        .await;
+
+        assert!(result.is_err());
     }
 
     /// Test that password logins are rate limited.
