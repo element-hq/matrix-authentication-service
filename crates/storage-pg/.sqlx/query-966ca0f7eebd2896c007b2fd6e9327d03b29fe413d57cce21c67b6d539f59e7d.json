@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE queue_workers\n                SET last_seen_at = $2\n                WHERE queue_worker_id = $1 AND shutdown_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "966ca0f7eebd2896c007b2fd6e9327d03b29fe413d57cce21c67b6d539f59e7d"
+}

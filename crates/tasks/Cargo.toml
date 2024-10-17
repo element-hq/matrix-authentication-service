@@ -13,7 +13,11 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-apalis-core = { version = "0.4.9", features = ["extensions", "tokio-comp", "storage"] }
+apalis-core = { version = "0.4.9", features = [
+    "extensions",
+    "tokio-comp",
+    "storage",
+] }
 apalis-cron = "0.4.9"
 async-stream = "0.3.6"
 async-trait.workspace = true
@@ -25,6 +29,7 @@ rand_chacha = "0.3.1"
 sqlx.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+tokio-util.workspace = true
 tower.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true

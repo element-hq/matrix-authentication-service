@@ -172,6 +172,8 @@ impl Options {
                 &mailer,
                 homeserver_connection.clone(),
                 url_builder.clone(),
+                shutdown.soft_shutdown_token(),
+                shutdown.task_tracker(),
             )
             .await?;
 

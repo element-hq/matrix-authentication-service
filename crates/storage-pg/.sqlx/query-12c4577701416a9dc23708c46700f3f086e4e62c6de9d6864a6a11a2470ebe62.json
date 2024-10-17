@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO queue_workers (queue_worker_id, registered_at, last_seen_at)\n                VALUES ($1, $2, $2)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "12c4577701416a9dc23708c46700f3f086e4e62c6de9d6864a6a11a2470ebe62"
+}

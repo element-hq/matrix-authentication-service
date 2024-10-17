@@ -10,10 +10,12 @@ use apalis_core::{executor::TokioExecutor, layers::extensions::Extension, monito
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, SystemClock};
-use mas_storage_pg::{DatabaseError, PgRepository};
+use mas_storage::{BoxClock, BoxRepository, RepositoryError, SystemClock};
+use mas_storage_pg::PgRepository;
+use new_queue::QueueRunnerError;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::debug;
 
 use crate::storage::PostgresStorageFactory;
@@ -21,6 +23,7 @@ use crate::storage::PostgresStorageFactory;
 mod database;
 mod email;
 mod matrix;
+mod new_queue;
 mod recovery;
 mod storage;
 mod user;
@@ -74,8 +77,11 @@ impl State {
         rand_chacha::ChaChaRng::from_rng(rand::thread_rng()).expect("failed to seed rng")
     }
 
-    pub async fn repository(&self) -> Result<BoxRepository, DatabaseError> {
-        let repo = PgRepository::from_pool(self.pool()).await?.boxed();
+    pub async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
+        let repo = PgRepository::from_pool(self.pool())
+            .await
+            .map_err(RepositoryError::from_error)?
+            .boxed();
 
         Ok(repo)
     }
@@ -138,7 +144,9 @@ pub async fn init(
     mailer: &Mailer,
     homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
     url_builder: UrlBuilder,
-) -> Result<Monitor<TokioExecutor>, sqlx::Error> {
+    cancellation_token: CancellationToken,
+    task_tracker: &TaskTracker,
+) -> Result<Monitor<TokioExecutor>, QueueRunnerError> {
     let state = State::new(
         pool.clone(),
         SystemClock::default(),
@@ -154,7 +162,23 @@ pub async fn init(
     let monitor = self::user::register(name, monitor, &state, &factory);
     let monitor = self::recovery::register(name, monitor, &state, &factory);
     // TODO: we might want to grab the join handle here
-    factory.listen().await?;
+    // TODO: this error isn't right, I just want that to compile
+    factory
+        .listen()
+        .await
+        .map_err(QueueRunnerError::SetupListener)?;
     debug!(?monitor, "workers registered");
+
+    let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
+
+    task_tracker.spawn(async move {
+        if let Err(e) = worker.run().await {
+            tracing::error!(
+                error = &e as &dyn std::error::Error,
+                "Failed to run new queue"
+            );
+        }
+    });
+
     Ok(monitor)
 }

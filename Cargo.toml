@@ -316,3 +316,10 @@ sha2.opt-level = 3
 digest.opt-level = 3
 block-buffer.opt-level = 3
 generic-array.opt-level = 3
+
+[patch.crates-io]
+sqlx = { git = "https://github.com/sandhose/sqlx.git", branch = "quenting/pglistener-executor" }
+sqlx-core = { git = "https://github.com/sandhose/sqlx.git", branch = "quenting/pglistener-executor" }
+sqlx-macros = { git = "https://github.com/sandhose/sqlx.git", branch = "quenting/pglistener-executor" }
+sqlx-macros-core = { git = "https://github.com/sandhose/sqlx.git", branch = "quenting/pglistener-executor" }
+sqlx-postgres = { git = "https://github.com/sandhose/sqlx.git", branch = "quenting/pglistener-executor" }
