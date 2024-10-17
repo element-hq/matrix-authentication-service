@@ -52,6 +52,7 @@ pub use self::{
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction, PkceMethod as UpstreamOAuth2PkceMethod,
         SetEmailVerification as UpstreamOAuth2SetEmailVerification, UpstreamOAuth2Config,
+        UserProfileMethod as UpstreamOAuth2UserProfileMethod,
     },
 };
 use crate::util::ConfigurationSection;

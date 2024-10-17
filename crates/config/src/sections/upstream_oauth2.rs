@@ -124,6 +124,26 @@ impl From<TokenAuthMethod> for OAuthClientAuthenticationMethod {
     }
 }
 
+/// Whether to fetch the user profile from the userinfo endpoint,
+/// or to rely on the data returned in the id_token from the token_endpoint
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum UserProfileMethod {
+    /// Use the userinfo endpoint if `openid` is not included in `scopes`
+    #[default]
+    Auto,
+
+    /// Always use the userinfo endpoint
+    UserinfoEndpoint,
+}
+
+impl UserProfileMethod {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, UserProfileMethod::Auto)
+    }
+}
+
 /// How to handle a claim
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 #[serde(rename_all = "lowercase")]
@@ -401,6 +421,14 @@ pub struct Provider {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
 
+    /// Whether to fetch the user profile from the userinfo endpoint,
+    /// or to rely on the data returned in the id_token from the token_endpoint.
+    ///
+    /// Defaults to `auto`, which uses the userinfo endpoint if `openid` is not
+    /// included in `scopes`, and the ID token otherwise.
+    #[serde(default, skip_serializing_if = "UserProfileMethod::is_default")]
+    pub user_profile_method: UserProfileMethod,
+
     /// The scopes to request from the provider
     pub scope: String,
 
@@ -423,6 +451,12 @@ pub struct Provider {
     /// Defaults to the `authorization_endpoint` provided through discovery
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorization_endpoint: Option<Url>,
+
+    /// The URL to use for the provider's userinfo endpoint
+    ///
+    /// Defaults to the `userinfo_endpoint` provided through discovery
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub userinfo_endpoint: Option<Url>,
 
     /// The URL to use for the provider's token endpoint
     ///

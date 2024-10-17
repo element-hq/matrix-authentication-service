@@ -109,6 +109,18 @@ impl<'a> LazyProviderInfos<'a> {
         Ok(self.load().await?.token_endpoint())
     }
 
+    /// Get the userinfo endpoint for the provider.
+    ///
+    /// Uses [`UpstreamOAuthProvider.userinfo_endpoint_override`] if set, otherwise
+    /// uses the one from discovery.
+    pub async fn userinfo_endpoint(&mut self) -> Result<&Url, DiscoveryError> {
+        if let Some(userinfo_endpoint) = &self.provider.userinfo_endpoint_override {
+            return Ok(userinfo_endpoint);
+        }
+
+        Ok(self.load().await?.userinfo_endpoint())
+    }
+
     /// Get the PKCE methods supported by the provider.
     ///
     /// If the mode is set to auto, it will use the ones from discovery,
@@ -276,7 +288,9 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use hyper::{body::Bytes, Request, Response, StatusCode};
-    use mas_data_model::UpstreamOAuthProviderClaimsImports;
+    use mas_data_model::{
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderUserProfileMethod,
+    };
     use mas_http::BoxCloneSyncService;
     use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{clock::MockClock, Clock};
@@ -487,8 +501,10 @@ mod tests {
             brand_name: None,
             discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
             pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
+            user_profile_method: UpstreamOAuthProviderUserProfileMethod::Auto,
             jwks_uri_override: None,
             authorization_endpoint_override: None,
+            userinfo_endpoint_override: None,
             token_endpoint_override: None,
             scope: Scope::from_iter([OPENID]),
             client_id: "client_id".to_owned(),

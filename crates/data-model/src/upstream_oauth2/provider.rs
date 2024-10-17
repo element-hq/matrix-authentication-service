@@ -116,6 +116,51 @@ impl std::fmt::Display for PkceMode {
     }
 }
 
+/// Whether to fetch the user profile from the userinfo endpoint,
+/// or to rely on the data returned in the id_token from the token_endpoint
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum UserProfileMethod {
+    /// Use the userinfo endpoint if `openid` is not included in `scopes`
+    #[default]
+    Auto,
+
+    /// Always use the userinfo endpoint
+    UserinfoEndpoint,
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("Invalid user profile method {0:?}")]
+pub struct InvalidUserProfileMethodError(String);
+
+impl std::str::FromStr for UserProfileMethod {
+    type Err = InvalidUserProfileMethodError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "auto" => Ok(Self::Auto),
+            "userinfo_endpoint" => Ok(Self::UserinfoEndpoint),
+            s => Err(InvalidUserProfileMethodError(s.to_owned())),
+        }
+    }
+}
+
+impl UserProfileMethod {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::UserinfoEndpoint => "userinfo_endpoint",
+        }
+    }
+}
+
+impl std::fmt::Display for UserProfileMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
@@ -127,11 +172,13 @@ pub struct UpstreamOAuthProvider {
     pub jwks_uri_override: Option<Url>,
     pub authorization_endpoint_override: Option<Url>,
     pub token_endpoint_override: Option<Url>,
+    pub userinfo_endpoint_override: Option<Url>,
     pub scope: Scope,
     pub client_id: String,
     pub encrypted_client_secret: Option<String>,
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
     pub token_endpoint_auth_method: OAuthClientAuthenticationMethod,
+    pub user_profile_method: UserProfileMethod,
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,

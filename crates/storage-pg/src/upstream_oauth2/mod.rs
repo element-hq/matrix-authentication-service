@@ -59,12 +59,15 @@ mod tests {
                     scope: Scope::from_iter([OPENID]),
                     token_endpoint_auth_method:
                         mas_iana::oauth::OAuthClientAuthenticationMethod::None,
+                    user_profile_method:
+                        mas_data_model::UpstreamOAuthProviderUserProfileMethod::Auto,
                     token_endpoint_signing_alg: None,
                     client_id: "client-id".to_owned(),
                     encrypted_client_secret: None,
                     claims_imports: UpstreamOAuthProviderClaimsImports::default(),
                     token_endpoint_override: None,
                     authorization_endpoint_override: None,
+                    userinfo_endpoint_override: None,
                     jwks_uri_override: None,
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
@@ -301,12 +304,15 @@ mod tests {
                         scope: scope.clone(),
                         token_endpoint_auth_method:
                             mas_iana::oauth::OAuthClientAuthenticationMethod::None,
+                        user_profile_method:
+                            mas_data_model::UpstreamOAuthProviderUserProfileMethod::Auto,
                         token_endpoint_signing_alg: None,
                         client_id,
                         encrypted_client_secret: None,
                         claims_imports: UpstreamOAuthProviderClaimsImports::default(),
                         token_endpoint_override: None,
                         authorization_endpoint_override: None,
+                        userinfo_endpoint_override: None,
                         jwks_uri_override: None,
                         discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                         pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,

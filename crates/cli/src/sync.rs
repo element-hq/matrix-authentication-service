@@ -231,6 +231,15 @@ pub async fn config_sync(
                 }
             };
 
+            let user_profile_method = match provider.user_profile_method {
+                mas_config::UpstreamOAuth2UserProfileMethod::Auto => {
+                    mas_data_model::UpstreamOAuthProviderUserProfileMethod::Auto
+                }
+                mas_config::UpstreamOAuth2UserProfileMethod::UserinfoEndpoint => {
+                    mas_data_model::UpstreamOAuthProviderUserProfileMethod::UserinfoEndpoint
+                }
+            };
+
             repo.upstream_oauth_provider()
                 .upsert(
                     clock,
@@ -241,6 +250,7 @@ pub async fn config_sync(
                         brand_name: provider.brand_name,
                         scope: provider.scope.parse()?,
                         token_endpoint_auth_method: provider.token_endpoint_auth_method.into(),
+                        user_profile_method,
                         token_endpoint_signing_alg: provider
                             .token_endpoint_auth_signing_alg
                             .clone(),
@@ -248,6 +258,7 @@ pub async fn config_sync(
                         encrypted_client_secret,
                         claims_imports: map_claims_imports(&provider.claims_imports),
                         token_endpoint_override: provider.token_endpoint,
+                        userinfo_endpoint_override: provider.userinfo_endpoint,
                         authorization_endpoint_override: provider.authorization_endpoint,
                         jwks_uri_override: provider.jwks_uri,
                         discovery_mode,
