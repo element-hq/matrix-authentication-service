@@ -53,19 +53,25 @@ pub fn mailer_from_config(
     config: &EmailConfig,
     templates: &Templates,
 ) -> Result<Mailer, anyhow::Error> {
-    let from = config.from.parse()?;
-    let reply_to = config.reply_to.parse()?;
+    let from = config
+        .from
+        .parse()
+        .context("invalid email configuration: invalid 'from' address")?;
+    let reply_to = config
+        .reply_to
+        .parse()
+        .context("invalid email configuration: invalid 'reply_to' address")?;
     let transport = match config.transport() {
         EmailTransportKind::Blackhole => MailTransport::blackhole(),
         EmailTransportKind::Smtp => {
             // This should have been set ahead of time
             let hostname = config
                 .hostname()
-                .context("invalid configuration: missing hostname")?;
+                .context("invalid email configuration: missing hostname")?;
 
             let mode = config
                 .mode()
-                .context("invalid configuration: missing mode")?;
+                .context("invalid email configuration: missing mode")?;
 
             let credentials = match (config.username(), config.password()) {
                 (Some(username), Some(password)) => Some(mas_email::SmtpCredentials::new(
@@ -74,7 +80,7 @@ pub fn mailer_from_config(
                 )),
                 (None, None) => None,
                 _ => {
-                    anyhow::bail!("invalid configuration: missing username or password");
+                    anyhow::bail!("invalid email configuration: missing username or password");
                 }
             };
 
