@@ -5322,9 +5322,9 @@ dependencies = [
 
 [[package]]
 name = "sea-query"
-version = "0.32.0-rc.2"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ae69162bc417008f7ba60abd5c2688529cd83e99a9ab680d922b41fd9bf3d8d"
+checksum = "ff504d13b5e4b52fffcf2fb203d0352a5722fa5151696db768933e41e1e591bb"
 dependencies = [
  "chrono",
  "inherent",
@@ -5334,9 +5334,9 @@ dependencies = [
 
 [[package]]
 name = "sea-query-binder"
-version = "0.7.0-rc.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "643c2e6fbba4440ff0075c405d37079a7da1a46892623b1cc8f06e05233eee1b"
+checksum = "b0019f47430f7995af63deda77e238c17323359af241233ec768aba1faea7608"
 dependencies = [
  "chrono",
  "sea-query",
