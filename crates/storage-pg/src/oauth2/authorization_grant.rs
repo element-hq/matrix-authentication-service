@@ -55,6 +55,7 @@ struct GrantLookup {
     code_challenge: Option<String>,
     code_challenge_method: Option<String>,
     requires_consent: bool,
+    login_hint: Option<String>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
 }
@@ -185,6 +186,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             created_at: value.created_at,
             response_type_id_token: value.response_type_id_token,
             requires_consent: value.requires_consent,
+            login_hint: value.login_hint,
         })
     }
 }
@@ -218,6 +220,7 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
         response_mode: ResponseMode,
         response_type_id_token: bool,
         requires_consent: bool,
+        login_hint: Option<String>,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
             .as_ref()
@@ -252,10 +255,11 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
                      response_type_id_token,
                      authorization_code,
                      requires_consent,
+                     login_hint,
                      created_at
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -271,6 +275,7 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
             response_type_id_token,
             code_str,
             requires_consent,
+            login_hint,
             created_at,
         )
         .traced()
@@ -291,6 +296,7 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
             created_at,
             response_type_id_token,
             requires_consent,
+            login_hint,
         })
     }
 
@@ -325,6 +331,7 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
                      , code_challenge
                      , code_challenge_method
                      , requires_consent
+                     , login_hint
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants
@@ -375,6 +382,7 @@ impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantReposi
                      , code_challenge
                      , code_challenge_method
                      , requires_consent
+                     , login_hint
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants
