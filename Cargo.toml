@@ -197,12 +197,12 @@ features = ["url", "chrono", "preserve_order"]
 
 # Query builder
 [workspace.dependencies.sea-query]
-version = "0.32.0-rc.2"
+version = "0.32.0"
 features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder
 [workspace.dependencies.sea-query-binder]
-version = "0.7.0-rc.2"
+version = "0.7.0"
 features = [
     "sqlx",
     "sqlx-postgres",
