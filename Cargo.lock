@@ -3283,6 +3283,7 @@ dependencies = [
  "governor",
  "indoc",
  "ipnetwork",
+ "lettre",
  "mas-iana",
  "mas-jose",
  "mas-keystore",

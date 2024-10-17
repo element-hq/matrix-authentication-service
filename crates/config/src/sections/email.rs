@@ -6,8 +6,9 @@
 
 #![allow(deprecated)]
 
-use std::num::NonZeroU16;
+use std::{num::NonZeroU16, str::FromStr};
 
+use lettre::message::Mailbox;
 use schemars::JsonSchema;
 use serde::{de::Error, Deserialize, Serialize};
 
@@ -199,6 +200,14 @@ impl ConfigurationSection for EmailConfig {
             EmailTransportKind::Blackhole => {}
 
             EmailTransportKind::Smtp => {
+                if let Err(e) = Mailbox::from_str(&self.from) {
+                    return Err(error_on_field(figment::error::Error::custom(e), "from"));
+                }
+
+                if let Err(e) = Mailbox::from_str(&self.reply_to) {
+                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to"));
+                }
+
                 match (self.username.is_some(), self.password.is_some()) {
                     (true, true) | (false, false) => {}
                     (true, false) => {
@@ -236,6 +245,14 @@ impl ConfigurationSection for EmailConfig {
 
             EmailTransportKind::Sendmail => {
                 let expected_fields = &["from", "reply_to", "transport", "command"];
+
+                if let Err(e) = Mailbox::from_str(&self.from) {
+                    return Err(error_on_field(figment::error::Error::custom(e), "from"));
+                }
+
+                if let Err(e) = Mailbox::from_str(&self.reply_to) {
+                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to"));
+                }
 
                 if self.command.is_none() {
                     return Err(missing_field("command"));
