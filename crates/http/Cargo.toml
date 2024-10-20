@@ -23,10 +23,12 @@ hyper.workspace = true
 hyper-util.workspace = true
 hyper-rustls = { workspace = true, optional = true }
 opentelemetry.workspace = true
+opentelemetry-http.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 rustls = { workspace = true, optional = true }
 rustls-platform-verifier = { workspace = true, optional = true }
 pin-project-lite = "0.2.14"
+reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"

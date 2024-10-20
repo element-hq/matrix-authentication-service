@@ -8,21 +8,14 @@
 //!
 //! [Discovery]: https://openid.net/specs/openid-connect-discovery-1_0.html
 
-use bytes::Bytes;
-use mas_http::{CatchHttpCodesLayer, JsonResponseLayer};
 use oauth2_types::oidc::{ProviderMetadata, VerifiedProviderMetadata};
-use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
-use crate::{
-    error::DiscoveryError,
-    http_service::HttpService,
-    utils::{http_all_error_status_codes, http_error_mapper},
-};
+use crate::error::DiscoveryError;
 
 /// Fetch the provider metadata.
 async fn discover_inner(
-    http_service: &HttpService,
+    client: &reqwest::Client,
     issuer: Url,
 ) -> Result<ProviderMetadata, DiscoveryError> {
     tracing::debug!("Fetching provider metadata...");
@@ -39,18 +32,17 @@ async fn discover_inner(
 
     let config_url = config_url.join(".well-known/openid-configuration")?;
 
-    let config_req = http::Request::get(config_url.as_str()).body(Bytes::new())?;
+    let response = client
+        .get(config_url.as_str())
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
-    let service = (
-        JsonResponseLayer::<ProviderMetadata>::default(),
-        CatchHttpCodesLayer::new(http_all_error_status_codes(), http_error_mapper),
-    )
-        .layer(http_service.clone());
-
-    let response = service.ready_oneshot().await?.call(config_req).await?;
     tracing::debug!(?response);
 
-    Ok(response.into_body())
+    Ok(response)
 }
 
 /// Fetch the provider metadata and validate it.
@@ -60,10 +52,10 @@ async fn discover_inner(
 /// Returns an error if the request fails or if the data is invalid.
 #[tracing::instrument(skip_all, fields(issuer))]
 pub async fn discover(
-    http_service: &HttpService,
+    client: &reqwest::Client,
     issuer: &str,
 ) -> Result<VerifiedProviderMetadata, DiscoveryError> {
-    let provider_metadata = discover_inner(http_service, issuer.parse()?).await?;
+    let provider_metadata = discover_inner(client, issuer.parse()?).await?;
 
     Ok(provider_metadata.validate(issuer)?)
 }
@@ -92,10 +84,10 @@ pub async fn discover(
 /// [provider metadata]: https://openid.net/specs/openid-connect-discovery-1_0.html
 #[tracing::instrument(skip_all, fields(issuer))]
 pub async fn insecure_discover(
-    http_service: &HttpService,
+    client: &reqwest::Client,
     issuer: &str,
 ) -> Result<VerifiedProviderMetadata, DiscoveryError> {
-    let provider_metadata = discover_inner(http_service, issuer.parse()?).await?;
+    let provider_metadata = discover_inner(client, issuer.parse()?).await?;
 
     Ok(provider_metadata.insecure_verify_metadata()?)
 }

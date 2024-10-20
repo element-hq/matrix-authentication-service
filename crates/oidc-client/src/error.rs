@@ -68,55 +68,17 @@ pub enum DiscoveryError {
     #[error(transparent)]
     IntoUrl(#[from] url::ParseError),
 
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
     /// The server returned an HTTP error status code.
     #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// An error occurred deserializing the response.
-    #[error(transparent)]
-    FromJson(#[from] serde_json::Error),
+    Http(#[from] reqwest::Error),
 
     /// An error occurred validating the metadata.
     #[error(transparent)]
     Validation(#[from] ProviderMetadataVerificationError),
 
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-
     /// Discovery is disabled for this provider.
     #[error("Discovery is disabled for this provider")]
     Disabled,
-}
-
-impl<S> From<json_response::Error<S>> for DiscoveryError
-where
-    S: Into<DiscoveryError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Deserialize { inner } => inner.into(),
-            json_response::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for DiscoveryError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                Self::Http(HttpError::new(status_code, inner))
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
 }
 
 /// All possible errors when registering the client.
@@ -563,30 +525,10 @@ where
 
 /// All possible errors when requesting a JWKS.
 #[derive(Debug, Error)]
+#[error("Failed to fetch JWKS")]
 pub enum JwksError {
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
-    /// An error occurred deserializing the response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
     /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<json_response::Error<S>> for JwksError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Service { inner } => Self::Service(inner.into()),
-            json_response::Error::Deserialize { inner } => Self::Json(inner),
-        }
-    }
+    Http(#[from] reqwest::Error),
 }
 
 /// All possible errors when verifying a JWT.

@@ -44,9 +44,7 @@ async fn pass_discover() {
         .mount(&mock_server)
         .await;
 
-    let provider_metadata = insecure_discover(&http_service, issuer.as_str())
-        .await
-        .unwrap();
+    let provider_metadata = insecure_discover(&client, issuer.as_str()).await.unwrap();
 
     assert_eq!(provider_metadata.issuer(), issuer.as_str());
 }

@@ -109,6 +109,7 @@ pub(crate) struct TestState {
     pub limiter: Limiter,
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
+    pub http_client: reqwest::Client,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -168,6 +169,8 @@ impl TestState {
             site_config.templates_features(),
         )
         .await?;
+
+        let http_client = mas_http::reqwest_client();
 
         // TODO: add more test keys to the store
         let rsa =
@@ -241,6 +244,7 @@ impl TestState {
             limiter,
             clock,
             rng,
+            http_client,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
     }
@@ -491,6 +495,12 @@ impl FromRef<TestState> for BoxHomeserverConnection {
 impl FromRef<TestState> for Limiter {
     fn from_ref(input: &TestState) -> Self {
         input.limiter.clone()
+    }
+}
+
+impl FromRef<TestState> for reqwest::Client {
+    fn from_ref(input: &TestState) -> Self {
+        input.http_client.clone()
     }
 }
 

@@ -42,7 +42,7 @@ use crate::{
 /// Returns an error if the request fails or the response is invalid.
 #[tracing::instrument(skip_all, fields(token_endpoint, request))]
 pub async fn request_access_token(
-    http_service: &HttpService,
+    http_client: &reqwest::Client,
     client_credentials: ClientCredentials,
     token_endpoint: &Url,
     request: AccessTokenRequest,
@@ -51,16 +51,9 @@ pub async fn request_access_token(
 ) -> Result<AccessTokenResponse, TokenRequestError> {
     tracing::debug!(?request, "Requesting access token...");
 
-    let token_request = http::Request::post(token_endpoint.as_str()).body(request)?;
+    let token_request = http_client.post(token_endpoint.as_str()).form(&request);
 
     let token_request = client_credentials.apply_to_request(token_request, now, rng)?;
-
-    let service = (
-        FormUrlencodedRequestLayer::default(),
-        JsonResponseLayer::<AccessTokenResponse>::default(),
-        CatchHttpCodesLayer::new(http_all_error_status_codes(), http_error_mapper),
-    )
-        .layer(http_service.clone());
 
     let res = service.ready_oneshot().await?.call(token_request).await?;
 

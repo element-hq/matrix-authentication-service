@@ -62,10 +62,10 @@ impl IntoResponse for RouteError {
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
     State(metadata_cache): State<MetadataCache>,
     mut repo: BoxRepository,
     State(url_builder): State<UrlBuilder>,
+    State(http_client): State<reqwest::Client>,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
     Query(query): Query<OptionalPostAuthAction>,
@@ -77,12 +77,10 @@ pub(crate) async fn get(
         .filter(UpstreamOAuthProvider::enabled)
         .ok_or(RouteError::ProviderNotFound)?;
 
-    let http_service = http_client_factory.http_service("upstream_oauth2.authorize");
-
     // First, discover the provider
     // This is done lazyly according to provider.discovery_mode and the various
     // endpoint overrides
-    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &http_service);
+    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &http_client);
     lazy_metadata.maybe_discover().await?;
 
     let redirect_uri = url_builder.upstream_oauth_callback(provider.id);
