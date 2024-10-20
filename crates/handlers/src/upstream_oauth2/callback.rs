@@ -134,6 +134,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     State(encrypter): State<Encrypter>,
     State(keystore): State<Keystore>,
+    State(client): State<reqwest::Client>,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
     Query(params): Query<QueryParams>,
@@ -186,12 +187,11 @@ pub(crate) async fn get(
         CodeOrError::Code { code } => code,
     };
 
-    let http_service = http_client_factory.http_service("upstream_oauth2.callback");
-    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &http_service);
+    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
     // Fetch the JWKS
     let jwks =
-        mas_oidc_client::requests::jose::fetch_jwks(&http_service, lazy_metadata.jwks_uri().await?)
+        mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
             .await?;
 
     // Figure out the client credentials
@@ -222,7 +222,7 @@ pub(crate) async fn get(
 
     let (response, id_token) =
         mas_oidc_client::requests::authorization_code::access_token_with_authorization_code(
-            &http_service,
+            &client,
             client_credentials,
             lazy_metadata.token_endpoint().await?,
             code,

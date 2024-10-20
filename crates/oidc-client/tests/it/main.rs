@@ -55,20 +55,14 @@ fn now() -> DateTime<Utc> {
     Utc::now()
 }
 
-async fn init_test() -> (HttpService, MockServer, Url) {
+async fn init_test() -> (reqwest::Client, MockServer, Url) {
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
-    let http_service = (
-        MapErrLayer::new(BoxError::from),
-        MapRequestLayer::new(|req: http::Request<_>| req.map(Full::new)),
-        BodyToBytesResponseLayer,
-    )
-        .layer(mas_http::make_untraced_client());
-    let http_service = BoxCloneSyncService::new(http_service);
+    let client = mas_http::reqwest_client();
     let mock_server = MockServer::start().await;
     let issuer = Url::parse(&mock_server.uri()).expect("Couldn't parse URL");
 
-    (http_service, mock_server, issuer)
+    (client, mock_server, issuer)
 }
 
 /// Generate a keystore with a single key for the given algorithm.

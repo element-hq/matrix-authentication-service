@@ -312,6 +312,7 @@ where
     MetadataCache: FromRef<S>,
     SiteConfig: FromRef<S>,
     Limiter: FromRef<S>,
+    reqwest::Client: FromRef<S>,
     BoxHomeserverConnection: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,

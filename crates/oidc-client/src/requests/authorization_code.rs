@@ -502,7 +502,7 @@ pub async fn build_par_authorization_url(
 #[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all, fields(token_endpoint))]
 pub async fn access_token_with_authorization_code(
-    http_service: &HttpService,
+    http_client: &reqwest::Client,
     client_credentials: ClientCredentials,
     token_endpoint: &Url,
     code: String,
@@ -514,7 +514,7 @@ pub async fn access_token_with_authorization_code(
     tracing::debug!("Exchanging authorization code for access token...");
 
     let token_response = request_access_token(
-        http_service,
+        http_client,
         client_credentials,
         token_endpoint,
         AccessTokenRequest::AuthorizationCode(AuthorizationCodeGrant {

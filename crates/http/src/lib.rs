@@ -13,6 +13,7 @@
 mod client;
 mod ext;
 mod layers;
+mod reqwest;
 mod service;
 
 #[cfg(feature = "client")]
@@ -33,6 +34,7 @@ pub use self::{
         json_request::{self, JsonRequest, JsonRequestLayer},
         json_response::{self, JsonResponse, JsonResponseLayer},
     },
+    reqwest::{client as reqwest_client, RequestBuilderExt},
     service::{BoxCloneSyncService, HttpService},
 };
 

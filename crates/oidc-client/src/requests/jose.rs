@@ -8,9 +8,7 @@
 
 use std::collections::HashMap;
 
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
-use mas_http::JsonResponseLayer;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_jose::{
     claims::{self, TimeOptions},
@@ -18,12 +16,10 @@ use mas_jose::{
     jwt::Jwt,
 };
 use serde_json::Value;
-use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
 use crate::{
     error::{IdTokenError, JwksError, JwtVerificationError},
-    http_service::HttpService,
     types::IdToken,
 };
 
@@ -40,18 +36,20 @@ use crate::{
 /// Returns an error if the request fails or if the data is invalid.
 #[tracing::instrument(skip_all, fields(jwks_uri))]
 pub async fn fetch_jwks(
-    http_service: &HttpService,
+    client: &reqwest::Client,
     jwks_uri: &Url,
 ) -> Result<PublicJsonWebKeySet, JwksError> {
     tracing::debug!("Fetching JWKS...");
 
-    let jwks_request = http::Request::get(jwks_uri.as_str()).body(Bytes::new())?;
+    let response: PublicJsonWebKeySet = client
+        .get(jwks_uri.as_str())
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
-    let service = JsonResponseLayer::<PublicJsonWebKeySet>::default().layer(http_service.clone());
-
-    let response = service.ready_oneshot().await?.call(jwks_request).await?;
-
-    Ok(response.into_body())
+    Ok(response)
 }
 
 /// The data required to verify a JWT.

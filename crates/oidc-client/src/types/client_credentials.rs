@@ -178,10 +178,11 @@ impl ClientCredentials {
     /// Apply these `ClientCredentials` to the given request.
     pub(crate) fn apply_to_request<T: Serialize>(
         self,
-        request: Request<T>,
+        request: reqwest::RequestBuilder,
         now: DateTime<Utc>,
         rng: &mut impl Rng,
-    ) -> Result<Request<RequestWithClientCredentials<T>>, CredentialsError> {
+    ) -> Result<reqwest::RequestBuilder, CredentialsError> {
+        // TODO: get the form in params, augment it and serialize
         let credentials = RequestClientCredentials::try_from_credentials(self, now, rng)?;
 
         let (parts, body) = request.into_parts();
