@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createElement, Children } from "react";
+import { Children, createElement } from "react";
 
 type Variant = "headline" | "title" | "subtitle" | "body" | "caption" | "micro";
 

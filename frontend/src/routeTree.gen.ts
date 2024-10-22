@@ -13,17 +13,17 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ResetCrossSigningImport } from './routes/reset-cross-signing'
 import { Route as AccountImport } from './routes/_account'
 import { Route as AccountIndexImport } from './routes/_account.index'
-import { Route as DevicesSplatImport } from './routes/devices.$'
-import { Route as ClientsIdImport } from './routes/clients.$id'
-import { Route as PasswordRecoveryIndexImport } from './routes/password.recovery.index'
-import { Route as PasswordChangeIndexImport } from './routes/password.change.index'
-import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.index'
-import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
-import { Route as AccountSessionsBrowsersImport } from './routes/_account.sessions.browsers'
 import { Route as AccountSessionsIdImport } from './routes/_account.sessions.$id'
+import { Route as AccountSessionsBrowsersImport } from './routes/_account.sessions.browsers'
+import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.index'
+import { Route as ClientsIdImport } from './routes/clients.$id'
+import { Route as DevicesSplatImport } from './routes/devices.$'
+import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
+import { Route as PasswordChangeIndexImport } from './routes/password.change.index'
+import { Route as PasswordRecoveryIndexImport } from './routes/password.recovery.index'
+import { Route as ResetCrossSigningImport } from './routes/reset-cross-signing'
 
 // Create Virtual Routes
 

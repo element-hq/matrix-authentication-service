@@ -7,7 +7,7 @@
 import { action } from "@storybook/addon-actions";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Dialog, Title, Description } from "./Dialog";
+import { Description, Dialog, Title } from "./Dialog";
 
 const Template: React.FC<{
   title: string;

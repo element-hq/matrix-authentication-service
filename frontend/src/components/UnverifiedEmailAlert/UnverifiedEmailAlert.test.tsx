@@ -6,8 +6,8 @@
 
 // @vitest-environment happy-dom
 
-import { render, cleanup, fireEvent } from "@testing-library/react";
-import { describe, it, expect, afterEach } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { makeFragmentData } from "../../gql/fragment-masking";
 import { DummyRouter } from "../../test-utils/router";

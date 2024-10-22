@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { Text, H5 } from "@vector-im/compound-web";
+import { H5, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
 import { FragmentType, graphql, useFragment } from "../../gql";

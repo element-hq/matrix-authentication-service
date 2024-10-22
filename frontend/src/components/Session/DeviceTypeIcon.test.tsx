@@ -7,8 +7,8 @@
 // @vitest-environment happy-dom
 
 import { composeStory } from "@storybook/react";
-import { render, cleanup } from "@testing-library/react";
-import { describe, it, expect, afterEach } from "vitest";
+import { cleanup, render } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
 import Meta, { Unknown, Pc, Mobile, Tablet } from "./DeviceTypeIcon.stories";
 

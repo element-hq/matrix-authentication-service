@@ -5,14 +5,14 @@
 // Please see LICENSE in the repository root for full details.
 
 import { ArgTypes, Decorator, Parameters, Preview } from "@storybook/react";
-import { useLayoutEffect } from "react";
 import { TooltipProvider } from "@vector-im/compound-web";
+import { useLayoutEffect } from "react";
 
 import "../src/shared.css";
 import i18n from "../src/i18n";
 
-import localazyMetadata from "./locales";
 import { DummyRouter } from "../src/test-utils/router";
+import localazyMetadata from "./locales";
 
 export const parameters: Parameters = {
   controls: {

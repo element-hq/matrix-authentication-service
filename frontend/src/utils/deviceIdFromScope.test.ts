@@ -5,7 +5,7 @@
  * Please see LICENSE in the repository root for full details.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { getDeviceIdFromScope } from "./deviceIdFromScope";
 

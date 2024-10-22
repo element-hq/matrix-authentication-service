@@ -13,10 +13,10 @@ import IconKeyOffSolid from "@vector-im/compound-design-tokens/assets/web/icons/
 import { Button, Text } from "@vector-im/compound-web";
 import {
   ForwardRefExoticComponent,
+  MouseEvent,
   RefAttributes,
   SVGProps,
   useState,
-  MouseEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "urql";

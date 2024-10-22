@@ -8,7 +8,7 @@
 
 import { create } from "react-test-renderer";
 import { Provider } from "urql";
-import { describe, expect, it, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { never } from "wonka";
 
 import { makeFragmentData } from "../gql";

@@ -6,7 +6,7 @@
 
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { TooltipProvider } from "@vector-im/compound-web";
-import { Suspense, StrictMode } from "react";
+import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import { Provider as UrqlProvider } from "urql";

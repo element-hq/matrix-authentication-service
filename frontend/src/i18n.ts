@@ -5,12 +5,12 @@
 // Please see LICENSE in the repository root for full details.
 
 import {
-  default as i18n,
+  BackendModule,
   InitOptions,
   LanguageDetectorModule,
-  BackendModule,
   ReadCallback,
   ResourceKey,
+  default as i18n,
 } from "i18next";
 import { initReactI18next } from "react-i18next";
 

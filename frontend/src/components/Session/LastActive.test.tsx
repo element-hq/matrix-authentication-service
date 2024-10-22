@@ -7,8 +7,8 @@
 // @vitest-environment happy-dom
 
 import { composeStory } from "@storybook/react";
-import { render, cleanup } from "@testing-library/react";
-import { describe, afterEach, expect, it, beforeAll } from "vitest";
+import { cleanup, render } from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { mockLocale } from "../../test-utils/mockLocale";
 
