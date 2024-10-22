@@ -26,7 +26,6 @@ pub async fn get(
     cookie_jar: CookieJar,
     PreferredLanguage(locale): PreferredLanguage,
 ) -> Result<impl IntoResponse, FancyError> {
-    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let session = session_info.load_session(&mut repo).await?;
