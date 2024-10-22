@@ -23,7 +23,7 @@
     "@radix-ui/react-dialog": "^1.1.2",
     "@tanstack/react-router": "^1.75.0",
     "@tanstack/router-zod-adapter": "^1.75.0",
-    "@urql/core": "^5.0.6",
+    "@urql/core": "^5.0.8",
     "@urql/devtools": "^2.0.3",
     "@urql/exchange-refocus": "^1.1.0",
     "@urql/exchange-request-policy": "^1.2.0",
@@ -39,7 +39,7 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.0",
     "swagger-ui-react": "^5.17.14",
-    "urql": "^4.1.0",
+    "urql": "^4.2.0",
     "vaul": "^1.1.0",
     "zod": "^3.23.8"
   },
