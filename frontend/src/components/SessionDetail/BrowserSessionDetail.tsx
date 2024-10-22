@@ -77,7 +77,7 @@ const BrowserSessionDetail: React.FC<Props> = ({ session, isCurrent }) => {
   return (
     <BlockList>
       {isCurrent && (
-        <Badge className={styles.currentBadge} kind="success">
+        <Badge className={styles.currentBadge} kind="green">
           {t("frontend.browser_session_details.current_badge")}
         </Badge>
       )}
