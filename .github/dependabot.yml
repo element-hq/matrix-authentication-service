@@ -55,12 +55,6 @@ updates:
       - "Z-Deps-Frontend"
     schedule:
       interval: "daily"
-    ignore:
-      # We don't want to migrate to eslint 9 for now
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "eslint-*"
-        update-types: ["version-update:semver-major"]
     groups:
       storybook:
         patterns:
@@ -94,10 +88,6 @@ updates:
         patterns:
           - "jotai"
           - "jotai-*"
-      eslint:
-        patterns:
-          - "eslint"
-          - "eslint-*"
       urql:
         patterns:
           - "urql"
@@ -126,11 +116,6 @@ updates:
     ignore:
       # Ignore @types/node until we can upgrade to Node 20
       - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      # We don't want to migrate to eslint 9 for now
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "eslint-*"
         update-types: ["version-update:semver-major"]
     groups:
       production:
