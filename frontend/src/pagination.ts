@@ -7,7 +7,13 @@
 import { useState } from "react";
 import * as z from "zod";
 
-import type { PageInfo } from "./gql/graphql";
+// PageInfo we get on connections from the GraphQL API
+type PageInfo = {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  startCursor?: string | null;
+  endCursor?: string | null;
+};
 
 export const FIRST_PAGE = Symbol("FIRST_PAGE");
 export const LAST_PAGE = Symbol("LAST_PAGE");
