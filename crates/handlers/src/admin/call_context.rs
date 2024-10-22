@@ -123,17 +123,8 @@ where
         parts: &mut axum::http::request::Parts,
         state: &S,
     ) -> Result<Self, Self::Rejection> {
-        let activity_tracker = BoundActivityTracker::from_request_parts(parts, state).await;
-        let activity_tracker = match activity_tracker {
-            Ok(t) => t,
-            Err(e) => match e {},
-        };
-
-        let clock = BoxClock::from_request_parts(parts, state).await;
-        let clock = match clock {
-            Ok(c) => c,
-            Err(e) => match e {},
-        };
+        let Ok(activity_tracker) = BoundActivityTracker::from_request_parts(parts, state).await;
+        let Ok(clock) = BoxClock::from_request_parts(parts, state).await;
 
         // Load the database repository
         let mut repo = BoxRepository::from_request_parts(parts, state)
