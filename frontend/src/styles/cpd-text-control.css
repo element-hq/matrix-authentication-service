@@ -28,7 +28,7 @@
 
 .cpd-text-control:focus,
 /* This is set to auto by tailwind, we need to reset this */
-.cpd-text-control:focus-visible {
+  .cpd-text-control:focus-visible {
   outline: 2px solid var(--cpd-color-border-focused);
   border-color: transparent;
 }

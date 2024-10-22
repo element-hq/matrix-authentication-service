@@ -96,8 +96,9 @@
   --handle-inset-block-start: var(--cpd-space-4x);
   --handle-inset-block-end: 0px;
   --content-inset-block-start: calc(
-    var(--handle-inset-block-start) + var(--handle-block-size) +
-      var(--handle-inset-block-end)
+    var(--handle-inset-block-start) +
+    var(--handle-block-size) +
+    var(--handle-inset-block-end)
   );
 }
 
@@ -112,7 +113,8 @@
 .drawer .body {
   padding-inline: var(--cpd-space-4x);
   padding-block-start: calc(
-    var(--content-inset-block-start) + var(--cpd-space-6x)
+    var(--content-inset-block-start) +
+    var(--cpd-space-6x)
   );
   padding-block-end: var(--cpd-space-12x);
   border-start-start-radius: var(--border-radius);

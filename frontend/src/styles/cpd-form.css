@@ -40,7 +40,8 @@
 .cpd-form-inline-field-control {
   /* The control should have the same height as the label */
   block-size: calc(
-    var(--cpd-font-size-body-md) * var(--cpd-font-line-height-regular)
+    var(--cpd-font-size-body-md) *
+    var(--cpd-font-line-height-regular)
   );
 
   /* Align the control in the middle of the label */
