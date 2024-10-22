@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { H1, H5, Body } from "@vector-im/compound-web";
+import { Body, H1, H5 } from "@vector-im/compound-web";
 
 import Block from "./Block";
 

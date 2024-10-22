@@ -7,12 +7,12 @@
 import IconClose from "@vector-im/compound-design-tokens/assets/web/icons/close";
 import IconEdit from "@vector-im/compound-design-tokens/assets/web/icons/edit";
 import {
-  Text,
   Avatar,
-  IconButton,
-  Tooltip,
   Button,
   Form,
+  IconButton,
+  Text,
+  Tooltip,
 } from "@vector-im/compound-web";
 import { ComponentPropsWithoutRef, forwardRef, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";

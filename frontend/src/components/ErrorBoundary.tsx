@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { ErrorInfo, ReactNode, PureComponent } from "react";
+import { ErrorInfo, PureComponent, ReactNode } from "react";
 
 import GenericError from "./GenericError";
 import Layout from "./Layout";

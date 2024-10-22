@@ -8,7 +8,7 @@ import { Alert } from "@vector-im/compound-web";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, useFragment, graphql } from "../../gql";
+import { FragmentType, graphql, useFragment } from "../../gql";
 import { Link } from "../Link";
 
 import styles from "./UnverifiedEmailAlert.module.css";
