@@ -55,15 +55,12 @@ impl MaybeProxyAcceptor {
     where
         T: AsyncRead + Unpin,
     {
-        match &self.acceptor {
-            Some(acceptor) => {
-                let (info, stream) = acceptor.accept(stream).await?;
-                Ok((Some(info), stream))
-            }
-            None => {
-                let stream = Rewind::new(stream);
-                Ok((None, stream))
-            }
+        if let Some(acceptor) = self.acceptor {
+            let (info, stream) = acceptor.accept(stream).await?;
+            Ok((Some(info), stream))
+        } else {
+            let stream = Rewind::new(stream);
+            Ok((None, stream))
         }
     }
 }
