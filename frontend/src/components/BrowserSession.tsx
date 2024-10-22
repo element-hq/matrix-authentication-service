@@ -156,7 +156,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
           </Card.Info>
 
           {isCurrent && (
-            <Badge kind="success" className="self-center">
+            <Badge kind="green" className="self-center">
               {t("frontend.session.current")}
             </Badge>
           )}
