@@ -1,15 +1,11 @@
 {
   "extends": [
     "@tsconfig/strictest/tsconfig.json",
-    "@tsconfig/node22/tsconfig.json",
+    "@tsconfig/node22/tsconfig.json"
   ],
   "compilerOptions": {
     "noEmit": true,
-    "allowJs": true,
+    "allowJs": true
   },
-  "include": [
-    ".eslintrc.cjs",
-    "src/**/*.mts",
-    "src/**/*.ts"
-  ]
+  "include": [".eslintrc.cjs", "src/**/*.mts", "src/**/*.ts"]
 }

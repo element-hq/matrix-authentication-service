@@ -6,7 +6,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import log4js from "log4js";
-import { ArgumentConfig, parse } from "ts-command-line-args";
+import { type ArgumentConfig, parse } from "ts-command-line-args";
 
 import { advisor } from "./advisor.mjs";
 import { migrate } from "./migrate.mjs";
