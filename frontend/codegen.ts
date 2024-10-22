@@ -6,13 +6,6 @@
 
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-// Adds a comment to the top of generated files to ignore linting and formatting
-const lintIgnore = {
-  add: {
-    content: "/* prettier-ignore */\n/* eslint-disable */",
-  },
-} as const;
-
 const config: CodegenConfig = {
   schema: "./schema.graphql",
   documents: ["src/**/*.{tsx,ts}", "!src/gql/**/*"],
@@ -21,6 +14,7 @@ const config: CodegenConfig = {
     "./src/gql/": {
       preset: "client",
       config: {
+        useTypeImports: true,
         // By default, unknown scalars are generated as `any`. This is not ideal for catching potential bugs.
         defaultScalarType: "unknown",
         scalars: {
@@ -28,10 +22,6 @@ const config: CodegenConfig = {
           Url: "string",
         },
       },
-      plugins: [lintIgnore],
-    },
-    "./src/gql/schema.ts": {
-      plugins: ["urql-introspection", lintIgnore],
     },
   },
 };
