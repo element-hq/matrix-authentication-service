@@ -166,6 +166,16 @@ impl<K: FormField> FormState<K> {
         self
     }
 
+    /// Set a value on the form
+    pub fn set_value(&mut self, field: K, value: Option<String>) {
+        self.fields.entry(field).or_default().value = value;
+    }
+
+    /// Checks if a field contains a value
+    pub fn has_value(&self, field: K) -> bool {
+        self.fields.get(&field).is_some_and(|f| f.value.is_some())
+    }
+
     /// Returns `true` if the form has no error attached to it
     #[must_use]
     pub fn is_valid(&self) -> bool {
