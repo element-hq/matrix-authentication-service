@@ -8,7 +8,7 @@ import IconComputer from "@vector-im/compound-design-tokens/assets/web/icons/com
 import IconMobile from "@vector-im/compound-design-tokens/assets/web/icons/mobile";
 import IconUnknown from "@vector-im/compound-design-tokens/assets/web/icons/unknown";
 import IconBrowser from "@vector-im/compound-design-tokens/assets/web/icons/web-browser";
-import { FunctionComponent, SVGProps } from "react";
+import type { FunctionComponent, SVGProps } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DeviceType } from "../../gql/graphql";

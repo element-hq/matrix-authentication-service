@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { Text } from "@vector-im/compound-web";
-import {
+import type {
   FC,
   ForwardRefExoticComponent,
   ReactNode,

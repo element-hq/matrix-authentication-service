@@ -6,7 +6,7 @@
 
 import styles from "./NavBar.module.css";
 
-const NavBar: React.FC<React.PropsWithChildren<{}>> = ({ children }) => (
+const NavBar: React.FC<React.PropsWithChildren> = ({ children }) => (
   <nav className={styles.navBar}>
     <ul className={styles.navBarItems}>{children}</ul>
   </nav>

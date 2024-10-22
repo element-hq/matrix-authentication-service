@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { TFunction } from "i18next";
+import type { TFunction } from "i18next";
 
 import { SetPasswordStatus } from "../gql/graphql";
 

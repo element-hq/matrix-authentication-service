@@ -8,7 +8,7 @@ import { createLink } from "@tanstack/react-router";
 import cx from "classnames";
 import { forwardRef } from "react";
 
-import { DeviceType } from "../../gql/graphql";
+import type { DeviceType } from "../../gql/graphql";
 import ClientAvatar from "../Session/ClientAvatar";
 import DeviceTypeIcon from "../Session/DeviceTypeIcon";
 

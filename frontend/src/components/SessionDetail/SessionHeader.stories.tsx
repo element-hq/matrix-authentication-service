@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 import SessionHeader from "./SessionHeader";
 

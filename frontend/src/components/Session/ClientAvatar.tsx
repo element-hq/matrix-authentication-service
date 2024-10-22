@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 import styles from "./ClientAvatar.module.css";
 

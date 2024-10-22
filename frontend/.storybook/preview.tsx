@@ -4,7 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { ArgTypes, Decorator, Parameters, Preview } from "@storybook/react";
+import type {
+  ArgTypes,
+  Decorator,
+  Parameters,
+  Preview,
+} from "@storybook/react";
 import { TooltipProvider } from "@vector-im/compound-web";
 import { useLayoutEffect } from "react";
 

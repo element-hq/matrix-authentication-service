@@ -8,22 +8,19 @@
       "**/dist/**",
       "**/__generated__/**",
       "**/coverage/**",
-      "src/gql/**"
+      "src/gql/**",
+      "src/routeTree.gen.ts"
     ]
   },
   "formatter": {
     "enabled": true,
     "useEditorconfig": true,
-    "ignore": [
-      ".storybook/locales.ts",
-      "locales/*.json",
-      "src/routeTree.gen.ts"
-    ]
+    "ignore": [".storybook/locales.ts", "locales/*.json"]
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": false
+      "recommended": true
     }
   }
 }

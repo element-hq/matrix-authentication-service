@@ -14,11 +14,16 @@ import {
   Text,
   Tooltip,
 } from "@vector-im/compound-web";
-import { ComponentPropsWithoutRef, forwardRef, useRef, useState } from "react";
+import {
+  type ComponentPropsWithoutRef,
+  forwardRef,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import { SetDisplayNameStatus } from "../../gql/graphql";
 import * as Dialog from "../Dialog";
 import LoadingSpinner from "../LoadingSpinner";

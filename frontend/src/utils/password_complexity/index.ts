@@ -6,7 +6,7 @@
 
 import { zxcvbnAsync, zxcvbnOptions } from "@zxcvbn-ts/core";
 import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
-import { TFunction } from "i18next";
+import type { TFunction } from "i18next";
 
 import wikipedia from "./enwiki.json";
 import namesf from "./namesf.json";

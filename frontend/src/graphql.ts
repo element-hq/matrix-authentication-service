@@ -35,12 +35,12 @@ const cache = cacheExchange({
         });
 
         // Invalidate the emails field on the User object so that it gets refetched
-        cache
+        const fields = cache
           .inspectFields(key)
-          .filter((field) => field.fieldName === "emails")
-          .forEach((field) => {
-            cache.invalidate(key, field.fieldName, field.arguments);
-          });
+          .filter((field) => field.fieldName === "emails");
+        for (const field of fields) {
+          cache.invalidate(key, field.fieldName, field.arguments);
+        }
       },
 
       removeEmail: (
@@ -64,12 +64,12 @@ const cache = cacheExchange({
           });
 
           // Invalidate the emails field on the User object so that it gets refetched
-          cache
+          const fields = cache
             .inspectFields(key)
-            .filter((field) => field.fieldName === "emails")
-            .forEach((field) => {
-              cache.invalidate(key, field.fieldName, field.arguments);
-            });
+            .filter((field) => field.fieldName === "emails");
+          for (const field of fields) {
+            cache.invalidate(key, field.fieldName, field.arguments);
+          }
         }
       },
 
@@ -94,12 +94,11 @@ const cache = cacheExchange({
           });
 
           // Invalidate the emails field on the User object so that it gets refetched
-          cache
+          for (const field of cache
             .inspectFields(key)
-            .filter((field) => field.fieldName === "emails")
-            .forEach((field) => {
-              cache.invalidate(key, field.fieldName, field.arguments);
-            });
+            .filter((field) => field.fieldName === "emails")) {
+            cache.invalidate(key, field.fieldName, field.arguments);
+          }
         }
       },
     },

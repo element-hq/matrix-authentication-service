@@ -8,7 +8,7 @@ import { Link } from "@tanstack/react-router";
 import { Form } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 
 import styles from "./AccountManagementPasswordPreview.module.css";
 
