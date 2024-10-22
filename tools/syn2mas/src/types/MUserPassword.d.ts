@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { MUser } from "./MUser";
+import type { MUser } from "./MUser";
 
-import { UUID } from "./index";
+import type { UUID } from "./index";
 
 export interface MUserPassword {
   user_password_id: UUID<MUserPassword>;

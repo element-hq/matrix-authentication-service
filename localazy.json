@@ -3,27 +3,30 @@
   "readKey": "a7633943728394577700-c0f9f1df124fbdbe76b2c7dfcbfe574476d56509e0da6180e2a321dbbe056c40",
   "upload": {
     "type": "json",
-    "files": [{
-      "file": "file.json",
-      "pattern": "translations/en.json",
-      "features": [
-        "arb_metadata",
-        "plural_object"
-      ]
-    }, {
-      "file": "frontend.json",
-      "pattern": "frontend/locales/en.json",
-      "features": ["plural_postfix_dd"]
-    }]
+    "files": [
+      {
+        "file": "file.json",
+        "pattern": "translations/en.json",
+        "features": ["arb_metadata", "plural_object"]
+      },
+      {
+        "file": "frontend.json",
+        "pattern": "frontend/locales/en.json",
+        "features": ["plural_postfix_dd"]
+      }
+    ]
   },
   "download": {
     "metadataFileTs": "frontend/.storybook/locales.ts",
-    "files": [{
-      "conditions": "equals: ${file}, file.json",
-      "output": "translations/${lang}.json"
-    }, {
-      "conditions": "equals: ${file}, frontend.json",
-      "output": "frontend/locales/${lang}.json"
-    }]
+    "files": [
+      {
+        "conditions": "equals: ${file}, file.json",
+        "output": "translations/${lang}.json"
+      },
+      {
+        "conditions": "equals: ${file}, frontend.json",
+        "output": "frontend/locales/${lang}.json"
+      }
+    ]
   }
 }

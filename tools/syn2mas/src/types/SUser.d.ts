@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { SynapseUserId, UnixTimestamp } from "./index";
+import type { SynapseUserId, UnixTimestamp } from "./index";
 
 export interface SUser {
   name: SynapseUserId; // '@test2:localhost:8008'

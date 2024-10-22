@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { SRefreshToken } from "./SRefreshToken";
+import type { SRefreshToken } from "./SRefreshToken";
 
-import { Id, SynapseUserId } from "./index";
+import type { Id, SynapseUserId } from "./index";
 
 /*
 CREATE TABLE access_tokens (

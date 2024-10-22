@@ -6,15 +6,15 @@
 
 import { readFile } from "node:fs/promises";
 
-import { Knex } from "knex";
+import type { Knex } from "knex";
 import log4js from "log4js";
 import { parse } from "ts-command-line-args";
 import yaml from "yaml";
 
 import { connectToSynapseDatabase } from "./db.mjs";
 import {
+  type SynapseOIDCProvider,
   synapseConfig as synapseConfigSchema,
-  SynapseOIDCProvider,
 } from "./schemas/synapse.mjs";
 import type { SAccessToken } from "./types/SAccessToken.d.ts";
 import type { SRefreshToken } from "./types/SRefreshToken.d.ts";

@@ -11,7 +11,7 @@ import log4js from "log4js";
 import { parse } from "ts-command-line-args";
 import yaml from "yaml";
 
-import { connectToSynapseDatabase, connectToMASDatabase } from "./db.mjs";
+import { connectToMASDatabase, connectToSynapseDatabase } from "./db.mjs";
 import { masConfig as masConfigSchema } from "./schemas/mas.mjs";
 import { synapseConfig as synapseConfigSchema } from "./schemas/synapse.mjs";
 import type { MCompatAccessToken } from "./types/MCompatAccessToken.d.ts";
@@ -104,7 +104,7 @@ export async function migrate(): Promise<void> {
   let fatals = 0;
   function fatal(message: string): void {
     log.fatal(message);
-    warnings.forEach((w) => log.warn(w));
+    for (const w of warnings) log.warn(w);
     if (!args.dryRun) {
       process.exit(1);
     }
@@ -186,7 +186,7 @@ export async function migrate(): Promise<void> {
     .from("users")
     .first();
 
-  if (parseInt(`${existingMasUsers?.count ?? 0}`) > 0) {
+  if (Number.parseInt(`${existingMasUsers?.count ?? 0}`) > 0) {
     fatal(
       `Found ${existingMasUsers?.count} existing users in MAS. Refusing to continue. Please clean MAS and try again.`,
     );
@@ -204,14 +204,16 @@ export async function migrate(): Promise<void> {
     }
 
     // users => users
-    const userCreatedAt = new Date(parseInt(`${user.creation_ts}`) * 1000);
+    const userCreatedAt = new Date(
+      Number.parseInt(`${user.creation_ts}`) * 1000,
+    );
     const masUser = {
       user_id: makeUuid(userCreatedAt),
       username: localpart,
       created_at: userCreatedAt,
       locked_at: user.deactivated === 1 ? userCreatedAt : null,
     };
-    executions.push(() => mas.insert(masUser!).into("users"));
+    executions.push(() => mas.insert(masUser).into("users"));
     log.debug(`${stringifyAndRedact(user)} => ${stringifyAndRedact(masUser)}`);
     // users.password_hash => user_passwords
     if (user.password_hash) {
@@ -245,7 +247,9 @@ export async function migrate(): Promise<void> {
         );
         continue;
       }
-      const threePidCreatedAt = new Date(parseInt(`${threePid.added_at}`));
+      const threePidCreatedAt = new Date(
+        Number.parseInt(`${threePid.added_at}`),
+      );
       const masUserEmail: MUserEmail = {
         user_email_id: makeUuid(threePidCreatedAt),
         user_id: masUser.user_id,
@@ -255,7 +259,7 @@ export async function migrate(): Promise<void> {
 
       if (threePid.validated_at) {
         masUserEmail.confirmed_at = new Date(
-          parseInt(`${threePid.validated_at}`),
+          Number.parseInt(`${threePid.validated_at}`),
         );
       }
 
@@ -275,8 +279,8 @@ export async function migrate(): Promise<void> {
       );
       executions.push(() =>
         mas("users")
-          .where({ user_id: masUser!.user_id })
-          .update({ primary_user_email_id: primaryEmail!.user_email_id }),
+          .where({ user_id: masUser?.user_id })
+          .update({ primary_user_email_id: primaryEmail?.user_email_id }),
       );
     }
 
@@ -287,12 +291,12 @@ export async function migrate(): Promise<void> {
       .where({ user_id: user.name });
     for (const externalId of synapseExternalIds) {
       try {
-        if (!upstreamProviders.has(externalId.auth_provider)) {
+        const provider = upstreamProviders.get(externalId.auth_provider);
+        if (!provider) {
           throw new Error(
             `Unknown upstream provider ${externalId.auth_provider}`,
           );
         }
-        const provider = upstreamProviders.get(externalId.auth_provider)!;
         const masUpstreamOauthLink: MUpstreamOauthLink = {
           upstream_oauth_link_id: makeUuid(userCreatedAt),
           user_id: masUser.user_id,
@@ -333,7 +337,7 @@ export async function migrate(): Promise<void> {
         .whereNotNull("device_id");
       for (const accessToken of synapseAccessTokens) {
         const tokenCreatedAt = accessToken.last_validated
-          ? new Date(parseInt(`${accessToken.last_validated}`))
+          ? new Date(Number.parseInt(`${accessToken.last_validated}`))
           : masUser.created_at;
         const masCompatSession: MCompatSession = {
           compat_session_id: makeUuid(tokenCreatedAt),
@@ -462,7 +466,7 @@ export async function migrate(): Promise<void> {
   log.info(
     `Completed migration ${args.dryRun ? "dry-run " : ""}of ${synapseUsers} users with ${fatals} fatals and ${warnings.length} warnings:`,
   );
-  warnings.forEach((w) => log.warn(w));
+  for (const w of warnings) log.warn(w);
   if (fatals > 0) {
     throw new Error(`Migration failed with ${fatals} fatals`);
   }
