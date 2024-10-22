@@ -7,7 +7,7 @@
 import { H5, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import { Link } from "../Link";
 
 import styles from "./BrowserSessionsOverview.module.css";

@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { Alert } from "@vector-im/compound-web";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Translation } from "react-i18next";
 
 const NotLoggedIn: React.FC = () => (

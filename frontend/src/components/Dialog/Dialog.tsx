@@ -15,7 +15,7 @@ import {
 } from "@radix-ui/react-dialog";
 import IconClose from "@vector-im/compound-design-tokens/assets/web/icons/close";
 import { Glass, Tooltip } from "@vector-im/compound-web";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Drawer } from "vaul";
 

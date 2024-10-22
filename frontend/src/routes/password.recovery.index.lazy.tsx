@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Form } from "@vector-im/compound-web";
-import { FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "urql";
 
@@ -123,7 +123,7 @@ function RecoverPassword(): React.ReactNode {
             siteConfig={siteConfig}
             forceShowNewPasswordInvalid={
               (result.data &&
-                result.data.setPasswordByRecovery.status ==
+                result.data.setPasswordByRecovery.status ===
                   SetPasswordStatus.InvalidNewPassword) ||
               false
             }

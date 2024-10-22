@@ -5,10 +5,10 @@
 // Please see LICENSE in the repository root for full details.
 
 import { Alert } from "@vector-im/compound-web";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import { Link } from "../Link";
 
 import styles from "./UnverifiedEmailAlert.module.css";
@@ -28,12 +28,16 @@ const UnverifiedEmailAlert: React.FC<{
   const data = useFragment(UNVERIFIED_EMAILS_FRAGMENT, user);
   const [dismiss, setDismiss] = useState(false);
   const { t } = useTranslation();
+  const currentCount = useRef<number>();
 
   const doDismiss = (): void => setDismiss(true);
 
   useEffect(() => {
-    setDismiss(false);
-  }, [data?.unverifiedEmails?.totalCount]);
+    if (currentCount.current !== data?.unverifiedEmails?.totalCount) {
+      currentCount.current = data?.unverifiedEmails?.totalCount;
+      setDismiss(false);
+    }
+  }, [data]);
 
   if (!data?.unverifiedEmails?.totalCount || dismiss) {
     return null;

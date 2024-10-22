@@ -10,7 +10,7 @@ import { delay, fromValue, pipe } from "wonka";
 
 import { makeFragmentData } from "../../gql";
 import {
-  SetDisplayNameMutation,
+  type SetDisplayNameMutation,
   SetDisplayNameStatus,
 } from "../../gql/graphql";
 

@@ -68,13 +68,13 @@ export default function PasswordCreationDoubleInput({
   const [newPassword, setNewPassword] = useState("");
 
   const passwordComplexity = usePasswordComplexity(newPassword);
-  let passwordStrengthTint;
+  let passwordStrengthTint: "red" | "orange" | "lime" | "green" | undefined;
   if (newPassword === "") {
     passwordStrengthTint = undefined;
   } else {
-    passwordStrengthTint = ["red", "red", "orange", "lime", "green"][
+    passwordStrengthTint = (["red", "red", "orange", "lime", "green"] as const)[
       passwordComplexity.score
-    ] as "red" | "orange" | "lime" | "green" | undefined;
+    ];
   }
 
   return (
@@ -89,8 +89,8 @@ export default function PasswordCreationDoubleInput({
           autoComplete="new-password"
           ref={newPasswordRef}
           onBlur={() =>
-            newPasswordAgainRef.current!.value &&
-            newPasswordAgainRef.current!.reportValidity()
+            newPasswordAgainRef.current?.value &&
+            newPasswordAgainRef.current?.reportValidity()
           }
           onChange={(e) => setNewPassword(e.target.value)}
         />
@@ -104,7 +104,7 @@ export default function PasswordCreationDoubleInput({
         />
 
         {passwordComplexity.improvementsText.map((suggestion) => (
-          <Form.HelpMessage>{suggestion}</Form.HelpMessage>
+          <Form.HelpMessage key={suggestion}>{suggestion}</Form.HelpMessage>
         ))}
 
         {passwordComplexity.score < minimumPasswordComplexity && (

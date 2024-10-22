@@ -7,11 +7,11 @@
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
 import IconEmail from "@vector-im/compound-design-tokens/assets/web/icons/email";
 import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
-import { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Translation, useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import { Close, Description, Dialog, Title } from "../Dialog";
 import { Link } from "../Link";
 

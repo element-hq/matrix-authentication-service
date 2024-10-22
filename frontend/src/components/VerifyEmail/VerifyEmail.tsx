@@ -12,7 +12,7 @@ import { useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 
 import styles from "./VerifyEmail.module.css";
 
