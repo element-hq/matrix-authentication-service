@@ -8,7 +8,7 @@ import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import BlockList from "../BlockList/BlockList";
 import { END_SESSION_MUTATION, simplifyUrl } from "../CompatSession";
 import DateTime from "../DateTime";

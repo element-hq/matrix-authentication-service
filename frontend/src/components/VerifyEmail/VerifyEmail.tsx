@@ -7,12 +7,12 @@
 import { useLinkProps, useNavigate } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send-solid";
-import { Button, Form, Alert, H1, Text } from "@vector-im/compound-web";
+import { Alert, Button, Form, H1, Text } from "@vector-im/compound-web";
 import { useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 
 import styles from "./VerifyEmail.module.css";
 

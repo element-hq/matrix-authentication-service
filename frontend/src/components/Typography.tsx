@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createElement, Children } from "react";
+import { Children, createElement } from "react";
 
 type Variant = "headline" | "title" | "subtitle" | "body" | "caption" | "micro";
 
@@ -59,18 +59,20 @@ export const Code: React.FC<SimpleProps> = ({ children }) => (
 );
 
 export const Title: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="title" children={children} />
+  <Typography variant="title">{children}</Typography>
 );
 
 export const Subtitle: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="subtitle" children={children} />
+  <Typography variant="subtitle">{children}</Typography>
 );
 
 export const Body: React.FC<{
   children: React.ReactNode;
   justified?: boolean;
 }> = ({ children, justified }) => (
-  <Typography variant="body" children={children} justified={justified} />
+  <Typography variant="body" justified={justified}>
+    {children}
+  </Typography>
 );
 
 export default Typography;

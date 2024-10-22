@@ -36,7 +36,9 @@
          *  - the regular 6x padding
          */
     padding-block-end: calc(
-      var(--cpd-space-9x) + var(--cpd-space-6x) + var(--cpd-space-6x)
+      var(--cpd-space-9x) +
+      var(--cpd-space-6x) +
+      var(--cpd-space-6x)
     );
   }
 }

@@ -4,14 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { CodegenConfig } from "@graphql-codegen/cli";
-
-// Adds a comment to the top of generated files to ignore linting and formatting
-const lintIgnore = {
-  add: {
-    content: "/* prettier-ignore */\n/* eslint-disable */",
-  },
-} as const;
+import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
   schema: "./schema.graphql",
@@ -21,6 +14,7 @@ const config: CodegenConfig = {
     "./src/gql/": {
       preset: "client",
       config: {
+        useTypeImports: true,
         // By default, unknown scalars are generated as `any`. This is not ideal for catching potential bugs.
         defaultScalarType: "unknown",
         scalars: {
@@ -28,10 +22,6 @@ const config: CodegenConfig = {
           Url: "string",
         },
       },
-      plugins: [lintIgnore],
-    },
-    "./src/gql/schema.ts": {
-      plugins: ["urql-introspection", lintIgnore],
     },
   },
 };

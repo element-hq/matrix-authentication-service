@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { readFile, writeFile } from "fs/promises";
-import { resolve } from "path";
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 import { codecovVitePlugin } from "@codecov/vite-plugin";
 import { TanStackRouterVite as tanStackRouter } from "@tanstack/router-vite-plugin";

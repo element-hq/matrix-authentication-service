@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
-import { Client } from "urql";
+import type { Client } from "urql";
 
 import Layout from "../components/Layout";
 import NotFound from "../components/NotFound";

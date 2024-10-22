@@ -265,14 +265,8 @@ impl TestState {
             .with_state(self.clone())
             .into_service();
 
-        // Both unwrap are on Infallible, so this is safe
-        let response = app
-            .ready_oneshot()
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let Ok(mut service) = app.ready_oneshot().await;
+        let Ok(response) = service.call(request).await;
 
         let (parts, body) = response.into_parts();
 

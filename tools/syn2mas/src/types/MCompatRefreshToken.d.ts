@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { MCompatAccessToken } from "./MCompatAccessToken";
-import { MCompatSession } from "./MCompatSession";
+import type { MCompatAccessToken } from "./MCompatAccessToken";
+import type { MCompatSession } from "./MCompatSession";
 
-import { UUID } from "./index";
+import type { UUID } from "./index";
 
 /*
 +-------------------------+--------------------------+-----------+

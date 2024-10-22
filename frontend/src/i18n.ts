@@ -5,12 +5,12 @@
 // Please see LICENSE in the repository root for full details.
 
 import {
+  type BackendModule,
+  type InitOptions,
+  type LanguageDetectorModule,
+  type ReadCallback,
+  type ResourceKey,
   default as i18n,
-  InitOptions,
-  LanguageDetectorModule,
-  BackendModule,
-  ReadCallback,
-  ResourceKey,
 } from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -28,9 +28,13 @@ const locales = import.meta.glob<string>("../locales/*.json", {
 const getLocaleUrl = (name: string): string | undefined =>
   locales[`../locales/${name}.json`];
 
-const supportedLngs = Object.keys(locales).map(
-  (url) => url.match(/\/([^/]+)\.json$/)![1],
-);
+const supportedLngs = Object.keys(locales).map((url) => {
+  const lang = url.match(/\/([^/]+)\.json$/)?.[1];
+  if (!lang) {
+    throw new Error(`Could not parse locale URL ${url}`);
+  }
+  return lang;
+});
 
 // A simple language detector that reads the `lang` attribute from the HTML tag
 const LanguageDetector = {
@@ -51,7 +55,7 @@ const Backend = {
   type: "backend",
   init(): void {},
   read(language: string, _namespace: string, callback: ReadCallback): void {
-    (async function (): Promise<ResourceKey> {
+    (async (): Promise<ResourceKey> => {
       const url = getLocaleUrl(language);
       if (!url) {
         throw new Error(`Locale ${language} not found`);
@@ -85,6 +89,7 @@ i18n
     fallbackLng: "en",
     keySeparator: ".",
     pluralSeparator: ":",
+    defaultNS: "frontend",
     supportedLngs,
     interpolation: {
       escapeValue: false, // React has built-in XSS protections

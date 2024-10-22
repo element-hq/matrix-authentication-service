@@ -6,9 +6,9 @@
 
 // @vitest-environment happy-dom
 
-import { render, cleanup } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import { Provider } from "urql";
-import { describe, expect, it, afterEach, beforeAll } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { never } from "wonka";
 
 import { makeFragmentData } from "../../gql";

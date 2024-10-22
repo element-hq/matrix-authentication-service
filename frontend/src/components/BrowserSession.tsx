@@ -13,7 +13,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
-import { FragmentType, graphql, useFragment } from "../gql";
+import { type FragmentType, graphql, useFragment } from "../gql";
 import { DeviceType } from "../gql/graphql";
 
 import DateTime from "./DateTime";
@@ -156,7 +156,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
           </Card.Info>
 
           {isCurrent && (
-            <Badge kind="success" className="self-center">
+            <Badge kind="green" className="self-center">
               {t("frontend.session.current")}
             </Badge>
           )}

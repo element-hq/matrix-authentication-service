@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignore": [
+      ".devcontainer/**",
+      "docs/**",
+      "translations/**",
+      "policies/**",
+      "crates/**",
+      "frontend/src/gql/**",
+      "frontend/src/routeTree.gen.ts",
+      "**/coverage/**",
+      "**/dist/**"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": true,
+    "ignore": ["frontend/.storybook/locales.ts", "frontend/locales/*.json"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  }
+}

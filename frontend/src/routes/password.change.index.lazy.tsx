@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Form, Separator } from "@vector-im/compound-web";
-import { FormEvent, useRef } from "react";
+import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "urql";
 

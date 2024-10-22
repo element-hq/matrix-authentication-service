@@ -7,18 +7,18 @@
 import { readFile } from "node:fs/promises";
 import type { SecureContextOptions } from "node:tls";
 
-import knex, { Knex } from "knex";
+import knex, { type Knex } from "knex";
 
-import {
+import type {
   MASConfig,
   DatabaseConfig as MASDatabaseConfig,
   URIDatabaseConfig as MASURIDatabaseConfig,
 } from "./schemas/mas.mjs";
-import { SynapseConfig } from "./schemas/synapse.mjs";
+import type { SynapseConfig } from "./schemas/synapse.mjs";
 
 export async function connectToSynapseDatabase({
   database,
-}: SynapseConfig): Promise<Knex<{}, unknown[]>> {
+}: SynapseConfig): Promise<Knex> {
   if (!database) {
     throw new Error("Synapse database not configured");
   }
@@ -32,22 +32,22 @@ export async function connectToSynapseDatabase({
   }
 
   const connection: Knex.PgConnectionConfig = {};
-  database.args.database && (connection.database = database.args.database);
-  database.args.dbname && (connection.database = database.args.dbname);
-  database.args.user && (connection.user = database.args.user);
-  database.args.password && (connection.password = database.args.password);
-  database.args.host && (connection.host = database.args.host);
-  typeof database.args.port === "number" &&
-    (connection.port = database.args.port);
-  typeof database.args.port === "string" &&
-    (connection.port = parseInt(database.args.port));
+  if (database.args.database) connection.database = database.args.database;
+  if (database.args.dbname) connection.database = database.args.dbname;
+  if (database.args.user) connection.user = database.args.user;
+  if (database.args.password) connection.password = database.args.password;
+  if (database.args.host) connection.host = database.args.host;
+  if (typeof database.args.port === "number")
+    connection.port = database.args.port;
+  if (typeof database.args.port === "string")
+    connection.port = Number.parseInt(database.args.port);
 
   const ssl: SecureContextOptions = {};
-  database.args.sslcert && (ssl.cert = await readFile(database.args.sslcert));
-  database.args.sslrootcert &&
-    (ssl.ca = await readFile(database.args.sslrootcert));
-  database.args.sslkey && (ssl.key = await readFile(database.args.sslkey));
-  database.args.sslpassword && (ssl.passphrase = database.args.sslpassword);
+  if (database.args.sslcert) ssl.cert = await readFile(database.args.sslcert);
+  if (database.args.sslrootcert)
+    ssl.ca = await readFile(database.args.sslrootcert);
+  if (database.args.sslkey) ssl.key = await readFile(database.args.sslkey);
+  if (database.args.sslpassword) ssl.passphrase = database.args.sslpassword;
 
   if (Object.keys(ssl).length > 0) {
     connection.ssl = ssl;
@@ -62,21 +62,21 @@ export async function connectToSynapseDatabase({
 const isUriConfig = (
   database: MASDatabaseConfig,
 ): database is MASURIDatabaseConfig =>
-  typeof (database as Record<string, unknown>)["uri"] === "string";
+  "uri" in database && typeof database.uri === "string";
 
 export async function connectToMASDatabase({
   database,
-}: MASConfig): Promise<Knex<{}, unknown[]>> {
+}: MASConfig): Promise<Knex> {
   const connection: Knex.PgConnectionConfig = {};
   const ssl: SecureContextOptions = {};
   if (isUriConfig(database)) {
     connection.connectionString = database.uri;
   } else {
-    database.database && (connection.database = database.database);
-    database.username && (connection.user = database.username);
-    database.password && (connection.password = database.password);
-    database.host && (connection.host = database.host);
-    database.port && (connection.port = database.port);
+    if (database.database) connection.database = database.database;
+    if (database.username) connection.user = database.username;
+    if (database.password) connection.password = database.password;
+    if (database.host) connection.host = database.host;
+    if (database.port) connection.port = database.port;
   }
 
   if (database.ssl_ca) {

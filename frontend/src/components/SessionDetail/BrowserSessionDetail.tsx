@@ -8,7 +8,7 @@ import { Badge } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, graphql, useFragment } from "../../gql";
+import { type FragmentType, graphql, useFragment } from "../../gql";
 import BlockList from "../BlockList/BlockList";
 import { useEndBrowserSession } from "../BrowserSession";
 import DateTime from "../DateTime";
@@ -77,7 +77,7 @@ const BrowserSessionDetail: React.FC<Props> = ({ session, isCurrent }) => {
   return (
     <BlockList>
       {isCurrent && (
-        <Badge className={styles.currentBadge} kind="success">
+        <Badge className={styles.currentBadge} kind="green">
           {t("frontend.browser_session_details.current_badge")}
         </Badge>
       )}

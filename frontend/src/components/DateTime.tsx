@@ -5,10 +5,10 @@
 // Please see LICENSE in the repository root for full details.
 
 import {
+  differenceInHours,
   formatISO,
   intlFormat,
   intlFormatDistance,
-  differenceInHours,
   parseISO,
 } from "date-fns";
 

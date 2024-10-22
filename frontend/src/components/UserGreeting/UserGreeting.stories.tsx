@@ -6,11 +6,11 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Provider } from "urql";
-import { fromValue, delay, pipe } from "wonka";
+import { delay, fromValue, pipe } from "wonka";
 
 import { makeFragmentData } from "../../gql";
 import {
-  SetDisplayNameMutation,
+  type SetDisplayNameMutation,
   SetDisplayNameStatus,
 } from "../../gql/graphql";
 

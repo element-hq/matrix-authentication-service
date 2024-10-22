@@ -12,13 +12,7 @@
   "bin": {
     "syn2mas": "dist/index.js"
   },
-  "files": [
-    "src",
-    "dist",
-    "package.json",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["src", "dist", "package.json", "LICENSE", "README.md"],
   "publishConfig": {
     "access": "public"
   },
@@ -27,27 +21,16 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "lint": "npm run lint:types && npm run lint:style",
-    "lint:style": "eslint . .eslintrc.cjs",
+    "lint:style": "biome check",
     "lint:types": "tsc --noEmit",
     "start": "node dist/index.js"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@tsconfig/node22": "^22.0.0",
     "@tsconfig/strictest": "^2.0.2",
     "@types/command-line-args": "^5.2.2",
     "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "eslint": "^8.52.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-import-resolver-typescript": "^3.6.1",
-    "eslint-plugin-import": "npm:eslint-plugin-i@^2.28.1",
-    "eslint-plugin-jest": "^27.9.0",
-    "eslint-plugin-matrix-org": "^1.2.1",
-    "eslint-plugin-prettier": "^5.0.0",
-    "eslint-plugin-unicorn": "^51.0.1",
-    "prettier": "^3.0.3",
     "tsx": "^4.16.2",
     "typescript": "^5.2.2"
   },

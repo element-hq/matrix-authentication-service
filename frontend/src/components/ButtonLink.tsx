@@ -6,7 +6,7 @@
 
 import { createLink } from "@tanstack/react-router";
 import { Button } from "@vector-im/compound-web";
-import { PropsWithChildren, forwardRef } from "react";
+import { type PropsWithChildren, forwardRef } from "react";
 
 type Props = {
   kind?: "primary" | "secondary" | "tertiary";

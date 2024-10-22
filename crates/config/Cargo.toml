@@ -22,6 +22,7 @@ camino = { workspace = true, features = ["serde1"] }
 chrono.workspace = true
 figment.workspace = true
 ipnetwork = { version = "0.20.0", features = ["serde", "schemars"] }
+lettre.workspace = true
 schemars.workspace = true
 ulid.workspace = true
 url.workspace = true
@@ -31,7 +32,7 @@ serde_with = { version = "3.11.0", features = ["hex", "chrono"] }
 serde_json.workspace = true
 
 pem-rfc7468 = "0.7.0"
-rustls-pki-types = "1.9.0"
+rustls-pki-types = "1.10.0"
 rustls-pemfile = "2.2.0"
 rand.workspace = true
 rand_chacha = "0.3.1"

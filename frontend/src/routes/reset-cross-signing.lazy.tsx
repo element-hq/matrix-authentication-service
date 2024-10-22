@@ -12,11 +12,11 @@ import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error"
 import IconKeyOffSolid from "@vector-im/compound-design-tokens/assets/web/icons/key-off-solid";
 import { Button, Text } from "@vector-im/compound-web";
 import {
-  ForwardRefExoticComponent,
-  RefAttributes,
-  SVGProps,
+  type ForwardRefExoticComponent,
+  type MouseEvent,
+  type RefAttributes,
+  type SVGProps,
   useState,
-  MouseEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "urql";
@@ -81,7 +81,7 @@ function ResetCrossSigning(): React.ReactNode {
       // https://spec.matrix.org/v1.11/client-server-api/#fallback
       if (window.onAuthDone) {
         window.onAuthDone();
-      } else if (window.opener && window.opener.postMessage) {
+      } else if (window.opener?.postMessage) {
         window.opener.postMessage("authDone", "*");
       }
     });
@@ -89,7 +89,7 @@ function ResetCrossSigning(): React.ReactNode {
 
   const [cancelled, setCancelled] = useState(false);
 
-  let cancelButton;
+  let cancelButton: React.ReactNode;
   if (!deepLink) {
     cancelButton = (
       <ButtonLink to="/" kind="tertiary">

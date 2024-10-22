@@ -11,7 +11,7 @@ import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send";
 import IconUserProfile from "@vector-im/compound-design-tokens/assets/web/icons/user-profile";
 import { Text } from "@vector-im/compound-web";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import Block from "../Block/Block";
@@ -40,28 +40,28 @@ const Scope: React.FC<{ scope: string }> = ({ scope }) => {
   }
 
   // Needs to be manually kept in sync with /templates/components/scope.html
-  const scopeMap: Record<string, [typeof IconInfo, string][]> = {
-    openid: [[IconUserProfile, t("mas.scope.view_profile")]],
+  const scopeMap: Record<string, [number, typeof IconInfo, string][]> = {
+    openid: [[0, IconUserProfile, t("mas.scope.view_profile")]],
     "urn:mas:graphql:*": [
-      [IconInfo, t("mas.scope.edit_profile")],
-      [IconComputer, t("mas.scope.manage_sessions")],
+      [1, IconInfo, t("mas.scope.edit_profile")],
+      [2, IconComputer, t("mas.scope.manage_sessions")],
     ],
     "urn:matrix:org.matrix.msc2967.client:api:*": [
-      [IconChat, t("mas.scope.view_messages")],
-      [IconSend, t("mas.scope.send_messages")],
+      [3, IconChat, t("mas.scope.view_messages")],
+      [4, IconSend, t("mas.scope.send_messages")],
     ],
-    "urn:synapse:admin:*": [[IconError, t("mas.scope.synapse_admin")]],
-    "urn:mas:admin": [[IconError, t("mas.scope.mas_admin")]],
-  };
+    "urn:synapse:admin:*": [[5, IconError, t("mas.scope.synapse_admin")]],
+    "urn:mas:admin": [[6, IconError, t("mas.scope.mas_admin")]],
+  } as const;
 
-  const mappedScopes: [typeof IconInfo, string][] = scopeMap[scope] ?? [
-    [IconInfo, scope],
-  ];
+  const mappedScopes: [number | string, typeof IconInfo, string][] = scopeMap[
+    scope
+  ] ?? [[scope, IconInfo, scope]];
 
   return (
     <>
-      {mappedScopes.map(([Icon, text], i) => (
-        <VisualListItem key={i} Icon={Icon} label={text} />
+      {mappedScopes.map(([key, Icon, text]) => (
+        <VisualListItem key={key} Icon={Icon} label={text} />
       ))}
     </>
   );

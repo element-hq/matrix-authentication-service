@@ -7,7 +7,7 @@
 import { H3 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import { FragmentType, useFragment } from "../../gql";
+import { type FragmentType, useFragment } from "../../gql";
 import { graphql } from "../../gql/gql";
 import BlockList from "../BlockList/BlockList";
 import ExternalLink from "../ExternalLink/ExternalLink";

@@ -72,7 +72,7 @@ version = "0.1.83"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
-version = "1.0.89"
+version = "1.0.90"
 
 # HTTP router
 [workspace.dependencies.axum]
@@ -85,7 +85,7 @@ features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Bytes
 [workspace.dependencies.bytes]
-version = "1.7.2"
+version = "1.8.0"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
@@ -99,7 +99,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.19"
+version = "4.5.20"
 features = ["derive"]
 
 # Configuration loading
@@ -109,7 +109,7 @@ features = ["env", "yaml", "test"]
 
 # Rate-limiting
 [workspace.dependencies.governor]
-version = "0.6.3"
+version = "0.7.0"
 
 # HTTP headers
 [workspace.dependencies.headers]
@@ -129,7 +129,7 @@ version = "0.1.2"
 
 # HTTP client and server
 [workspace.dependencies.hyper]
-version = "1.4.1"
+version = "1.5.0"
 features = ["client", "http1", "http2"]
 
 # Additional Hyper utilties
@@ -184,7 +184,7 @@ version = "0.8.5"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.14"
+version = "0.23.15"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
@@ -197,12 +197,12 @@ features = ["url", "chrono", "preserve_order"]
 
 # Query builder
 [workspace.dependencies.sea-query]
-version = "0.32.0-rc.2"
+version = "0.32.0"
 features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder
 [workspace.dependencies.sea-query-binder]
-version = "0.7.0-rc.2"
+version = "0.7.0"
 features = [
     "sqlx",
     "sqlx-postgres",
@@ -228,12 +228,12 @@ version = "0.34.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
-version = "1.0.210"
+version = "1.0.211"
 features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.128"
+version = "1.0.132"
 features = ["preserve_order"]
 
 # SQL database support
@@ -256,7 +256,7 @@ version = "1.0.64"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.40.0"
+version = "1.41.0"
 features = ["full"]
 
 # Useful async utilities

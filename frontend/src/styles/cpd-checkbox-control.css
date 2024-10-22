@@ -16,7 +16,7 @@
 .cpd-checkbox-input,
 .cpd-checkbox-ui {
   box-sizing: border-box;
-  grid-area: 1/1;
+  grid-area: 1 / 1;
   inline-size: var(--size);
   block-size: var(--size);
 }

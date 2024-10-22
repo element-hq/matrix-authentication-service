@@ -19,7 +19,7 @@ import BrowserSessionsOverview from "../components/UserSessionsOverview/BrowserS
 import { usePages } from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
 
-import { QUERY, LIST_QUERY } from "./_account.sessions.index";
+import { LIST_QUERY, QUERY } from "./_account.sessions.index";
 
 const PAGE_SIZE = 6;
 

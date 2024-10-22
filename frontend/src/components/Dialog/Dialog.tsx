@@ -5,17 +5,17 @@
 // Please see LICENSE in the repository root for full details.
 
 import {
-  Root as DialogRoot,
-  Trigger,
-  Portal,
   Close,
-  Title as DialogTitle,
-  Overlay as DialogOverlay,
   Content as DialogContent,
+  Overlay as DialogOverlay,
+  Root as DialogRoot,
+  Title as DialogTitle,
+  Portal,
+  Trigger,
 } from "@radix-ui/react-dialog";
 import IconClose from "@vector-im/compound-design-tokens/assets/web/icons/close";
 import { Glass, Tooltip } from "@vector-im/compound-web";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import { Drawer } from "vaul";
 
