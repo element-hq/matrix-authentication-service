@@ -109,7 +109,7 @@ features = ["env", "yaml", "test"]
 
 # Rate-limiting
 [workspace.dependencies.governor]
-version = "0.6.4"
+version = "0.7.0"
 
 # HTTP headers
 [workspace.dependencies.headers]
