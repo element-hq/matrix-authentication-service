@@ -93,6 +93,7 @@ function BrowserSessions(): React.ReactElement {
             disabled={!forwardPage}
             to="/sessions/browsers"
             search={forwardPage || pagination}
+            resetScroll
           >
             {t("common.previous")}
           </ButtonLink>
@@ -106,6 +107,7 @@ function BrowserSessions(): React.ReactElement {
             disabled={!backwardPage}
             to="/sessions/browsers"
             search={backwardPage || pagination}
+            resetScroll
           >
             {t("common.next")}
           </ButtonLink>
