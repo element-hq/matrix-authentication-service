@@ -133,7 +133,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               See your profile info and contact details
             </p>
@@ -154,7 +154,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               View your existing messages and data
             </p>
@@ -177,7 +177,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               Send new messages on your behalf
             </p>
@@ -393,7 +393,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               See your profile info and contact details
             </p>
@@ -414,7 +414,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               View your existing messages and data
             </p>
@@ -437,7 +437,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               Send new messages on your behalf
             </p>
@@ -622,7 +622,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               See your profile info and contact details
             </p>
@@ -643,7 +643,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               View your existing messages and data
             </p>
@@ -666,7 +666,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
               />
             </svg>
             <p
-              class="_typography_yh5dq_162 _font-body-md-medium_yh5dq_69"
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
             >
               Send new messages on your behalf
             </p>
