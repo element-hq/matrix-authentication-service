@@ -89,7 +89,7 @@ i18n
     fallbackLng: "en",
     keySeparator: ".",
     pluralSeparator: ":",
-    defaultNS: "frontend",
+    defaultNS: "translation",
     supportedLngs,
     interpolation: {
       escapeValue: false, // React has built-in XSS protections
