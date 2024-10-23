@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
 import { type FragmentType, graphql, useFragment } from "../gql";
-import { DeviceType, Oauth2ApplicationType } from "../gql/graphql";
+import type { DeviceType, Oauth2ApplicationType } from "../gql/graphql";
 import { getDeviceIdFromScope } from "../utils/deviceIdFromScope";
 
 import DateTime from "./DateTime";
@@ -58,13 +58,13 @@ export const END_SESSION_MUTATION = graphql(/* GraphQL */ `
 const getDeviceTypeFromClientAppType = (
   appType?: Oauth2ApplicationType | null,
 ): DeviceType => {
-  if (appType === Oauth2ApplicationType.Web) {
-    return DeviceType.Pc;
+  if (appType === "WEB") {
+    return "PC";
   }
-  if (appType === Oauth2ApplicationType.Native) {
-    return DeviceType.Mobile;
+  if (appType === "NATIVE") {
+    return "MOBILE";
   }
-  return DeviceType.Unknown;
+  return "UNKNOWN";
 };
 
 type Props = {
@@ -88,7 +88,7 @@ const OAuth2Session: React.FC<Props> = ({ session }) => {
     : undefined;
 
   const deviceType =
-    (data.userAgent?.deviceType === DeviceType.Unknown
+    (data.userAgent?.deviceType === "UNKNOWN"
       ? null
       : data.userAgent?.deviceType) ??
     getDeviceTypeFromClientAppType(data.client.applicationType);

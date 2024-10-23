@@ -6,7 +6,7 @@
 
 import type { TFunction } from "i18next";
 
-import { SetPasswordStatus } from "../gql/graphql";
+import type { SetPasswordStatus } from "../gql/graphql";
 
 /**
  * Provides a translated string representing a `SetPasswordStatus`.
@@ -25,35 +25,35 @@ export function translateSetPasswordError(
   status: SetPasswordStatus | undefined,
 ): string | undefined {
   switch (status) {
-    case SetPasswordStatus.NoCurrentPassword:
+    case "NO_CURRENT_PASSWORD":
       return t(
         "frontend.password_change.failure.description.no_current_password",
       );
-    case SetPasswordStatus.PasswordChangesDisabled:
+    case "PASSWORD_CHANGES_DISABLED":
       return t(
         "frontend.password_change.failure.description.password_changes_disabled",
       );
-    case SetPasswordStatus.AccountLocked:
+    case "ACCOUNT_LOCKED":
       return t("frontend.password_change.failure.description.account_locked");
-    case SetPasswordStatus.ExpiredRecoveryTicket:
+    case "EXPIRED_RECOVERY_TICKET":
       return t(
         "frontend.password_change.failure.description.expired_recovery_ticket",
       );
-    case SetPasswordStatus.NoSuchRecoveryTicket:
+    case "NO_SUCH_RECOVERY_TICKET":
       return t(
         "frontend.password_change.failure.description.no_such_recovery_ticket",
       );
-    case SetPasswordStatus.RecoveryTicketAlreadyUsed:
+    case "RECOVERY_TICKET_ALREADY_USED":
       return t(
         "frontend.password_change.failure.description.recovery_ticket_already_used",
       );
 
-    case SetPasswordStatus.WrongPassword:
-    case SetPasswordStatus.InvalidNewPassword:
+    case "WRONG_PASSWORD":
+    case "INVALID_NEW_PASSWORD":
       // These cases are shown as inline errors in the form itself.
       return undefined;
 
-    case SetPasswordStatus.Allowed:
+    case "ALLOWED":
     case undefined:
       return undefined;
 

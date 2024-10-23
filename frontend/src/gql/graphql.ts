@@ -37,16 +37,15 @@ export type AddEmailInput = {
 };
 
 /** The status of the `addEmail` mutation */
-export enum AddEmailStatus {
+export type AddEmailStatus =
   /** The email address was added */
-  Added = 'ADDED',
+  | 'ADDED'
   /** The email address is not allowed by the policy */
-  Denied = 'DENIED',
+  | 'DENIED'
   /** The email address already exists */
-  Exists = 'EXISTS',
+  | 'EXISTS'
   /** The email address is invalid */
-  Invalid = 'INVALID'
-}
+  | 'INVALID';
 
 /** The input for the `addUser` mutation. */
 export type AddUserInput = {
@@ -63,16 +62,15 @@ export type AddUserInput = {
 };
 
 /** The status of the `addUser` mutation. */
-export enum AddUserStatus {
+export type AddUserStatus =
   /** The user was added. */
-  Added = 'ADDED',
+  | 'ADDED'
   /** The user already exists. */
-  Exists = 'EXISTS',
+  | 'EXISTS'
   /** The username is invalid. */
-  Invalid = 'INVALID',
+  | 'INVALID'
   /** The username is reserved. */
-  Reserved = 'RESERVED'
-}
+  | 'RESERVED';
 
 /** The input for the `allowUserCrossSigningReset` mutation. */
 export type AllowUserCrossSigningResetInput = {
@@ -81,19 +79,17 @@ export type AllowUserCrossSigningResetInput = {
 };
 
 /** Which Captcha service is being used */
-export enum CaptchaService {
-  CloudflareTurnstile = 'CLOUDFLARE_TURNSTILE',
-  HCaptcha = 'H_CAPTCHA',
-  RecaptchaV2 = 'RECAPTCHA_V2'
-}
+export type CaptchaService =
+  | 'CLOUDFLARE_TURNSTILE'
+  | 'H_CAPTCHA'
+  | 'RECAPTCHA_V2';
 
 /** The type of a compatibility session. */
-export enum CompatSessionType {
+export type CompatSessionType =
   /** The session was created by a SSO login. */
-  SsoLogin = 'SSO_LOGIN',
+  | 'SSO_LOGIN'
   /** The session was created by an unknown method. */
-  Unknown = 'UNKNOWN'
-}
+  | 'UNKNOWN';
 
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
@@ -114,16 +110,15 @@ export type DateFilter = {
 };
 
 /** The type of a user agent */
-export enum DeviceType {
+export type DeviceType =
   /** A mobile phone. Can also sometimes be a tablet. */
-  Mobile = 'MOBILE',
+  | 'MOBILE'
   /** A personal computer, laptop or desktop */
-  Pc = 'PC',
+  | 'PC'
   /** A tablet */
-  Tablet = 'TABLET',
+  | 'TABLET'
   /** Unknown device type */
-  Unknown = 'UNKNOWN'
-}
+  | 'UNKNOWN';
 
 /** The input of the `endBrowserSession` mutation. */
 export type EndBrowserSessionInput = {
@@ -132,12 +127,11 @@ export type EndBrowserSessionInput = {
 };
 
 /** The status of the `endBrowserSession` mutation. */
-export enum EndBrowserSessionStatus {
+export type EndBrowserSessionStatus =
   /** The session was ended. */
-  Ended = 'ENDED',
+  | 'ENDED'
   /** The session was not found. */
-  NotFound = 'NOT_FOUND'
-}
+  | 'NOT_FOUND';
 
 /** The input of the `endCompatSession` mutation. */
 export type EndCompatSessionInput = {
@@ -146,12 +140,11 @@ export type EndCompatSessionInput = {
 };
 
 /** The status of the `endCompatSession` mutation. */
-export enum EndCompatSessionStatus {
+export type EndCompatSessionStatus =
   /** The session was ended. */
-  Ended = 'ENDED',
+  | 'ENDED'
   /** The session was not found. */
-  NotFound = 'NOT_FOUND'
-}
+  | 'NOT_FOUND';
 
 /** The input of the `endOauth2Session` mutation. */
 export type EndOAuth2SessionInput = {
@@ -160,12 +153,11 @@ export type EndOAuth2SessionInput = {
 };
 
 /** The status of the `endOauth2Session` mutation. */
-export enum EndOAuth2SessionStatus {
+export type EndOAuth2SessionStatus =
   /** The session was ended. */
-  Ended = 'ENDED',
+  | 'ENDED'
   /** The session was not found. */
-  NotFound = 'NOT_FOUND'
-}
+  | 'NOT_FOUND';
 
 /** The input for the `lockUser` mutation. */
 export type LockUserInput = {
@@ -176,20 +168,18 @@ export type LockUserInput = {
 };
 
 /** The status of the `lockUser` mutation. */
-export enum LockUserStatus {
+export type LockUserStatus =
   /** The user was locked. */
-  Locked = 'LOCKED',
+  | 'LOCKED'
   /** The user was not found. */
-  NotFound = 'NOT_FOUND'
-}
+  | 'NOT_FOUND';
 
 /** The application type advertised by the client. */
-export enum Oauth2ApplicationType {
+export type Oauth2ApplicationType =
   /** Client is a native application. */
-  Native = 'NATIVE',
+  | 'NATIVE'
   /** Client is a web application. */
-  Web = 'WEB'
-}
+  | 'WEB';
 
 /** The input for the `removeEmail` mutation */
 export type RemoveEmailInput = {
@@ -198,14 +188,13 @@ export type RemoveEmailInput = {
 };
 
 /** The status of the `removeEmail` mutation */
-export enum RemoveEmailStatus {
+export type RemoveEmailStatus =
   /** The email address was not found */
-  NotFound = 'NOT_FOUND',
+  | 'NOT_FOUND'
   /** Can't remove the primary email address */
-  Primary = 'PRIMARY',
+  | 'PRIMARY'
   /** The email address was removed */
-  Removed = 'REMOVED'
-}
+  | 'REMOVED';
 
 /** The input for the `sendVerificationEmail` mutation */
 export type SendVerificationEmailInput = {
@@ -214,20 +203,18 @@ export type SendVerificationEmailInput = {
 };
 
 /** The status of the `sendVerificationEmail` mutation */
-export enum SendVerificationEmailStatus {
+export type SendVerificationEmailStatus =
   /** The email address is already verified */
-  AlreadyVerified = 'ALREADY_VERIFIED',
+  | 'ALREADY_VERIFIED'
   /** The verification email was sent */
-  Sent = 'SENT'
-}
+  | 'SENT';
 
 /** The state of a session */
-export enum SessionState {
+export type SessionState =
   /** The session is active. */
-  Active = 'ACTIVE',
+  | 'ACTIVE'
   /** The session is no longer active. */
-  Finished = 'FINISHED'
-}
+  | 'FINISHED';
 
 /** The input for the `setCanRequestAdmin` mutation. */
 export type SetCanRequestAdminInput = {
@@ -246,12 +233,11 @@ export type SetDisplayNameInput = {
 };
 
 /** The status of the `setDisplayName` mutation */
-export enum SetDisplayNameStatus {
+export type SetDisplayNameStatus =
   /** The display name is invalid */
-  Invalid = 'INVALID',
+  | 'INVALID'
   /** The display name was set */
-  Set = 'SET'
-}
+  | 'SET';
 
 /** The input for the `setPasswordByRecovery` mutation. */
 export type SetPasswordByRecoveryInput = {
@@ -283,44 +269,43 @@ export type SetPasswordInput = {
 };
 
 /** The status of the `setPassword` mutation. */
-export enum SetPasswordStatus {
+export type SetPasswordStatus =
   /** Your account is locked and you can't change its password. */
-  AccountLocked = 'ACCOUNT_LOCKED',
+  | 'ACCOUNT_LOCKED'
   /** The password was updated. */
-  Allowed = 'ALLOWED',
+  | 'ALLOWED'
   /** The specified recovery ticket has expired. */
-  ExpiredRecoveryTicket = 'EXPIRED_RECOVERY_TICKET',
+  | 'EXPIRED_RECOVERY_TICKET'
   /**
    * The new password is invalid. For example, it may not meet configured
    * security requirements.
    */
-  InvalidNewPassword = 'INVALID_NEW_PASSWORD',
+  | 'INVALID_NEW_PASSWORD'
   /**
    * You aren't allowed to set the password for that user.
    * This happens if you aren't setting your own password and you aren't a
    * server administrator.
    */
-  NotAllowed = 'NOT_ALLOWED',
+  | 'NOT_ALLOWED'
   /** The user was not found. */
-  NotFound = 'NOT_FOUND',
+  | 'NOT_FOUND'
   /** The user doesn't have a current password to attempt to match against. */
-  NoCurrentPassword = 'NO_CURRENT_PASSWORD',
+  | 'NO_CURRENT_PASSWORD'
   /** The specified recovery ticket does not exist. */
-  NoSuchRecoveryTicket = 'NO_SUCH_RECOVERY_TICKET',
+  | 'NO_SUCH_RECOVERY_TICKET'
   /**
    * Password support has been disabled.
    * This usually means that login is handled by an upstream identity
    * provider.
    */
-  PasswordChangesDisabled = 'PASSWORD_CHANGES_DISABLED',
+  | 'PASSWORD_CHANGES_DISABLED'
   /**
    * The specified recovery ticket has already been used and cannot be used
    * again.
    */
-  RecoveryTicketAlreadyUsed = 'RECOVERY_TICKET_ALREADY_USED',
+  | 'RECOVERY_TICKET_ALREADY_USED'
   /** The supplied current password was wrong. */
-  WrongPassword = 'WRONG_PASSWORD'
-}
+  | 'WRONG_PASSWORD';
 
 /** The input for the `setPrimaryEmail` mutation */
 export type SetPrimaryEmailInput = {
@@ -329,14 +314,13 @@ export type SetPrimaryEmailInput = {
 };
 
 /** The status of the `setPrimaryEmail` mutation */
-export enum SetPrimaryEmailStatus {
+export type SetPrimaryEmailStatus =
   /** The email address was not found */
-  NotFound = 'NOT_FOUND',
+  | 'NOT_FOUND'
   /** The email address was set as primary */
-  Set = 'SET',
+  | 'SET'
   /** Can't make an unverified email address primary */
-  Unverified = 'UNVERIFIED'
-}
+  | 'UNVERIFIED';
 
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
@@ -345,28 +329,25 @@ export type UnlockUserInput = {
 };
 
 /** The status of the `unlockUser` mutation. */
-export enum UnlockUserStatus {
+export type UnlockUserStatus =
   /** The user was not found. */
-  NotFound = 'NOT_FOUND',
+  | 'NOT_FOUND'
   /** The user was unlocked. */
-  Unlocked = 'UNLOCKED'
-}
+  | 'UNLOCKED';
 
 /** The state of a compatibility session. */
-export enum UserEmailState {
+export type UserEmailState =
   /** The email address has been confirmed. */
-  Confirmed = 'CONFIRMED',
+  | 'CONFIRMED'
   /** The email address is pending confirmation. */
-  Pending = 'PENDING'
-}
+  | 'PENDING';
 
 /** The state of a user. */
-export enum UserState {
+export type UserState =
   /** The user is active. */
-  Active = 'ACTIVE',
+  | 'ACTIVE'
   /** The user is locked. */
-  Locked = 'LOCKED'
-}
+  | 'LOCKED';
 
 /** The input for the `verifyEmail` mutation */
 export type VerifyEmailInput = {
@@ -377,14 +358,13 @@ export type VerifyEmailInput = {
 };
 
 /** The status of the `verifyEmail` mutation */
-export enum VerifyEmailStatus {
+export type VerifyEmailStatus =
   /** The email address was already verified before */
-  AlreadyVerified = 'ALREADY_VERIFIED',
+  | 'ALREADY_VERIFIED'
   /** The verification code is invalid */
-  InvalidCode = 'INVALID_CODE',
+  | 'INVALID_CODE'
   /** The email address was just verified */
-  Verified = 'VERIFIED'
-}
+  | 'VERIFIED';
 
 export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 

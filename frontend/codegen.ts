@@ -15,6 +15,7 @@ const config: CodegenConfig = {
       preset: "client",
       config: {
         useTypeImports: true,
+        enumsAsTypes: true,
         // By default, unknown scalars are generated as `any`. This is not ideal for catching potential bugs.
         defaultScalarType: "unknown",
         scalars: {

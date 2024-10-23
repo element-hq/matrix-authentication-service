@@ -67,9 +67,7 @@ function RecoverPassword(): React.ReactNode {
 
     const response = await changePassword({ ticket, newPassword });
 
-    if (
-      response.data?.setPasswordByRecovery.status === SetPasswordStatus.Allowed
-    ) {
+    if (response.data?.setPasswordByRecovery.status === "ALLOWED") {
       // Redirect to the application root using a full page load
       // The MAS backend will then redirect to the login page
       // Unfortunately this won't work in dev mode (`npm run dev`)
@@ -124,7 +122,7 @@ function RecoverPassword(): React.ReactNode {
             forceShowNewPasswordInvalid={
               (result.data &&
                 result.data.setPasswordByRecovery.status ===
-                  SetPasswordStatus.InvalidNewPassword) ||
+                  "INVALID_NEW_PASSWORD") ||
               false
             }
           />

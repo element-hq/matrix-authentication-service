@@ -78,7 +78,7 @@ function ChangePassword(): React.ReactNode {
 
     const response = await changePassword({ userId, oldPassword, newPassword });
 
-    if (response.data?.setPassword.status === SetPasswordStatus.Allowed) {
+    if (response.data?.setPassword.status === "ALLOWED") {
       router.navigate({ to: "/password/change/success" });
     }
   };
@@ -125,10 +125,7 @@ function ChangePassword(): React.ReactNode {
 
           <Form.Field
             name="current_password"
-            serverInvalid={
-              result.data?.setPassword.status ===
-              SetPasswordStatus.WrongPassword
-            }
+            serverInvalid={result.data?.setPassword.status === "WRONG_PASSWORD"}
           >
             <Form.Label>
               {t("frontend.password_change.current_password_label")}
@@ -145,8 +142,7 @@ function ChangePassword(): React.ReactNode {
             </Form.ErrorMessage>
 
             {result.data &&
-              result.data.setPassword.status ===
-                SetPasswordStatus.WrongPassword && (
+              result.data.setPassword.status === "WRONG_PASSWORD" && (
                 <Form.ErrorMessage>
                   {t(
                     "frontend.password_change.failure.description.wrong_password",
@@ -161,8 +157,7 @@ function ChangePassword(): React.ReactNode {
             siteConfig={siteConfig}
             forceShowNewPasswordInvalid={
               (result.data &&
-                result.data.setPassword.status ===
-                  SetPasswordStatus.InvalidNewPassword) ||
+                result.data.setPassword.status === "INVALID_NEW_PASSWORD") ||
               false
             }
           />

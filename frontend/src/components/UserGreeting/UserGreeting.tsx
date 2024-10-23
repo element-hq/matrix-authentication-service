@@ -107,7 +107,7 @@ const UserGreeting: React.FC<Props> = ({ user, siteConfig }) => {
 
     const result = await setDisplayName({ displayName, userId: data.id });
 
-    if (result.data?.setDisplayName.status === SetDisplayNameStatus.Set) {
+    if (result.data?.setDisplayName.status === "SET") {
       setOpen(false);
     }
   };
@@ -163,8 +163,7 @@ const UserGreeting: React.FC<Props> = ({ user, siteConfig }) => {
               <Form.Field
                 name="displayname"
                 serverInvalid={
-                  setDisplayNameResult.data?.setDisplayName.status ===
-                  SetDisplayNameStatus.Invalid
+                  setDisplayNameResult.data?.setDisplayName.status === "INVALID"
                 }
               >
                 <Form.Label>

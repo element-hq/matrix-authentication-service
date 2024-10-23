@@ -12,7 +12,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { never } from "wonka";
 
 import { makeFragmentData } from "../gql";
-import { Oauth2ApplicationType } from "../gql/graphql";
+import type { Oauth2ApplicationType } from "../gql/graphql";
 import { mockLocale } from "../test-utils/mockLocale";
 import { DummyRouter } from "../test-utils/router";
 
@@ -34,7 +34,7 @@ describe("<OAuth2Session />", () => {
       clientId: "test-client-id",
       clientName: "Element",
       clientUri: "https://element.io",
-      applicationType: Oauth2ApplicationType.Web,
+      applicationType: "WEB" as Oauth2ApplicationType,
     },
   };
 
@@ -80,7 +80,7 @@ describe("<OAuth2Session />", () => {
         finishedAt,
         client: {
           ...defaultSession.client,
-          applicationType: Oauth2ApplicationType.Native,
+          applicationType: "NATIVE",
         },
       },
       FRAGMENT,
