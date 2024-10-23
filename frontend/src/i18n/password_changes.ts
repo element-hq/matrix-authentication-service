@@ -21,7 +21,7 @@ import { SetPasswordStatus } from "../gql/graphql";
  * Throws an error if the status is not known.
  */
 export function translateSetPasswordError(
-  t: TFunction<"frontend", undefined>,
+  t: TFunction,
   status: SetPasswordStatus | undefined,
 ): string | undefined {
   switch (status) {

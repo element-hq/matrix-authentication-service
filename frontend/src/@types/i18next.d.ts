@@ -5,15 +5,15 @@
 // Please see LICENSE in the repository root for full details.
 
 import "i18next";
-import type frontend from "../../locales/en.json";
+import type translation from "../../locales/en.json";
 
 declare module "i18next" {
   interface CustomTypeOptions {
     keySeparator: ".";
     pluralSeparator: ":";
-    defaultNS: "frontend";
+    defaultNS: "translation";
     resources: {
-      frontend: typeof frontend;
+      translation: typeof translation;
     };
   }
 }

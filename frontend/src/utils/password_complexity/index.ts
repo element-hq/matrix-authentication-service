@@ -70,7 +70,7 @@ export interface PasswordComplexity {
 /** Estimates the complexity of a password. */
 export async function estimatePasswordComplexity(
   password: string,
-  t: TFunction<"frontend", undefined>,
+  t: TFunction,
 ): Promise<PasswordComplexity> {
   const scorerResult = await zxcvbnAsync(password);
 
@@ -96,10 +96,7 @@ export async function estimatePasswordComplexity(
 }
 
 /** Returns a translated string corresponding to the 0 to 4 score. */
-function translateScore(
-  score: 0 | 1 | 2 | 3 | 4,
-  t: TFunction<"frontend", undefined>,
-): string {
+function translateScore(score: 0 | 1 | 2 | 3 | 4, t: TFunction): string {
   switch (score) {
     case 0:
       return t("frontend.password_strength.score.0");
@@ -117,7 +114,7 @@ function translateScore(
 /** Returns a translated string corresponding to a password improvement suggestion from zxcvbn-ts. */
 function translateSuggestion(
   suggestionCode: string,
-  t: TFunction<"frontend", undefined>,
+  t: TFunction,
 ): string | undefined {
   switch (suggestionCode) {
     case "allUppercase":
@@ -154,7 +151,7 @@ function translateSuggestion(
 /** Returns a translated string corresponding to a weak password warning from zxcvbn-ts. */
 function translateWarning(
   warningCode: string,
-  t: TFunction<"frontend", undefined>,
+  t: TFunction,
 ): string | undefined {
   switch (warningCode) {
     case "commonNames":
