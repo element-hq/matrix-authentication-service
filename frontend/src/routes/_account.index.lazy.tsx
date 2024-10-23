@@ -92,8 +92,12 @@ function Index(): React.ReactElement {
               <Text className="text-secondary" size="md">
                 {t("frontend.reset_cross_signing.description")}
               </Text>
-              <ButtonLink to="/reset-cross-signing" kind="primary" destructive>
-                {t("frontend.reset_cross_signing.button")}
+              <ButtonLink
+                to="/reset-cross-signing"
+                kind="secondary"
+                destructive
+              >
+                {t("frontend.reset_cross_signing.start_reset")}
               </ButtonLink>
             </BlockList>
           </Collapsible.Content>

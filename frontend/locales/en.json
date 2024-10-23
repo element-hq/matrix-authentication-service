@@ -186,7 +186,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Reset identity",
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
@@ -194,15 +193,17 @@
       },
       "description": "If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.",
       "effect_list": {
-        "negative_1": "You will lose your existing message history",
-        "negative_2": "You will need to verify all your existing devices and contacts again",
+        "neutral_1": "You will lose any message history that's stored only on the server",
+        "neutral_2": "You will need to verify all your existing devices and contacts again",
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
         "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
         "heading": "Failed to allow crypto identity reset"
       },
+      "finish_reset": "Finish reset",
       "heading": "Reset your identity in case you can't confirm another way",
+      "start_reset": "Start reset",
       "success": {
         "description": "The identity reset has been approved for the next {{minutes}} minutes. You can close this window and go back to the app to continue.",
         "heading": "Identity reset successfully. Go back to the app to finish the process."

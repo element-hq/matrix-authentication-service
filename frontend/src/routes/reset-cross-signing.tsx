@@ -1,40 +1,58 @@
 // Copyright 2024 New Vector Ltd.
-// Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import {
+  type ErrorComponentProps,
+  Outlet,
+  createFileRoute,
+} from "@tanstack/react-router";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
+import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import { Button, Text } from "@vector-im/compound-web";
 import * as z from "zod";
 
-import { graphql } from "../gql";
+import { useTranslation } from "react-i18next";
+import BlockList from "../components/BlockList";
+import Layout from "../components/Layout";
+import PageHeading from "../components/PageHeading";
 
 const searchSchema = z.object({
   deepLink: z.boolean().optional(),
 });
 
-export const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
-  query CurrentViewerQuery {
-    viewer {
-      __typename
-      ... on Node {
-        id
-      }
-    }
-  }
-`);
-
 export const Route = createFileRoute("/reset-cross-signing")({
-  async loader({ context, abortController: { signal } }) {
-    const viewer = await context.client.query(
-      CURRENT_VIEWER_QUERY,
-      {},
-      { fetchOptions: { signal } },
-    );
-    if (viewer.error) throw viewer.error;
-    if (viewer.data?.viewer.__typename !== "User") throw notFound();
-  },
-
+  component: () => (
+    <Layout>
+      <BlockList>
+        <Outlet />
+      </BlockList>
+    </Layout>
+  ),
+  errorComponent: ResetCrossSigningError,
   validateSearch: zodSearchValidator(searchSchema),
 });
+
+function ResetCrossSigningError({
+  reset,
+}: ErrorComponentProps): React.ReactElement {
+  const { t } = useTranslation();
+  return (
+    <>
+      <PageHeading
+        Icon={IconError}
+        title={t("frontend.reset_cross_signing.failure.heading")}
+        invalid
+      />
+
+      <Text className="text-center text-secondary" size="md">
+        {t("frontend.reset_cross_signing.failure.description")}
+      </Text>
+
+      <Button kind="tertiary" size="lg" onClick={() => reset()}>
+        {t("action.back")}
+      </Button>
+    </>
+  );
+}
