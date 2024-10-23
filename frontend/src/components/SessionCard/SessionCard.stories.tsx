@@ -9,7 +9,7 @@ import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign
 import { Button } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import { DeviceType } from "../../gql/graphql";
+import type { DeviceType } from "../../gql/graphql";
 
 import * as Card from "./SessionCard";
 
@@ -51,10 +51,13 @@ const meta = {
     disabled: false,
     deviceName: "MacBook Pro 16",
     clientName: "Firefox",
-    deviceType: DeviceType.Pc,
+    deviceType: "PC",
   },
   argTypes: {
-    deviceType: { control: "select", options: Object.values(DeviceType) },
+    deviceType: {
+      control: "select",
+      options: ["PC", "MOBILE", "TABLET", "UNKNOWN"],
+    },
     disabled: { control: "boolean" },
     deviceName: { control: "text" },
     clientName: { control: "text" },

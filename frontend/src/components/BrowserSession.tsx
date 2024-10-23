@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation } from "urql";
 
 import { type FragmentType, graphql, useFragment } from "../gql";
-import { DeviceType } from "../gql/graphql";
+import type { DeviceType } from "../gql/graphql";
 
 import DateTime from "./DateTime";
 import EndSessionButton from "./Session/EndSessionButton";
@@ -97,7 +97,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
 
   const onSessionEnd = useEndBrowserSession(data.id, isCurrent);
 
-  const deviceType = data.userAgent?.deviceType ?? DeviceType.Unknown;
+  const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 
   let deviceName: string | null = null;
   let clientName: string | null = null;

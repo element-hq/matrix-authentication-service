@@ -11,7 +11,7 @@ import IconBrowser from "@vector-im/compound-design-tokens/assets/web/icons/web-
 import type { FunctionComponent, SVGProps } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DeviceType } from "../../gql/graphql";
+import type { DeviceType } from "../../gql/graphql";
 
 import styles from "./DeviceTypeIcon.module.css";
 
@@ -19,10 +19,10 @@ const deviceTypeToIcon: Record<
   DeviceType,
   FunctionComponent<SVGProps<SVGSVGElement> & { title?: string | undefined }>
 > = {
-  [DeviceType.Unknown]: IconUnknown,
-  [DeviceType.Pc]: IconComputer,
-  [DeviceType.Mobile]: IconMobile,
-  [DeviceType.Tablet]: IconBrowser,
+  UNKNOWN: IconUnknown,
+  PC: IconComputer,
+  MOBILE: IconMobile,
+  TABLET: IconBrowser,
 };
 
 const DeviceTypeIcon: React.FC<{ deviceType: DeviceType }> = ({
@@ -33,10 +33,10 @@ const DeviceTypeIcon: React.FC<{ deviceType: DeviceType }> = ({
   const Icon = deviceTypeToIcon[deviceType];
 
   const deviceTypeToLabel: Record<DeviceType, string> = {
-    [DeviceType.Unknown]: t("frontend.device_type_icon_label.unknown"),
-    [DeviceType.Pc]: t("frontend.device_type_icon_label.pc"),
-    [DeviceType.Mobile]: t("frontend.device_type_icon_label.mobile"),
-    [DeviceType.Tablet]: t("frontend.device_type_icon_label.tablet"),
+    UNKNOWN: t("frontend.device_type_icon_label.unknown"),
+    PC: t("frontend.device_type_icon_label.pc"),
+    MOBILE: t("frontend.device_type_icon_label.mobile"),
+    TABLET: t("frontend.device_type_icon_label.tablet"),
   };
 
   const label = deviceTypeToLabel[deviceType];

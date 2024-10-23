@@ -9,10 +9,7 @@ import { Provider } from "urql";
 import { delay, fromValue, pipe } from "wonka";
 
 import { makeFragmentData } from "../../gql";
-import {
-  type SetDisplayNameMutation,
-  SetDisplayNameStatus,
-} from "../../gql/graphql";
+import type { SetDisplayNameMutation } from "../../gql/graphql";
 
 import UserGreeting, { CONFIG_FRAGMENT, FRAGMENT } from "./UserGreeting";
 
@@ -31,7 +28,7 @@ const Template: React.FC<{
         fromValue({
           data: {
             setDisplayName: {
-              status: SetDisplayNameStatus.Set,
+              status: "SET",
               user: { id: userId, matrix: { displayName } },
             },
           },

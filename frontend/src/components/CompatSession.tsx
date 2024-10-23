@@ -86,7 +86,7 @@ const CompatSession: React.FC<{
     ? simplifyUrl(data.ssoLogin.redirectUri)
     : undefined;
 
-  const deviceType = data.userAgent?.deviceType ?? DeviceType.Unknown;
+  const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 
   const deviceName =
     data.userAgent?.model ??
