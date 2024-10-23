@@ -14,7 +14,7 @@
 }
 
 .item {
-  background: var(--cpd-color-bg-subtle-secondary);
+  background: var(--cpd-color-bg-action-secondary-hovered);
   padding: var(--cpd-space-3x) var(--cpd-space-5x);
   display: flex;
   align-items: center;

@@ -6,7 +6,9 @@
 
 import { createLink } from "@tanstack/react-router";
 import { Button } from "@vector-im/compound-web";
+import cx from "classnames";
 import { type PropsWithChildren, forwardRef } from "react";
+import styles from "./ButtonLink.module.css";
 
 type Props = {
   kind?: "primary" | "secondary" | "tertiary";
@@ -14,14 +16,21 @@ type Props = {
   Icon?: React.ComponentType<React.SVGAttributes<SVGElement>>;
   destructive?: boolean;
   disabled?: boolean;
+  className?: string;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>;
 
 export const ButtonLink = createLink(
   forwardRef<HTMLAnchorElement, PropsWithChildren<Props>>(
-    ({ children, ...props }, ref) => {
+    ({ children, className, ...props }, ref) => {
       const disabled = !!props.disabled || !!props["aria-disabled"] || false;
       return (
-        <Button as="a" {...props} disabled={disabled} ref={ref}>
+        <Button
+          as="a"
+          {...props}
+          className={cx(styles.buttonLink, className)}
+          disabled={disabled}
+          ref={ref}
+        >
           {children}
         </Button>
       );

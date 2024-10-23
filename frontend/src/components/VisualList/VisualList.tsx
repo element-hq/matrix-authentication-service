@@ -30,9 +30,7 @@ export const VisualListItem: FC<{
   return (
     <li className={styles.item}>
       <Icon color={iconColor ?? "var(--cpd-color-icon-tertiary)"} />
-      <Text size="md" weight="medium">
-        {label}
-      </Text>
+      <Text size="md">{label}</Text>
     </li>
   );
 };

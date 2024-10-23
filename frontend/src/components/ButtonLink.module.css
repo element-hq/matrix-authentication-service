@@ -1,0 +1,13 @@
+/* Copyright 2024 New Vector Ltd.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * Please see LICENSE in the repository root for full details.
+ */
+
+/* The weird selector is to have higher specificity than compound-web's button-link */
+a.button-link[href] {
+  /** This is to undo the following rule in compound-web:
+   * https://github.com/element-hq/compound-web/blob/6ccb4b6049f3bc8e9739d9452c850ed3c7de49f9/src/components/Button/Button.module.css#L31-L34
+   */
+  inline-size: initial;
+}
