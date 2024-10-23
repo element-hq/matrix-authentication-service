@@ -4,7 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import {
+  Outlet,
+  ScrollRestoration,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import type { Client } from "urql";
 
@@ -16,6 +20,7 @@ export const Route = createRootRouteWithContext<{
 }>()({
   component: () => (
     <>
+      <ScrollRestoration />
       <Outlet />
       {import.meta.env.DEV && <TanStackRouterDevtools />}
     </>

@@ -112,6 +112,7 @@ function Sessions(): React.ReactElement {
             disabled={!forwardPage}
             to="/sessions"
             search={{ inactive, ...(forwardPage || pagination) }}
+            resetScroll
           >
             {t("common.previous")}
           </ButtonLink>
@@ -125,6 +126,7 @@ function Sessions(): React.ReactElement {
             disabled={!backwardPage}
             to="/sessions"
             search={{ inactive, ...(backwardPage || pagination) }}
+            resetScroll
           >
             {t("common.next")}
           </ButtonLink>

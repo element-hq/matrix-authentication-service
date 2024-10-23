@@ -34,6 +34,7 @@ const PasswordChangeSuccessLazyImport = createFileRoute(
 // Create/Update Routes
 
 const ResetCrossSigningRoute = ResetCrossSigningImport.update({
+  id: '/reset-cross-signing',
   path: '/reset-cross-signing',
   getParentRoute: () => rootRoute,
 } as any).lazy(() =>
@@ -46,6 +47,7 @@ const AccountRoute = AccountImport.update({
 } as any).lazy(() => import('./routes/_account.lazy').then((d) => d.Route))
 
 const AccountIndexRoute = AccountIndexImport.update({
+  id: '/',
   path: '/',
   getParentRoute: () => AccountRoute,
 } as any).lazy(() =>
@@ -53,16 +55,19 @@ const AccountIndexRoute = AccountIndexImport.update({
 )
 
 const DevicesSplatRoute = DevicesSplatImport.update({
+  id: '/devices/$',
   path: '/devices/$',
   getParentRoute: () => rootRoute,
 } as any)
 
 const ClientsIdRoute = ClientsIdImport.update({
+  id: '/clients/$id',
   path: '/clients/$id',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/clients.$id.lazy').then((d) => d.Route))
 
 const PasswordRecoveryIndexRoute = PasswordRecoveryIndexImport.update({
+  id: '/password/recovery/',
   path: '/password/recovery/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() =>
@@ -70,6 +75,7 @@ const PasswordRecoveryIndexRoute = PasswordRecoveryIndexImport.update({
 )
 
 const PasswordChangeIndexRoute = PasswordChangeIndexImport.update({
+  id: '/password/change/',
   path: '/password/change/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() =>
@@ -77,6 +83,7 @@ const PasswordChangeIndexRoute = PasswordChangeIndexImport.update({
 )
 
 const AccountSessionsIndexRoute = AccountSessionsIndexImport.update({
+  id: '/sessions/',
   path: '/sessions/',
   getParentRoute: () => AccountRoute,
 } as any).lazy(() =>
@@ -84,6 +91,7 @@ const AccountSessionsIndexRoute = AccountSessionsIndexImport.update({
 )
 
 const PasswordChangeSuccessLazyRoute = PasswordChangeSuccessLazyImport.update({
+  id: '/password/change/success',
   path: '/password/change/success',
   getParentRoute: () => rootRoute,
 } as any).lazy(() =>
@@ -91,6 +99,7 @@ const PasswordChangeSuccessLazyRoute = PasswordChangeSuccessLazyImport.update({
 )
 
 const EmailsIdVerifyRoute = EmailsIdVerifyImport.update({
+  id: '/emails/$id/verify',
   path: '/emails/$id/verify',
   getParentRoute: () => rootRoute,
 } as any).lazy(() =>
@@ -98,6 +107,7 @@ const EmailsIdVerifyRoute = EmailsIdVerifyImport.update({
 )
 
 const AccountSessionsBrowsersRoute = AccountSessionsBrowsersImport.update({
+  id: '/sessions/browsers',
   path: '/sessions/browsers',
   getParentRoute: () => AccountRoute,
 } as any).lazy(() =>
@@ -105,6 +115,7 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersImport.update({
 )
 
 const AccountSessionsIdRoute = AccountSessionsIdImport.update({
+  id: '/sessions/$id',
   path: '/sessions/$id',
   getParentRoute: () => AccountRoute,
 } as any).lazy(() =>
