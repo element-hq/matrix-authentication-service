@@ -273,12 +273,12 @@ features = ["rt"]
 # Tower services
 [workspace.dependencies.tower]
 version = "0.5.1"
-features = ["util"]
+features = ["util", "limit"]
 
 # Tower HTTP layers
 [workspace.dependencies.tower-http]
 version = "0.6.1"
-features = ["cors", "fs", "add-extension"]
+features = ["cors", "fs", "add-extension", "set-header", "follow-redirect"]
 
 # Logging and tracing
 [workspace.dependencies.tracing]

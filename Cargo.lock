@@ -2422,7 +2422,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
- "webpki-roots",
 ]
 
 [[package]]
@@ -3255,6 +3254,7 @@ dependencies = [
  "prometheus",
  "rand",
  "rand_chacha",
+ "reqwest",
  "rustls",
  "sentry",
  "sentry-tower",
@@ -5063,7 +5063,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "webpki-roots",
  "windows-registry",
 ]
 

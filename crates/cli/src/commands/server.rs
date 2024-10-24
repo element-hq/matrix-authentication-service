@@ -150,6 +150,8 @@ impl Options {
 
         let http_client_factory = HttpClientFactory::new();
 
+        let http_client = mas_http::reqwest_client();
+
         let homeserver_connection = SynapseConnection::new(
             config.matrix.homeserver.clone(),
             config.matrix.endpoint.clone(),
@@ -242,6 +244,7 @@ impl Options {
                 policy_factory,
                 graphql_schema,
                 http_client_factory,
+                http_client,
                 password_manager,
                 metadata_cache,
                 site_config,

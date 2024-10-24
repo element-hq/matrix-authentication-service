@@ -7,8 +7,6 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
-use http_body_util::Full;
-use mas_http::{BodyToBytesResponseLayer, BoxCloneSyncService};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::{
     claims::{self, hash_token},
@@ -17,20 +15,13 @@ use mas_jose::{
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_oidc_client::{
-    http_service::HttpService,
-    types::{
-        client_credentials::{ClientCredentials, JwtSigningFn, JwtSigningMethod},
-        IdToken,
-    },
+use mas_oidc_client::types::{
+    client_credentials::{ClientCredentials, JwtSigningFn, JwtSigningMethod},
+    IdToken,
 };
 use rand::{
     distributions::{Alphanumeric, DistString},
     SeedableRng,
-};
-use tower::{
-    util::{MapErrLayer, MapRequestLayer},
-    BoxError, Layer,
 };
 use url::Url;
 use wiremock::MockServer;
@@ -41,7 +32,6 @@ mod types;
 const REDIRECT_URI: &str = "http://localhost/";
 const CLIENT_ID: &str = "client!+ID";
 const CLIENT_SECRET: &str = "SECRET?%Gclient";
-const REQUEST_URI: &str = "REQUESTur1";
 const AUTHORIZATION_CODE: &str = "authC0D3";
 const CODE_VERIFIER: &str = "cODEv3R1f1ER";
 const NONCE: &str = "No0o0o0once";

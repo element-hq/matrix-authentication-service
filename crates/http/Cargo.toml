@@ -21,12 +21,12 @@ http-body.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 hyper-util.workspace = true
-hyper-rustls = { workspace = true, optional = true }
+hyper-rustls.workspace = true
 opentelemetry.workspace = true
 opentelemetry-http.workspace = true
 opentelemetry-semantic-conventions.workspace = true
-rustls = { workspace = true, optional = true }
-rustls-platform-verifier = { workspace = true, optional = true }
+rustls.workspace = true
+rustls-platform-verifier.workspace = true
 pin-project-lite = "0.2.14"
 reqwest.workspace = true
 serde.workspace = true
@@ -38,20 +38,8 @@ tower-http.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true
 
-mas-tower = { workspace = true, optional = true }
+mas-tower.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
 tokio.workspace = true
-
-[features]
-client = [
-    "dep:mas-tower",
-    "dep:rustls",
-    "dep:hyper-rustls",
-    "dep:rustls-platform-verifier",
-    "tower/limit",
-    "tower-http/timeout",
-    "tower-http/follow-redirect",
-    "tower-http/set-header",
-]

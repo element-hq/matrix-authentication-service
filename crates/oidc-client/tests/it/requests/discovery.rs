@@ -36,7 +36,7 @@ fn provider_metadata(issuer: &Url) -> ProviderMetadata {
 
 #[tokio::test]
 async fn pass_discover() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
 
     Mock::given(method("GET"))
         .and(path("/.well-known/openid-configuration"))
@@ -44,7 +44,9 @@ async fn pass_discover() {
         .mount(&mock_server)
         .await;
 
-    let provider_metadata = insecure_discover(&client, issuer.as_str()).await.unwrap();
+    let provider_metadata = insecure_discover(&http_client, issuer.as_str())
+        .await
+        .unwrap();
 
     assert_eq!(provider_metadata.issuer(), issuer.as_str());
 }
@@ -70,7 +72,7 @@ async fn fail_discover_not_json() {
 
     let error = discover(&http_service, issuer.as_str()).await.unwrap_err();
 
-    assert_matches!(error, DiscoveryError::FromJson(_));
+    assert_matches!(error, DiscoveryError::Http(_));
 }
 
 #[tokio::test]

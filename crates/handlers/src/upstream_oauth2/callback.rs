@@ -9,9 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use hyper::StatusCode;
-use mas_axum_utils::{
-    cookies::CookieJar, http_client_factory::HttpClientFactory, sentry::SentryEventID,
-};
+use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::UpstreamOAuthProvider;
 use mas_keystore::{Encrypter, Keystore};
 use mas_oidc_client::requests::{
@@ -128,7 +126,6 @@ impl IntoResponse for RouteError {
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
     State(metadata_cache): State<MetadataCache>,
     mut repo: BoxRepository,
     State(url_builder): State<UrlBuilder>,

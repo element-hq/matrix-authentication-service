@@ -9,27 +9,23 @@
 #![deny(rustdoc::missing_crate_level_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-#[cfg(feature = "client")]
 mod client;
 mod ext;
 mod layers;
 mod reqwest;
 mod service;
 
-#[cfg(feature = "client")]
 pub use self::{
     client::{
         make_traced_connector, make_untraced_client, Client, TracedClient, TracedConnector,
         UntracedClient, UntracedConnector,
     },
-    layers::client::{ClientLayer, ClientService},
-};
-pub use self::{
     ext::{set_propagator, CorsLayerExt, ServiceExt as HttpServiceExt},
     layers::{
         body_to_bytes_response::{self, BodyToBytesResponse, BodyToBytesResponseLayer},
         bytes_to_body_request::{self, BytesToBodyRequest, BytesToBodyRequestLayer},
         catch_http_codes::{self, CatchHttpCodes, CatchHttpCodesLayer},
+        client::{ClientLayer, ClientService},
         form_urlencoded_request::{self, FormUrlencodedRequest, FormUrlencodedRequestLayer},
         json_request::{self, JsonRequest, JsonRequestLayer},
         json_response::{self, JsonResponse, JsonResponseLayer},

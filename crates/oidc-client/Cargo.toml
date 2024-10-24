@@ -51,5 +51,3 @@ tokio.workspace = true
 wiremock = "0.6.2"
 http-body-util.workspace = true
 rustls.workspace = true
-
-mas-http = { workspace = true, features = ["client"] }

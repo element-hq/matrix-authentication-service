@@ -7,18 +7,12 @@
 //! Requests for the Token endpoint.
 
 use chrono::{DateTime, Utc};
-use mas_http::{CatchHttpCodesLayer, FormUrlencodedRequestLayer, JsonResponseLayer};
+use mas_http::RequestBuilderExt;
 use oauth2_types::requests::{AccessTokenRequest, AccessTokenResponse};
 use rand::Rng;
-use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
-use crate::{
-    error::TokenRequestError,
-    http_service::HttpService,
-    types::client_credentials::ClientCredentials,
-    utils::{http_all_error_status_codes, http_error_mapper},
-};
+use crate::{error::TokenRequestError, types::client_credentials::ClientCredentials};
 
 /// Request an access token.
 ///
@@ -51,13 +45,15 @@ pub async fn request_access_token(
 ) -> Result<AccessTokenResponse, TokenRequestError> {
     tracing::debug!(?request, "Requesting access token...");
 
-    let token_request = http_client.post(token_endpoint.as_str()).form(&request);
+    let token_request = http_client.post(token_endpoint.as_str());
 
-    let token_request = client_credentials.apply_to_request(token_request, now, rng)?;
-
-    let res = service.ready_oneshot().await?.call(token_request).await?;
-
-    let token_response = res.into_body();
+    let token_response = client_credentials
+        .authenticated_form(token_request, &request, now, rng)?
+        .send_traced()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
     Ok(token_response)
 }

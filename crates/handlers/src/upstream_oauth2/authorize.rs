@@ -9,9 +9,7 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{
-    cookies::CookieJar, http_client_factory::HttpClientFactory, sentry::SentryEventID,
-};
+use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::UpstreamOAuthProvider;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::UrlBuilder;

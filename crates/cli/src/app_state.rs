@@ -44,6 +44,7 @@ pub struct AppState {
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: GraphQLSchema,
     pub http_client_factory: HttpClientFactory,
+    pub http_client: reqwest::Client,
     pub password_manager: PasswordManager,
     pub metadata_cache: MetadataCache,
     pub site_config: SiteConfig,
@@ -116,13 +117,9 @@ impl AppState {
 
         let mut repo = PgRepository::from_conn(conn);
 
-        let http_service = self
-            .http_client_factory
-            .http_service("upstream_oauth2.metadata");
-
         self.metadata_cache
             .warm_up_and_run(
-                http_service,
+                &self.http_client,
                 std::time::Duration::from_secs(60 * 15),
                 &mut repo,
             )
@@ -176,6 +173,12 @@ impl FromRef<AppState> for UrlBuilder {
 impl FromRef<AppState> for HttpClientFactory {
     fn from_ref(input: &AppState) -> Self {
         input.http_client_factory.clone()
+    }
+}
+
+impl FromRef<AppState> for reqwest::Client {
+    fn from_ref(input: &AppState) -> Self {
+        input.http_client.clone()
     }
 }
 
