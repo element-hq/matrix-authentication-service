@@ -20,7 +20,6 @@ use url::Url;
 use super::jose::JwtVerificationData;
 use crate::{
     error::{IdTokenError, TokenRefreshError},
-    http_service::HttpService,
     requests::{jose::verify_id_token, token::request_access_token},
     types::{client_credentials::ClientCredentials, IdToken},
 };
@@ -68,7 +67,7 @@ use crate::{
 #[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all, fields(token_endpoint))]
 pub async fn refresh_access_token(
-    http_service: &HttpService,
+    http_client: &reqwest::Client,
     client_credentials: ClientCredentials,
     token_endpoint: &Url,
     refresh_token: String,
@@ -81,7 +80,7 @@ pub async fn refresh_access_token(
     tracing::debug!("Refreshing access token…");
 
     let token_response = request_access_token(
-        http_service,
+        http_client,
         client_credentials,
         token_endpoint,
         AccessTokenRequest::RefreshToken(RefreshTokenGrant {

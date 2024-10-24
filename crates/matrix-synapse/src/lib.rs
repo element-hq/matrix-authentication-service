@@ -4,21 +4,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-#![allow(clippy::blocks_in_conditions)]
-
 use std::collections::HashSet;
 
 use anyhow::{bail, Context};
-use http::{header::AUTHORIZATION, request::Builder, Method, Request, StatusCode};
-use mas_axum_utils::http_client_factory::HttpClientFactory;
-use mas_http::{catch_http_codes, json_response, EmptyBody, HttpServiceExt};
+use error::SynapseResponseExt;
+use http::{Method, StatusCode};
+use mas_http::RequestBuilderExt as _;
 use mas_matrix::{HomeserverConnection, MatrixUser, ProvisionRequest};
 use serde::{Deserialize, Serialize};
-use tower::{Service, ServiceExt};
 use tracing::debug;
 use url::Url;
-
-use self::error::catch_homeserver_error;
 
 static SYNAPSE_AUTH_PROVIDER: &str = "oauth-delegated";
 
@@ -36,7 +31,7 @@ pub struct SynapseConnection {
     homeserver: String,
     endpoint: Url,
     access_token: String,
-    http_client_factory: HttpClientFactory,
+    http_client: reqwest::Client,
 }
 
 impl SynapseConnection {
@@ -45,45 +40,42 @@ impl SynapseConnection {
         homeserver: String,
         endpoint: Url,
         access_token: String,
-        http_client_factory: HttpClientFactory,
+        http_client: reqwest::Client,
     ) -> Self {
         Self {
             homeserver,
             endpoint,
             access_token,
-            http_client_factory,
+            http_client,
         }
     }
 
-    fn builder(&self, url: &str) -> Builder {
-        Request::builder()
-            .uri(
+    fn builder(&self, method: Method, url: &str) -> reqwest::RequestBuilder {
+        self.http_client
+            .request(
+                method,
                 self.endpoint
                     .join(url)
                     .map(String::from)
                     .unwrap_or_default(),
             )
-            .header(AUTHORIZATION, format!("Bearer {}", self.access_token))
+            .bearer_auth(&self.access_token)
     }
 
-    #[must_use]
-    pub fn post(&self, url: &str) -> Builder {
-        self.builder(url).method(Method::POST)
+    fn post(&self, url: &str) -> reqwest::RequestBuilder {
+        self.builder(Method::POST, url)
     }
 
-    #[must_use]
-    pub fn get(&self, url: &str) -> Builder {
-        self.builder(url).method(Method::GET)
+    fn get(&self, url: &str) -> reqwest::RequestBuilder {
+        self.builder(Method::GET, url)
     }
 
-    #[must_use]
-    pub fn put(&self, url: &str) -> Builder {
-        self.builder(url).method(Method::PUT)
+    fn put(&self, url: &str) -> reqwest::RequestBuilder {
+        self.builder(Method::PUT, url)
     }
 
-    #[must_use]
-    pub fn delete(&self, url: &str) -> Builder {
-        self.builder(url).method(Method::DELETE)
+    fn delete(&self, url: &str) -> reqwest::RequestBuilder {
+        self.builder(Method::DELETE, url)
     }
 }
 
@@ -182,29 +174,22 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error> {
         let mxid = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.query_user")
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error)
-            .json_response();
 
-        let request = self
+        let response = self
             .get(&format!("_synapse/admin/v2/users/{mxid}"))
-            .body(EmptyBody::new())?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .send_traced()
             .await
             .context("Failed to query user from Synapse")?;
 
-        if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to query user from Synapse"));
-        }
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while querying user from Synapse")?;
 
-        let body: SynapseUser = response.into_body();
+        let body: SynapseUser = response
+            .json()
+            .await
+            .context("Failed to deserialize response while querying user from Synapse")?;
 
         Ok(MatrixUser {
             displayname: body.display_name,
@@ -224,52 +209,36 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error> {
         let localpart = urlencoding::encode(localpart);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.is_localpart_available")
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error)
-            .json_response::<UsernameAvailableResponse>();
 
-        let request = self
+        let response = self
             .get(&format!(
                 "_synapse/admin/v1/username_available?username={localpart}"
             ))
-            .body(EmptyBody::new())?;
+            .send_traced()
+            .await
+            .context("Failed to query localpart availability from Synapse")?;
 
-        let response = client.ready().await?.call(request).await;
-
-        match response {
+        match response.error_for_synapse_error().await {
             Ok(resp) => {
-                if !resp.status().is_success() {
-                    // We should have already handled 4xx and 5xx errors by this point
-                    // so anything not 2xx is fairly weird
-                    bail!(
-                        "unexpected response from /username_available: {}",
-                        resp.status()
-                    );
-                }
-                Ok(resp.into_body().available)
-            }
-            Err(err) => match err {
-                // Convoluted as... but we want to handle some of the 400 Bad Request responses
-                // ourselves
-                json_response::Error::Service {
-                    inner:
-                        catch_http_codes::Error::HttpError {
-                            status_code: StatusCode::BAD_REQUEST,
-                            inner: homeserver_error,
-                        },
-                } if homeserver_error.errcode() == Some(M_INVALID_USERNAME)
-                    || homeserver_error.errcode() == Some(M_USER_IN_USE) =>
-                {
-                    debug!("Username not available: {homeserver_error}");
-                    Ok(false)
-                }
+                let response: UsernameAvailableResponse = resp.json().await.context(
+                    "Unexpected response while querying localpart availability from Synapse",
+                )?;
 
-                other_err => Err(anyhow::Error::new(other_err)
-                    .context("Failed to query localpart availability from Synapse")),
-            },
+                Ok(response.available)
+            }
+
+            Err(err)
+                if err.errcode() == Some(M_INVALID_USERNAME)
+                    || err.errcode() == Some(M_USER_IN_USE) =>
+            {
+                debug!(
+                    error = &err as &dyn std::error::Error,
+                    "Localpart is not available"
+                );
+                Ok(false)
+            }
+
+            Err(err) => Err(err).context("Failed to query localpart availability from Synapse"),
         }
     }
 
@@ -312,33 +281,23 @@ impl HomeserverConnection for SynapseConnection {
                 );
             });
 
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.provision_user")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
-
         let mxid = urlencoding::encode(request.mxid());
-        let request = self
+        let response = self
             .put(&format!("_synapse/admin/v2/users/{mxid}"))
-            .body(body)?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&body)
+            .send_traced()
             .await
             .context("Failed to provision user in Synapse")?;
+
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while provisioning user in Synapse")?;
 
         match response.status() {
             StatusCode::CREATED => Ok(true),
             StatusCode::OK => Ok(false),
-            code => Err(anyhow::anyhow!(
-                "Failed to provision user in Synapse: {}",
-                code
-            )),
+            code => bail!("Unexpected HTTP code while provisioning user in Synapse: {code}"),
         }
     }
 
@@ -354,29 +313,26 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
         let mxid = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.create_device")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
 
-        let request = self
+        let response = self
             .post(&format!("_synapse/admin/v2/users/{mxid}/devices"))
-            .body(SynapseDevice {
+            .json(&SynapseDevice {
                 device_id: device_id.to_owned(),
-            })?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            })
+            .send_traced()
             .await
             .context("Failed to create device in Synapse")?;
 
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while creating device in Synapse")?;
+
         if response.status() != StatusCode::CREATED {
-            return Err(anyhow::anyhow!("Failed to create device in Synapse"));
+            bail!(
+                "Unexpected HTTP code while creating device in Synapse: {}",
+                response.status()
+            );
         }
 
         Ok(())
@@ -395,27 +351,25 @@ impl HomeserverConnection for SynapseConnection {
     async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
         let mxid = urlencoding::encode(mxid);
         let device_id = urlencoding::encode(device_id);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.delete_device")
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
 
-        let request = self
+        let response = self
             .delete(&format!(
                 "_synapse/admin/v2/users/{mxid}/devices/{device_id}"
             ))
-            .body(EmptyBody::new())?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .send_traced()
             .await
             .context("Failed to delete device in Synapse")?;
 
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while deleting device in Synapse")?;
+
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to delete device in Synapse"));
+            bail!(
+                "Unexpected HTTP code while deleting device in Synapse: {}",
+                response.status()
+            );
         }
 
         Ok(())
@@ -433,29 +387,26 @@ impl HomeserverConnection for SynapseConnection {
     async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error> {
         // Get the list of current devices
         let mxid_url = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.sync_devices.query")
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error)
-            .json_response();
 
-        let request = self
+        let response = self
             .get(&format!("_synapse/admin/v2/users/{mxid_url}/devices"))
-            .body(EmptyBody::new())?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .send_traced()
             .await
-            .context("Failed to query user from Synapse")?;
+            .context("Failed to query devices from Synapse")?;
+
+        let response = response.error_for_synapse_error().await?;
 
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to query user devices from Synapse"));
+            bail!(
+                "Unexpected HTTP code while querying devices from Synapse: {}",
+                response.status()
+            );
         }
 
-        let body: SynapseDeviceListResponse = response.into_body();
+        let body: SynapseDeviceListResponse = response
+            .json()
+            .await
+            .context("Failed to parse response while querying devices from Synapse")?;
 
         let existing_devices: HashSet<String> =
             body.devices.into_iter().map(|d| d.device_id).collect();
@@ -463,29 +414,25 @@ impl HomeserverConnection for SynapseConnection {
         // First, delete all the devices that are not needed anymore
         let to_delete = existing_devices.difference(&devices).cloned().collect();
 
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.sync_devices.delete")
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error)
-            .request_bytes_to_body()
-            .json_request();
-
-        let request = self
+        let response = self
             .post(&format!(
                 "_synapse/admin/v2/users/{mxid_url}/delete_devices"
             ))
-            .body(SynapseDeleteDevicesRequest { devices: to_delete })?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&SynapseDeleteDevicesRequest { devices: to_delete })
+            .send_traced()
             .await
-            .context("Failed to query user from Synapse")?;
+            .context("Failed to delete devices from Synapse")?;
+
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while deleting devices from Synapse")?;
 
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to delete devices from Synapse"));
+            bail!(
+                "Unexpected HTTP code while deleting devices from Synapse: {}",
+                response.status()
+            );
         }
 
         // Then, create the devices that are missing. There is no batching API to do
@@ -509,27 +456,24 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error> {
         let mxid = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.delete_user")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
 
-        let request = self
+        let response = self
             .post(&format!("_synapse/admin/v1/deactivate/{mxid}"))
-            .body(SynapseDeactivateUserRequest { erase })?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&SynapseDeactivateUserRequest { erase })
+            .send_traced()
             .await
-            .context("Failed to delete user in Synapse")?;
+            .context("Failed to deactivate user in Synapse")?;
+
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while deactivating user in Synapse")?;
 
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to delete user in Synapse"));
+            bail!(
+                "Unexpected HTTP code while deactivating user in Synapse: {}",
+                response.status()
+            );
         }
 
         Ok(())
@@ -545,37 +489,25 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        let body = SynapseUser {
-            deactivated: Some(false),
-            ..SynapseUser::default()
-        };
-
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.reactivate_user")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
-
         let mxid = urlencoding::encode(mxid);
-        let request = self
+        let response = self
             .put(&format!("_synapse/admin/v2/users/{mxid}"))
-            .body(body)?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&SynapseUser {
+                deactivated: Some(false),
+                ..SynapseUser::default()
+            })
+            .send_traced()
             .await
-            .context("Failed to provision user in Synapse")?;
+            .context("Failed to reactivate user in Synapse")?;
+
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while reactivating user in Synapse")?;
 
         match response.status() {
             StatusCode::CREATED | StatusCode::OK => Ok(()),
-            code => Err(anyhow::anyhow!(
-                "Failed to provision user in Synapse: {}",
-                code
-            )),
+            code => bail!("Unexpected HTTP code while reactivating user in Synapse: {code}",),
         }
     }
 
@@ -591,27 +523,23 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error> {
         let mxid = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.set_displayname")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
-
-        let request = self
+        let response = self
             .put(&format!("_matrix/client/v3/profile/{mxid}/displayname"))
-            .body(SetDisplayNameRequest { displayname })?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&SetDisplayNameRequest { displayname })
+            .send_traced()
             .await
             .context("Failed to set displayname in Synapse")?;
 
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while setting displayname in Synapse")?;
+
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!("Failed to set displayname in Synapse"));
+            bail!(
+                "Unexpected HTTP code while setting displayname in Synapse: {}",
+                response.status()
+            );
         }
 
         Ok(())
@@ -641,32 +569,26 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error> {
         let mxid = urlencoding::encode(mxid);
-        let mut client = self
-            .http_client_factory
-            .client("homeserver.allow_cross_signing_reset")
-            .request_bytes_to_body()
-            .json_request()
-            .response_body_to_bytes()
-            .catch_http_errors(catch_homeserver_error);
 
-        let request = self
+        let response = self
             .post(&format!(
                 "_synapse/admin/v1/users/{mxid}/_allow_cross_signing_replacement_without_uia"
             ))
-            .body(SynapseAllowCrossSigningResetRequest {})?;
-
-        let response = client
-            .ready()
-            .await?
-            .call(request)
+            .json(&SynapseAllowCrossSigningResetRequest {})
+            .send_traced()
             .await
             .context("Failed to allow cross-signing reset in Synapse")?;
 
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while allowing cross-signing reset in Synapse")?;
+
         if response.status() != StatusCode::OK {
-            return Err(anyhow::anyhow!(
-                "Failed to allow cross signing reset in Synapse: {}",
-                response.status()
-            ));
+            bail!(
+                "Unexpected HTTP code while allowing cross-signing reset in Synapse: {}",
+                response.status(),
+            );
         }
 
         Ok(())

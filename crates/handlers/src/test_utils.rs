@@ -26,7 +26,6 @@ use hyper::{
 };
 use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
-    http_client_factory::HttpClientFactory,
     ErrorWrapper,
 };
 use mas_config::RateLimitingConfig;
@@ -102,13 +101,13 @@ pub(crate) struct TestState {
     pub homeserver_connection: Arc<MockHomeserverConnection>,
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: graphql::Schema,
-    pub http_client_factory: HttpClientFactory,
     pub password_manager: PasswordManager,
     pub site_config: SiteConfig,
     pub activity_tracker: ActivityTracker,
     pub limiter: Limiter,
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
+    pub http_client: reqwest::Client,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -169,6 +168,8 @@ impl TestState {
         )
         .await?;
 
+        let http_client = mas_http::reqwest_client();
+
         // TODO: add more test keys to the store
         let rsa =
             PrivateKey::load_pem(include_str!("../../keystore/tests/keys/rsa.pkcs1.pem")).unwrap();
@@ -195,8 +196,6 @@ impl TestState {
 
         let homeserver_connection =
             Arc::new(MockHomeserverConnection::new(&site_config.server_name));
-
-        let http_client_factory = HttpClientFactory::new();
 
         let clock = Arc::new(MockClock::default());
         let rng = Arc::new(Mutex::new(ChaChaRng::seed_from_u64(42)));
@@ -234,13 +233,13 @@ impl TestState {
             homeserver_connection,
             policy_factory,
             graphql_schema,
-            http_client_factory,
             password_manager,
             site_config,
             activity_tracker,
             limiter,
             clock,
             rng,
+            http_client,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
     }
@@ -452,12 +451,6 @@ impl FromRef<TestState> for UrlBuilder {
     }
 }
 
-impl FromRef<TestState> for HttpClientFactory {
-    fn from_ref(input: &TestState) -> Self {
-        input.http_client_factory.clone()
-    }
-}
-
 impl FromRef<TestState> for PasswordManager {
     fn from_ref(input: &TestState) -> Self {
         input.password_manager.clone()
@@ -491,6 +484,12 @@ impl FromRef<TestState> for BoxHomeserverConnection {
 impl FromRef<TestState> for Limiter {
     fn from_ref(input: &TestState) -> Self {
         input.limiter.clone()
+    }
+}
+
+impl FromRef<TestState> for reqwest::Client {
+    fn from_ref(input: &TestState) -> Self {
+        input.http_client.clone()
     }
 }
 

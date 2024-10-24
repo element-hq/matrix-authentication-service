@@ -16,7 +16,6 @@ use lettre::Address;
 use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
-    http_client_factory::HttpClientFactory,
     FancyError, SessionInfoExt,
 };
 use mas_data_model::{CaptchaConfig, UserAgent};
@@ -113,7 +112,7 @@ pub(crate) async fn post(
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
     State(homeserver): State<BoxHomeserverConnection>,
-    State(http_client_factory): State<HttpClientFactory>,
+    State(http_client): State<reqwest::Client>,
     (State(limiter), requester): (State<Limiter>, RequesterFingerprint),
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -140,7 +139,7 @@ pub(crate) async fn post(
         .captcha
         .verify(
             &activity_tracker,
-            &http_client_factory,
+            &http_client,
             url_builder.public_hostname(),
             site_config.captcha.as_ref(),
         )

@@ -19,7 +19,7 @@ use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
 use headers::{authorization::Basic, Authorization};
 use http::{Request, StatusCode};
 use mas_data_model::{Client, JwksOrJwksUri};
-use mas_http::HttpServiceExt;
+use mas_http::RequestBuilderExt;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::{jwk::PublicJsonWebKeySet, jwt::Jwt};
 use mas_keystore::Encrypter;
@@ -28,9 +28,6 @@ use oauth2_types::errors::{ClientError, ClientErrorCode};
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use thiserror::Error;
-use tower::{Service, ServiceExt};
-
-use crate::http_client_factory::HttpClientFactory;
 
 static JWT_BEARER_CLIENT_ASSERTION: &str = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
@@ -104,7 +101,7 @@ impl Credentials {
     #[tracing::instrument(skip_all, err)]
     pub async fn verify(
         &self,
-        http_client_factory: &HttpClientFactory,
+        http_client: &reqwest::Client,
         encrypter: &Encrypter,
         method: &OAuthClientAuthenticationMethod,
         client: &Client,
@@ -146,7 +143,7 @@ impl Credentials {
                     .as_ref()
                     .ok_or(CredentialsVerificationError::InvalidClientConfig)?;
 
-                let jwks = fetch_jwks(http_client_factory, jwks)
+                let jwks = fetch_jwks(http_client, jwks)
                     .await
                     .map_err(|_| CredentialsVerificationError::JwksFetchFailed)?;
 
@@ -181,7 +178,7 @@ impl Credentials {
 }
 
 async fn fetch_jwks(
-    http_client_factory: &HttpClientFactory,
+    http_client: &reqwest::Client,
     jwks: &JwksOrJwksUri,
 ) -> Result<PublicJsonWebKeySet, BoxError> {
     let uri = match jwks {
@@ -189,19 +186,14 @@ async fn fetch_jwks(
         JwksOrJwksUri::JwksUri(u) => u,
     };
 
-    let request = http::Request::builder()
-        .uri(uri.as_str())
-        .body(mas_http::EmptyBody::new())
-        .unwrap();
+    let response = http_client
+        .get(uri.as_str())
+        .send_traced()
+        .await?
+        .json()
+        .await?;
 
-    let mut client = http_client_factory
-        .client("client.fetch_jwks")
-        .response_body_to_bytes()
-        .json_response::<PublicJsonWebKeySet>();
-
-    let response = client.ready().await?.call(request).await?;
-
-    Ok(response.into_body())
+    Ok(response)
 }
 
 #[derive(Debug, Error)]

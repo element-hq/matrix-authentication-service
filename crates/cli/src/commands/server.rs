@@ -13,7 +13,7 @@ use itertools::Itertools;
 use mas_config::{
     AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
 };
-use mas_handlers::{ActivityTracker, CookieManager, HttpClientFactory, Limiter, MetadataCache};
+use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
@@ -148,13 +148,13 @@ impl Options {
         let templates =
             templates_from_config(&config.templates, &site_config, &url_builder).await?;
 
-        let http_client_factory = HttpClientFactory::new();
+        let http_client = mas_http::reqwest_client();
 
         let homeserver_connection = SynapseConnection::new(
             config.matrix.homeserver.clone(),
             config.matrix.endpoint.clone(),
             config.matrix.secret.clone(),
-            http_client_factory.clone(),
+            http_client.clone(),
         );
 
         if !self.no_worker {
@@ -241,7 +241,7 @@ impl Options {
                 homeserver_connection,
                 policy_factory,
                 graphql_schema,
-                http_client_factory,
+                http_client,
                 password_manager,
                 metadata_cache,
                 site_config,

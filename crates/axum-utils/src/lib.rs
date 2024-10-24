@@ -12,7 +12,6 @@ pub mod cookies;
 pub mod csrf;
 pub mod error_wrapper;
 pub mod fancy_error;
-pub mod http_client_factory;
 pub mod jwt;
 pub mod language_detection;
 pub mod sentry;

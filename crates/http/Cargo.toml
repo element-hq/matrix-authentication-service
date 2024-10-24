@@ -12,44 +12,14 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-async-trait.workspace = true
-bytes.workspace = true
-futures-util = "0.3.31"
 headers.workspace = true
 http.workspace = true
-http-body.workspace = true
-http-body-util.workspace = true
-hyper.workspace = true
 hyper-util.workspace = true
-hyper-rustls = { workspace = true, optional = true }
-opentelemetry.workspace = true
+opentelemetry-http.workspace = true
 opentelemetry-semantic-conventions.workspace = true
-rustls = { workspace = true, optional = true }
-rustls-platform-verifier = { workspace = true, optional = true }
-pin-project-lite = "0.2.14"
-serde.workspace = true
-serde_json.workspace = true
-serde_urlencoded = "0.7.1"
-thiserror.workspace = true
-tower.workspace = true
+opentelemetry.workspace = true
+reqwest.workspace = true
+rustls-platform-verifier.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true
-
-mas-tower = { workspace = true, optional = true }
-
-[dev-dependencies]
-anyhow.workspace = true
-tokio.workspace = true
-
-[features]
-client = [
-    "dep:mas-tower",
-    "dep:rustls",
-    "dep:hyper-rustls",
-    "dep:rustls-platform-verifier",
-    "tower/limit",
-    "tower-http/timeout",
-    "tower-http/follow-redirect",
-    "tower-http/set-header",
-]

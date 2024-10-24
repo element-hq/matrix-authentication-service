@@ -8,7 +8,6 @@ use axum::{extract::State, response::IntoResponse, Json};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    http_client_factory::HttpClientFactory,
     sentry::SentryEventID,
 };
 use mas_data_model::TokenType;
@@ -111,7 +110,7 @@ impl From<mas_data_model::TokenFormatError> for RouteError {
 )]
 pub(crate) async fn post(
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
+    State(http_client): State<reqwest::Client>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     State(encrypter): State<Encrypter>,
@@ -130,7 +129,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client_factory, &encrypter, method, &client)
+        .verify(&http_client, &encrypter, method, &client)
         .await?;
 
     let Some(form) = client_authorization.form else {

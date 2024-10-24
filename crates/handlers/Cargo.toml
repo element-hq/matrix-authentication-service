@@ -41,6 +41,9 @@ aide.workspace = true
 async-graphql.workspace = true
 schemars.workspace = true
 
+# HTTP client
+reqwest.workspace = true
+
 # Emails
 lettre.workspace = true
 

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 
 use assert_matches::assert_matches;
 use base64ct::Encoding;
+use http::header::AUTHORIZATION;
 use mas_iana::oauth::{OAuthAccessTokenType, OAuthClientAuthenticationMethod};
 use mas_jose::{
     claims::{self, TimeOptions},
@@ -31,7 +32,7 @@ use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, CLIENT_
 
 #[tokio::test]
 async fn pass_none() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials =
         client_credentials(&OAuthClientAuthenticationMethod::None, &issuer, None);
     let token_endpoint = issuer.join("token").unwrap();
@@ -67,7 +68,7 @@ async fn pass_none() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -80,7 +81,7 @@ async fn pass_none() {
 
 #[tokio::test]
 async fn pass_client_secret_basic() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::ClientSecretBasic,
         &issuer,
@@ -94,10 +95,15 @@ async fn pass_client_secret_basic() {
     let enc_user_pass =
         base64ct::Base64::encode_string(format!("{username}:{password}").as_bytes());
     let authorization_header = format!("Basic {enc_user_pass}");
+    eprintln!("{authorization_header}");
 
     Mock::given(method("POST"))
         .and(path("/token"))
-        .and(header("authorization", authorization_header.as_str()))
+        .and(|req: &Request| {
+            println!("{req:?}");
+            true
+        })
+        .and(header(AUTHORIZATION, authorization_header.as_str()))
         .respond_with(
             ResponseTemplate::new(200).set_body_json(AccessTokenResponse {
                 access_token: ACCESS_TOKEN.to_owned(),
@@ -112,7 +118,7 @@ async fn pass_client_secret_basic() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -125,7 +131,7 @@ async fn pass_client_secret_basic() {
 
 #[tokio::test]
 async fn pass_client_secret_post() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::ClientSecretPost,
         &issuer,
@@ -172,7 +178,7 @@ async fn pass_client_secret_post() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -185,7 +191,7 @@ async fn pass_client_secret_post() {
 
 #[tokio::test]
 async fn pass_client_secret_jwt() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::ClientSecretJwt,
         &issuer,
@@ -253,7 +259,7 @@ async fn pass_client_secret_jwt() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -266,7 +272,7 @@ async fn pass_client_secret_jwt() {
 
 #[tokio::test]
 async fn pass_private_key_jwt_with_keystore() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::PrivateKeyJwt,
         &issuer,
@@ -341,7 +347,7 @@ async fn pass_private_key_jwt_with_keystore() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -354,7 +360,7 @@ async fn pass_private_key_jwt_with_keystore() {
 
 #[tokio::test]
 async fn pass_private_key_jwt_with_custom_signing() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::PrivateKeyJwt,
         &issuer,
@@ -410,7 +416,7 @@ async fn pass_private_key_jwt_with_custom_signing() {
         .await;
 
     access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,
@@ -423,7 +429,7 @@ async fn pass_private_key_jwt_with_custom_signing() {
 
 #[tokio::test]
 async fn fail_private_key_jwt_with_custom_signing() {
-    let (http_service, _, issuer) = init_test().await;
+    let (http_client, _, issuer) = init_test().await;
     let client_credentials = client_credentials(
         &OAuthClientAuthenticationMethod::PrivateKeyJwt,
         &issuer,
@@ -433,7 +439,7 @@ async fn fail_private_key_jwt_with_custom_signing() {
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
 
     let error = access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         None,

@@ -7,8 +7,6 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
-use http_body_util::Full;
-use mas_http::{BodyToBytesResponseLayer, BoxCloneSyncService};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::{
     claims::{self, hash_token},
@@ -17,20 +15,13 @@ use mas_jose::{
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_oidc_client::{
-    http_service::HttpService,
-    types::{
-        client_credentials::{ClientCredentials, JwtSigningFn, JwtSigningMethod},
-        IdToken,
-    },
+use mas_oidc_client::types::{
+    client_credentials::{ClientCredentials, JwtSigningFn, JwtSigningMethod},
+    IdToken,
 };
 use rand::{
     distributions::{Alphanumeric, DistString},
     SeedableRng,
-};
-use tower::{
-    util::{MapErrLayer, MapRequestLayer},
-    BoxError, Layer,
 };
 use url::Url;
 use wiremock::MockServer;
@@ -41,7 +32,6 @@ mod types;
 const REDIRECT_URI: &str = "http://localhost/";
 const CLIENT_ID: &str = "client!+ID";
 const CLIENT_SECRET: &str = "SECRET?%Gclient";
-const REQUEST_URI: &str = "REQUESTur1";
 const AUTHORIZATION_CODE: &str = "authC0D3";
 const CODE_VERIFIER: &str = "cODEv3R1f1ER";
 const NONCE: &str = "No0o0o0once";
@@ -55,20 +45,14 @@ fn now() -> DateTime<Utc> {
     Utc::now()
 }
 
-async fn init_test() -> (HttpService, MockServer, Url) {
+async fn init_test() -> (reqwest::Client, MockServer, Url) {
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
-    let http_service = (
-        MapErrLayer::new(BoxError::from),
-        MapRequestLayer::new(|req: http::Request<_>| req.map(Full::new)),
-        BodyToBytesResponseLayer,
-    )
-        .layer(mas_http::make_untraced_client());
-    let http_service = BoxCloneSyncService::new(http_service);
+    let client = mas_http::reqwest_client();
     let mock_server = MockServer::start().await;
     let issuer = Url::parse(&mock_server.uri()).expect("Couldn't parse URL");
 
-    (http_service, mock_server, issuer)
+    (client, mock_server, issuer)
 }
 
 /// Generate a keystore with a single key for the given algorithm.

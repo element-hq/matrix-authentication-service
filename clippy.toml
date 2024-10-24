@@ -5,6 +5,8 @@ disallowed-methods = [
     { path = "chrono::Utc::now", reason = "source the current time from the clock instead" },
     { path = "ulid::Ulid::from_datetime", reason = "use Ulid::from_datetime_with_source instead" },
     { path = "ulid::Ulid::new", reason = "use Ulid::from_datetime_with_source instead" },
+    { path = "reqwest::Client::new", reason = "use mas_http::reqwest_client instead" },
+    { path = "reqwest::RequestBuilder::send", reason = "use send_traced instead" },
 ]
 
 disallowed-types = [

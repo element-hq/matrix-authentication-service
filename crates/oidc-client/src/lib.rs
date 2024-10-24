@@ -23,14 +23,9 @@
 //!   - [Authorization Code](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth)
 //!   - [Client Credentials](https://www.rfc-editor.org/rfc/rfc6749#section-4.4)
 //!   - [Device Code](https://www.rfc-editor.org/rfc/rfc8628) (TBD)
-//! - [User Info](https://openid.net/specs/openid-connect-core-1_0.html#UserInfo)
-//! - Token:
 //!   - [Refresh Token](https://openid.net/specs/openid-connect-core-1_0.html#RefreshTokens)
-//!   - [Introspection](https://www.rfc-editor.org/rfc/rfc7662)
-//!   - [Revocation](https://www.rfc-editor.org/rfc/rfc7009)
-//! - [Dynamic Client Registration](https://openid.net/specs/openid-connect-registration-1_0.html)
+//! - [User Info](https://openid.net/specs/openid-connect-core-1_0.html#UserInfo)
 //! - [PKCE](https://www.rfc-editor.org/rfc/rfc7636)
-//! - [Pushed Authorization Requests](https://www.rfc-editor.org/rfc/rfc9126)
 //!
 //! # Matrix features
 //!
@@ -49,10 +44,8 @@
 #![allow(clippy::module_name_repetitions, clippy::implicit_hasher)]
 
 pub mod error;
-pub mod http_service;
 pub mod requests;
 pub mod types;
-mod utils;
 
 use std::fmt;
 

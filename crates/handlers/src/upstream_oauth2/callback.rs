@@ -9,9 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use hyper::StatusCode;
-use mas_axum_utils::{
-    cookies::CookieJar, http_client_factory::HttpClientFactory, sentry::SentryEventID,
-};
+use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::UpstreamOAuthProvider;
 use mas_keystore::{Encrypter, Keystore};
 use mas_oidc_client::requests::{
@@ -128,12 +126,12 @@ impl IntoResponse for RouteError {
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
     State(metadata_cache): State<MetadataCache>,
     mut repo: BoxRepository,
     State(url_builder): State<UrlBuilder>,
     State(encrypter): State<Encrypter>,
     State(keystore): State<Keystore>,
+    State(client): State<reqwest::Client>,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
     Query(params): Query<QueryParams>,
@@ -186,12 +184,11 @@ pub(crate) async fn get(
         CodeOrError::Code { code } => code,
     };
 
-    let http_service = http_client_factory.http_service("upstream_oauth2.callback");
-    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &http_service);
+    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
     // Fetch the JWKS
     let jwks =
-        mas_oidc_client::requests::jose::fetch_jwks(&http_service, lazy_metadata.jwks_uri().await?)
+        mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
             .await?;
 
     // Figure out the client credentials
@@ -222,7 +219,7 @@ pub(crate) async fn get(
 
     let (response, id_token) =
         mas_oidc_client::requests::authorization_code::access_token_with_authorization_code(
-            &http_service,
+            &client,
             client_credentials,
             lazy_metadata.token_endpoint().await?,
             code,

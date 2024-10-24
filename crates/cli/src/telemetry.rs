@@ -88,11 +88,6 @@ fn propagator(propagators: &[Propagator]) -> impl TextMapPropagator {
     TextMapCompositePropagator::new(propagators)
 }
 
-fn http_client() -> impl opentelemetry_http::HttpClient + 'static {
-    let client = mas_http::make_untraced_client();
-    opentelemetry_http::hyper::HyperClient::new_with_timeout(client, Duration::from_secs(30))
-}
-
 fn stdout_tracer_provider() -> TracerProvider {
     let exporter = opentelemetry_stdout::SpanExporter::default();
     TracerProvider::builder()
@@ -105,7 +100,7 @@ fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<TracerProvider
 
     let mut exporter = opentelemetry_otlp::new_exporter()
         .http()
-        .with_http_client(http_client());
+        .with_http_client(mas_http::reqwest_client());
     if let Some(endpoint) = endpoint {
         exporter = exporter.with_endpoint(endpoint.to_string());
     }
@@ -143,7 +138,7 @@ fn otlp_metric_reader(endpoint: Option<&url::Url>) -> anyhow::Result<PeriodicRea
 
     let mut exporter = opentelemetry_otlp::new_exporter()
         .http()
-        .with_http_client(http_client());
+        .with_http_client(mas_http::reqwest_client());
     if let Some(endpoint) = endpoint {
         exporter = exporter.with_endpoint(endpoint.to_string());
     }

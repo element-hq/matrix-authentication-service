@@ -26,6 +26,7 @@ http.workspace = true
 language-tags = "0.3.2"
 mime = "0.3.17"
 rand.workspace = true
+reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
@@ -50,5 +51,3 @@ tokio.workspace = true
 wiremock = "0.6.2"
 http-body-util.workspace = true
 rustls.workspace = true
-
-mas-http = { workspace = true, features = ["client"] }

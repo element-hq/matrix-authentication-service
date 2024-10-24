@@ -31,6 +31,7 @@ itertools = "0.13.0"
 listenfd = "1.0.1"
 rand.workspace = true
 rand_chacha = "0.3.1"
+reqwest.workspace = true
 rustls.workspace = true
 serde_json.workspace = true
 serde_yaml = "0.9.34"
@@ -71,8 +72,8 @@ sentry-tower.workspace = true
 mas-config.workspace = true
 mas-data-model.workspace = true
 mas-email.workspace = true
-mas-handlers = { workspace = true }
-mas-http = { workspace = true, features = ["client"] }
+mas-handlers.workspace = true
+mas-http.workspace = true
 mas-i18n.workspace = true
 mas-iana.workspace = true
 mas-keystore.workspace = true

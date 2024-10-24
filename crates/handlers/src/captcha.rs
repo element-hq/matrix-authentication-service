@@ -6,14 +6,10 @@
 
 use std::net::IpAddr;
 
-use axum::BoxError;
-use hyper::Request;
-use mas_axum_utils::http_client_factory::HttpClientFactory;
 use mas_data_model::{CaptchaConfig, CaptchaService};
-use mas_http::HttpServiceExt;
+use mas_http::RequestBuilderExt as _;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tower::{Service, ServiceExt};
 
 use crate::BoundActivityTracker;
 
@@ -47,7 +43,7 @@ pub enum Error {
     HostnameMismatch { expected: String, got: String },
 
     #[error("The CAPTCHA provider returned an error")]
-    RequestFailed(#[source] BoxError),
+    RequestFailed(#[from] reqwest::Error),
 }
 
 #[allow(clippy::struct_field_names)]
@@ -163,7 +159,7 @@ impl Form {
     pub async fn verify(
         &self,
         activity_tracker: &BoundActivityTracker,
-        http_client_factory: &HttpClientFactory,
+        http_client: &reqwest::Client,
         site_hostname: &str,
         config: Option<&CaptchaConfig>,
     ) -> Result<(), Error> {
@@ -193,51 +189,41 @@ impl Form {
             (_, None, None, None) => return Err(Error::MissingCaptchaResponse),
 
             // reCAPTCHA v2
-            (CaptchaService::RecaptchaV2, Some(response), None, None) => {
-                Request::post(RECAPTCHA_VERIFY_URL)
-                    .body(VerificationRequest {
-                        secret,
-                        response,
-                        remoteip,
-                    })
-                    .unwrap()
-            }
+            (CaptchaService::RecaptchaV2, Some(response), None, None) => http_client
+                .post(RECAPTCHA_VERIFY_URL)
+                .form(&VerificationRequest {
+                    secret,
+                    response,
+                    remoteip,
+                }),
 
             // hCaptcha
-            (CaptchaService::HCaptcha, None, Some(response), None) => {
-                Request::post(HCAPTCHA_VERIFY_URL)
-                    .body(VerificationRequest {
-                        secret,
-                        response,
-                        remoteip,
-                    })
-                    .unwrap()
-            }
+            (CaptchaService::HCaptcha, None, Some(response), None) => http_client
+                .post(HCAPTCHA_VERIFY_URL)
+                .form(&VerificationRequest {
+                    secret,
+                    response,
+                    remoteip,
+                }),
 
             // Cloudflare Turnstile
-            (CaptchaService::CloudflareTurnstile, None, None, Some(response)) => {
-                Request::post(CF_TURNSTILE_VERIFY_URL)
-                    .body(VerificationRequest {
-                        secret,
-                        response,
-                        remoteip,
-                    })
-                    .unwrap()
-            }
+            (CaptchaService::CloudflareTurnstile, None, None, Some(response)) => http_client
+                .post(CF_TURNSTILE_VERIFY_URL)
+                .form(&VerificationRequest {
+                    secret,
+                    response,
+                    remoteip,
+                }),
 
             _ => return Err(Error::CaptchaResponseMismatch),
         };
 
-        let client = http_client_factory
-            .client("captcha")
-            .request_bytes_to_body()
-            .form_urlencoded_request()
-            .response_body_to_bytes()
-            .json_response::<VerificationResponse>()
-            .map_err(|e| Error::RequestFailed(e.into()));
-
-        let response = client.ready_oneshot().await?.call(request).await?;
-        let response = response.into_body();
+        let response: VerificationResponse = request
+            .send_traced()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
 
         if !response.success {
             return Err(Error::InvalidCaptcha(
