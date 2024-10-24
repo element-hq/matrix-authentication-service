@@ -15,9 +15,7 @@ use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSection, RootConfig};
-use mas_handlers::HttpClientFactory;
-use mas_http::HttpServiceExt;
-use tower::{Service, ServiceExt};
+use mas_http::RequestBuilderExt;
 use tracing::{error, info, info_span, warn};
 use url::{Host, Url};
 
@@ -36,7 +34,7 @@ impl Options {
         let config = RootConfig::extract(figment)?;
 
         // We'll need an HTTP client
-        let http_client_factory = HttpClientFactory::new();
+        let http_client = mas_http::reqwest_client();
         let base_url = config.http.public_base.as_str();
         let issuer = config.http.issuer.as_ref().map(url::Url::as_str);
         let issuer = issuer.unwrap_or(base_url);
@@ -55,15 +53,7 @@ This means some clients will refuse to use it."#
         }
 
         let well_known_uri = format!("https://{matrix_domain}/.well-known/matrix/client");
-        let mut client = http_client_factory
-            .client("doctor")
-            .response_body_to_bytes()
-            .json_response::<serde_json::Value>();
-
-        let request = hyper::Request::builder()
-            .uri(&well_known_uri)
-            .body(axum::body::Body::empty())?;
-        let result = client.ready().await?.call(request).await;
+        let result = http_client.get(&well_known_uri).send_traced().await;
 
         let expected_well_known = serde_json::json!({
             "m.homeserver": {
@@ -86,15 +76,21 @@ Make sure the homeserver is reachable and the well-known document is available a
                     );
                 }
 
-                let body = response.into_body();
+                let result = response.json::<serde_json::Value>().await;
 
-                if let Some(auth) = body.get("org.matrix.msc2965.authentication") {
-                    if let Some(wk_issuer) = auth.get("issuer").and_then(|issuer| issuer.as_str()) {
-                        if issuer == wk_issuer {
-                            info!(r#"✅ Matrix client well-known at "{well_known_uri}" is valid"#);
-                        } else {
-                            warn!(
-                                r#"⚠️ Matrix client well-known has an "org.matrix.msc2965.authentication" section, but the issuer is not the same as the homeserver.
+                match result {
+                    Ok(body) => {
+                        if let Some(auth) = body.get("org.matrix.msc2965.authentication") {
+                            if let Some(wk_issuer) =
+                                auth.get("issuer").and_then(|issuer| issuer.as_str())
+                            {
+                                if issuer == wk_issuer {
+                                    info!(
+                                        r#"✅ Matrix client well-known at "{well_known_uri}" is valid"#
+                                    );
+                                } else {
+                                    warn!(
+                                        r#"⚠️ Matrix client well-known has an "org.matrix.msc2965.authentication" section, but the issuer is not the same as the homeserver.
 Check the well-known document at "{well_known_uri}"
 This can happen because MAS parses the URL its config differently from the homeserver.
 This means some OIDC-native clients might not work.
@@ -116,18 +112,18 @@ And in the Synapse config:
 
 See {DOCS_BASE}/setup/homeserver.html
 "#
-                            );
-                        }
-                    } else {
-                        error!(
-                            r#"❌ Matrix client well-known "org.matrix.msc2965.authentication" does not have a valid "issuer" field.
+                                    );
+                                }
+                            } else {
+                                error!(
+                                    r#"❌ Matrix client well-known "org.matrix.msc2965.authentication" does not have a valid "issuer" field.
 Check the well-known document at "{well_known_uri}"
 "#
-                        );
-                    }
-                } else {
-                    warn!(
-                        r#"Matrix client well-known is missing the "org.matrix.msc2965.authentication" section.
+                                );
+                            }
+                        } else {
+                            warn!(
+                                r#"Matrix client well-known is missing the "org.matrix.msc2965.authentication" section.
 Check the well-known document at "{well_known_uri}"
 Make sure Synapse has delegated auth enabled:
 
@@ -143,14 +139,29 @@ If it is not Synapse handling the well-known document, update it to include the 
 
 See {DOCS_BASE}/setup/homeserver.html
 "#
-                    );
-                }
+                            );
+                        }
+                        // Return the discovered homeserver base URL
+                        body.get("m.homeserver")
+                            .and_then(|hs| hs.get("base_url"))
+                            .and_then(|base_url| base_url.as_str())
+                            .and_then(|base_url| Url::parse(base_url).ok())
+                    }
+                    Err(e) => {
+                        warn!(
+                            r#"⚠️ Invalid JSON for the well-known document at "{well_known_uri}".
+Make sure going to {well_known_uri:?} in a web browser returns a valid JSON document, similar to:
 
-                // Return the discovered homeserver base URL
-                body.get("m.homeserver")
-                    .and_then(|hs| hs.get("base_url"))
-                    .and_then(|base_url| base_url.as_str())
-                    .and_then(|base_url| Url::parse(base_url).ok())
+{expected_well_known:#}
+
+See {DOCS_BASE}/setup/homeserver.html
+
+Error details: {e}
+"#
+                        );
+                        None
+                    }
+                }
             }
             Err(e) => {
                 warn!(
@@ -172,10 +183,10 @@ Error details: {e}
 
         // Now try to reach the homeserver
         let client_versions = hs_api.join("/_matrix/client/versions")?;
-        let request = hyper::Request::builder()
-            .uri(client_versions.as_str())
-            .body(axum::body::Body::empty())?;
-        let result = client.ready().await?.call(request).await;
+        let result = http_client
+            .get(client_versions.as_str())
+            .send_traced()
+            .await;
         let can_reach_cs = match result {
             Ok(response) => {
                 let status = response.status();
@@ -222,18 +233,15 @@ Error details: {e}
             // Try the whoami API. If it replies with `M_UNKNOWN` this is because Synapse
             // couldn't reach MAS
             let whoami = hs_api.join("/_matrix/client/v3/account/whoami")?;
-            let request = hyper::Request::builder()
-                .header(
-                    "Authorization",
-                    "Bearer averyinvalidtokenireallyhopethisisnotvalid",
-                )
-                .uri(whoami.as_str())
-                .body(axum::body::Body::empty())?;
-            let result = client.ready().await?.call(request).await;
+            let result = http_client
+                .get(whoami.as_str())
+                .bearer_auth("averyinvalidtokenireallyhopethisisnotvalid")
+                .send_traced()
+                .await;
             match result {
                 Ok(response) => {
-                    let (parts, body) = response.into_parts();
-                    let status = parts.status;
+                    let status = response.status();
+                    let body = response.text().await.unwrap_or("???".into());
 
                     match status.as_u16() {
                         401 => info!(
@@ -276,10 +284,7 @@ Error details: {e}
 
             // Try to reach the admin API on an unauthorized endpoint
             let server_version = hs_api.join("/_synapse/admin/v1/server_version")?;
-            let request = hyper::Request::builder()
-                .uri(server_version.as_str())
-                .body(axum::body::Body::empty())?;
-            let result = client.ready().await?.call(request).await;
+            let result = http_client.get(server_version.as_str()).send_traced().await;
             match result {
                 Ok(response) => {
                     let status = response.status();
@@ -304,11 +309,11 @@ Error details: {e}
 
             // Try to reach an authenticated admin API endpoint
             let background_updates = hs_api.join("/_synapse/admin/v1/background_updates/status")?;
-            let request = hyper::Request::builder()
-                .uri(background_updates.as_str())
-                .header("Authorization", format!("Bearer {admin_token}"))
-                .body(axum::body::Body::empty())?;
-            let result = client.ready().await?.call(request).await;
+            let result = http_client
+                .get(background_updates.as_str())
+                .bearer_auth(&admin_token)
+                .send_traced()
+                .await;
             match result {
                 Ok(response) => {
                     let status = response.status();
@@ -353,17 +358,17 @@ Error details: {e}
         // Try to reach the legacy login API
         let compat_login = external_cs_api_endpoint.join("/_matrix/client/v3/login")?;
         let compat_login = compat_login.as_str();
-        let request = hyper::Request::builder()
-            .uri(compat_login)
-            .body(axum::body::Body::empty())?;
-        let result = client.ready().await?.call(request).await;
+        let result = http_client.get(compat_login).send_traced().await;
         match result {
             Ok(response) => {
                 let status = response.status();
                 if status.is_success() {
                     // Now we need to inspect the body to figure out whether it's Synapse or MAS
                     // which handled the request
-                    let body = response.into_body();
+                    let body = response
+                        .json::<serde_json::Value>()
+                        .await
+                        .unwrap_or_default();
                     let flows = body
                         .get("flows")
                         .and_then(|flows| flows.as_array())

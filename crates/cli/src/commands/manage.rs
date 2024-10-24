@@ -16,7 +16,6 @@ use mas_config::{
 };
 use mas_data_model::{Device, TokenType, Ulid, UpstreamOAuthProvider, User};
 use mas_email::Address;
-use mas_handlers::HttpClientFactory;
 use mas_matrix::HomeserverConnection;
 use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
@@ -512,7 +511,7 @@ impl Options {
                 yes,
                 ignore_password_complexity,
             } => {
-                let http_client_factory = HttpClientFactory::new();
+                let http_client = mas_http::reqwest_client();
                 let password_config = PasswordsConfig::extract_or_default(figment)?;
                 let database_config = DatabaseConfig::extract_or_default(figment)?;
                 let matrix_config = MatrixConfig::extract(figment)?;
@@ -522,7 +521,7 @@ impl Options {
                     matrix_config.homeserver,
                     matrix_config.endpoint,
                     matrix_config.secret,
-                    http_client_factory,
+                    http_client,
                 );
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;

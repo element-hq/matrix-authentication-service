@@ -26,7 +26,6 @@ use hyper::{
 };
 use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
-    http_client_factory::HttpClientFactory,
     ErrorWrapper,
 };
 use mas_config::RateLimitingConfig;
@@ -102,7 +101,6 @@ pub(crate) struct TestState {
     pub homeserver_connection: Arc<MockHomeserverConnection>,
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: graphql::Schema,
-    pub http_client_factory: HttpClientFactory,
     pub password_manager: PasswordManager,
     pub site_config: SiteConfig,
     pub activity_tracker: ActivityTracker,
@@ -199,8 +197,6 @@ impl TestState {
         let homeserver_connection =
             Arc::new(MockHomeserverConnection::new(&site_config.server_name));
 
-        let http_client_factory = HttpClientFactory::new();
-
         let clock = Arc::new(MockClock::default());
         let rng = Arc::new(Mutex::new(ChaChaRng::seed_from_u64(42)));
 
@@ -237,7 +233,6 @@ impl TestState {
             homeserver_connection,
             policy_factory,
             graphql_schema,
-            http_client_factory,
             password_manager,
             site_config,
             activity_tracker,
@@ -453,12 +448,6 @@ impl FromRef<TestState> for Encrypter {
 impl FromRef<TestState> for UrlBuilder {
     fn from_ref(input: &TestState) -> Self {
         input.url_builder.clone()
-    }
-}
-
-impl FromRef<TestState> for HttpClientFactory {
-    fn from_ref(input: &TestState) -> Self {
-        input.http_client_factory.clone()
     }
 }
 

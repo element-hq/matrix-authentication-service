@@ -14,7 +14,7 @@ use ipnetwork::IpNetwork;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
     passwords::PasswordManager, ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper,
-    GraphQLSchema, HttpClientFactory, Limiter, MetadataCache, RequesterFingerprint,
+    GraphQLSchema, Limiter, MetadataCache, RequesterFingerprint,
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
@@ -43,7 +43,6 @@ pub struct AppState {
     pub homeserver_connection: SynapseConnection,
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: GraphQLSchema,
-    pub http_client_factory: HttpClientFactory,
     pub http_client: reqwest::Client,
     pub password_manager: PasswordManager,
     pub metadata_cache: MetadataCache,
@@ -167,12 +166,6 @@ impl FromRef<AppState> for Encrypter {
 impl FromRef<AppState> for UrlBuilder {
     fn from_ref(input: &AppState) -> Self {
         input.url_builder.clone()
-    }
-}
-
-impl FromRef<AppState> for HttpClientFactory {
-    fn from_ref(input: &AppState) -> Self {
-        input.http_client_factory.clone()
     }
 }
 

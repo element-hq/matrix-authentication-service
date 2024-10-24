@@ -2885,16 +2885,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "iri-string"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc0f0a572e8ffe56e2ff4f769f32ffe919282c3916799f8b68688b6030063bea"
-dependencies = [
- "memchr",
- "serde",
-]
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3188,6 +3178,7 @@ dependencies = [
  "mime",
  "oauth2-types",
  "rand",
+ "reqwest",
  "sentry",
  "serde",
  "serde_json",
@@ -3413,31 +3404,14 @@ dependencies = [
 name = "mas-http"
 version = "0.12.0"
 dependencies = [
- "anyhow",
- "async-trait",
- "bytes",
- "futures-util",
  "headers",
  "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-rustls",
  "hyper-util",
- "mas-tower",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
- "pin-project-lite",
  "reqwest",
- "rustls",
  "rustls-platform-verifier",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "thiserror",
- "tokio",
- "tower 0.5.1",
  "tower-http",
  "tracing",
  "tracing-opentelemetry",
@@ -3612,8 +3586,10 @@ dependencies = [
  "mas-axum-utils",
  "mas-http",
  "mas-matrix",
+ "reqwest",
  "serde",
  "serde_json",
+ "thiserror",
  "tower 0.5.1",
  "tracing",
  "url",
@@ -4158,11 +4134,8 @@ dependencies = [
  "async-trait",
  "bytes",
  "http",
- "http-body-util",
- "hyper",
- "hyper-util",
  "opentelemetry",
- "tokio",
+ "reqwest",
 ]
 
 [[package]]
@@ -5032,6 +5005,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -5422,12 +5396,15 @@ version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5484316556650182f03b43d4c746ce0e3e48074a21e2f51244b648b6542e1066"
 dependencies = [
+ "httpdate",
+ "reqwest",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
  "sentry-panic",
  "sentry-tower",
  "sentry-tracing",
+ "tokio",
 ]
 
 [[package]]
@@ -6398,7 +6375,6 @@ dependencies = [
  "pin-project-lite",
  "sync_wrapper 0.1.2",
  "tokio",
- "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -6418,14 +6394,12 @@ dependencies = [
  "http-body-util",
  "http-range-header",
  "httpdate",
- "iri-string",
  "mime",
  "mime_guess",
  "percent-encoding",
  "pin-project-lite",
  "tokio",
  "tokio-util",
- "tower 0.5.1",
  "tower-layer",
  "tower-service",
  "tracing",

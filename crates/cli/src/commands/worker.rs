@@ -9,7 +9,6 @@ use std::process::ExitCode;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
-use mas_handlers::HttpClientFactory;
 use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use rand::{
@@ -57,12 +56,12 @@ impl Options {
         let mailer = mailer_from_config(&config.email, &templates)?;
         mailer.test_connection().await?;
 
-        let http_client_factory = HttpClientFactory::new();
+        let http_client = mas_http::reqwest_client();
         let conn = SynapseConnection::new(
             config.matrix.homeserver.clone(),
             config.matrix.endpoint.clone(),
             config.matrix.secret.clone(),
-            http_client_factory,
+            http_client,
         );
 
         drop(config);

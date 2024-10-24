@@ -27,6 +27,7 @@ hyper-util.workspace = true
 icu_locid = "1.4.0"
 mime = "0.3.17"
 rand.workspace = true
+reqwest.workspace = true
 sentry.workspace = true
 serde.workspace = true
 serde_with = "3.11.0"

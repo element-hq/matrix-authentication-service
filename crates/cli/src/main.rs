@@ -16,16 +16,35 @@ use tracing_subscriber::{
     filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer, Registry,
 };
 
-use crate::sentry_transport::HyperTransportFactory;
-
 mod app_state;
 mod commands;
-mod sentry_transport;
 mod server;
 mod shutdown;
 mod sync;
 mod telemetry;
 mod util;
+
+#[derive(Debug)]
+struct SentryTransportFactory {
+    client: reqwest::Client,
+}
+
+impl SentryTransportFactory {
+    fn new() -> Self {
+        Self {
+            client: mas_http::reqwest_client(),
+        }
+    }
+}
+
+impl sentry::TransportFactory for SentryTransportFactory {
+    fn create_transport(&self, options: &sentry::ClientOptions) -> Arc<dyn sentry::Transport> {
+        let transport =
+            sentry::transports::ReqwestHttpTransport::with_client(options, self.client.clone());
+
+        Arc::new(transport)
+    }
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<ExitCode> {
@@ -79,9 +98,7 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     let sentry = sentry::init((
         telemetry_config.sentry.dsn.as_deref(),
         sentry::ClientOptions {
-            transport: Some(Arc::new(HyperTransportFactory::new(
-                mas_http::make_untraced_client(),
-            ))),
+            transport: Some(Arc::new(SentryTransportFactory::new())),
             traces_sample_rate: 1.0,
             auto_session_tracking: true,
             session_mode: sentry::SessionMode::Request,

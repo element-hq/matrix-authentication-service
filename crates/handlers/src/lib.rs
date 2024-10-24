@@ -78,9 +78,7 @@ macro_rules! impl_from_error_for_route {
     };
 }
 
-pub use mas_axum_utils::{
-    cookies::CookieManager, http_client_factory::HttpClientFactory, ErrorWrapper,
-};
+pub use mas_axum_utils::{cookies::CookieManager, ErrorWrapper};
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
@@ -186,7 +184,7 @@ where
     ActivityTracker: FromRequestParts<S>,
     BoundActivityTracker: FromRequestParts<S>,
     Encrypter: FromRef<S>,
-    HttpClientFactory: FromRef<S>,
+    reqwest::Client: FromRef<S>,
     SiteConfig: FromRef<S>,
     BoxHomeserverConnection: FromRef<S>,
     BoxClock: FromRequestParts<S>,
@@ -307,7 +305,6 @@ where
     Encrypter: FromRef<S>,
     Templates: FromRef<S>,
     Keystore: FromRef<S>,
-    HttpClientFactory: FromRef<S>,
     PasswordManager: FromRef<S>,
     MetadataCache: FromRef<S>,
     SiteConfig: FromRef<S>,
