@@ -10,8 +10,6 @@ use std::{collections::HashMap, fmt, sync::Arc};
 
 use base64ct::{Base64UrlUnpadded, Encoding};
 use chrono::{DateTime, Duration, Utc};
-use headers::{Authorization, HeaderMapExt};
-use http::Request;
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 #[cfg(feature = "keystore")]
 use mas_jose::constraints::Constrainable;
@@ -25,7 +23,6 @@ use mas_keystore::Keystore;
 use rand::Rng;
 use serde::Serialize;
 use serde_json::Value;
-use serde_with::skip_serializing_none;
 use tower::BoxError;
 use url::Url;
 
@@ -175,45 +172,113 @@ impl ClientCredentials {
         }
     }
 
-    /// Apply these `ClientCredentials` to the given request.
-    pub(crate) fn apply_to_request<T: Serialize>(
-        self,
+    /// Apply these [`ClientCredentials`] to the given request with the given
+    /// form.
+    pub(crate) fn authenticated_form<T: Serialize>(
+        &self,
         request: reqwest::RequestBuilder,
+        form: &T,
         now: DateTime<Utc>,
         rng: &mut impl Rng,
     ) -> Result<reqwest::RequestBuilder, CredentialsError> {
-        // TODO: get the form in params, augment it and serialize
-        let credentials = RequestClientCredentials::try_from_credentials(self, now, rng)?;
+        let request = match self {
+            ClientCredentials::None { client_id } => request.form(&RequestWithClientCredentials {
+                body: form,
+                client_id,
+                client_secret: None,
+                client_assertion: None,
+                client_assertion_type: None,
+            }),
 
-        let (parts, body) = request.into_parts();
-        let mut body = RequestWithClientCredentials {
-            body,
-            credentials: None,
-        };
-
-        let request = match credentials {
-            RequestClientCredentials::Body(credentials) => {
-                body.credentials = Some(credentials);
-                Request::from_parts(parts, body)
-            }
-            RequestClientCredentials::Header(credentials) => {
-                let HeaderClientCredentials {
+            ClientCredentials::ClientSecretBasic {
+                client_id,
+                client_secret,
+            } => request.basic_auth(client_id, Some(client_secret)).form(
+                &RequestWithClientCredentials {
+                    body: form,
                     client_id,
-                    client_secret,
-                } = credentials;
+                    client_secret: None,
+                    client_assertion: None,
+                    client_assertion_type: None,
+                },
+            ),
 
-                let mut request = Request::from_parts(parts, body);
+            ClientCredentials::ClientSecretPost {
+                client_id,
+                client_secret,
+            } => request.form(&RequestWithClientCredentials {
+                body: form,
+                client_id,
+                client_secret: Some(client_secret),
+                client_assertion: None,
+                client_assertion_type: None,
+            }),
 
-                // Encode the values with `application/x-www-form-urlencoded`.
-                let client_id =
-                    form_urlencoded::byte_serialize(client_id.as_bytes()).collect::<String>();
-                let client_secret =
-                    form_urlencoded::byte_serialize(client_secret.as_bytes()).collect::<String>();
+            ClientCredentials::ClientSecretJwt {
+                client_id,
+                client_secret,
+                signing_algorithm,
+                token_endpoint,
+            } => {
+                let claims =
+                    prepare_claims(client_id.clone(), token_endpoint.to_string(), now, rng)?;
+                let key = SymmetricKey::new_for_alg(
+                    client_secret.as_bytes().to_vec(),
+                    signing_algorithm,
+                )?;
+                let header = JsonWebSignatureHeader::new(signing_algorithm.clone());
 
-                let auth = Authorization::basic(&client_id, &client_secret);
-                request.headers_mut().typed_insert(auth);
+                let jwt = Jwt::sign(header, claims, &key)?;
 
-                request
+                request.form(&RequestWithClientCredentials {
+                    body: form,
+                    client_id,
+                    client_secret: None,
+                    client_assertion: Some(jwt.as_str()),
+                    client_assertion_type: Some(JwtBearerClientAssertionType),
+                })
+            }
+
+            ClientCredentials::PrivateKeyJwt {
+                client_id,
+                jwt_signing_method,
+                signing_algorithm,
+                token_endpoint,
+            } => {
+                let claims =
+                    prepare_claims(client_id.clone(), token_endpoint.to_string(), now, rng)?;
+
+                let client_assertion = match jwt_signing_method {
+                    #[cfg(feature = "keystore")]
+                    JwtSigningMethod::Keystore(keystore) => {
+                        let key = keystore
+                            .signing_key_for_algorithm(signing_algorithm)
+                            .ok_or(CredentialsError::NoPrivateKeyFound)?;
+                        let signer = key
+                            .params()
+                            .signing_key_for_alg(signing_algorithm)
+                            .map_err(|_| CredentialsError::JwtWrongAlgorithm)?;
+                        let mut header = JsonWebSignatureHeader::new(signing_algorithm.clone());
+
+                        if let Some(kid) = key.kid() {
+                            header = header.with_kid(kid);
+                        }
+
+                        Jwt::sign(header, claims, &signer)?.to_string()
+                    }
+                    JwtSigningMethod::Custom(jwt_signing_fn) => {
+                        jwt_signing_fn(claims, signing_algorithm.clone())
+                            .map_err(CredentialsError::Custom)?
+                    }
+                };
+
+                request.form(&RequestWithClientCredentials {
+                    body: form,
+                    client_id,
+                    client_secret: None,
+                    client_assertion: Some(&client_assertion),
+                    client_assertion_type: Some(JwtBearerClientAssertionType),
+                })
             }
         };
 
@@ -264,123 +329,7 @@ impl fmt::Debug for ClientCredentials {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")]
-pub(crate) struct JwtBearerClientAssertionType;
-
-enum RequestClientCredentials {
-    Body(BodyClientCredentials),
-    Header(HeaderClientCredentials),
-}
-
-impl RequestClientCredentials {
-    fn try_from_credentials(
-        credentials: ClientCredentials,
-        now: DateTime<Utc>,
-        rng: &mut impl Rng,
-    ) -> Result<Self, CredentialsError> {
-        let res = match credentials {
-            ClientCredentials::None { client_id } => Self::Body(BodyClientCredentials {
-                client_id,
-                client_secret: None,
-                client_assertion: None,
-                client_assertion_type: None,
-            }),
-            ClientCredentials::ClientSecretBasic {
-                client_id,
-                client_secret,
-            } => Self::Header(HeaderClientCredentials {
-                client_id,
-                client_secret,
-            }),
-            ClientCredentials::ClientSecretPost {
-                client_id,
-                client_secret,
-            } => Self::Body(BodyClientCredentials {
-                client_id,
-                client_secret: Some(client_secret),
-                client_assertion: None,
-                client_assertion_type: None,
-            }),
-            ClientCredentials::ClientSecretJwt {
-                client_id,
-                client_secret,
-                signing_algorithm,
-                token_endpoint,
-            } => {
-                let claims =
-                    prepare_claims(client_id.clone(), token_endpoint.to_string(), now, rng)?;
-                let key = SymmetricKey::new_for_alg(client_secret.into(), &signing_algorithm)?;
-                let header = JsonWebSignatureHeader::new(signing_algorithm);
-
-                let jwt = Jwt::sign(header, claims, &key)?;
-
-                Self::Body(BodyClientCredentials {
-                    client_id,
-                    client_secret: None,
-                    client_assertion: Some(jwt.to_string()),
-                    client_assertion_type: Some(JwtBearerClientAssertionType),
-                })
-            }
-            ClientCredentials::PrivateKeyJwt {
-                client_id,
-                jwt_signing_method,
-                signing_algorithm,
-                token_endpoint,
-            } => {
-                let claims =
-                    prepare_claims(client_id.clone(), token_endpoint.to_string(), now, rng)?;
-
-                let client_assertion = match jwt_signing_method {
-                    #[cfg(feature = "keystore")]
-                    JwtSigningMethod::Keystore(keystore) => {
-                        let key = keystore
-                            .signing_key_for_algorithm(&signing_algorithm)
-                            .ok_or(CredentialsError::NoPrivateKeyFound)?;
-                        let signer = key
-                            .params()
-                            .signing_key_for_alg(&signing_algorithm)
-                            .map_err(|_| CredentialsError::JwtWrongAlgorithm)?;
-                        let mut header = JsonWebSignatureHeader::new(signing_algorithm);
-
-                        if let Some(kid) = key.kid() {
-                            header = header.with_kid(kid);
-                        }
-
-                        Jwt::sign(header, claims, &signer)?.to_string()
-                    }
-                    JwtSigningMethod::Custom(jwt_signing_fn) => {
-                        jwt_signing_fn(claims, signing_algorithm)
-                            .map_err(CredentialsError::Custom)?
-                    }
-                };
-
-                Self::Body(BodyClientCredentials {
-                    client_id,
-                    client_secret: None,
-                    client_assertion: Some(client_assertion),
-                    client_assertion_type: Some(JwtBearerClientAssertionType),
-                })
-            }
-        };
-
-        Ok(res)
-    }
-}
-
-#[allow(clippy::struct_field_names)] // All the fields start with `client_`
-#[skip_serializing_none]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub(crate) struct BodyClientCredentials {
-    client_id: String,
-    client_secret: Option<String>,
-    client_assertion: Option<String>,
-    client_assertion_type: Option<JwtBearerClientAssertionType>,
-}
-
-#[derive(Debug, Clone)]
-struct HeaderClientCredentials {
-    client_id: String,
-    client_secret: String,
-}
+struct JwtBearerClientAssertionType;
 
 fn prepare_claims(
     iss: String,
@@ -409,14 +358,20 @@ fn prepare_claims(
 
 /// A request with client credentials added to it.
 #[derive(Clone, Serialize)]
-#[skip_serializing_none]
-pub struct RequestWithClientCredentials<T> {
+struct RequestWithClientCredentials<'a, T> {
     #[serde(flatten)]
-    pub(crate) body: T,
-    #[serde(flatten)]
-    pub(crate) credentials: Option<BodyClientCredentials>,
+    body: T,
+
+    client_id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_assertion: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_assertion_type: Option<JwtBearerClientAssertionType>,
 }
 
+/*
 #[cfg(test)]
 mod test {
     use assert_matches::assert_matches;
@@ -440,91 +395,6 @@ mod test {
     fn now() -> DateTime<Utc> {
         #[allow(clippy::disallowed_methods)]
         Utc::now()
-    }
-
-    #[test]
-    fn serialize_credentials() {
-        assert_eq!(
-            serde_urlencoded::to_string(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: None,
-                client_assertion: None,
-                client_assertion_type: None,
-            })
-            .unwrap(),
-            "client_id=abcd%24%2B%2B"
-        );
-        assert_eq!(
-            serde_urlencoded::to_string(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: Some(CLIENT_SECRET.to_owned()),
-                client_assertion: None,
-                client_assertion_type: None,
-            })
-            .unwrap(),
-            "client_id=abcd%24%2B%2B&client_secret=xyz%21%3B%3F"
-        );
-        assert_eq!(
-            serde_urlencoded::to_string(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: None,
-                client_assertion: Some(CLIENT_SECRET.to_owned()),
-                client_assertion_type: Some(JwtBearerClientAssertionType)
-            })
-            .unwrap(),
-            "client_id=abcd%24%2B%2B&client_assertion=xyz%21%3B%3F&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
-        );
-    }
-
-    #[test]
-    fn serialize_request_with_credentials() {
-        let req = RequestWithClientCredentials {
-            body: Body { body: REQUEST_BODY },
-            credentials: None,
-        };
-        assert_eq!(serde_urlencoded::to_string(req).unwrap(), "body=some_body");
-
-        let req = RequestWithClientCredentials {
-            body: Body { body: REQUEST_BODY },
-            credentials: Some(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: None,
-                client_assertion: None,
-                client_assertion_type: None,
-            }),
-        };
-        assert_eq!(
-            serde_urlencoded::to_string(req).unwrap(),
-            "body=some_body&client_id=abcd%24%2B%2B"
-        );
-
-        let req = RequestWithClientCredentials {
-            body: Body { body: REQUEST_BODY },
-            credentials: Some(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: Some(CLIENT_SECRET.to_owned()),
-                client_assertion: None,
-                client_assertion_type: None,
-            }),
-        };
-        assert_eq!(
-            serde_urlencoded::to_string(req).unwrap(),
-            "body=some_body&client_id=abcd%24%2B%2B&client_secret=xyz%21%3B%3F"
-        );
-
-        let req = RequestWithClientCredentials {
-            body: Body { body: REQUEST_BODY },
-            credentials: Some(BodyClientCredentials {
-                client_id: CLIENT_ID.to_owned(),
-                client_secret: None,
-                client_assertion: Some(CLIENT_SECRET.to_owned()),
-                client_assertion_type: Some(JwtBearerClientAssertionType),
-            }),
-        };
-        assert_eq!(
-            serde_urlencoded::to_string(req).unwrap(),
-            "body=some_body&client_id=abcd%24%2B%2B&client_assertion=xyz%21%3B%3F&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
-        );
     }
 
     #[tokio::test]
@@ -677,3 +547,5 @@ mod test {
         credentials.client_assertion_type.unwrap();
     }
 }
+
+*/

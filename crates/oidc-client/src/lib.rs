@@ -52,7 +52,6 @@ pub mod error;
 pub mod http_service;
 pub mod requests;
 pub mod types;
-mod utils;
 
 use std::fmt;
 

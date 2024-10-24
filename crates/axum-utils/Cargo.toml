@@ -41,7 +41,7 @@ ulid.workspace = true
 
 oauth2-types.workspace = true
 mas-data-model.workspace = true
-mas-http = { workspace = true, features = ["client"] }
+mas-http.workspace = true
 mas-iana.workspace = true
 mas-jose.workspace = true
 mas-keystore.workspace = true

@@ -9,6 +9,7 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
+use mas_http::RequestBuilderExt;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_jose::{
     claims::{self, TimeOptions},
@@ -43,7 +44,7 @@ pub async fn fetch_jwks(
 
     let response: PublicJsonWebKeySet = client
         .get(jwks_uri.as_str())
-        .send()
+        .send_traced()
         .await?
         .error_for_status()?
         .json()

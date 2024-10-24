@@ -7,9 +7,7 @@
 pub mod body_to_bytes_response;
 pub mod bytes_to_body_request;
 pub mod catch_http_codes;
+pub mod client;
 pub mod form_urlencoded_request;
 pub mod json_request;
 pub mod json_response;
-
-#[cfg(feature = "client")]
-pub(crate) mod client;

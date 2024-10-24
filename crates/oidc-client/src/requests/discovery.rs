@@ -8,6 +8,7 @@
 //!
 //! [Discovery]: https://openid.net/specs/openid-connect-discovery-1_0.html
 
+use mas_http::RequestBuilderExt;
 use oauth2_types::oidc::{ProviderMetadata, VerifiedProviderMetadata};
 use url::Url;
 
@@ -34,7 +35,7 @@ async fn discover_inner(
 
     let response = client
         .get(config_url.as_str())
-        .send()
+        .send_traced()
         .await?
         .error_for_status()?
         .json()

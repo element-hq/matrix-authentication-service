@@ -190,6 +190,10 @@ async fn main() -> anyhow::Result<()> {
         .pretty()
         .init();
 
+    #[expect(
+        clippy::disallowed_methods,
+        reason = "reqwest::Client::new should be disallowed by clippy, but for the codegen it's fine"
+    )]
     let client = Client::new();
 
     let iana_crate_root = Utf8Path::new("crates/iana/");

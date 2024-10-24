@@ -66,6 +66,10 @@ pub trait EnumEntry: DeserializeOwned + Send + Sync {
     async fn fetch(client: &Client) -> anyhow::Result<Vec<(&'static str, EnumMember)>> {
         tracing::info!("Fetching CSV");
 
+        #[expect(
+            clippy::disallowed_methods,
+            reason = "we don't use send_traced in the codegen"
+        )]
         let response = client
             .get(Self::URL)
             .header("User-Agent", "mas-iana-codegen/0.1")

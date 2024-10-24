@@ -6,11 +6,9 @@
 
 //! The error types used in this crate.
 
-use std::{str::Utf8Error, sync::Arc};
-
 use headers::authorization::InvalidBearerToken;
-use http::{header::ToStrError, StatusCode};
-use mas_http::{catch_http_codes, form_urlencoded_request, json_request, json_response};
+use http::StatusCode;
+use mas_http::{catch_http_codes, form_urlencoded_request, json_response};
 use mas_jose::{
     claims::ClaimError,
     jwa::InvalidAlgorithm,
@@ -33,9 +31,6 @@ pub enum Error {
     /// An error occurred fetching the provider JWKS.
     Jwks(#[from] JwksError),
 
-    /// An error occurred during client registration.
-    Registration(#[from] RegistrationError),
-
     /// An error occurred building the authorization URL.
     Authorization(#[from] AuthorizationError),
 
@@ -48,17 +43,11 @@ pub enum Error {
     /// An error occurred refreshing an access token.
     TokenRefresh(#[from] TokenRefreshError),
 
-    /// An error occurred revoking a token.
-    TokenRevoke(#[from] TokenRevokeError),
-
     /// An error occurred requesting user info.
     UserInfo(#[from] UserInfoError),
 
     /// An error occurred introspecting a token.
     Introspection(#[from] IntrospectionError),
-
-    /// An error occurred building the account management URL.
-    AccountManagement(#[from] AccountManagementError),
 }
 
 /// All possible errors when fetching provider metadata.
@@ -81,135 +70,6 @@ pub enum DiscoveryError {
     Disabled,
 }
 
-/// All possible errors when registering the client.
-#[derive(Debug, Error)]
-pub enum RegistrationError {
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
-    /// An error occurred serializing the request or deserializing the response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// No client secret was received although one was expected because of the
-    /// authentication method.
-    #[error("missing client secret in response")]
-    MissingClientSecret,
-
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<json_request::Error<S>> for RegistrationError
-where
-    S: Into<RegistrationError>,
-{
-    fn from(err: json_request::Error<S>) -> Self {
-        match err {
-            json_request::Error::Serialize { inner } => inner.into(),
-            json_request::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<json_response::Error<S>> for RegistrationError
-where
-    S: Into<RegistrationError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Deserialize { inner } => inner.into(),
-            json_response::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for RegistrationError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
-}
-
-/// All possible errors when making a pushed authorization request.
-#[derive(Debug, Error)]
-pub enum PushedAuthorizationError {
-    /// An error occurred serializing the request.
-    #[error(transparent)]
-    UrlEncoded(#[from] serde_urlencoded::ser::Error),
-
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
-    /// An error occurred adding the client credentials to the request.
-    #[error(transparent)]
-    Credentials(#[from] CredentialsError),
-
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// An error occurred deserializing the response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<form_urlencoded_request::Error<S>> for PushedAuthorizationError
-where
-    S: Into<PushedAuthorizationError>,
-{
-    fn from(err: form_urlencoded_request::Error<S>) -> Self {
-        match err {
-            form_urlencoded_request::Error::Serialize { inner } => inner.into(),
-            form_urlencoded_request::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<json_response::Error<S>> for PushedAuthorizationError
-where
-    S: Into<PushedAuthorizationError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Deserialize { inner } => inner.into(),
-            json_response::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for PushedAuthorizationError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
-}
-
 /// All possible errors when authorizing the client.
 #[derive(Debug, Error)]
 pub enum AuthorizationError {
@@ -220,76 +80,18 @@ pub enum AuthorizationError {
     /// An error occurred serializing the request.
     #[error(transparent)]
     UrlEncoded(#[from] serde_urlencoded::ser::Error),
-
-    /// An error occurred making the PAR request.
-    #[error(transparent)]
-    PushedAuthorization(#[from] PushedAuthorizationError),
 }
 
 /// All possible errors when requesting an access token.
 #[derive(Debug, Error)]
 pub enum TokenRequestError {
-    /// An error occurred building the request.
+    /// The HTTP client returned an error.
     #[error(transparent)]
-    IntoHttp(#[from] http::Error),
+    Http(#[from] reqwest::Error),
 
-    /// An error occurred adding the client credentials to the request.
+    /// Error while injecting the client credentials into the request.
     #[error(transparent)]
     Credentials(#[from] CredentialsError),
-
-    /// An error occurred serializing the request.
-    #[error(transparent)]
-    UrlEncoded(#[from] serde_urlencoded::ser::Error),
-
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// An error occurred deserializing the response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<form_urlencoded_request::Error<S>> for TokenRequestError
-where
-    S: Into<TokenRequestError>,
-{
-    fn from(err: form_urlencoded_request::Error<S>) -> Self {
-        match err {
-            form_urlencoded_request::Error::Serialize { inner } => inner.into(),
-            form_urlencoded_request::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<json_response::Error<S>> for TokenRequestError
-where
-    S: Into<TokenRequestError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Deserialize { inner } => inner.into(),
-            json_response::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for TokenRequestError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
 }
 
 /// All possible errors when exchanging a code for an access token.
@@ -316,94 +118,12 @@ pub enum TokenRefreshError {
     IdToken(#[from] IdTokenError),
 }
 
-/// All possible errors when revoking a token.
-#[derive(Debug, Error)]
-pub enum TokenRevokeError {
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
-    /// An error occurred adding the client credentials to the request.
-    #[error(transparent)]
-    Credentials(#[from] CredentialsError),
-
-    /// An error occurred serializing the request.
-    #[error(transparent)]
-    UrlEncoded(#[from] serde_urlencoded::ser::Error),
-
-    /// An error occurred deserializing the error response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<form_urlencoded_request::Error<S>> for TokenRevokeError
-where
-    S: Into<TokenRevokeError>,
-{
-    fn from(err: form_urlencoded_request::Error<S>) -> Self {
-        match err {
-            form_urlencoded_request::Error::Serialize { inner } => inner.into(),
-            form_urlencoded_request::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for TokenRevokeError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
-}
-
 /// All possible errors when requesting user info.
 #[derive(Debug, Error)]
 pub enum UserInfoError {
-    /// An error occurred getting the provider metadata.
-    #[error(transparent)]
-    Discovery(#[from] Arc<DiscoveryError>),
-
-    /// The provider doesn't support requesting user info.
-    #[error("missing UserInfo support")]
-    MissingUserInfoSupport,
-
-    /// No token is available to get info from.
-    #[error("missing token")]
-    MissingToken,
-
-    /// No client metadata is available.
-    #[error("missing client metadata")]
-    MissingClientMetadata,
-
-    /// The access token is invalid.
-    #[error(transparent)]
-    Token(#[from] InvalidBearerToken),
-
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
     /// The content-type header is missing from the response.
     #[error("missing response content-type")]
     MissingResponseContentType,
-
-    /// The content-type header could not be decoded.
-    #[error("could not decoded response content-type: {0}")]
-    DecodeResponseContentType(#[from] ToStrError),
 
     /// The content-type is not valid.
     #[error("invalid response content-type")]
@@ -418,39 +138,13 @@ pub enum UserInfoError {
         got: String,
     },
 
-    /// An error occurred reading the response.
-    #[error(transparent)]
-    FromUtf8(#[from] Utf8Error),
-
-    /// An error occurred deserializing the JSON or error response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
     /// An error occurred verifying the Id Token.
     #[error(transparent)]
     IdToken(#[from] IdTokenError),
 
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
     /// An error occurred sending the request.
     #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for UserInfoError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
+    Http(#[from] reqwest::Error),
 }
 
 /// All possible errors when introspecting a token.
@@ -643,12 +337,4 @@ pub enum CredentialsError {
     /// An error occurred with a custom signing method.
     #[error(transparent)]
     Custom(BoxError),
-}
-
-/// All errors that can occur when building the account management URL.
-#[derive(Debug, Error)]
-pub enum AccountManagementError {
-    /// An error occurred serializing the parameters.
-    #[error(transparent)]
-    UrlEncoded(#[from] serde_urlencoded::ser::Error),
 }
