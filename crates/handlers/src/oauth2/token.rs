@@ -11,7 +11,6 @@ use headers::{CacheControl, HeaderMap, HeaderMapExt, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    http_client_factory::HttpClientFactory,
     sentry::SentryEventID,
 };
 use mas_data_model::{
@@ -203,7 +202,7 @@ impl_from_error_for_route!(super::IdTokenSignatureError);
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
+    State(http_client): State<reqwest::Client>,
     State(key_store): State<Keystore>,
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
@@ -229,7 +228,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client_factory, &encrypter, method, &client)
+        .verify(&http_client, &encrypter, method, &client)
         .await?;
 
     let form = client_authorization.form.ok_or(RouteError::BadRequest)?;

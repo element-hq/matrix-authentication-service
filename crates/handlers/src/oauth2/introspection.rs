@@ -8,7 +8,6 @@ use axum::{extract::State, response::IntoResponse, Json};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    http_client_factory::HttpClientFactory,
     sentry::SentryEventID,
 };
 use mas_data_model::{TokenFormatError, TokenType};
@@ -167,7 +166,7 @@ const SYNAPSE_ADMIN_SCOPE: ScopeToken = ScopeToken::from_static("urn:synapse:adm
 #[allow(clippy::too_many_lines)]
 pub(crate) async fn post(
     clock: BoxClock,
-    State(http_client_factory): State<HttpClientFactory>,
+    State(http_client): State<reqwest::Client>,
     mut repo: BoxRepository,
     activity_tracker: ActivityTracker,
     State(encrypter): State<Encrypter>,
@@ -188,7 +187,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client_factory, &encrypter, method, &client)
+        .verify(&http_client, &encrypter, method, &client)
         .await?;
 
     let Some(form) = client_authorization.form else {

@@ -6,18 +6,12 @@
 
 //! The error types used in this crate.
 
-use headers::authorization::InvalidBearerToken;
-use http::StatusCode;
-use mas_http::{catch_http_codes, form_urlencoded_request, json_response};
 use mas_jose::{
     claims::ClaimError,
     jwa::InvalidAlgorithm,
     jwt::{JwtDecodeError, JwtSignatureError, NoKeyWorked},
 };
-use oauth2_types::{
-    errors::ClientErrorCode, oidc::ProviderMetadataVerificationError, pkce::CodeChallengeError,
-};
-use serde::{Deserialize, Serialize};
+use oauth2_types::{oidc::ProviderMetadataVerificationError, pkce::CodeChallengeError};
 use thiserror::Error;
 pub use tower::BoxError;
 
@@ -45,9 +39,6 @@ pub enum Error {
 
     /// An error occurred requesting user info.
     UserInfo(#[from] UserInfoError),
-
-    /// An error occurred introspecting a token.
-    Introspection(#[from] IntrospectionError),
 }
 
 /// All possible errors when fetching provider metadata.
@@ -147,76 +138,6 @@ pub enum UserInfoError {
     Http(#[from] reqwest::Error),
 }
 
-/// All possible errors when introspecting a token.
-#[derive(Debug, Error)]
-pub enum IntrospectionError {
-    /// An error occurred building the request.
-    #[error(transparent)]
-    IntoHttp(#[from] http::Error),
-
-    /// An error occurred adding the client credentials to the request.
-    #[error(transparent)]
-    Credentials(#[from] CredentialsError),
-
-    /// The access token is invalid.
-    #[error(transparent)]
-    Token(#[from] InvalidBearerToken),
-
-    /// An error occurred serializing the request.
-    #[error(transparent)]
-    UrlEncoded(#[from] serde_urlencoded::ser::Error),
-
-    /// An error occurred deserializing the JSON or error response.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// The server returned an HTTP error status code.
-    #[error(transparent)]
-    Http(#[from] HttpError),
-
-    /// An error occurred sending the request.
-    #[error(transparent)]
-    Service(BoxError),
-}
-
-impl<S> From<form_urlencoded_request::Error<S>> for IntrospectionError
-where
-    S: Into<IntrospectionError>,
-{
-    fn from(err: form_urlencoded_request::Error<S>) -> Self {
-        match err {
-            form_urlencoded_request::Error::Serialize { inner } => inner.into(),
-            form_urlencoded_request::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<json_response::Error<S>> for IntrospectionError
-where
-    S: Into<IntrospectionError>,
-{
-    fn from(err: json_response::Error<S>) -> Self {
-        match err {
-            json_response::Error::Deserialize { inner } => inner.into(),
-            json_response::Error::Service { inner } => inner.into(),
-        }
-    }
-}
-
-impl<S> From<catch_http_codes::Error<S, Option<ErrorBody>>> for IntrospectionError
-where
-    S: Into<BoxError>,
-{
-    fn from(err: catch_http_codes::Error<S, Option<ErrorBody>>) -> Self {
-        match err {
-            catch_http_codes::Error::HttpError { status_code, inner } => {
-                HttpError::new(status_code, inner).into()
-            }
-            catch_http_codes::Error::Service { inner } => Self::Service(inner.into()),
-        }
-    }
-}
-
 /// All possible errors when requesting a JWKS.
 #[derive(Debug, Error)]
 #[error("Failed to fetch JWKS")]
@@ -275,35 +196,6 @@ pub enum IdTokenError {
     /// one we got before.
     #[error("wrong authentication time")]
     WrongAuthTime,
-}
-
-/// An error that can be returned by an OpenID Provider.
-#[derive(Debug, Clone, Error)]
-#[error("{status}: {body:?}")]
-pub struct HttpError {
-    /// The status code of the error.
-    pub status: StatusCode,
-
-    /// The body of the error, if any.
-    pub body: Option<ErrorBody>,
-}
-
-impl HttpError {
-    /// Creates a new `HttpError` with the given status code and optional body.
-    #[must_use]
-    pub fn new(status: StatusCode, body: Option<ErrorBody>) -> Self {
-        Self { status, body }
-    }
-}
-
-/// The body of an error that can be returned by an OpenID Provider.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ErrorBody {
-    /// The error code.
-    pub error: ClientErrorCode,
-
-    /// Additional text description of the error for debugging.
-    pub error_description: Option<String>,
 }
 
 /// All errors that can occur when adding client credentials to the request.

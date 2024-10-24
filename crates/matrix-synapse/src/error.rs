@@ -1,9 +1,13 @@
-use std::{error::Error, fmt::Display};
+// Copyright 2024 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+// Please see LICENSE in the repository root for full details.
 
-use http::Response;
-use mas_axum_utils::axum::body::Bytes;
+use std::fmt::Display;
+
+use async_trait::async_trait;
 use serde::Deserialize;
-use tracing::debug;
+use thiserror::Error;
 
 /// Represents a Matrix error
 /// Ref: <https://spec.matrix.org/v1.10/client-server-api/#standard-error-response>
@@ -15,50 +19,51 @@ struct MatrixError {
 
 /// Represents an error received from the homeserver.
 /// Where possible, we capture the Matrix error from the JSON response body.
-///
-/// Note that the `CatchHttpCodes` layer already captures the `StatusCode` for
-/// us; we don't need to do that twice.
-#[derive(Debug)]
-pub(crate) struct HomeserverError {
-    matrix_error: Option<MatrixError>,
+#[derive(Debug, Error)]
+pub(crate) struct Error {
+    synapse_error: Option<MatrixError>,
+
+    #[source]
+    source: reqwest::Error,
 }
 
-impl Display for HomeserverError {
+impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(matrix_error) = &self.matrix_error {
-            write!(f, "{matrix_error}")
+        if let Some(matrix_error) = &self.synapse_error {
+            write!(f, "{}: {}", matrix_error.errcode, matrix_error.error)
         } else {
             write!(f, "(no specific error)")
         }
     }
 }
 
-impl Error for HomeserverError {}
-
-impl HomeserverError {
+impl Error {
     /// Return the error code (`errcode`)
     pub fn errcode(&self) -> Option<&str> {
-        self.matrix_error.as_ref().map(|me| me.errcode.as_str())
+        let me = self.synapse_error.as_ref()?;
+        Some(&me.errcode)
     }
 }
 
-/// Parses a JSON-encoded Matrix error from the response body
-/// Spec reference: <https://spec.matrix.org/v1.10/client-server-api/#standard-error-response>
-#[allow(clippy::needless_pass_by_value)]
-pub(crate) fn catch_homeserver_error(response: Response<Bytes>) -> HomeserverError {
-    let matrix_error: Option<MatrixError> = match serde_json::from_slice(response.body().as_ref()) {
-        Ok(body) => Some(body),
-        Err(err) => {
-            debug!("failed to deserialise expected homeserver error: {err:?}");
-            None
-        }
-    };
-    HomeserverError { matrix_error }
+/// An extension trait for [`reqwest::Response`] to help working with errors
+/// from Synapse.
+#[async_trait]
+pub(crate) trait SynapseResponseExt: Sized {
+    async fn error_for_synapse_error(self) -> Result<Self, Error>;
 }
 
-impl Display for MatrixError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let MatrixError { errcode, error } = &self;
-        write!(f, "{errcode}: {error}")
+#[async_trait]
+impl SynapseResponseExt for reqwest::Response {
+    async fn error_for_synapse_error(self) -> Result<Self, Error> {
+        match self.error_for_status_ref() {
+            Ok(_response) => Ok(self),
+            Err(source) => {
+                let synapse_error = self.json().await.ok();
+                Err(Error {
+                    synapse_error,
+                    source,
+                })
+            }
+        }
     }
 }

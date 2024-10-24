@@ -221,7 +221,7 @@ features = [
 [workspace.dependencies.sentry]
 version = "0.34.0"
 default-features = false
-features = ["backtrace", "contexts", "panic", "tower"]
+features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
@@ -273,12 +273,12 @@ features = ["rt"]
 # Tower services
 [workspace.dependencies.tower]
 version = "0.5.1"
-features = ["util", "limit"]
+features = ["util"]
 
 # Tower HTTP layers
 [workspace.dependencies.tower-http]
 version = "0.6.1"
-features = ["cors", "fs", "add-extension", "set-header", "follow-redirect"]
+features = ["cors", "fs", "add-extension", "set-header"]
 
 # Logging and tracing
 [workspace.dependencies.tracing]
@@ -292,7 +292,7 @@ version = "0.24.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry-http]
 version = "0.13.0"
-features = ["hyper"]
+features = ["reqwest"]
 [workspace.dependencies.opentelemetry-semantic-conventions]
 version = "0.16.0"
 [workspace.dependencies.tracing-opentelemetry]

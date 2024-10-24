@@ -11,7 +11,6 @@ use headers::{CacheControl, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    http_client_factory::HttpClientFactory,
     sentry::SentryEventID,
 };
 use mas_data_model::UserAgent;
@@ -81,7 +80,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     activity_tracker: BoundActivityTracker,
     State(url_builder): State<UrlBuilder>,
-    State(http_client_factory): State<HttpClientFactory>,
+    State(http_client): State<reqwest::Client>,
     State(encrypter): State<Encrypter>,
     client_authorization: ClientAuthorization<DeviceAuthorizationRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -99,12 +98,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client_factory, &encrypter, method, &client)
-        .await?;
-
-    client_authorization
-        .credentials
-        .verify(&http_client_factory, &encrypter, method, &client)
+        .verify(&http_client, &encrypter, method, &client)
         .await?;
 
     if !client.grant_types.contains(&GrantType::DeviceCode) {
