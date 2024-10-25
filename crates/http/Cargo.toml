@@ -12,6 +12,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+futures-util.workspace = true
 headers.workspace = true
 http.workspace = true
 hyper-util.workspace = true
@@ -20,6 +21,7 @@ opentelemetry-semantic-conventions.workspace = true
 opentelemetry.workspace = true
 reqwest.workspace = true
 rustls-platform-verifier.workspace = true
+tower.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true

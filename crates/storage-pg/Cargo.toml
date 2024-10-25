@@ -21,7 +21,7 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
-futures-util = "0.3.31"
+futures-util.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 
 rand.workspace = true

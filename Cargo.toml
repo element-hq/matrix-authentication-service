@@ -107,6 +107,10 @@ features = ["derive"]
 version = "0.10.19"
 features = ["env", "yaml", "test"]
 
+# Utilities for dealing with futures
+[workspace.dependencies.futures-util]
+version = "0.3.31"
+
 # Rate-limiting
 [workspace.dependencies.governor]
 version = "0.7.0"
