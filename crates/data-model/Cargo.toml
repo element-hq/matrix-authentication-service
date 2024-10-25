@@ -20,7 +20,7 @@ crc = "3.2.1"
 ulid.workspace = true
 rand.workspace = true
 rand_chacha = "0.3.1"
-regex = "1.11.0"
+regex = "1.11.1"
 woothee = "0.13.0"
 
 mas-iana.workspace = true
