@@ -108,3 +108,4 @@ insta.workspace = true
 tracing-subscriber.workspace = true
 cookie_store = "0.21.0"
 sqlx.workspace = true
+wiremock.workspace = true
