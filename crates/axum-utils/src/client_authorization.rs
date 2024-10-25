@@ -190,6 +190,7 @@ async fn fetch_jwks(
         .get(uri.as_str())
         .send_traced()
         .await?
+        .error_for_status()?
         .json()
         .await?;
 

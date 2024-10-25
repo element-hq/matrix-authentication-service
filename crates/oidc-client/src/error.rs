@@ -6,12 +6,14 @@
 
 //! The error types used in this crate.
 
+use async_trait::async_trait;
 use mas_jose::{
     claims::ClaimError,
     jwa::InvalidAlgorithm,
     jwt::{JwtDecodeError, JwtSignatureError, NoKeyWorked},
 };
 use oauth2_types::{oidc::ProviderMetadataVerificationError, pkce::CodeChallengeError};
+use serde::Deserialize;
 use thiserror::Error;
 
 /// All possible errors when using this crate.
@@ -42,17 +44,15 @@ pub enum Error {
 
 /// All possible errors when fetching provider metadata.
 #[derive(Debug, Error)]
+#[error("Fetching provider metadata failed")]
 pub enum DiscoveryError {
     /// An error occurred building the request's URL.
-    #[error(transparent)]
     IntoUrl(#[from] url::ParseError),
 
     /// The server returned an HTTP error status code.
-    #[error(transparent)]
     Http(#[from] reqwest::Error),
 
     /// An error occurred validating the metadata.
-    #[error(transparent)]
     Validation(#[from] ProviderMetadataVerificationError),
 
     /// Discovery is disabled for this provider.
@@ -62,25 +62,26 @@ pub enum DiscoveryError {
 
 /// All possible errors when authorizing the client.
 #[derive(Debug, Error)]
+#[error("Building the authorization URL failed")]
 pub enum AuthorizationError {
     /// An error occurred constructing the PKCE code challenge.
-    #[error(transparent)]
     Pkce(#[from] CodeChallengeError),
 
     /// An error occurred serializing the request.
-    #[error(transparent)]
     UrlEncoded(#[from] serde_urlencoded::ser::Error),
 }
 
 /// All possible errors when requesting an access token.
 #[derive(Debug, Error)]
+#[error("Request to the token endpoint failed")]
 pub enum TokenRequestError {
     /// The HTTP client returned an error.
-    #[error(transparent)]
     Http(#[from] reqwest::Error),
 
+    /// The server returned an error
+    OAuth2(#[from] OAuth2Error),
+
     /// Error while injecting the client credentials into the request.
-    #[error(transparent)]
     Credentials(#[from] CredentialsError),
 }
 
@@ -92,7 +93,7 @@ pub enum TokenAuthorizationCodeError {
     Token(#[from] TokenRequestError),
 
     /// An error occurred validating the ID Token.
-    #[error(transparent)]
+    #[error("Verifying the 'id_token' returned by the provider failed")]
     IdToken(#[from] IdTokenError),
 }
 
@@ -104,7 +105,7 @@ pub enum TokenRefreshError {
     Token(#[from] TokenRequestError),
 
     /// An error occurred validating the ID Token.
-    #[error(transparent)]
+    #[error("Verifying the 'id_token' returned by the provider failed")]
     IdToken(#[from] IdTokenError),
 }
 
@@ -129,12 +130,16 @@ pub enum UserInfoError {
     },
 
     /// An error occurred verifying the Id Token.
-    #[error(transparent)]
+    #[error("Verifying the 'id_token' returned by the provider failed")]
     IdToken(#[from] IdTokenError),
 
     /// An error occurred sending the request.
     #[error(transparent)]
     Http(#[from] reqwest::Error),
+
+    /// The server returned an error
+    #[error(transparent)]
+    OAuth2(#[from] OAuth2Error),
 }
 
 /// All possible errors when requesting a JWKS.
@@ -178,12 +183,12 @@ pub enum IdTokenError {
     #[error("Authorization ID token is missing")]
     MissingAuthIdToken,
 
-    /// An error occurred validating the ID Token's signature and basic claims.
     #[error(transparent)]
+    /// An error occurred validating the ID Token's signature and basic claims.
     Jwt(#[from] JwtVerificationError),
 
-    /// An error occurred extracting a claim.
     #[error(transparent)]
+    /// An error occurred extracting a claim.
     Claim(#[from] ClaimError),
 
     /// The subject identifier returned by the issuer is not the same as the one
@@ -224,4 +229,79 @@ pub enum CredentialsError {
     /// An error occurred when signing the JWT.
     #[error(transparent)]
     JwtSignature(#[from] JwtSignatureError),
+}
+
+#[derive(Debug, Deserialize)]
+struct OAuth2ErrorResponse {
+    error: String,
+    error_description: Option<String>,
+    error_uri: Option<String>,
+}
+
+impl std::fmt::Display for OAuth2ErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.error)?;
+
+        if let Some(error_uri) = &self.error_uri {
+            write!(f, " (See {error_uri})")?;
+        }
+
+        if let Some(error_description) = &self.error_description {
+            write!(f, ": {error_description}")?;
+        }
+
+        Ok(())
+    }
+}
+
+/// An error returned by the OAuth 2.0 provider
+#[derive(Debug, Error)]
+pub struct OAuth2Error {
+    error: Option<OAuth2ErrorResponse>,
+
+    #[source]
+    inner: reqwest::Error,
+}
+
+impl std::fmt::Display for OAuth2Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(error) = &self.error {
+            write!(
+                f,
+                "Request to the provider failed with the following error: {error}"
+            )
+        } else {
+            write!(f, "Request to the provider failed")
+        }
+    }
+}
+
+impl From<reqwest::Error> for OAuth2Error {
+    fn from(inner: reqwest::Error) -> Self {
+        Self { error: None, inner }
+    }
+}
+
+/// An extension trait to deal with error responses from the OAuth 2.0 provider
+#[async_trait]
+pub(crate) trait ResponseExt {
+    async fn error_from_oauth2_error_response(self) -> Result<Self, OAuth2Error>
+    where
+        Self: Sized;
+}
+
+#[async_trait]
+impl ResponseExt for reqwest::Response {
+    async fn error_from_oauth2_error_response(self) -> Result<Self, OAuth2Error> {
+        let Err(inner) = self.error_for_status_ref() else {
+            return Ok(self);
+        };
+
+        let error: OAuth2ErrorResponse = self.json().await?;
+
+        Err(OAuth2Error {
+            error: Some(error),
+            inner,
+        })
+    }
 }
