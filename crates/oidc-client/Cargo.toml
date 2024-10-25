@@ -12,6 +12,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+async-trait.workspace = true
 base64ct = { version = "1.6.0", features = ["std"] }
 chrono.workspace = true
 form_urlencoded = "1.2.1"

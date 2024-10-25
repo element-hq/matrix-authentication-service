@@ -3604,6 +3604,7 @@ name = "mas-oidc-client"
 version = "0.12.0"
 dependencies = [
  "assert_matches",
+ "async-trait",
  "base64ct",
  "bitflags 2.6.0",
  "chrono",

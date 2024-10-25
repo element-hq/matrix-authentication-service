@@ -12,7 +12,10 @@ use oauth2_types::requests::{AccessTokenRequest, AccessTokenResponse};
 use rand::Rng;
 use url::Url;
 
-use crate::{error::TokenRequestError, types::client_credentials::ClientCredentials};
+use crate::{
+    error::{ResponseExt, TokenRequestError},
+    types::client_credentials::ClientCredentials,
+};
 
 /// Request an access token.
 ///
@@ -51,7 +54,8 @@ pub async fn request_access_token(
         .authenticated_form(token_request, &request, now, rng)?
         .send_traced()
         .await?
-        .error_for_status()?
+        .error_from_oauth2_error_response()
+        .await?
         .json()
         .await?;
 

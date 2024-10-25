@@ -20,7 +20,7 @@ use url::Url;
 
 use super::jose::JwtVerificationData;
 use crate::{
-    error::{IdTokenError, UserInfoError},
+    error::{IdTokenError, ResponseExt, UserInfoError},
     requests::jose::verify_signed_jwt,
     types::IdToken,
 };
@@ -74,7 +74,11 @@ pub async fn fetch_userinfo(
         .bearer_auth(access_token)
         .header(ACCEPT, HeaderValue::from_static(expected_content_type));
 
-    let userinfo_response = userinfo_request.send_traced().await?.error_for_status()?;
+    let userinfo_response = userinfo_request
+        .send_traced()
+        .await?
+        .error_from_oauth2_error_response()
+        .await?;
 
     let content_type: Mime = userinfo_response
         .headers()
