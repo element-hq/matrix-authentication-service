@@ -22,7 +22,7 @@ use oauth2_types::{
         AccessTokenRequest, AccessTokenResponse, AuthorizationCodeGrant, AuthorizationRequest,
         Display, Prompt,
     },
-    scope::Scope,
+    scope::{Scope, OPENID},
 };
 use rand::{
     distributions::{Alphanumeric, DistString},
@@ -35,11 +35,7 @@ use super::jose::JwtVerificationData;
 use crate::{
     error::{AuthorizationError, IdTokenError, TokenAuthorizationCodeError},
     requests::{jose::verify_id_token, token::request_access_token},
-    types::{
-        client_credentials::ClientCredentials,
-        scope::{ScopeExt, ScopeToken},
-        IdToken,
-    },
+    types::{client_credentials::ClientCredentials, IdToken},
 };
 
 /// The data necessary to build an authorization request.
@@ -247,7 +243,7 @@ fn build_authorization_request(
         (None, None)
     };
 
-    scope.insert_token(ScopeToken::Openid);
+    scope.insert(OPENID);
 
     let auth_request = FullAuthorizationRequest {
         inner: AuthorizationRequest {

@@ -20,9 +20,11 @@ use mas_oidc_client::{
         },
         jose::JwtVerificationData,
     },
-    types::scope::{ScopeExt, ScopeToken},
 };
-use oauth2_types::requests::{AccessTokenResponse, Display, Prompt};
+use oauth2_types::{
+    requests::{AccessTokenResponse, Display, Prompt},
+    scope::OPENID,
+};
 use rand::SeedableRng;
 use url::Url;
 use wiremock::{
@@ -46,7 +48,7 @@ fn pass_authorization_url() {
         authorization_endpoint,
         AuthorizationRequestData::new(
             CLIENT_ID.to_owned(),
-            [ScopeToken::Openid].into_iter().collect(),
+            [OPENID].into_iter().collect(),
             redirect_uri,
         )
         .with_code_challenge_methods_supported(vec![PkceCodeChallengeMethod::S256]),
@@ -89,7 +91,7 @@ fn pass_full_authorization_url() {
 
     let authorization_data = AuthorizationRequestData::new(
         CLIENT_ID.to_owned(),
-        [ScopeToken::Openid].into_iter().collect(),
+        [OPENID].into_iter().collect(),
         Url::parse(REDIRECT_URI).unwrap(),
     )
     .with_display(Display::Touch)
@@ -207,7 +209,7 @@ async fn pass_access_token_with_authorization_code() {
                 id_token: Some(id_token.to_string()),
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
-                scope: Some([ScopeToken::Openid].into_iter().collect()),
+                scope: Some([OPENID].into_iter().collect()),
             }),
         )
         .mount(&mock_server)
@@ -228,7 +230,7 @@ async fn pass_access_token_with_authorization_code() {
 
     assert_eq!(response.access_token, ACCESS_TOKEN);
     assert_eq!(response.refresh_token, None);
-    assert!(response.scope.unwrap().contains_token(&ScopeToken::Openid));
+    assert!(response.scope.unwrap().contains("openid"));
     assert_eq!(response_id_token.unwrap().as_str(), id_token.as_str());
 }
 
@@ -265,7 +267,7 @@ async fn fail_access_token_with_authorization_code_wrong_nonce() {
                 id_token: Some(id_token.into_string()),
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
-                scope: Some([ScopeToken::Openid].into_iter().collect()),
+                scope: Some([OPENID].into_iter().collect()),
             }),
         )
         .mount(&mock_server)
@@ -326,7 +328,7 @@ async fn fail_access_token_with_authorization_code_no_id_token() {
                 id_token: None,
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
-                scope: Some([ScopeToken::Openid].into_iter().collect()),
+                scope: Some([OPENID].into_iter().collect()),
             }),
         )
         .mount(&mock_server)
