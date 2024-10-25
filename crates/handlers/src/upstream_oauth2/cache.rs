@@ -267,21 +267,22 @@ impl MetadataCache {
     }
 }
 
-/* TODO: redo those tests
 #[cfg(test)]
 mod tests {
     #![allow(clippy::too_many_lines)]
 
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    // XXX: sadly, we can't test HTTPS requests with wiremock, so we can only test
+    // 'insecure' discovery
 
-    use hyper::{body::Bytes, Request, Response, StatusCode};
     use mas_data_model::UpstreamOAuthProviderClaimsImports;
-    use mas_http::BoxCloneSyncService;
     use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{clock::MockClock, Clock};
     use oauth2_types::scope::{Scope, OPENID};
-    use tower::BoxError;
     use ulid::Ulid;
+    use wiremock::{
+        matchers::{method, path},
+        Mock, MockServer, ResponseTemplate,
+    };
 
     use super::*;
     use crate::test_utils::setup;
@@ -289,202 +290,101 @@ mod tests {
     #[tokio::test]
     async fn test_metadata_cache() {
         setup();
-        let calls = Arc::new(AtomicUsize::new(0));
-        let closure_calls = Arc::clone(&calls);
-        let handler = move |req: Request<Bytes>| {
-            let calls = Arc::clone(&closure_calls);
-            async move {
-                calls.fetch_add(1, Ordering::SeqCst);
+        let mock_server = MockServer::start().await;
+        let http_client = mas_http::reqwest_client();
 
-                let body = match req.uri().authority().unwrap().as_str() {
-                    "valid.example.com" => Bytes::from_static(
-                        br#"{
-                            "issuer": "https://valid.example.com/",
-                            "authorization_endpoint": "https://valid.example.com/authorize",
-                            "token_endpoint": "https://valid.example.com/token",
-                            "jwks_uri": "https://valid.example.com/jwks",
-                            "response_types_supported": [
-                                "code"
-                            ],
-                            "grant_types_supported": [
-                                "authorization_code"
-                            ],
-                            "subject_types_supported": [
-                                "public"
-                            ],
-                            "id_token_signing_alg_values_supported": [
-                                "RS256"
-                            ],
-                            "scopes_supported": [
-                                "openid",
-                                "profile",
-                                "email"
-                            ]
-                        }"#,
-                    ),
-                    "insecure.example.com" => Bytes::from_static(
-                        br#"{
-                            "issuer": "http://insecure.example.com/",
-                            "authorization_endpoint": "http://insecure.example.com/authorize",
-                            "token_endpoint": "http://insecure.example.com/token",
-                            "jwks_uri": "http://insecure.example.com/jwks",
-                            "response_types_supported": [
-                                "code"
-                            ],
-                            "grant_types_supported": [
-                                "authorization_code"
-                            ],
-                            "subject_types_supported": [
-                                "public"
-                            ],
-                            "id_token_signing_alg_values_supported": [
-                                "RS256"
-                            ],
-                            "scopes_supported": [
-                                "openid",
-                                "profile",
-                                "email"
-                            ]
-                        }"#,
-                    ),
-                    _ => Bytes::default(),
-                };
-
-                let mut response = Response::new(body);
-                *response.status_mut() = StatusCode::OK;
-                Ok::<_, BoxError>(response)
-            }
-        };
-
-        let service = BoxCloneSyncService::new(tower::service_fn(handler));
         let cache = MetadataCache::new();
 
         // An inexistant issuer should fail
         cache
-            .get(&service, "https://inexistant.example.com/", true)
+            .get(&http_client, &mock_server.uri(), false)
             .await
             .unwrap_err();
-        assert_eq!(calls.load(Ordering::SeqCst), 1);
+
+        let expected_calls = 3;
+        let mut calls = 0;
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/.well-known/openid-configuration"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issuer": mock_server.uri(),
+                "authorization_endpoint": "https://example.com/authorize",
+                "token_endpoint": "https://example.com/token",
+                "jwks_uri": "https://example.com/jwks",
+                "userinfo_endpoint": "https://example.com/userinfo",
+                "scopes_supported": ["openid"],
+                "response_types_supported": ["code"],
+                "response_modes_supported": ["query", "fragment"],
+                "grant_types_supported": ["authorization_code"],
+                "subject_types_supported": ["public"],
+                "id_token_signing_alg_values_supported": ["RS256"],
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
 
         // A valid issuer should succeed
         cache
-            .get(&service, "https://valid.example.com/", true)
+            .get(&http_client, &mock_server.uri(), false)
             .await
             .unwrap();
-        assert_eq!(calls.load(Ordering::SeqCst), 2);
+        calls += 1;
 
         // Calling again should not trigger a new fetch
         cache
-            .get(&service, "https://valid.example.com/", true)
+            .get(&http_client, &mock_server.uri(), false)
             .await
             .unwrap();
-        assert_eq!(calls.load(Ordering::SeqCst), 2);
+        calls += 0;
 
-        // An insecure issuer should work with insecure discovery
+        // A secure discovery should call but fail because the issuer is insecure
         cache
-            .get(&service, "http://insecure.example.com/", false)
-            .await
-            .unwrap();
-        assert_eq!(calls.load(Ordering::SeqCst), 3);
-
-        // Doing it again shpoild not trigger a new fetch
-        cache
-            .get(&service, "http://insecure.example.com/", false)
-            .await
-            .unwrap();
-        assert_eq!(calls.load(Ordering::SeqCst), 3);
-
-        // But it should fail with secure discovery
-        // Note that it still fetched because secure and insecure caches are distinct
-        cache
-            .get(&service, "http://insecure.example.com/", true)
+            .get(&http_client, &mock_server.uri(), true)
             .await
             .unwrap_err();
-        assert_eq!(calls.load(Ordering::SeqCst), 4);
+        calls += 1;
 
-        // Calling refresh should refresh all the known valid issuers
-        cache.refresh_all(&service).await;
-        assert_eq!(calls.load(Ordering::SeqCst), 6);
+        // Calling refresh should refresh all the known issuers
+        cache.refresh_all(&http_client).await;
+        calls += 1;
+
+        assert_eq!(calls, expected_calls);
     }
 
     #[tokio::test]
     async fn test_lazy_provider_infos() {
         setup();
-        let calls = Arc::new(AtomicUsize::new(0));
-        let closure_calls = Arc::clone(&calls);
-        let handler = move |req: Request<Bytes>| {
-            let calls = Arc::clone(&closure_calls);
-            async move {
-                calls.fetch_add(1, Ordering::SeqCst);
 
-                let body = match req.uri().authority().unwrap().as_str() {
-                    "valid.example.com" => Bytes::from_static(
-                        br#"{
-                            "issuer": "https://valid.example.com/",
-                            "authorization_endpoint": "https://valid.example.com/authorize",
-                            "token_endpoint": "https://valid.example.com/token",
-                            "jwks_uri": "https://valid.example.com/jwks",
-                            "response_types_supported": [
-                                "code"
-                            ],
-                            "grant_types_supported": [
-                                "authorization_code"
-                            ],
-                            "subject_types_supported": [
-                                "public"
-                            ],
-                            "id_token_signing_alg_values_supported": [
-                                "RS256"
-                            ],
-                            "scopes_supported": [
-                                "openid",
-                                "profile",
-                                "email"
-                            ]
-                        }"#,
-                    ),
-                    "insecure.example.com" => Bytes::from_static(
-                        br#"{
-                            "issuer": "http://insecure.example.com/",
-                            "authorization_endpoint": "http://insecure.example.com/authorize",
-                            "token_endpoint": "http://insecure.example.com/token",
-                            "jwks_uri": "http://insecure.example.com/jwks",
-                            "response_types_supported": [
-                                "code"
-                            ],
-                            "grant_types_supported": [
-                                "authorization_code"
-                            ],
-                            "subject_types_supported": [
-                                "public"
-                            ],
-                            "id_token_signing_alg_values_supported": [
-                                "RS256"
-                            ],
-                            "scopes_supported": [
-                                "openid",
-                                "profile",
-                                "email"
-                            ]
-                        }"#,
-                    ),
-                    _ => Bytes::default(),
-                };
+        let mock_server = MockServer::start().await;
+        let http_client = mas_http::reqwest_client();
 
-                let mut response = Response::new(body);
-                *response.status_mut() = StatusCode::OK;
-                Ok::<_, BoxError>(response)
-            }
-        };
+        let expected_calls = 2;
+        let mut calls = 0;
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/.well-known/openid-configuration"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issuer": mock_server.uri(),
+                "authorization_endpoint": "https://example.com/authorize",
+                "token_endpoint": "https://example.com/token",
+                "jwks_uri": "https://example.com/jwks",
+                "userinfo_endpoint": "https://example.com/userinfo",
+                "scopes_supported": ["openid"],
+                "response_types_supported": ["code"],
+                "response_modes_supported": ["query", "fragment"],
+                "grant_types_supported": ["authorization_code"],
+                "subject_types_supported": ["public"],
+                "id_token_signing_alg_values_supported": ["RS256"],
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
 
         let clock = MockClock::default();
-        let service = BoxCloneSyncService::new(tower::service_fn(handler));
         let provider = UpstreamOAuthProvider {
             id: Ulid::nil(),
-            issuer: "https://valid.example.com/".to_owned(),
+            issuer: mock_server.uri(),
             human_name: Some("Example Ltd.".to_owned()),
             brand_name: None,
-            discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
+            discovery_mode: UpstreamOAuthProviderDiscoveryMode::Insecure,
             pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
             jwks_uri_override: None,
             authorization_endpoint_override: None,
@@ -503,39 +403,36 @@ mod tests {
         // Without any override, it should just use discovery
         {
             let cache = MetadataCache::new();
-            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &service);
-            assert_eq!(calls.load(Ordering::SeqCst), 0);
+            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &http_client);
             lazy_metadata.maybe_discover().await.unwrap();
-            assert_eq!(calls.load(Ordering::SeqCst), 1);
             assert_eq!(
                 lazy_metadata
                     .authorization_endpoint()
                     .await
                     .unwrap()
                     .as_str(),
-                "https://valid.example.com/authorize"
+                "https://example.com/authorize"
             );
+            calls += 1;
         }
 
         // Test overriding endpoints
         {
             let provider = UpstreamOAuthProvider {
-                jwks_uri_override: Some("https://valid.example.com/jwks_override".parse().unwrap()),
+                jwks_uri_override: Some("https://example.com/jwks_override".parse().unwrap()),
                 authorization_endpoint_override: Some(
-                    "https://valid.example.com/authorize_override"
-                        .parse()
-                        .unwrap(),
+                    "https://example.com/authorize_override".parse().unwrap(),
                 ),
                 token_endpoint_override: Some(
-                    "https://valid.example.com/token_override".parse().unwrap(),
+                    "https://example.com/token_override".parse().unwrap(),
                 ),
                 ..provider.clone()
             };
             let cache = MetadataCache::new();
-            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &service);
+            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &http_client);
             assert_eq!(
                 lazy_metadata.jwks_uri().await.unwrap().as_str(),
-                "https://valid.example.com/jwks_override"
+                "https://example.com/jwks_override"
             );
             assert_eq!(
                 lazy_metadata
@@ -543,48 +440,27 @@ mod tests {
                     .await
                     .unwrap()
                     .as_str(),
-                "https://valid.example.com/authorize_override"
+                "https://example.com/authorize_override"
             );
             assert_eq!(
                 lazy_metadata.token_endpoint().await.unwrap().as_str(),
-                "https://valid.example.com/token_override"
+                "https://example.com/token_override"
             );
             // This shouldn't trigger a new fetch as the endpoint is overriden
-            assert_eq!(calls.load(Ordering::SeqCst), 1);
+            calls += 0;
         }
 
-        // Insecure providers don't work with secure discovery
+        // Loading an insecure provider with secure discovery should fail
         {
             let provider = UpstreamOAuthProvider {
-                issuer: "http://insecure.example.com/".to_owned(),
+                discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
                 ..provider.clone()
             };
             let cache = MetadataCache::new();
-            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &service);
+            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &http_client);
             lazy_metadata.authorization_endpoint().await.unwrap_err();
             // This triggered a fetch, even though it failed
-            assert_eq!(calls.load(Ordering::SeqCst), 2);
-        }
-
-        // Insecure providers work with insecure discovery
-        {
-            let provider = UpstreamOAuthProvider {
-                issuer: "http://insecure.example.com/".to_owned(),
-                discovery_mode: UpstreamOAuthProviderDiscoveryMode::Insecure,
-                ..provider.clone()
-            };
-            let cache = MetadataCache::new();
-            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &service);
-            assert_eq!(
-                lazy_metadata
-                    .authorization_endpoint()
-                    .await
-                    .unwrap()
-                    .as_str(),
-                "http://insecure.example.com/authorize"
-            );
-            // This triggered a fetch
-            assert_eq!(calls.load(Ordering::SeqCst), 3);
+            calls += 1;
         }
 
         // Getting endpoints when discovery is disabled only works for overriden ones
@@ -592,13 +468,13 @@ mod tests {
             let provider = UpstreamOAuthProvider {
                 discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
                 authorization_endpoint_override: Some(
-                    Url::parse("https://valid.example.com/authorize_override").unwrap(),
+                    Url::parse("https://example.com/authorize_override").unwrap(),
                 ),
                 token_endpoint_override: None,
                 ..provider.clone()
             };
             let cache = MetadataCache::new();
-            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &service);
+            let mut lazy_metadata = LazyProviderInfos::new(&cache, &provider, &http_client);
             // This should not fail, but also does nothing
             assert!(lazy_metadata.maybe_discover().await.unwrap().is_none());
             assert_eq!(
@@ -607,15 +483,16 @@ mod tests {
                     .await
                     .unwrap()
                     .as_str(),
-                "https://valid.example.com/authorize_override"
+                "https://example.com/authorize_override"
             );
             assert!(matches!(
                 lazy_metadata.token_endpoint().await,
                 Err(DiscoveryError::Disabled),
             ));
             // This did not trigger a fetch
-            assert_eq!(calls.load(Ordering::SeqCst), 3);
+            calls += 0;
         }
+
+        assert_eq!(calls, expected_calls);
     }
 }
-*/
