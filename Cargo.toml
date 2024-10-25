@@ -172,7 +172,7 @@ features = [
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.3.1"
+version = "2.4.0"
 
 # Utilities to deal with non-zero values
 [workspace.dependencies.nonzero_ext]
