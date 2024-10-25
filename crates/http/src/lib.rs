@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-//! [`tower`] layers and services to help building HTTP client and servers
+//! Utilities to do HTTP requests
 
 #![deny(rustdoc::missing_crate_level_docs)]
 #![allow(clippy::module_name_repetitions)]
