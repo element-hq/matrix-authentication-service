@@ -7,7 +7,6 @@
 //! OAuth 2.0 and OpenID Connect types.
 
 pub mod client_credentials;
-pub mod scope;
 
 use std::collections::HashMap;
 
