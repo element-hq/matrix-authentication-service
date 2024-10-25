@@ -21,6 +21,7 @@ opentelemetry-semantic-conventions.workspace = true
 opentelemetry.workspace = true
 reqwest.workspace = true
 rustls-platform-verifier.workspace = true
+tokio.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 tracing.workspace = true

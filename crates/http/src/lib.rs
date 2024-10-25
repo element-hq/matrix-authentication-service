@@ -9,6 +9,8 @@
 #![deny(rustdoc::missing_crate_level_docs)]
 #![allow(clippy::module_name_repetitions)]
 
+use std::sync::LazyLock;
+
 mod ext;
 mod reqwest;
 
@@ -16,3 +18,12 @@ pub use self::{
     ext::{set_propagator, CorsLayerExt},
     reqwest::{client as reqwest_client, RequestBuilderExt},
 };
+
+static METER: LazyLock<opentelemetry::metrics::Meter> = LazyLock::new(|| {
+    opentelemetry::global::meter_with_version(
+        env!("CARGO_PKG_NAME"),
+        Some(env!("CARGO_PKG_VERSION")),
+        Some(opentelemetry_semantic_conventions::SCHEMA_URL),
+        None,
+    )
+});
