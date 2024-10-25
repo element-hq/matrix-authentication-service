@@ -13,7 +13,6 @@ use mas_jose::{
 };
 use oauth2_types::{oidc::ProviderMetadataVerificationError, pkce::CodeChallengeError};
 use thiserror::Error;
-pub use tower::BoxError;
 
 /// All possible errors when using this crate.
 #[derive(Debug, Error)]
@@ -225,8 +224,4 @@ pub enum CredentialsError {
     /// An error occurred when signing the JWT.
     #[error(transparent)]
     JwtSignature(#[from] JwtSignatureError),
-
-    /// An error occurred with a custom signing method.
-    #[error(transparent)]
-    Custom(BoxError),
 }

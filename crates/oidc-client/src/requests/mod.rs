@@ -11,6 +11,5 @@ pub mod client_credentials;
 pub mod discovery;
 pub mod jose;
 pub mod refresh_token;
-pub mod rp_initiated_logout;
 pub mod token;
 pub mod userinfo;

@@ -21,8 +21,7 @@ use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, REFRESH
 #[tokio::test]
 async fn pass_refresh_access_token() {
     let (http_service, mock_server, issuer) = init_test().await;
-    let client_credentials =
-        client_credentials(&OAuthClientAuthenticationMethod::None, &issuer, None);
+    let client_credentials = client_credentials(&OAuthClientAuthenticationMethod::None, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
 

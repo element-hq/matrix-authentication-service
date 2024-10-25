@@ -9,5 +9,4 @@ mod client_credentials;
 mod discovery;
 mod jose;
 mod refresh_token;
-mod rp_initiated_logout;
 mod userinfo;

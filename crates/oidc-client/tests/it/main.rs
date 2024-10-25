@@ -15,10 +15,7 @@ use mas_jose::{
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_oidc_client::types::{
-    client_credentials::{ClientCredentials, JwtSigningFn, JwtSigningMethod},
-    IdToken,
-};
+use mas_oidc_client::types::{client_credentials::ClientCredentials, IdToken};
 use rand::{
     distributions::{Alphanumeric, DistString},
     SeedableRng,
@@ -120,7 +117,6 @@ fn id_token(issuer: &str) -> (IdToken, PublicJsonWebKeySet) {
 fn client_credentials(
     auth_method: &OAuthClientAuthenticationMethod,
     issuer: &Url,
-    custom_signing: Option<Box<JwtSigningFn>>,
 ) -> ClientCredentials {
     match auth_method {
         OAuthClientAuthenticationMethod::None => ClientCredentials::None {
@@ -145,15 +141,9 @@ fn client_credentials(
         OAuthClientAuthenticationMethod::PrivateKeyJwt => {
             let signing_algorithm = JsonWebSignatureAlg::Es256;
 
-            let jwt_signing_method = if let Some(signing_fn) = custom_signing {
-                JwtSigningMethod::with_custom_signing_method(signing_fn)
-            } else {
-                JwtSigningMethod::with_keystore(keystore(&signing_algorithm))
-            };
-
             ClientCredentials::PrivateKeyJwt {
                 client_id: CLIENT_ID.to_owned(),
-                jwt_signing_method,
+                keystore: keystore(&signing_algorithm),
                 signing_algorithm,
                 token_endpoint: issuer.join("token").unwrap(),
             }
