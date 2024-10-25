@@ -9,7 +9,7 @@ use std::string::FromUtf8Error;
 use mas_data_model::UpstreamOAuthProvider;
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_keystore::{DecryptError, Encrypter, Keystore};
-use mas_oidc_client::types::client_credentials::{ClientCredentials, JwtSigningMethod};
+use mas_oidc_client::types::client_credentials::ClientCredentials;
 use thiserror::Error;
 use url::Url;
 
@@ -84,7 +84,7 @@ fn client_credentials_for_provider(
         },
         OAuthClientAuthenticationMethod::PrivateKeyJwt => ClientCredentials::PrivateKeyJwt {
             client_id,
-            jwt_signing_method: JwtSigningMethod::Keystore(keystore.clone()),
+            keystore: keystore.clone(),
             signing_algorithm: provider
                 .token_endpoint_signing_alg
                 .clone()

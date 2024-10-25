@@ -29,7 +29,6 @@ use rand::{
     Rng,
 };
 use serde::Serialize;
-use serde_with::skip_serializing_none;
 use url::Url;
 
 use super::jose::JwtVerificationData;
@@ -194,12 +193,12 @@ pub struct AuthorizationValidationData {
     pub code_challenge_verifier: Option<String>,
 }
 
-#[skip_serializing_none]
 #[derive(Clone, Serialize)]
 struct FullAuthorizationRequest {
     #[serde(flatten)]
     inner: AuthorizationRequest,
-    #[serde(flatten)]
+
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pkce: Option<pkce::AuthorizationRequest>,
 }
 

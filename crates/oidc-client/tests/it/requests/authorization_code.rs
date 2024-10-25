@@ -177,8 +177,7 @@ fn is_valid_token_endpoint_request(req: &Request) -> bool {
 #[tokio::test]
 async fn pass_access_token_with_authorization_code() {
     let (http_service, mock_server, issuer) = init_test().await;
-    let client_credentials =
-        client_credentials(&OAuthClientAuthenticationMethod::None, &issuer, None);
+    let client_credentials = client_credentials(&OAuthClientAuthenticationMethod::None, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
 
@@ -236,8 +235,7 @@ async fn pass_access_token_with_authorization_code() {
 #[tokio::test]
 async fn fail_access_token_with_authorization_code_wrong_nonce() {
     let (http_service, mock_server, issuer) = init_test().await;
-    let client_credentials =
-        client_credentials(&OAuthClientAuthenticationMethod::None, &issuer, None);
+    let client_credentials = client_credentials(&OAuthClientAuthenticationMethod::None, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
 
@@ -298,8 +296,7 @@ async fn fail_access_token_with_authorization_code_wrong_nonce() {
 #[tokio::test]
 async fn fail_access_token_with_authorization_code_no_id_token() {
     let (http_service, mock_server, issuer) = init_test().await;
-    let client_credentials =
-        client_credentials(&OAuthClientAuthenticationMethod::None, &issuer, None);
+    let client_credentials = client_credentials(&OAuthClientAuthenticationMethod::None, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
 

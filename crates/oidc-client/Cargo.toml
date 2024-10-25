@@ -11,16 +11,10 @@ repository.workspace = true
 [lints]
 workspace = true
 
-[features]
-default = ["keystore"]
-keystore = ["dep:mas-keystore"]
-
 [dependencies]
 base64ct = { version = "1.6.0", features = ["std"] }
-bytes.workspace = true
 chrono.workspace = true
 form_urlencoded = "1.2.1"
-futures-util = "0.3.31"
 headers.workspace = true
 http.workspace = true
 language-tags = "0.3.2"
@@ -30,22 +24,19 @@ reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
-serde_with = "3.11.0"
 thiserror.workspace = true
-tower.workspace = true
 tracing.workspace = true
 url.workspace = true
 
 mas-http.workspace = true
 mas-iana.workspace = true
 mas-jose.workspace = true
-mas-keystore = { workspace = true, optional = true }
+mas-keystore.workspace = true
 oauth2-types.workspace = true
 
 [dev-dependencies]
 assert_matches = "1.5.0"
 bitflags = "2.6.0"
-mas-keystore.workspace = true
 rand_chacha = "0.3.1"
 tokio.workspace = true
 wiremock = "0.6.2"

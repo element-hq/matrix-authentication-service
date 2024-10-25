@@ -23,11 +23,8 @@ use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, CLIENT_
 #[tokio::test]
 async fn pass_access_token_with_client_credentials() {
     let (http_service, mock_server, issuer) = init_test().await;
-    let client_credentials = client_credentials(
-        &OAuthClientAuthenticationMethod::ClientSecretPost,
-        &issuer,
-        None,
-    );
+    let client_credentials =
+        client_credentials(&OAuthClientAuthenticationMethod::ClientSecretPost, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
     let scope = [ScopeToken::Profile].into_iter().collect::<Scope>();
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
