@@ -317,7 +317,10 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
         run: |
           ~/.cargo/bin/cargo-nextest nextest run --archive-file nextest-archive.tar.zst \
-                     --partition count:${{ matrix.partition }}/2
+                     --partition count:${{ matrix.partition }}/2 \
+                     --retries 1
+          # --retries is a workaround for sqlx not playing nice with nextest
+          # Waiting for https://github.com/launchbadge/sqlx/pull/3334
 
   syn2mas:
     name: Check syn2mas
