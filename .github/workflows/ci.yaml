@@ -132,7 +132,7 @@ jobs:
       - name: Run `cargo-deny`
         uses: EmbarkStudios/cargo-deny-action@v2.0.1
 
-  
+
   check-schema:
     name: Check schema
     runs-on: ubuntu-latest
@@ -168,7 +168,7 @@ jobs:
         run: |
           if ! [[ -z $(git status -s) ]]; then
             echo "::error title=Workspace is not clean::Please run 'sh ./misc/update.sh' and commit the changes"
-          
+
             (
               echo '## Diff after running `sh ./misc/update.sh`:'
               echo
@@ -176,7 +176,7 @@ jobs:
               git diff
               echo '```'
             ) >> $GITHUB_STEP_SUMMARY
-          
+
             exit 1
           fi
 
@@ -216,13 +216,51 @@ jobs:
           cargo clippy --workspace --tests --bins --lib -- -D warnings
 
 
-  test:
-    name: Run test suite with Rust stable
-    needs: [rustfmt, opa-lint]
+  compile-test-artifacts:
+    name: Compile test artifacts
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
+      - name: Build and archive tests
+        run: cargo nextest archive --archive-file nextest-archive.tar.zst
+        env:
+          SQLX_OFFLINE: '1'
+
+      - name: Upload archive to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-archive
+          path: nextest-archive.tar.zst
+
+
+  test:
+    name: Run test suite with Rust stable
+    needs: [rustfmt, opa-lint, compile-test-artifacts]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        partition: [1, 2]
 
     services:
       postgres:
@@ -243,10 +281,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.1
 
-      - name: Install toolchain
-        run: |
-          rustup toolchain install stable
-          rustup default stable
+      - run: mkdir -p ~/.cargo/bin
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
 
       - name: Install Node
         uses: actions/setup-node@v4.0.4
@@ -270,16 +307,17 @@ jobs:
         working-directory: ./policies
         run: make
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+      - name: Download archive
+        uses: actions/download-artifact@v4
+        with:
+          name: nextest-archive
 
       - name: Test
-        id: test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
-          SQLX_OFFLINE: '1'
         run: |
-          cargo test --workspace
+          ~/.cargo/bin/cargo-nextest nextest run --archive-file nextest-archive.tar.zst \
+                     --partition count:${{ matrix.partition }}/2
 
   syn2mas:
     name: Check syn2mas
