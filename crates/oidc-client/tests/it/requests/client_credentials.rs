@@ -22,7 +22,7 @@ use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, CLIENT_
 
 #[tokio::test]
 async fn pass_access_token_with_client_credentials() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let client_credentials =
         client_credentials(&OAuthClientAuthenticationMethod::ClientSecretPost, &issuer);
     let token_endpoint = issuer.join("token").unwrap();
@@ -83,7 +83,7 @@ async fn pass_access_token_with_client_credentials() {
         .await;
 
     let response = access_token_with_client_credentials(
-        &http_service,
+        &http_client,
         client_credentials,
         &token_endpoint,
         Some(scope),

@@ -19,7 +19,7 @@ use crate::{id_token, init_test, ACCESS_TOKEN, SUBJECT_IDENTIFIER};
 
 #[tokio::test]
 async fn pass_fetch_userinfo() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let userinfo_endpoint = issuer.join("userinfo").unwrap();
     let (auth_id_token, _) = id_token(issuer.as_str());
 
@@ -37,7 +37,7 @@ async fn pass_fetch_userinfo() {
         .await;
 
     let claims = fetch_userinfo(
-        &http_service,
+        &http_client,
         &userinfo_endpoint,
         ACCESS_TOKEN,
         None,
@@ -51,7 +51,7 @@ async fn pass_fetch_userinfo() {
 
 #[tokio::test]
 async fn fail_wrong_subject_identifier() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
     let userinfo_endpoint = issuer.join("userinfo").unwrap();
     let (auth_id_token, _) = id_token(issuer.as_str());
 
@@ -69,7 +69,7 @@ async fn fail_wrong_subject_identifier() {
         .await;
 
     let error = fetch_userinfo(
-        &http_service,
+        &http_client,
         &userinfo_endpoint,
         ACCESS_TOKEN,
         None,
