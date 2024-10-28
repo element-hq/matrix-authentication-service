@@ -26,10 +26,11 @@ mod tests {
     use hyper::{Request, StatusCode};
 
     use super::*;
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_get_health(pool: PgPool) {
+        setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let request = Request::get("/health").empty();
 
