@@ -3369,6 +3369,7 @@ dependencies = [
  "mas-templates",
  "mime",
  "minijinja",
+ "minijinja-contrib",
  "nonzero_ext",
  "oauth2-types",
  "opentelemetry",
@@ -3770,6 +3771,7 @@ dependencies = [
  "mas-router",
  "mas-spa",
  "minijinja",
+ "minijinja-contrib",
  "oauth2-types",
  "rand",
  "serde",
@@ -3871,6 +3873,16 @@ dependencies = [
  "serde",
  "serde_json",
  "v_htmlescape",
+]
+
+[[package]]
+name = "minijinja-contrib"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39ffd46ee854be23604a20efd6c9655374fefbe4d44b949dc0f907305d92873a"
+dependencies = [
+ "minijinja",
+ "serde",
 ]
 
 [[package]]

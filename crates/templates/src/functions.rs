@@ -34,12 +34,13 @@ pub fn register(
     vite_manifest: ViteManifest,
     translator: Arc<Translator>,
 ) {
+    env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
+
+    minijinja_contrib::add_to_environment(env);
     env.add_test("empty", self::tester_empty);
-    env.add_test("starting_with", tester_starting_with);
     env.add_filter("to_params", filter_to_params);
     env.add_filter("simplify_url", filter_simplify_url);
     env.add_filter("add_slashes", filter_add_slashes);
-    env.add_filter("split", filter_split);
     env.add_function("add_params_to_url", function_add_params_to_url);
     env.add_function("counter", || Ok(Value::from_object(Counter::default())));
     env.add_global(
@@ -70,17 +71,6 @@ pub fn register(
 
 fn tester_empty(seq: Value) -> bool {
     seq.len() == Some(0)
-}
-
-fn tester_starting_with(value: &str, prefix: &str) -> bool {
-    value.starts_with(prefix)
-}
-
-fn filter_split(value: &str, separator: &str) -> Vec<String> {
-    value
-        .split(separator)
-        .map(std::borrow::ToOwned::to_owned)
-        .collect()
 }
 
 fn filter_add_slashes(value: &str) -> String {

@@ -9,13 +9,6 @@ use std::{collections::HashMap, sync::Arc};
 use base64ct::{Base64, Base64Unpadded, Base64Url, Base64UrlUnpadded, Encoding};
 use minijinja::{Environment, Error, ErrorKind, Value};
 
-fn split(value: &str, separator: Option<&str>) -> Vec<String> {
-    value
-        .split(separator.unwrap_or(" "))
-        .map(ToOwned::to_owned)
-        .collect::<Vec<_>>()
-}
-
 fn b64decode(value: &str) -> Result<Value, Error> {
     // We're not too concerned about the performance of this filter, so we'll just
     // try all the base64 variants when decoding
@@ -78,11 +71,14 @@ fn string(value: &Value) -> String {
 pub fn environment() -> Environment<'static> {
     let mut env = Environment::new();
 
-    env.add_filter("split", split);
+    minijinja_contrib::add_to_environment(&mut env);
+
     env.add_filter("b64decode", b64decode);
     env.add_filter("b64encode", b64encode);
     env.add_filter("tlvdecode", tlvdecode);
     env.add_filter("string", string);
+
+    env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
 
     env
 }
