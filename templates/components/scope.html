@@ -21,7 +21,7 @@ Please see LICENSE in the repository root for full details.
         <li>{{ icon.error() }}<p>{{ _("mas.scope.synapse_admin") }}</p></li>
       {% elif scope == "urn:mas:admin" %}
         <li>{{ icon.error() }}<p>{{ _("mas.scope.mas_admin") }}</p></li>
-      {% elif scope is starting_with("urn:matrix:org.matrix.msc2967.client:device:") %}
+      {% elif scope is startingwith("urn:matrix:org.matrix.msc2967.client:device:") %}
         {# We hide this scope #}
       {% else %}
         <li>{{ icon.info() }}<p>{{ scope }}</p></li>

@@ -78,6 +78,7 @@ time = "0.3.36"
 url.workspace = true
 mime = "0.3.17"
 minijinja.workspace = true
+minijinja-contrib.workspace = true
 nonzero_ext.workspace = true
 rand.workspace = true
 rand_chacha = "0.3.1"

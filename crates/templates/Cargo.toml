@@ -20,7 +20,8 @@ walkdir = "2.5.0"
 anyhow.workspace = true
 thiserror.workspace = true
 
-minijinja = { workspace = true, features = ["loader", "json", "speedups", "unstable_machinery"] }
+minijinja.workspace = true
+minijinja-contrib.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_urlencoded = "0.7.1"
