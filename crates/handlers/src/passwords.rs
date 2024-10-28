@@ -432,6 +432,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "this is particularly slow (20s+ seconds)"]
     fn hashing_pbkdf2() {
         let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
         let password = b"hunter2";

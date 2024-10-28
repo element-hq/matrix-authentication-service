@@ -325,14 +325,16 @@ version = "0.6.2"
 
 # A few profile opt-level tweaks to make the test suite run faster
 [profile.dev.package]
-num-bigint-dig.opt-level = 3
-sqlx-macros.opt-level = 3
-cranelift-codegen.opt-level = 3
-regalloc2.opt-level = 3
 argon2.opt-level = 3
-pbkdf2.opt-level = 3
 bcrypt.opt-level = 3
-sha2.opt-level = 3
-digest.opt-level = 3
 block-buffer.opt-level = 3
+cranelift-codegen.opt-level = 3
+digest.opt-level = 3
+hmac.opt-level = 3
 generic-array.opt-level = 3
+num-bigint-dig.opt-level = 3
+pbkdf2.opt-level = 3
+rayon.opt-level = 3
+regalloc2.opt-level = 3
+sha2.opt-level = 3
+sqlx-macros.opt-level = 3
