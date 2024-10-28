@@ -59,7 +59,7 @@
     "@tanstack/router-devtools": "^1.76.1",
     "@tanstack/router-vite-plugin": "^1.76.0",
     "@testing-library/react": "^16.0.1",
-    "@types/node": "^22.7.9",
+    "@types/node": "^22.8.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-test-renderer": "^18.3.0",
