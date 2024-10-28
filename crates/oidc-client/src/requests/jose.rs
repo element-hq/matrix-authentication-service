@@ -28,7 +28,7 @@ use crate::{
 ///
 /// # Arguments
 ///
-/// * `http_service` - The service to use for making HTTP requests.
+/// * `http_client` - The reqwest client to use for making HTTP requests.
 ///
 /// * `jwks_uri` - The URL where the JWKS can be retrieved.
 ///

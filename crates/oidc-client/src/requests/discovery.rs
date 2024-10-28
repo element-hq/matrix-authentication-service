@@ -69,7 +69,7 @@ pub async fn discover(
 ///
 /// # Arguments
 ///
-/// * `http_service` - The service to use for making HTTP requests.
+/// * `http_client` - The reqwest client to use for making HTTP requests.
 ///
 /// * `issuer` - The URL of the OpenID Connect Provider to fetch metadata for.
 ///

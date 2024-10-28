@@ -32,7 +32,7 @@ use crate::{
 ///
 /// # Arguments
 ///
-/// * `http_service` - The service to use for making HTTP requests.
+/// * `http_client` - The reqwest client to use for making HTTP requests.
 ///
 /// * `userinfo_endpoint` - The URL of the issuer's User Info endpoint.
 ///

@@ -53,16 +53,16 @@ async fn pass_discover() {
 
 #[tokio::test]
 async fn fail_discover_404() {
-    let (http_service, _mock_server, issuer) = init_test().await;
+    let (http_client, _mock_server, issuer) = init_test().await;
 
-    let error = discover(&http_service, issuer.as_str()).await.unwrap_err();
+    let error = discover(&http_client, issuer.as_str()).await.unwrap_err();
 
     assert_matches!(error, DiscoveryError::Http(_));
 }
 
 #[tokio::test]
 async fn fail_discover_not_json() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
 
     Mock::given(method("GET"))
         .and(path("/.well-known/openid-configuration"))
@@ -70,14 +70,14 @@ async fn fail_discover_not_json() {
         .mount(&mock_server)
         .await;
 
-    let error = discover(&http_service, issuer.as_str()).await.unwrap_err();
+    let error = discover(&http_client, issuer.as_str()).await.unwrap_err();
 
     assert_matches!(error, DiscoveryError::Http(_));
 }
 
 #[tokio::test]
 async fn fail_discover_invalid_metadata() {
-    let (http_service, mock_server, issuer) = init_test().await;
+    let (http_client, mock_server, issuer) = init_test().await;
 
     Mock::given(method("GET"))
         .and(path("/.well-known/openid-configuration"))
@@ -85,7 +85,7 @@ async fn fail_discover_invalid_metadata() {
         .mount(&mock_server)
         .await;
 
-    let error = discover(&http_service, issuer.as_str()).await.unwrap_err();
+    let error = discover(&http_client, issuer.as_str()).await.unwrap_err();
 
     assert_matches!(error, DiscoveryError::Validation(_));
 }
