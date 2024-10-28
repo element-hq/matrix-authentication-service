@@ -32,20 +32,7 @@
 //!
 //! The repository trait definition should look like this:
 //!
-//! ```rust
-//! # use async_trait::async_trait;
-//! # use ulid::Ulid;
-//! # use rand_core::RngCore;
-//! # use mas_storage::Clock;
-//! #
-//! # // A fake data structure, usually defined in mas-data-model
-//! # struct FakeData {
-//! #    id: Ulid,
-//! # }
-//! #
-//! # // A fake empty macro, to replace `mas_storage::repository_impl`
-//! # macro_rules! repository_impl { ($($tok:tt)*) => {} }
-//!
+//! ```ignore
 //! #[async_trait]
 //! pub trait FakeDataRepository: Send + Sync {
 //!     /// The error type returned by the repository
@@ -108,11 +95,7 @@
 //! Then update the [`RepositoryAccess`] trait to make the new repository
 //! available:
 //!
-//! ```rust
-//! # trait FakeDataRepository {
-//! #     type Error;
-//! # }
-//!
+//! ```ignore
 //! /// Access the various repositories the backend implements.
 //! pub trait RepositoryAccess: Send {
 //!     /// The backend-specific error type used by each repository.

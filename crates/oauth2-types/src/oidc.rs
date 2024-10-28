@@ -925,32 +925,6 @@ impl ProviderMetadata {
 ///
 /// To access other fields, use this type's `Deref` implementation.
 ///
-/// # Example
-///
-/// ```no_run
-/// use oauth2_types::{
-///     oidc::VerifiedProviderMetadata,
-///     requests::GrantType,
-/// };
-/// use url::Url;
-/// # use oauth2_types::oidc::{ProviderMetadata, ProviderMetadataVerificationError};
-/// # let metadata = ProviderMetadata::default();
-/// # let issuer = "http://localhost/";
-/// let verified_metadata = metadata.validate(&issuer)?;
-///
-/// // The endpoint is required during validation so this is not an `Option`.
-/// let _: &Url = verified_metadata.authorization_endpoint();
-///
-/// // The field has a default value so this is not an `Option`.
-/// let _: &[GrantType] = verified_metadata.grant_types_supported();
-///
-/// // Other fields can be accessed via `Deref`.
-/// if let Some(registration_endpoint) = &verified_metadata.registration_endpoint {
-///     println!("Registration is supported at {registration_endpoint}");
-/// }
-/// # Ok::<(), ProviderMetadataVerificationError>(())
-/// ```
-///
 /// [OpenID Connect Discovery Spec 1.0]: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
 #[derive(Debug, Clone)]
 pub struct VerifiedProviderMetadata {

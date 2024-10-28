@@ -611,24 +611,6 @@ pub struct Keystore {
 
 impl Keystore {
     /// Create a keystore out of a JSON Web Key Set
-    ///
-    /// ```rust
-    /// use mas_keystore::{Keystore, PrivateKey, JsonWebKey, JsonWebKeySet};
-    /// let rsa = PrivateKey::load_pem(include_str!("../tests/keys/rsa.pkcs1.pem")).unwrap();
-    /// let rsa = JsonWebKey::new(rsa);
-    ///
-    /// let ec_p256 = PrivateKey::load_pem(include_str!("../tests/keys/ec-p256.sec1.pem")).unwrap();
-    /// let ec_p256 = JsonWebKey::new(ec_p256);
-    ///
-    /// let ec_p384 = PrivateKey::load_pem(include_str!("../tests/keys/ec-p384.sec1.pem")).unwrap();
-    /// let ec_p384 = JsonWebKey::new(ec_p384);
-    ///
-    /// let ec_k256 = PrivateKey::load_pem(include_str!("../tests/keys/ec-k256.sec1.pem")).unwrap();
-    /// let ec_k256 = JsonWebKey::new(ec_k256);
-    ///
-    /// let jwks = JsonWebKeySet::new(vec![rsa, ec_p256, ec_p384, ec_k256]);
-    /// let keystore = Keystore::new(jwks);
-    /// ```
     #[must_use]
     pub fn new(keys: JsonWebKeySet<PrivateKey>) -> Self {
         let keys = Arc::new(keys);

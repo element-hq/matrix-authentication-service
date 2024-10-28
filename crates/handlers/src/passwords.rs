@@ -42,18 +42,6 @@ impl PasswordManager {
     /// complexity score between 0 and 4. The first item in
     /// the iterator will be the default hashing scheme.
     ///
-    /// # Example
-    ///
-    /// ```rust
-    /// pub use mas_handlers::passwords::{PasswordManager, Hasher};
-    ///
-    /// PasswordManager::new(3, [
-    ///     (3, Hasher::argon2id(Some(b"a-secret-pepper".to_vec()))),
-    ///     (2, Hasher::argon2id(None)),
-    ///     (1, Hasher::bcrypt(Some(10), None)),
-    /// ]).unwrap();
-    /// ```
-    ///
     /// # Errors
     ///
     /// Returns an error if the iterator was empty

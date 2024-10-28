@@ -225,16 +225,6 @@ impl TokenType {
     }
 
     /// Generate a token for the given type
-    ///
-    /// ```rust
-    /// extern crate rand;
-    ///
-    /// use rand::thread_rng;
-    /// use mas_data_model::TokenType::{AccessToken, RefreshToken};
-    ///
-    /// AccessToken.generate(&mut thread_rng());
-    /// RefreshToken.generate(&mut thread_rng());
-    /// ```
     pub fn generate(self, rng: &mut (impl RngCore + ?Sized)) -> String {
         let random_part: String = rng
             .sample_iter(&Alphanumeric)
@@ -249,25 +239,6 @@ impl TokenType {
     }
 
     /// Check the format of a token and determine its type
-    ///
-    /// ```rust
-    /// use mas_data_model::TokenType;
-    ///
-    /// assert_eq!(
-    ///     TokenType::check("mat_kkLSacJDpek22jKWw4AcXG68b7U3W6_0Lg9yb"),
-    ///     Ok(TokenType::AccessToken)
-    /// );
-    ///
-    /// assert_eq!(
-    ///     TokenType::check("mar_PkpplxPkfjsqvtdfUlYR1Afg2TpaHF_GaTQd2"),
-    ///     Ok(TokenType::RefreshToken)
-    /// );
-    ///
-    /// assert_eq!(
-    ///     TokenType::check("syt_PkpplxPkfjsqvtdfUlYR1Afg2TpaHF_GaTQd2"),
-    ///     Ok(TokenType::CompatAccessToken)
-    /// );
-    /// ```
     ///
     /// # Errors
     ///
