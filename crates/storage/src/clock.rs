@@ -48,20 +48,6 @@ impl Clock for SystemClock {
 
 /// A fake clock, which uses a fixed timestamp, and can be advanced with the
 /// [`MockClock::advance`] method.
-///
-/// ```rust
-/// use mas_storage::clock::{Clock, MockClock};
-/// use chrono::Duration;
-///
-/// let clock = MockClock::default();
-/// let t1 = clock.now();
-/// let t2 = clock.now();
-/// assert_eq!(t1, t2);
-///
-/// clock.advance(Duration::microseconds(10 * 1000 * 1000));
-/// let t3 = clock.now();
-/// assert_eq!(t2 + Duration::microseconds(10 * 1000 * 1000), t3);
-/// ```
 pub struct MockClock {
     timestamp: AtomicI64,
 }

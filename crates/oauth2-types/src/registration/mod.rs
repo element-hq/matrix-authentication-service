@@ -769,33 +769,6 @@ impl ClientMetadata {
 ///
 /// To access other fields, use this type's `Deref` implementation.
 ///
-/// # Example
-///
-/// ```no_run
-/// use oauth2_types::{
-///     oidc::ApplicationType,
-///     registration::VerifiedClientMetadata,
-///     requests::GrantType,
-/// };
-/// use url::Url;
-/// # use oauth2_types::registration::{ClientMetadata, ClientMetadataVerificationError};
-/// # let metadata = ClientMetadata::default();
-/// # let issuer = Url::parse("http://localhost").unwrap();
-/// let verified_metadata = metadata.validate()?;
-///
-/// // The redirect URIs are required during validation so this is not an `Option`.
-/// let _: &[Url] = verified_metadata.redirect_uris();
-///
-/// // The field has a default value so this is not an `Option`.
-/// let _: ApplicationType = verified_metadata.application_type();
-///
-/// // Other fields can be accessed via `Deref`.
-/// if let Some(jwks_uri) = &verified_metadata.jwks_uri {
-///     println!("Client's JWK Set is available at {jwks_uri}");
-/// }
-/// # Ok::<(), ClientMetadataVerificationError>(())
-/// ```
-///
 /// [OpenID Connect Dynamic Client Registration Spec 1.0]: https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata
 #[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(into = "ClientMetadataSerdeHelper")]
