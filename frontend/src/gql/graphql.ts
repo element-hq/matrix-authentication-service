@@ -36,6 +36,19 @@ export type AddEmailInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** The payload of the `addEmail` mutation */
+export type AddEmailPayload = {
+  __typename?: 'AddEmailPayload';
+  /** The email address that was added */
+  email?: Maybe<UserEmail>;
+  /** Status of the operation */
+  status: AddEmailStatus;
+  /** The user to whom the email address was added */
+  user?: Maybe<User>;
+  /** The list of policy violations if the email address was denied */
+  violations?: Maybe<Array<Scalars['String']['output']>>;
+};
+
 /** The status of the `addEmail` mutation */
 export type AddEmailStatus =
   /** The email address was added */
@@ -61,6 +74,15 @@ export type AddUserInput = {
   username: Scalars['String']['input'];
 };
 
+/** The payload for the `addUser` mutation. */
+export type AddUserPayload = {
+  __typename?: 'AddUserPayload';
+  /** Status of the operation */
+  status: AddUserStatus;
+  /** The user that was added. */
+  user?: Maybe<User>;
+};
+
 /** The status of the `addUser` mutation. */
 export type AddUserStatus =
   /** The user was added. */
@@ -78,11 +100,179 @@ export type AllowUserCrossSigningResetInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** The payload for the `allowUserCrossSigningReset` mutation. */
+export type AllowUserCrossSigningResetPayload = {
+  __typename?: 'AllowUserCrossSigningResetPayload';
+  /** The user that was updated. */
+  user?: Maybe<User>;
+};
+
+export type Anonymous = Node & {
+  __typename?: 'Anonymous';
+  id: Scalars['ID']['output'];
+};
+
+/** A session in an application, either a compatibility or an OAuth 2.0 one */
+export type AppSession = CompatSession | Oauth2Session;
+
+export type AppSessionConnection = {
+  __typename?: 'AppSessionConnection';
+  /** A list of edges. */
+  edges: Array<AppSessionEdge>;
+  /** A list of nodes. */
+  nodes: Array<AppSession>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AppSessionEdge = {
+  __typename?: 'AppSessionEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: AppSession;
+};
+
+/**
+ * An authentication records when a user enter their credential in a browser
+ * session.
+ */
+export type Authentication = CreationEvent & Node & {
+  __typename?: 'Authentication';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** A browser session represents a logged in user in a browser. */
+export type BrowserSession = CreationEvent & Node & {
+  __typename?: 'BrowserSession';
+  /**
+   * Get the list of both compat and OAuth 2.0 sessions started by this
+   * browser session, chronologically sorted
+   */
+  appSessions: AppSessionConnection;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** When the session was finished. */
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The last time the session was active. */
+  lastActiveAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The last IP address used by the session. */
+  lastActiveIp?: Maybe<Scalars['String']['output']>;
+  /** The most recent authentication of this session. */
+  lastAuthentication?: Maybe<Authentication>;
+  /** The state of the session. */
+  state: SessionState;
+  /** The user logged in this session. */
+  user: User;
+  /** The user-agent with which the session was created. */
+  userAgent?: Maybe<UserAgent>;
+};
+
+
+/** A browser session represents a logged in user in a browser. */
+export type BrowserSessionAppSessionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  device?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  state?: InputMaybe<SessionState>;
+};
+
+export type BrowserSessionConnection = {
+  __typename?: 'BrowserSessionConnection';
+  /** A list of edges. */
+  edges: Array<BrowserSessionEdge>;
+  /** A list of nodes. */
+  nodes: Array<BrowserSession>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type BrowserSessionEdge = {
+  __typename?: 'BrowserSessionEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: BrowserSession;
+};
+
+export type CaptchaConfig = {
+  __typename?: 'CaptchaConfig';
+  id: Scalars['ID']['output'];
+  /** Which Captcha service is being used */
+  service: CaptchaService;
+  /** The site key used by the instance */
+  siteKey: Scalars['String']['output'];
+};
+
 /** Which Captcha service is being used */
 export type CaptchaService =
   | 'CLOUDFLARE_TURNSTILE'
   | 'H_CAPTCHA'
   | 'RECAPTCHA_V2';
+
+/**
+ * A compat session represents a client session which used the legacy Matrix
+ * login API.
+ */
+export type CompatSession = CreationEvent & Node & {
+  __typename?: 'CompatSession';
+  /** The browser session which started this session, if any. */
+  browserSession?: Maybe<BrowserSession>;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The Matrix Device ID of this session. */
+  deviceId: Scalars['String']['output'];
+  /** When the session ended. */
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The last time the session was active. */
+  lastActiveAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The last IP address used by the session. */
+  lastActiveIp?: Maybe<Scalars['String']['output']>;
+  /** The associated SSO login, if any. */
+  ssoLogin?: Maybe<CompatSsoLogin>;
+  /** The state of the session. */
+  state: SessionState;
+  /** The user authorized for this session. */
+  user: User;
+  /** The user-agent with which the session was created. */
+  userAgent?: Maybe<UserAgent>;
+};
+
+export type CompatSessionConnection = {
+  __typename?: 'CompatSessionConnection';
+  /** A list of edges. */
+  edges: Array<CompatSessionEdge>;
+  /** A list of nodes. */
+  nodes: Array<CompatSession>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type CompatSessionEdge = {
+  __typename?: 'CompatSessionEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: CompatSession;
+};
 
 /** The type of a compatibility session. */
 export type CompatSessionType =
@@ -90,6 +280,50 @@ export type CompatSessionType =
   | 'SSO_LOGIN'
   /** The session was created by an unknown method. */
   | 'UNKNOWN';
+
+/**
+ * A compat SSO login represents a login done through the legacy Matrix login
+ * API, via the `m.login.sso` login method.
+ */
+export type CompatSsoLogin = Node & {
+  __typename?: 'CompatSsoLogin';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** When the client exchanged the login token sent during the redirection. */
+  exchangedAt?: Maybe<Scalars['DateTime']['output']>;
+  /**
+   * When the login was fulfilled, and the user was redirected back to the
+   * client.
+   */
+  fulfilledAt?: Maybe<Scalars['DateTime']['output']>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The redirect URI used during the login. */
+  redirectUri: Scalars['Url']['output'];
+  /** The compat session which was started by this login. */
+  session?: Maybe<CompatSession>;
+};
+
+export type CompatSsoLoginConnection = {
+  __typename?: 'CompatSsoLoginConnection';
+  /** A list of edges. */
+  edges: Array<CompatSsoLoginEdge>;
+  /** A list of nodes. */
+  nodes: Array<CompatSsoLogin>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type CompatSsoLoginEdge = {
+  __typename?: 'CompatSsoLoginEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: CompatSsoLogin;
+};
 
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
@@ -99,6 +333,23 @@ export type CreateOAuth2SessionInput = {
   scope: Scalars['String']['input'];
   /** The ID of the user for which to create the session */
   userId: Scalars['ID']['input'];
+};
+
+/** The payload of the `createOauth2Session` mutation. */
+export type CreateOAuth2SessionPayload = {
+  __typename?: 'CreateOAuth2SessionPayload';
+  /** Access token for this session */
+  accessToken: Scalars['String']['output'];
+  /** The OAuth 2.0 session which was just created */
+  oauth2Session: Oauth2Session;
+  /** Refresh token for this session, if it is not a permanent session */
+  refreshToken?: Maybe<Scalars['String']['output']>;
+};
+
+/** An object with a creation date. */
+export type CreationEvent = {
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
 };
 
 /** A filter for dates, with a lower bound and an upper bound */
@@ -126,6 +377,14 @@ export type EndBrowserSessionInput = {
   browserSessionId: Scalars['ID']['input'];
 };
 
+export type EndBrowserSessionPayload = {
+  __typename?: 'EndBrowserSessionPayload';
+  /** Returns the ended session. */
+  browserSession?: Maybe<BrowserSession>;
+  /** The status of the mutation. */
+  status: EndBrowserSessionStatus;
+};
+
 /** The status of the `endBrowserSession` mutation. */
 export type EndBrowserSessionStatus =
   /** The session was ended. */
@@ -139,6 +398,14 @@ export type EndCompatSessionInput = {
   compatSessionId: Scalars['ID']['input'];
 };
 
+export type EndCompatSessionPayload = {
+  __typename?: 'EndCompatSessionPayload';
+  /** Returns the ended session. */
+  compatSession?: Maybe<CompatSession>;
+  /** The status of the mutation. */
+  status: EndCompatSessionStatus;
+};
+
 /** The status of the `endCompatSession` mutation. */
 export type EndCompatSessionStatus =
   /** The session was ended. */
@@ -150,6 +417,14 @@ export type EndCompatSessionStatus =
 export type EndOAuth2SessionInput = {
   /** The ID of the session to end. */
   oauth2SessionId: Scalars['ID']['input'];
+};
+
+export type EndOAuth2SessionPayload = {
+  __typename?: 'EndOAuth2SessionPayload';
+  /** Returns the ended session. */
+  oauth2Session?: Maybe<Oauth2Session>;
+  /** The status of the mutation. */
+  status: EndOAuth2SessionStatus;
 };
 
 /** The status of the `endOauth2Session` mutation. */
@@ -167,12 +442,191 @@ export type LockUserInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** The payload for the `lockUser` mutation. */
+export type LockUserPayload = {
+  __typename?: 'LockUserPayload';
+  /** Status of the operation */
+  status: LockUserStatus;
+  /** The user that was locked. */
+  user?: Maybe<User>;
+};
+
 /** The status of the `lockUser` mutation. */
 export type LockUserStatus =
   /** The user was locked. */
   | 'LOCKED'
   /** The user was not found. */
   | 'NOT_FOUND';
+
+export type MatrixUser = {
+  __typename?: 'MatrixUser';
+  /** The avatar URL of the user, if any. */
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** Whether the user is deactivated on the homeserver. */
+  deactivated: Scalars['Boolean']['output'];
+  /** The display name of the user, if any. */
+  displayName?: Maybe<Scalars['String']['output']>;
+  /** The Matrix ID of the user. */
+  mxid: Scalars['String']['output'];
+};
+
+/** The mutations root of the GraphQL interface. */
+export type Mutation = {
+  __typename?: 'Mutation';
+  /** Add an email address to the specified user */
+  addEmail: AddEmailPayload;
+  /** Add a user. This is only available to administrators. */
+  addUser: AddUserPayload;
+  /** Temporarily allow user to reset their cross-signing keys. */
+  allowUserCrossSigningReset: AllowUserCrossSigningResetPayload;
+  /**
+   * Create a new arbitrary OAuth 2.0 Session.
+   *
+   * Only available for administrators.
+   */
+  createOauth2Session: CreateOAuth2SessionPayload;
+  endBrowserSession: EndBrowserSessionPayload;
+  endCompatSession: EndCompatSessionPayload;
+  endOauth2Session: EndOAuth2SessionPayload;
+  /** Lock a user. This is only available to administrators. */
+  lockUser: LockUserPayload;
+  /** Remove an email address */
+  removeEmail: RemoveEmailPayload;
+  /** Send a verification code for an email address */
+  sendVerificationEmail: SendVerificationEmailPayload;
+  /**
+   * Set whether a user can request admin. This is only available to
+   * administrators.
+   */
+  setCanRequestAdmin: SetCanRequestAdminPayload;
+  /** Set the display name of a user */
+  setDisplayName: SetDisplayNamePayload;
+  /**
+   * Set the password for a user.
+   *
+   * This can be used by server administrators to set any user's password,
+   * or, provided the capability hasn't been disabled on this server,
+   * by a user to change their own password as long as they know their
+   * current password.
+   */
+  setPassword: SetPasswordPayload;
+  /** Set the password for yourself, using a recovery ticket sent by e-mail. */
+  setPasswordByRecovery: SetPasswordPayload;
+  /** Set an email address as primary */
+  setPrimaryEmail: SetPrimaryEmailPayload;
+  /** Unlock a user. This is only available to administrators. */
+  unlockUser: UnlockUserPayload;
+  /** Submit a verification code for an email address */
+  verifyEmail: VerifyEmailPayload;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationAddEmailArgs = {
+  input: AddEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationAddUserArgs = {
+  input: AddUserInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationAllowUserCrossSigningResetArgs = {
+  input: AllowUserCrossSigningResetInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationCreateOauth2SessionArgs = {
+  input: CreateOAuth2SessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationEndBrowserSessionArgs = {
+  input: EndBrowserSessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationEndCompatSessionArgs = {
+  input: EndCompatSessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationEndOauth2SessionArgs = {
+  input: EndOAuth2SessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationLockUserArgs = {
+  input: LockUserInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationRemoveEmailArgs = {
+  input: RemoveEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSendVerificationEmailArgs = {
+  input: SendVerificationEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetCanRequestAdminArgs = {
+  input: SetCanRequestAdminInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetDisplayNameArgs = {
+  input: SetDisplayNameInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetPasswordArgs = {
+  input: SetPasswordInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetPasswordByRecoveryArgs = {
+  input: SetPasswordByRecoveryInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetPrimaryEmailArgs = {
+  input: SetPrimaryEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationUnlockUserArgs = {
+  input: UnlockUserInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationVerifyEmailArgs = {
+  input: VerifyEmailInput;
+};
+
+/** An object with an ID. */
+export type Node = {
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+};
 
 /** The application type advertised by the client. */
 export type Oauth2ApplicationType =
@@ -181,10 +635,246 @@ export type Oauth2ApplicationType =
   /** Client is a web application. */
   | 'WEB';
 
+/** An OAuth 2.0 client */
+export type Oauth2Client = Node & {
+  __typename?: 'Oauth2Client';
+  /** The application type advertised by the client. */
+  applicationType?: Maybe<Oauth2ApplicationType>;
+  /** OAuth 2.0 client ID */
+  clientId: Scalars['String']['output'];
+  /** Client name advertised by the client. */
+  clientName?: Maybe<Scalars['String']['output']>;
+  /** Client URI advertised by the client. */
+  clientUri?: Maybe<Scalars['Url']['output']>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** Logo URI advertised by the client. */
+  logoUri?: Maybe<Scalars['Url']['output']>;
+  /** Privacy policy URI advertised by the client. */
+  policyUri?: Maybe<Scalars['Url']['output']>;
+  /** List of redirect URIs used for authorization grants by the client. */
+  redirectUris: Array<Scalars['Url']['output']>;
+  /** Terms of services URI advertised by the client. */
+  tosUri?: Maybe<Scalars['Url']['output']>;
+};
+
+/**
+ * An OAuth 2.0 session represents a client session which used the OAuth APIs
+ * to login.
+ */
+export type Oauth2Session = CreationEvent & Node & {
+  __typename?: 'Oauth2Session';
+  /** The browser session which started this OAuth 2.0 session. */
+  browserSession?: Maybe<BrowserSession>;
+  /** OAuth 2.0 client used by this session. */
+  client: Oauth2Client;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** When the session ended. */
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The last time the session was active. */
+  lastActiveAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The last IP address used by the session. */
+  lastActiveIp?: Maybe<Scalars['String']['output']>;
+  /** Scope granted for this session. */
+  scope: Scalars['String']['output'];
+  /** The state of the session. */
+  state: SessionState;
+  /** User authorized for this session. */
+  user?: Maybe<User>;
+  /** The user-agent with which the session was created. */
+  userAgent?: Maybe<UserAgent>;
+};
+
+export type Oauth2SessionConnection = {
+  __typename?: 'Oauth2SessionConnection';
+  /** A list of edges. */
+  edges: Array<Oauth2SessionEdge>;
+  /** A list of nodes. */
+  nodes: Array<Oauth2Session>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type Oauth2SessionEdge = {
+  __typename?: 'Oauth2SessionEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: Oauth2Session;
+};
+
+/** Information about pagination in a connection */
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  /** When paginating forwards, the cursor to continue. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  /** When paginating forwards, are there more items? */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** When paginating backwards, are there more items? */
+  hasPreviousPage: Scalars['Boolean']['output'];
+  /** When paginating backwards, the cursor to continue. */
+  startCursor?: Maybe<Scalars['String']['output']>;
+};
+
+/** The query root of the GraphQL interface. */
+export type Query = {
+  __typename?: 'Query';
+  /** Fetch a browser session by its ID. */
+  browserSession?: Maybe<BrowserSession>;
+  /** Fetch a compatible session by its ID. */
+  compatSession?: Maybe<CompatSession>;
+  /**
+   * Get the current logged in browser session
+   * @deprecated Use `viewerSession` instead.
+   */
+  currentBrowserSession?: Maybe<BrowserSession>;
+  /**
+   * Get the current logged in user
+   * @deprecated Use `viewer` instead.
+   */
+  currentUser?: Maybe<User>;
+  /** Fetches an object given its ID. */
+  node?: Maybe<Node>;
+  /** Fetch an OAuth 2.0 client by its ID. */
+  oauth2Client?: Maybe<Oauth2Client>;
+  /** Fetch an OAuth 2.0 session by its ID. */
+  oauth2Session?: Maybe<Oauth2Session>;
+  /** Lookup a compat or OAuth 2.0 session */
+  session?: Maybe<Session>;
+  /** Get the current site configuration */
+  siteConfig: SiteConfig;
+  /** Fetch an upstream OAuth 2.0 link by its ID. */
+  upstreamOauth2Link?: Maybe<UpstreamOAuth2Link>;
+  /** Fetch an upstream OAuth 2.0 provider by its ID. */
+  upstreamOauth2Provider?: Maybe<UpstreamOAuth2Provider>;
+  /** Get a list of upstream OAuth 2.0 providers. */
+  upstreamOauth2Providers: UpstreamOAuth2ProviderConnection;
+  /** Fetch a user by its ID. */
+  user?: Maybe<User>;
+  /** Fetch a user by its username. */
+  userByUsername?: Maybe<User>;
+  /** Fetch a user email by its ID. */
+  userEmail?: Maybe<UserEmail>;
+  /**
+   * Get a list of users.
+   *
+   * This is only available to administrators.
+   */
+  users: UserConnection;
+  /** Get the viewer */
+  viewer: Viewer;
+  /** Get the viewer's session */
+  viewerSession: ViewerSession;
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryBrowserSessionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryCompatSessionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryNodeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryOauth2ClientArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryOauth2SessionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QuerySessionArgs = {
+  deviceId: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUpstreamOauth2LinkArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUpstreamOauth2ProviderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUpstreamOauth2ProvidersArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUserByUsernameArgs = {
+  username: Scalars['String']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUserEmailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUsersArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  canRequestAdmin?: InputMaybe<Scalars['Boolean']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  state?: InputMaybe<UserState>;
+};
+
 /** The input for the `removeEmail` mutation */
 export type RemoveEmailInput = {
   /** The ID of the email address to remove */
   userEmailId: Scalars['ID']['input'];
+};
+
+/** The payload of the `removeEmail` mutation */
+export type RemoveEmailPayload = {
+  __typename?: 'RemoveEmailPayload';
+  /** The email address that was removed */
+  email?: Maybe<UserEmail>;
+  /** Status of the operation */
+  status: RemoveEmailStatus;
+  /** The user to whom the email address belonged */
+  user?: Maybe<User>;
 };
 
 /** The status of the `removeEmail` mutation */
@@ -202,12 +892,26 @@ export type SendVerificationEmailInput = {
   userEmailId: Scalars['ID']['input'];
 };
 
+/** The payload of the `sendVerificationEmail` mutation */
+export type SendVerificationEmailPayload = {
+  __typename?: 'SendVerificationEmailPayload';
+  /** The email address to which the verification email was sent */
+  email: UserEmail;
+  /** Status of the operation */
+  status: SendVerificationEmailStatus;
+  /** The user to whom the email address belongs */
+  user: User;
+};
+
 /** The status of the `sendVerificationEmail` mutation */
 export type SendVerificationEmailStatus =
   /** The email address is already verified */
   | 'ALREADY_VERIFIED'
   /** The verification email was sent */
   | 'SENT';
+
+/** A client session, either compat or OAuth 2.0 */
+export type Session = CompatSession | Oauth2Session;
 
 /** The state of a session */
 export type SessionState =
@@ -224,12 +928,28 @@ export type SetCanRequestAdminInput = {
   userId: Scalars['ID']['input'];
 };
 
+/** The payload for the `setCanRequestAdmin` mutation. */
+export type SetCanRequestAdminPayload = {
+  __typename?: 'SetCanRequestAdminPayload';
+  /** The user that was updated. */
+  user?: Maybe<User>;
+};
+
 /** The input for the `addEmail` mutation */
 export type SetDisplayNameInput = {
   /** The display name to set. If `None`, the display name will be removed. */
   displayName?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the user to add the email address to */
   userId: Scalars['ID']['input'];
+};
+
+/** The payload of the `setDisplayName` mutation */
+export type SetDisplayNamePayload = {
+  __typename?: 'SetDisplayNamePayload';
+  /** Status of the operation */
+  status: SetDisplayNameStatus;
+  /** The user that was updated */
+  user?: Maybe<User>;
 };
 
 /** The status of the `setDisplayName` mutation */
@@ -266,6 +986,13 @@ export type SetPasswordInput = {
    * ID.
    */
   userId: Scalars['ID']['input'];
+};
+
+/** The return type for the `setPassword` mutation. */
+export type SetPasswordPayload = {
+  __typename?: 'SetPasswordPayload';
+  /** Status of the operation */
+  status: SetPasswordStatus;
 };
 
 /** The status of the `setPassword` mutation. */
@@ -313,6 +1040,14 @@ export type SetPrimaryEmailInput = {
   userEmailId: Scalars['ID']['input'];
 };
 
+/** The payload of the `setPrimaryEmail` mutation */
+export type SetPrimaryEmailPayload = {
+  __typename?: 'SetPrimaryEmailPayload';
+  status: SetPrimaryEmailStatus;
+  /** The user to whom the email address belongs */
+  user?: Maybe<User>;
+};
+
 /** The status of the `setPrimaryEmail` mutation */
 export type SetPrimaryEmailStatus =
   /** The email address was not found */
@@ -322,10 +1057,51 @@ export type SetPrimaryEmailStatus =
   /** Can't make an unverified email address primary */
   | 'UNVERIFIED';
 
+export type SiteConfig = Node & {
+  __typename?: 'SiteConfig';
+  /** The configuration of CAPTCHA provider. */
+  captchaConfig?: Maybe<CaptchaConfig>;
+  /** Whether users can change their display name. */
+  displayNameChangeAllowed: Scalars['Boolean']['output'];
+  /** Whether users can change their email. */
+  emailChangeAllowed: Scalars['Boolean']['output'];
+  /** The ID of the site configuration. */
+  id: Scalars['ID']['output'];
+  /** Imprint to show in the footer. */
+  imprint?: Maybe<Scalars['String']['output']>;
+  /**
+   * Minimum password complexity, from 0 to 4, in terms of a zxcvbn score.
+   * The exact scorer (including dictionaries and other data tables)
+   * in use is <https://crates.io/crates/zxcvbn>.
+   */
+  minimumPasswordComplexity: Scalars['Int']['output'];
+  /** Whether passwords are enabled and users can change their own passwords. */
+  passwordChangeAllowed: Scalars['Boolean']['output'];
+  /** Whether passwords are enabled for login. */
+  passwordLoginEnabled: Scalars['Boolean']['output'];
+  /** Whether passwords are enabled and users can register using a password. */
+  passwordRegistrationEnabled: Scalars['Boolean']['output'];
+  /** The URL to the privacy policy. */
+  policyUri?: Maybe<Scalars['Url']['output']>;
+  /** The server name of the homeserver. */
+  serverName: Scalars['String']['output'];
+  /** The URL to the terms of service. */
+  tosUri?: Maybe<Scalars['Url']['output']>;
+};
+
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
   /** The ID of the user to unlock */
   userId: Scalars['ID']['input'];
+};
+
+/** The payload for the `unlockUser` mutation. */
+export type UnlockUserPayload = {
+  __typename?: 'UnlockUserPayload';
+  /** Status of the operation */
+  status: UnlockUserStatus;
+  /** The user that was unlocked. */
+  user?: Maybe<User>;
 };
 
 /** The status of the `unlockUser` mutation. */
@@ -334,6 +1110,263 @@ export type UnlockUserStatus =
   | 'NOT_FOUND'
   /** The user was unlocked. */
   | 'UNLOCKED';
+
+export type UpstreamOAuth2Link = CreationEvent & Node & {
+  __typename?: 'UpstreamOAuth2Link';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The provider for which this link is. */
+  provider: UpstreamOAuth2Provider;
+  /** Subject used for linking */
+  subject: Scalars['String']['output'];
+  /** The user to which this link is associated. */
+  user?: Maybe<User>;
+};
+
+export type UpstreamOAuth2LinkConnection = {
+  __typename?: 'UpstreamOAuth2LinkConnection';
+  /** A list of edges. */
+  edges: Array<UpstreamOAuth2LinkEdge>;
+  /** A list of nodes. */
+  nodes: Array<UpstreamOAuth2Link>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UpstreamOAuth2LinkEdge = {
+  __typename?: 'UpstreamOAuth2LinkEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: UpstreamOAuth2Link;
+};
+
+export type UpstreamOAuth2Provider = CreationEvent & Node & {
+  __typename?: 'UpstreamOAuth2Provider';
+  /** Client ID used for this provider. */
+  clientId: Scalars['String']['output'];
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** OpenID Connect issuer URL. */
+  issuer: Scalars['String']['output'];
+};
+
+export type UpstreamOAuth2ProviderConnection = {
+  __typename?: 'UpstreamOAuth2ProviderConnection';
+  /** A list of edges. */
+  edges: Array<UpstreamOAuth2ProviderEdge>;
+  /** A list of nodes. */
+  nodes: Array<UpstreamOAuth2Provider>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UpstreamOAuth2ProviderEdge = {
+  __typename?: 'UpstreamOAuth2ProviderEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: UpstreamOAuth2Provider;
+};
+
+/** A user is an individual's account. */
+export type User = Node & {
+  __typename?: 'User';
+  /**
+   * Get the list of both compat and OAuth 2.0 sessions, chronologically
+   * sorted
+   */
+  appSessions: AppSessionConnection;
+  /** Get the list of active browser sessions, chronologically sorted */
+  browserSessions: BrowserSessionConnection;
+  /** Whether the user can request admin privileges. */
+  canRequestAdmin: Scalars['Boolean']['output'];
+  /** Get the list of compatibility sessions, chronologically sorted */
+  compatSessions: CompatSessionConnection;
+  /** Get the list of compatibility SSO logins, chronologically sorted */
+  compatSsoLogins: CompatSsoLoginConnection;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Get the list of emails, chronologically sorted */
+  emails: UserEmailConnection;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** When the user was locked out. */
+  lockedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Access to the user's Matrix account information. */
+  matrix: MatrixUser;
+  /** Get the list of OAuth 2.0 sessions, chronologically sorted */
+  oauth2Sessions: Oauth2SessionConnection;
+  /** Primary email address of the user. */
+  primaryEmail?: Maybe<UserEmail>;
+  /** Get the list of upstream OAuth 2.0 links */
+  upstreamOauth2Links: UpstreamOAuth2LinkConnection;
+  /** Username chosen by the user. */
+  username: Scalars['String']['output'];
+};
+
+
+/** A user is an individual's account. */
+export type UserAppSessionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  browserSession?: InputMaybe<Scalars['ID']['input']>;
+  device?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  lastActive?: InputMaybe<DateFilter>;
+  state?: InputMaybe<SessionState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserBrowserSessionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  lastActive?: InputMaybe<DateFilter>;
+  state?: InputMaybe<SessionState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserCompatSessionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  lastActive?: InputMaybe<DateFilter>;
+  state?: InputMaybe<SessionState>;
+  type?: InputMaybe<CompatSessionType>;
+};
+
+
+/** A user is an individual's account. */
+export type UserCompatSsoLoginsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** A user is an individual's account. */
+export type UserEmailsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  state?: InputMaybe<UserEmailState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserOauth2SessionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  client?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  lastActive?: InputMaybe<DateFilter>;
+  state?: InputMaybe<SessionState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserUpstreamOauth2LinksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A parsed user agent string */
+export type UserAgent = {
+  __typename?: 'UserAgent';
+  /** The device type */
+  deviceType: DeviceType;
+  /** The device model */
+  model?: Maybe<Scalars['String']['output']>;
+  /** The name of the browser */
+  name?: Maybe<Scalars['String']['output']>;
+  /** The operating system name */
+  os?: Maybe<Scalars['String']['output']>;
+  /** The operating system version */
+  osVersion?: Maybe<Scalars['String']['output']>;
+  /** The user agent string */
+  raw: Scalars['String']['output'];
+  /** The version of the browser */
+  version?: Maybe<Scalars['String']['output']>;
+};
+
+export type UserConnection = {
+  __typename?: 'UserConnection';
+  /** A list of edges. */
+  edges: Array<UserEdge>;
+  /** A list of nodes. */
+  nodes: Array<User>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UserEdge = {
+  __typename?: 'UserEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: User;
+};
+
+/** A user email address */
+export type UserEmail = CreationEvent & Node & {
+  __typename?: 'UserEmail';
+  /**
+   * When the email address was confirmed. Is `null` if the email was never
+   * verified by the user.
+   */
+  confirmedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Email address */
+  email: Scalars['String']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+export type UserEmailConnection = {
+  __typename?: 'UserEmailConnection';
+  /** A list of edges. */
+  edges: Array<UserEmailEdge>;
+  /** A list of nodes. */
+  nodes: Array<UserEmail>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UserEmailEdge = {
+  __typename?: 'UserEmailEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: UserEmail;
+};
 
 /** The state of a compatibility session. */
 export type UserEmailState =
@@ -357,6 +1390,17 @@ export type VerifyEmailInput = {
   userEmailId: Scalars['ID']['input'];
 };
 
+/** The payload of the `verifyEmail` mutation */
+export type VerifyEmailPayload = {
+  __typename?: 'VerifyEmailPayload';
+  /** The email address that was verified */
+  email?: Maybe<UserEmail>;
+  /** Status of the operation */
+  status: VerifyEmailStatus;
+  /** The user to whom the email address belongs */
+  user?: Maybe<User>;
+};
+
 /** The status of the `verifyEmail` mutation */
 export type VerifyEmailStatus =
   /** The email address was already verified before */
@@ -365,6 +1409,12 @@ export type VerifyEmailStatus =
   | 'INVALID_CODE'
   /** The email address was just verified */
   | 'VERIFIED';
+
+/** Represents the current viewer */
+export type Viewer = Anonymous | User;
+
+/** Represents the current viewer's session */
+export type ViewerSession = Anonymous | BrowserSession | Oauth2Session;
 
 export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 
