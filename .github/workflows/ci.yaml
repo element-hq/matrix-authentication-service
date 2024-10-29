@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v4.2.1
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: 20
 
@@ -80,7 +80,7 @@ jobs:
         uses: actions/checkout@v4.2.1
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: 20
 
@@ -153,7 +153,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: 20
 
@@ -286,7 +286,7 @@ jobs:
         uses: taiki-e/install-action@nextest
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version: 20
 
@@ -334,7 +334,7 @@ jobs:
         uses: actions/checkout@v4.2.1
 
       - name: Install Node
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.1.0
         with:
           node-version-file: ./tools/syn2mas/.nvmrc
 
