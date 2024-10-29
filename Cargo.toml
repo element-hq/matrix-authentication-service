@@ -138,7 +138,7 @@ features = ["client", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.9"
+version = "0.1.10"
 features = [
     "client",
     "server",
