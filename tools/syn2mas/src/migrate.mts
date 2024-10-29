@@ -19,6 +19,7 @@ import type { MCompatRefreshToken } from "./types/MCompatRefreshToken.d.ts";
 import type { MCompatSession } from "./types/MCompatSession.d.ts";
 import type { MUpstreamOauthLink } from "./types/MUpstreamOauthLink.d.ts";
 import type { MUpstreamOauthProvider } from "./types/MUpstreamOauthProvider.d.ts";
+import type { MUser } from "./types/MUser.js";
 import type { MUserEmail } from "./types/MUserEmail.d.ts";
 import type { MUserPassword } from "./types/MUserPassword.d.ts";
 import type { SAccessToken } from "./types/SAccessToken.d.ts";
@@ -207,11 +208,13 @@ export async function migrate(): Promise<void> {
     const userCreatedAt = new Date(
       Number.parseInt(`${user.creation_ts}`) * 1000,
     );
-    const masUser = {
+    const masUser: MUser = {
       user_id: makeUuid(userCreatedAt),
       username: localpart,
       created_at: userCreatedAt,
       locked_at: user.deactivated === 1 ? userCreatedAt : null,
+      primary_user_email_id: null,
+      can_request_admin: user.admin === 1,
     };
     executions.push(() => mas.insert(masUser).into("users"));
     log.debug(`${stringifyAndRedact(user)} => ${stringifyAndRedact(masUser)}`);
