@@ -82,15 +82,6 @@ export async function advisor(): Promise<void> {
     return res["count(*)"] as number;
   }
 
-  const adminUsers = await count(
-    synapse.count("*").from<SUser>("users").where({ admin: 1 }),
-  );
-  if (adminUsers > 0) {
-    warn(
-      `Synapse database contains ${adminUsers} admin users which will need to be added to the MAS configuration.`,
-    );
-  }
-
   const guestUsers = await count(
     synapse.count("*").from<SUser>("users").where({ is_guest: 1 }),
   );
