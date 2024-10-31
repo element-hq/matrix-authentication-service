@@ -12,12 +12,16 @@ use serde::{Deserialize, Serialize};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ulid::Ulid;
 
+use super::Worker;
 use crate::{repository_impl, Clock};
 
 /// Represents a job in the job queue
 pub struct Job {
     /// The ID of the job
     pub id: Ulid,
+
+    /// The queue on which the job was placed
+    pub queue_name: String,
 
     /// The payload of the job
     pub payload: serde_json::Value,
@@ -27,7 +31,7 @@ pub struct Job {
 }
 
 /// Metadata stored alongside the job
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct JobMetadata {
     #[serde(default)]
     trace_id: String,
@@ -97,6 +101,38 @@ pub trait QueueJobRepository: Send + Sync {
         payload: serde_json::Value,
         metadata: serde_json::Value,
     ) -> Result<(), Self::Error>;
+
+    /// Reserve multiple jobs from multiple queues
+    ///
+    /// # Parameters
+    ///
+    /// * `clock` - The clock used to generate timestamps
+    /// * `worker` - The worker that is reserving the jobs
+    /// * `queues` - The queues to reserve jobs from
+    /// * `count` - The number of jobs to reserve
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn reserve(
+        &mut self,
+        clock: &dyn Clock,
+        worker: &Worker,
+        queues: &[&str],
+        count: usize,
+    ) -> Result<Vec<Job>, Self::Error>;
+
+    /// Mark a job as completed
+    ///
+    /// # Parameters
+    ///
+    /// * `clock` - The clock used to generate timestamps
+    /// * `job` - The job to mark as completed
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn mark_as_completed(&mut self, clock: &dyn Clock, id: Ulid) -> Result<(), Self::Error>;
 }
 
 repository_impl!(QueueJobRepository:
@@ -108,6 +144,16 @@ repository_impl!(QueueJobRepository:
         payload: serde_json::Value,
         metadata: serde_json::Value,
     ) -> Result<(), Self::Error>;
+
+    async fn reserve(
+        &mut self,
+        clock: &dyn Clock,
+        worker: &Worker,
+        queues: &[&str],
+        count: usize,
+    ) -> Result<Vec<Job>, Self::Error>;
+
+    async fn mark_as_completed(&mut self, clock: &dyn Clock, id: Ulid) -> Result<(), Self::Error>;
 );
 
 /// Extension trait for [`QueueJobRepository`] to help adding a job to the queue

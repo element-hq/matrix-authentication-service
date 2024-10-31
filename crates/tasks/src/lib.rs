@@ -18,14 +18,13 @@ use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 
+// TODO: we need to have a way to schedule recurring tasks
 // mod database;
-// mod email;
-// mod matrix;
+mod email;
+mod matrix;
 mod new_queue;
-// mod recovery;
-// mod storage;
-// mod user;
-// mod utils;
+mod recovery;
+mod user;
 
 #[derive(Clone)]
 struct State {
@@ -110,6 +109,15 @@ pub async fn init(
         url_builder,
     );
     let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
+
+    worker.register_handler::<mas_storage::queue::DeactivateUserJob>();
+    worker.register_handler::<mas_storage::queue::DeleteDeviceJob>();
+    worker.register_handler::<mas_storage::queue::ProvisionDeviceJob>();
+    worker.register_handler::<mas_storage::queue::ProvisionUserJob>();
+    worker.register_handler::<mas_storage::queue::ReactivateUserJob>();
+    worker.register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>();
+    worker.register_handler::<mas_storage::queue::SyncDevicesJob>();
+    worker.register_handler::<mas_storage::queue::VerifyEmailJob>();
 
     task_tracker.spawn(async move {
         if let Err(e) = worker.run().await {
