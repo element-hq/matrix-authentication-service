@@ -40,6 +40,23 @@ This will output `WARN` entries for any identified actions and `ERROR` entries i
 
 Follow the instructions in the [installation guide](installation.md) to install MAS alongside your existing homeserver.
 
+#### Local passwords
+
+Synapse uses bcrypt as its password hashing scheme while MAS defaults to using the newer argon2id.
+You will have to configure the version 1 scheme as bcrypt for migrated passwords to work.
+It is also recommended that you keep argon2id as version 2 so that once users log in, their hashes will be updated to the newer recommended scheme.
+
+Example passwords configuration:
+```yml
+passwords:
+  enabled: true
+  schemes:
+  - version: 1
+    algorithm: bcrypt
+  - version: 2
+    algorithm: argon2id
+```
+
 ### Map any upstream SSO providers
 
 If you are using an upstream SSO provider then you will need to provision the upstream provide in MAS manually.
