@@ -101,26 +101,25 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    providers:
-    - id: <id>
-      human_name: Authelia
-      issuer: "https://<authelia-fqdn>" # TO BE FILLED W/O ANY TRAILING SLASHES
-      client_id: "<client-id>" # TO BE FILLED
-      client_secret: "<client-secret>" # TO BE FILLED
-      token_endpoint_auth_method: client_secret_basic
-      scope: "openid profile email"
-      discovery_mode: insecure
-      claims_imports:
-          localpart:
-            action: require
-            template: "{{ user.preferred_username }}"
-          displayname:
-            action: suggest
-            template: "{{ user.name }}"
-          email:
-            action: suggest
-            template: "{{ user.email }}"
-            set_email_verification: always
+  - id: <id>
+    human_name: Authelia
+    issuer: "https://<authelia-fqdn>" # TO BE FILLED W/O ANY TRAILING SLASHES
+    client_id: "<client-id>" # TO BE FILLED
+    client_secret: "<client-secret>" # TO BE FILLED
+    token_endpoint_auth_method: client_secret_basic
+    scope: "openid profile email"
+    discovery_mode: insecure
+    claims_imports:
+        localpart:
+          action: require
+          template: "{{ user.preferred_username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+          set_email_verification: always
 ```
 
 
