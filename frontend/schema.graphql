@@ -1651,6 +1651,21 @@ type UpstreamOAuth2Provider implements Node & CreationEvent {
   """
   humanName: String
   """
+  The brand name of the provider.
+
+  Values supported by the default template are:
+
+  - `apple`
+  - `google`
+  - `facebook`
+  - `github`
+  - `gitlab`
+  - `twitter`
+
+  Note that this is a free-form field and can be any string value.
+  """
+  brandName: String
+  """
   UpstreamOAuth2Links associated with this provider for the current user.
   """
   upstreamOauth2LinksForUser: [UpstreamOAuth2Link!]!

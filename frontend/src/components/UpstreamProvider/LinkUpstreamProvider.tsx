@@ -7,6 +7,12 @@ import IconUserAdd from "@vector-im/compound-design-tokens/assets/web/icons/user
 import { Button } from "@vector-im/compound-web";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import GoogleLogo from "./logos/google";
+import GithubLogo from "./logos/github";
+import GitlabLogo from "./logos/gitlab";
+import TwitterLogo from "./logos/twitter";
+import FacebookLogo from "./logos/facebook";
+import AppleLogo from "./logos/apple";
 
 import { FragmentType, graphql, useFragment } from "../../gql";
 import LoadingSpinner from "../LoadingSpinner";
@@ -15,6 +21,7 @@ const FRAGMENT = graphql(/* GraphQL */ `
   fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {
     id
     humanName
+    brandName
   }
 `);
 
@@ -37,6 +44,34 @@ const LinkUpstreamProvider: React.FC<{
     setInProgress(false);
   };
 
+  // Pick the right svg from the brand name
+  //
+  // Supported upstream providers:
+  // - Google
+  // - GitHub
+  // - GitLab
+  // - Twitter
+  // - Facebook
+  // - Apple
+  const logo = (function (brandName?: string | null) {
+    if (!brandName) {
+      return null;
+    }
+    if (brandName.toLowerCase() === "google") {
+      return GoogleLogo;
+    } else if (brandName.toLowerCase() === "github") {
+      return GithubLogo;
+    } else if (brandName.toLowerCase() === "gitlab") {
+      return GitlabLogo;
+    } else if (brandName.toLowerCase() === "twitter") {
+      return TwitterLogo;
+    } else if (brandName.toLowerCase() === "facebook") {
+      return FacebookLogo;
+    } else if (brandName.toLowerCase() === "apple") {
+      return AppleLogo;
+    }
+  })(data.brandName);
+
   return (
     <>
       <Button
@@ -44,7 +79,7 @@ const LinkUpstreamProvider: React.FC<{
         kind="primary"
         onClick={onConfirm}
         disabled={disabled ?? inProgress}
-        Icon={(disabled ?? inProgress) ? undefined : IconUserAdd}
+        Icon={(disabled ?? inProgress) ? undefined : (logo ?? IconUserAdd)}
       >
         {inProgress && <LoadingSpinner inline />}
         {t("frontend.link_upstream_button.text", {

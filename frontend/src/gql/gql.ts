@@ -29,7 +29,7 @@ const documents = {
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    userAgent {\n      name\n      os\n      model\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.CompatSession_DetailFragmentDoc,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UnverifiedEmailAlert_user on User {\n    id\n    unverifiedEmails: emails(first: 0, state: PENDING) {\n      totalCount\n    }\n  }\n": types.UnverifiedEmailAlert_UserFragmentDoc,
-    "\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n  }\n": types.LinkUpstreamProvider_ProviderFragmentDoc,
+    "\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n    brandName\n  }\n": types.LinkUpstreamProvider_ProviderFragmentDoc,
     "\n  fragment UnlinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    createdAt\n    humanName\n    upstreamOauth2LinksForUser {\n      id\n      provider {\n        id\n      }\n    }\n  }\n": types.UnlinkUpstreamProvider_ProviderFragmentDoc,
     "\n  mutation RemoveUpstreamLink($id: ID!) {\n    removeUpstreamLink(input: { upstreamLinkId: $id }) {\n      status\n    }\n  }\n": types.RemoveUpstreamLinkDocument,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n": types.UserEmail_EmailFragmentDoc,
@@ -142,7 +142,7 @@ export function graphql(source: "\n  fragment UnverifiedEmailAlert_user on User 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n  }\n"): (typeof documents)["\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n  }\n"];
+export function graphql(source: "\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n    brandName\n  }\n"): (typeof documents)["\n  fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {\n    id\n    humanName\n    brandName\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

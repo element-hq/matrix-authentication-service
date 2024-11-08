@@ -88,7 +88,17 @@ const UpstreamProviderList: React.FC<{}> = () => {
 
   return (
     <>
-      <H5>{t("frontend.account.available_upstreams")}</H5>
+      {linkedUpstreams.length > 0 && (
+        <>
+          {linkedUpstreams.map((edge) => (
+            <UnlinkUpstreamProvider
+              upstreamProvider={edge.node}
+              onUnlinked={onUnlinked}
+              key={edge.cursor}
+            />
+          ))}
+        </>
+      )}
       {links.edges
         .filter(
           (edge) =>
@@ -102,18 +112,7 @@ const UpstreamProviderList: React.FC<{}> = () => {
             key={edge.cursor}
           />
         ))}
-      {linkedUpstreams.length > 0 && (
-        <>
-          <H5>{t("frontend.account.linked_upstreams")}</H5>
-          {linkedUpstreams.map((edge) => (
-            <UnlinkUpstreamProvider
-              upstreamProvider={edge.node}
-              onUnlinked={onUnlinked}
-              key={edge.cursor}
-            />
-          ))}
-        </>
-      )}
+
       <PaginationControls
         autoHide
         count={links.totalCount ?? 0}

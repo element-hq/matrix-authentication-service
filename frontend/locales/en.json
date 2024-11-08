@@ -35,14 +35,16 @@
         "title": "Edit profile",
         "username_label": "Username"
       },
-      "linked_upstreams": "Linked Upstream Providers",
+      "linked_upstreams": {
+        "description": "Sign in with another account provider that supports Single Sign On (SSO).",
+        "heading": "Linked accounts"
+      },
       "password": {
         "change": "Change password",
         "change_disabled": "Password changes are disabled by the administrator.",
         "label": "Password"
       },
-      "title": "Your account",
-      "available_upstreams": "Available Upstream Providers"
+      "title": "Your account"
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",
@@ -94,7 +96,7 @@
       "inactive_90_days": "Inactive for 90+ days"
     },
     "link_upstream_button": {
-      "text": "Link {{provider}}"
+      "text": "Link to {{provider}}"
     },
     "nav": {
       "devices": "Devices",

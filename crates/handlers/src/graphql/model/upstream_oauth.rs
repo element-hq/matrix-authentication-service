@@ -55,6 +55,22 @@ impl UpstreamOAuth2Provider {
         self.provider.human_name.as_deref()
     }
 
+    /// The brand name of the provider.
+    ///
+    /// Values supported by the default template are:
+    ///
+    ///  - `apple`
+    ///  - `google`
+    ///  - `facebook`
+    ///  - `github`
+    ///  - `gitlab`
+    ///  - `twitter`
+    ///
+    /// Note that this is a free-form field and can be any string value.
+    pub async fn brand_name(&self) -> Option<&str> {
+        self.provider.brand_name.as_deref()
+    }
+
     /// UpstreamOAuth2Links associated with this provider for the current user.
     pub async fn upstream_oauth2_links_for_user(
         &self,

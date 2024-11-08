@@ -72,12 +72,6 @@ function Index(): React.ReactElement {
           )}
         </div>
 
-        <BlockList>
-          <Separator />
-          <Suspense fallback={<LoadingSpinner mini className="self-center" />}>
-            <UpstreamProviderList />
-          </Suspense>
-        </BlockList>
         {siteConfig.passwordLoginEnabled && (
           <>
             <Separator />
@@ -87,6 +81,26 @@ function Index(): React.ReactElement {
         )}
 
         <Separator />
+
+        <Collapsible.Root>
+          <Collapsible.Trigger>
+            <Heading size="sm" weight="semibold">
+              {t("frontend.account.linked_upstreams.heading")}
+            </Heading>
+          </Collapsible.Trigger>
+          <Collapsible.Content>
+            <BlockList>
+              <Text className="text-secondary" size="md">
+                {t("frontend.account.linked_upstreams.description")}
+              </Text>
+              <Suspense
+                fallback={<LoadingSpinner mini className="self-center" />}
+              >
+                <UpstreamProviderList />
+              </Suspense>
+            </BlockList>
+          </Collapsible.Content>
+        </Collapsible.Root>
 
         <Collapsible.Root>
           <Collapsible.Trigger>
