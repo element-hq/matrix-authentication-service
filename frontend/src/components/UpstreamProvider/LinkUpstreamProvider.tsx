@@ -50,7 +50,7 @@ const LinkUpstreamProvider: React.FC<{
         kind="primary"
         onClick={onConfirm}
         disabled={disabled ?? inProgress}
-        Icon={disabled ?? inProgress ? undefined : IconUserAdd}
+        Icon={(disabled ?? inProgress) ? undefined : IconUserAdd}
       >
         {inProgress && <LoadingSpinner inline />}
         {t("frontend.link_upstream_button.text", {

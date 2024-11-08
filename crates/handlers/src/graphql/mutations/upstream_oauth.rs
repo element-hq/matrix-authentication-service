@@ -91,7 +91,7 @@ impl RemoveUpstreamLinkPayload {
         };
 
         match user_id {
-            None => return Ok(None),
+            None => Ok(None),
             Some(user_id) => {
                 let user = repo
                     .user()

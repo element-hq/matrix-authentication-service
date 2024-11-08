@@ -914,12 +914,11 @@ export type RemoveUpstreamLinkPayload = {
 };
 
 /** The status of the `removeEmail` mutation */
-export enum RemoveUpstreamLinkStatus {
+export type RemoveUpstreamLinkStatus =
   /** The upstream link was not found */
-  NotFound = 'NOT_FOUND',
+  | 'NOT_FOUND'
   /** The upstream link was removed */
-  Removed = 'REMOVED'
-}
+  | 'REMOVED';
 
 /** The input for the `sendVerificationEmail` mutation */
 export type SendVerificationEmailInput = {

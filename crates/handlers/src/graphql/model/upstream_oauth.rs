@@ -69,7 +69,7 @@ impl UpstreamOAuth2Provider {
         let mut repo = state.repository().await?;
         let filter = UpstreamOAuthLinkFilter::new()
             .for_provider(&self.provider)
-            .for_user(&user);
+            .for_user(user);
         let links = repo
             .upstream_oauth_link()
             // Hardcoded limit of 100 links. We do not expect reasonably more links
