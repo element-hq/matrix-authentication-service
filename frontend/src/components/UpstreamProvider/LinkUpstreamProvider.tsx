@@ -15,12 +15,6 @@ const FRAGMENT = graphql(/* GraphQL */ `
   fragment LinkUpstreamProvider_provider on UpstreamOAuth2Provider {
     id
     humanName
-    upstreamOauth2LinksForUser {
-      id
-      provider {
-        id
-      }
-    }
   }
 `);
 
