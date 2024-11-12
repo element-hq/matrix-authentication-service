@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import type { ExecutionResult } from "graphql";
 import appConfig from "./config";
 import type { TypedDocumentString } from "./gql/graphql";
 
@@ -16,19 +17,19 @@ if (import.meta.env.TEST && !window) {
 
 const graphqlEndpoint = new URL(appConfig.graphqlEndpoint, base).toString();
 
-type RequestOptions<TResult, TVariables> = {
-  query: TypedDocumentString<TResult, TVariables>;
+type RequestOptions<TData, TVariables> = {
+  query: TypedDocumentString<TData, TVariables>;
   signal?: AbortSignal;
   // biome-ignore lint/suspicious/noExplicitAny: this is for inference
 } & (TVariables extends Record<any, never>
   ? { variables?: TVariables }
   : { variables: TVariables });
 
-export const graphqlRequest = async <TResult, TVariables>({
+export const graphqlRequest = async <TData, TVariables>({
   query,
   variables,
   signal,
-}: RequestOptions<TResult, TVariables>): Promise<TResult> => {
+}: RequestOptions<TData, TVariables>): Promise<TData> => {
   const response = await fetch(graphqlEndpoint, {
     method: "POST",
     headers: {
@@ -45,9 +46,13 @@ export const graphqlRequest = async <TResult, TVariables>({
     throw new Error(`GraphQL request failed: ${response.status}`);
   }
 
-  const json = await response.json();
+  const json: ExecutionResult<TData> = await response.json();
   if (json.errors) {
     throw new Error(JSON.stringify(json.errors));
+  }
+
+  if (!json.data) {
+    throw new Error("GraphQL request returned no data");
   }
 
   return json.data;
