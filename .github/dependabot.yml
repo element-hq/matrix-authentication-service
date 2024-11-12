@@ -88,10 +88,6 @@ updates:
         patterns:
           - "jotai"
           - "jotai-*"
-      urql:
-        patterns:
-          - "urql"
-          - "@urql/*"
       graphql-codegen:
         patterns:
           - "@graphql-codegen/*"

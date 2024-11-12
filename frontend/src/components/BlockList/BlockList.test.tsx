@@ -6,31 +6,29 @@
 
 // @vitest-environment happy-dom
 
-import { create } from "react-test-renderer";
 import { describe, expect, it } from "vitest";
-
+import render from "../../test-utils/render";
 import Block from "../Block";
-
 import BlockList from "./BlockList";
 
 describe("BlockList", () => {
   it("render an empty <BlockList />", () => {
-    const component = create(<BlockList />);
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<BlockList />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("render <BlockList /> with children", () => {
-    const component = create(
+    const { asFragment } = render(
       <BlockList>
         <Block>Block 1</Block>
         <Block>Block 2</Block>
       </BlockList>,
     );
-    expect(component.toJSON()).toMatchSnapshot();
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("passes down the className prop", () => {
-    const component = create(<BlockList className="foo" />);
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<BlockList className="foo" />);
+    expect(asFragment()).toMatchSnapshot();
   });
 });

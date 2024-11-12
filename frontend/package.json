@@ -41,7 +41,6 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.1",
     "swagger-ui-react": "^5.18.2",
-    "urql": "^4.2.1",
     "vaul": "^1.1.1",
     "zod": "^3.23.8"
   },
@@ -76,7 +75,6 @@
     "postcss": "^8.4.49",
     "postcss-modules": "^6.0.1",
     "postcss-nesting": "^13.0.1",
-    "react-test-renderer": "^18.3.1",
     "rimraf": "^6.0.1",
     "storybook": "^8.3.5",
     "storybook-react-i18next": "^3.1.7",

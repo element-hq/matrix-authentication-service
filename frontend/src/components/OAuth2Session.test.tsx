@@ -6,23 +6,14 @@
 
 // @vitest-environment happy-dom
 
-import { create } from "react-test-renderer";
-import { Provider } from "urql";
 import { beforeAll, describe, expect, it } from "vitest";
-import { never } from "wonka";
-
 import { makeFragmentData } from "../gql";
 import type { Oauth2ApplicationType } from "../gql/graphql";
 import { mockLocale } from "../test-utils/mockLocale";
-import { DummyRouter } from "../test-utils/router";
-
+import render from "../test-utils/render";
 import OAuth2Session, { FRAGMENT } from "./OAuth2Session";
 
 describe("<OAuth2Session />", () => {
-  const mockClient = {
-    executeQuery: (): typeof never => never,
-  };
-
   const defaultSession = {
     id: "session-id",
     scope:
@@ -45,14 +36,8 @@ describe("<OAuth2Session />", () => {
   it("renders an active session", () => {
     const session = makeFragmentData(defaultSession, FRAGMENT);
 
-    const component = create(
-      <Provider value={mockClient}>
-        <DummyRouter>
-          <OAuth2Session session={session} />
-        </DummyRouter>
-      </Provider>,
-    );
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<OAuth2Session session={session} />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("renders a finished session", () => {
@@ -63,14 +48,8 @@ describe("<OAuth2Session />", () => {
       },
       FRAGMENT,
     );
-    const component = create(
-      <Provider value={mockClient}>
-        <DummyRouter>
-          <OAuth2Session session={session} />
-        </DummyRouter>
-      </Provider>,
-    );
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<OAuth2Session session={session} />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("renders correct icon for a native session", () => {
@@ -85,13 +64,7 @@ describe("<OAuth2Session />", () => {
       },
       FRAGMENT,
     );
-    const component = create(
-      <Provider value={mockClient}>
-        <DummyRouter>
-          <OAuth2Session session={session} />
-        </DummyRouter>
-      </Provider>,
-    );
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<OAuth2Session session={session} />);
+    expect(asFragment()).toMatchSnapshot();
   });
 });

@@ -1,27 +1,18 @@
 // Copyright 2024 New Vector Ltd.
-// Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
+// Copyright 2023-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
 // @vitest-environment happy-dom
 
-import { create } from "react-test-renderer";
-import { Provider } from "urql";
 import { beforeAll, describe, expect, it } from "vitest";
-import { never } from "wonka";
-
 import { makeFragmentData } from "../gql";
 import { mockLocale } from "../test-utils/mockLocale";
-import { DummyRouter } from "../test-utils/router";
-
+import render from "../test-utils/render";
 import CompatSession, { FRAGMENT } from "./CompatSession";
 
 describe("<CompatSession />", () => {
-  const mockClient = {
-    executeQuery: (): typeof never => never,
-  };
-
   const baseSession = {
     id: "session-id",
     deviceId: "abcd1234",
@@ -39,14 +30,8 @@ describe("<CompatSession />", () => {
 
   it("renders an active session", () => {
     const session = makeFragmentData(baseSession, FRAGMENT);
-    const component = create(
-      <Provider value={mockClient}>
-        <DummyRouter>
-          <CompatSession session={session} />
-        </DummyRouter>
-      </Provider>,
-    );
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<CompatSession session={session} />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("renders a finished session", () => {
@@ -57,13 +42,7 @@ describe("<CompatSession />", () => {
       },
       FRAGMENT,
     );
-    const component = create(
-      <Provider value={mockClient}>
-        <DummyRouter>
-          <CompatSession session={session} />
-        </DummyRouter>
-      </Provider>,
-    );
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<CompatSession session={session} />);
+    expect(asFragment()).toMatchSnapshot();
   });
 });
