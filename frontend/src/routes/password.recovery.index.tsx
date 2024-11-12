@@ -13,7 +13,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query PasswordRecoveryQuery {
+  query PasswordRecovery {
     siteConfig {
       id
       ...PasswordCreationDoubleInput_siteConfig

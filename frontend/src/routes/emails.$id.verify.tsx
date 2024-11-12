@@ -11,7 +11,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query VerifyEmailQuery($id: ID!) {
+  query VerifyEmail($id: ID!) {
     userEmail(id: $id) {
       ...UserEmail_verifyEmail
     }

@@ -26,7 +26,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
-  query CurrentViewerQuery {
+  query CurrentViewer {
     viewer {
       __typename
       ... on Node {

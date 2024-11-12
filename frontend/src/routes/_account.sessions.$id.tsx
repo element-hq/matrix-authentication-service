@@ -11,7 +11,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query SessionDetailQuery($id: ID!) {
+  query SessionDetail($id: ID!) {
     viewerSession {
       ... on Node {
         id

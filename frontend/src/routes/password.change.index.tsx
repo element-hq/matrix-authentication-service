@@ -11,7 +11,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query PasswordChangeQuery {
+  query PasswordChange {
     viewer {
       __typename
       ... on Node {

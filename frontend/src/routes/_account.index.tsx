@@ -13,7 +13,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query UserProfileQuery {
+  query UserProfile {
     viewer {
       __typename
       ... on User {

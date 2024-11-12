@@ -11,7 +11,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
-  query OAuth2ClientQuery($id: ID!) {
+  query OAuth2Client($id: ID!) {
     oauth2Client(id: $id) {
       ...OAuth2Client_detail
     }

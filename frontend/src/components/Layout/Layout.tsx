@@ -15,7 +15,7 @@ import { graphqlClient } from "../../graphql";
 import styles from "./Layout.module.css";
 
 const QUERY = graphql(/* GraphQL */ `
-  query FooterQuery {
+  query Footer {
     siteConfig {
       id
       ...Footer_siteConfig

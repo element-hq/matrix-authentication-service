@@ -1,5 +1,6 @@
 /* eslint-disable */
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import { graphql, type GraphQLResponseResolver, type RequestHandlerOptions } from 'msw'
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -1443,10 +1444,10 @@ export type EndCompatSessionMutation = { __typename?: 'Mutation', endCompatSessi
 
 export type Footer_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, imprint?: string | null, tosUri?: string | null, policyUri?: string | null } & { ' $fragmentName'?: 'Footer_SiteConfigFragment' };
 
-export type FooterQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type FooterQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type FooterQueryQuery = { __typename?: 'Query', siteConfig: (
+export type FooterQuery = { __typename?: 'Query', siteConfig: (
     { __typename?: 'SiteConfig', id: string }
     & { ' $fragmentRefs'?: { 'Footer_SiteConfigFragment': Footer_SiteConfigFragment } }
   ) };
@@ -1511,7 +1512,7 @@ export type AddEmailMutation = { __typename?: 'Mutation', addEmail: { __typename
       & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
     ) | null } };
 
-export type UserEmailListQueryQueryVariables = Exact<{
+export type UserEmailListQueryVariables = Exact<{
   userId: Scalars['ID']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -1520,7 +1521,7 @@ export type UserEmailListQueryQueryVariables = Exact<{
 }>;
 
 
-export type UserEmailListQueryQuery = { __typename?: 'Query', user?: { __typename?: 'User', id: string, emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
+export type UserEmailListQuery = { __typename?: 'Query', user?: { __typename?: 'User', id: string, emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
           { __typename?: 'UserEmail', id: string }
           & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
         ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } | null };
@@ -1536,13 +1537,13 @@ export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: st
 
 export type UserEmail_VerifyEmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_VerifyEmailFragment' };
 
-export type VerifyEmailMutationVariables = Exact<{
+export type DoVerifyEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   code: Scalars['String']['input'];
 }>;
 
 
-export type VerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerifyEmailPayload', status: VerifyEmailStatus, user?: { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } | null, email?: (
+export type DoVerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerifyEmailPayload', status: VerifyEmailStatus, user?: { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } | null, email?: (
       { __typename?: 'UserEmail', id: string }
       & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
     ) | null } };
@@ -1557,10 +1558,10 @@ export type ResendVerificationEmailMutation = { __typename?: 'Mutation', sendVer
       & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
     ) } };
 
-export type UserProfileQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQueryQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
+export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
     { __typename: 'User', id: string, primaryEmail?: (
       { __typename?: 'UserEmail', id: string }
       & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
@@ -1571,12 +1572,12 @@ export type UserProfileQueryQuery = { __typename?: 'Query', viewer: { __typename
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
 
-export type SessionDetailQueryQueryVariables = Exact<{
+export type SessionDetailQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type SessionDetailQueryQuery = { __typename?: 'Query', viewerSession: { __typename?: 'Anonymous', id: string } | { __typename?: 'BrowserSession', id: string } | { __typename?: 'Oauth2Session', id: string }, node?: { __typename: 'Anonymous', id: string } | { __typename: 'Authentication', id: string } | (
+export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __typename?: 'Anonymous', id: string } | { __typename?: 'BrowserSession', id: string } | { __typename?: 'Oauth2Session', id: string }, node?: { __typename: 'Anonymous', id: string } | { __typename: 'Authentication', id: string } | (
     { __typename: 'BrowserSession', id: string }
     & { ' $fragmentRefs'?: { 'BrowserSession_DetailFragment': BrowserSession_DetailFragment } }
   ) | (
@@ -1601,15 +1602,15 @@ export type BrowserSessionListQuery = { __typename?: 'Query', viewerSession: { _
             & { ' $fragmentRefs'?: { 'BrowserSession_SessionFragment': BrowserSession_SessionFragment } }
           ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } } | { __typename: 'Oauth2Session' } };
 
-export type SessionsOverviewQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SessionsOverviewQueryQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
+export type SessionsOverviewQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
     { __typename: 'User', id: string }
     & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
   ) };
 
-export type AppSessionsListQueryQueryVariables = Exact<{
+export type AppSessionsListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1618,7 +1619,7 @@ export type AppSessionsListQueryQueryVariables = Exact<{
 }>;
 
 
-export type AppSessionsListQueryQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node: (
+export type AppSessionsListQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node: (
           { __typename: 'CompatSession' }
           & { ' $fragmentRefs'?: { 'CompatSession_SessionFragment': CompatSession_SessionFragment } }
         ) | (
@@ -1637,35 +1638,35 @@ export type CurrentUserGreetingQuery = { __typename?: 'Query', viewerSession: { 
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
-export type OAuth2ClientQueryQueryVariables = Exact<{
+export type OAuth2ClientQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type OAuth2ClientQueryQuery = { __typename?: 'Query', oauth2Client?: (
+export type OAuth2ClientQuery = { __typename?: 'Query', oauth2Client?: (
     { __typename?: 'Oauth2Client' }
     & { ' $fragmentRefs'?: { 'OAuth2Client_DetailFragment': OAuth2Client_DetailFragment } }
   ) | null };
 
-export type CurrentViewerQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type CurrentViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CurrentViewerQueryQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string } };
+export type CurrentViewerQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string } };
 
-export type DeviceRedirectQueryQueryVariables = Exact<{
+export type DeviceRedirectQueryVariables = Exact<{
   deviceId: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 }>;
 
 
-export type DeviceRedirectQueryQuery = { __typename?: 'Query', session?: { __typename: 'CompatSession', id: string } | { __typename: 'Oauth2Session', id: string } | null };
+export type DeviceRedirectQuery = { __typename?: 'Query', session?: { __typename: 'CompatSession', id: string } | { __typename: 'Oauth2Session', id: string } | null };
 
-export type VerifyEmailQueryQueryVariables = Exact<{
+export type VerifyEmailQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type VerifyEmailQueryQuery = { __typename?: 'Query', userEmail?: (
+export type VerifyEmailQuery = { __typename?: 'Query', userEmail?: (
     { __typename?: 'UserEmail' }
     & { ' $fragmentRefs'?: { 'UserEmail_VerifyEmailFragment': UserEmail_VerifyEmailFragment } }
   ) | null };
@@ -1679,10 +1680,10 @@ export type ChangePasswordMutationVariables = Exact<{
 
 export type ChangePasswordMutation = { __typename?: 'Mutation', setPassword: { __typename?: 'SetPasswordPayload', status: SetPasswordStatus } };
 
-export type PasswordChangeQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PasswordChangeQueryQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string }, siteConfig: (
+export type PasswordChangeQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string }, siteConfig: (
     { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
   ) };
@@ -1695,10 +1696,10 @@ export type RecoverPasswordMutationVariables = Exact<{
 
 export type RecoverPasswordMutation = { __typename?: 'Mutation', setPasswordByRecovery: { __typename?: 'SetPasswordPayload', status: SetPasswordStatus } };
 
-export type PasswordRecoveryQueryQueryVariables = Exact<{ [key: string]: never; }>;
+export type PasswordRecoveryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PasswordRecoveryQueryQuery = { __typename?: 'Query', siteConfig: (
+export type PasswordRecoveryQuery = { __typename?: 'Query', siteConfig: (
     { __typename?: 'SiteConfig', id: string }
     & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
   ) };
@@ -1731,27 +1732,592 @@ export const BrowserSessionsOverview_UserFragmentDoc = {"kind":"Document","defin
 export const UserEmail_VerifyEmailFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_verifyEmail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]} as unknown as DocumentNode<UserEmail_VerifyEmailFragment, unknown>;
 export const EndBrowserSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"EndBrowserSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endBrowserSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"browserSessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"browserSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSession_session"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSession_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"raw"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAuthentication"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<EndBrowserSessionMutation, EndBrowserSessionMutationVariables>;
 export const EndCompatSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"EndCompatSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCompatSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"compatSessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"compatSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<EndCompatSessionMutation, EndCompatSessionMutationVariables>;
-export const FooterQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FooterQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"Footer_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"Footer_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"imprint"}},{"kind":"Field","name":{"kind":"Name","value":"tosUri"}},{"kind":"Field","name":{"kind":"Name","value":"policyUri"}}]}}]} as unknown as DocumentNode<FooterQueryQuery, FooterQueryQueryVariables>;
+export const FooterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Footer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"Footer_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"Footer_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"imprint"}},{"kind":"Field","name":{"kind":"Name","value":"tosUri"}},{"kind":"Field","name":{"kind":"Name","value":"policyUri"}}]}}]} as unknown as DocumentNode<FooterQuery, FooterQueryVariables>;
 export const EndOAuth2SessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"EndOAuth2Session"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endOauth2Session"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"oauth2SessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"oauth2Session"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>;
 export const RemoveEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userEmailId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<RemoveEmailMutation, RemoveEmailMutationVariables>;
 export const SetPrimaryEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetPrimaryEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setPrimaryEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userEmailId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]}}]} as unknown as DocumentNode<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>;
 export const SetDisplayNameDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetDisplayName"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"displayName"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setDisplayName"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"displayName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"displayName"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"matrix"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"displayName"}}]}}]}}]}}]}}]} as unknown as DocumentNode<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
 export const AddEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"violations"}},{"kind":"Field","name":{"kind":"Name","value":"email"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<AddEmailMutation, AddEmailMutationVariables>;
-export const UserEmailListQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserEmailListQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emails"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cursor"}},{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<UserEmailListQueryQuery, UserEmailListQueryQueryVariables>;
-export const VerifyEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"VerifyEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"code"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userEmailId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"code"},"value":{"kind":"Variable","name":{"kind":"Name","value":"code"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"email"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<VerifyEmailMutation, VerifyEmailMutationVariables>;
+export const UserEmailListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserEmailList"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emails"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cursor"}},{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<UserEmailListQuery, UserEmailListQueryVariables>;
+export const DoVerifyEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DoVerifyEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"code"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userEmailId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"code"},"value":{"kind":"Variable","name":{"kind":"Name","value":"code"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"email"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>;
 export const ResendVerificationEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ResendVerificationEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sendVerificationEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userEmailId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"email"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}}]} as unknown as DocumentNode<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>;
-export const UserProfileQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserProfileQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmailList_user"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emailChangeAllowed"}},{"kind":"Field","name":{"kind":"Name","value":"passwordLoginEnabled"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmailList_siteConfig"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_siteConfig"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordChange_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emailChangeAllowed"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmailList_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmailList_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_siteConfig"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordChange_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"passwordChangeAllowed"}}]}}]} as unknown as DocumentNode<UserProfileQueryQuery, UserProfileQueryQueryVariables>;
-export const SessionDetailQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SessionDetailQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"node"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"CompatSession_detail"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Session_detail"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSession_detail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"CompatSession_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"CompatSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"deviceId"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ssoLogin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Session_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Session"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"client"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"clientUri"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSession_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"os"}}]}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAuthentication"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}}]}}]}}]} as unknown as DocumentNode<SessionDetailQueryQuery, SessionDetailQueryQueryVariables>;
+export const UserProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserProfile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_email"}}]}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmailList_user"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emailChangeAllowed"}},{"kind":"Field","name":{"kind":"Name","value":"passwordLoginEnabled"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmailList_siteConfig"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_siteConfig"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordChange_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emailChangeAllowed"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_email"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"confirmedAt"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmailList_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"primaryEmail"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmailList_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_siteConfig"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordChange_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"passwordChangeAllowed"}}]}}]} as unknown as DocumentNode<UserProfileQuery, UserProfileQueryVariables>;
+export const SessionDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SessionDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"node"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"CompatSession_detail"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Session_detail"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSession_detail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"CompatSession_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"CompatSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"deviceId"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ssoLogin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Session_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Session"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"client"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"clientUri"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSession_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"os"}}]}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAuthentication"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}}]}}]}}]} as unknown as DocumentNode<SessionDetailQuery, SessionDetailQueryVariables>;
 export const BrowserSessionListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BrowserSessionList"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DateFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"browserSessions"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}},{"kind":"Argument","name":{"kind":"Name","value":"lastActive"},"value":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"ACTIVE"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cursor"}},{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSession_session"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSession_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"raw"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastAuthentication"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<BrowserSessionListQuery, BrowserSessionListQueryVariables>;
-export const SessionsOverviewQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SessionsOverviewQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSessionsOverview_user"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSessionsOverview_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"browserSessions"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"0"}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"ACTIVE"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}}]} as unknown as DocumentNode<SessionsOverviewQueryQuery, SessionsOverviewQueryQueryVariables>;
-export const AppSessionsListQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppSessionsListQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DateFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"appSessions"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"lastActive"},"value":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"ACTIVE"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cursor"}},{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"CompatSession_session"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Session_session"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"CompatSession_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"CompatSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"deviceId"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ssoLogin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Session_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Session"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"client"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"applicationType"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}}]}}]}}]} as unknown as DocumentNode<AppSessionsListQueryQuery, AppSessionsListQueryQueryVariables>;
+export const SessionsOverviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SessionsOverview"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"BrowserSessionsOverview_user"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"BrowserSessionsOverview_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"browserSessions"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"0"}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"ACTIVE"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}}]} as unknown as DocumentNode<SessionsOverviewQuery, SessionsOverviewQueryVariables>;
+export const AppSessionsListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AppSessionsList"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DateFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"appSessions"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"lastActive"},"value":{"kind":"Variable","name":{"kind":"Name","value":"lastActive"}}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"ACTIVE"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cursor"}},{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"CompatSession_session"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Session_session"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"CompatSession_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"CompatSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"deviceId"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ssoLogin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUri"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Session_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Session"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"finishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveIp"}},{"kind":"Field","name":{"kind":"Name","value":"lastActiveAt"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"os"}},{"kind":"Field","name":{"kind":"Name","value":"deviceType"}}]}},{"kind":"Field","name":{"kind":"Name","value":"client"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"applicationType"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}}]}}]}}]} as unknown as DocumentNode<AppSessionsListQuery, AppSessionsListQueryVariables>;
 export const CurrentUserGreetingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CurrentUserGreeting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerSession"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BrowserSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UnverifiedEmailAlert_user"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserGreeting_user"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserGreeting_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UnverifiedEmailAlert_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","alias":{"kind":"Name","value":"unverifiedEmails"},"name":{"kind":"Name","value":"emails"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"0"}},{"kind":"Argument","name":{"kind":"Name","value":"state"},"value":{"kind":"EnumValue","value":"PENDING"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserGreeting_user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"matrix"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mxid"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserGreeting_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayNameChangeAllowed"}}]}}]} as unknown as DocumentNode<CurrentUserGreetingQuery, CurrentUserGreetingQueryVariables>;
-export const OAuth2ClientQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"OAuth2ClientQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"oauth2Client"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Client_detail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Client_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Client"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"clientUri"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}},{"kind":"Field","name":{"kind":"Name","value":"tosUri"}},{"kind":"Field","name":{"kind":"Name","value":"policyUri"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUris"}}]}}]} as unknown as DocumentNode<OAuth2ClientQueryQuery, OAuth2ClientQueryQueryVariables>;
-export const CurrentViewerQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CurrentViewerQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CurrentViewerQueryQuery, CurrentViewerQueryQueryVariables>;
-export const DeviceRedirectQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DeviceRedirectQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"deviceId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"session"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"deviceId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"deviceId"}}},{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeviceRedirectQueryQuery, DeviceRedirectQueryQueryVariables>;
-export const VerifyEmailQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"VerifyEmailQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_verifyEmail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_verifyEmail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]} as unknown as DocumentNode<VerifyEmailQueryQuery, VerifyEmailQueryQueryVariables>;
+export const OAuth2ClientDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"OAuth2Client"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"oauth2Client"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OAuth2Client_detail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OAuth2Client_detail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Oauth2Client"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"clientId"}},{"kind":"Field","name":{"kind":"Name","value":"clientName"}},{"kind":"Field","name":{"kind":"Name","value":"clientUri"}},{"kind":"Field","name":{"kind":"Name","value":"logoUri"}},{"kind":"Field","name":{"kind":"Name","value":"tosUri"}},{"kind":"Field","name":{"kind":"Name","value":"policyUri"}},{"kind":"Field","name":{"kind":"Name","value":"redirectUris"}}]}}]} as unknown as DocumentNode<OAuth2ClientQuery, OAuth2ClientQueryVariables>;
+export const CurrentViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CurrentViewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CurrentViewerQuery, CurrentViewerQueryVariables>;
+export const DeviceRedirectDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DeviceRedirect"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"deviceId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"session"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"deviceId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"deviceId"}}},{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeviceRedirectQuery, DeviceRedirectQueryVariables>;
+export const VerifyEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"VerifyEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"UserEmail_verifyEmail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"UserEmail_verifyEmail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"UserEmail"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]} as unknown as DocumentNode<VerifyEmailQuery, VerifyEmailQueryVariables>;
 export const ChangePasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangePassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"oldPassword"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"currentPassword"},"value":{"kind":"Variable","name":{"kind":"Name","value":"oldPassword"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"newPassword"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<ChangePasswordMutation, ChangePasswordMutationVariables>;
-export const PasswordChangeQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PasswordChangeQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"minimumPasswordComplexity"}}]}}]} as unknown as DocumentNode<PasswordChangeQueryQuery, PasswordChangeQueryQueryVariables>;
+export const PasswordChangeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PasswordChange"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Node"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"minimumPasswordComplexity"}}]}}]} as unknown as DocumentNode<PasswordChangeQuery, PasswordChangeQueryVariables>;
 export const RecoverPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RecoverPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ticket"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setPasswordByRecovery"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"ticket"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ticket"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"newPassword"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<RecoverPasswordMutation, RecoverPasswordMutationVariables>;
-export const PasswordRecoveryQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PasswordRecoveryQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"minimumPasswordComplexity"}}]}}]} as unknown as DocumentNode<PasswordRecoveryQueryQuery, PasswordRecoveryQueryQueryVariables>;
+export const PasswordRecoveryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PasswordRecovery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"siteConfig"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PasswordCreationDoubleInput_siteConfig"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"SiteConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"minimumPasswordComplexity"}}]}}]} as unknown as DocumentNode<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>;
 export const AllowCrossSigningResetDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AllowCrossSigningReset"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allowUserCrossSigningReset"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>;
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockEndBrowserSessionMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { endBrowserSession }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockEndBrowserSessionMutation = (resolver: GraphQLResponseResolver<EndBrowserSessionMutation, EndBrowserSessionMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<EndBrowserSessionMutation, EndBrowserSessionMutationVariables>(
+    'EndBrowserSession',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockEndCompatSessionMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { endCompatSession }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockEndCompatSessionMutation = (resolver: GraphQLResponseResolver<EndCompatSessionMutation, EndCompatSessionMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<EndCompatSessionMutation, EndCompatSessionMutationVariables>(
+    'EndCompatSession',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockFooterQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockFooterQuery = (resolver: GraphQLResponseResolver<FooterQuery, FooterQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<FooterQuery, FooterQueryVariables>(
+    'Footer',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockEndOAuth2SessionMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { endOauth2Session }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockEndOAuth2SessionMutation = (resolver: GraphQLResponseResolver<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>(
+    'EndOAuth2Session',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockRemoveEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { removeEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRemoveEmailMutation = (resolver: GraphQLResponseResolver<RemoveEmailMutation, RemoveEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<RemoveEmailMutation, RemoveEmailMutationVariables>(
+    'RemoveEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetPrimaryEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { setPrimaryEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetPrimaryEmailMutation = (resolver: GraphQLResponseResolver<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>(
+    'SetPrimaryEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetDisplayNameMutation(
+ *   ({ query, variables }) => {
+ *     const { userId, displayName } = variables;
+ *     return HttpResponse.json({
+ *       data: { setDisplayName }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetDisplayNameMutation = (resolver: GraphQLResponseResolver<SetDisplayNameMutation, SetDisplayNameMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetDisplayNameMutation, SetDisplayNameMutationVariables>(
+    'SetDisplayName',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockAddEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { userId, email } = variables;
+ *     return HttpResponse.json({
+ *       data: { addEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailMutation, AddEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<AddEmailMutation, AddEmailMutationVariables>(
+    'AddEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUserEmailListQuery(
+ *   ({ query, variables }) => {
+ *     const { userId, first, after, last, before } = variables;
+ *     return HttpResponse.json({
+ *       data: { user }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
+    'UserEmailList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockDoVerifyEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { id, code } = variables;
+ *     return HttpResponse.json({
+ *       data: { verifyEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockDoVerifyEmailMutation = (resolver: GraphQLResponseResolver<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>(
+    'DoVerifyEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockResendVerificationEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { sendVerificationEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockResendVerificationEmailMutation = (resolver: GraphQLResponseResolver<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>(
+    'ResendVerificationEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUserProfileQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewer, siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUserProfileQuery = (resolver: GraphQLResponseResolver<UserProfileQuery, UserProfileQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UserProfileQuery, UserProfileQueryVariables>(
+    'UserProfile',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSessionDetailQuery(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewerSession, node }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSessionDetailQuery = (resolver: GraphQLResponseResolver<SessionDetailQuery, SessionDetailQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<SessionDetailQuery, SessionDetailQueryVariables>(
+    'SessionDetail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockBrowserSessionListQuery(
+ *   ({ query, variables }) => {
+ *     const { first, after, last, before, lastActive } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewerSession }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockBrowserSessionListQuery = (resolver: GraphQLResponseResolver<BrowserSessionListQuery, BrowserSessionListQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<BrowserSessionListQuery, BrowserSessionListQueryVariables>(
+    'BrowserSessionList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSessionsOverviewQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSessionsOverviewQuery = (resolver: GraphQLResponseResolver<SessionsOverviewQuery, SessionsOverviewQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<SessionsOverviewQuery, SessionsOverviewQueryVariables>(
+    'SessionsOverview',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockAppSessionsListQuery(
+ *   ({ query, variables }) => {
+ *     const { before, after, first, last, lastActive } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockAppSessionsListQuery = (resolver: GraphQLResponseResolver<AppSessionsListQuery, AppSessionsListQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<AppSessionsListQuery, AppSessionsListQueryVariables>(
+    'AppSessionsList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockCurrentUserGreetingQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewerSession, siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockCurrentUserGreetingQuery = (resolver: GraphQLResponseResolver<CurrentUserGreetingQuery, CurrentUserGreetingQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<CurrentUserGreetingQuery, CurrentUserGreetingQueryVariables>(
+    'CurrentUserGreeting',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockOAuth2ClientQuery(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { oauth2Client }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockOAuth2ClientQuery = (resolver: GraphQLResponseResolver<OAuth2ClientQuery, OAuth2ClientQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<OAuth2ClientQuery, OAuth2ClientQueryVariables>(
+    'OAuth2Client',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockCurrentViewerQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockCurrentViewerQuery = (resolver: GraphQLResponseResolver<CurrentViewerQuery, CurrentViewerQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<CurrentViewerQuery, CurrentViewerQueryVariables>(
+    'CurrentViewer',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockDeviceRedirectQuery(
+ *   ({ query, variables }) => {
+ *     const { deviceId, userId } = variables;
+ *     return HttpResponse.json({
+ *       data: { session }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockDeviceRedirectQuery = (resolver: GraphQLResponseResolver<DeviceRedirectQuery, DeviceRedirectQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<DeviceRedirectQuery, DeviceRedirectQueryVariables>(
+    'DeviceRedirect',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockVerifyEmailQuery(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { userEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockVerifyEmailQuery = (resolver: GraphQLResponseResolver<VerifyEmailQuery, VerifyEmailQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<VerifyEmailQuery, VerifyEmailQueryVariables>(
+    'VerifyEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockChangePasswordMutation(
+ *   ({ query, variables }) => {
+ *     const { userId, oldPassword, newPassword } = variables;
+ *     return HttpResponse.json({
+ *       data: { setPassword }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockChangePasswordMutation = (resolver: GraphQLResponseResolver<ChangePasswordMutation, ChangePasswordMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<ChangePasswordMutation, ChangePasswordMutationVariables>(
+    'ChangePassword',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockPasswordChangeQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewer, siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockPasswordChangeQuery = (resolver: GraphQLResponseResolver<PasswordChangeQuery, PasswordChangeQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<PasswordChangeQuery, PasswordChangeQueryVariables>(
+    'PasswordChange',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockRecoverPasswordMutation(
+ *   ({ query, variables }) => {
+ *     const { ticket, newPassword } = variables;
+ *     return HttpResponse.json({
+ *       data: { setPasswordByRecovery }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRecoverPasswordMutation = (resolver: GraphQLResponseResolver<RecoverPasswordMutation, RecoverPasswordMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<RecoverPasswordMutation, RecoverPasswordMutationVariables>(
+    'RecoverPassword',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockPasswordRecoveryQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockPasswordRecoveryQuery = (resolver: GraphQLResponseResolver<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>(
+    'PasswordRecovery',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockAllowCrossSigningResetMutation(
+ *   ({ query, variables }) => {
+ *     const { userId } = variables;
+ *     return HttpResponse.json({
+ *       data: { allowUserCrossSigningReset }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockAllowCrossSigningResetMutation = (resolver: GraphQLResponseResolver<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>(
+    'AllowCrossSigningReset',
+    resolver,
+    options
+  )
