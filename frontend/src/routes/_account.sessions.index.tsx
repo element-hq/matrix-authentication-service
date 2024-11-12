@@ -21,7 +21,7 @@ import { getNinetyDaysAgo } from "../utils/dates";
 const PAGE_SIZE = 6;
 
 const QUERY = graphql(/* GraphQL */ `
-  query SessionsOverviewQuery {
+  query SessionsOverview {
     viewer {
       __typename
 
@@ -39,7 +39,7 @@ export const query = queryOptions({
 });
 
 const LIST_QUERY = graphql(/* GraphQL */ `
-  query AppSessionsListQuery(
+  query AppSessionsList(
     $before: String
     $after: String
     $first: Int

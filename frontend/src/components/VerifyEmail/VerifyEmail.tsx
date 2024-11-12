@@ -23,7 +23,7 @@ const FRAGMENT = graphql(/* GraphQL */ `
 `);
 
 const VERIFY_EMAIL_MUTATION = graphql(/* GraphQL */ `
-  mutation VerifyEmail($id: ID!, $code: String!) {
+  mutation DoVerifyEmail($id: ID!, $code: String!) {
     verifyEmail(input: { userEmailId: $id, code: $code }) {
       status
 

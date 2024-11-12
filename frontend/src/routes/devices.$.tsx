@@ -15,7 +15,7 @@ import { graphql } from "../gql";
 import { graphqlClient } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
-  query CurrentViewerQuery {
+  query CurrentViewer {
     viewer {
       __typename
       ... on Node {
@@ -35,7 +35,7 @@ const currentViewerQuery = queryOptions({
 });
 
 const QUERY = graphql(/* GraphQL */ `
-  query DeviceRedirectQuery($deviceId: String!, $userId: ID!) {
+  query DeviceRedirect($deviceId: String!, $userId: ID!) {
     session(deviceId: $deviceId, userId: $userId) {
       __typename
       ... on Node {

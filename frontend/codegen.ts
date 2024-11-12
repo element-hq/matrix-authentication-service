@@ -13,6 +13,7 @@ const config: CodegenConfig = {
   generates: {
     "./src/gql/": {
       preset: "client",
+      plugins: ["typescript-msw"],
       config: {
         useTypeImports: true,
         enumsAsTypes: true,

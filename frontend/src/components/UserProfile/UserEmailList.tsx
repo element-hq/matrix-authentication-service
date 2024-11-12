@@ -19,7 +19,7 @@ import PaginationControls from "../PaginationControls";
 import UserEmail from "../UserEmail";
 
 const QUERY = graphql(/* GraphQL */ `
-  query UserEmailListQuery(
+  query UserEmailList(
     $userId: ID!
     $first: Int
     $after: String
