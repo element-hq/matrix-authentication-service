@@ -7,15 +7,13 @@
 import IconChrome from "@browser-logos/chrome/chrome_64x64.png?url";
 import IconFirefox from "@browser-logos/firefox/firefox_64x64.png?url";
 import IconSafari from "@browser-logos/safari/safari_64x64.png?url";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-
 import { type FragmentType, graphql, useFragment } from "../gql";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 import DateTime from "./DateTime";
 import EndSessionButton from "./Session/EndSessionButton";
 import LastActive from "./Session/LastActive";
@@ -61,7 +59,7 @@ export const useEndBrowserSession = (
   const queryClient = useQueryClient();
   const endSession = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(END_SESSION_MUTATION, { id }),
+      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
       queryClient.invalidateQueries({ queryKey: ["browserSessionList"] });

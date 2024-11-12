@@ -4,11 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute } from "@tanstack/react-router";
-
 import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query OAuth2Client($id: ID!) {
@@ -22,7 +21,7 @@ export const query = (id: string) =>
   queryOptions({
     queryKey: ["oauth2Client", id],
     queryFn: ({ signal }) =>
-      graphqlClient.request({ document: QUERY, variables: { id }, signal }),
+      graphqlRequest({ query: QUERY, variables: { id }, signal }),
   });
 
 export const Route = createFileRoute("/clients/$id")({

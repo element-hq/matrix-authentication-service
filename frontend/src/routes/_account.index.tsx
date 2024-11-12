@@ -4,13 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
-
-import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query UserProfile {
@@ -41,7 +40,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 export const query = queryOptions({
   queryKey: ["userProfile"],
-  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 const actionSchema = z

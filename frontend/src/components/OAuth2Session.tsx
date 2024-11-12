@@ -9,7 +9,7 @@ import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../gql";
 import type { DeviceType, Oauth2ApplicationType } from "../gql/graphql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 import { getDeviceIdFromScope } from "../utils/deviceIdFromScope";
 import DateTime from "./DateTime";
 import EndSessionButton from "./Session/EndSessionButton";
@@ -75,7 +75,7 @@ const OAuth2Session: React.FC<Props> = ({ session }) => {
   const queryClient = useQueryClient();
   const endSession = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(END_SESSION_MUTATION, { id }),
+      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
       queryClient.invalidateQueries({ queryKey: ["appSessionList"] });

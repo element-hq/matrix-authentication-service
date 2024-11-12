@@ -10,7 +10,7 @@ import * as z from "zod";
 
 import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 import {
   type AnyPagination,
   anyPaginationSchema,
@@ -35,7 +35,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 export const query = queryOptions({
   queryKey: ["sessionsOverview"],
-  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 const LIST_QUERY = graphql(/* GraphQL */ `
@@ -88,8 +88,8 @@ export const listQuery = (
   queryOptions({
     queryKey: ["appSessionList", inactive, pagination],
     queryFn: ({ signal }) =>
-      graphqlClient.request({
-        document: LIST_QUERY,
+      graphqlRequest({
+        query: LIST_QUERY,
         variables: {
           lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
           ...pagination,

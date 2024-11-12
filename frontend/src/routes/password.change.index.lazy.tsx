@@ -22,9 +22,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
 import { graphql } from "../gql";
+import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
-
-import { graphqlClient } from "../graphql";
 import { query } from "./password.change.index";
 
 const CHANGE_PASSWORD_MUTATION = graphql(/* GraphQL */ `
@@ -72,10 +71,13 @@ function ChangePassword(): React.ReactNode {
         );
       }
 
-      const response = await graphqlClient.request(CHANGE_PASSWORD_MUTATION, {
-        userId,
-        oldPassword,
-        newPassword,
+      const response = await graphqlRequest({
+        query: CHANGE_PASSWORD_MUTATION,
+        variables: {
+          userId,
+          oldPassword,
+          newPassword,
+        },
       });
 
       if (response.setPassword.status === "ALLOWED") {

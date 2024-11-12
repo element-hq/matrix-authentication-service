@@ -6,9 +6,8 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -35,7 +34,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 export const query = queryOptions({
   queryKey: ["currentUserGreeting"],
-  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/_account")({

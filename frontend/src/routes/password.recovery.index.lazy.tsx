@@ -21,9 +21,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
 import { graphql } from "../gql";
+import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
-
-import { graphqlClient } from "../graphql";
 import { query } from "./password.recovery.index";
 
 const RECOVER_PASSWORD_MUTATION = graphql(/* GraphQL */ `
@@ -64,9 +63,12 @@ function RecoverPassword(): React.ReactNode {
         );
       }
 
-      const response = await graphqlClient.request(RECOVER_PASSWORD_MUTATION, {
-        ticket,
-        newPassword,
+      const response = await graphqlRequest({
+        query: RECOVER_PASSWORD_MUTATION,
+        variables: {
+          ticket,
+          newPassword,
+        },
       });
 
       if (response.setPasswordByRecovery.status === "ALLOWED") {

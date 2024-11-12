@@ -4,11 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute } from "@tanstack/react-router";
-
 import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query PasswordChange {
@@ -27,7 +26,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 export const query = queryOptions({
   queryKey: ["passwordChange"],
-  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/password/change/")({

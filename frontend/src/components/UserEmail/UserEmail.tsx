@@ -4,17 +4,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
 import IconEmail from "@vector-im/compound-design-tokens/assets/web/icons/email";
 import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
 import type { ComponentProps, ReactNode } from "react";
 import { Translation, useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
+import { graphqlRequest } from "../../graphql";
 import { Close, Description, Dialog, Title } from "../Dialog";
 import { Link } from "../Link";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { graphqlClient } from "../../graphql";
 import styles from "./UserEmail.module.css";
 
 // This component shows a single user email address, with controls to verify it,
@@ -136,7 +135,7 @@ const UserEmail: React.FC<{
 
   const setPrimary = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(SET_PRIMARY_EMAIL_MUTATION, { id }),
+      graphqlRequest({ query: SET_PRIMARY_EMAIL_MUTATION, variables: { id } }),
     onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       queryClient.invalidateQueries({ queryKey: ["userEmails"] });
@@ -145,7 +144,7 @@ const UserEmail: React.FC<{
 
   const removeEmail = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(REMOVE_EMAIL_MUTATION, { id }),
+      graphqlRequest({ query: REMOVE_EMAIL_MUTATION, variables: { id } }),
     onSuccess: (_data) => {
       onRemove?.();
       queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });

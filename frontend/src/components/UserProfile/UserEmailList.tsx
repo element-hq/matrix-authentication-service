@@ -7,7 +7,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTransition } from "react";
 import { type FragmentType, graphql, useFragment } from "../../gql";
-import { graphqlClient } from "../../graphql";
+import { graphqlRequest } from "../../graphql";
 import {
   type AnyPagination,
   FIRST_PAGE,
@@ -77,8 +77,8 @@ const UserEmailList: React.FC<{
   const result = useSuspenseQuery({
     queryKey: ["userEmails", pagination],
     queryFn: ({ signal }) =>
-      graphqlClient.request({
-        document: QUERY,
+      graphqlRequest({
+        query: QUERY,
         variables: {
           userId: data.id,
           ...(pagination as AnyPagination),
