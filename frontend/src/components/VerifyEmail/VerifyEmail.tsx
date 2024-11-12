@@ -12,7 +12,7 @@ import { Alert, Button, Form, H1, Text } from "@vector-im/compound-web";
 import { useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
-import { graphqlClient } from "../../graphql";
+import { graphqlRequest } from "../../graphql";
 import styles from "./VerifyEmail.module.css";
 
 const FRAGMENT = graphql(/* GraphQL */ `
@@ -80,7 +80,7 @@ const VerifyEmail: React.FC<{
   const queryClient = useQueryClient();
   const verifyEmail = useMutation({
     mutationFn: ({ id, code }: { id: string; code: string }) =>
-      graphqlClient.request(VERIFY_EMAIL_MUTATION, { id, code }),
+      graphqlRequest({ query: VERIFY_EMAIL_MUTATION, variables: { id, code } }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
@@ -94,7 +94,10 @@ const VerifyEmail: React.FC<{
 
   const resendVerificationEmail = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(RESEND_VERIFICATION_EMAIL_MUTATION, { id }),
+      graphqlRequest({
+        query: RESEND_VERIFICATION_EMAIL_MUTATION,
+        variables: { id },
+      }),
     onSuccess: () => {
       fieldRef.current?.focus();
     },

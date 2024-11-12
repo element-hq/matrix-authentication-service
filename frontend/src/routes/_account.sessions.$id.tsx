@@ -4,11 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute } from "@tanstack/react-router";
-
 import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query SessionDetail($id: ID!) {
@@ -32,7 +31,7 @@ export const query = (id: string) =>
   queryOptions({
     queryKey: ["sessionDetail", id],
     queryFn: ({ signal }) =>
-      graphqlClient.request({ document: QUERY, signal, variables: { id } }),
+      graphqlRequest({ query: QUERY, signal, variables: { id } }),
   });
 
 export const Route = createFileRoute("/_account/sessions/$id")({

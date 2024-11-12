@@ -4,14 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import cx from "classnames";
 import { Suspense } from "react";
-
 import { graphql } from "../../gql";
+import { graphqlRequest } from "../../graphql";
 import Footer from "../Footer";
-
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { graphqlClient } from "../../graphql";
 import styles from "./Layout.module.css";
 
 const QUERY = graphql(/* GraphQL */ `
@@ -25,7 +23,7 @@ const QUERY = graphql(/* GraphQL */ `
 
 export const query = queryOptions({
   queryKey: ["footer"],
-  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 const AsyncFooter: React.FC = () => {

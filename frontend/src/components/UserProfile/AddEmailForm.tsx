@@ -12,7 +12,7 @@ import {
 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import { graphql } from "../../gql";
-import { graphqlClient } from "../../graphql";
+import { graphqlRequest } from "../../graphql";
 
 const ADD_EMAIL_MUTATION = graphql(/* GraphQL */ `
   mutation AddEmail($userId: ID!, $email: String!) {
@@ -35,7 +35,10 @@ const AddEmailForm: React.FC<{
   const queryClient = useQueryClient();
   const addEmail = useMutation({
     mutationFn: ({ userId, email }: { userId: string; email: string }) =>
-      graphqlClient.request(ADD_EMAIL_MUTATION, { userId, email }),
+      graphqlRequest({
+        query: ADD_EMAIL_MUTATION,
+        variables: { userId, email },
+      }),
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["userEmails"] });
 

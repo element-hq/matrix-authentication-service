@@ -6,9 +6,8 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query VerifyEmail($id: ID!) {
@@ -22,7 +21,7 @@ export const query = (id: string) =>
   queryOptions({
     queryKey: ["verifyEmail", id],
     queryFn: ({ signal }) =>
-      graphqlClient.request({ document: QUERY, signal, variables: { id } }),
+      graphqlRequest({ query: QUERY, signal, variables: { id } }),
   });
 
 export const Route = createFileRoute("/emails/$id/verify")({

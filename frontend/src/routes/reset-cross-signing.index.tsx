@@ -23,7 +23,7 @@ import {
   VisualListItem,
 } from "../components/VisualList/VisualList";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewer {
@@ -39,8 +39,8 @@ const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
 const currentViewerQuery = queryOptions({
   queryKey: ["currentViewer"],
   queryFn: ({ signal }) =>
-    graphqlClient.request({
-      document: CURRENT_VIEWER_QUERY,
+    graphqlRequest({
+      query: CURRENT_VIEWER_QUERY,
       signal,
     }),
 });
@@ -83,8 +83,11 @@ function ResetCrossSigning(): React.ReactNode {
 
   const mutation = useMutation({
     mutationFn: async (userId: string) =>
-      graphqlClient.request(ALLOW_CROSS_SIGING_RESET_MUTATION, {
-        userId,
+      graphqlRequest({
+        query: ALLOW_CROSS_SIGING_RESET_MUTATION,
+        variables: {
+          userId,
+        },
       }),
 
     onSuccess: () => {

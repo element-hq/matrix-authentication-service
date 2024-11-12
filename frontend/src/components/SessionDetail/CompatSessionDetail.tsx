@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
-import { graphqlClient } from "../../graphql";
+import { graphqlRequest } from "../../graphql";
 import BlockList from "../BlockList/BlockList";
 import { END_SESSION_MUTATION, simplifyUrl } from "../CompatSession";
 import DateTime from "../DateTime";
@@ -46,7 +46,7 @@ const CompatSessionDetail: React.FC<Props> = ({ session }) => {
   const queryClient = useQueryClient();
   const endSession = useMutation({
     mutationFn: (id: string) =>
-      graphqlClient.request(END_SESSION_MUTATION, { id }),
+      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
       queryClient.invalidateQueries({ queryKey: ["appSessionList"] });

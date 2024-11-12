@@ -12,7 +12,7 @@ import { queryOptions } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewer {
@@ -28,8 +28,8 @@ const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
 const currentViewerQuery = queryOptions({
   queryKey: ["currentViewer"],
   queryFn: ({ signal }) =>
-    graphqlClient.request({
-      document: CURRENT_VIEWER_QUERY,
+    graphqlRequest({
+      query: CURRENT_VIEWER_QUERY,
       signal,
     }),
 });
@@ -49,8 +49,8 @@ const query = (deviceId: string, userId: string) =>
   queryOptions({
     queryKey: ["deviceRedirect", deviceId, userId],
     queryFn: ({ signal }) =>
-      graphqlClient.request({
-        document: QUERY,
+      graphqlRequest({
+        query: QUERY,
         variables: { deviceId, userId },
         signal,
       }),

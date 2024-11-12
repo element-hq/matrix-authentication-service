@@ -23,7 +23,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
-import { graphqlClient } from "../../graphql";
+import { graphqlRequest } from "../../graphql";
 import * as Dialog from "../Dialog";
 import LoadingSpinner from "../LoadingSpinner";
 import styles from "./UserGreeting.module.css";
@@ -92,8 +92,14 @@ const UserGreeting: React.FC<Props> = ({ user, siteConfig }) => {
     mutationFn: ({
       userId,
       displayName,
-    }: { userId: string; displayName: string | null }) =>
-      graphqlClient.request(SET_DISPLAYNAME_MUTATION, { userId, displayName }),
+    }: {
+      userId: string;
+      displayName: string | null;
+    }) =>
+      graphqlRequest({
+        query: SET_DISPLAYNAME_MUTATION,
+        variables: { userId, displayName },
+      }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       if (data.setDisplayName.status === "SET") {

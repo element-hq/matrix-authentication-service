@@ -34,8 +34,6 @@
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
-    "graphql": "^16.9.0",
-    "graphql-request": "^7.1.2",
     "i18next": "^23.16.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

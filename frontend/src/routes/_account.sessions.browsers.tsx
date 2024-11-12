@@ -10,7 +10,7 @@ import * as z from "zod";
 
 import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
-import { graphqlClient } from "../graphql";
+import { graphqlRequest } from "../graphql";
 import {
   type AnyPagination,
   anyPaginationSchema,
@@ -71,8 +71,8 @@ export const query = (pagination: AnyPagination, inactive: true | undefined) =>
   queryOptions({
     queryKey: ["browserSessionList", inactive, pagination],
     queryFn: ({ signal }) =>
-      graphqlClient.request({
-        document: QUERY,
+      graphqlRequest({
+        query: QUERY,
         variables: {
           lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
           ...pagination,
