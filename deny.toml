@@ -66,8 +66,6 @@ skip = [
     { name = "heck", version = "0.4.1" },
     # wasmtime -> cranelift is depending on this old version
     { name = "itertools", version = "0.12.1" },
-    # wasmtime -> cranelift is depending on this old version
-    { name = "gimli", version = "0.28.1" },
     # apalis-core depends on this old version
     { name = "strum", version = "0.25.0" },
     { name = "strum_macros", version = "0.25.0" },
