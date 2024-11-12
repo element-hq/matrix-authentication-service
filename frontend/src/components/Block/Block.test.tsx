@@ -6,34 +6,34 @@
 
 // @vitest-environment happy-dom
 
-import { create } from "react-test-renderer";
 import { describe, expect, it } from "vitest";
 
+import render from "../../test-utils/render";
 import Block from "./Block";
 
 describe("Block", () => {
   it("render <Block />", () => {
-    const component = create(<Block />);
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<Block />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("render <Block /> with children", () => {
-    const component = create(
+    const { asFragment } = render(
       <Block>
         <h1>Title</h1>
         <p>Body</p>
       </Block>,
     );
-    expect(component.toJSON()).toMatchSnapshot();
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("passes down the className prop", () => {
-    const component = create(<Block className="foo" />);
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<Block className="test" />);
+    expect(asFragment()).toMatchSnapshot();
   });
 
   it("renders with highlight", () => {
-    const component = create(<Block highlight />);
-    expect(component.toJSON()).toMatchSnapshot();
+    const { asFragment } = render(<Block highlight />);
+    expect(asFragment()).toMatchSnapshot();
   });
 });

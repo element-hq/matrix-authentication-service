@@ -5,38 +5,17 @@
 // Please see LICENSE in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Provider } from "urql";
-import { delay, fromValue, pipe } from "wonka";
-
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { makeFragmentData } from "../../gql";
-import type { SetDisplayNameMutation } from "../../gql/graphql";
-
 import UserGreeting, { CONFIG_FRAGMENT, FRAGMENT } from "./UserGreeting";
+
+const queryClient = new QueryClient();
 
 const Template: React.FC<{
   displayName?: string;
   mxid: string;
   displayNameChangeAllowed: boolean;
 }> = ({ displayName, mxid, displayNameChangeAllowed }) => {
-  const userId = "user id";
-
-  const mockClient = {
-    /* This will resolve after a small delay */
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    executeMutation: () =>
-      pipe(
-        fromValue({
-          data: {
-            setDisplayName: {
-              status: "SET",
-              user: { id: userId, matrix: { displayName } },
-            },
-          },
-        } satisfies { data: SetDisplayNameMutation }),
-        delay(300),
-      ),
-  };
-
   const user = makeFragmentData(
     {
       id: "user id",
@@ -57,9 +36,9 @@ const Template: React.FC<{
   );
 
   return (
-    <Provider value={mockClient}>
+    <QueryClientProvider client={queryClient}>
       <UserGreeting user={user} siteConfig={config} />
-    </Provider>
+    </QueryClientProvider>
   );
 };
 

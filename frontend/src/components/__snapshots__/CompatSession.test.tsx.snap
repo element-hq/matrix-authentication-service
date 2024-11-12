@@ -1,201 +1,193 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`<CompatSession /> > renders a finished session 1`] = `
-<section
-  className="_sessionCardRoot_e2909e"
->
-  <a
-    aria-disabled={true}
-    className="_sessionCard_e2909e _disabled_e2909e"
-    disabled={true}
-    onClick={[Function]}
-    onFocus={[Function]}
-    onMouseEnter={[Function]}
-    onMouseLeave={[Function]}
-    onTouchStart={[Function]}
-    role="link"
+<DocumentFragment>
+  <section
+    class="_sessionCardRoot_e2909e"
   >
-    <header
-      className="_cardHeader_e2909e"
+    <a
+      aria-disabled="true"
+      class="_sessionCard_e2909e _disabled_e2909e"
+      disabled=""
+      role="link"
     >
-      <svg
-        aria-label="Unknown device type"
-        className="_deviceTypeIcon_e677aa"
-        fill="currentColor"
-        height="1em"
-        viewBox="0 0 24 24"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
+      <header
+        class="_cardHeader_e2909e"
       >
-        <path
-          d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 0 1 3 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 0 1 5 3h14c.55 0 1.02.196 1.413.587.39.393.587.863.587 1.413v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 19 21H5Zm0-2h14V5H5v14Z"
-        />
-        <path
-          d="M11 10a1 1 0 1 1 1.479.878c-.31.17-.659.413-.94.741-.286.334-.539.8-.539 1.381a1 1 0 0 0 2 .006.3.3 0 0 1 .057-.085 1.39 1.39 0 0 1 .382-.288A3 3 0 1 0 9 10a1 1 0 1 0 2 0Zm1.999 3.011v-.004.005ZM12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-        />
-      </svg>
-      <div
-        className="_content_e2909e"
-      >
-        <div
-          className="_name_e2909e"
+        <svg
+          aria-label="Unknown device type"
+          class="_deviceTypeIcon_e677aa"
+          fill="currentColor"
+          height="1em"
+          viewBox="0 0 24 24"
+          width="1em"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          Unknown device
-        </div>
+          <path
+            d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 0 1 3 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 0 1 5 3h14c.55 0 1.02.196 1.413.587.39.393.587.863.587 1.413v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 19 21H5Zm0-2h14V5H5v14Z"
+          />
+          <path
+            d="M11 10a1 1 0 1 1 1.479.878c-.31.17-.659.413-.94.741-.286.334-.539.8-.539 1.381a1 1 0 0 0 2 .006.3.3 0 0 1 .057-.085 1.39 1.39 0 0 1 .382-.288A3 3 0 1 0 9 10a1 1 0 1 0 2 0Zm1.999 3.011v-.004.005ZM12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+          />
+        </svg>
         <div
-          className="_client_e2909e"
+          class="_content_e2909e"
         >
-          element.io
-        </div>
-      </div>
-    </header>
-    <ul
-      className="_metadata_e2909e"
-    >
-      <li>
-        <div
-          className="_key_e2909e"
-        >
-          Signed in
-        </div>
-        <div
-          className="_value_e2909e"
-        >
-          <time
-            dateTime="2023-06-29T03:35:17Z"
+          <div
+            class="_name_e2909e"
           >
-            Thu, 29 Jun 2023, 03:35
-          </time>
+            Unknown device
+          </div>
+          <div
+            class="_client_e2909e"
+          >
+            element.io
+          </div>
         </div>
-      </li>
-      <li>
-        <div
-          className="_key_e2909e"
-        >
-          Device ID
-        </div>
-        <div
-          className="_value_e2909e"
-        >
-          abcd1234
-        </div>
-      </li>
-    </ul>
-  </a>
-</section>
+      </header>
+      <ul
+        class="_metadata_e2909e"
+      >
+        <li>
+          <div
+            class="_key_e2909e"
+          >
+            Signed in
+          </div>
+          <div
+            class="_value_e2909e"
+          >
+            <time
+              datetime="2023-06-29T03:35:17Z"
+            >
+              Thu, 29 Jun 2023, 03:35
+            </time>
+          </div>
+        </li>
+        <li>
+          <div
+            class="_key_e2909e"
+          >
+            Device ID
+          </div>
+          <div
+            class="_value_e2909e"
+          >
+            abcd1234
+          </div>
+        </li>
+      </ul>
+    </a>
+  </section>
+</DocumentFragment>
 `;
 
 exports[`<CompatSession /> > renders an active session 1`] = `
-<section
-  className="_sessionCardRoot_e2909e"
->
-  <a
-    className="_sessionCard_e2909e"
-    disabled={false}
-    href="/sessions/session-id"
-    onClick={[Function]}
-    onFocus={[Function]}
-    onMouseEnter={[Function]}
-    onMouseLeave={[Function]}
-    onTouchStart={[Function]}
+<DocumentFragment>
+  <section
+    class="_sessionCardRoot_e2909e"
   >
-    <header
-      className="_cardHeader_e2909e"
+    <a
+      class="_sessionCard_e2909e"
+      href="/sessions/session-id"
     >
-      <svg
-        aria-label="Unknown device type"
-        className="_deviceTypeIcon_e677aa"
-        fill="currentColor"
-        height="1em"
-        viewBox="0 0 24 24"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
+      <header
+        class="_cardHeader_e2909e"
       >
-        <path
-          d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 0 1 3 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 0 1 5 3h14c.55 0 1.02.196 1.413.587.39.393.587.863.587 1.413v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 19 21H5Zm0-2h14V5H5v14Z"
-        />
-        <path
-          d="M11 10a1 1 0 1 1 1.479.878c-.31.17-.659.413-.94.741-.286.334-.539.8-.539 1.381a1 1 0 0 0 2 .006.3.3 0 0 1 .057-.085 1.39 1.39 0 0 1 .382-.288A3 3 0 1 0 9 10a1 1 0 1 0 2 0Zm1.999 3.011v-.004.005ZM12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-        />
-      </svg>
-      <div
-        className="_content_e2909e"
-      >
-        <div
-          className="_name_e2909e"
+        <svg
+          aria-label="Unknown device type"
+          class="_deviceTypeIcon_e677aa"
+          fill="currentColor"
+          height="1em"
+          viewBox="0 0 24 24"
+          width="1em"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          Unknown device
-        </div>
+          <path
+            d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 0 1 3 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 0 1 5 3h14c.55 0 1.02.196 1.413.587.39.393.587.863.587 1.413v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 19 21H5Zm0-2h14V5H5v14Z"
+          />
+          <path
+            d="M11 10a1 1 0 1 1 1.479.878c-.31.17-.659.413-.94.741-.286.334-.539.8-.539 1.381a1 1 0 0 0 2 .006.3.3 0 0 1 .057-.085 1.39 1.39 0 0 1 .382-.288A3 3 0 1 0 9 10a1 1 0 1 0 2 0Zm1.999 3.011v-.004.005ZM12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+          />
+        </svg>
         <div
-          className="_client_e2909e"
+          class="_content_e2909e"
         >
-          element.io
-        </div>
-      </div>
-    </header>
-    <ul
-      className="_metadata_e2909e"
-    >
-      <li>
-        <div
-          className="_key_e2909e"
-        >
-          Signed in
-        </div>
-        <div
-          className="_value_e2909e"
-        >
-          <time
-            dateTime="2023-06-29T03:35:17Z"
+          <div
+            class="_name_e2909e"
           >
-            Thu, 29 Jun 2023, 03:35
-          </time>
+            Unknown device
+          </div>
+          <div
+            class="_client_e2909e"
+          >
+            element.io
+          </div>
         </div>
-      </li>
-      <li>
-        <div
-          className="_key_e2909e"
-        >
-          Device ID
-        </div>
-        <div
-          className="_value_e2909e"
-        >
-          abcd1234
-        </div>
-      </li>
-    </ul>
-  </a>
-  <div
-    className="_action_e2909e"
-  >
-    <button
-      aria-controls="radix-:r0:"
-      aria-expanded={false}
-      aria-haspopup="dialog"
-      className="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
-      data-kind="secondary"
-      data-size="sm"
-      data-state="closed"
-      onClick={[Function]}
-      role="button"
-      tabIndex={0}
-      type="button"
-    >
-      <svg
-        aria-hidden={true}
-        fill="currentColor"
-        height={20}
-        viewBox="0 0 24 24"
-        width={20}
-        xmlns="http://www.w3.org/2000/svg"
+      </header>
+      <ul
+        class="_metadata_e2909e"
       >
-        <path
-          d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
-        />
-      </svg>
-      Sign out
-    </button>
-  </div>
-</section>
+        <li>
+          <div
+            class="_key_e2909e"
+          >
+            Signed in
+          </div>
+          <div
+            class="_value_e2909e"
+          >
+            <time
+              datetime="2023-06-29T03:35:17Z"
+            >
+              Thu, 29 Jun 2023, 03:35
+            </time>
+          </div>
+        </li>
+        <li>
+          <div
+            class="_key_e2909e"
+          >
+            Device ID
+          </div>
+          <div
+            class="_value_e2909e"
+          >
+            abcd1234
+          </div>
+        </li>
+      </ul>
+    </a>
+    <div
+      class="_action_e2909e"
+    >
+      <button
+        aria-controls="radix-:r0:"
+        aria-expanded="false"
+        aria-haspopup="dialog"
+        class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
+        data-kind="secondary"
+        data-size="sm"
+        data-state="closed"
+        role="button"
+        tabindex="0"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
+          />
+        </svg>
+        Sign out
+      </button>
+    </div>
+  </section>
+</DocumentFragment>
 `;

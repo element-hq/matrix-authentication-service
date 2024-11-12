@@ -1,33 +1,41 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Block > passes down the className prop 1`] = `
-<div
-  className="_block_17898c foo"
-/>
+<DocumentFragment>
+  <div
+    class="_block_17898c test"
+  />
+</DocumentFragment>
 `;
 
 exports[`Block > render <Block /> 1`] = `
-<div
-  className="_block_17898c"
-/>
+<DocumentFragment>
+  <div
+    class="_block_17898c"
+  />
+</DocumentFragment>
 `;
 
 exports[`Block > render <Block /> with children 1`] = `
-<div
-  className="_block_17898c"
->
-  <h1>
-    Title
-  </h1>
-  <p>
-    Body
-  </p>
-</div>
+<DocumentFragment>
+  <div
+    class="_block_17898c"
+  >
+    <h1>
+      Title
+    </h1>
+    <p>
+      Body
+    </p>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`Block > renders with highlight 1`] = `
-<div
-  className="_block_17898c"
-  data-active={true}
-/>
+<DocumentFragment>
+  <div
+    class="_block_17898c"
+    data-active="true"
+  />
+</DocumentFragment>
 `;

@@ -8,6 +8,13 @@ import { GraphQLClient } from "graphql-request";
 
 import appConfig from "./config";
 
-export const graphqlClient = new GraphQLClient(
-  new URL(appConfig.graphqlEndpoint, window.location.toString()).toString(),
-);
+let base: string;
+if (import.meta.env.TEST && !window) {
+  base = "http://localhost/";
+} else {
+  base = window.location.toString();
+}
+
+const graphqlEndpoint = new URL(appConfig.graphqlEndpoint, base).toString();
+
+export const graphqlClient = new GraphQLClient(graphqlEndpoint);
