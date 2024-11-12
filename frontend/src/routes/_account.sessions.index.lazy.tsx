@@ -7,7 +7,6 @@
 import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { H3, Separator } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "urql";
 
 import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
@@ -17,9 +16,9 @@ import Filter from "../components/Filter";
 import OAuth2Session from "../components/OAuth2Session";
 import BrowserSessionsOverview from "../components/UserSessionsOverview/BrowserSessionsOverview";
 import { usePages } from "../pagination";
-import { getNinetyDaysAgo } from "../utils/dates";
 
-import { LIST_QUERY, QUERY } from "./_account.sessions.index";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { listQuery, query } from "./_account.sessions.index";
 
 const PAGE_SIZE = 6;
 
@@ -35,24 +34,14 @@ export const Route = createLazyFileRoute("/_account/sessions/")({
 function Sessions(): React.ReactElement {
   const { t } = useTranslation();
   const { inactive, pagination } = Route.useLoaderDeps();
-  const [overview] = useQuery({ query: QUERY });
-  if (overview.error) throw overview.error;
-  const user =
-    overview.data?.viewer.__typename === "User" ? overview.data.viewer : null;
-  if (user === null) throw notFound();
+  const {
+    data: { viewer },
+  } = useSuspenseQuery(query);
+  if (viewer.__typename !== "User") throw notFound();
 
-  const variables = {
-    lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
-    ...pagination,
-  };
-
-  const [list] = useQuery({ query: LIST_QUERY, variables });
-  if (list.error) throw list.error;
-  const appSessions =
-    list.data?.viewer.__typename === "User"
-      ? list.data.viewer.appSessions
-      : null;
-  if (appSessions === null) throw notFound();
+  const { data } = useSuspenseQuery(listQuery(pagination, inactive));
+  if (data.viewer.__typename !== "User") throw notFound();
+  const appSessions = data.viewer.appSessions;
 
   const [backwardPage, forwardPage] = usePages(
     pagination,
@@ -66,7 +55,7 @@ function Sessions(): React.ReactElement {
   return (
     <BlockList>
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
-      <BrowserSessionsOverview user={user} />
+      <BrowserSessionsOverview user={viewer} />
       <Separator />
       <div className="flex gap-2 justify-start items-center">
         <Filter

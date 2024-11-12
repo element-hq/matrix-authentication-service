@@ -7,7 +7,6 @@
 import { Outlet, createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "urql";
 
 import { useEndBrowserSession } from "../components/BrowserSession";
 import Layout from "../components/Layout";
@@ -17,7 +16,8 @@ import EndSessionButton from "../components/Session/EndSessionButton";
 import UnverifiedEmailAlert from "../components/UnverifiedEmailAlert";
 import UserGreeting from "../components/UserGreeting";
 
-import { QUERY } from "./_account";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { query } from "./_account";
 
 export const Route = createLazyFileRoute("/_account")({
   component: Account,
@@ -25,14 +25,10 @@ export const Route = createLazyFileRoute("/_account")({
 
 function Account(): React.ReactElement {
   const { t } = useTranslation();
-  const [result] = useQuery({
-    query: QUERY,
-  });
-  if (result.error) throw result.error;
-  const session = result.data?.viewerSession;
+  const result = useSuspenseQuery(query);
+  const session = result.data.viewerSession;
   if (session?.__typename !== "BrowserSession") throw notFound();
-  const siteConfig = result.data?.siteConfig;
-  if (!siteConfig) throw Error(); // This should never happen
+  const siteConfig = result.data.siteConfig;
   const onSessionEnd = useEndBrowserSession(session.id, true);
 
   return (

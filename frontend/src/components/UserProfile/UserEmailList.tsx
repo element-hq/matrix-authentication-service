@@ -4,11 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTransition } from "react";
-import { useQuery } from "urql";
-
 import { type FragmentType, graphql, useFragment } from "../../gql";
+import { graphqlClient } from "../../graphql";
 import {
+  type AnyPagination,
   FIRST_PAGE,
   type Pagination,
   usePages,
@@ -73,13 +74,20 @@ const UserEmailList: React.FC<{
   const [pending, startTransition] = useTransition();
 
   const [pagination, setPagination] = usePagination();
-  const [result, refreshList] = useQuery({
-    query: QUERY,
-    variables: { userId: data.id, ...pagination },
+  const result = useSuspenseQuery({
+    queryKey: ["userEmails", pagination],
+    queryFn: ({ signal }) =>
+      graphqlClient.request({
+        document: QUERY,
+        variables: {
+          userId: data.id,
+          ...(pagination as AnyPagination),
+        },
+        signal,
+      }),
   });
-  if (result.error) throw result.error;
-  const emails = result.data?.user?.emails;
-  if (!emails) throw new Error(); // Suspense mode is enabled
+  const emails = result.data.user?.emails;
+  if (!emails) throw new Error();
 
   const [prevPage, nextPage] = usePages(pagination, emails.pageInfo);
 
@@ -91,11 +99,10 @@ const UserEmailList: React.FC<{
     });
   };
 
-  // When removing an email, we want to refresh the list and go back to the first page
+  // When removing an email, we want to go back to the first page
   const onRemove = (): void => {
     startTransition(() => {
       setPagination(FIRST_PAGE);
-      refreshList();
     });
   };
 

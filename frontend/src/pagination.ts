@@ -19,20 +19,20 @@ export const FIRST_PAGE = Symbol("FIRST_PAGE");
 export const LAST_PAGE = Symbol("LAST_PAGE");
 
 export const anyPaginationSchema = z.object({
-  first: z.number().optional(),
-  after: z.string().optional(),
-  last: z.number().optional(),
-  before: z.string().optional(),
+  first: z.number().nullish(),
+  after: z.string().nullish(),
+  last: z.number().nullish(),
+  before: z.string().nullish(),
 });
 
 export const forwardPaginationSchema = z.object({
   first: z.number(),
-  after: z.string().optional(),
+  after: z.string().nullish(),
 });
 
 const backwardPaginationSchema = z.object({
   last: z.number(),
-  before: z.string().optional(),
+  before: z.string().nullish(),
 });
 
 const paginationSchema = z.union([

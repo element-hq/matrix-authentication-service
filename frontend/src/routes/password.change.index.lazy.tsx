@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createLazyFileRoute,
   notFound,
@@ -13,7 +14,6 @@ import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lo
 import { Alert, Form, Separator } from "@vector-im/compound-web";
 import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery } from "urql";
 
 import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
@@ -22,10 +22,10 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
 import { graphql } from "../gql";
-import { SetPasswordStatus } from "../gql/graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
 
-import { QUERY } from "./password.change.index";
+import { graphqlClient } from "../graphql";
+import { query } from "./password.change.index";
 
 const CHANGE_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation ChangePassword(
@@ -51,43 +51,52 @@ export const Route = createLazyFileRoute("/password/change/")({
 
 function ChangePassword(): React.ReactNode {
   const { t } = useTranslation();
-  const [queryResult] = useQuery({ query: QUERY });
+  const {
+    data: { viewer, siteConfig },
+  } = useSuspenseQuery(query);
   const router = useRouter();
-  if (queryResult.error) throw queryResult.error;
-  if (queryResult.data?.viewer.__typename !== "User") throw notFound();
-  const userId = queryResult.data.viewer.id;
-  const siteConfig = queryResult.data?.siteConfig;
-  if (!siteConfig) throw Error(); // This should never happen
+  if (viewer.__typename !== "User") throw notFound();
+  const userId = viewer.id;
 
   const currentPasswordRef = useRef<HTMLInputElement>(null);
 
-  const [result, changePassword] = useMutation(CHANGE_PASSWORD_MUTATION);
+  const mutation = useMutation({
+    async mutationFn(formData: FormData) {
+      const oldPassword = formData.get("current_password") as string;
+      const newPassword = formData.get("new_password") as string;
+      const newPasswordAgain = formData.get("new_password_again") as string;
+
+      if (newPassword !== newPasswordAgain) {
+        throw new Error(
+          "passwords mismatch; this should be checked by the form",
+        );
+      }
+
+      const response = await graphqlClient.request(CHANGE_PASSWORD_MUTATION, {
+        userId,
+        oldPassword,
+        newPassword,
+      });
+
+      if (response.setPassword.status === "ALLOWED") {
+        router.navigate({ to: "/password/change/success" });
+      }
+
+      return response.setPassword;
+    },
+  });
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-
     const formData = new FormData(event.currentTarget);
-
-    const oldPassword = formData.get("current_password") as string;
-    const newPassword = formData.get("new_password") as string;
-    const newPasswordAgain = formData.get("new_password_again") as string;
-
-    if (newPassword !== newPasswordAgain) {
-      throw new Error("passwords mismatch; this should be checked by the form");
-    }
-
-    const response = await changePassword({ userId, oldPassword, newPassword });
-
-    if (response.data?.setPassword.status === "ALLOWED") {
-      router.navigate({ to: "/password/change/success" });
-    }
+    mutation.mutate(formData);
   };
 
-  const unhandleableError = result.error !== undefined;
+  const unhandleableError = mutation.error !== null;
 
   const errorMsg: string | undefined = translateSetPasswordError(
     t,
-    result.data?.setPassword.status,
+    mutation.data?.status,
   );
 
   return (
@@ -125,7 +134,7 @@ function ChangePassword(): React.ReactNode {
 
           <Form.Field
             name="current_password"
-            serverInvalid={result.data?.setPassword.status === "WRONG_PASSWORD"}
+            serverInvalid={mutation.data?.status === "WRONG_PASSWORD"}
           >
             <Form.Label>
               {t("frontend.password_change.current_password_label")}
@@ -141,14 +150,13 @@ function ChangePassword(): React.ReactNode {
               {t("frontend.errors.field_required")}
             </Form.ErrorMessage>
 
-            {result.data &&
-              result.data.setPassword.status === "WRONG_PASSWORD" && (
-                <Form.ErrorMessage>
-                  {t(
-                    "frontend.password_change.failure.description.wrong_password",
-                  )}
-                </Form.ErrorMessage>
-              )}
+            {mutation.data && mutation.data.status === "WRONG_PASSWORD" && (
+              <Form.ErrorMessage>
+                {t(
+                  "frontend.password_change.failure.description.wrong_password",
+                )}
+              </Form.ErrorMessage>
+            )}
           </Form.Field>
 
           <Separator />
@@ -156,14 +164,14 @@ function ChangePassword(): React.ReactNode {
           <PasswordCreationDoubleInput
             siteConfig={siteConfig}
             forceShowNewPasswordInvalid={
-              (result.data &&
-                result.data.setPassword.status === "INVALID_NEW_PASSWORD") ||
+              (mutation.data &&
+                mutation.data.status === "INVALID_NEW_PASSWORD") ||
               false
             }
           />
 
-          <Form.Submit kind="primary" disabled={result.fetching}>
-            {!!result.fetching && <LoadingSpinner inline />}
+          <Form.Submit kind="primary" disabled={mutation.isPending}>
+            {!!mutation.isPending && <LoadingSpinner inline />}
             {t("action.save")}
           </Form.Submit>
 

@@ -6,8 +6,6 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { DeviceType } from "../../gql/graphql";
-
 import DeviceTypeIcon from "./DeviceTypeIcon";
 
 const meta = {

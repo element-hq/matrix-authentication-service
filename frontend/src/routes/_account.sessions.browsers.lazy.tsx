@@ -7,7 +7,6 @@
 import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { H5 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "urql";
 
 import BlockList from "../components/BlockList";
 import BrowserSession from "../components/BrowserSession";
@@ -15,9 +14,9 @@ import { ButtonLink } from "../components/ButtonLink";
 import EmptyState from "../components/EmptyState";
 import Filter from "../components/Filter";
 import { usePages } from "../pagination";
-import { getNinetyDaysAgo } from "../utils/dates";
 
-import { QUERY } from "./_account.sessions.browsers";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { query } from "./_account.sessions.browsers";
 
 const PAGE_SIZE = 6;
 
@@ -29,27 +28,19 @@ function BrowserSessions(): React.ReactElement {
   const { t } = useTranslation();
   const { inactive, pagination } = Route.useLoaderDeps();
 
-  const variables = {
-    lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
-    ...pagination,
-  };
-
-  const [list] = useQuery({ query: QUERY, variables });
-  if (list.error) throw list.error;
-  const currentSession =
-    list.data?.viewerSession.__typename === "BrowserSession"
-      ? list.data.viewerSession
-      : null;
-  if (currentSession === null) throw notFound();
+  const {
+    data: { viewerSession },
+  } = useSuspenseQuery(query(pagination, inactive));
+  if (viewerSession.__typename !== "BrowserSession") throw notFound();
 
   const [backwardPage, forwardPage] = usePages(
     pagination,
-    currentSession.user.browserSessions.pageInfo,
+    viewerSession.user.browserSessions.pageInfo,
     PAGE_SIZE,
   );
 
   // We reverse the list as we are paginating backwards
-  const edges = [...currentSession.user.browserSessions.edges].reverse();
+  const edges = [...viewerSession.user.browserSessions.edges].reverse();
   return (
     <BlockList>
       <H5>{t("frontend.browser_sessions_overview.heading")}</H5>
@@ -68,11 +59,11 @@ function BrowserSessions(): React.ReactElement {
         <BrowserSession
           key={n.cursor}
           session={n.node}
-          isCurrent={currentSession.id === n.node.id}
+          isCurrent={viewerSession.id === n.node.id}
         />
       ))}
 
-      {currentSession.user.browserSessions.totalCount === 0 && (
+      {viewerSession.user.browserSessions.totalCount === 0 && (
         <EmptyState>
           {inactive
             ? t(

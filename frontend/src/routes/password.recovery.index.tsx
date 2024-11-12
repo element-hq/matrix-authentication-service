@@ -8,9 +8,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
 
+import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
+import { graphqlClient } from "../graphql";
 
-export const QUERY = graphql(/* GraphQL */ `
+const QUERY = graphql(/* GraphQL */ `
   query PasswordRecoveryQuery {
     siteConfig {
       id
@@ -19,6 +21,11 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+export const query = queryOptions({
+  queryKey: ["passwordRecovery"],
+  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+});
+
 const schema = z.object({
   ticket: z.string(),
 });
@@ -26,12 +33,5 @@ const schema = z.object({
 export const Route = createFileRoute("/password/recovery/")({
   validateSearch: zodSearchValidator(schema),
 
-  async loader({ context, abortController: { signal } }) {
-    const queryResult = await context.client.query(
-      QUERY,
-      {},
-      { fetchOptions: { signal } },
-    );
-    if (queryResult.error) throw queryResult.error;
-  },
+  loader: ({ context }) => context.queryClient.ensureQueryData(query),
 });

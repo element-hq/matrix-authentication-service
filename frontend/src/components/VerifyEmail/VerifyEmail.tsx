@@ -4,16 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLinkProps, useNavigate } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send-solid";
 import { Alert, Button, Form, H1, Text } from "@vector-im/compound-web";
 import { useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { useMutation } from "urql";
-
 import { type FragmentType, graphql, useFragment } from "../../gql";
-
+import { graphqlClient } from "../../graphql";
 import styles from "./VerifyEmail.module.css";
 
 const FRAGMENT = graphql(/* GraphQL */ `
@@ -78,10 +77,28 @@ const VerifyEmail: React.FC<{
   email: FragmentType<typeof FRAGMENT>;
 }> = ({ email }) => {
   const data = useFragment(FRAGMENT, email);
-  const [verifyEmailResult, verifyEmail] = useMutation(VERIFY_EMAIL_MUTATION);
-  const [resendVerificationEmailResult, resendVerificationEmail] = useMutation(
-    RESEND_VERIFICATION_EMAIL_MUTATION,
-  );
+  const queryClient = useQueryClient();
+  const verifyEmail = useMutation({
+    mutationFn: ({ id, code }: { id: string; code: string }) =>
+      graphqlClient.request(VERIFY_EMAIL_MUTATION, { id, code }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userEmails"] });
+
+      if (data.verifyEmail.status === "VERIFIED") {
+        navigate({ to: "/" });
+      }
+    },
+  });
+
+  const resendVerificationEmail = useMutation({
+    mutationFn: (id: string) =>
+      graphqlClient.request(RESEND_VERIFICATION_EMAIL_MUTATION, { id }),
+    onSuccess: () => {
+      fieldRef.current?.focus();
+    },
+  });
   const navigate = useNavigate();
   const fieldRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
@@ -91,26 +108,16 @@ const VerifyEmail: React.FC<{
     const form = e.currentTarget;
     const formData = new FormData(form);
     const code = formData.get("code") as string;
-    verifyEmail({ id: data.id, code }).then((result) => {
-      // Clear the form
-      form.reset();
-
-      if (result.data?.verifyEmail.status === "VERIFIED") {
-        navigate({ to: "/" });
-      }
-    });
+    verifyEmail.mutateAsync({ id: data.id, code }).finally(() => form.reset());
   };
 
   const onResendClick = (): void => {
-    resendVerificationEmail({ id: data.id }).then(() => {
-      fieldRef.current?.focus();
-    });
+    resendVerificationEmail.mutate(data.id);
   };
 
   const emailSent =
-    resendVerificationEmailResult.data?.sendVerificationEmail.status === "SENT";
-  const invalidCode =
-    verifyEmailResult.data?.verifyEmail.status === "INVALID_CODE";
+    resendVerificationEmail.data?.sendVerificationEmail.status === "SENT";
+  const invalidCode = verifyEmail.data?.verifyEmail.status === "INVALID_CODE";
   const { email: codeEmail } = data;
 
   return (
@@ -163,13 +170,13 @@ const VerifyEmail: React.FC<{
           </Form.ErrorMessage>
         </Form.Field>
 
-        <Form.Submit type="submit" disabled={verifyEmailResult.fetching}>
+        <Form.Submit type="submit" disabled={verifyEmail.isPending}>
           {t("action.continue")}
         </Form.Submit>
         <Button
           type="button"
           kind="secondary"
-          disabled={resendVerificationEmailResult.fetching}
+          disabled={resendVerificationEmail.isPending}
           onClick={onResendClick}
         >
           {t("frontend.verify_email.resend_code")}
