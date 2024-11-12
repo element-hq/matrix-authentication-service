@@ -69,6 +69,7 @@
     "@vitest/coverage-v8": "^2.1.5",
     "autoprefixer": "^10.4.20",
     "browserslist-to-esbuild": "^2.1.1",
+    "graphql": "^16.9.0",
     "happy-dom": "^15.11.4",
     "i18next-parser": "^9.0.2",
     "msw": "^2.6.4",
