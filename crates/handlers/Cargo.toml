@@ -107,6 +107,6 @@ zxcvbn = "3.1.0"
 [dev-dependencies]
 insta.workspace = true
 tracing-subscriber.workspace = true
-cookie_store = "0.21.0"
+cookie_store = "0.21.1"
 sqlx.workspace = true
 wiremock.workspace = true
