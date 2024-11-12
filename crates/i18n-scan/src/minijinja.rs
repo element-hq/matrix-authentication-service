@@ -6,7 +6,7 @@
 
 pub use minijinja::machinery::parse;
 use minijinja::{
-    machinery::ast::{Call, Const, Expr, Macro, Spanned, Stmt},
+    machinery::ast::{Call, CallArg, Const, Expr, Macro, Spanned, Stmt},
     ErrorKind,
 };
 
@@ -90,9 +90,9 @@ pub fn find_in_stmt<'a>(context: &mut Context, stmt: &'a Stmt<'a>) -> Result<(),
     Ok(())
 }
 
-fn as_const<'a>(expr: &'a Expr<'a>) -> Option<&'a Const> {
-    match expr {
-        Expr::Const(const_) => Some(const_),
+fn as_const<'a>(call_arg: &'a CallArg<'a>) -> Option<&'a Const> {
+    match call_arg {
+        CallArg::Pos(Expr::Const(const_)) => Some(const_),
         _ => None,
     }
 }
@@ -122,13 +122,10 @@ fn find_in_call<'a>(
                     "t() first argument must be a string literal",
                 ))?;
 
-            let has_count = call.args.iter().any(|arg| {
-                if let Expr::Kwargs(kwargs) = arg {
-                    kwargs.pairs.iter().any(|(key, _value)| *key == "count")
-                } else {
-                    false
-                }
-            });
+            let has_count = call
+                .args
+                .iter()
+                .any(|arg| matches!(arg, CallArg::Kwarg("count", _)));
 
             let key = Key::new(
                 if has_count {
@@ -146,11 +143,32 @@ fn find_in_call<'a>(
     }
 
     find_in_expr(context, &call.expr)?;
-    for arg in &call.args {
-        find_in_expr(context, arg)?;
+    find_in_call_args(context, &call.args)?;
+
+    Ok(())
+}
+
+fn find_in_call_args<'a>(
+    context: &mut Context,
+    args: &'a [CallArg<'a>],
+) -> Result<(), minijinja::Error> {
+    for arg in args {
+        find_in_call_arg(context, arg)?;
     }
 
     Ok(())
+}
+
+fn find_in_call_arg<'a>(
+    context: &mut Context,
+    arg: &'a CallArg<'a>,
+) -> Result<(), minijinja::Error> {
+    match arg {
+        CallArg::Pos(expr)
+        | CallArg::Kwarg(_, expr)
+        | CallArg::PosSplat(expr)
+        | CallArg::KwargSplat(expr) => find_in_expr(context, expr),
+    }
 }
 
 fn find_in_stmts<'a>(context: &mut Context, stmts: &'a [Stmt<'a>]) -> Result<(), minijinja::Error> {
@@ -185,11 +203,11 @@ fn find_in_expr<'a>(context: &mut Context, expr: &'a Expr<'a>) -> Result<(), min
         }
         Expr::Filter(filter) => {
             find_in_optional_expr(context, &filter.expr)?;
-            find_in_exprs(context, &filter.args)?;
+            find_in_call_args(context, &filter.args)?;
         }
         Expr::Test(test) => {
             find_in_expr(context, &test.expr)?;
-            find_in_exprs(context, &test.args)?;
+            find_in_call_args(context, &test.args)?;
         }
         Expr::GetAttr(get_attr) => {
             find_in_expr(context, &get_attr.expr)?;
@@ -207,11 +225,6 @@ fn find_in_expr<'a>(context: &mut Context, expr: &'a Expr<'a>) -> Result<(), min
         Expr::Map(map) => {
             find_in_exprs(context, &map.keys)?;
             find_in_exprs(context, &map.values)?;
-        }
-        Expr::Kwargs(kwargs) => {
-            for (_key, value) in &kwargs.pairs {
-                find_in_expr(context, value)?;
-            }
         }
     }
 
