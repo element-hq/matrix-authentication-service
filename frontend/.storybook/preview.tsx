@@ -74,7 +74,7 @@ const withThemeProvider: Decorator = (Story, context) => {
   );
 };
 
-const withDummyRouter: Decorator = (Story, context) => {
+const withDummyRouter: Decorator = (Story, _context) => {
   return (
     <DummyRouter>
       <Story />
@@ -82,7 +82,7 @@ const withDummyRouter: Decorator = (Story, context) => {
   );
 };
 
-const withTooltipProvider: Decorator = (Story, context) => {
+const withTooltipProvider: Decorator = (Story, _context) => {
   return (
     <TooltipProvider>
       <Story />

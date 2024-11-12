@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createLazyFileRoute,
   useRouter,
@@ -13,7 +14,6 @@ import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lo
 import { Alert, Form } from "@vector-im/compound-web";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery } from "urql";
 
 import BlockList from "../components/BlockList";
 import Layout from "../components/Layout";
@@ -21,10 +21,10 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
 import { graphql } from "../gql";
-import { SetPasswordStatus } from "../gql/graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
 
-import { QUERY } from "./password.recovery.index";
+import { graphqlClient } from "../graphql";
+import { query } from "./password.recovery.index";
 
 const RECOVER_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation RecoverPassword($ticket: String!, $newPassword: String!) {
@@ -45,43 +45,55 @@ function RecoverPassword(): React.ReactNode {
   const { ticket } = useSearch({
     from: "/password/recovery/",
   });
-  const [queryResult] = useQuery({ query: QUERY });
+  const {
+    data: { siteConfig },
+  } = useSuspenseQuery(query);
   const router = useRouter();
-  if (queryResult.error) throw queryResult.error;
-  const siteConfig = queryResult.data?.siteConfig;
-  if (!siteConfig) throw Error(); // This should never happen
 
-  const [result, changePassword] = useMutation(RECOVER_PASSWORD_MUTATION);
+  const mutation = useMutation({
+    mutationFn: async ({
+      ticket,
+      form,
+    }: { ticket: string; form: FormData }) => {
+      const newPassword = form.get("new_password") as string;
+      const newPasswordAgain = form.get("new_password_again") as string;
+
+      if (newPassword !== newPasswordAgain) {
+        throw new Error(
+          "passwords mismatch; this should be checked by the form",
+        );
+      }
+
+      const response = await graphqlClient.request(RECOVER_PASSWORD_MUTATION, {
+        ticket,
+        newPassword,
+      });
+
+      if (response.setPasswordByRecovery.status === "ALLOWED") {
+        // Redirect to the application root using a full page load
+        // The MAS backend will then redirect to the login page
+        // Unfortunately this won't work in dev mode (`npm run dev`)
+        // as the backend isn't involved there.
+        const location = router.buildLocation({ to: "/" });
+        window.location.href = location.href;
+      }
+
+      return response.setPasswordByRecovery;
+    },
+  });
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
-
-    const newPassword = formData.get("new_password") as string;
-    const newPasswordAgain = formData.get("new_password_again") as string;
-
-    if (newPassword !== newPasswordAgain) {
-      throw new Error("passwords mismatch; this should be checked by the form");
-    }
-
-    const response = await changePassword({ ticket, newPassword });
-
-    if (response.data?.setPasswordByRecovery.status === "ALLOWED") {
-      // Redirect to the application root using a full page load
-      // The MAS backend will then redirect to the login page
-      // Unfortunately this won't work in dev mode (`npm run dev`)
-      // as the backend isn't involved there.
-      const location = router.buildLocation({ to: "/" });
-      window.location.href = location.href;
-    }
+    const form = new FormData(event.currentTarget);
+    mutation.mutate({ ticket, form });
   };
 
-  const unhandleableError = result.error !== undefined;
+  const unhandleableError = mutation.error !== undefined;
 
   const errorMsg: string | undefined = translateSetPasswordError(
     t,
-    result.data?.setPasswordByRecovery.status,
+    mutation.data?.status,
   );
 
   return (
@@ -120,15 +132,12 @@ function RecoverPassword(): React.ReactNode {
           <PasswordCreationDoubleInput
             siteConfig={siteConfig}
             forceShowNewPasswordInvalid={
-              (result.data &&
-                result.data.setPasswordByRecovery.status ===
-                  "INVALID_NEW_PASSWORD") ||
-              false
+              mutation.data?.status === "INVALID_NEW_PASSWORD" || false
             }
           />
 
-          <Form.Submit kind="primary" disabled={result.fetching}>
-            {!!result.fetching && <LoadingSpinner inline />}
+          <Form.Submit kind="primary" disabled={mutation.isPending}>
+            {!!mutation.isPending && <LoadingSpinner inline />}
             {t("action.save_and_continue")}
           </Form.Submit>
         </Form.Root>

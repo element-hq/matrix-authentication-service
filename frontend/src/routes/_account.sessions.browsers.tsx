@@ -4,17 +4,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
 
+import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
-import { anyPaginationSchema, normalizePagination } from "../pagination";
+import { graphqlClient } from "../graphql";
+import {
+  type AnyPagination,
+  anyPaginationSchema,
+  normalizePagination,
+} from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
 
 const PAGE_SIZE = 6;
 
-export const QUERY = graphql(/* GraphQL */ `
+const QUERY = graphql(/* GraphQL */ `
   query BrowserSessionList(
     $first: Int
     $after: String
@@ -61,6 +67,20 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+export const query = (pagination: AnyPagination, inactive: true | undefined) =>
+  queryOptions({
+    queryKey: ["browserSessionList", inactive, pagination],
+    queryFn: ({ signal }) =>
+      graphqlClient.request({
+        document: QUERY,
+        variables: {
+          lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
+          ...pagination,
+        },
+        signal,
+      }),
+  });
+
 const searchSchema = z
   .object({
     inactive: z.literal(true).optional(),
@@ -75,21 +95,6 @@ export const Route = createFileRoute("/_account/sessions/browsers")({
     pagination: normalizePagination(pagination, PAGE_SIZE, "backward"),
   }),
 
-  async loader({
-    context,
-    deps: { inactive, pagination },
-    abortController: { signal },
-  }) {
-    const variables = {
-      lastActive: inactive ? { before: getNinetyDaysAgo() } : undefined,
-      ...pagination,
-    };
-
-    const result = await context.client.query(QUERY, variables, {
-      fetchOptions: { signal },
-    });
-    if (result.error) throw result.error;
-    if (result.data?.viewerSession?.__typename !== "BrowserSession")
-      throw notFound();
-  },
+  loader: ({ context, deps: { inactive, pagination } }) =>
+    context.queryClient.ensureQueryData(query(pagination, inactive)),
 });

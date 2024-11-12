@@ -4,13 +4,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import {
+  queryOptions,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import IconCheck from "@vector-im/compound-design-tokens/assets/web/icons/check";
 import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import { Button, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery } from "urql";
 import { ButtonLink } from "../components/ButtonLink";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
@@ -19,6 +23,7 @@ import {
   VisualListItem,
 } from "../components/VisualList/VisualList";
 import { graphql } from "../gql";
+import { graphqlClient } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewerQuery {
@@ -31,16 +36,18 @@ const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+const currentViewerQuery = queryOptions({
+  queryKey: ["currentViewer"],
+  queryFn: ({ signal }) =>
+    graphqlClient.request({
+      document: CURRENT_VIEWER_QUERY,
+      signal,
+    }),
+});
+
 export const Route = createFileRoute("/reset-cross-signing/")({
-  async loader({ context, abortController: { signal } }) {
-    const viewer = await context.client.query(
-      CURRENT_VIEWER_QUERY,
-      {},
-      { fetchOptions: { signal } },
-    );
-    if (viewer.error) throw viewer.error;
-    if (viewer.data?.viewer.__typename !== "User") throw notFound();
-  },
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(currentViewerQuery),
 
   component: ResetCrossSigning,
 });
@@ -68,30 +75,36 @@ function ResetCrossSigning(): React.ReactNode {
   const { deepLink } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { t } = useTranslation();
-  const [viewer] = useQuery({ query: CURRENT_VIEWER_QUERY });
-  if (viewer.error) throw viewer.error;
-  if (viewer.data?.viewer.__typename !== "User") throw notFound();
-  const userId = viewer.data.viewer.id;
+  const {
+    data: { viewer },
+  } = useSuspenseQuery(currentViewerQuery);
+  if (viewer.__typename !== "User") throw notFound();
+  const userId = viewer.id;
 
-  const [result, allowReset] = useMutation(ALLOW_CROSS_SIGING_RESET_MUTATION);
-  if (result.error) throw result.error;
-  const success = !!result.data;
+  const mutation = useMutation({
+    mutationFn: async (userId: string) =>
+      graphqlClient.request(ALLOW_CROSS_SIGING_RESET_MUTATION, {
+        userId,
+      }),
+
+    onSuccess: () => {
+      setTimeout(() => {
+        // Synapse may fling the user here via UIA fallback,
+        // this is part of the API to signal completion to the calling client
+        // https://spec.matrix.org/v1.11/client-server-api/#fallback
+        if (window.onAuthDone) {
+          window.onAuthDone();
+        } else if (window.opener?.postMessage) {
+          window.opener.postMessage("authDone", "*");
+        }
+      });
+
+      navigate({ to: "/reset-cross-signing/success", replace: true });
+    },
+  });
 
   const onClick = async (): Promise<void> => {
-    await allowReset({ userId });
-
-    setTimeout(() => {
-      // Synapse may fling the user here via UIA fallback,
-      // this is part of the API to signal completion to the calling client
-      // https://spec.matrix.org/v1.11/client-server-api/#fallback
-      if (window.onAuthDone) {
-        window.onAuthDone();
-      } else if (window.opener?.postMessage) {
-        window.opener.postMessage("authDone", "*");
-      }
-    });
-
-    navigate({ to: "/reset-cross-signing/success", replace: true });
+    mutation.mutate(userId);
   };
 
   return (
@@ -129,10 +142,10 @@ function ResetCrossSigning(): React.ReactNode {
       <Button
         kind="primary"
         destructive
-        disabled={result.fetching}
+        disabled={mutation.isPending}
         onClick={onClick}
       >
-        {!!result.fetching && <LoadingSpinner inline />}
+        {!!mutation.isPending && <LoadingSpinner inline />}
         {t("frontend.reset_cross_signing.finish_reset")}
       </Button>
 

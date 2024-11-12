@@ -4,15 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   EditInPlace,
   ErrorMessage,
   HelpMessage,
 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "urql";
-
 import { graphql } from "../../gql";
+import { graphqlClient } from "../../graphql";
 
 const ADD_EMAIL_MUTATION = graphql(/* GraphQL */ `
   mutation AddEmail($userId: ID!, $email: String!) {
@@ -32,8 +32,26 @@ const AddEmailForm: React.FC<{
   onAdd: (id: string) => Promise<void>;
 }> = ({ userId, onAdd }) => {
   const { t } = useTranslation();
-  const [addEmailResult, addEmail] = useMutation(ADD_EMAIL_MUTATION);
-  if (addEmailResult.error) throw addEmailResult.error;
+  const queryClient = useQueryClient();
+  const addEmail = useMutation({
+    mutationFn: ({ userId, email }: { userId: string; email: string }) =>
+      graphqlClient.request(ADD_EMAIL_MUTATION, { userId, email }),
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ["userEmails"] });
+
+      // Don't clear the form if the email was invalid or already exists
+      if (data.addEmail.status !== "ADDED") {
+        return;
+      }
+
+      if (!data.addEmail.email?.id) {
+        throw new Error("Unexpected response from server");
+      }
+
+      // Call the onAdd callback
+      await onAdd(data.addEmail.email?.id);
+    },
+  });
 
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
@@ -42,23 +60,11 @@ const AddEmailForm: React.FC<{
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("input") as string;
-    const result = await addEmail({ userId, email });
-
-    // Don't clear the form if the email was invalid or already exists
-    if (result.data?.addEmail.status !== "ADDED") {
-      return;
-    }
-
-    if (!result.data?.addEmail.email?.id) {
-      throw new Error("Unexpected response from server");
-    }
-
-    // Call the onAdd callback
-    await onAdd(result.data?.addEmail.email?.id);
+    addEmail.mutate({ userId, email });
   };
 
-  const status = addEmailResult.data?.addEmail.status ?? null;
-  const violations = addEmailResult.data?.addEmail.violations ?? [];
+  const status = addEmail.data?.addEmail.status ?? null;
+  const violations = addEmail.data?.addEmail.violations ?? [];
 
   return (
     <EditInPlace

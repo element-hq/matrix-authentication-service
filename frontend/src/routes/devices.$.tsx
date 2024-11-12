@@ -8,9 +8,11 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
+import { queryOptions } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
 import { graphql } from "../gql";
+import { graphqlClient } from "../graphql";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewerQuery {
@@ -23,6 +25,15 @@ const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+const currentViewerQuery = queryOptions({
+  queryKey: ["currentViewer"],
+  queryFn: ({ signal }) =>
+    graphqlClient.request({
+      document: CURRENT_VIEWER_QUERY,
+      signal,
+    }),
+});
+
 const QUERY = graphql(/* GraphQL */ `
   query DeviceRedirectQuery($deviceId: String!, $userId: ID!) {
     session(deviceId: $deviceId, userId: $userId) {
@@ -34,33 +45,34 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-export const Route = createFileRoute("/devices/$")({
-  async loader({ context, params, abortController: { signal } }) {
-    const viewer = await context.client.query(
-      CURRENT_VIEWER_QUERY,
-      {},
-      {
-        fetchOptions: { signal },
-      },
-    );
-    if (viewer.error) throw viewer.error;
-    if (viewer.data?.viewer.__typename !== "User") throw notFound();
+const query = (deviceId: string, userId: string) =>
+  queryOptions({
+    queryKey: ["deviceRedirect", deviceId, userId],
+    queryFn: ({ signal }) =>
+      graphqlClient.request({
+        document: QUERY,
+        variables: { deviceId, userId },
+        signal,
+      }),
+  });
 
-    const result = await context.client.query(
-      QUERY,
-      {
-        deviceId: params._splat || "",
-        userId: viewer.data.viewer.id,
-      },
-      { fetchOptions: { signal } },
+export const Route = createFileRoute("/devices/$")({
+  async loader({ context, params }) {
+    const data = await context.queryClient.fetchQuery(currentViewerQuery);
+    if (data.viewer.__typename !== "User")
+      throw notFound({
+        global: true,
+      });
+
+    const result = await context.queryClient.fetchQuery(
+      query(params._splat || "", data.viewer.id),
     );
-    if (result.error) throw result.error;
-    const session = result.data?.session;
-    if (!session) throw notFound();
+
+    if (!result.session) throw notFound();
 
     throw redirect({
       to: "/sessions/$id",
-      params: { id: session.id },
+      params: { id: result.session.id },
       replace: true,
     });
   },

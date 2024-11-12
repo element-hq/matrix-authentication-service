@@ -4,14 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "urql";
-
 import { type FragmentType, graphql, useFragment } from "../gql";
 import type { DeviceType, Oauth2ApplicationType } from "../gql/graphql";
+import { graphqlClient } from "../graphql";
 import { getDeviceIdFromScope } from "../utils/deviceIdFromScope";
-
 import DateTime from "./DateTime";
 import EndSessionButton from "./Session/EndSessionButton";
 import LastActive from "./Session/LastActive";
@@ -49,7 +48,6 @@ export const END_SESSION_MUTATION = graphql(/* GraphQL */ `
       status
       oauth2Session {
         id
-        ...OAuth2Session_session
       }
     }
   }
@@ -74,10 +72,21 @@ type Props = {
 const OAuth2Session: React.FC<Props> = ({ session }) => {
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, session);
-  const [, endSession] = useMutation(END_SESSION_MUTATION);
+  const queryClient = useQueryClient();
+  const endSession = useMutation({
+    mutationFn: (id: string) =>
+      graphqlClient.request(END_SESSION_MUTATION, { id }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
+      queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
+      queryClient.invalidateQueries({
+        queryKey: ["sessionDetail", data.endOauth2Session.oauth2Session?.id],
+      });
+    },
+  });
 
   const onSessionEnd = async (): Promise<void> => {
-    await endSession({ id: data.id });
+    await endSession.mutateAsync(data.id);
   };
 
   const deviceId = getDeviceIdFromScope(data.scope);

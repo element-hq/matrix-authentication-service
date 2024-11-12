@@ -6,11 +6,12 @@
 
 import cx from "classnames";
 import { Suspense } from "react";
-import { useQuery } from "urql";
 
 import { graphql } from "../../gql";
 import Footer from "../Footer";
 
+import { queryOptions, useQuery } from "@tanstack/react-query";
+import { graphqlClient } from "../../graphql";
 import styles from "./Layout.module.css";
 
 const QUERY = graphql(/* GraphQL */ `
@@ -22,10 +23,13 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+export const query = queryOptions({
+  queryKey: ["footer"],
+  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+});
+
 const AsyncFooter: React.FC = () => {
-  const [result] = useQuery({
-    query: QUERY,
-  });
+  const result = useQuery(query);
 
   if (result.error) {
     // We probably prefer to render an empty footer in case of an error

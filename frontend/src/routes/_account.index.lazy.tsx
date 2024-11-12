@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   createLazyFileRoute,
   notFound,
@@ -12,7 +13,6 @@ import {
 import { Alert, Heading, Separator, Text } from "@vector-im/compound-web";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "urql";
 
 import AccountManagementPasswordPreview from "../components/AccountManagementPasswordPreview";
 import BlockList from "../components/BlockList";
@@ -23,7 +23,7 @@ import UserEmail from "../components/UserEmail";
 import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList from "../components/UserProfile/UserEmailList";
 
-import { QUERY } from "./_account.index";
+import { query } from "./_account.index";
 
 export const Route = createLazyFileRoute("/_account/")({
   component: Index,
@@ -32,12 +32,10 @@ export const Route = createLazyFileRoute("/_account/")({
 function Index(): React.ReactElement {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [result] = useQuery({ query: QUERY });
-  if (result.error) throw result.error;
-  const user = result.data?.viewer;
-  if (user?.__typename !== "User") throw notFound();
-  const siteConfig = result.data?.siteConfig;
-  if (!siteConfig) throw Error(); // This should never happen
+  const {
+    data: { viewer, siteConfig },
+  } = useSuspenseQuery(query);
+  if (viewer?.__typename !== "User") throw notFound();
 
   // When adding an email, we want to go to the email verification form
   const onAdd = async (id: string): Promise<void> => {
@@ -49,9 +47,9 @@ function Index(): React.ReactElement {
       <BlockList>
         {/* This wrapper is only needed for the anchor link */}
         <div className="flex flex-col gap-4" id="emails">
-          {user.primaryEmail ? (
+          {viewer.primaryEmail ? (
             <UserEmail
-              email={user.primaryEmail}
+              email={viewer.primaryEmail}
               isPrimary
               siteConfig={siteConfig}
             />
@@ -63,11 +61,11 @@ function Index(): React.ReactElement {
           )}
 
           <Suspense fallback={<LoadingSpinner mini className="self-center" />}>
-            <UserEmailList siteConfig={siteConfig} user={user} />
+            <UserEmailList siteConfig={siteConfig} user={viewer} />
           </Suspense>
 
           {siteConfig.emailChangeAllowed && (
-            <AddEmailForm userId={user.id} onAdd={onAdd} />
+            <AddEmailForm userId={viewer.id} onAdd={onAdd} />
           )}
         </div>
 

@@ -7,14 +7,14 @@
 import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "urql";
 
 import { Link } from "../components/Link";
 import BrowserSessionDetail from "../components/SessionDetail/BrowserSessionDetail";
 import CompatSessionDetail from "../components/SessionDetail/CompatSessionDetail";
 import OAuth2SessionDetail from "../components/SessionDetail/OAuth2SessionDetail";
 
-import { QUERY } from "./_account.sessions.$id";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { query } from "./_account.sessions.$id";
 
 export const Route = createLazyFileRoute("/_account/sessions/$id")({
   notFoundComponent: NotFound,
@@ -38,11 +38,10 @@ function NotFound(): React.ReactElement {
 
 function SessionDetail(): React.ReactElement {
   const { id } = Route.useParams();
-  const [result] = useQuery({ query: QUERY, variables: { id } });
-  if (result.error) throw result.error;
-  const node = result.data?.node;
+  const {
+    data: { node, viewerSession },
+  } = useSuspenseQuery(query(id));
   if (!node) throw notFound();
-  const currentSessionId = result.data?.viewerSession?.id;
 
   switch (node.__typename) {
     case "CompatSession":
@@ -53,7 +52,7 @@ function SessionDetail(): React.ReactElement {
       return (
         <BrowserSessionDetail
           session={node}
-          isCurrent={node.id === currentSessionId}
+          isCurrent={node.id === viewerSession.id}
         />
       );
     default:

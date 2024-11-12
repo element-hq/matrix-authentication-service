@@ -17,19 +17,24 @@
       "crates/**",
       "frontend/src/gql/**",
       "frontend/src/routeTree.gen.ts",
+      "frontend/.storybook/locales.ts",
+      "frontend/locales/*.json",
       "**/coverage/**",
       "**/dist/**"
     ]
   },
   "formatter": {
     "enabled": true,
-    "useEditorconfig": true,
-    "ignore": ["frontend/.storybook/locales.ts", "frontend/locales/*.json"]
+    "useEditorconfig": true
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "correctness": {
+        "noUnusedImports": "warn",
+        "noUnusedVariables": "warn"
+      }
     }
   }
 }

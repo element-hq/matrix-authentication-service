@@ -18,6 +18,7 @@ const config: CodegenConfig = {
         enumsAsTypes: true,
         // By default, unknown scalars are generated as `any`. This is not ideal for catching potential bugs.
         defaultScalarType: "unknown",
+        maybeValue: "T | null | undefined",
         scalars: {
           DateTime: "string",
           Url: "string",

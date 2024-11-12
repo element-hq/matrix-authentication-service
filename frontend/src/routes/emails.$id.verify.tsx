@@ -4,11 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { graphql } from "../gql";
+import { graphqlClient } from "../graphql";
 
-export const QUERY = graphql(/* GraphQL */ `
+const QUERY = graphql(/* GraphQL */ `
   query VerifyEmailQuery($id: ID!) {
     userEmail(id: $id) {
       ...UserEmail_verifyEmail
@@ -16,16 +18,14 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+export const query = (id: string) =>
+  queryOptions({
+    queryKey: ["verifyEmail", id],
+    queryFn: ({ signal }) =>
+      graphqlClient.request({ document: QUERY, signal, variables: { id } }),
+  });
+
 export const Route = createFileRoute("/emails/$id/verify")({
-  async loader({ context, params, abortController: { signal } }) {
-    const result = await context.client.query(
-      QUERY,
-      {
-        id: params.id,
-      },
-      { fetchOptions: { signal } },
-    );
-    if (result.error) throw result.error;
-    if (!result.data?.userEmail) throw notFound();
-  },
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(query(params.id)),
 });

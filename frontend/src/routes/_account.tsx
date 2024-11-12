@@ -4,11 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { graphql } from "../gql";
+import { graphqlClient } from "../graphql";
 
-export const QUERY = graphql(/* GraphQL */ `
+const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
     viewerSession {
       __typename
@@ -31,15 +33,11 @@ export const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
+export const query = queryOptions({
+  queryKey: ["currentUserGreeting"],
+  queryFn: ({ signal }) => graphqlClient.request({ document: QUERY, signal }),
+});
+
 export const Route = createFileRoute("/_account")({
-  loader: async ({ context, abortController: { signal } }) => {
-    const result = await context.client.query(
-      QUERY,
-      {},
-      { fetchOptions: { signal } },
-    );
-    if (result.error) throw result.error;
-    if (result.data?.viewerSession.__typename !== "BrowserSession")
-      throw notFound();
-  },
+  loader: ({ context }) => context.queryClient.ensureQueryData(query),
 });

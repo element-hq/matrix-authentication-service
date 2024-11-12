@@ -9,12 +9,12 @@ import IconEmail from "@vector-im/compound-design-tokens/assets/web/icons/email"
 import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
 import type { ComponentProps, ReactNode } from "react";
 import { Translation, useTranslation } from "react-i18next";
-import { useMutation } from "urql";
-
 import { type FragmentType, graphql, useFragment } from "../../gql";
 import { Close, Description, Dialog, Title } from "../Dialog";
 import { Link } from "../Link";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { graphqlClient } from "../../graphql";
 import styles from "./UserEmail.module.css";
 
 // This component shows a single user email address, with controls to verify it,
@@ -132,24 +132,33 @@ const UserEmail: React.FC<{
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, email);
   const { emailChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);
+  const queryClient = useQueryClient();
 
-  const [setPrimaryResult, setPrimary] = useMutation(
-    SET_PRIMARY_EMAIL_MUTATION,
-  );
-  const [removeResult, removeEmail] = useMutation(REMOVE_EMAIL_MUTATION);
-  // Handle errors with the error boundary
-  if (setPrimaryResult.error) throw setPrimaryResult.error;
-  if (removeResult.error) throw removeResult.error;
+  const setPrimary = useMutation({
+    mutationFn: (id: string) =>
+      graphqlClient.request(SET_PRIMARY_EMAIL_MUTATION, { id }),
+    onSuccess: (_data) => {
+      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
+      queryClient.invalidateQueries({ queryKey: ["userEmails"] });
+    },
+  });
+
+  const removeEmail = useMutation({
+    mutationFn: (id: string) =>
+      graphqlClient.request(REMOVE_EMAIL_MUTATION, { id }),
+    onSuccess: (_data) => {
+      onRemove?.();
+      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
+      queryClient.invalidateQueries({ queryKey: ["userEmails"] });
+    },
+  });
 
   const onRemoveClick = (): void => {
-    removeEmail({ id: data.id }).then(() => {
-      // Call the onRemove callback if provided
-      onRemove?.();
-    });
+    removeEmail.mutate(data.id);
   };
 
   const onSetPrimaryClick = (): void => {
-    setPrimary({ id: data.id });
+    setPrimary.mutate(data.id);
   };
 
   return (
@@ -171,7 +180,7 @@ const UserEmail: React.FC<{
           {!isPrimary && emailChangeAllowed && (
             <DeleteButtonWithConfirmation
               email={data.email}
-              disabled={removeResult.fetching}
+              disabled={removeEmail.isPending}
               onClick={onRemoveClick}
             />
           )}
@@ -188,7 +197,7 @@ const UserEmail: React.FC<{
             <button
               type="button"
               className={styles.link}
-              disabled={setPrimaryResult.fetching}
+              disabled={setPrimary.isPending}
               onClick={onSetPrimaryClick}
             >
               {t("frontend.user_email.make_primary_button")}
