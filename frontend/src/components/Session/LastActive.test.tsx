@@ -7,8 +7,8 @@
 // @vitest-environment happy-dom
 
 import { composeStory } from "@storybook/react";
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { mockLocale } from "../../test-utils/mockLocale";
 
@@ -21,7 +21,6 @@ import Meta, {
 
 describe("<LastActive", () => {
   beforeAll(() => mockLocale());
-  afterEach(cleanup);
 
   it("renders an 'active now' timestamp", () => {
     const Component = composeStory(ActiveNow, { ...Meta });

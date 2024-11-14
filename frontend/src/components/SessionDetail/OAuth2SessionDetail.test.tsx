@@ -6,8 +6,7 @@
 
 // @vitest-environment happy-dom
 
-import { cleanup } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeFragmentData } from "../../gql";
 import { mockLocale } from "../../test-utils/mockLocale";
@@ -35,7 +34,6 @@ describe("<OAuth2SessionDetail>", () => {
   };
 
   beforeAll(() => mockLocale());
-  afterEach(cleanup);
 
   it("renders session details", () => {
     const data = makeFragmentData(baseSession, FRAGMENT);

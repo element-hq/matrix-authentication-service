@@ -4,9 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
 import * as i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { beforeEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
 
 import EN from "./locales/en.json";
 
@@ -26,3 +28,5 @@ beforeEach(() => {
     },
   });
 });
+
+afterEach(() => cleanup());

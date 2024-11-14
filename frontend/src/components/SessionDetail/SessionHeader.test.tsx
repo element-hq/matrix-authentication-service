@@ -7,15 +7,14 @@
 // @vitest-environment happy-dom
 
 import { composeStory } from "@storybook/react";
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { DummyRouter } from "../../test-utils/router";
 
 import Meta, { Basic } from "./SessionHeader.stories";
 
 describe("<SessionHeader />", () => {
-  afterEach(cleanup);
   it("renders a session header", () => {
     const Component = composeStory(Basic, Meta);
     const { container } = render(

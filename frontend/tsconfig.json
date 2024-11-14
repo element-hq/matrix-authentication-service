@@ -17,7 +17,7 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "locales", ".storybook/preview.tsx"],
+  "include": ["src", "tests", "locales", ".storybook/preview.tsx"],
   "references": [
     {
       "path": "./tsconfig.node.json"

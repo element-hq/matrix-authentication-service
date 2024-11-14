@@ -18,7 +18,6 @@ const QUERY = graphql(/* GraphQL */ `
         id
 
         user {
-          id
           ...UnverifiedEmailAlert_user
           ...UserGreeting_user
         }
@@ -26,7 +25,6 @@ const QUERY = graphql(/* GraphQL */ `
     }
 
     siteConfig {
-      id
       ...UserGreeting_siteConfig
     }
   }

@@ -40,7 +40,6 @@ export const FRAGMENT = graphql(/* GraphQL */ `
 
 export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment UserGreeting_siteConfig on SiteConfig {
-    id
     displayNameChangeAllowed
   }
 `);
@@ -49,12 +48,6 @@ const SET_DISPLAYNAME_MUTATION = graphql(/* GraphQL */ `
   mutation SetDisplayName($userId: ID!, $displayName: String) {
     setDisplayName(input: { userId: $userId, displayName: $displayName }) {
       status
-      user {
-        id
-        matrix {
-          displayName
-        }
-      }
     }
   }
 `);

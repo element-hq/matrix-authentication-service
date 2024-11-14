@@ -1,0 +1,505 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
+<div
+  aria-describedby="radix-:r45:"
+  aria-labelledby="radix-:r44:"
+  class="_body_9cf7b0"
+  data-state="open"
+  id="radix-:r43:"
+  role="dialog"
+  style="pointer-events: auto;"
+  tabindex="-1"
+>
+  <h2
+    class="_title_9cf7b0"
+    id="radix-:r44:"
+  >
+    Edit profile
+  </h2>
+  <span
+    aria-label="@user:example.com"
+    class="_avatar_mcap2_17 self-center _avatar-imageless_mcap2_61"
+    data-color="3"
+    data-type="round"
+    role="img"
+    style="--cpd-avatar-size: 88px;"
+  >
+    U
+  </span>
+  bound HTMLFormElement {
+    "0": <input
+      aria-describedby="radix-:r4r:"
+      aria-invalid="true"
+      autocomplete="name"
+      class="_control_9gon8_18 _control_1qov4_22"
+      data-invalid="true"
+      id="radix-:r4k:"
+      name="displayname"
+      title=""
+      type="text"
+      value="User"
+    />,
+    "1": <button
+      aria-controls=":r4l:"
+      aria-labelledby=":r4m:"
+      class="_action_1qov4_33"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        fill="currentColor"
+        height="1em"
+        viewBox="0 0 24 24"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+        />
+      </svg>
+    </button>,
+    "2": <input
+      class="_control_9gon8_18"
+      id="radix-:r4s:"
+      name="mxid"
+      readonly=""
+      title=""
+      value="@user:example.com"
+    />,
+    "3": <button
+      aria-disabled="false"
+      class="_button_i91xf_17"
+      data-kind="primary"
+      data-size="lg"
+      role="button"
+      tabindex="0"
+      type="submit"
+    >
+      Save
+    </button>,
+  }
+  <button
+    class="_button_i91xf_17"
+    data-kind="tertiary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+    type="button"
+  >
+    Cancel
+  </button>
+  <button
+    aria-labelledby=":r4t:"
+    class="_close_9cf7b0"
+    type="button"
+  >
+    <svg
+      fill="currentColor"
+      height="1em"
+      viewBox="0 0 24 24"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+      />
+    </svg>
+  </button>
+</div>
+`;
+
+exports[`Account home page > display name edit box > lets edit the display name 1`] = `
+<div
+  aria-describedby="radix-:rp:"
+  aria-labelledby="radix-:ro:"
+  class="_body_9cf7b0"
+  data-state="open"
+  id="radix-:rn:"
+  role="dialog"
+  style="pointer-events: auto;"
+  tabindex="-1"
+>
+  <h2
+    class="_title_9cf7b0"
+    id="radix-:ro:"
+  >
+    Edit profile
+  </h2>
+  <span
+    aria-label="@user:example.com"
+    class="_avatar_mcap2_17 self-center _avatar-imageless_mcap2_61"
+    data-color="3"
+    data-type="round"
+    role="img"
+    style="--cpd-avatar-size: 88px;"
+  >
+    U
+  </span>
+  bound HTMLFormElement {
+    "0": <input
+      aria-describedby="radix-:r1f:"
+      autocomplete="name"
+      class="_control_9gon8_18 _control_1qov4_22"
+      id="radix-:r18:"
+      name="displayname"
+      title=""
+      type="text"
+      value="User"
+    />,
+    "1": <button
+      aria-controls=":r19:"
+      aria-labelledby=":r1a:"
+      class="_action_1qov4_33"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        fill="currentColor"
+        height="1em"
+        viewBox="0 0 24 24"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+        />
+      </svg>
+    </button>,
+    "2": <input
+      class="_control_9gon8_18"
+      id="radix-:r1g:"
+      name="mxid"
+      readonly=""
+      title=""
+      value="@user:example.com"
+    />,
+    "3": <button
+      aria-disabled="false"
+      class="_button_i91xf_17"
+      data-kind="primary"
+      data-size="lg"
+      role="button"
+      tabindex="0"
+      type="submit"
+    >
+      Save
+    </button>,
+  }
+  <button
+    class="_button_i91xf_17"
+    data-kind="tertiary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+    type="button"
+  >
+    Cancel
+  </button>
+  <button
+    aria-labelledby=":r1h:"
+    class="_close_9cf7b0"
+    type="button"
+  >
+    <svg
+      fill="currentColor"
+      height="1em"
+      viewBox="0 0 24 24"
+      width="1em"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+      />
+    </svg>
+  </button>
+</div>
+`;
+
+exports[`Account home page > renders the page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9 _wide_0c8bf9"
+  >
+    <div
+      class="flex flex-col gap-4"
+    >
+      <header
+        class="flex justify-between mb-4"
+      >
+        <h1
+          class="_typography_yh5dq_162 _font-heading-lg-semibold_yh5dq_135"
+        >
+          Your account
+        </h1>
+        <button
+          aria-controls="radix-:r0:"
+          aria-expanded="false"
+          aria-haspopup="dialog"
+          class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
+          data-kind="secondary"
+          data-size="sm"
+          data-state="closed"
+          role="button"
+          tabindex="0"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            fill="currentColor"
+            height="20"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
+            />
+          </svg>
+          Sign out
+        </button>
+      </header>
+      <div
+        class="_user_66f22a"
+      >
+        <span
+          aria-label="@user:example.com"
+          class="_avatar_mcap2_17 _avatar_66f22a _avatar-imageless_mcap2_61"
+          data-color="3"
+          data-type="round"
+          role="img"
+          style="--cpd-avatar-size: var(--cpd-space-14x);"
+        >
+          U
+        </span>
+        <div
+          class="_meta_66f22a"
+        >
+          <p
+            class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
+          >
+            User
+          </p>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _mxid_66f22a"
+          >
+            @user:example.com
+          </p>
+        </div>
+        <button
+          aria-controls="radix-:r3:"
+          aria-expanded="false"
+          aria-haspopup="dialog"
+          aria-labelledby=":r6:"
+          class="_icon-button_bh2qc_17 _editButton_66f22a"
+          data-state="closed"
+          role="button"
+          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          tabindex="0"
+          type="button"
+        >
+          <div
+            class="_indicator-icon_133tf_26"
+            style="--cpd-icon-button-size: 100%;"
+          >
+            <svg
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.212l1.414-5.657a1 1 0 0 1 .263-.465L15.706 2.637Zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.77 3.771-.942L16.93 9.9Z"
+                fill-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
+      </div>
+      <nav
+        class="_navBar_214497"
+      >
+        <ul
+          class="_navBarItems_214497"
+        >
+          <li
+            class="_navTab_8603fc"
+          >
+            <a
+              aria-current="page"
+              class="_navItem_8603fc"
+              data-status="active"
+              href="/"
+            >
+              Settings
+            </a>
+          </li>
+          <li
+            class="_navTab_8603fc"
+          >
+            <a
+              class="_navItem_8603fc"
+              href="/sessions"
+            >
+              Devices
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <div
+        class="flex flex-col gap-4"
+        id="emails"
+      >
+        bound HTMLFormElement {
+          "0": <input
+            aria-describedby="radix-:rc: radix-:rd:"
+            class="_control_9gon8_18 _userEmailField_e2a518"
+            id="radix-:rb:"
+            name="email"
+            readonly=""
+            title=""
+            type="email"
+            value=""
+          />,
+        }
+        <div
+          aria-busy="true"
+          class="self-center _mini_0c7436"
+          role="alert"
+        >
+          <svg
+            class="_loadingSpinnerInner_0c7436"
+            fill="none"
+            role="img"
+            viewBox="0 0 100 101"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <title>
+              Loading…
+            </title>
+            <path
+              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+              fill="currentFill"
+            />
+          </svg>
+        </div>
+        bound HTMLFormElement {
+          "0": <input
+            aria-describedby="radix-:rf:"
+            class="_control_9gon8_18"
+            id="radix-:re:"
+            name="input"
+            required=""
+            title=""
+            type="email"
+          />,
+        }
+      </div>
+      <div
+        class="_separator_144s5_17"
+        data-kind="primary"
+        data-orientation="horizontal"
+        role="separator"
+      />
+      bound HTMLFormElement {
+        "0": <input
+          aria-describedby="radix-:rh:"
+          class="_control_9gon8_18"
+          id="radix-:rg:"
+          name="password_preview"
+          readonly=""
+          title=""
+          type="password"
+          value="this looks like a password"
+        />,
+      }
+      <div
+        class="_separator_144s5_17"
+        data-kind="primary"
+        data-orientation="horizontal"
+        role="separator"
+      />
+      <div
+        data-state="closed"
+      >
+        <button
+          aria-controls="radix-:ri:"
+          aria-expanded="false"
+          class="_trigger_f1daaa"
+          data-state="closed"
+          type="button"
+        >
+          <div
+            class="_triggerTitle_f1daaa"
+          >
+            <h1
+              class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
+            >
+              End-to-end encryption
+            </h1>
+          </div>
+          <svg
+            class="_triggerIcon_f1daaa"
+            fill="currentColor"
+            height="24px"
+            viewBox="0 0 24 24"
+            width="24px"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m12 10.775-3.9 3.9a.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275.948.948 0 0 1-.275-.7.95.95 0 0 1 .275-.7l4.6-4.6c.1-.1.208-.17.325-.213.117-.041.242-.062.375-.062s.258.02.375.062a.877.877 0 0 1 .325.213l4.6 4.6a.948.948 0 0 1 .275.7.949.949 0 0 1-.275.7.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275l-3.9-3.9Z"
+            />
+          </svg>
+        </button>
+        <div
+          class="_content_f1daaa"
+          data-state="closed"
+          hidden=""
+          id="radix-:ri:"
+        />
+      </div>
+    </div>
+    <footer
+      class="_legalFooter_eb428f"
+    >
+      <nav>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_eb428f"
+        >
+          •
+        </div>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_eb428f"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;

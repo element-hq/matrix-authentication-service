@@ -4,18 +4,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { QueryClient } from "@tanstack/react-query";
 import type { ExecutionResult } from "graphql";
 import appConfig from "./config";
 import type { TypedDocumentString } from "./gql/graphql";
 
-let base: string;
-if (import.meta.env.TEST && !window) {
-  base = "http://localhost/";
+let graphqlEndpoint: string;
+if (import.meta.env.TEST && typeof window === "undefined") {
+  graphqlEndpoint = new URL(
+    appConfig.graphqlEndpoint,
+    "http:://localhost/",
+  ).toString();
 } else {
-  base = window.location.toString();
+  graphqlEndpoint = new URL(
+    appConfig.graphqlEndpoint,
+    window.location.toString(),
+  ).toString();
 }
-
-const graphqlEndpoint = new URL(appConfig.graphqlEndpoint, base).toString();
 
 type RequestOptions<TData, TVariables> = {
   query: TypedDocumentString<TData, TVariables>;
@@ -30,17 +35,27 @@ export const graphqlRequest = async <TData, TVariables>({
   variables,
   signal,
 }: RequestOptions<TData, TVariables>): Promise<TData> => {
-  const response = await fetch(graphqlEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-    signal,
-  });
+  const stack = new Error().stack;
+  let response: Response;
+  try {
+    response = await fetch(graphqlEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+      signal,
+    });
+  } catch (cause) {
+    const e = new Error(`GraphQL to ${graphqlEndpoint} request failed`, {
+      cause,
+    });
+    e.stack = stack;
+    throw e;
+  }
 
   if (!response.ok) {
     throw new Error(`GraphQL request failed: ${response.status}`);
@@ -57,3 +72,11 @@ export const graphqlRequest = async <TData, TVariables>({
 
   return json.data;
 };
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: {
+      throwOnError: true,
+    },
+  },
+});

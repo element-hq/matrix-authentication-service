@@ -6,8 +6,8 @@
 
 // @vitest-environment happy-dom
 
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { makeFragmentData } from "../../gql/fragment-masking";
 
@@ -25,7 +25,6 @@ describe("<OAuth2ClientDetail>", () => {
     policyUri: "https://client.org/policy",
     redirectUris: ["https://client.org/"],
   };
-  afterEach(cleanup);
 
   it("renders client details", () => {
     const data = makeFragmentData(baseClient, OAUTH2_CLIENT_FRAGMENT);

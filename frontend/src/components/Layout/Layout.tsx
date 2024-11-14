@@ -24,12 +24,13 @@ const QUERY = graphql(/* GraphQL */ `
 export const query = queryOptions({
   queryKey: ["footer"],
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
+  throwOnError: false,
 });
 
 const AsyncFooter: React.FC = () => {
   const result = useQuery(query);
 
-  if (result.error) {
+  if (result.error || result.isPending) {
     // We probably prefer to render an empty footer in case of an error
     return null;
   }
@@ -37,7 +38,7 @@ const AsyncFooter: React.FC = () => {
   const siteConfig = result.data?.siteConfig;
   if (!siteConfig) {
     // We checked for errors, this should never happen
-    throw new Error();
+    throw new Error("Failed to load site config");
   }
 
   return <Footer siteConfig={siteConfig} />;
@@ -49,7 +50,6 @@ const Layout: React.FC<{
 }> = ({ children, wide }) => (
   <div className={cx(styles.layoutContainer, wide && styles.wide)}>
     {children}
-
     <Suspense fallback={null}>
       <AsyncFooter />
     </Suspense>

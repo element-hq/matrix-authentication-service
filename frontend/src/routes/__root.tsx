@@ -7,13 +7,21 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
+  type ErrorRouteComponent,
   Outlet,
   ScrollRestoration,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import GenericError from "../components/GenericError";
 import Layout, { query } from "../components/Layout";
 import NotFound from "../components/NotFound";
+
+const ErrorComponent: ErrorRouteComponent = ({ error }) => (
+  <Layout>
+    <GenericError error={error} />
+  </Layout>
+);
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -23,7 +31,7 @@ export const Route = createRootRouteWithContext<{
       <ScrollRestoration />
       <Outlet />
 
-      {import.meta.env.DEV && (
+      {import.meta.env.DEV && !import.meta.env.TEST && (
         <>
           <TanStackRouterDevtools position="bottom-right" />
           <ReactQueryDevtools buttonPosition="top-right" />
@@ -35,6 +43,8 @@ export const Route = createRootRouteWithContext<{
   loader({ context }) {
     context.queryClient.ensureQueryData(query);
   },
+
+  errorComponent: ErrorComponent,
 
   notFoundComponent: () => (
     <Layout>

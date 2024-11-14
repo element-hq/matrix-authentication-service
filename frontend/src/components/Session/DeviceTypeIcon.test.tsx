@@ -7,14 +7,12 @@
 // @vitest-environment happy-dom
 
 import { composeStory } from "@storybook/react";
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import Meta, { Unknown, Pc, Mobile, Tablet } from "./DeviceTypeIcon.stories";
 
 describe("<DeviceTypeIcon />", () => {
-  afterEach(cleanup);
-
   it("renders unknown device type", () => {
     const Component = composeStory(Unknown, Meta);
     const { container } = render(<Component />);

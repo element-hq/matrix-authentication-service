@@ -6,8 +6,8 @@
 
 // @vitest-environment happy-dom
 
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { makeFragmentData } from "../../gql";
 import { DummyRouter } from "../../test-utils/router";
@@ -15,8 +15,6 @@ import { DummyRouter } from "../../test-utils/router";
 import BrowserSessionsOverview, { FRAGMENT } from "./BrowserSessionsOverview";
 
 describe("BrowserSessionsOverview", () => {
-  afterEach(cleanup);
-
   it("renders with no browser sessions", async () => {
     const user = makeFragmentData(
       {

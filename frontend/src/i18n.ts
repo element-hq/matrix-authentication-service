@@ -81,20 +81,22 @@ const Backend = {
   },
 } satisfies BackendModule;
 
-i18n
-  .use(Backend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    fallbackLng: "en",
-    keySeparator: ".",
-    pluralSeparator: ":",
-    defaultNS: "translation",
-    supportedLngs,
-    interpolation: {
-      escapeValue: false, // React has built-in XSS protections
-    },
-  } satisfies InitOptions);
+export const setupI18n = () => {
+  i18n
+    .use(Backend)
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init({
+      fallbackLng: "en",
+      keySeparator: ".",
+      pluralSeparator: ":",
+      defaultNS: "translation",
+      supportedLngs,
+      interpolation: {
+        escapeValue: false, // React has built-in XSS protections
+      },
+    } satisfies InitOptions);
+};
 
 import.meta.hot?.on("locales-update", () => {
   i18n.reloadResources().then(() => {

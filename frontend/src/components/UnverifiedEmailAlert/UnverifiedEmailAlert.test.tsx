@@ -6,8 +6,8 @@
 
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { fireEvent, render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { makeFragmentData } from "../../gql/fragment-masking";
 import { DummyRouter } from "../../test-utils/router";
@@ -17,8 +17,6 @@ import UnverifiedEmailAlert, {
 } from "./UnverifiedEmailAlert";
 
 describe("<UnverifiedEmailAlert />", () => {
-  afterEach(cleanup);
-
   it("does not render a warning when there are no unverified emails", () => {
     const data = makeFragmentData(
       {

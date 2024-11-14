@@ -153,7 +153,7 @@ export default defineConfig((env) => ({
 
   test: {
     globalSetup: "./vitest.global-setup.ts",
-    setupFiles: ["./vitest.i18n-setup.ts", "./vitest.msw-setup.ts"],
+    setupFiles: "./vitest.setup.ts",
     coverage: {
       provider: "v8",
       src: ["./src/"],

@@ -6,8 +6,8 @@
 
 // @vitest-environment happy-dom
 
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import ClientAvatar from "./ClientAvatar";
 
@@ -15,8 +15,6 @@ describe("<ClientAvatar />", () => {
   const name = "Test Client";
   const logoUri = "https://www.testclient.com/logo.png";
   const size = "10px";
-
-  afterEach(cleanup);
 
   it("renders client logo", () => {
     const { container } = render(
