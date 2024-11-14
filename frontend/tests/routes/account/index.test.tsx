@@ -21,7 +21,7 @@ describe("Account home page", () => {
   describe("display name edit box", () => {
     it("lets edit the display name", async () => {
       // TODO: a better way to wait on delays
-      let advance: () => void;
+      let advance: () => void = () => {};
       const wait = new Promise((resolve) => {
         advance = () => resolve(void 0);
       });
