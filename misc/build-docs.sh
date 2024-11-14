@@ -50,4 +50,6 @@ mv target/doc target/book/rustdoc
 cd frontend
 npm ci
 npx storybook build -o ../target/book/storybook
+# Copy the mock service worker to the root of the domain, else it won't load
+cp ../target/book/storybook/mockServiceWorker.js ../target/book/mockServiceWorker.js
 cd ..
