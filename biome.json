@@ -19,6 +19,7 @@
       "frontend/src/routeTree.gen.ts",
       "frontend/.storybook/locales.ts",
       "frontend/locales/*.json",
+      "frontend/stories/static/**",
       "**/coverage/**",
       "**/dist/**"
     ]
