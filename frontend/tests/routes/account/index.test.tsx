@@ -9,105 +9,11 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { UNVERIFIED_EMAILS_FRAGMENT } from "../../../src/components/UnverifiedEmailAlert/UnverifiedEmailAlert";
-import {
-  CONFIG_FRAGMENT as USER_GREETING_CONFIG_FRAGMENT,
-  FRAGMENT as USER_GREETING_FRAGMENT,
-} from "../../../src/components/UserGreeting/UserGreeting";
-import { makeFragmentData } from "../../../src/gql";
-import {
-  mockCurrentUserGreetingQuery,
-  mockSetDisplayNameMutation,
-  mockUserEmailListQuery,
-  mockUserProfileQuery,
-} from "../../../src/gql/graphql";
+import { mockSetDisplayNameMutation } from "../../../src/gql/graphql";
 import { renderPage, server } from "../render";
-
-const handlers = [
-  mockCurrentUserGreetingQuery(() =>
-    HttpResponse.json({
-      data: {
-        viewerSession: {
-          __typename: "BrowserSession",
-
-          id: "session-id",
-          user: Object.assign(
-            makeFragmentData(
-              {
-                id: "user-id",
-                matrix: {
-                  mxid: "@user:example.com",
-                  displayName: "User",
-                },
-              },
-              USER_GREETING_FRAGMENT,
-            ),
-
-            makeFragmentData(
-              {
-                unverifiedEmails: {
-                  totalCount: 0,
-                },
-              },
-              UNVERIFIED_EMAILS_FRAGMENT,
-            ),
-          ),
-        },
-
-        siteConfig: makeFragmentData(
-          {
-            displayNameChangeAllowed: true,
-          },
-          USER_GREETING_CONFIG_FRAGMENT,
-        ),
-      },
-    }),
-  ),
-
-  mockUserProfileQuery(() =>
-    HttpResponse.json({
-      data: {
-        viewer: {
-          __typename: "User",
-          id: "user-id",
-          primaryEmail: {
-            id: "primary-email-id",
-          },
-        },
-
-        siteConfig: {
-          emailChangeAllowed: true,
-          passwordLoginEnabled: true,
-        },
-      },
-    }),
-  ),
-
-  mockUserEmailListQuery(() =>
-    HttpResponse.json({
-      data: {
-        user: {
-          id: "user-id",
-          emails: {
-            edges: [],
-            totalCount: 0,
-            pageInfo: {
-              hasNextPage: false,
-              hasPreviousPage: false,
-              startCursor: null,
-              endCursor: null,
-            },
-          },
-        },
-      },
-    }),
-  ),
-];
 
 describe("Account home page", () => {
   it("renders the page", async () => {
-    server.use(...handlers);
-
     const { asFragment } = await renderPage("/");
     expect(asFragment()).toMatchSnapshot();
   });
@@ -137,7 +43,6 @@ describe("Account home page", () => {
             },
           });
         }),
-        ...handlers,
       );
 
       const user = userEvent.setup();
@@ -164,8 +69,6 @@ describe("Account home page", () => {
     });
 
     it("closes with escape", async () => {
-      server.use(...handlers);
-
       const user = userEvent.setup();
       await renderPage("/");
 
@@ -181,8 +84,6 @@ describe("Account home page", () => {
     });
 
     it("closes with cancel", async () => {
-      server.use(...handlers);
-
       const user = userEvent.setup();
       await renderPage("/");
 
@@ -210,7 +111,6 @@ describe("Account home page", () => {
             },
           }),
         ),
-        ...handlers,
       );
 
       const user = userEvent.setup();

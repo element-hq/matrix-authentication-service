@@ -49,7 +49,7 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-const FRAGMENT = graphql(/* GraphQL */ `
+export const FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmailList_user on User {
     id
     primaryEmail {
@@ -58,9 +58,8 @@ const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
+export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmailList_siteConfig on SiteConfig {
-    id
     ...UserEmail_siteConfig
   }
 `);

@@ -2,47 +2,47 @@
 
 exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
 <div
-  aria-describedby="radix-:r45:"
-  aria-labelledby="radix-:r44:"
+  aria-describedby="radix-:r41:"
+  aria-labelledby="radix-:r40:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r43:"
+  id="radix-:r3v:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r44:"
+    id="radix-:r40:"
   >
     Edit profile
   </h2>
   <span
-    aria-label="@user:example.com"
+    aria-label="@alice:example.com"
     class="_avatar_mcap2_17 self-center _avatar-imageless_mcap2_61"
-    data-color="3"
+    data-color="6"
     data-type="round"
     role="img"
     style="--cpd-avatar-size: 88px;"
   >
-    U
+    A
   </span>
   bound HTMLFormElement {
     "0": <input
-      aria-describedby="radix-:r4r:"
+      aria-describedby="radix-:r4m:"
       aria-invalid="true"
       autocomplete="name"
       class="_control_9gon8_18 _control_1qov4_22"
       data-invalid="true"
-      id="radix-:r4k:"
+      id="radix-:r4f:"
       name="displayname"
       title=""
       type="text"
-      value="User"
+      value="Alice"
     />,
     "1": <button
-      aria-controls=":r4l:"
-      aria-labelledby=":r4m:"
+      aria-controls=":r4g:"
+      aria-labelledby=":r4h:"
       class="_action_1qov4_33"
       type="button"
     >
@@ -61,11 +61,11 @@ exports[`Account home page > display name edit box > displays an error if the di
     </button>,
     "2": <input
       class="_control_9gon8_18"
-      id="radix-:r4s:"
+      id="radix-:r4n:"
       name="mxid"
       readonly=""
       title=""
-      value="@user:example.com"
+      value="@alice:example.com"
     />,
     "3": <button
       aria-disabled="false"
@@ -90,7 +90,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     Cancel
   </button>
   <button
-    aria-labelledby=":r4t:"
+    aria-labelledby=":r4o:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -111,45 +111,45 @@ exports[`Account home page > display name edit box > displays an error if the di
 
 exports[`Account home page > display name edit box > lets edit the display name 1`] = `
 <div
-  aria-describedby="radix-:rp:"
-  aria-labelledby="radix-:ro:"
+  aria-describedby="radix-:ro:"
+  aria-labelledby="radix-:rn:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:rn:"
+  id="radix-:rm:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:ro:"
+    id="radix-:rn:"
   >
     Edit profile
   </h2>
   <span
-    aria-label="@user:example.com"
+    aria-label="@alice:example.com"
     class="_avatar_mcap2_17 self-center _avatar-imageless_mcap2_61"
-    data-color="3"
+    data-color="6"
     data-type="round"
     role="img"
     style="--cpd-avatar-size: 88px;"
   >
-    U
+    A
   </span>
   bound HTMLFormElement {
     "0": <input
-      aria-describedby="radix-:r1f:"
+      aria-describedby="radix-:r1d:"
       autocomplete="name"
       class="_control_9gon8_18 _control_1qov4_22"
-      id="radix-:r18:"
+      id="radix-:r16:"
       name="displayname"
       title=""
       type="text"
-      value="User"
+      value="Alice"
     />,
     "1": <button
-      aria-controls=":r19:"
-      aria-labelledby=":r1a:"
+      aria-controls=":r17:"
+      aria-labelledby=":r18:"
       class="_action_1qov4_33"
       type="button"
     >
@@ -168,11 +168,11 @@ exports[`Account home page > display name edit box > lets edit the display name 
     </button>,
     "2": <input
       class="_control_9gon8_18"
-      id="radix-:r1g:"
+      id="radix-:r1e:"
       name="mxid"
       readonly=""
       title=""
-      value="@user:example.com"
+      value="@alice:example.com"
     />,
     "3": <button
       aria-disabled="false"
@@ -197,7 +197,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     Cancel
   </button>
   <button
-    aria-labelledby=":r1h:"
+    aria-labelledby=":r1f:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -263,14 +263,14 @@ exports[`Account home page > renders the page 1`] = `
         class="_user_66f22a"
       >
         <span
-          aria-label="@user:example.com"
+          aria-label="@alice:example.com"
           class="_avatar_mcap2_17 _avatar_66f22a _avatar-imageless_mcap2_61"
-          data-color="3"
+          data-color="6"
           data-type="round"
           role="img"
           style="--cpd-avatar-size: var(--cpd-space-14x);"
         >
-          U
+          A
         </span>
         <div
           class="_meta_66f22a"
@@ -278,12 +278,12 @@ exports[`Account home page > renders the page 1`] = `
           <p
             class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
           >
-            User
+            Alice
           </p>
           <p
             class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _mxid_66f22a"
           >
-            @user:example.com
+            @alice:example.com
           </p>
         </div>
         <button
@@ -358,14 +358,14 @@ exports[`Account home page > renders the page 1`] = `
       >
         bound HTMLFormElement {
           "0": <input
-            aria-describedby="radix-:rc: radix-:rd:"
+            aria-describedby="radix-:rc:"
             class="_control_9gon8_18 _userEmailField_e2a518"
             id="radix-:rb:"
             name="email"
             readonly=""
             title=""
             type="email"
-            value=""
+            value="alice@example.com"
           />,
         }
         <div
@@ -391,9 +391,9 @@ exports[`Account home page > renders the page 1`] = `
         </div>
         bound HTMLFormElement {
           "0": <input
-            aria-describedby="radix-:rf:"
+            aria-describedby="radix-:re:"
             class="_control_9gon8_18"
-            id="radix-:re:"
+            id="radix-:rd:"
             name="input"
             required=""
             title=""
@@ -409,9 +409,9 @@ exports[`Account home page > renders the page 1`] = `
       />
       bound HTMLFormElement {
         "0": <input
-          aria-describedby="radix-:rh:"
+          aria-describedby="radix-:rg:"
           class="_control_9gon8_18"
-          id="radix-:rg:"
+          id="radix-:rf:"
           name="password_preview"
           readonly=""
           title=""
@@ -429,7 +429,7 @@ exports[`Account home page > renders the page 1`] = `
         data-state="closed"
       >
         <button
-          aria-controls="radix-:ri:"
+          aria-controls="radix-:rh:"
           aria-expanded="false"
           class="_trigger_f1daaa"
           data-state="closed"
@@ -461,7 +461,7 @@ exports[`Account home page > renders the page 1`] = `
           class="_content_f1daaa"
           data-state="closed"
           hidden=""
-          id="radix-:ri:"
+          id="radix-:rh:"
         />
       </div>
     </div>

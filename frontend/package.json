@@ -53,9 +53,11 @@
     "@graphql-codegen/client-preset": "^4.5.0",
     "@graphql-codegen/typescript-msw": "^3.0.0",
     "@graphql-codegen/urql-introspection": "^3.0.0",
-    "@storybook/addon-essentials": "^8.4.3",
-    "@storybook/react": "^8.4.3",
-    "@storybook/react-vite": "^8.4.3",
+    "@storybook/addon-essentials": "^8.4.4",
+    "@storybook/addon-interactions": "^8.4.4",
+    "@storybook/react": "^8.4.4",
+    "@storybook/react-vite": "^8.4.4",
+    "@storybook/test": "^8.4.4",
     "@tanstack/react-query-devtools": "^5.59.20",
     "@tanstack/router-devtools": "^1.81.5",
     "@tanstack/router-vite-plugin": "^1.79.0",
@@ -74,11 +76,12 @@
     "happy-dom": "^15.11.4",
     "i18next-parser": "^9.0.2",
     "msw": "^2.6.4",
+    "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.4.49",
     "postcss-modules": "^6.0.1",
     "postcss-nesting": "^13.0.1",
     "rimraf": "^6.0.1",
-    "storybook": "^8.3.5",
+    "storybook": "^8.4.4",
     "storybook-react-i18next": "^3.1.7",
     "tailwindcss": "^3.4.14",
     "typescript": "5.6.3",
@@ -87,5 +90,8 @@
     "vite-plugin-graphql-codegen": "^3.3.8",
     "vite-plugin-manifest-sri": "^0.2.0",
     "vitest": "^2.1.2"
+  },
+  "msw": {
+    "workerDirectory": ["stories/static"]
   }
 }

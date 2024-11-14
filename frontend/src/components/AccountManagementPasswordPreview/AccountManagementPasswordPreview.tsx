@@ -12,9 +12,8 @@ import { type FragmentType, graphql, useFragment } from "../../gql";
 
 import styles from "./AccountManagementPasswordPreview.module.css";
 
-const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
+export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment PasswordChange_siteConfig on SiteConfig {
-    id
     passwordChangeAllowed
   }
 `);

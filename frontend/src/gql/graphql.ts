@@ -1417,7 +1417,7 @@ export type Viewer = Anonymous | User;
 /** Represents the current viewer's session */
 export type ViewerSession = Anonymous | BrowserSession | Oauth2Session;
 
-export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
+export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 
 export type BrowserSession_SessionFragment = { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', raw: string, name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, lastAuthentication?: { __typename?: 'Authentication', id: string, createdAt: string } | null } & { ' $fragmentName'?: 'BrowserSession_SessionFragment' };
 
@@ -1473,7 +1473,7 @@ export type UnverifiedEmailAlert_UserFragment = { __typename?: 'User', unverifie
 
 export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string, confirmedAt?: string | null } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
-export type UserEmail_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmail_SiteConfigFragment' };
+export type UserEmail_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmail_SiteConfigFragment' };
 
 export type RemoveEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1529,7 +1529,7 @@ export type UserEmailListQuery = { __typename?: 'Query', user?: { __typename?: '
 export type UserEmailList_UserFragment = { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } & { ' $fragmentName'?: 'UserEmailList_UserFragment' };
 
 export type UserEmailList_SiteConfigFragment = (
-  { __typename?: 'SiteConfig', id: string }
+  { __typename?: 'SiteConfig' }
   & { ' $fragmentRefs'?: { 'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment } }
 ) & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
@@ -1727,7 +1727,6 @@ export class TypedDocumentString<TResult, TVariables>
 }
 export const PasswordChange_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment PasswordChange_siteConfig on SiteConfig {
-  id
   passwordChangeAllowed
 }
     `, {"fragmentName":"PasswordChange_siteConfig"}) as unknown as TypedDocumentString<PasswordChange_SiteConfigFragment, unknown>;
@@ -1916,17 +1915,14 @@ export const UserEmailList_UserFragmentDoc = new TypedDocumentString(`
     `, {"fragmentName":"UserEmailList_user"}) as unknown as TypedDocumentString<UserEmailList_UserFragment, unknown>;
 export const UserEmail_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserEmail_siteConfig on SiteConfig {
-  id
   emailChangeAllowed
 }
     `, {"fragmentName":"UserEmail_siteConfig"}) as unknown as TypedDocumentString<UserEmail_SiteConfigFragment, unknown>;
 export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserEmailList_siteConfig on SiteConfig {
-  id
   ...UserEmail_siteConfig
 }
     fragment UserEmail_siteConfig on SiteConfig {
-  id
   emailChangeAllowed
 }`, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
@@ -2141,7 +2137,6 @@ export const UserProfileDocument = new TypedDocumentString(`
   }
 }
     fragment PasswordChange_siteConfig on SiteConfig {
-  id
   passwordChangeAllowed
 }
 fragment UserEmail_email on UserEmail {
@@ -2150,7 +2145,6 @@ fragment UserEmail_email on UserEmail {
   confirmedAt
 }
 fragment UserEmail_siteConfig on SiteConfig {
-  id
   emailChangeAllowed
 }
 fragment UserEmailList_user on User {
@@ -2160,7 +2154,6 @@ fragment UserEmailList_user on User {
   }
 }
 fragment UserEmailList_siteConfig on SiteConfig {
-  id
   ...UserEmail_siteConfig
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
 export const SessionDetailDocument = new TypedDocumentString(`

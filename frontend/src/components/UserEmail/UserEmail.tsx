@@ -19,7 +19,7 @@ import styles from "./UserEmail.module.css";
 // This component shows a single user email address, with controls to verify it,
 // resend the verification email, remove it, and set it as the primary email address.
 
-const FRAGMENT = graphql(/* GraphQL */ `
+export const FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmail_email on UserEmail {
     id
     email
@@ -27,9 +27,8 @@ const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
+export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmail_siteConfig on SiteConfig {
-    id
     emailChangeAllowed
   }
 `);
