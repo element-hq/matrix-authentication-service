@@ -14,6 +14,7 @@ import { CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT } from "../../src/co
 import { makeFragmentData } from "../../src/gql";
 import {
   mockCurrentUserGreetingQuery,
+  mockCurrentViewerQuery,
   mockFooterQuery,
   mockUserEmailListQuery,
   mockUserProfileQuery,
@@ -36,6 +37,17 @@ export const handlers = [
             },
             FOOTER_FRAGMENT,
           ),
+        },
+      },
+    }),
+  ),
+
+  mockCurrentViewerQuery(() =>
+    HttpResponse.json({
+      data: {
+        viewer: {
+          __typename: "User",
+          id: "user-id",
         },
       },
     }),

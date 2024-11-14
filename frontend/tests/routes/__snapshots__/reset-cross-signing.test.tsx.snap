@@ -1,0 +1,559 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Reset cross signing > renders the cancelled page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9"
+  >
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <header
+        class="_pageHeading_c10486"
+      >
+        <div
+          class="_icon_c10486 _success_c10486"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4.917 2.083a1 1 0 0 0-1.414 1.414L6.07 6.064c-1.27.18-2.377.743-3.32 1.686C1.583 8.917 1 10.333 1 12c0 1.667.583 3.083 1.75 4.25C3.917 17.417 5.333 18 7 18a5.863 5.863 0 0 0 3.475-1.1A5.81 5.81 0 0 0 12.65 14H13l1.3 1.3c.1.1.208.17.325.213.117.041.242.062.375.062s.258-.02.375-.062a.782.782 0 0 0 .1-.044l5.028 5.028a1 1 0 0 0 1.414-1.414l-17-17Zm.67 11.33A1.926 1.926 0 0 1 5 12c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 7 10c.55 0 1.02.196 1.412.588.392.391.588.862.588 1.412 0 .55-.196 1.02-.588 1.413A1.926 1.926 0 0 1 7 14c-.55 0-1.02-.196-1.412-.587Zm14.9 1.423L15.65 10h4.95a1.033 1.033 0 0 1 .725.3l1.025 1.025c.083.083.15.18.2.288.05.108.075.229.075.362a1.067 1.067 0 0 1-.25.7l-1.888 2.16Z"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_c10486"
+        >
+          <h1
+            class="_title_c10486"
+          >
+            Identity reset cancelled.
+          </h1>
+        </div>
+      </header>
+      <p
+        class="_typography_yh5dq_162 _font-body-lg-regular_yh5dq_78 text-center text-secondary"
+      >
+        You can close this window and go back to the app to continue.
+      </p>
+      <p
+        class="_typography_yh5dq_162 _font-body-lg-regular_yh5dq_78 text-center text-secondary"
+      >
+        If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the deep link page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9"
+  >
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <header
+        class="_pageHeading_c10486"
+      >
+        <div
+          class="_icon_c10486 _invalid_c10486"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 17a.97.97 0 0 0 .713-.288A.968.968 0 0 0 13 16a.968.968 0 0 0-.287-.713A.968.968 0 0 0 12 15a.968.968 0 0 0-.713.287A.968.968 0 0 0 11 16c0 .283.096.52.287.712.192.192.43.288.713.288Zm0-4c.283 0 .52-.096.713-.287A.968.968 0 0 0 13 12V8a.967.967 0 0 0-.287-.713A.968.968 0 0 0 12 7a.968.968 0 0 0-.713.287A.967.967 0 0 0 11 8v4c0 .283.096.52.287.713.192.191.43.287.713.287Zm0 9a9.738 9.738 0 0 1-3.9-.788 10.099 10.099 0 0 1-3.175-2.137c-.9-.9-1.612-1.958-2.137-3.175A9.738 9.738 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.738 9.738 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.738 9.738 0 0 1 12 22Z"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_c10486"
+        >
+          <h1
+            class="_title_c10486"
+          >
+            Reset your identity in case you can't confirm another way
+          </h1>
+        </div>
+      </header>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-center text-secondary"
+      >
+        If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
+      </p>
+      <ul
+        class="_list_7f22f8"
+      >
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-success-primary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9.55 17.575c-.133 0-.258-.02-.375-.063a.876.876 0 0 1-.325-.212L4.55 13c-.183-.183-.27-.42-.263-.713.009-.291.105-.529.288-.712a.948.948 0 0 1 .7-.275.95.95 0 0 1 .7.275L9.55 15.15l8.475-8.475c.183-.183.42-.275.713-.275.291 0 .529.092.712.275.183.183.275.42.275.713 0 .291-.092.529-.275.712l-9.2 9.2c-.1.1-.208.17-.325.212a1.106 1.106 0 0 1-.375.063Z"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            Your account details, contacts, preferences, and chat list will be kept
+          </p>
+        </li>
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-tertiary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M11.287 7.287A.968.968 0 0 1 12 7c.283 0 .52.096.713.287.191.192.287.43.287.713s-.096.52-.287.713A.968.968 0 0 1 12 9a.968.968 0 0 1-.713-.287A.967.967 0 0 1 11 8c0-.283.096-.52.287-.713Zm0 4A.968.968 0 0 1 12 11c.283 0 .52.096.713.287.191.192.287.43.287.713v4a.97.97 0 0 1-.287.712A.968.968 0 0 1 12 17a.968.968 0 0 1-.713-.288A.968.968 0 0 1 11 16v-4c0-.283.096-.52.287-.713Z"
+            />
+            <path
+              clip-rule="evenodd"
+              d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+              fill-rule="evenodd"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            You will lose any message history that's stored only on the server
+          </p>
+        </li>
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-tertiary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M11.287 7.287A.968.968 0 0 1 12 7c.283 0 .52.096.713.287.191.192.287.43.287.713s-.096.52-.287.713A.968.968 0 0 1 12 9a.968.968 0 0 1-.713-.287A.967.967 0 0 1 11 8c0-.283.096-.52.287-.713Zm0 4A.968.968 0 0 1 12 11c.283 0 .52.096.713.287.191.192.287.43.287.713v4a.97.97 0 0 1-.287.712A.968.968 0 0 1 12 17a.968.968 0 0 1-.713-.288A.968.968 0 0 1 11 16v-4c0-.283.096-.52.287-.713Z"
+            />
+            <path
+              clip-rule="evenodd"
+              d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+              fill-rule="evenodd"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            You will need to verify all your existing devices and contacts again
+          </p>
+        </li>
+      </ul>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-semibold_yh5dq_64 text-center"
+      >
+        Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key.
+      </p>
+      <button
+        aria-disabled="false"
+        class="_button_i91xf_17 _destructive_i91xf_116"
+        data-kind="primary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        Finish reset
+      </button>
+      <a
+        aria-disabled="false"
+        class="_button_i91xf_17 _buttonLink_42cda0"
+        data-kind="tertiary"
+        data-size="lg"
+        href="/reset-cross-signing/cancelled"
+        role="link"
+        tabindex="0"
+      >
+        Cancel
+      </a>
+    </div>
+    <footer
+      class="_legalFooter_eb428f"
+    >
+      <nav>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_eb428f"
+        >
+          •
+        </div>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_eb428f"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the errored page 1`] = `
+<DocumentFragment>
+  <header
+    class="_pageHeading_c10486"
+  >
+    <div
+      class="_icon_c10486 _invalid_c10486"
+    >
+      <svg
+        fill="currentColor"
+        height="1em"
+        viewBox="0 0 24 24"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 17a.97.97 0 0 0 .713-.288A.968.968 0 0 0 13 16a.968.968 0 0 0-.287-.713A.968.968 0 0 0 12 15a.968.968 0 0 0-.713.287A.968.968 0 0 0 11 16c0 .283.096.52.287.712.192.192.43.288.713.288Zm0-4c.283 0 .52-.096.713-.287A.968.968 0 0 0 13 12V8a.967.967 0 0 0-.287-.713A.968.968 0 0 0 12 7a.968.968 0 0 0-.713.287A.967.967 0 0 0 11 8v4c0 .283.096.52.287.713.192.191.43.287.713.287Zm0 9a9.738 9.738 0 0 1-3.9-.788 10.099 10.099 0 0 1-3.175-2.137c-.9-.9-1.612-1.958-2.137-3.175A9.738 9.738 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.738 9.738 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.738 9.738 0 0 1 12 22Z"
+        />
+      </svg>
+    </div>
+    <div
+      class="_header_c10486"
+    >
+      <h1
+        class="_title_c10486"
+      >
+        Failed to allow crypto identity reset
+      </h1>
+    </div>
+  </header>
+  <p
+    class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-center text-secondary"
+  >
+    This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.
+  </p>
+  <button
+    class="_button_i91xf_17"
+    data-kind="tertiary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+  >
+    Back
+  </button>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9"
+  >
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <header
+        class="_pageHeading_c10486"
+      >
+        <div
+          class="_icon_c10486 _invalid_c10486"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 17a.97.97 0 0 0 .713-.288A.968.968 0 0 0 13 16a.968.968 0 0 0-.287-.713A.968.968 0 0 0 12 15a.968.968 0 0 0-.713.287A.968.968 0 0 0 11 16c0 .283.096.52.287.712.192.192.43.288.713.288Zm0-4c.283 0 .52-.096.713-.287A.968.968 0 0 0 13 12V8a.967.967 0 0 0-.287-.713A.968.968 0 0 0 12 7a.968.968 0 0 0-.713.287A.967.967 0 0 0 11 8v4c0 .283.096.52.287.713.192.191.43.287.713.287Zm0 9a9.738 9.738 0 0 1-3.9-.788 10.099 10.099 0 0 1-3.175-2.137c-.9-.9-1.612-1.958-2.137-3.175A9.738 9.738 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.738 9.738 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.738 9.738 0 0 1 12 22Z"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_c10486"
+        >
+          <h1
+            class="_title_c10486"
+          >
+            Reset your identity in case you can't confirm another way
+          </h1>
+        </div>
+      </header>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-center text-secondary"
+      >
+        If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
+      </p>
+      <ul
+        class="_list_7f22f8"
+      >
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-success-primary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9.55 17.575c-.133 0-.258-.02-.375-.063a.876.876 0 0 1-.325-.212L4.55 13c-.183-.183-.27-.42-.263-.713.009-.291.105-.529.288-.712a.948.948 0 0 1 .7-.275.95.95 0 0 1 .7.275L9.55 15.15l8.475-8.475c.183-.183.42-.275.713-.275.291 0 .529.092.712.275.183.183.275.42.275.713 0 .291-.092.529-.275.712l-9.2 9.2c-.1.1-.208.17-.325.212a1.106 1.106 0 0 1-.375.063Z"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            Your account details, contacts, preferences, and chat list will be kept
+          </p>
+        </li>
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-tertiary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M11.287 7.287A.968.968 0 0 1 12 7c.283 0 .52.096.713.287.191.192.287.43.287.713s-.096.52-.287.713A.968.968 0 0 1 12 9a.968.968 0 0 1-.713-.287A.967.967 0 0 1 11 8c0-.283.096-.52.287-.713Zm0 4A.968.968 0 0 1 12 11c.283 0 .52.096.713.287.191.192.287.43.287.713v4a.97.97 0 0 1-.287.712A.968.968 0 0 1 12 17a.968.968 0 0 1-.713-.288A.968.968 0 0 1 11 16v-4c0-.283.096-.52.287-.713Z"
+            />
+            <path
+              clip-rule="evenodd"
+              d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+              fill-rule="evenodd"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            You will lose any message history that's stored only on the server
+          </p>
+        </li>
+        <li
+          class="_item_7f22f8"
+        >
+          <svg
+            color="var(--cpd-color-icon-tertiary)"
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M11.287 7.287A.968.968 0 0 1 12 7c.283 0 .52.096.713.287.191.192.287.43.287.713s-.096.52-.287.713A.968.968 0 0 1 12 9a.968.968 0 0 1-.713-.287A.967.967 0 0 1 11 8c0-.283.096-.52.287-.713Zm0 4A.968.968 0 0 1 12 11c.283 0 .52.096.713.287.191.192.287.43.287.713v4a.97.97 0 0 1-.287.712A.968.968 0 0 1 12 17a.968.968 0 0 1-.713-.288A.968.968 0 0 1 11 16v-4c0-.283.096-.52.287-.713Z"
+            />
+            <path
+              clip-rule="evenodd"
+              d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+              fill-rule="evenodd"
+            />
+          </svg>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+          >
+            You will need to verify all your existing devices and contacts again
+          </p>
+        </li>
+      </ul>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-semibold_yh5dq_64 text-center"
+      >
+        Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key.
+      </p>
+      <button
+        aria-disabled="false"
+        class="_button_i91xf_17 _destructive_i91xf_116"
+        data-kind="primary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        Finish reset
+      </button>
+      <a
+        aria-disabled="false"
+        class="_button_i91xf_17 _buttonLink_42cda0"
+        data-kind="tertiary"
+        data-size="lg"
+        href="/"
+        role="link"
+        tabindex="0"
+      >
+        Back
+      </a>
+    </div>
+    <footer
+      class="_legalFooter_eb428f"
+    >
+      <nav>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_eb428f"
+        >
+          •
+        </div>
+        <a
+          class="_link_1mzip_17"
+          data-kind="primary"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_eb428f"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the success page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9"
+  >
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <header
+        class="_pageHeading_c10486"
+      >
+        <div
+          class="_icon_c10486 _success_c10486"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m10.6 13.8-2.15-2.15a.948.948 0 0 0-.7-.275.948.948 0 0 0-.7.275.948.948 0 0 0-.275.7.95.95 0 0 0 .275.7L9.9 15.9c.2.2.433.3.7.3.267 0 .5-.1.7-.3l5.65-5.65a.948.948 0 0 0 .275-.7.948.948 0 0 0-.275-.7.948.948 0 0 0-.7-.275.948.948 0 0 0-.7.275L10.6 13.8ZM12 22a9.738 9.738 0 0 1-3.9-.788 10.099 10.099 0 0 1-3.175-2.137c-.9-.9-1.612-1.958-2.137-3.175A9.738 9.738 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.738 9.738 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.738 9.738 0 0 1 12 22Z"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_c10486"
+        >
+          <h1
+            class="_title_c10486"
+          >
+            Identity reset successfully. Go back to the app to finish the process.
+          </h1>
+        </div>
+      </header>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-center text-secondary"
+      >
+        The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the success page 2`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_0c8bf9"
+  >
+    <div
+      class="_blockList_f8cc7f"
+    >
+      <header
+        class="_pageHeading_c10486"
+      >
+        <div
+          class="_icon_c10486 _success_c10486"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m10.6 13.8-2.15-2.15a.948.948 0 0 0-.7-.275.948.948 0 0 0-.7.275.948.948 0 0 0-.275.7.95.95 0 0 0 .275.7L9.9 15.9c.2.2.433.3.7.3.267 0 .5-.1.7-.3l5.65-5.65a.948.948 0 0 0 .275-.7.948.948 0 0 0-.275-.7.948.948 0 0 0-.7-.275.948.948 0 0 0-.7.275L10.6 13.8ZM12 22a9.738 9.738 0 0 1-3.9-.788 10.099 10.099 0 0 1-3.175-2.137c-.9-.9-1.612-1.958-2.137-3.175A9.738 9.738 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.738 9.738 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.738 9.738 0 0 1 12 22Z"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_c10486"
+        >
+          <h1
+            class="_title_c10486"
+          >
+            Identity reset successfully. Go back to the app to finish the process.
+          </h1>
+        </div>
+      </header>
+      <p
+        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-center text-secondary"
+      >
+        The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
