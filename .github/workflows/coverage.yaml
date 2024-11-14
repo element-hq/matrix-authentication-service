@@ -67,7 +67,7 @@ jobs:
         working-directory: ./frontend
         run: npm run build
         env:
-          UPLOAD_CODECOV_BUNDLE: "true"
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test
         working-directory: ./frontend

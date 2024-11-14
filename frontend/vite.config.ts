@@ -71,12 +71,10 @@ export default defineConfig((env) => ({
     tanStackRouter(),
 
     codecovVitePlugin({
-      enableBundleAnalysis: process.env.UPLOAD_CODECOV_BUNDLE === "true",
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
       bundleName: "mas-frontend",
+      uploadToken: process.env.CODECOV_TOKEN,
       gitService: "github",
-      oidc: {
-        useGitHubOIDC: true,
-      },
     }),
 
     // Custom plugin to make sure that each asset has an entry in the manifest
