@@ -5,15 +5,15 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { type RenderResult, render } from "@testing-library/react";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";
 import { setupServer } from "msw/node";
 import { I18nextProvider } from "react-i18next";
 import { afterAll, afterEach, beforeAll } from "vitest";
-import { handlers } from "../mocks/handlers";
-import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "../../src/routeTree.gen";
+import { handlers } from "../mocks/handlers";
 
 // Create a new router instance
 
