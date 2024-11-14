@@ -34,7 +34,7 @@ describe("Reset cross signing", () => {
 
   it("calls the callback on success", async () => {
     // TODO: a better way to wait on delays
-    let advance: () => void;
+    let advance: () => void = () => {};
     const wait = new Promise((resolve) => {
       advance = () => resolve(void 0);
     });
