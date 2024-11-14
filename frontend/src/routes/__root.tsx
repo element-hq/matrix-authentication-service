@@ -31,12 +31,14 @@ export const Route = createRootRouteWithContext<{
       <ScrollRestoration />
       <Outlet />
 
-      {import.meta.env.DEV && !import.meta.env.TEST && (
-        <>
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="top-right" />
-        </>
-      )}
+      {import.meta.env.DEV &&
+        !import.meta.env.TEST &&
+        !import.meta.env.STORYBOOK && (
+          <>
+            <TanStackRouterDevtools position="bottom-right" />
+            <ReactQueryDevtools buttonPosition="top-right" />
+          </>
+        )}
     </>
   ),
 

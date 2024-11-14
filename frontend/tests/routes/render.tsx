@@ -8,38 +8,12 @@ import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import { type RenderResult, render } from "@testing-library/react";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";
-import { HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { I18nextProvider } from "react-i18next";
 import { afterAll, afterEach, beforeAll } from "vitest";
-import { FRAGMENT } from "../../src/components/Footer/Footer";
-import { makeFragmentData } from "../../src/gql";
-import { mockFooterQuery } from "../../src/gql/graphql";
 import { queryClient } from "../../src/graphql";
 import { router } from "../../src/router";
-
-const handlers = [
-  mockFooterQuery(() =>
-    HttpResponse.json({
-      data: {
-        siteConfig: {
-          id: "siteConfig",
-
-          ...makeFragmentData(
-            {
-              id: "siteConfig",
-              policyUri: "https://matrix.org/policy",
-              tosUri: "https://matrix.org/tos",
-              imprint:
-                "All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.",
-            },
-            FRAGMENT,
-          ),
-        },
-      },
-    }),
-  ),
-];
+import { handlers } from "../mocks/handlers";
 
 export const server = setupServer(...handlers);
 
@@ -54,9 +28,11 @@ afterEach(() => server.resetHandlers());
 
 async function renderPage(route: string): Promise<RenderResult> {
   await router.load();
+
   const history = createMemoryHistory({
     initialEntries: [route],
   });
+
   return render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

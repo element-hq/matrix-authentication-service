@@ -15,7 +15,7 @@ import * as types from './graphql';
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 const documents = {
-    "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    id\n    passwordChangeAllowed\n  }\n": types.PasswordChange_SiteConfigFragmentDoc,
+    "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    passwordChangeAllowed\n  }\n": types.PasswordChange_SiteConfigFragmentDoc,
     "\n  fragment BrowserSession_session on BrowserSession {\n    id\n    createdAt\n    finishedAt\n    userAgent {\n      raw\n      name\n      os\n      model\n      deviceType\n    }\n    lastActiveIp\n    lastActiveAt\n    lastAuthentication {\n      id\n      createdAt\n    }\n  }\n": types.BrowserSession_SessionFragmentDoc,
     "\n  mutation EndBrowserSession($id: ID!) {\n    endBrowserSession(input: { browserSessionId: $id }) {\n      status\n      browserSession {\n        id\n        ...BrowserSession_session\n      }\n    }\n  }\n": types.EndBrowserSessionDocument,
     "\n  fragment OAuth2Client_detail on Oauth2Client {\n    id\n    clientId\n    clientName\n    clientUri\n    logoUri\n    tosUri\n    policyUri\n    redirectUris\n  }\n": types.OAuth2Client_DetailFragmentDoc,
@@ -31,7 +31,7 @@ const documents = {
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UnverifiedEmailAlert_user on User {\n    unverifiedEmails: emails(first: 0, state: PENDING) {\n      totalCount\n    }\n  }\n": types.UnverifiedEmailAlert_UserFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n    confirmedAt\n  }\n": types.UserEmail_EmailFragmentDoc,
-    "\n  fragment UserEmail_siteConfig on SiteConfig {\n    id\n    emailChangeAllowed\n  }\n": types.UserEmail_SiteConfigFragmentDoc,
+    "\n  fragment UserEmail_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n": types.UserEmail_SiteConfigFragmentDoc,
     "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
     "\n  mutation SetPrimaryEmail($id: ID!) {\n    setPrimaryEmail(input: { userEmailId: $id }) {\n      status\n      user {\n        id\n        primaryEmail {\n          id\n        }\n      }\n    }\n  }\n": types.SetPrimaryEmailDocument,
     "\n  fragment UserGreeting_user on User {\n    id\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": types.UserGreeting_UserFragmentDoc,
@@ -40,7 +40,7 @@ const documents = {
     "\n  mutation AddEmail($userId: ID!, $email: String!) {\n    addEmail(input: { userId: $userId, email: $email }) {\n      status\n      violations\n      email {\n        id\n        ...UserEmail_email\n      }\n    }\n  }\n": types.AddEmailDocument,
     "\n  query UserEmailList(\n    $userId: ID!\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    user(id: $userId) {\n      id\n\n      emails(first: $first, after: $after, last: $last, before: $before) {\n        edges {\n          cursor\n          node {\n            id\n            ...UserEmail_email\n          }\n        }\n        totalCount\n        pageInfo {\n          hasNextPage\n          hasPreviousPage\n          startCursor\n          endCursor\n        }\n      }\n    }\n  }\n": types.UserEmailListDocument,
     "\n  fragment UserEmailList_user on User {\n    id\n    primaryEmail {\n      id\n    }\n  }\n": types.UserEmailList_UserFragmentDoc,
-    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    id\n    ...UserEmail_siteConfig\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
+    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    ...UserEmail_siteConfig\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
     "\n  fragment BrowserSessionsOverview_user on User {\n    id\n\n    browserSessions(first: 0, state: ACTIVE) {\n      totalCount\n    }\n  }\n": types.BrowserSessionsOverview_UserFragmentDoc,
     "\n  fragment UserEmail_verifyEmail on UserEmail {\n    id\n    email\n  }\n": types.UserEmail_VerifyEmailFragmentDoc,
     "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    verifyEmail(input: { userEmailId: $id, code: $code }) {\n      status\n\n      user {\n        id\n        primaryEmail {\n          id\n        }\n      }\n\n      email {\n        id\n        ...UserEmail_email\n      }\n    }\n  }\n": types.DoVerifyEmailDocument,
@@ -65,7 +65,7 @@ const documents = {
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    id\n    passwordChangeAllowed\n  }\n"): typeof import('./graphql').PasswordChange_SiteConfigFragmentDoc;
+export function graphql(source: "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    passwordChangeAllowed\n  }\n"): typeof import('./graphql').PasswordChange_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -129,7 +129,7 @@ export function graphql(source: "\n  fragment UserEmail_email on UserEmail {\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment UserEmail_siteConfig on SiteConfig {\n    id\n    emailChangeAllowed\n  }\n"): typeof import('./graphql').UserEmail_SiteConfigFragmentDoc;
+export function graphql(source: "\n  fragment UserEmail_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n"): typeof import('./graphql').UserEmail_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -165,7 +165,7 @@ export function graphql(source: "\n  fragment UserEmailList_user on User {\n    
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    id\n    ...UserEmail_siteConfig\n  }\n"): typeof import('./graphql').UserEmailList_SiteConfigFragmentDoc;
+export function graphql(source: "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    ...UserEmail_siteConfig\n  }\n"): typeof import('./graphql').UserEmailList_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
