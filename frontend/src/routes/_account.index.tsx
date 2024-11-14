@@ -17,7 +17,6 @@ const QUERY = graphql(/* GraphQL */ `
       __typename
       ... on User {
         id
-
         primaryEmail {
           id
           ...UserEmail_email
@@ -28,7 +27,6 @@ const QUERY = graphql(/* GraphQL */ `
     }
 
     siteConfig {
-      id
       emailChangeAllowed
       passwordLoginEnabled
       ...UserEmailList_siteConfig

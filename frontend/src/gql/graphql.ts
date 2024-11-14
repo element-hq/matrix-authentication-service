@@ -1469,7 +1469,7 @@ export type CompatSession_DetailFragment = { __typename?: 'CompatSession', id: s
 
 export type OAuth2Session_DetailFragment = { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } } & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 
-export type UnverifiedEmailAlert_UserFragment = { __typename?: 'User', id: string, unverifiedEmails: { __typename?: 'UserEmailConnection', totalCount: number } } & { ' $fragmentName'?: 'UnverifiedEmailAlert_UserFragment' };
+export type UnverifiedEmailAlert_UserFragment = { __typename?: 'User', unverifiedEmails: { __typename?: 'UserEmailConnection', totalCount: number } } & { ' $fragmentName'?: 'UnverifiedEmailAlert_UserFragment' };
 
 export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string, confirmedAt?: string | null } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
@@ -1491,7 +1491,7 @@ export type SetPrimaryEmailMutation = { __typename?: 'Mutation', setPrimaryEmail
 
 export type UserGreeting_UserFragment = { __typename?: 'User', id: string, matrix: { __typename?: 'MatrixUser', mxid: string, displayName?: string | null } } & { ' $fragmentName'?: 'UserGreeting_UserFragment' };
 
-export type UserGreeting_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, displayNameChangeAllowed: boolean } & { ' $fragmentName'?: 'UserGreeting_SiteConfigFragment' };
+export type UserGreeting_SiteConfigFragment = { __typename?: 'SiteConfig', displayNameChangeAllowed: boolean } & { ' $fragmentName'?: 'UserGreeting_SiteConfigFragment' };
 
 export type SetDisplayNameMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1499,7 +1499,7 @@ export type SetDisplayNameMutationVariables = Exact<{
 }>;
 
 
-export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus, user?: { __typename?: 'User', id: string, matrix: { __typename?: 'MatrixUser', displayName?: string | null } } | null } };
+export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
 export type AddEmailMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1568,7 +1568,7 @@ export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'An
     ) | null }
     & { ' $fragmentRefs'?: { 'UserEmailList_UserFragment': UserEmailList_UserFragment } }
   ), siteConfig: (
-    { __typename?: 'SiteConfig', id: string, emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
+    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
 
@@ -1631,10 +1631,10 @@ export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>
 
 
 export type CurrentUserGreetingQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
-      { __typename?: 'User', id: string }
+      { __typename?: 'User' }
       & { ' $fragmentRefs'?: { 'UnverifiedEmailAlert_UserFragment': UnverifiedEmailAlert_UserFragment;'UserGreeting_UserFragment': UserGreeting_UserFragment } }
     ) } | { __typename: 'Oauth2Session' }, siteConfig: (
-    { __typename?: 'SiteConfig', id: string }
+    { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
@@ -1700,7 +1700,7 @@ export type PasswordRecoveryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type PasswordRecoveryQuery = { __typename?: 'Query', siteConfig: (
-    { __typename?: 'SiteConfig', id: string }
+    { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
   ) };
 
@@ -1880,7 +1880,6 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
     `, {"fragmentName":"OAuth2Session_detail"}) as unknown as TypedDocumentString<OAuth2Session_DetailFragment, unknown>;
 export const UnverifiedEmailAlert_UserFragmentDoc = new TypedDocumentString(`
     fragment UnverifiedEmailAlert_user on User {
-  id
   unverifiedEmails: emails(first: 0, state: PENDING) {
     totalCount
   }
@@ -1904,7 +1903,6 @@ export const UserGreeting_UserFragmentDoc = new TypedDocumentString(`
     `, {"fragmentName":"UserGreeting_user"}) as unknown as TypedDocumentString<UserGreeting_UserFragment, unknown>;
 export const UserGreeting_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserGreeting_siteConfig on SiteConfig {
-  id
   displayNameChangeAllowed
 }
     `, {"fragmentName":"UserGreeting_siteConfig"}) as unknown as TypedDocumentString<UserGreeting_SiteConfigFragment, unknown>;
@@ -2033,12 +2031,6 @@ export const SetDisplayNameDocument = new TypedDocumentString(`
     mutation SetDisplayName($userId: ID!, $displayName: String) {
   setDisplayName(input: {userId: $userId, displayName: $displayName}) {
     status
-    user {
-      id
-      matrix {
-        displayName
-      }
-    }
   }
 }
     `) as unknown as TypedDocumentString<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
@@ -2141,7 +2133,6 @@ export const UserProfileDocument = new TypedDocumentString(`
     }
   }
   siteConfig {
-    id
     emailChangeAllowed
     passwordLoginEnabled
     ...UserEmailList_siteConfig
@@ -2387,19 +2378,16 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
     ... on BrowserSession {
       id
       user {
-        id
         ...UnverifiedEmailAlert_user
         ...UserGreeting_user
       }
     }
   }
   siteConfig {
-    id
     ...UserGreeting_siteConfig
   }
 }
     fragment UnverifiedEmailAlert_user on User {
-  id
   unverifiedEmails: emails(first: 0, state: PENDING) {
     totalCount
   }
@@ -2412,7 +2400,6 @@ fragment UserGreeting_user on User {
   }
 }
 fragment UserGreeting_siteConfig on SiteConfig {
-  id
   displayNameChangeAllowed
 }`) as unknown as TypedDocumentString<CurrentUserGreetingQuery, CurrentUserGreetingQueryVariables>;
 export const OAuth2ClientDocument = new TypedDocumentString(`
@@ -2496,7 +2483,6 @@ export const RecoverPasswordDocument = new TypedDocumentString(`
 export const PasswordRecoveryDocument = new TypedDocumentString(`
     query PasswordRecovery {
   siteConfig {
-    id
     ...PasswordCreationDoubleInput_siteConfig
   }
 }
