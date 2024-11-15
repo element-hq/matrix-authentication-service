@@ -274,8 +274,9 @@ mod tests {
     // XXX: sadly, we can't test HTTPS requests with wiremock, so we can only test
     // 'insecure' discovery
 
-    use mas_data_model::UpstreamOAuthProviderClaimsImports;
-    use mas_iana::oauth::OAuthClientAuthenticationMethod;
+    use mas_data_model::{
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+    };
     use mas_storage::{clock::MockClock, Clock};
     use oauth2_types::scope::{Scope, OPENID};
     use ulid::Ulid;
@@ -393,7 +394,7 @@ mod tests {
             client_id: "client_id".to_owned(),
             encrypted_client_secret: None,
             token_endpoint_signing_alg: None,
-            token_endpoint_auth_method: OAuthClientAuthenticationMethod::None,
+            token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
             created_at: clock.now(),
             disabled_at: None,
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),

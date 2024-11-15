@@ -51,7 +51,8 @@ pub use self::{
         ClaimsImports as UpstreamOAuth2ClaimsImports, DiscoveryMode as UpstreamOAuth2DiscoveryMode,
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction, PkceMethod as UpstreamOAuth2PkceMethod,
-        SetEmailVerification as UpstreamOAuth2SetEmailVerification, UpstreamOAuth2Config,
+        SetEmailVerification as UpstreamOAuth2SetEmailVerification,
+        TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
     },
 };
 use crate::util::ConfigurationSection;

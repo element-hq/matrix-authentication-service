@@ -343,8 +343,9 @@ mod test {
         header::{CONTENT_TYPE, LOCATION},
         Request, StatusCode,
     };
-    use mas_data_model::UpstreamOAuthProviderClaimsImports;
-    use mas_iana::oauth::OAuthClientAuthenticationMethod;
+    use mas_data_model::{
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+    };
     use mas_router::Route;
     use mas_storage::{
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
@@ -400,7 +401,7 @@ mod test {
                     human_name: Some("First Ltd.".to_owned()),
                     brand_name: None,
                     scope: [OPENID].into_iter().collect(),
-                    token_endpoint_auth_method: OAuthClientAuthenticationMethod::None,
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
                     client_id: "client".to_owned(),
                     encrypted_client_secret: None,
@@ -435,7 +436,7 @@ mod test {
                     human_name: None,
                     brand_name: None,
                     scope: [OPENID].into_iter().collect(),
-                    token_endpoint_auth_method: OAuthClientAuthenticationMethod::None,
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
                     client_id: "client".to_owned(),
                     encrypted_client_secret: None,

@@ -6,10 +6,12 @@
 
 use std::string::FromUtf8Error;
 
-use mas_data_model::UpstreamOAuthProvider;
-use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
+use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderTokenAuthMethod};
+use mas_iana::jose::JsonWebSignatureAlg;
 use mas_keystore::{DecryptError, Encrypter, Keystore};
 use mas_oidc_client::types::client_credentials::ClientCredentials;
+use pkcs8::DecodePrivateKey;
+use serde::Deserialize;
 use thiserror::Error;
 use url::Url;
 
@@ -39,6 +41,25 @@ enum ProviderCredentialsError {
         #[from]
         inner: FromUtf8Error,
     },
+
+    #[error("Invalid JSON in client secret")]
+    InvalidClientSecretJson {
+        #[from]
+        inner: serde_json::Error,
+    },
+
+    #[error("Could not parse PEM encoded private key")]
+    InvalidPrivateKey {
+        #[from]
+        inner: pkcs8::Error,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SignInWithApple {
+    pub private_key: String,
+    pub team_id: String,
+    pub key_id: String,
 }
 
 fn client_credentials_for_provider(
@@ -61,28 +82,38 @@ fn client_credentials_for_provider(
         .transpose()?;
 
     let client_credentials = match provider.token_endpoint_auth_method {
-        OAuthClientAuthenticationMethod::None => ClientCredentials::None { client_id },
-        OAuthClientAuthenticationMethod::ClientSecretPost => ClientCredentials::ClientSecretPost {
-            client_id,
-            client_secret: client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?,
-        },
-        OAuthClientAuthenticationMethod::ClientSecretBasic => {
+        UpstreamOAuthProviderTokenAuthMethod::None => ClientCredentials::None { client_id },
+
+        UpstreamOAuthProviderTokenAuthMethod::ClientSecretPost => {
+            ClientCredentials::ClientSecretPost {
+                client_id,
+                client_secret: client_secret
+                    .ok_or(ProviderCredentialsError::MissingClientSecret)?,
+            }
+        }
+
+        UpstreamOAuthProviderTokenAuthMethod::ClientSecretBasic => {
             ClientCredentials::ClientSecretBasic {
                 client_id,
                 client_secret: client_secret
                     .ok_or(ProviderCredentialsError::MissingClientSecret)?,
             }
         }
-        OAuthClientAuthenticationMethod::ClientSecretJwt => ClientCredentials::ClientSecretJwt {
-            client_id,
-            client_secret: client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?,
-            signing_algorithm: provider
-                .token_endpoint_signing_alg
-                .clone()
-                .unwrap_or(JsonWebSignatureAlg::Rs256),
-            token_endpoint: token_endpoint.clone(),
-        },
-        OAuthClientAuthenticationMethod::PrivateKeyJwt => ClientCredentials::PrivateKeyJwt {
+
+        UpstreamOAuthProviderTokenAuthMethod::ClientSecretJwt => {
+            ClientCredentials::ClientSecretJwt {
+                client_id,
+                client_secret: client_secret
+                    .ok_or(ProviderCredentialsError::MissingClientSecret)?,
+                signing_algorithm: provider
+                    .token_endpoint_signing_alg
+                    .clone()
+                    .unwrap_or(JsonWebSignatureAlg::Rs256),
+                token_endpoint: token_endpoint.clone(),
+            }
+        }
+
+        UpstreamOAuthProviderTokenAuthMethod::PrivateKeyJwt => ClientCredentials::PrivateKeyJwt {
             client_id,
             keystore: keystore.clone(),
             signing_algorithm: provider
@@ -91,8 +122,21 @@ fn client_credentials_for_provider(
                 .unwrap_or(JsonWebSignatureAlg::Rs256),
             token_endpoint: token_endpoint.clone(),
         },
-        // XXX: The database should never have an unsupported method in it
-        _ => unreachable!(),
+
+        UpstreamOAuthProviderTokenAuthMethod::SignInWithApple => {
+            let params = client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
+            let params: SignInWithApple = serde_json::from_str(&params)?;
+
+            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&params.private_key)?;
+
+            ClientCredentials::SignInWithApple {
+                client_id,
+                audience: provider.issuer.clone(),
+                key,
+                key_id: params.key_id,
+                team_id: params.team_id,
+            }
+        }
     };
 
     Ok(client_credentials)
