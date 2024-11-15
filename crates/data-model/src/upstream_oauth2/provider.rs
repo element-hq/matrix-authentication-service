@@ -116,6 +116,55 @@ impl std::fmt::Display for PkceMode {
     }
 }
 
+#[derive(Debug, Clone, Error)]
+#[error("Invalid response mode {0:?}")]
+pub struct InvalidResponseModeError(String);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ResponseMode {
+    #[default]
+    Query,
+    FormPost,
+}
+
+impl From<ResponseMode> for oauth2_types::requests::ResponseMode {
+    fn from(value: ResponseMode) -> Self {
+        match value {
+            ResponseMode::Query => oauth2_types::requests::ResponseMode::Query,
+            ResponseMode::FormPost => oauth2_types::requests::ResponseMode::FormPost,
+        }
+    }
+}
+
+impl ResponseMode {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Query => "query",
+            Self::FormPost => "form_post",
+        }
+    }
+}
+
+impl std::fmt::Display for ResponseMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for ResponseMode {
+    type Err = InvalidResponseModeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "query" => Ok(ResponseMode::Query),
+            "form_post" => Ok(ResponseMode::FormPost),
+            s => Err(InvalidResponseModeError(s.to_owned())),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TokenAuthMethod {
@@ -183,6 +232,7 @@ pub struct UpstreamOAuthProvider {
     pub encrypted_client_secret: Option<String>,
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
     pub token_endpoint_auth_method: TokenAuthMethod,
+    pub response_mode: ResponseMode,
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,

@@ -20,7 +20,7 @@ use oauth2_types::{
     prelude::CodeChallengeMethodExt,
     requests::{
         AccessTokenRequest, AccessTokenResponse, AuthorizationCodeGrant, AuthorizationRequest,
-        Display, Prompt,
+        Display, Prompt, ResponseMode,
     },
     scope::{Scope, OPENID},
 };
@@ -89,6 +89,9 @@ pub struct AuthorizationRequestData {
 
     /// Requested Authentication Context Class Reference values.
     pub acr_values: Option<HashSet<String>>,
+
+    /// Requested response mode.
+    pub response_mode: Option<ResponseMode>,
 }
 
 impl AuthorizationRequestData {
@@ -108,6 +111,7 @@ impl AuthorizationRequestData {
             id_token_hint: None,
             login_hint: None,
             acr_values: None,
+            response_mode: None,
         }
     }
 
@@ -170,6 +174,13 @@ impl AuthorizationRequestData {
         self.acr_values = Some(acr_values);
         self
     }
+
+    /// Set the `response_mode` field of this `AuthorizationRequestData`.
+    #[must_use]
+    pub fn with_response_mode(mut self, response_mode: ResponseMode) -> Self {
+        self.response_mode = Some(response_mode);
+        self
+    }
 }
 
 /// The data necessary to validate a response from the Token endpoint in the
@@ -215,6 +226,7 @@ fn build_authorization_request(
         id_token_hint,
         login_hint,
         acr_values,
+        response_mode,
     } = authorization_data;
 
     // Generate a random CSRF "state" token and a nonce.
@@ -252,7 +264,7 @@ fn build_authorization_request(
             redirect_uri: Some(redirect_uri.clone()),
             scope,
             state: Some(state.clone()),
-            response_mode: None,
+            response_mode,
             nonce: Some(nonce.clone()),
             display,
             prompt,

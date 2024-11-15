@@ -232,6 +232,15 @@ pub async fn config_sync(
                 }
             };
 
+            let response_mode = match provider.response_mode {
+                mas_config::UpstreamOAuth2ResponseMode::Query => {
+                    mas_data_model::UpstreamOAuthProviderResponseMode::Query
+                }
+                mas_config::UpstreamOAuth2ResponseMode::FormPost => {
+                    mas_data_model::UpstreamOAuthProviderResponseMode::FormPost
+                }
+            };
+
             if discovery_mode.is_disabled() {
                 if provider.authorization_endpoint.is_none() {
                     error!("Provider has discovery disabled but no authorization endpoint set");
@@ -279,6 +288,7 @@ pub async fn config_sync(
                         jwks_uri_override: provider.jwks_uri,
                         discovery_mode,
                         pkce_mode,
+                        response_mode,
                         additional_authorization_parameters: provider
                             .additional_authorization_parameters
                             .into_iter()

@@ -9,7 +9,8 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use mas_data_model::{
     UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
+    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
+    UpstreamOAuthProviderTokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
@@ -66,6 +67,9 @@ pub struct UpstreamOAuthProviderParams {
 
     /// How should PKCE be used
     pub pkce_mode: UpstreamOAuthProviderPkceMode,
+
+    /// What response mode it should ask
+    pub response_mode: UpstreamOAuthProviderResponseMode,
 
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,

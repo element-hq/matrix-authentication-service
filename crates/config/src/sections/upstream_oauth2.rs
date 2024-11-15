@@ -105,6 +105,29 @@ impl ConfigurationSection for UpstreamOAuth2Config {
     }
 }
 
+/// The response mode we ask the provider to use for the callback
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ResponseMode {
+    /// `query`: The provider will send the response as a query string in the
+    /// URL search parameters
+    #[default]
+    Query,
+
+    /// `form_post`: The provider will send the response as a POST request with
+    /// the response parameters in the request body
+    ///
+    /// <https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>
+    FormPost,
+}
+
+impl ResponseMode {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, ResponseMode::Query)
+    }
+}
+
 /// Authentication methods used against the OAuth 2.0 provider
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -459,6 +482,10 @@ pub struct Provider {
     /// Defaults to the `jwks_uri` provided through discovery
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jwks_uri: Option<Url>,
+
+    /// The response mode we ask the provider to use for the callback
+    #[serde(default, skip_serializing_if = "ResponseMode::is_default")]
+    pub response_mode: ResponseMode,
 
     /// How claims should be imported from the `id_token` provided by the
     /// provider
