@@ -19,7 +19,9 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::UpstreamOAuthProviderClaimsImports;
+    use mas_data_model::{
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+    };
     use mas_storage::{
         clock::MockClock,
         upstream_oauth2::{
@@ -57,8 +59,7 @@ mod tests {
                     human_name: None,
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
-                    token_endpoint_auth_method:
-                        mas_iana::oauth::OAuthClientAuthenticationMethod::None,
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
                     client_id: "client-id".to_owned(),
                     encrypted_client_secret: None,
@@ -299,8 +300,7 @@ mod tests {
                         human_name: None,
                         brand_name: None,
                         scope: scope.clone(),
-                        token_endpoint_auth_method:
-                            mas_iana::oauth::OAuthClientAuthenticationMethod::None,
+                        token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                         token_endpoint_signing_alg: None,
                         client_id,
                         encrypted_client_secret: None,

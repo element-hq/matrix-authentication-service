@@ -187,11 +187,17 @@ pub async fn config_sync(
                 continue;
             }
 
-            let encrypted_client_secret = provider
-                .client_secret
-                .as_deref()
-                .map(|client_secret| encrypter.encrypt_to_string(client_secret.as_bytes()))
-                .transpose()?;
+            let encrypted_client_secret =
+                if let Some(client_secret) = provider.client_secret.as_deref() {
+                    Some(encrypter.encrypt_to_string(client_secret.as_bytes())?)
+                } else if let Some(siwa) = provider.sign_in_with_apple.as_ref() {
+                    // For SIWA, we JSON-encode the config and encrypt it, reusing the client_secret
+                    // field in the database
+                    let encoded = serde_json::to_vec(siwa)?;
+                    Some(encrypter.encrypt_to_string(&encoded)?)
+                } else {
+                    None
+                };
 
             let discovery_mode = match provider.discovery_mode {
                 mas_config::UpstreamOAuth2DiscoveryMode::Oidc => {
@@ -202,6 +208,27 @@ pub async fn config_sync(
                 }
                 mas_config::UpstreamOAuth2DiscoveryMode::Disabled => {
                     mas_data_model::UpstreamOAuthProviderDiscoveryMode::Disabled
+                }
+            };
+
+            let token_endpoint_auth_method = match provider.token_endpoint_auth_method {
+                mas_config::UpstreamOAuth2TokenAuthMethod::None => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::None
+                }
+                mas_config::UpstreamOAuth2TokenAuthMethod::ClientSecretBasic => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::ClientSecretBasic
+                }
+                mas_config::UpstreamOAuth2TokenAuthMethod::ClientSecretPost => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::ClientSecretPost
+                }
+                mas_config::UpstreamOAuth2TokenAuthMethod::ClientSecretJwt => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::ClientSecretJwt
+                }
+                mas_config::UpstreamOAuth2TokenAuthMethod::PrivateKeyJwt => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::PrivateKeyJwt
+                }
+                mas_config::UpstreamOAuth2TokenAuthMethod::SignInWithApple => {
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::SignInWithApple
                 }
             };
 
@@ -240,7 +267,7 @@ pub async fn config_sync(
                         human_name: provider.human_name,
                         brand_name: provider.brand_name,
                         scope: provider.scope.parse()?,
-                        token_endpoint_auth_method: provider.token_endpoint_auth_method.into(),
+                        token_endpoint_auth_method,
                         token_endpoint_signing_alg: provider
                             .token_endpoint_auth_signing_alg
                             .clone(),

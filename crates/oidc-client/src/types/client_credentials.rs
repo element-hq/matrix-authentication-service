@@ -14,7 +14,7 @@ use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod
 use mas_jose::{
     claims::{self, ClaimError},
     constraints::Constrainable,
-    jwa::SymmetricKey,
+    jwa::{AsymmetricSigningKey, SymmetricKey},
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::Keystore;
@@ -97,6 +97,24 @@ pub enum ClientCredentials {
         /// The URL of the issuer's Token endpoint.
         token_endpoint: Url,
     },
+
+    /// The client authenticates like Sign in with Apple wants
+    SignInWithApple {
+        /// The unique ID for the client.
+        client_id: String,
+
+        /// The audience to use. Usually `https://appleid.apple.com`
+        audience: String,
+
+        /// The ECDSA key used to sign
+        key: elliptic_curve::SecretKey<p256::NistP256>,
+
+        /// The key ID
+        key_id: String,
+
+        /// The Apple Team ID
+        team_id: String,
+    },
 }
 
 impl ClientCredentials {
@@ -108,12 +126,14 @@ impl ClientCredentials {
             | ClientCredentials::ClientSecretBasic { client_id, .. }
             | ClientCredentials::ClientSecretPost { client_id, .. }
             | ClientCredentials::ClientSecretJwt { client_id, .. }
-            | ClientCredentials::PrivateKeyJwt { client_id, .. } => client_id,
+            | ClientCredentials::PrivateKeyJwt { client_id, .. }
+            | ClientCredentials::SignInWithApple { client_id, .. } => client_id,
         }
     }
 
     /// Apply these [`ClientCredentials`] to the given request with the given
     /// form.
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn authenticated_form<T: Serialize>(
         &self,
         request: reqwest::RequestBuilder,
@@ -217,6 +237,39 @@ impl ClientCredentials {
                     client_assertion_type: Some(JwtBearerClientAssertionType),
                 })
             }
+
+            ClientCredentials::SignInWithApple {
+                client_id,
+                audience,
+                key,
+                key_id,
+                team_id,
+            } => {
+                // SIWA expects a signed JWT as client secret
+                // https://developer.apple.com/documentation/accountorganizationaldatasharing/creating-a-client-secret
+                let signer = AsymmetricSigningKey::es256(key.clone());
+
+                let mut claims = HashMap::new();
+
+                claims::ISS.insert(&mut claims, team_id)?;
+                claims::SUB.insert(&mut claims, client_id)?;
+                claims::AUD.insert(&mut claims, audience.clone())?;
+                claims::IAT.insert(&mut claims, now)?;
+                claims::EXP.insert(&mut claims, now + Duration::microseconds(60 * 1000 * 1000))?;
+
+                let header =
+                    JsonWebSignatureHeader::new(JsonWebSignatureAlg::Es256).with_kid(key_id);
+
+                let client_secret = Jwt::sign(header, claims, &signer)?;
+
+                request.form(&RequestWithClientCredentials {
+                    body: form,
+                    client_id,
+                    client_secret: Some(client_secret.as_str()),
+                    client_assertion: None,
+                    client_assertion_type: None,
+                })
+            }
         };
 
         Ok(request)
@@ -259,6 +312,17 @@ impl fmt::Debug for ClientCredentials {
                 .field("client_id", client_id)
                 .field("signing_algorithm", signing_algorithm)
                 .field("token_endpoint", token_endpoint)
+                .finish_non_exhaustive(),
+            Self::SignInWithApple {
+                client_id,
+                key_id,
+                team_id,
+                ..
+            } => f
+                .debug_struct("SignInWithApple")
+                .field("client_id", client_id)
+                .field("key_id", key_id)
+                .field("team_id", team_id)
                 .finish_non_exhaustive(),
         }
     }

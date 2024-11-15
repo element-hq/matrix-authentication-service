@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use chrono::{DateTime, Utc};
-use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
+use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -116,6 +116,57 @@ impl std::fmt::Display for PkceMode {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TokenAuthMethod {
+    None,
+    ClientSecretBasic,
+    ClientSecretPost,
+    ClientSecretJwt,
+    PrivateKeyJwt,
+    SignInWithApple,
+}
+
+impl TokenAuthMethod {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::ClientSecretBasic => "client_secret_basic",
+            Self::ClientSecretPost => "client_secret_post",
+            Self::ClientSecretJwt => "client_secret_jwt",
+            Self::PrivateKeyJwt => "private_key_jwt",
+            Self::SignInWithApple => "sign_in_with_apple",
+        }
+    }
+}
+
+impl std::fmt::Display for TokenAuthMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for TokenAuthMethod {
+    type Err = InvalidUpstreamOAuth2TokenAuthMethod;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "none" => Ok(Self::None),
+            "client_secret_post" => Ok(Self::ClientSecretPost),
+            "client_secret_basic" => Ok(Self::ClientSecretBasic),
+            "client_secret_jwt" => Ok(Self::ClientSecretJwt),
+            "private_key_jwt" => Ok(Self::PrivateKeyJwt),
+            "sign_in_with_apple" => Ok(Self::SignInWithApple),
+            s => Err(InvalidUpstreamOAuth2TokenAuthMethod(s.to_owned())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("Invalid upstream OAuth 2.0 token auth method: {0}")]
+pub struct InvalidUpstreamOAuth2TokenAuthMethod(String);
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
@@ -126,12 +177,12 @@ pub struct UpstreamOAuthProvider {
     pub pkce_mode: PkceMode,
     pub jwks_uri_override: Option<Url>,
     pub authorization_endpoint_override: Option<Url>,
-    pub token_endpoint_override: Option<Url>,
     pub scope: Scope,
+    pub token_endpoint_override: Option<Url>,
     pub client_id: String,
     pub encrypted_client_secret: Option<String>,
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
-    pub token_endpoint_auth_method: OAuthClientAuthenticationMethod,
+    pub token_endpoint_auth_method: TokenAuthMethod,
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,

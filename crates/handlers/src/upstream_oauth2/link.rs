@@ -843,8 +843,9 @@ mod tests {
     use hyper::{header::CONTENT_TYPE, Request, StatusCode};
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderImportPreference,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
-    use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
+    use mas_iana::jose::JsonWebSignatureAlg;
     use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
     use mas_router::Route;
     use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
@@ -906,7 +907,7 @@ mod tests {
                     human_name: Some("Example Ltd.".to_owned()),
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
-                    token_endpoint_auth_method: OAuthClientAuthenticationMethod::None,
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
                     client_id: "client".to_owned(),
                     encrypted_client_secret: None,

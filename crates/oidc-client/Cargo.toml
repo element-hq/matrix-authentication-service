@@ -15,11 +15,15 @@ workspace = true
 async-trait.workspace = true
 base64ct = { version = "1.6.0", features = ["std"] }
 chrono.workspace = true
+elliptic-curve.workspace = true
 form_urlencoded = "1.2.1"
 headers.workspace = true
 http.workspace = true
 language-tags = "0.3.2"
 mime = "0.3.17"
+pem-rfc7468.workspace = true
+pkcs8.workspace = true
+p256.workspace = true
 rand.workspace = true
 reqwest.workspace = true
 serde.workspace = true

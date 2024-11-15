@@ -9,9 +9,9 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use mas_data_model::{
     UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-    UpstreamOAuthProviderPkceMode,
+    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
 };
-use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
+use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -35,7 +35,7 @@ pub struct UpstreamOAuthProviderParams {
     pub scope: Scope,
 
     /// The token endpoint authentication method
-    pub token_endpoint_auth_method: OAuthClientAuthenticationMethod,
+    pub token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod,
 
     /// The JWT signing algorithm to use when then `client_secret_jwt` or
     /// `private_key_jwt` authentication methods are used

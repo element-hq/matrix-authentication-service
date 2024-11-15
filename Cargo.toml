@@ -102,6 +102,11 @@ features = ["serde", "clock"]
 version = "4.5.21"
 features = ["derive"]
 
+# Elliptic curve cryptography
+[workspace.dependencies.elliptic-curve]
+version = "0.13.8"
+features = ["std", "pem", "sec1"]
+
 # Configuration loading
 [workspace.dependencies.figment]
 version = "0.10.19"
@@ -187,6 +192,36 @@ features = ["pycompat"]
 # Utilities to deal with non-zero values
 [workspace.dependencies.nonzero_ext]
 version = "0.3.0"
+
+# K256 elliptic curve
+[workspace.dependencies.k256]
+version = "0.13.4"
+features = ["std"]
+
+# P256 elliptic curve
+[workspace.dependencies.p256]
+version = "0.13.2"
+features = ["std"]
+
+# P384 elliptic curve
+[workspace.dependencies.p384]
+version = "0.13.0"
+features = ["std"]
+
+# PEM file decoding
+[workspace.dependencies.pem-rfc7468]
+version = "0.7.0"
+features = ["std"]
+
+# PKCS#1 encoding
+[workspace.dependencies.pkcs1]
+version = "0.7.5"
+features = ["std"]
+
+# PKCS#8 encoding
+[workspace.dependencies.pkcs8]
+version = "0.10.2"
+features = ["std", "pkcs5", "encryption"]
 
 # Random values
 [workspace.dependencies.rand]
