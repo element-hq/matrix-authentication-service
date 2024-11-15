@@ -15,8 +15,6 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 import { routeTree } from "../../src/routeTree.gen";
 import { handlers } from "../mocks/handlers";
 
-// Create a new router instance
-
 export const server = setupServer(...handlers);
 
 // Start server before all tests

@@ -35,7 +35,6 @@ export const graphqlRequest = async <TData, TVariables>({
   variables,
   signal,
 }: RequestOptions<TData, TVariables>): Promise<TData> => {
-  const stack = new Error().stack;
   let response: Response;
   try {
     response = await fetch(graphqlEndpoint, {
@@ -50,15 +49,15 @@ export const graphqlRequest = async <TData, TVariables>({
       signal,
     });
   } catch (cause) {
-    const e = new Error(`GraphQL to ${graphqlEndpoint} request failed`, {
+    throw new Error(`GraphQL request to ${graphqlEndpoint} request failed`, {
       cause,
     });
-    e.stack = stack;
-    throw e;
   }
 
   if (!response.ok) {
-    throw new Error(`GraphQL request failed: ${response.status}`);
+    throw new Error(
+      `GraphQL request to ${graphqlEndpoint} failed: ${response.status}`,
+    );
   }
 
   const json: ExecutionResult<TData> = await response.json();
@@ -67,7 +66,7 @@ export const graphqlRequest = async <TData, TVariables>({
   }
 
   if (!json.data) {
-    throw new Error("GraphQL request returned no data");
+    throw new Error(`GraphQL request to ${graphqlEndpoint} returned no data`);
   }
 
   return json.data;
