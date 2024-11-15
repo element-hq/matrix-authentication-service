@@ -7,10 +7,11 @@
 use axum::{
     extract::{Path, Query, State},
     response::IntoResponse,
+    Form,
 };
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
-use mas_data_model::UpstreamOAuthProvider;
+use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
 use mas_keystore::{Encrypter, Keystore};
 use mas_oidc_client::requests::{
     authorization_code::AuthorizationValidationData, jose::JwtVerificationData,
@@ -35,7 +36,7 @@ use super::{
 use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache};
 
 #[derive(Deserialize)]
-pub struct QueryParams {
+pub struct Params {
     state: String,
 
     #[serde(flatten)]
@@ -91,6 +92,20 @@ pub(crate) enum RouteError {
     #[error("Missing session cookie")]
     MissingCookie,
 
+    #[error("Missing query parameters")]
+    MissingQueryParams,
+
+    #[error("Missing form parameters")]
+    MissingFormParams,
+
+    #[error("Ambiguous parameters: got both query and form parameters")]
+    AmbiguousParams,
+
+    #[error("Invalid response mode, expected '{expected}'")]
+    InvalidParamsMode {
+        expected: UpstreamOAuthProviderResponseMode,
+    },
+
     #[error(transparent)]
     Internal(Box<dyn std::error::Error>),
 }
@@ -117,13 +132,13 @@ impl IntoResponse for RouteError {
 }
 
 #[tracing::instrument(
-    name = "handlers.upstream_oauth2.callback.get",
+    name = "handlers.upstream_oauth2.callback.handler",
     fields(upstream_oauth_provider.id = %provider_id),
     skip_all,
     err,
 )]
 #[allow(clippy::too_many_lines, clippy::too_many_arguments)]
-pub(crate) async fn get(
+pub(crate) async fn handler(
     mut rng: BoxRng,
     clock: BoxClock,
     State(metadata_cache): State<MetadataCache>,
@@ -134,7 +149,8 @@ pub(crate) async fn get(
     State(client): State<reqwest::Client>,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
-    Query(params): Query<QueryParams>,
+    query_params: Option<Query<Params>>,
+    form_params: Option<Form<Params>>,
 ) -> Result<impl IntoResponse, RouteError> {
     let provider = repo
         .upstream_oauth_provider()
@@ -142,6 +158,21 @@ pub(crate) async fn get(
         .await?
         .filter(UpstreamOAuthProvider::enabled)
         .ok_or(RouteError::ProviderNotFound)?;
+
+    // Read the parameters from the query or the form, depending on what
+    // response_mode the provider uses
+    let params = match (provider.response_mode, query_params, form_params) {
+        (UpstreamOAuthProviderResponseMode::Query, Some(query_params), None) => query_params.0,
+        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(form_params)) => form_params.0,
+        (UpstreamOAuthProviderResponseMode::Query, None, None) => {
+            return Err(RouteError::MissingQueryParams)
+        }
+        (UpstreamOAuthProviderResponseMode::FormPost, None, None) => {
+            return Err(RouteError::MissingFormParams)
+        }
+        (_, Some(_), Some(_)) => return Err(RouteError::AmbiguousParams),
+        (expected, _, _) => return Err(RouteError::InvalidParamsMode { expected }),
+    };
 
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
     let (session_id, _post_auth_action) = sessions_cookie
