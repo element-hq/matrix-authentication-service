@@ -41,8 +41,8 @@ pub use self::{
         UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink, UpstreamOAuthProvider,
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
         UpstreamOAuthProviderImportAction, UpstreamOAuthProviderImportPreference,
-        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderSubjectPreference,
-        UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
+        UpstreamOAuthProviderSubjectPreference, UpstreamOAuthProviderTokenAuthMethod,
     },
     user_agent::{DeviceType, UserAgent},
     users::{

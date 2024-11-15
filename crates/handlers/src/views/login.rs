@@ -411,6 +411,7 @@ mod test {
                     jwks_uri_override: None,
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: mas_data_model::UpstreamOAuthProviderResponseMode::Query,
                     additional_authorization_parameters: Vec::new(),
                 },
             )
@@ -446,6 +447,7 @@ mod test {
                     jwks_uri_override: None,
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: mas_data_model::UpstreamOAuthProviderResponseMode::Query,
                     additional_authorization_parameters: Vec::new(),
                 },
             )

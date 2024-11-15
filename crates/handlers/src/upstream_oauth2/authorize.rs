@@ -87,7 +87,8 @@ pub(crate) async fn get(
         provider.client_id.clone(),
         provider.scope.clone(),
         redirect_uri,
-    );
+    )
+    .with_response_mode(provider.response_mode.into());
 
     let data = if let Some(methods) = lazy_metadata.pkce_methods().await? {
         data.with_code_challenge_methods_supported(methods)

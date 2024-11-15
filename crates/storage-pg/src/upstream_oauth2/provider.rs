@@ -64,6 +64,7 @@ struct ProviderLookup {
     token_endpoint_override: Option<String>,
     discovery_mode: String,
     pkce_mode: String,
+    response_mode: String,
     additional_parameters: Option<Json<Vec<(String, String)>>>,
 }
 
@@ -141,6 +142,13 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
                 .source(e)
         })?;
 
+        let response_mode = value.response_mode.parse().map_err(|e| {
+            DatabaseInconsistencyError::on("upstream_oauth_providers")
+                .column("response_mode")
+                .row(id)
+                .source(e)
+        })?;
+
         let additional_authorization_parameters = value
             .additional_parameters
             .map(|Json(x)| x)
@@ -164,6 +172,7 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             jwks_uri_override,
             discovery_mode,
             pkce_mode,
+            response_mode,
             additional_authorization_parameters,
         })
     }
@@ -217,6 +226,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                     token_endpoint_override,
                     discovery_mode,
                     pkce_mode,
+                    response_mode,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>"
                 FROM upstream_oauth_providers
                 WHERE upstream_oauth_provider_id = $1
@@ -274,9 +284,10 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                 jwks_uri_override,
                 discovery_mode,
                 pkce_mode,
+                response_mode,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
-                      $10, $11, $12, $13, $14, $15, $16)
+                      $10, $11, $12, $13, $14, $15, $16, $17)
         "#,
             Uuid::from(id),
             &params.issuer,
@@ -302,6 +313,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
             params.jwks_uri_override.as_ref().map(ToString::to_string),
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
+            params.response_mode.as_str(),
             created_at,
         )
         .traced()
@@ -326,6 +338,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
             jwks_uri_override: params.jwks_uri_override,
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
+            response_mode: params.response_mode,
             additional_authorization_parameters: params.additional_authorization_parameters,
         })
     }
@@ -433,10 +446,11 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                     jwks_uri_override,
                     discovery_mode,
                     pkce_mode,
+                    response_mode,
                     additional_parameters,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
-                          $10, $11, $12, $13, $14, $15, $16, $17)
+                          $10, $11, $12, $13, $14, $15, $16, $17, $18)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -455,6 +469,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                         jwks_uri_override = EXCLUDED.jwks_uri_override,
                         discovery_mode = EXCLUDED.discovery_mode,
                         pkce_mode = EXCLUDED.pkce_mode,
+                        response_mode = EXCLUDED.response_mode,
                         additional_parameters = EXCLUDED.additional_parameters
                 RETURNING created_at
             "#,
@@ -482,6 +497,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
             params.jwks_uri_override.as_ref().map(ToString::to_string),
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
+            params.response_mode.as_str(),
             Json(&params.additional_authorization_parameters) as _,
             created_at,
         )
@@ -507,6 +523,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
             jwks_uri_override: params.jwks_uri_override,
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
+            response_mode: params.response_mode,
             additional_authorization_parameters: params.additional_authorization_parameters,
         })
     }
@@ -679,6 +696,13 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
             .expr_as(
                 Expr::col((
                     UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::ResponseMode,
+                )),
+                ProviderLookupIden::ResponseMode,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
                     UpstreamOAuthProviders::AdditionalParameters,
                 )),
                 ProviderLookupIden::AdditionalParameters,
@@ -770,6 +794,7 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                     token_endpoint_override,
                     discovery_mode,
                     pkce_mode,
+                    response_mode,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>"
                 FROM upstream_oauth_providers
                 WHERE disabled_at IS NULL
