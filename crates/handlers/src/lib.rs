@@ -402,7 +402,8 @@ where
         )
         .route(
             mas_router::UpstreamOAuth2Callback::route(),
-            get(self::upstream_oauth2::callback::get),
+            get(self::upstream_oauth2::callback::handler)
+                .post(self::upstream_oauth2::callback::handler),
         )
         .route(
             mas_router::UpstreamOAuth2Link::route(),

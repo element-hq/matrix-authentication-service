@@ -101,7 +101,15 @@ impl CookieOption {
         cookie.set_http_only(true);
         cookie.set_secure(self.secure());
         cookie.set_path(self.path().to_owned());
-        cookie.set_same_site(SameSite::Lax);
+
+        // The `form_post` callback requires that, as it means a 3rd party origin will
+        // POST to MAS. This is presumably fine, as our forms are protected with a CSRF
+        // token
+        cookie.set_same_site(if self.secure() {
+            SameSite::None
+        } else {
+            SameSite::Lax
+        });
         cookie
     }
 }
