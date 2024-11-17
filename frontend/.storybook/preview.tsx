@@ -13,17 +13,19 @@ import type {
 import { TooltipProvider } from "@vector-im/compound-web";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { useLayoutEffect } from "react";
-
 import "../src/shared.css";
 import i18n, { setupI18n } from "../src/i18n";
-
 import { DummyRouter } from "../src/test-utils/router";
 import { handlers } from "../tests/mocks/handlers";
 import localazyMetadata from "./locales";
+import swUrl from "./mockServiceWorker.js?url";
 
 initialize(
   {
     onUnhandledRequest: "bypass",
+    serviceWorker: {
+      url: swUrl,
+    },
   },
   handlers,
 );

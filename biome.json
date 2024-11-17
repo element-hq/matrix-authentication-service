@@ -18,8 +18,8 @@
       "frontend/src/gql/**",
       "frontend/src/routeTree.gen.ts",
       "frontend/.storybook/locales.ts",
+      "frontend/.storybook/mockServiceWorker.js",
       "frontend/locales/*.json",
-      "frontend/stories/static/**",
       "**/coverage/**",
       "**/dist/**"
     ]

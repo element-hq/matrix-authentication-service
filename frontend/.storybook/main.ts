@@ -9,8 +9,6 @@ import type { StorybookConfig } from "@storybook/react-vite";
 const config: StorybookConfig = {
   stories: ["../{src,stories}/**/*.stories.@(js|jsx|ts|tsx)"],
 
-  staticDirs: ["../stories/static"],
-
   addons: [
     // Automatic docs pages
     "@storybook/addon-docs",
@@ -56,6 +54,13 @@ const config: StorybookConfig = {
 
   env: {
     STORYBOOK: "true",
+  },
+
+  viteFinal: async (config) => {
+    // Host all the assets in the root directory,
+    // so that the service worker is correctly scoped to the root
+    config.build.assetsDir = "";
+    return config;
   },
 };
 
