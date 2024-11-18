@@ -145,7 +145,7 @@ mod tests {
 
         let session = repo
             .upstream_oauth_session()
-            .complete_with_link(&clock, session, &link, None)
+            .complete_with_link(&clock, session, &link, None, None)
             .await
             .unwrap();
         // Reload the session

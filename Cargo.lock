@@ -3311,6 +3311,7 @@ dependencies = [
  "regex",
  "ruma-common",
  "serde",
+ "serde_json",
  "thiserror",
  "ulid",
  "url",

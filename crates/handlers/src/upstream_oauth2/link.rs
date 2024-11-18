@@ -340,6 +340,10 @@ pub(crate) async fn get(
             let env = {
                 let mut e = environment();
                 e.add_global("user", payload);
+                e.add_global(
+                    "extra_callback_parameters",
+                    minijinja::Value::from_serialize(upstream_session.extra_callback_parameters()),
+                );
                 e
             };
 
@@ -582,6 +586,10 @@ pub(crate) async fn post(
             let env = {
                 let mut e = environment();
                 e.add_global("user", payload);
+                e.add_global(
+                    "extra_callback_parameters",
+                    minijinja::Value::from_serialize(upstream_session.extra_callback_parameters()),
+                );
                 e
             };
 
@@ -945,7 +953,13 @@ mod tests {
 
         let session = repo
             .upstream_oauth_session()
-            .complete_with_link(&state.clock, session, &link, Some(id_token.into_string()))
+            .complete_with_link(
+                &state.clock,
+                session,
+                &link,
+                Some(id_token.into_string()),
+                None,
+            )
             .await
             .unwrap();
 

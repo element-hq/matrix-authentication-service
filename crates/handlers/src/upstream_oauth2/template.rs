@@ -68,6 +68,18 @@ fn string(value: &Value) -> String {
     value.to_string()
 }
 
+fn from_json(value: &str) -> Result<Value, minijinja::Error> {
+    let value: serde_json::Value = serde_json::from_str(value).map_err(|e| {
+        minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "Failed to decode JSON",
+        )
+        .with_source(e)
+    })?;
+
+    Ok(Value::from_serialize(value))
+}
+
 pub fn environment() -> Environment<'static> {
     let mut env = Environment::new();
 
@@ -77,6 +89,7 @@ pub fn environment() -> Environment<'static> {
     env.add_filter("b64encode", b64encode);
     env.add_filter("tlvdecode", tlvdecode);
     env.add_filter("string", string);
+    env.add_filter("from_json", from_json);
 
     env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
 

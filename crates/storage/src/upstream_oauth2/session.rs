@@ -74,6 +74,8 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// * `upstream_oauth_link`: the link to associate with the session
     /// * `id_token`: the ID token returned by the upstream OAuth provider, if
     ///   present
+    /// * `extra_callback_parameters`: the extra query parameters returned in
+    ///   the callback, if any
     ///
     /// # Errors
     ///
@@ -84,6 +86,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
         upstream_oauth_link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        extra_callback_parameters: Option<serde_json::Value>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     /// Mark a session as consumed
@@ -127,6 +130,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
         upstream_oauth_link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        extra_callback_parameters: Option<serde_json::Value>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     async fn consume(

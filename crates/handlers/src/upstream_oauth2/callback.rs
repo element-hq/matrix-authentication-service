@@ -48,6 +48,9 @@ pub struct Params {
 enum CodeOrError {
     Code {
         code: String,
+
+        #[serde(flatten)]
+        extra_callback_parameters: Option<serde_json::Value>,
     },
     Error {
         error: ClientErrorCode,
@@ -201,7 +204,7 @@ pub(crate) async fn handler(
     }
 
     // Let's extract the code from the params, and return if there was an error
-    let code = match params.code_or_error {
+    let (code, extra_callback_parameters) = match params.code_or_error {
         CodeOrError::Error {
             error,
             error_description,
@@ -212,7 +215,10 @@ pub(crate) async fn handler(
                 error_description,
             })
         }
-        CodeOrError::Code { code } => code,
+        CodeOrError::Code {
+            code,
+            extra_callback_parameters,
+        } => (code, extra_callback_parameters),
     };
 
     let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
@@ -266,6 +272,10 @@ pub(crate) async fn handler(
     let env = {
         let mut env = environment();
         env.add_global("user", minijinja::Value::from_serialize(&id_token));
+        env.add_global(
+            "extra_callback_parameters",
+            minijinja::Value::from_serialize(&extra_callback_parameters),
+        );
         env
     };
 
@@ -299,7 +309,13 @@ pub(crate) async fn handler(
 
     let session = repo
         .upstream_oauth_session()
-        .complete_with_link(&clock, session, &link, response.id_token)
+        .complete_with_link(
+            &clock,
+            session,
+            &link,
+            response.id_token,
+            extra_callback_parameters,
+        )
         .await?;
 
     let cookie_jar = sessions_cookie
