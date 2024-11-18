@@ -76,11 +76,11 @@ version = "1.0.93"
 
 # HTTP router
 [workspace.dependencies.axum]
-version = "0.7.7"
+version = "0.7.9"
 
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
-version = "0.9.4"
+version = "0.9.6"
 features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Bytes
