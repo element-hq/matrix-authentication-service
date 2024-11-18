@@ -68,6 +68,39 @@ If there is only one upstream provider configured and the local password databas
 
 This section contains sample configurations for popular OIDC providers.
 
+### Apple
+
+Sign-in with Apple uses special non-standard for authenticating clients, which requires a special configuration.
+
+```yaml
+upstream_oauth2:
+  providers:
+    - client_id: 01JAYS74TCG3BTWKADN5Q4518C
+      client_name: "<Service ID>" # TO BE FILLED
+      scope: "openid name email"
+      response_mode: "form_post"
+
+      token_endpoint_auth_method: "sign_in_with_apple"
+      sign_in_with_apple:
+        private_key: |
+          # Content of the PEM-encoded private key file, TO BE FILLED
+        team_id: "<Team ID>" # TO BE FILLED
+        key_id: "<Key ID>" # TO BE FILLED
+
+      claims_imports:
+        localpart:
+          action: ignore
+        displayname:
+          action: suggest
+          # SiWA passes down the user infos as query parameters in the callback
+          # which is available in the extra_callback_parameters variable
+          template: |
+            {%- set user = extra_callback_parameters["user"] | from_json -%}
+            {{- user.name.firstName }} {{ user.name.lastName -}}
+        email:
+          action: suggest
+```
+
 ### Authelia
 
 These instructions assume that you have already enabled the OIDC provider support in [Authelia](https://www.authelia.com/).
