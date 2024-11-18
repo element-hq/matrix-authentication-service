@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    created_at,\n                    completed_at,\n                    consumed_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    extra_callback_parameters,\n                    created_at,\n                    completed_at,\n                    consumed_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -40,16 +40,21 @@
       },
       {
         "ordinal": 7,
+        "name": "extra_callback_parameters",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "completed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "consumed_at",
         "type_info": "Timestamptz"
       }
@@ -67,10 +72,11 @@
       true,
       false,
       true,
+      true,
       false,
       true,
       true
     ]
   },
-  "hash": "67ab838035946ddc15b43dd2f79d10b233d07e863b3a5c776c5db97cff263c8c"
+  "hash": "7d329e0c57f36b9ffe2aa7ddf4a21e293522c00009cca0222524b0c73f6eee30"
 }
