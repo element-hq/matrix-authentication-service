@@ -306,7 +306,7 @@ fn handle_login_hint(
     }
 
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
-        let value = match grant.parse_login_hint(homeserver) {
+        let value = match grant.parse_login_hint(homeserver.homeserver()) {
             LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
             LoginHint::None => None,
         };

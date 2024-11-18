@@ -3304,7 +3304,6 @@ dependencies = [
  "crc",
  "mas-iana",
  "mas-jose",
- "mas-matrix",
  "oauth2-types",
  "rand",
  "rand_chacha",
