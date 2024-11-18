@@ -26,5 +26,4 @@ ruma-common = "0.13.0"
 
 mas-iana.workspace = true
 mas-jose.workspace = true
-mas-matrix.workspace = true
 oauth2-types.workspace = true

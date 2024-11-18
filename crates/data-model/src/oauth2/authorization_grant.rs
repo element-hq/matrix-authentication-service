@@ -8,7 +8,6 @@ use std::num::NonZeroU32;
 
 use chrono::{DateTime, Duration, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
-use mas_matrix::BoxHomeserverConnection;
 use oauth2_types::{
     pkce::{CodeChallengeError, CodeChallengeMethodExt},
     requests::ResponseMode,
@@ -188,7 +187,7 @@ impl AuthorizationGrant {
     }
 
     #[must_use]
-    pub fn parse_login_hint(&self, homeserver: &BoxHomeserverConnection) -> LoginHint {
+    pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
@@ -206,7 +205,7 @@ impl AuthorizationGrant {
                 };
 
                 // Only handle MXIDs for current homeserver
-                if mxid.server_name() != homeserver.homeserver() {
+                if mxid.server_name() != homeserver {
                     return LoginHint::None;
                 }
 
@@ -287,14 +286,9 @@ impl AuthorizationGrant {
 
 #[cfg(test)]
 mod tests {
-    use mas_matrix::MockHomeserverConnection;
     use rand::thread_rng;
 
     use super::*;
-
-    fn get_homeserver() -> BoxHomeserverConnection {
-        Box::new(MockHomeserverConnection::new("example.com"))
-    }
 
     #[test]
     fn no_login_hint() {
@@ -309,7 +303,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint(&get_homeserver());
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -327,7 +321,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint(&get_homeserver());
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::MXID(mxid) if mxid.localpart() == "example-user"));
     }
@@ -345,7 +339,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint(&get_homeserver());
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -363,7 +357,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint(&get_homeserver());
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -381,7 +375,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint(&get_homeserver());
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
