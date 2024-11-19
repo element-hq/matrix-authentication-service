@@ -166,6 +166,9 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
         clock: &dyn Clock,
         threshold: Duration,
     ) -> Result<(), Self::Error> {
+        // Here the threshold is usually set to a few minutes, so we don't need to use
+        // the database time, as we can assume worker clocks have less than a minute
+        // skew between each other, else other things would break
         let now = clock.now();
         sqlx::query!(
             r#"
@@ -194,15 +197,15 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
     )]
     async fn remove_leader_lease_if_expired(
         &mut self,
-        clock: &dyn Clock,
+        _clock: &dyn Clock,
     ) -> Result<(), Self::Error> {
-        let now = clock.now();
+        // `expires_at` is a rare exception where we use the database time, as this
+        // would be very sensitive to clock skew between workers
         sqlx::query!(
             r#"
                 DELETE FROM queue_leader
-                WHERE expires_at < $1
+                WHERE expires_at < NOW()
             "#,
-            now,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -226,22 +229,23 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
         worker: &Worker,
     ) -> Result<bool, Self::Error> {
         let now = clock.now();
-        let ttl = Duration::seconds(5);
         // The queue_leader table is meant to only have a single row, which conflicts on
         // the `active` column
 
         // If there is a conflict, we update the `expires_at` column ONLY IF the current
         // leader is ourselves.
+
+        // `expires_at` is a rare exception where we use the database time, as this
+        // would be very sensitive to clock skew between workers
         let res = sqlx::query!(
             r#"
                 INSERT INTO queue_leader (elected_at, expires_at, queue_worker_id)
-                VALUES ($1, $2, $3)
+                VALUES ($1, NOW() + INTERVAL '5 seconds', $2)
                 ON CONFLICT (active)
                 DO UPDATE SET expires_at = EXCLUDED.expires_at
-                WHERE queue_leader.queue_worker_id = $3
+                WHERE queue_leader.queue_worker_id = $2
             "#,
             now,
-            now + ttl,
             Uuid::from(worker.id)
         )
         .traced()
