@@ -7,7 +7,76 @@
 use std::{collections::HashMap, sync::Arc};
 
 use base64ct::{Base64, Base64Unpadded, Base64Url, Base64UrlUnpadded, Encoding};
-use minijinja::{Environment, Error, ErrorKind, Value};
+use minijinja::{
+    value::{Enumerator, Object},
+    Environment, Error, ErrorKind, Value,
+};
+
+/// Context passed to the attribute mapping template
+///
+/// The variables available in the template are:
+/// - `user`: claims for the user, currently from the ID token. Later, we'll
+///   also allow importing from the userinfo endpoint
+/// - `id_token_claims`: claims from the ID token
+/// - `extra_callback_parameters`: extra parameters passed to the callback
+#[derive(Debug, Default)]
+pub(crate) struct AttributeMappingContext {
+    id_token_claims: Option<HashMap<String, serde_json::Value>>,
+    extra_callback_parameters: Option<serde_json::Value>,
+}
+
+impl AttributeMappingContext {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_id_token_claims(
+        mut self,
+        id_token_claims: HashMap<String, serde_json::Value>,
+    ) -> Self {
+        self.id_token_claims = Some(id_token_claims);
+        self
+    }
+
+    pub fn with_extra_callback_parameters(
+        mut self,
+        extra_callback_parameters: serde_json::Value,
+    ) -> Self {
+        self.extra_callback_parameters = Some(extra_callback_parameters);
+        self
+    }
+
+    pub fn build(self) -> Value {
+        Value::from_object(self)
+    }
+}
+
+impl Object for AttributeMappingContext {
+    fn get_value(self: &Arc<Self>, name: &Value) -> Option<Value> {
+        match name.as_str()? {
+            "user" | "id_token_claims" => self.id_token_claims.as_ref().map(Value::from_serialize),
+            "extra_callback_parameters" => self
+                .extra_callback_parameters
+                .as_ref()
+                .map(Value::from_serialize),
+            _ => None,
+        }
+    }
+
+    fn enumerate(self: &Arc<Self>) -> Enumerator {
+        match (
+            self.id_token_claims.is_some(),
+            self.extra_callback_parameters.is_some(),
+        ) {
+            (true, true) => {
+                Enumerator::Str(&["user", "id_token_claims", "extra_callback_parameters"])
+            }
+            (true, false) => Enumerator::Str(&["user", "id_token_claims"]),
+            (false, true) => Enumerator::Str(&["extra_callback_parameters"]),
+            (false, false) => Enumerator::Str(&["user"]),
+        }
+    }
+}
 
 fn b64decode(value: &str) -> Result<Value, Error> {
     // We're not too concerned about the performance of this filter, so we'll just

@@ -38,7 +38,10 @@ use thiserror::Error;
 use tracing::warn;
 use ulid::Ulid;
 
-use super::{template::environment, UpstreamSessionsCookie};
+use super::{
+    template::{environment, AttributeMappingContext},
+    UpstreamSessionsCookie,
+};
 use crate::{
     impl_from_error_for_route, views::shared::OptionalPostAuthAction, PreferredLanguage, SiteConfig,
 };
@@ -130,9 +133,10 @@ impl IntoResponse for RouteError {
 fn render_attribute_template(
     environment: &Environment,
     template: &str,
+    context: &minijinja::Value,
     required: bool,
 ) -> Result<Option<String>, RouteError> {
-    match environment.render_str(template, ()) {
+    match environment.render_str(template, context) {
         Ok(value) if value.is_empty() => {
             if required {
                 return Err(RouteError::RequiredAttributeEmpty {
@@ -320,10 +324,7 @@ pub(crate) async fn get(
         (None, None) => {
             // Session not linked and used not logged in: suggest creating an
             // account or logging in an existing user
-            let id_token = upstream_session
-                .id_token()
-                .map(Jwt::<'_, minijinja::Value>::try_from)
-                .transpose()?;
+            let id_token = upstream_session.id_token().map(Jwt::try_from).transpose()?;
 
             let provider = repo
                 .upstream_oauth_provider()
@@ -331,21 +332,19 @@ pub(crate) async fn get(
                 .await?
                 .ok_or(RouteError::ProviderNotFound)?;
 
-            let payload = id_token
-                .map(|id_token| id_token.into_parts().1)
-                .unwrap_or_default();
-
             let ctx = UpstreamRegister::default();
 
-            let env = {
-                let mut e = environment();
-                e.add_global("user", payload);
-                e.add_global(
-                    "extra_callback_parameters",
-                    minijinja::Value::from_serialize(upstream_session.extra_callback_parameters()),
-                );
-                e
-            };
+            let env = environment();
+
+            let mut context = AttributeMappingContext::new();
+            if let Some(id_token) = id_token {
+                let (_, payload) = id_token.into_parts();
+                context = context.with_id_token_claims(payload);
+            }
+            if let Some(extra_callback_parameters) = upstream_session.extra_callback_parameters() {
+                context = context.with_extra_callback_parameters(extra_callback_parameters.clone());
+            }
+            let context = context.build();
 
             let ctx = if provider.claims_imports.displayname.ignore() {
                 ctx
@@ -360,6 +359,7 @@ pub(crate) async fn get(
                 match render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.displayname.is_required(),
                 )? {
                     Some(value) => ctx
@@ -381,6 +381,7 @@ pub(crate) async fn get(
                 match render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.email.is_required(),
                 )? {
                     Some(value) => ctx.with_email(value, provider.claims_imports.email.is_forced()),
@@ -401,6 +402,7 @@ pub(crate) async fn get(
                 match render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.localpart.is_required(),
                 )? {
                     Some(localpart) => {
@@ -561,10 +563,7 @@ pub(crate) async fn post(
             let import_display_name = import_display_name.is_some();
             let accept_terms = accept_terms.is_some();
 
-            let id_token = upstream_session
-                .id_token()
-                .map(Jwt::<'_, minijinja::Value>::try_from)
-                .transpose()?;
+            let id_token = upstream_session.id_token().map(Jwt::try_from).transpose()?;
 
             let provider = repo
                 .upstream_oauth_provider()
@@ -572,26 +571,23 @@ pub(crate) async fn post(
                 .await?
                 .ok_or(RouteError::ProviderNotFound)?;
 
-            let payload = id_token
-                .map(|id_token| id_token.into_parts().1)
-                .unwrap_or_default();
+            // Let's try to import the claims from the ID token
+            let env = environment();
+
+            let mut context = AttributeMappingContext::new();
+            if let Some(id_token) = id_token {
+                let (_, payload) = id_token.into_parts();
+                context = context.with_id_token_claims(payload);
+            }
+            if let Some(extra_callback_parameters) = upstream_session.extra_callback_parameters() {
+                context = context.with_extra_callback_parameters(extra_callback_parameters.clone());
+            }
+            let context = context.build();
 
             // Is the email verified according to the upstream provider?
-            let provider_email_verified = payload
-                .get_item(&minijinja::Value::from("email_verified"))
-                .map(|v| v.is_true())
-                .unwrap_or(false);
-
-            // Let's try to import the claims from the ID token
-            let env = {
-                let mut e = environment();
-                e.add_global("user", payload);
-                e.add_global(
-                    "extra_callback_parameters",
-                    minijinja::Value::from_serialize(upstream_session.extra_callback_parameters()),
-                );
-                e
-            };
+            let provider_email_verified = env
+                .render_str("{{ user.email_verified | string }}", &context)
+                .map_or(false, |v| v == "true");
 
             // Create a template context in case we need to re-render because of an error
             let ctx = UpstreamRegister::default();
@@ -611,6 +607,7 @@ pub(crate) async fn post(
                 render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.displayname.is_required(),
                 )?
             } else {
@@ -637,6 +634,7 @@ pub(crate) async fn post(
                 render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.email.is_required(),
                 )?
             } else {
@@ -660,6 +658,7 @@ pub(crate) async fn post(
                 render_attribute_template(
                     &env,
                     template,
+                    &context,
                     provider.claims_imports.email.is_required(),
                 )?
             } else {
