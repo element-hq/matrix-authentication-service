@@ -30,7 +30,9 @@ use thiserror::Error;
 use ulid::Ulid;
 
 use super::{
-    cache::LazyProviderInfos, client_credentials_for_provider, template::environment,
+    cache::LazyProviderInfos,
+    client_credentials_for_provider,
+    template::{environment, AttributeMappingContext},
     UpstreamSessionsCookie,
 };
 use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache};
@@ -269,15 +271,13 @@ pub(crate) async fn handler(
 
     let (_header, id_token) = id_token.ok_or(RouteError::MissingIDToken)?.into_parts();
 
-    let env = {
-        let mut env = environment();
-        env.add_global("user", minijinja::Value::from_serialize(&id_token));
-        env.add_global(
-            "extra_callback_parameters",
-            minijinja::Value::from_serialize(&extra_callback_parameters),
-        );
-        env
-    };
+    let mut context = AttributeMappingContext::new().with_id_token_claims(id_token);
+    if let Some(extra_callback_parameters) = extra_callback_parameters.clone() {
+        context = context.with_extra_callback_parameters(extra_callback_parameters);
+    }
+    let context = context.build();
+
+    let env = environment();
 
     let template = provider
         .claims_imports
@@ -286,7 +286,7 @@ pub(crate) async fn handler(
         .as_deref()
         .unwrap_or("{{ user.sub }}");
     let subject = env
-        .render_str(template, ())
+        .render_str(template, context)
         .map_err(RouteError::ExtractSubject)?;
 
     if subject.is_empty() {
