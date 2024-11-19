@@ -287,7 +287,7 @@ features = ["util"]
 
 # Tower HTTP layers
 [workspace.dependencies.tower-http]
-version = "0.6.1"
+version = "0.6.2"
 features = ["cors", "fs", "add-extension", "set-header"]
 
 # Logging and tracing
