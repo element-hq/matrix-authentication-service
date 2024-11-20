@@ -35,6 +35,7 @@ pub struct JobContext {
     pub id: Ulid,
     pub metadata: JobMetadata,
     pub queue_name: String,
+    pub attempt: usize,
     pub cancellation_token: CancellationToken,
 }
 
@@ -155,6 +156,9 @@ const MAX_CONCURRENT_JOBS: usize = 10;
 
 // How many jobs can we fetch at once
 const MAX_JOBS_TO_FETCH: usize = 5;
+
+// How many attempts a job should be retried
+const MAX_ATTEMPTS: usize = 5;
 
 type JobFactory = Arc<dyn Fn(JobPayload) -> Box<dyn RunnableJob> + Send + Sync>;
 
@@ -280,6 +284,8 @@ impl QueueWorker {
     async fn shutdown(&mut self) -> Result<(), QueueRunnerError> {
         tracing::info!("Shutting down worker");
 
+        // TODO: collect running jobs
+
         // Start a transaction on the existing PgListener connection
         let txn = self
             .listener
@@ -397,7 +403,7 @@ impl QueueWorker {
 
         while let Some(result) = self.last_join_result.take() {
             // TODO: add metrics to track the job status and the time it took
-            let context = match result {
+            match result {
                 Ok((id, Ok(()))) => {
                     // The job succeeded
                     let context = self
@@ -408,10 +414,13 @@ impl QueueWorker {
                     tracing::info!(
                         job.id = %context.id,
                         job.queue_name = %context.queue_name,
+                        job.attempt = %context.attempt,
                         "Job completed"
                     );
 
-                    context
+                    repo.queue_job()
+                        .mark_as_completed(&self.clock, context.id)
+                        .await?;
                 }
                 Ok((id, Err(e))) => {
                     // The job failed
@@ -420,29 +429,48 @@ impl QueueWorker {
                         .remove(&id)
                         .expect("Job context not found");
 
+                    let reason = format!("{:?}", e.error);
+                    repo.queue_job()
+                        .mark_as_failed(&self.clock, context.id, &reason)
+                        .await?;
+
                     match e.decision {
                         JobErrorDecision::Fail => {
                             tracing::error!(
                                 error = &e as &dyn std::error::Error,
                                 job.id = %context.id,
                                 job.queue_name = %context.queue_name,
-                                "Job failed"
+                                job.attempt = %context.attempt,
+                                "Job failed, not retrying"
                             );
                         }
 
                         JobErrorDecision::Retry => {
-                            tracing::warn!(
-                                error = &e as &dyn std::error::Error,
-                                job.id = %context.id,
-                                job.queue_name = %context.queue_name,
-                                "Job failed, will retry"
-                            );
+                            if context.attempt < MAX_ATTEMPTS {
+                                tracing::warn!(
+                                    error = &e as &dyn std::error::Error,
+                                    job.id = %context.id,
+                                    job.queue_name = %context.queue_name,
+                                    job.attempt = %context.attempt,
+                                    "Job failed, will retry"
+                                );
 
-                            // TODO: reschedule the job
+                                // TODO: retry with an exponential backoff, once we know how to
+                                // schedule jobs in the future
+                                repo.queue_job()
+                                    .retry(&mut self.rng, &self.clock, context.id)
+                                    .await?;
+                            } else {
+                                tracing::error!(
+                                    error = &e as &dyn std::error::Error,
+                                    job.id = %context.id,
+                                    job.queue_name = %context.queue_name,
+                                    job.attempt = %context.attempt,
+                                    "Job failed too many times, abandonning"
+                                );
+                            }
                         }
                     }
-
-                    context
                 }
                 Err(e) => {
                     // The job crashed (or was cancelled)
@@ -452,22 +480,34 @@ impl QueueWorker {
                         .remove(&id)
                         .expect("Job context not found");
 
-                    tracing::error!(
-                        error = &e as &dyn std::error::Error,
-                        job.id = %context.id,
-                        job.queue_name = %context.queue_name,
-                        "Job crashed"
-                    );
+                    let reason = e.to_string();
+                    repo.queue_job()
+                        .mark_as_failed(&self.clock, context.id, &reason)
+                        .await?;
 
-                    // TODO: reschedule the job
+                    if context.attempt < MAX_ATTEMPTS {
+                        tracing::warn!(
+                            error = &e as &dyn std::error::Error,
+                            job.id = %context.id,
+                            job.queue_name = %context.queue_name,
+                            job.attempt = %context.attempt,
+                            "Job crashed, will retry"
+                        );
 
-                    context
+                        repo.queue_job()
+                            .retry(&mut self.rng, &self.clock, context.id)
+                            .await?;
+                    } else {
+                        tracing::error!(
+                            error = &e as &dyn std::error::Error,
+                            job.id = %context.id,
+                            job.queue_name = %context.queue_name,
+                            job.attempt = %context.attempt,
+                            "Job crashed too many times, abandonning"
+                        );
+                    }
                 }
             };
-
-            repo.queue_job()
-                .mark_as_completed(&self.clock, context.id)
-                .await?;
 
             self.last_join_result = self.running_jobs.try_join_next_with_id();
         }
@@ -492,6 +532,7 @@ impl QueueWorker {
                 queue_name,
                 payload,
                 metadata,
+                attempt,
             } in jobs
             {
                 let cancellation_token = self.cancellation_token.child_token();
@@ -500,6 +541,7 @@ impl QueueWorker {
                     id,
                     metadata,
                     queue_name,
+                    attempt,
                     cancellation_token,
                 };
 

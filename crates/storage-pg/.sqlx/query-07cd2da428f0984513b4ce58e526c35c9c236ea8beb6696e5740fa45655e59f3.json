@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE queue_jobs\n                SET next_attempt_id = $1\n                WHERE queue_job_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "07cd2da428f0984513b4ce58e526c35c9c236ea8beb6696e5740fa45655e59f3"
+}
