@@ -28,6 +28,9 @@ pub struct Job {
 
     /// Arbitrary metadata about the job
     pub metadata: JobMetadata,
+
+    /// Which attempt it is
+    pub attempt: usize,
 }
 
 /// Metadata stored alongside the job
@@ -127,12 +130,48 @@ pub trait QueueJobRepository: Send + Sync {
     /// # Parameters
     ///
     /// * `clock` - The clock used to generate timestamps
-    /// * `job` - The job to mark as completed
+    /// * `id` - The ID of the job to mark as completed
     ///
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
     async fn mark_as_completed(&mut self, clock: &dyn Clock, id: Ulid) -> Result<(), Self::Error>;
+
+    /// Marks a job as failed.
+    ///
+    /// # Parameters
+    ///
+    /// * `clock` - The clock used to generate timestamps
+    /// * `id` - The ID of the job to mark as failed
+    /// * `reason` - The reason for the failure
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn mark_as_failed(
+        &mut self,
+        clock: &dyn Clock,
+        id: Ulid,
+        reason: &str,
+    ) -> Result<(), Self::Error>;
+
+    /// Retry a job.
+    ///
+    /// # Parameters
+    ///
+    /// * `rng` - The random number generator used to generate a new job ID
+    /// * `clock` - The clock used to generate timestamps
+    /// * `id` - The ID of the job to reschedule
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn retry(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        id: Ulid,
+    ) -> Result<(), Self::Error>;
 }
 
 repository_impl!(QueueJobRepository:
@@ -154,6 +193,19 @@ repository_impl!(QueueJobRepository:
     ) -> Result<Vec<Job>, Self::Error>;
 
     async fn mark_as_completed(&mut self, clock: &dyn Clock, id: Ulid) -> Result<(), Self::Error>;
+
+    async fn mark_as_failed(&mut self,
+        clock: &dyn Clock,
+        id: Ulid,
+        reason: &str,
+    ) -> Result<(), Self::Error>;
+
+    async fn retry(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        id: Ulid,
+    ) -> Result<(), Self::Error>;
 );
 
 /// Extension trait for [`QueueJobRepository`] to help adding a job to the queue

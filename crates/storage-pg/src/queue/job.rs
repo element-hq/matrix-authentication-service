@@ -37,6 +37,7 @@ struct JobReservationResult {
     queue_name: String,
     payload: serde_json::Value,
     metadata: serde_json::Value,
+    attempt: i32,
 }
 
 impl TryFrom<JobReservationResult> for Job {
@@ -54,11 +55,19 @@ impl TryFrom<JobReservationResult> for Job {
                 .source(e)
         })?;
 
+        let attempt = value.attempt.try_into().map_err(|e| {
+            DatabaseInconsistencyError::on("queue_jobs")
+                .column("attempt")
+                .row(id)
+                .source(e)
+        })?;
+
         Ok(Self {
             id,
             queue_name,
             payload,
             metadata,
+            attempt,
         })
     }
 }
@@ -152,7 +161,8 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
                     queue_jobs.queue_job_id,
                     queue_jobs.queue_name,
                     queue_jobs.payload,
-                    queue_jobs.metadata
+                    queue_jobs.metadata,
+                    queue_jobs.attempt
             "#,
             &queues,
             max_count,
@@ -189,6 +199,105 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
                 WHERE queue_job_id = $2 AND status = 'running'
             "#,
             now,
+            Uuid::from(id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.mark_as_failed",
+        skip_all,
+        fields(
+            db.query.text,
+            job.id = %id,
+        ),
+        err
+    )]
+    async fn mark_as_failed(
+        &mut self,
+        clock: &dyn Clock,
+        id: Ulid,
+        reason: &str,
+    ) -> Result<(), Self::Error> {
+        let now = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE queue_jobs
+                SET
+                    status = 'failed',
+                    failed_at = $1,
+                    failed_reason = $2
+                WHERE
+                    queue_job_id = $3
+                    AND status = 'running'
+            "#,
+            now,
+            reason,
+            Uuid::from(id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.retry",
+        skip_all,
+        fields(
+            db.query.text,
+            job.id = %id,
+        ),
+        err
+    )]
+    async fn retry(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        id: Ulid,
+    ) -> Result<(), Self::Error> {
+        let now = clock.now();
+        let new_id = Ulid::from_datetime_with_source(now.into(), rng);
+
+        // Create a new job with the same payload and metadata, but a new ID and
+        // increment the attempt
+        // We make sure we do this only for 'failed' jobs
+        let res = sqlx::query!(
+            r#"
+                INSERT INTO queue_jobs
+                    (queue_job_id, queue_name, payload, metadata, created_at, attempt)
+                SELECT $1, queue_name, payload, metadata, $2, attempt + 1
+                FROM queue_jobs
+                WHERE queue_job_id = $3
+                  AND status = 'failed'
+            "#,
+            Uuid::from(new_id),
+            now,
+            Uuid::from(id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        // Update the old job to point to the new attempt
+        let res = sqlx::query!(
+            r#"
+                UPDATE queue_jobs
+                SET next_attempt_id = $1
+                WHERE queue_job_id = $2
+            "#,
+            Uuid::from(new_id),
             Uuid::from(id),
         )
         .traced()

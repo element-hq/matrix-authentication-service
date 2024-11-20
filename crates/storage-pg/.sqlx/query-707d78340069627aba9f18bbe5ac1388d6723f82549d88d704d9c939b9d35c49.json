@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                -- We first grab a few jobs that are available,\n                -- using a FOR UPDATE SKIP LOCKED so that this can be run concurrently\n                -- and we don't get multiple workers grabbing the same jobs\n                WITH locked_jobs AS (\n                    SELECT queue_job_id\n                    FROM queue_jobs\n                    WHERE\n                        status = 'available'\n                        AND queue_name = ANY($1)\n                    ORDER BY queue_job_id ASC\n                    LIMIT $2\n                    FOR UPDATE\n                    SKIP LOCKED\n                )\n                -- then we update the status of those jobs to 'running', returning the job details\n                UPDATE queue_jobs\n                SET status = 'running', started_at = $3, started_by = $4\n                FROM locked_jobs\n                WHERE queue_jobs.queue_job_id = locked_jobs.queue_job_id\n                RETURNING\n                    queue_jobs.queue_job_id,\n                    queue_jobs.queue_name,\n                    queue_jobs.payload,\n                    queue_jobs.metadata,\n                    queue_jobs.attempt\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "queue_job_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "queue_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "payload",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "attempt",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "707d78340069627aba9f18bbe5ac1388d6723f82549d88d704d9c939b9d35c49"
+}
