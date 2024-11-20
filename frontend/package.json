@@ -58,7 +58,7 @@
     "@storybook/react": "^8.4.4",
     "@storybook/react-vite": "^8.4.4",
     "@storybook/test": "^8.4.4",
-    "@tanstack/react-query-devtools": "^5.60.5",
+    "@tanstack/react-query-devtools": "^5.61.0",
     "@tanstack/router-devtools": "^1.81.5",
     "@tanstack/router-vite-plugin": "^1.79.0",
     "@testing-library/jest-dom": "^6.6.3",
