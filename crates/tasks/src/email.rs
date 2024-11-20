@@ -15,7 +15,7 @@ use rand::{distributions::Uniform, Rng};
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, RunnableJob},
+    new_queue::{JobContext, JobError, RunnableJob},
     State,
 };
 
@@ -25,10 +25,10 @@ impl RunnableJob for VerifyEmailJob {
         name = "job.verify_email",
         fields(user_email.id = %self.user_email_id()),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
-        let mut repo = state.repository().await?;
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
         let mut rng = state.rng();
         let mailer = state.mailer();
         let clock = state.clock();
@@ -42,22 +42,26 @@ impl RunnableJob for VerifyEmailJob {
         let user_email = repo
             .user_email()
             .lookup(self.user_email_id())
-            .await?
-            .context("User email not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User email not found")
+            .map_err(JobError::fail)?;
 
         // Lookup the user associated with the email
         let user = repo
             .user()
             .lookup(user_email.user_id)
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         // Generate a verification code
         let range = Uniform::<u32>::from(0..1_000_000);
         let code = rng.sample(range);
         let code = format!("{code:06}");
 
-        let address: Address = user_email.email.parse()?;
+        let address: Address = user_email.email.parse().map_err(JobError::fail)?;
 
         // Save the verification code in the database
         let verification = repo
@@ -69,7 +73,8 @@ impl RunnableJob for VerifyEmailJob {
                 Duration::try_hours(8).unwrap(),
                 code,
             )
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
 
         // And send the verification email
         let mailbox = Mailbox::new(Some(user.username.clone()), address);
@@ -77,14 +82,17 @@ impl RunnableJob for VerifyEmailJob {
         let context = EmailVerificationContext::new(user.clone(), verification.clone())
             .with_language(language);
 
-        mailer.send_verification_email(mailbox, &context).await?;
+        mailer
+            .send_verification_email(mailbox, &context)
+            .await
+            .map_err(JobError::retry)?;
 
         info!(
             email.id = %user_email.id,
             "Verification email sent"
         );
 
-        repo.save().await?;
+        repo.save().await.map_err(JobError::retry)?;
 
         Ok(())
     }

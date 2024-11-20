@@ -16,7 +16,7 @@ use mas_storage::{
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, RunnableJob},
+    new_queue::{JobContext, JobError, RunnableJob},
     State,
 };
 
@@ -27,25 +27,28 @@ impl RunnableJob for DeactivateUserJob {
     name = "job.deactivate_user"
         fields(user.id = %self.user_id(), erase = %self.hs_erase()),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();
         let matrix = state.matrix_connection();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         // Let's first lock the user
         let user = repo
             .user()
             .lock(&clock, user)
             .await
-            .context("Failed to lock user")?;
+            .context("Failed to lock user")
+            .map_err(JobError::retry)?;
 
         // Kill all sessions for the user
         let n = repo
@@ -54,7 +57,8 @@ impl RunnableJob for DeactivateUserJob {
                 &clock,
                 BrowserSessionFilter::new().for_user(&user).active_only(),
             )
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
         info!(affected = n, "Killed all browser sessions for user");
 
         let n = repo
@@ -63,7 +67,8 @@ impl RunnableJob for DeactivateUserJob {
                 &clock,
                 OAuth2SessionFilter::new().for_user(&user).active_only(),
             )
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
         info!(affected = n, "Killed all OAuth 2.0 sessions for user");
 
         let n = repo
@@ -72,16 +77,20 @@ impl RunnableJob for DeactivateUserJob {
                 &clock,
                 CompatSessionFilter::new().for_user(&user).active_only(),
             )
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
         info!(affected = n, "Killed all compatibility sessions for user");
 
         // Before calling back to the homeserver, commit the changes to the database, as
         // we want the user to be locked out as soon as possible
-        repo.save().await?;
+        repo.save().await.map_err(JobError::retry)?;
 
         let mxid = matrix.mxid(&user.username);
         info!("Deactivating user {} on homeserver", mxid);
-        matrix.delete_user(&mxid, self.hs_erase()).await?;
+        matrix
+            .delete_user(&mxid, self.hs_erase())
+            .await
+            .map_err(JobError::retry)?;
 
         Ok(())
     }
@@ -94,26 +103,31 @@ impl RunnableJob for ReactivateUserJob {
         name = "job.reactivate_user",
         fields(user.id = %self.user_id()),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         let mxid = matrix.mxid(&user.username);
         info!("Reactivating user {} on homeserver", mxid);
-        matrix.reactivate_user(&mxid).await?;
+        matrix
+            .reactivate_user(&mxid)
+            .await
+            .map_err(JobError::retry)?;
 
         // We want to unlock the user from our side only once it has been reactivated on
         // the homeserver
-        let _user = repo.user().unlock(user).await?;
-        repo.save().await?;
+        let _user = repo.user().unlock(user).await.map_err(JobError::retry)?;
+        repo.save().await.map_err(JobError::retry)?;
 
         Ok(())
     }
