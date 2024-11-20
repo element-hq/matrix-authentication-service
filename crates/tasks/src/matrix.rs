@@ -23,7 +23,7 @@ use mas_storage::{
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, RunnableJob},
+    new_queue::{JobContext, JobError, RunnableJob},
     State,
 };
 
@@ -36,25 +36,28 @@ impl RunnableJob for ProvisionUserJob {
         name = "job.provision_user"
         fields(user.id = %self.user_id()),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
         let mut rng = state.rng();
         let clock = state.clock();
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         let mxid = matrix.mxid(&user.username);
         let emails = repo
             .user_email()
             .all(&user)
-            .await?
+            .await
+            .map_err(JobError::retry)?
             .into_iter()
             .filter(|email| email.confirmed_at.is_some())
             .map(|email| email.email)
@@ -65,7 +68,10 @@ impl RunnableJob for ProvisionUserJob {
             request = request.set_displayname(display_name.to_owned());
         }
 
-        let created = matrix.provision_user(&request).await?;
+        let created = matrix
+            .provision_user(&request)
+            .await
+            .map_err(JobError::retry)?;
 
         if created {
             info!(%user.id, %mxid, "User created");
@@ -77,9 +83,10 @@ impl RunnableJob for ProvisionUserJob {
         let sync_device_job = SyncDevicesJob::new(&user);
         repo.queue_job()
             .schedule_job(&mut rng, &clock, sync_device_job)
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
 
-        repo.save().await?;
+        repo.save().await.map_err(JobError::retry)?;
 
         Ok(())
     }
@@ -97,23 +104,26 @@ impl RunnableJob for ProvisionDeviceJob {
             device.id = %self.device_id(),
         ),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
-        let mut repo = state.repository().await?;
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
         let mut rng = state.rng();
         let clock = state.clock();
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         // Schedule a device sync job
         repo.queue_job()
             .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
 
         Ok(())
     }
@@ -131,32 +141,26 @@ impl RunnableJob for DeleteDeviceJob {
             device.id = %self.device_id(),
         ),
         skip_all,
-        err(Debug),
+        err,
     )]
-    #[tracing::instrument(
-        name = "job.delete_device"
-        fields(
-            user.id = %self.user_id(),
-            device.id = %self.device_id(),
-        ),
-        skip_all,
-        err(Debug),
-    )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let mut rng = state.rng();
         let clock = state.clock();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         // Schedule a device sync job
         repo.queue_job()
             .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
-            .await?;
+            .await
+            .map_err(JobError::retry)?;
 
         Ok(())
     }
@@ -169,20 +173,25 @@ impl RunnableJob for SyncDevicesJob {
         name = "job.sync_devices",
         fields(user.id = %self.user_id()),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
 
         let user = repo
             .user()
             .lookup(self.user_id())
-            .await?
-            .context("User not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User not found")
+            .map_err(JobError::fail)?;
 
         // Lock the user sync to make sure we don't get into a race condition
-        repo.user().acquire_lock_for_sync(&user).await?;
+        repo.user()
+            .acquire_lock_for_sync(&user)
+            .await
+            .map_err(JobError::retry)?;
 
         let mut devices = HashSet::new();
 
@@ -195,7 +204,8 @@ impl RunnableJob for SyncDevicesJob {
                     CompatSessionFilter::new().for_user(&user).active_only(),
                     cursor,
                 )
-                .await?;
+                .await
+                .map_err(JobError::retry)?;
 
             for (compat_session, _) in page.edges {
                 devices.insert(compat_session.device.as_str().to_owned());
@@ -216,7 +226,8 @@ impl RunnableJob for SyncDevicesJob {
                     OAuth2SessionFilter::new().for_user(&user).active_only(),
                     cursor,
                 )
-                .await?;
+                .await
+                .map_err(JobError::retry)?;
 
             for oauth2_session in page.edges {
                 for scope in &*oauth2_session.scope {
@@ -234,11 +245,14 @@ impl RunnableJob for SyncDevicesJob {
         }
 
         let mxid = matrix.mxid(&user.username);
-        matrix.sync_devices(&mxid, devices).await?;
+        matrix
+            .sync_devices(&mxid, devices)
+            .await
+            .map_err(JobError::retry)?;
 
         // We kept the connection until now, so that we still hold the lock on the user
         // throughout the sync
-        repo.save().await?;
+        repo.save().await.map_err(JobError::retry)?;
 
         Ok(())
     }

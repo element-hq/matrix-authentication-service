@@ -54,6 +54,47 @@ impl JobContext {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum JobErrorDecision {
+    Retry,
+
+    #[default]
+    Fail,
+}
+
+impl std::fmt::Display for JobErrorDecision {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Retry => f.write_str("retry"),
+            Self::Fail => f.write_str("fail"),
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+#[error("Job failed to run, will {decision}")]
+pub struct JobError {
+    decision: JobErrorDecision,
+    #[source]
+    error: anyhow::Error,
+}
+
+impl JobError {
+    pub fn retry<T: Into<anyhow::Error>>(error: T) -> Self {
+        Self {
+            decision: JobErrorDecision::Retry,
+            error: error.into(),
+        }
+    }
+
+    pub fn fail<T: Into<anyhow::Error>>(error: T) -> Self {
+        Self {
+            decision: JobErrorDecision::Fail,
+            error: error.into(),
+        }
+    }
+}
+
 pub trait FromJob {
     fn from_job(payload: JobPayload) -> Result<Self, anyhow::Error>
     where
@@ -71,7 +112,7 @@ where
 
 #[async_trait]
 pub trait RunnableJob: FromJob + Send + 'static {
-    async fn run(&self, state: &State, context: JobContext) -> Result<(), anyhow::Error>;
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError>;
 }
 
 fn box_runnable_job<T: RunnableJob + 'static>(job: T) -> Box<dyn RunnableJob> {
@@ -126,13 +167,13 @@ pub struct QueueWorker {
     last_heartbeat: DateTime<Utc>,
     cancellation_token: CancellationToken,
     state: State,
-    running_jobs: JoinSet<Result<(), anyhow::Error>>,
+    running_jobs: JoinSet<Result<(), JobError>>,
     job_contexts: HashMap<tokio::task::Id, JobContext>,
     factories: HashMap<&'static str, JobFactory>,
 
     #[allow(clippy::type_complexity)]
     last_join_result:
-        Option<Result<(tokio::task::Id, Result<(), anyhow::Error>), tokio::task::JoinError>>,
+        Option<Result<(tokio::task::Id, Result<(), JobError>), tokio::task::JoinError>>,
 }
 
 impl QueueWorker {
@@ -379,14 +420,27 @@ impl QueueWorker {
                         .remove(&id)
                         .expect("Job context not found");
 
-                    tracing::error!(
-                        error = ?e,
-                        job.id = %context.id,
-                        job.queue_name = %context.queue_name,
-                        "Job failed"
-                    );
+                    match e.decision {
+                        JobErrorDecision::Fail => {
+                            tracing::error!(
+                                error = &e as &dyn std::error::Error,
+                                job.id = %context.id,
+                                job.queue_name = %context.queue_name,
+                                "Job failed"
+                            );
+                        }
 
-                    // TODO: reschedule the job
+                        JobErrorDecision::Retry => {
+                            tracing::warn!(
+                                error = &e as &dyn std::error::Error,
+                                job.id = %context.id,
+                                job.queue_name = %context.queue_name,
+                                "Job failed, will retry"
+                            );
+
+                            // TODO: reschedule the job
+                        }
+                    }
 
                     context
                 }

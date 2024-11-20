@@ -18,7 +18,7 @@ use rand::distributions::{Alphanumeric, DistString};
 use tracing::{error, info};
 
 use crate::{
-    new_queue::{JobContext, RunnableJob},
+    new_queue::{JobContext, JobError, RunnableJob},
     State,
 };
 
@@ -32,20 +32,22 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
             user_recovery_session.email,
         ),
         skip_all,
-        err(Debug),
+        err,
     )]
-    async fn run(&self, state: &State, _context: JobContext) -> Result<(), anyhow::Error> {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();
         let mailer = state.mailer();
         let url_builder = state.url_builder();
         let mut rng = state.rng();
-        let mut repo = state.repository().await?;
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
 
         let session = repo
             .user_recovery()
             .lookup_session(self.user_recovery_session_id())
-            .await?
-            .context("User recovery session not found")?;
+            .await
+            .map_err(JobError::retry)?
+            .context("User recovery session not found")
+            .map_err(JobError::fail)?;
 
         tracing::Span::current().record("user_recovery_session.email", &session.email);
 
@@ -59,7 +61,8 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
         let lang: DataLocale = session
             .locale
             .parse()
-            .context("Invalid locale in database on recovery session")?;
+            .context("Invalid locale in database on recovery session")
+            .map_err(JobError::fail)?;
 
         loop {
             let page = repo
@@ -70,7 +73,8 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
                         .verified_only(),
                     cursor,
                 )
-                .await?;
+                .await
+                .map_err(JobError::retry)?;
 
             for email in page.edges {
                 let ticket = Alphanumeric.sample_string(&mut rng, 32);
@@ -78,23 +82,28 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
                 let ticket = repo
                     .user_recovery()
                     .add_ticket(&mut rng, &clock, &session, &email, ticket)
-                    .await?;
+                    .await
+                    .map_err(JobError::retry)?;
 
                 let user_email = repo
                     .user_email()
                     .lookup(email.id)
-                    .await?
-                    .context("User email not found")?;
+                    .await
+                    .map_err(JobError::retry)?
+                    .context("User email not found")
+                    .map_err(JobError::fail)?;
 
                 let user = repo
                     .user()
                     .lookup(user_email.user_id)
-                    .await?
-                    .context("User not found")?;
+                    .await
+                    .map_err(JobError::retry)?
+                    .context("User not found")
+                    .map_err(JobError::fail)?;
 
                 let url = url_builder.account_recovery_link(ticket.ticket);
 
-                let address: Address = user_email.email.parse()?;
+                let address: Address = user_email.email.parse().map_err(JobError::fail)?;
                 let mailbox = Mailbox::new(Some(user.username.clone()), address);
 
                 info!("Sending recovery email to {}", mailbox);
@@ -117,7 +126,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
             }
         }
 
-        repo.save().await?;
+        repo.save().await.map_err(JobError::fail)?;
 
         Ok(())
     }
