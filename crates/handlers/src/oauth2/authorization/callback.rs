@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 use axum::response::{Html, IntoResponse, Redirect, Response};
 use mas_data_model::AuthorizationGrant;
+use mas_i18n::DataLocale;
 use mas_templates::{FormPostContext, Templates};
 use oauth2_types::requests::ResponseMode;
 use serde::Serialize;
@@ -103,6 +104,7 @@ impl CallbackDestination {
     pub async fn go<T: Serialize + Send + Sync>(
         self,
         templates: &Templates,
+        locale: &DataLocale,
         params: T,
     ) -> Result<Response, CallbackDestinationError> {
         #[derive(Serialize)]
@@ -155,7 +157,7 @@ impl CallbackDestination {
                     state,
                     params,
                 };
-                let ctx = FormPostContext::new(redirect_uri, merged);
+                let ctx = FormPostContext::new_for_url(redirect_uri, merged).with_language(locale);
                 let rendered = templates.render_form_post(&ctx)?;
                 Ok(Html(rendered).into_response())
             }

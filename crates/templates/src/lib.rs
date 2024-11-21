@@ -368,7 +368,7 @@ register_templates! {
     pub fn render_reauth(WithLanguage<WithCsrf<WithSession<ReauthContext>>>) { "pages/reauth.html" }
 
     /// Render the form used by the form_post response mode
-    pub fn render_form_post<T: Serialize>(FormPostContext<T>) { "form_post.html" }
+    pub fn render_form_post<T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
 
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }

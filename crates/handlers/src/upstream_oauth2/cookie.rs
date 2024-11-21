@@ -61,6 +61,11 @@ impl UpstreamSessions {
         }
     }
 
+    /// Returns true if the cookie is empty
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     /// Save the upstreams sessions to the cookie jar
     pub fn save<C>(self, cookie_jar: CookieJar, clock: &C) -> CookieJar
     where
