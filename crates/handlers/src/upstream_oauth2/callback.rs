@@ -6,9 +6,10 @@
 
 use axum::{
     extract::{Path, Query, State},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     Form,
 };
+use axum_extra::response::Html;
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
@@ -24,8 +25,9 @@ use mas_storage::{
     },
     BoxClock, BoxRepository, BoxRng, Clock,
 };
+use mas_templates::{FormPostContext, Templates};
 use oauth2_types::errors::ClientErrorCode;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;
 
@@ -35,9 +37,9 @@ use super::{
     template::{environment, AttributeMappingContext},
     UpstreamSessionsCookie,
 };
-use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache};
+use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache, PreferredLanguage};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Params {
     state: String,
 
@@ -45,7 +47,7 @@ pub struct Params {
     code_or_error: CodeOrError,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum CodeOrError {
     Code {
@@ -115,6 +117,7 @@ pub(crate) enum RouteError {
     Internal(Box<dyn std::error::Error>),
 }
 
+impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_oidc_client::error::DiscoveryError);
 impl_from_error_for_route!(mas_oidc_client::error::JwksError);
@@ -152,11 +155,13 @@ pub(crate) async fn handler(
     State(encrypter): State<Encrypter>,
     State(keystore): State<Keystore>,
     State(client): State<reqwest::Client>,
+    State(templates): State<Templates>,
+    PreferredLanguage(locale): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
     query_params: Option<Query<Params>>,
     form_params: Option<Form<Params>>,
-) -> Result<impl IntoResponse, RouteError> {
+) -> Result<Response, RouteError> {
     let provider = repo
         .upstream_oauth_provider()
         .lookup(provider_id)
@@ -164,11 +169,24 @@ pub(crate) async fn handler(
         .filter(UpstreamOAuthProvider::enabled)
         .ok_or(RouteError::ProviderNotFound)?;
 
+    let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
+
     // Read the parameters from the query or the form, depending on what
     // response_mode the provider uses
     let params = match (provider.response_mode, query_params, form_params) {
-        (UpstreamOAuthProviderResponseMode::Query, Some(query_params), None) => query_params.0,
-        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(form_params)) => form_params.0,
+        (UpstreamOAuthProviderResponseMode::Query, Some(Query(query_params)), None) => query_params,
+        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(Form(form_params))) => {
+            // We got there from a cross-site form POST, so we need to render a form with
+            // the same values, which posts back to the same URL
+            if sessions_cookie.is_empty() {
+                let context =
+                    FormPostContext::new_for_current_url(form_params).with_language(&locale);
+                let html = templates.render_form_post(&context)?;
+                return Ok(Html(html).into_response());
+            }
+
+            form_params
+        }
         (UpstreamOAuthProviderResponseMode::Query, None, None) => {
             return Err(RouteError::MissingQueryParams)
         }
@@ -179,7 +197,6 @@ pub(crate) async fn handler(
         (expected, _, _) => return Err(RouteError::InvalidParamsMode { expected }),
     };
 
-    let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
     let (session_id, _post_auth_action) = sessions_cookie
         .find_session(provider_id, &params.state)
         .map_err(|_| RouteError::MissingCookie)?;
@@ -327,5 +344,6 @@ pub(crate) async fn handler(
     Ok((
         cookie_jar,
         url_builder.redirect(&mas_router::UpstreamOAuth2Link::new(link.id)),
-    ))
+    )
+        .into_response())
 }

@@ -6,18 +6,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 -#}
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Redirecting to client</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body onload="javascript:document.forms[0].submit()">
-    <form method="post" action="{{ redirect_uri }}">
-      {% for key, value in params|items %}
-        <input type="hidden" name="{{ key }}" value="{{ value }}" />
-      {% endfor %}
-    </form>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="header">
+      <h1 class="title">{{ _("common.loading") }}</h1>
+    </div>
+  </header>
+
+  <form method="post" class="flex flex-col"{% if redirect_uri %} action="{{ redirect_uri }}"{% endif %}>
+    {% for key, value in params|items %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}" />
+    {% endfor %}
+
+    <noscript>
+      {# Display a button to submit the form in case JavaScript is disabled #}
+      {{ button.button(text=_("action.continue")) }}
+    </noscript>
+  </form>
+
+  {# Submit the form in JavaScript on the next tick, so that if the browser
+     wants to display the placeholder instead of a blank page, it can #}
+  <script>setTimeout(function() { document.forms[0].submit(); }, 0);</script>
+{% endblock %}

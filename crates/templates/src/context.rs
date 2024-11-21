@@ -1460,7 +1460,7 @@ impl TemplateContext for DeviceConsentContext {
 /// Context used by the `form_post.html` template
 #[derive(Serialize)]
 pub struct FormPostContext<T> {
-    redirect_uri: Url,
+    redirect_uri: Option<Url>,
     params: T,
 }
 
@@ -1473,7 +1473,7 @@ impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
         sample_params
             .into_iter()
             .map(|params| FormPostContext {
-                redirect_uri: "https://example.com/callback".parse().unwrap(),
+                redirect_uri: "https://example.com/callback".parse().ok(),
                 params,
             })
             .collect()
@@ -1481,11 +1481,32 @@ impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
 }
 
 impl<T> FormPostContext<T> {
-    /// Constructs a context for the `form_post` response mode form
-    pub fn new(redirect_uri: Url, params: T) -> Self {
+    /// Constructs a context for the `form_post` response mode form for a given
+    /// URL
+    pub fn new_for_url(redirect_uri: Url, params: T) -> Self {
         Self {
-            redirect_uri,
+            redirect_uri: Some(redirect_uri),
             params,
+        }
+    }
+
+    /// Constructs a context for the `form_post` response mode form for the
+    /// current URL
+    pub fn new_for_current_url(params: T) -> Self {
+        Self {
+            redirect_uri: None,
+            params,
+        }
+    }
+
+    /// Add the language to the context
+    ///
+    /// This is usually implemented by the [`TemplateContext`] trait, but it is
+    /// annoying to make it work because of the generic parameter
+    pub fn with_language(self, lang: &DataLocale) -> WithLanguage<Self> {
+        WithLanguage {
+            lang: lang.to_string(),
+            inner: self,
         }
     }
 }

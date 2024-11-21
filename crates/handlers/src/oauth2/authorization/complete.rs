@@ -141,7 +141,7 @@ pub(crate) async fn get(
     .await
     {
         Ok(params) => {
-            let res = callback_destination.go(&templates, params).await?;
+            let res = callback_destination.go(&templates, &locale, params).await?;
             Ok((cookie_jar, res).into_response())
         }
         Err(GrantCompletionError::RequiresReauth) => Ok((

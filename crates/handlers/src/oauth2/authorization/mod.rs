@@ -170,6 +170,7 @@ pub(crate) async fn get(
     let res: Result<Response, RouteError> = ({
         let templates = templates.clone();
         let callback_destination = callback_destination.clone();
+        let locale = locale.clone();
         async move {
             let maybe_session = session_info.load_session(&mut repo).await?;
             let prompt = params.auth.prompt.as_deref().unwrap_or_default();
@@ -180,6 +181,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::RequestNotSupported),
                     )
                     .await?);
@@ -189,6 +191,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::RequestUriNotSupported),
                     )
                     .await?);
@@ -200,6 +203,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::UnsupportedResponseType),
                     )
                     .await?);
@@ -211,6 +215,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::UnauthorizedClient),
                     )
                     .await?);
@@ -220,6 +225,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::RegistrationNotSupported),
                     )
                     .await?);
@@ -230,6 +236,7 @@ pub(crate) async fn get(
                 return Ok(callback_destination
                     .go(
                         &templates,
+                        &locale,
                         ClientError::from(ClientErrorCode::LoginRequired),
                     )
                     .await?);
@@ -241,6 +248,7 @@ pub(crate) async fn get(
                     return Ok(callback_destination
                         .go(
                             &templates,
+                            &locale,
                             ClientError::from(ClientErrorCode::UnauthorizedClient),
                         )
                         .await?);
@@ -266,6 +274,7 @@ pub(crate) async fn get(
                     return Ok(callback_destination
                         .go(
                             &templates,
+                            &locale,
                             ClientError::from(ClientErrorCode::InvalidRequest),
                         )
                         .await?);
@@ -350,11 +359,12 @@ pub(crate) async fn get(
                     )
                     .await
                     {
-                        Ok(params) => callback_destination.go(&templates, params).await?,
+                        Ok(params) => callback_destination.go(&templates, &locale, params).await?,
                         Err(GrantCompletionError::RequiresConsent) => {
                             callback_destination
                                 .go(
                                     &templates,
+                                    &locale,
                                     ClientError::from(ClientErrorCode::ConsentRequired),
                                 )
                                 .await?
@@ -363,13 +373,14 @@ pub(crate) async fn get(
                             callback_destination
                                 .go(
                                     &templates,
+                                    &locale,
                                     ClientError::from(ClientErrorCode::InteractionRequired),
                                 )
                                 .await?
                         }
                         Err(GrantCompletionError::PolicyViolation(_grant, _res)) => {
                             callback_destination
-                                .go(&templates, ClientError::from(ClientErrorCode::AccessDenied))
+                                .go(&templates, &locale, ClientError::from(ClientErrorCode::AccessDenied))
                                 .await?
                         }
                         Err(GrantCompletionError::Internal(e)) => {
@@ -400,7 +411,7 @@ pub(crate) async fn get(
                     )
                     .await
                     {
-                        Ok(params) => callback_destination.go(&templates, params).await?,
+                        Ok(params) => callback_destination.go(&templates, &locale, params).await?,
                         Err(GrantCompletionError::RequiresConsent) => {
                             url_builder.redirect(&mas_router::Consent(grant_id)).into_response()
                         }
@@ -440,7 +451,11 @@ pub(crate) async fn get(
         Err(err) => {
             tracing::error!(%err);
             callback_destination
-                .go(&templates, ClientError::from(ClientErrorCode::ServerError))
+                .go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::ServerError),
+                )
                 .await?
         }
     };
