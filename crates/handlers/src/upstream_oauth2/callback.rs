@@ -43,6 +43,11 @@ use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache, Pr
 pub struct Params {
     state: String,
 
+    /// An extra parameter to track whether the POST request was re-made by us
+    /// to the same URL to escape Same-Site cookies restrictions
+    #[serde(default)]
+    did_mas_repost_to_itself: bool,
+
     #[serde(flatten)]
     code_or_error: CodeOrError,
 }
@@ -175,10 +180,14 @@ pub(crate) async fn handler(
     // response_mode the provider uses
     let params = match (provider.response_mode, query_params, form_params) {
         (UpstreamOAuthProviderResponseMode::Query, Some(Query(query_params)), None) => query_params,
-        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(Form(form_params))) => {
-            // We got there from a cross-site form POST, so we need to render a form with
-            // the same values, which posts back to the same URL
-            if sessions_cookie.is_empty() {
+        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(Form(mut form_params))) => {
+            // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
+            // usually a cross-site form POST, we need to render a form with the
+            // same values, which posts back to the same URL. However, there are
+            // other valid reasons for the cookie to be missing, so to track whether we did
+            // this POST ourselves, we set a flag.
+            if sessions_cookie.is_empty() && !form_params.did_mas_repost_to_itself {
+                form_params.did_mas_repost_to_itself = true;
                 let context =
                     FormPostContext::new_for_current_url(form_params).with_language(&locale);
                 let html = templates.render_form_post(&context)?;
