@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO queue_jobs\n                    (queue_job_id, queue_name, payload, metadata, created_at, attempt, scheduled_at, status)\n                SELECT $1, queue_name, payload, metadata, $2, attempt + 1, $3, 'scheduled'\n                FROM queue_jobs\n                WHERE queue_job_id = $4\n                  AND status = 'failed'\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3355b3b5729d8240297a5ac8111ce891e626a82dcb78ff85f2b815d9329ff936"
+}

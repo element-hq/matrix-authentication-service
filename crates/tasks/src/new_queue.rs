@@ -160,6 +160,14 @@ const MAX_JOBS_TO_FETCH: usize = 5;
 // How many attempts a job should be retried
 const MAX_ATTEMPTS: usize = 5;
 
+/// Returns the delay to wait before retrying a job
+///
+/// Uses an exponential backoff: 1s, 2s, 4s, 8s, 16s
+fn retry_delay(attempt: usize) -> Duration {
+    let attempt = u32::try_from(attempt).unwrap_or(u32::MAX);
+    Duration::milliseconds(2_i64.saturating_pow(attempt) * 1000)
+}
+
 type JobResult = Result<(), JobError>;
 type JobFactory = Arc<dyn Fn(JobPayload) -> Box<dyn RunnableJob> + Send + Sync>;
 
@@ -516,6 +524,17 @@ impl QueueWorker {
 
         // TODO: mark tasks those workers had as lost
 
+        // Mark all the scheduled jobs as available
+        let scheduled = repo
+            .queue_job()
+            .schedule_available_jobs(&self.clock)
+            .await?;
+        match scheduled {
+            0 => {}
+            1 => tracing::warn!("One scheduled job marked as available"),
+            n => tracing::warn!("{n} scheduled jobs marked as available"),
+        }
+
         // Release the leader lock
         let txn = repo
             .into_inner()
@@ -669,17 +688,19 @@ impl JobTracker {
 
                         JobErrorDecision::Retry => {
                             if context.attempt < MAX_ATTEMPTS {
+                                let delay = retry_delay(context.attempt);
                                 tracing::warn!(
                                     error = &e as &dyn std::error::Error,
                                     job.id = %context.id,
                                     job.queue_name = %context.queue_name,
                                     job.attempt = %context.attempt,
-                                    "Job failed, will retry"
+                                    "Job failed, will retry in {}s",
+                                    delay.num_seconds()
                                 );
 
-                                // TODO: retry with an exponential backoff, once we know how to
-                                // schedule jobs in the future
-                                repo.queue_job().retry(&mut *rng, clock, context.id).await?;
+                                repo.queue_job()
+                                    .retry(&mut *rng, clock, context.id, delay)
+                                    .await?;
                             } else {
                                 tracing::error!(
                                     error = &e as &dyn std::error::Error,
@@ -707,15 +728,19 @@ impl JobTracker {
                         .await?;
 
                     if context.attempt < MAX_ATTEMPTS {
+                        let delay = retry_delay(context.attempt);
                         tracing::warn!(
                             error = &e as &dyn std::error::Error,
                             job.id = %context.id,
                             job.queue_name = %context.queue_name,
                             job.attempt = %context.attempt,
-                            "Job crashed, will retry"
+                            "Job crashed, will retry in {}s",
+                            delay.num_seconds()
                         );
 
-                        repo.queue_job().retry(&mut *rng, clock, context.id).await?;
+                        repo.queue_job()
+                            .retry(&mut *rng, clock, context.id, delay)
+                            .await?;
                     } else {
                         tracing::error!(
                             error = &e as &dyn std::error::Error,

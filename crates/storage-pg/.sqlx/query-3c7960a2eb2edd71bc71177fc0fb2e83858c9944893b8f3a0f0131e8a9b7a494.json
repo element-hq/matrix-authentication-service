@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE queue_jobs\n                SET status = 'available'\n                WHERE\n                    status = 'scheduled'\n                    AND scheduled_at <= $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c7960a2eb2edd71bc71177fc0fb2e83858c9944893b8f3a0f0131e8a9b7a494"
+}
