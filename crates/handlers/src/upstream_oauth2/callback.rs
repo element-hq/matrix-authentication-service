@@ -5,7 +5,8 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
+    http::Method,
     response::{IntoResponse, Response},
     Form,
 };
@@ -110,9 +111,6 @@ pub(crate) enum RouteError {
     #[error("Missing form parameters")]
     MissingFormParams,
 
-    #[error("Ambiguous parameters: got both query and form parameters")]
-    AmbiguousParams,
-
     #[error("Invalid response mode, expected '{expected}'")]
     InvalidParamsMode {
         expected: UpstreamOAuthProviderResponseMode,
@@ -161,11 +159,11 @@ pub(crate) async fn handler(
     State(keystore): State<Keystore>,
     State(client): State<reqwest::Client>,
     State(templates): State<Templates>,
+    method: Method,
     PreferredLanguage(locale): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
-    query_params: Option<Query<Params>>,
-    form_params: Option<Form<Params>>,
+    params: Option<Form<Params>>,
 ) -> Result<Response, RouteError> {
     let provider = repo
         .upstream_oauth_provider()
@@ -176,35 +174,37 @@ pub(crate) async fn handler(
 
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
 
-    // Read the parameters from the query or the form, depending on what
-    // response_mode the provider uses
-    let params = match (provider.response_mode, query_params, form_params) {
-        (UpstreamOAuthProviderResponseMode::Query, Some(Query(query_params)), None) => query_params,
-        (UpstreamOAuthProviderResponseMode::FormPost, None, Some(Form(mut form_params))) => {
+    let Some(Form(params)) = params else {
+        if let Method::GET = method {
+            return Err(RouteError::MissingQueryParams);
+        }
+
+        return Err(RouteError::MissingFormParams);
+    };
+
+    // The `Form` extractor will use the body of the request for POST requests and
+    // the query parameters for GET requests. We need to then look at the method do
+    // make sure it matches the expected `response_mode`
+    match (provider.response_mode, method) {
+        (UpstreamOAuthProviderResponseMode::Query, Method::GET) => {}
+        (UpstreamOAuthProviderResponseMode::FormPost, Method::POST) => {
             // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
             // usually a cross-site form POST, we need to render a form with the
             // same values, which posts back to the same URL. However, there are
             // other valid reasons for the cookie to be missing, so to track whether we did
             // this POST ourselves, we set a flag.
-            if sessions_cookie.is_empty() && !form_params.did_mas_repost_to_itself {
-                form_params.did_mas_repost_to_itself = true;
-                let context =
-                    FormPostContext::new_for_current_url(form_params).with_language(&locale);
+            if sessions_cookie.is_empty() && !params.did_mas_repost_to_itself {
+                let params = Params {
+                    did_mas_repost_to_itself: true,
+                    ..params
+                };
+                let context = FormPostContext::new_for_current_url(params).with_language(&locale);
                 let html = templates.render_form_post(&context)?;
                 return Ok(Html(html).into_response());
             }
-
-            form_params
         }
-        (UpstreamOAuthProviderResponseMode::Query, None, None) => {
-            return Err(RouteError::MissingQueryParams)
-        }
-        (UpstreamOAuthProviderResponseMode::FormPost, None, None) => {
-            return Err(RouteError::MissingFormParams)
-        }
-        (_, Some(_), Some(_)) => return Err(RouteError::AmbiguousParams),
-        (expected, _, _) => return Err(RouteError::InvalidParamsMode { expected }),
-    };
+        (expected, _) => return Err(RouteError::InvalidParamsMode { expected }),
+    }
 
     let (session_id, _post_auth_action) = sessions_cookie
         .find_session(provider_id, &params.state)
