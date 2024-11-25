@@ -95,6 +95,10 @@ updates:
         patterns:
           - "@tanstack/react-router"
           - "@tanstack/router-*"
+      tanstack-query:
+        patterns:
+          - "@tanstack/react-query"
+          - "@tanstack/react-query-*"
       types:
         patterns:
           - "@types/*"
