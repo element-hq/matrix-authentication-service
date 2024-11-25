@@ -12,8 +12,10 @@ use mas_storage::{
     queue::{Job, QueueJobRepository, Worker},
     Clock,
 };
+use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sqlx::PgConnection;
+use tracing::Instrument;
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -137,6 +139,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         payload: serde_json::Value,
         metadata: serde_json::Value,
         scheduled_at: DateTime<Utc>,
+        schedule_name: Option<&str>,
     ) -> Result<(), Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
@@ -145,8 +148,8 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         sqlx::query!(
             r#"
                 INSERT INTO queue_jobs
-                    (queue_job_id, queue_name, payload, metadata, created_at, scheduled_at, status)
-                VALUES ($1, $2, $3, $4, $5, $6, 'scheduled')
+                    (queue_job_id, queue_name, payload, metadata, created_at, scheduled_at, schedule_name, status)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, 'scheduled')
             "#,
             Uuid::from(id),
             queue_name,
@@ -154,10 +157,37 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             metadata,
             created_at,
             scheduled_at,
+            schedule_name,
         )
         .traced()
         .execute(&mut *self.conn)
         .await?;
+
+        // If there was a schedule name supplied, update the queue_schedules table
+        if let Some(schedule_name) = schedule_name {
+            let span = tracing::info_span!(
+                "db.queue_job.schedule_later.update_schedules",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            let res = sqlx::query!(
+                r#"
+                    UPDATE queue_schedules
+                    SET last_scheduled_at = $1,
+                        last_scheduled_job_id = $2
+                    WHERE schedule_name = $3
+                "#,
+                scheduled_at,
+                Uuid::from(id),
+                schedule_name,
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+
+            DatabaseError::ensure_affected_rows(&res, 1)?;
+        }
 
         Ok(())
     }
@@ -315,14 +345,19 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         let scheduled_at = now + delay;
         let new_id = Ulid::from_datetime_with_source(now.into(), rng);
 
+        let span = tracing::info_span!(
+            "db.queue_job.retry.insert_job",
+            { DB_QUERY_TEXT } = tracing::field::Empty
+        );
         // Create a new job with the same payload and metadata, but a new ID and
         // increment the attempt
         // We make sure we do this only for 'failed' jobs
         let res = sqlx::query!(
             r#"
                 INSERT INTO queue_jobs
-                    (queue_job_id, queue_name, payload, metadata, created_at, attempt, scheduled_at, status)
-                SELECT $1, queue_name, payload, metadata, $2, attempt + 1, $3, 'scheduled'
+                    (queue_job_id, queue_name, payload, metadata, created_at,
+                     attempt, scheduled_at, schedule_name, status)
+                SELECT $1, queue_name, payload, metadata, $2, attempt + 1, $3, schedule_name, 'scheduled'
                 FROM queue_jobs
                 WHERE queue_job_id = $4
                   AND status = 'failed'
@@ -332,13 +367,39 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             scheduled_at,
             Uuid::from(id),
         )
-        .traced()
+        .record(&span)
         .execute(&mut *self.conn)
+        .instrument(span)
         .await?;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
+        // If that job was referenced by a schedule, update the schedule
+        let span = tracing::info_span!(
+            "db.queue_job.retry.update_schedule",
+            { DB_QUERY_TEXT } = tracing::field::Empty
+        );
+        sqlx::query!(
+            r#"
+                UPDATE queue_schedules
+                SET last_scheduled_at = $1,
+                    last_scheduled_job_id = $2
+                WHERE last_scheduled_job_id = $3
+            "#,
+            scheduled_at,
+            Uuid::from(new_id),
+            Uuid::from(id),
+        )
+        .record(&span)
+        .execute(&mut *self.conn)
+        .instrument(span)
+        .await?;
+
         // Update the old job to point to the new attempt
+        let span = tracing::info_span!(
+            "db.queue_job.retry.update_old_job",
+            { DB_QUERY_TEXT } = tracing::field::Empty
+        );
         let res = sqlx::query!(
             r#"
                 UPDATE queue_jobs
@@ -348,8 +409,9 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             Uuid::from(new_id),
             Uuid::from(id),
         )
-        .traced()
+        .record(&span)
         .execute(&mut *self.conn)
+        .instrument(span)
         .await?;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;

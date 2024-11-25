@@ -17,7 +17,7 @@ use crate::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
-    queue::{QueueJobRepository, QueueWorkerRepository},
+    queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
@@ -194,6 +194,11 @@ pub trait RepositoryAccess: Send {
 
     /// Get a [`QueueJobRepository`]
     fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`QueueScheduleRepository`]
+    fn queue_schedule<'c>(
+        &'c mut self,
+    ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c>;
 }
 
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
@@ -213,7 +218,7 @@ mod impls {
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
             OAuth2SessionRepository,
         },
-        queue::{QueueJobRepository, QueueWorkerRepository},
+        queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
         upstream_oauth2::{
             UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
             UpstreamOAuthSessionRepository,
@@ -414,6 +419,12 @@ mod impls {
         fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.queue_job(), &mut self.mapper))
         }
+
+        fn queue_schedule<'c>(
+            &'c mut self,
+        ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.queue_schedule(), &mut self.mapper))
+        }
     }
 
     impl<R: RepositoryAccess + ?Sized> RepositoryAccess for Box<R> {
@@ -541,6 +552,12 @@ mod impls {
 
         fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c> {
             (**self).queue_job()
+        }
+
+        fn queue_schedule<'c>(
+            &'c mut self,
+        ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
+            (**self).queue_schedule()
         }
     }
 }

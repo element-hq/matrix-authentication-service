@@ -17,6 +17,7 @@ use mas_storage::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
+    queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
@@ -38,7 +39,10 @@ use crate::{
         PgOAuth2ClientRepository, PgOAuth2DeviceCodeGrantRepository,
         PgOAuth2RefreshTokenRepository, PgOAuth2SessionRepository,
     },
-    queue::{job::PgQueueJobRepository, worker::PgQueueWorkerRepository},
+    queue::{
+        job::PgQueueJobRepository, schedule::PgQueueScheduleRepository,
+        worker::PgQueueWorkerRepository,
+    },
     upstream_oauth2::{
         PgUpstreamOAuthLinkRepository, PgUpstreamOAuthProviderRepository,
         PgUpstreamOAuthSessionRepository,
@@ -259,15 +263,17 @@ where
         Box::new(PgCompatRefreshTokenRepository::new(self.conn.as_mut()))
     }
 
-    fn queue_worker<'c>(
-        &'c mut self,
-    ) -> Box<dyn mas_storage::queue::QueueWorkerRepository<Error = Self::Error> + 'c> {
+    fn queue_worker<'c>(&'c mut self) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
         Box::new(PgQueueWorkerRepository::new(self.conn.as_mut()))
     }
 
-    fn queue_job<'c>(
-        &'c mut self,
-    ) -> Box<dyn mas_storage::queue::QueueJobRepository<Error = Self::Error> + 'c> {
+    fn queue_job<'c>(&'c mut self) -> Box<dyn QueueJobRepository<Error = Self::Error> + 'c> {
         Box::new(PgQueueJobRepository::new(self.conn.as_mut()))
+    }
+
+    fn queue_schedule<'c>(
+        &'c mut self,
+    ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
+        Box::new(PgQueueScheduleRepository::new(self.conn.as_mut()))
     }
 }
