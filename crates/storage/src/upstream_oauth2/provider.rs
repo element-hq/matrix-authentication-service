@@ -43,7 +43,8 @@ pub struct UpstreamOAuthProviderParams {
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
 
     /// Whether to fetch the user profile from the userinfo endpoint,
-    /// or to rely on the data returned in the id_token from the token_endpoint.
+    /// or to rely on the data returned in the `id_token` from the
+    /// `token_endpoint`.
     pub fetch_userinfo: bool,
 
     /// The client ID to use when authenticating to the upstream
