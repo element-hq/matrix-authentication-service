@@ -60,6 +60,9 @@ skip = [
     { name = "regex-automata", version = "0.2.0" },  # icu_list depends on this old version
     { name = "indexmap", version = "1.9.3" },        # schemars depends on this old version
     { name = "hashbrown" },                          # Too many versions :(
+    # a few dependencies depend on the 1.x version of thiserror
+    { name = "thiserror", version = "1.0.69" },
+    { name = "thiserror-impl", version = "1.0.69" },
     # url and cookie-store depend on this old version of idna
     { name = "idna", version = "0.5.0" },
     # axum-macros, sqlx-macros and sea-query-attr use an old version
