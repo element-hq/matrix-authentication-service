@@ -150,6 +150,12 @@ templates:
 
   # Path to the frontend assets manifest file
   assets_manifest: /to/manifest.json
+
+  # From where to load the translation files
+  # Default in Docker distribution: `/usr/local/share/mas-cli/translations/`
+  # Default in pre-built binaries: `./share/translations/`
+  # Default in locally-built binaries: `./translations/`
+  translations_path: /to/translations
 ```
 
 ## `clients`
