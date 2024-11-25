@@ -102,6 +102,10 @@ features = ["serde", "clock"]
 version = "4.5.21"
 features = ["derive"]
 
+# Cron expressions
+[workspace.dependencies.cron]
+version = "0.13.0"
+
 # Elliptic curve cryptography
 [workspace.dependencies.elliptic-curve]
 version = "0.13.8"

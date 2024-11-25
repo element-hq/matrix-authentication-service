@@ -18,8 +18,7 @@ use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 
-// TODO: we need to have a way to schedule recurring tasks
-// mod database;
+mod database;
 mod email;
 mod matrix;
 mod new_queue;
@@ -110,14 +109,21 @@ pub async fn init(
     );
     let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
 
-    worker.register_handler::<mas_storage::queue::DeactivateUserJob>();
-    worker.register_handler::<mas_storage::queue::DeleteDeviceJob>();
-    worker.register_handler::<mas_storage::queue::ProvisionDeviceJob>();
-    worker.register_handler::<mas_storage::queue::ProvisionUserJob>();
-    worker.register_handler::<mas_storage::queue::ReactivateUserJob>();
-    worker.register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>();
-    worker.register_handler::<mas_storage::queue::SyncDevicesJob>();
-    worker.register_handler::<mas_storage::queue::VerifyEmailJob>();
+    worker
+        .register_handler::<mas_storage::queue::CleanupExpiredTokensJob>()
+        .register_handler::<mas_storage::queue::DeactivateUserJob>()
+        .register_handler::<mas_storage::queue::DeleteDeviceJob>()
+        .register_handler::<mas_storage::queue::ProvisionDeviceJob>()
+        .register_handler::<mas_storage::queue::ProvisionUserJob>()
+        .register_handler::<mas_storage::queue::ReactivateUserJob>()
+        .register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>()
+        .register_handler::<mas_storage::queue::SyncDevicesJob>()
+        .register_handler::<mas_storage::queue::VerifyEmailJob>()
+        .add_schedule(
+            "cleanup-expired-tokens",
+            "*/15 * * * * *".parse()?,
+            mas_storage::queue::CleanupExpiredTokensJob,
+        );
 
     task_tracker.spawn(async move {
         if let Err(e) = worker.run().await {
