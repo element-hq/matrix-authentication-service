@@ -466,7 +466,8 @@ pub struct Provider {
     pub pkce_method: PkceMethod,
 
     /// Whether to fetch the user profile from the userinfo endpoint,
-    /// or to rely on the data returned in the `id_token` from the `token_endpoint`.
+    /// or to rely on the data returned in the `id_token` from the
+    /// `token_endpoint`.
     ///
     /// Defaults to `false`.
     #[serde(default)]
