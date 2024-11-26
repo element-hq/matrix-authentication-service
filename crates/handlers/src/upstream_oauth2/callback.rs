@@ -29,6 +29,7 @@ use mas_storage::{
 use mas_templates::{FormPostContext, Templates};
 use oauth2_types::errors::ClientErrorCode;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use thiserror::Error;
 use ulid::Ulid;
 
@@ -117,7 +118,7 @@ pub(crate) enum RouteError {
     },
 
     #[error(transparent)]
-    Internal(Box<dyn std::error::Error>),
+    Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
 impl_from_error_for_route!(mas_templates::TemplateError);
@@ -125,6 +126,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_oidc_client::error::DiscoveryError);
 impl_from_error_for_route!(mas_oidc_client::error::JwksError);
 impl_from_error_for_route!(mas_oidc_client::error::TokenAuthorizationCodeError);
+impl_from_error_for_route!(mas_oidc_client::error::UserInfoError);
 impl_from_error_for_route!(super::ProviderCredentialsError);
 impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
 
@@ -274,7 +276,7 @@ pub(crate) async fn handler(
         redirect_uri,
     };
 
-    let id_token_verification_data = JwtVerificationData {
+    let verification_data = JwtVerificationData {
         issuer: &provider.issuer,
         jwks: &jwks,
         // TODO: make that configurable
@@ -282,25 +284,48 @@ pub(crate) async fn handler(
         client_id: &provider.client_id,
     };
 
-    let (response, id_token) =
+    let (response, id_token_map) =
         mas_oidc_client::requests::authorization_code::access_token_with_authorization_code(
             &client,
             client_credentials,
             lazy_metadata.token_endpoint().await?,
             code,
             validation_data,
-            Some(id_token_verification_data),
+            Some(verification_data),
             clock.now(),
             &mut rng,
         )
         .await?;
 
-    let (_header, id_token) = id_token.ok_or(RouteError::MissingIDToken)?.into_parts();
+    let (_header, id_token) = id_token_map
+        .clone()
+        .ok_or(RouteError::MissingIDToken)?
+        .into_parts();
 
     let mut context = AttributeMappingContext::new().with_id_token_claims(id_token);
     if let Some(extra_callback_parameters) = extra_callback_parameters.clone() {
         context = context.with_extra_callback_parameters(extra_callback_parameters);
     }
+
+    let userinfo = if provider.fetch_userinfo {
+        Some(json!(
+            mas_oidc_client::requests::userinfo::fetch_userinfo(
+                &client,
+                lazy_metadata.userinfo_endpoint().await?,
+                response.access_token.as_str(),
+                Some(verification_data),
+                &id_token_map.ok_or(RouteError::MissingIDToken)?,
+            )
+            .await?
+        ))
+    } else {
+        None
+    };
+
+    if let Some(userinfo) = userinfo.clone() {
+        context = context.with_userinfo_claims(userinfo);
+    }
+
     let context = context.build();
 
     let env = environment();
@@ -341,6 +366,7 @@ pub(crate) async fn handler(
             &link,
             response.id_token,
             extra_callback_parameters,
+            userinfo,
         )
         .await?;
 

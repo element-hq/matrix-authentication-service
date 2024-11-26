@@ -465,11 +465,25 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "PkceMethod::is_default")]
     pub pkce_method: PkceMethod,
 
+    /// Whether to fetch the user profile from the userinfo endpoint,
+    /// or to rely on the data returned in the `id_token` from the
+    /// `token_endpoint`.
+    ///
+    /// Defaults to `false`.
+    #[serde(default)]
+    pub fetch_userinfo: bool,
+
     /// The URL to use for the provider's authorization endpoint
     ///
     /// Defaults to the `authorization_endpoint` provided through discovery
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorization_endpoint: Option<Url>,
+
+    /// The URL to use for the provider's userinfo endpoint
+    ///
+    /// Defaults to the `userinfo_endpoint` provided through discovery
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub userinfo_endpoint: Option<Url>,
 
     /// The URL to use for the provider's token endpoint
     ///

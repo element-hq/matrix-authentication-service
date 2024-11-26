@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\"\n                FROM upstream_oauth_providers\n                WHERE upstream_oauth_provider_id = $1\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    fetch_userinfo,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\"\n                FROM upstream_oauth_providers\n                WHERE upstream_oauth_provider_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -50,51 +50,61 @@
       },
       {
         "ordinal": 9,
+        "name": "fetch_userinfo",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "disabled_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "claims_imports: Json<UpstreamOAuthProviderClaimsImports>",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "jwks_uri_override",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "authorization_endpoint_override",
         "type_info": "Text"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "token_endpoint_override",
         "type_info": "Text"
       },
       {
-        "ordinal": 15,
-        "name": "discovery_mode",
-        "type_info": "Text"
-      },
-      {
         "ordinal": 16,
-        "name": "pkce_mode",
+        "name": "userinfo_endpoint_override",
         "type_info": "Text"
       },
       {
         "ordinal": 17,
-        "name": "response_mode",
+        "name": "discovery_mode",
         "type_info": "Text"
       },
       {
         "ordinal": 18,
+        "name": "pkce_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "response_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
         "name": "additional_parameters: Json<Vec<(String, String)>>",
         "type_info": "Jsonb"
       }
@@ -115,8 +125,10 @@
       true,
       false,
       false,
+      false,
       true,
       false,
+      true,
       true,
       true,
       true,
@@ -126,5 +138,5 @@
       true
     ]
   },
-  "hash": "73f4e5a724a432f1328c6112185cdc9c7a1ae1de45a2a8c02e7a2b8020b41160"
+  "hash": "887bd597132831c5caab2356f2d935c00a32274161ec5265da91d1c75ad0bb2b"
 }

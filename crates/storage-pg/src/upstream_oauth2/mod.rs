@@ -60,12 +60,14 @@ mod tests {
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
                     token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    fetch_userinfo: false,
                     token_endpoint_signing_alg: None,
                     client_id: "client-id".to_owned(),
                     encrypted_client_secret: None,
                     claims_imports: UpstreamOAuthProviderClaimsImports::default(),
                     token_endpoint_override: None,
                     authorization_endpoint_override: None,
+                    userinfo_endpoint_override: None,
                     jwks_uri_override: None,
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
@@ -145,7 +147,7 @@ mod tests {
 
         let session = repo
             .upstream_oauth_session()
-            .complete_with_link(&clock, session, &link, None, None)
+            .complete_with_link(&clock, session, &link, None, None, None)
             .await
             .unwrap();
         // Reload the session
@@ -302,12 +304,14 @@ mod tests {
                         brand_name: None,
                         scope: scope.clone(),
                         token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                        fetch_userinfo: false,
                         token_endpoint_signing_alg: None,
                         client_id,
                         encrypted_client_secret: None,
                         claims_imports: UpstreamOAuthProviderClaimsImports::default(),
                         token_endpoint_override: None,
                         authorization_endpoint_override: None,
+                        userinfo_endpoint_override: None,
                         jwks_uri_override: None,
                         discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                         pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,

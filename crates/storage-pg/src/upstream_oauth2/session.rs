@@ -40,6 +40,7 @@ struct SessionLookup {
     code_challenge_verifier: Option<String>,
     nonce: String,
     id_token: Option<String>,
+    userinfo: Option<serde_json::Value>,
     created_at: DateTime<Utc>,
     completed_at: Option<DateTime<Utc>>,
     consumed_at: Option<DateTime<Utc>>,
@@ -55,22 +56,30 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
             value.upstream_oauth_link_id,
             value.id_token,
             value.extra_callback_parameters,
+            value.userinfo,
             value.completed_at,
             value.consumed_at,
         ) {
-            (None, None, None, None, None) => UpstreamOAuthAuthorizationSessionState::Pending,
-            (Some(link_id), id_token, extra_callback_parameters, Some(completed_at), None) => {
-                UpstreamOAuthAuthorizationSessionState::Completed {
-                    completed_at,
-                    link_id: link_id.into(),
-                    id_token,
-                    extra_callback_parameters,
-                }
-            }
+            (None, None, None, None, None, None) => UpstreamOAuthAuthorizationSessionState::Pending,
             (
                 Some(link_id),
                 id_token,
                 extra_callback_parameters,
+                userinfo,
+                Some(completed_at),
+                None,
+            ) => UpstreamOAuthAuthorizationSessionState::Completed {
+                completed_at,
+                link_id: link_id.into(),
+                id_token,
+                extra_callback_parameters,
+                userinfo,
+            },
+            (
+                Some(link_id),
+                id_token,
+                extra_callback_parameters,
+                userinfo,
                 Some(completed_at),
                 Some(consumed_at),
             ) => UpstreamOAuthAuthorizationSessionState::Consumed {
@@ -78,6 +87,7 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
                 link_id: link_id.into(),
                 id_token,
                 extra_callback_parameters,
+                userinfo,
                 consumed_at,
             },
             _ => {
@@ -128,6 +138,7 @@ impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c>
                     nonce,
                     id_token,
                     extra_callback_parameters,
+                    userinfo,
                     created_at,
                     completed_at,
                     consumed_at
@@ -184,8 +195,9 @@ impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c>
                     created_at,
                     completed_at,
                     consumed_at,
-                    id_token
-                ) VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL, NULL)
+                    id_token,
+                    userinfo
+                ) VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL, NULL, NULL)
             "#,
             Uuid::from(id),
             Uuid::from(upstream_oauth_provider.id),
@@ -226,6 +238,7 @@ impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c>
         upstream_oauth_link: &UpstreamOAuthLink,
         id_token: Option<String>,
         extra_callback_parameters: Option<serde_json::Value>,
+        userinfo: Option<serde_json::Value>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error> {
         let completed_at = clock.now();
 
@@ -235,13 +248,15 @@ impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c>
                 SET upstream_oauth_link_id = $1,
                     completed_at = $2,
                     id_token = $3,
-                    extra_callback_parameters = $4
-                WHERE upstream_oauth_authorization_session_id = $5
+                    extra_callback_parameters = $4,
+                    userinfo = $5
+                WHERE upstream_oauth_authorization_session_id = $6
             "#,
             Uuid::from(upstream_oauth_link.id),
             completed_at,
             id_token,
             extra_callback_parameters,
+            userinfo,
             Uuid::from(upstream_oauth_authorization_session.id),
         )
         .traced()
@@ -254,6 +269,7 @@ impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c>
                 upstream_oauth_link,
                 id_token,
                 extra_callback_parameters,
+                userinfo,
             )
             .map_err(DatabaseError::to_invalid_operation)?;
 

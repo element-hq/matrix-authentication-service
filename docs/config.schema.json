@@ -1895,8 +1895,18 @@
             }
           ]
         },
+        "fetch_userinfo": {
+          "description": "Whether to fetch the user profile from the userinfo endpoint, or to rely on the data returned in the `id_token` from the `token_endpoint`.\n\nDefaults to `false`.",
+          "default": false,
+          "type": "boolean"
+        },
         "authorization_endpoint": {
           "description": "The URL to use for the provider's authorization endpoint\n\nDefaults to the `authorization_endpoint` provided through discovery",
+          "type": "string",
+          "format": "uri"
+        },
+        "userinfo_endpoint": {
+          "description": "The URL to use for the provider's userinfo endpoint\n\nDefaults to the `userinfo_endpoint` provided through discovery",
           "type": "string",
           "format": "uri"
         },

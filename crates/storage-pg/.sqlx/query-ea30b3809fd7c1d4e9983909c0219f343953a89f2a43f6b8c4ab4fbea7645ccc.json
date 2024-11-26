@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    extra_callback_parameters,\n                    created_at,\n                    completed_at,\n                    consumed_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    extra_callback_parameters,\n                    userinfo,\n                    created_at,\n                    completed_at,\n                    consumed_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -45,16 +45,21 @@
       },
       {
         "ordinal": 8,
+        "name": "userinfo",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "completed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "consumed_at",
         "type_info": "Timestamptz"
       }
@@ -73,10 +78,11 @@
       false,
       true,
       true,
+      true,
       false,
       true,
       true
     ]
   },
-  "hash": "7d329e0c57f36b9ffe2aa7ddf4a21e293522c00009cca0222524b0c73f6eee30"
+  "hash": "ea30b3809fd7c1d4e9983909c0219f343953a89f2a43f6b8c4ab4fbea7645ccc"
 }
