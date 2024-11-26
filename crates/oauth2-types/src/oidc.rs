@@ -950,7 +950,7 @@ impl VerifiedProviderMetadata {
         }
     }
 
-    /// TODO
+    /// URL of the authorization server's userinfo endpoint.
     #[must_use]
     pub fn userinfo_endpoint(&self) -> &Url {
         match &self.userinfo_endpoint {
