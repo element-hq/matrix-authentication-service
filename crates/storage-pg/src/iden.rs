@@ -98,6 +98,7 @@ pub enum UpstreamOAuthProviders {
     EncryptedClientSecret,
     TokenEndpointSigningAlg,
     TokenEndpointAuthMethod,
+    FetchUserinfo,
     CreatedAt,
     DisabledAt,
     ClaimsImports,

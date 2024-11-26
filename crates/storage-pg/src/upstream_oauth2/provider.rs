@@ -72,6 +72,8 @@ struct ProviderLookup {
 
 impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
     type Error = DatabaseInconsistencyError;
+
+    #[allow(clippy::too_many_lines)]
     fn try_from(value: ProviderLookup) -> Result<Self, Self::Error> {
         let id = value.upstream_oauth_provider_id.into();
         let scope = value.scope.parse().map_err(|e| {
@@ -680,6 +682,13 @@ impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'
                     UpstreamOAuthProviders::CreatedAt,
                 )),
                 ProviderLookupIden::CreatedAt,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::FetchUserinfo,
+                )),
+                ProviderLookupIden::FetchUserinfo,
             )
             .expr_as(
                 Expr::col((
