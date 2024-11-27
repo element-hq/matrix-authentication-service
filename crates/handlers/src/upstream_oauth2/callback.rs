@@ -14,10 +14,9 @@ use axum_extra::response::Html;
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
+use mas_jose::claims::TokenHash;
 use mas_keystore::{Encrypter, Keystore};
-use mas_oidc_client::requests::{
-    authorization_code::AuthorizationValidationData, jose::JwtVerificationData,
-};
+use mas_oidc_client::requests::jose::JwtVerificationData;
 use mas_router::UrlBuilder;
 use mas_storage::{
     upstream_oauth2::{
@@ -27,7 +26,7 @@ use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock,
 };
 use mas_templates::{FormPostContext, Templates};
-use oauth2_types::errors::ClientErrorCode;
+use oauth2_types::{errors::ClientErrorCode, requests::AccessTokenRequest};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
@@ -88,9 +87,6 @@ pub(crate) enum RouteError {
     #[error("State parameter mismatch")]
     StateMismatch,
 
-    #[error("Missing ID token")]
-    MissingIDToken,
-
     #[error("Could not extract subject from ID token")]
     ExtractSubject(#[source] minijinja::Error),
 
@@ -125,7 +121,8 @@ impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_oidc_client::error::DiscoveryError);
 impl_from_error_for_route!(mas_oidc_client::error::JwksError);
-impl_from_error_for_route!(mas_oidc_client::error::TokenAuthorizationCodeError);
+impl_from_error_for_route!(mas_oidc_client::error::TokenRequestError);
+impl_from_error_for_route!(mas_oidc_client::error::IdTokenError);
 impl_from_error_for_route!(mas_oidc_client::error::UserInfoError);
 impl_from_error_for_route!(super::ProviderCredentialsError);
 impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
@@ -253,11 +250,6 @@ pub(crate) async fn handler(
 
     let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
-    // Fetch the JWKS
-    let jwks =
-        mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
-            .await?;
-
     // Figure out the client credentials
     let client_credentials = client_credentials_for_provider(
         &provider,
@@ -268,41 +260,72 @@ pub(crate) async fn handler(
 
     let redirect_uri = url_builder.upstream_oauth_callback(provider.id);
 
-    // TODO: all that should be borrowed
-    let validation_data = AuthorizationValidationData {
-        state: session.state_str.clone(),
-        nonce: session.nonce.clone(),
-        code_challenge_verifier: session.code_challenge_verifier.clone(),
-        redirect_uri,
-    };
+    let token_response = mas_oidc_client::requests::token::request_access_token(
+        &client,
+        client_credentials,
+        lazy_metadata.token_endpoint().await?,
+        AccessTokenRequest::AuthorizationCode(oauth2_types::requests::AuthorizationCodeGrant {
+            code: code.clone(),
+            redirect_uri: Some(redirect_uri),
+            code_verifier: session.code_challenge_verifier.clone(),
+        }),
+        clock.now(),
+        &mut rng,
+    )
+    .await?;
 
-    let verification_data = JwtVerificationData {
-        issuer: &provider.issuer,
-        jwks: &jwks,
-        // TODO: make that configurable
-        signing_algorithm: &mas_iana::jose::JsonWebSignatureAlg::Rs256,
-        client_id: &provider.client_id,
-    };
+    let mut context = AttributeMappingContext::new();
+    if let Some(id_token) = token_response.id_token.as_ref() {
+        // Fetch the JWKS
+        let jwks =
+            mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
+                .await?;
 
-    let (response, id_token_map) =
-        mas_oidc_client::requests::authorization_code::access_token_with_authorization_code(
-            &client,
-            client_credentials,
-            lazy_metadata.token_endpoint().await?,
-            code,
-            validation_data,
-            Some(verification_data),
+        let verification_data = JwtVerificationData {
+            issuer: &provider.issuer,
+            jwks: &jwks,
+            // TODO: make that configurable
+            signing_algorithm: &mas_iana::jose::JsonWebSignatureAlg::Rs256,
+            client_id: &provider.client_id,
+        };
+
+        // Decode and verify the ID token
+        let id_token = mas_oidc_client::requests::jose::verify_id_token(
+            id_token,
+            verification_data,
+            None,
             clock.now(),
-            &mut rng,
-        )
-        .await?;
+        )?;
 
-    let (_header, id_token) = id_token_map
-        .clone()
-        .ok_or(RouteError::MissingIDToken)?
-        .into_parts();
+        let (_headers, mut claims) = id_token.into_parts();
 
-    let mut context = AttributeMappingContext::new().with_id_token_claims(id_token);
+        // Access token hash must match.
+        mas_jose::claims::AT_HASH
+            .extract_optional_with_options(
+                &mut claims,
+                TokenHash::new(
+                    verification_data.signing_algorithm,
+                    &token_response.access_token,
+                ),
+            )
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
+
+        // Code hash must match.
+        mas_jose::claims::C_HASH
+            .extract_optional_with_options(
+                &mut claims,
+                TokenHash::new(verification_data.signing_algorithm, &code),
+            )
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
+
+        // Nonce must match.
+        mas_jose::claims::NONCE
+            .extract_required_with_options(&mut claims, session.nonce.as_str())
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
+
+        context = context.with_id_token_claims(claims);
+    }
+
     if let Some(extra_callback_parameters) = extra_callback_parameters.clone() {
         context = context.with_extra_callback_parameters(extra_callback_parameters);
     }
@@ -312,9 +335,8 @@ pub(crate) async fn handler(
             mas_oidc_client::requests::userinfo::fetch_userinfo(
                 &client,
                 lazy_metadata.userinfo_endpoint().await?,
-                response.access_token.as_str(),
-                Some(verification_data),
-                &id_token_map.ok_or(RouteError::MissingIDToken)?,
+                token_response.access_token.as_str(),
+                None,
             )
             .await?
         ))
@@ -364,7 +386,7 @@ pub(crate) async fn handler(
             &clock,
             session,
             &link,
-            response.id_token,
+            token_response.id_token,
             extra_callback_parameters,
             userinfo,
         )

@@ -13,7 +13,6 @@ use std::collections::HashMap;
 use headers::{ContentType, HeaderMapExt, HeaderValue};
 use http::header::ACCEPT;
 use mas_http::RequestBuilderExt;
-use mas_jose::claims;
 use mime::Mime;
 use serde_json::Value;
 use url::Url;
@@ -22,7 +21,6 @@ use super::jose::JwtVerificationData;
 use crate::{
     error::{IdTokenError, ResponseExt, UserInfoError},
     requests::jose::verify_signed_jwt,
-    types::IdToken,
 };
 
 /// Obtain information about an authenticated end-user.
@@ -59,7 +57,6 @@ pub async fn fetch_userinfo(
     userinfo_endpoint: &Url,
     access_token: &str,
     jwt_verification_data: Option<JwtVerificationData<'_>>,
-    auth_id_token: &IdToken<'_>,
 ) -> Result<HashMap<String, Value>, UserInfoError> {
     tracing::debug!("Obtaining user info…");
 
@@ -94,7 +91,7 @@ pub async fn fetch_userinfo(
         });
     }
 
-    let mut claims = if let Some(verification_data) = jwt_verification_data {
+    let claims = if let Some(verification_data) = jwt_verification_data {
         let response_body = userinfo_response.text().await?;
         verify_signed_jwt(&response_body, verification_data)
             .map_err(IdTokenError::from)?
@@ -103,19 +100,6 @@ pub async fn fetch_userinfo(
     } else {
         userinfo_response.json().await?
     };
-
-    let mut auth_claims = auth_id_token.payload().clone();
-
-    // Subject identifier must always be the same.
-    let sub = claims::SUB
-        .extract_required(&mut claims)
-        .map_err(IdTokenError::from)?;
-    let auth_sub = claims::SUB
-        .extract_required(&mut auth_claims)
-        .map_err(IdTokenError::from)?;
-    if sub != auth_sub {
-        return Err(IdTokenError::WrongSubjectIdentifier.into());
-    }
 
     Ok(claims)
 }
