@@ -7,7 +7,9 @@
 //! Requests for the Token endpoint.
 
 use chrono::{DateTime, Utc};
+use http::header::ACCEPT;
 use mas_http::RequestBuilderExt;
+use mime::APPLICATION_JSON;
 use oauth2_types::requests::{AccessTokenRequest, AccessTokenResponse};
 use rand::Rng;
 use url::Url;
@@ -48,7 +50,9 @@ pub async fn request_access_token(
 ) -> Result<AccessTokenResponse, TokenRequestError> {
     tracing::debug!(?request, "Requesting access token...");
 
-    let token_request = http_client.post(token_endpoint.as_str());
+    let token_request = http_client
+        .post(token_endpoint.as_str())
+        .header(ACCEPT, APPLICATION_JSON.as_ref());
 
     let token_response = client_credentials
         .authenticated_form(token_request, &request, now, rng)?

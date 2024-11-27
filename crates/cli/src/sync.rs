@@ -251,7 +251,7 @@ pub async fn config_sync(
                 }
 
                 if provider.jwks_uri.is_none() {
-                    error!("Provider has discovery disabled but no JWKS URI set");
+                    warn!("Provider has discovery disabled but no JWKS URI set");
                 }
             }
 
