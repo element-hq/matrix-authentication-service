@@ -200,6 +200,10 @@ pub enum IdTokenError {
     /// one we got before.
     #[error("wrong authentication time")]
     WrongAuthTime,
+
+    #[error(transparent)]
+    /// TODO
+    Deserialize(#[from] serde_json::Error),
 }
 
 /// All errors that can occur when adding client credentials to the request.
