@@ -96,6 +96,6 @@ impl Options {
 
         configs
             .into_iter()
-            .fold(base, |f, path| f.merge(Yaml::file(path)))
+            .fold(base, |f, path| f.admerge(Yaml::file(path)))
     }
 }
