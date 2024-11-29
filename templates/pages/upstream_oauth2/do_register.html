@@ -71,11 +71,6 @@ Please see LICENSE in the repository root for full details.
           <p class="account">
             {{- upstream_oauth_link.human_account_name -}}
           </p>
-        {% elif imported_email %}
-          {# We fallback to the email if we have one #}
-          <p class="account">
-            {{- imported_email -}}
-          </p>
         {% endif %}
       </div>
     </section>
