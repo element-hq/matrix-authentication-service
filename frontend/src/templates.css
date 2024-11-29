@@ -139,3 +139,39 @@
     color: var(--cpd-color-text-primary);
   }
 }
+
+.upstream-oauth2-provider-account {
+  display: flex;
+  gap: var(--cpd-space-4x);
+  background-color: var(--cpd-color-bg-text-on-solid-primary);
+  border: solid 1px var(--cpd-color-gray-400);
+  border-radius: var(--cpd-space-3x);
+  padding: var(--cpd-space-4x);
+  align-items: center;
+
+  & > svg {
+    height: var(--cpd-space-6x);
+    width: var(--cpd-space-6x);
+
+    &:not(.brand) {
+      color: var(--cpd-color-icon-secondary);
+    }
+  }
+
+  & .infos {
+    display: flex;
+    flex-direction: column;
+
+    & .provider {
+      font: var(--cpd-font-body-md-semibold);
+      letter-spacing: var(--cpd-font-letter-spacing-body-md);
+      color: var(--cpd-color-text-primary);
+    }
+
+    & .account {
+      font: var(--cpd-font-body-md-regular);
+      letter-spacing: var(--cpd-font-letter-spacing-body-md);
+      color: var(--cpd-color-text-secondary);
+    }
+  }
+}

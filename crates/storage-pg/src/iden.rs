@@ -122,5 +122,6 @@ pub enum UpstreamOAuthLinks {
     UpstreamOAuthProviderId,
     UserId,
     Subject,
+    HumanAccountName,
     CreatedAt,
 }

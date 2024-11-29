@@ -2120,6 +2120,14 @@
               "$ref": "#/definitions/EmailImportPreference"
             }
           ]
+        },
+        "account_name": {
+          "description": "Set a human-readable name for the upstream account for display purposes",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AccountNameImportPreference"
+            }
+          ]
         }
       }
     },
@@ -2253,6 +2261,16 @@
           ]
         }
       ]
+    },
+    "AccountNameImportPreference": {
+      "description": "What should be done for the account name attribute",
+      "type": "object",
+      "properties": {
+        "template": {
+          "description": "The Jinja2 template to use for the account name. This name is only used for display purposes.\n\nIf not provided, it will be ignored.",
+          "type": "string"
+        }
+      }
     },
     "BrandingConfig": {
       "description": "Configuration section for tweaking the branding of the service",

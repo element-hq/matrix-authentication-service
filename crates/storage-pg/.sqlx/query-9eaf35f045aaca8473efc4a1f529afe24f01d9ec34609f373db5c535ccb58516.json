@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO upstream_oauth_links (\n                    upstream_oauth_link_id,\n                    upstream_oauth_provider_id,\n                    user_id,\n                    subject,\n                    human_account_name,\n                    created_at\n                ) VALUES ($1, $2, NULL, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9eaf35f045aaca8473efc4a1f529afe24f01d9ec34609f373db5c535ccb58516"
+}

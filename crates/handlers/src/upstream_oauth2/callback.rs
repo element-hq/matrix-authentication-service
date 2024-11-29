@@ -359,7 +359,7 @@ pub(crate) async fn handler(
         .as_deref()
         .unwrap_or("{{ user.sub }}");
     let subject = env
-        .render_str(template, context)
+        .render_str(template, context.clone())
         .map_err(RouteError::ExtractSubject)?;
 
     if subject.is_empty() {
@@ -375,8 +375,26 @@ pub(crate) async fn handler(
     let link = if let Some(link) = maybe_link {
         link
     } else {
+        // Try to render the human account name if we have one,
+        // but just log if it fails
+        let human_account_name = provider
+            .claims_imports
+            .account_name
+            .template
+            .as_deref()
+            .and_then(|template| match env.render_str(template, context) {
+                Ok(name) => Some(name),
+                Err(e) => {
+                    tracing::warn!(
+                        error = &e as &dyn std::error::Error,
+                        "Failed to render account name"
+                    );
+                    None
+                }
+            });
+
         repo.upstream_oauth_link()
-            .add(&mut rng, &clock, &provider, subject)
+            .add(&mut rng, &clock, &provider, subject, human_account_name)
             .await?
     };
 

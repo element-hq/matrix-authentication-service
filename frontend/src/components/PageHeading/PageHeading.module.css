@@ -42,8 +42,8 @@
     }
 
     & svg {
-      height: var(--cpd-space-10x);
-      width: var(--cpd-space-10x);
+      height: var(--cpd-space-8x);
+      width: var(--cpd-space-8x);
       color: var(--cpd-color-icon-secondary);
     }
   }

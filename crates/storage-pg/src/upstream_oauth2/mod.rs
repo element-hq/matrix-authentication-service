@@ -124,7 +124,7 @@ mod tests {
         // Create a link
         let link = repo
             .upstream_oauth_link()
-            .add(&mut rng, &clock, &provider, "a-subject".to_owned())
+            .add(&mut rng, &clock, &provider, "a-subject".to_owned(), None)
             .await
             .unwrap();
 

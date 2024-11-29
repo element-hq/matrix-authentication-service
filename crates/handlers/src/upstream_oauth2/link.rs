@@ -332,7 +332,7 @@ pub(crate) async fn get(
                 .await?
                 .ok_or(RouteError::ProviderNotFound)?;
 
-            let ctx = UpstreamRegister::default();
+            let ctx = UpstreamRegister::new(link.clone(), provider.clone());
 
             let env = environment();
 
@@ -596,7 +596,7 @@ pub(crate) async fn post(
                 .map_or(false, |v| v == "true");
 
             // Create a template context in case we need to re-render because of an error
-            let ctx = UpstreamRegister::default();
+            let ctx = UpstreamRegister::new(link.clone(), provider.clone());
 
             let display_name = if provider
                 .claims_imports
@@ -954,7 +954,13 @@ mod tests {
 
         let link = repo
             .upstream_oauth_link()
-            .add(&mut rng, &state.clock, &provider, "subject".to_owned())
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                "subject".to_owned(),
+                None,
+            )
             .await
             .unwrap();
 

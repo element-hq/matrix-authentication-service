@@ -14,7 +14,7 @@
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:68:35-61, pages/upstream_oauth2/do_register.html:149:26-52"
+      "context": "pages/login.html:68:35-61, pages/upstream_oauth2/do_register.html:192:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -71,11 +71,11 @@
   "common": {
     "display_name": "Display Name",
     "@display_name": {
-      "context": "pages/upstream_oauth2/do_register.html:107:37-61"
+      "context": "pages/upstream_oauth2/do_register.html:146:37-61"
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/account/emails/add.html:33:33-58, pages/recovery/start.html:34:33-58, pages/register.html:40:35-60, pages/upstream_oauth2/do_register.html:79:37-62"
+      "context": "pages/account/emails/add.html:33:33-58, pages/recovery/start.html:34:33-58, pages/register.html:40:35-60, pages/upstream_oauth2/do_register.html:114:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -83,7 +83,7 @@
     },
     "mxid": "Matrix ID",
     "@mxid": {
-      "context": "pages/upstream_oauth2/do_register.html:58:35-51"
+      "context": "pages/upstream_oauth2/do_register.html:93:35-51"
     },
     "password": "Password",
     "@password": {
@@ -95,7 +95,7 @@
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:46:37-57, pages/register.html:36:35-55, pages/upstream_oauth2/do_register.html:66:35-55, pages/upstream_oauth2/do_register.html:71:39-59"
+      "context": "pages/login.html:46:37-57, pages/register.html:36:35-55, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
     }
   },
   "error": {
@@ -519,7 +519,7 @@
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register.html:53:37-97, pages/upstream_oauth2/do_register.html:136:35-95"
+        "context": "pages/register.html:53:37-97, pages/upstream_oauth2/do_register.html:179:35-95"
       }
     },
     "scope": {
@@ -570,11 +570,11 @@
         "choose_username": {
           "description": "This cannot be changed later.",
           "@description": {
-            "context": "pages/upstream_oauth2/do_register.html:38:13-74"
+            "context": "pages/upstream_oauth2/do_register.html:52:13-74"
           },
           "heading": "Choose your username",
           "@heading": {
-            "context": "pages/upstream_oauth2/do_register.html:35:13-70",
+            "context": "pages/upstream_oauth2/do_register.html:49:13-70",
             "description": "Displayed when creating a new account from an SSO login, and the username is not forced"
           }
         },
@@ -584,7 +584,7 @@
         },
         "enforced_by_policy": "Enforced by server policy",
         "@enforced_by_policy": {
-          "context": "pages/upstream_oauth2/do_register.html:62:14-66"
+          "context": "pages/upstream_oauth2/do_register.html:97:14-66"
         },
         "forced_display_name": "Will use the following display name",
         "@forced_display_name": {
@@ -601,20 +601,34 @@
         "import_data": {
           "description": "Confirm the information that will be linked to your new %(server_name)s account.",
           "@description": {
-            "context": "pages/upstream_oauth2/do_register.html:23:13-104"
+            "context": "pages/upstream_oauth2/do_register.html:25:13-104"
           },
           "heading": "Import your data",
           "@heading": {
-            "context": "pages/upstream_oauth2/do_register.html:20:13-66"
+            "context": "pages/upstream_oauth2/do_register.html:22:13-66"
           }
         },
         "imported_from_upstream": "Imported from your upstream account",
         "@imported_from_upstream": {
-          "context": "pages/upstream_oauth2/do_register.html:111:16-72, pages/upstream_oauth2/do_register.html:83:16-72"
+          "context": "pages/upstream_oauth2/do_register.html:121:18-74, pages/upstream_oauth2/do_register.html:153:18-74"
+        },
+        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
+        "@imported_from_upstream_with_name": {
+          "context": "pages/upstream_oauth2/do_register.html:119:18-131, pages/upstream_oauth2/do_register.html:151:18-131"
         },
         "link_existing": "Link to an existing account",
         "@link_existing": {
           "description": "Button to link an existing account after an SSO login"
+        },
+        "provider_name": "%(human_name)s account",
+        "@provider_name": {
+          "context": "pages/upstream_oauth2/do_register.html:68:14-108"
+        },
+        "signup_with_upstream": {
+          "heading": "Continue signing up with your %(human_name)s account",
+          "@heading": {
+            "context": "pages/upstream_oauth2/do_register.html:37:13-122"
+          }
         },
         "suggested_display_name": "Import display name",
         "@suggested_display_name": {
@@ -626,7 +640,7 @@
         },
         "use": "Use",
         "@use": {
-          "context": "pages/upstream_oauth2/do_register.html:127:20-57, pages/upstream_oauth2/do_register.html:98:18-55"
+          "context": "pages/upstream_oauth2/do_register.html:137:18-55, pages/upstream_oauth2/do_register.html:170:20-57"
         }
       },
       "suggest_link": {

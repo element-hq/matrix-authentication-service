@@ -14,5 +14,6 @@ pub struct UpstreamOAuthLink {
     pub provider_id: Ulid,
     pub user_id: Option<Ulid>,
     pub subject: String,
+    pub human_account_name: Option<String>,
     pub created_at: DateTime<Utc>,
 }

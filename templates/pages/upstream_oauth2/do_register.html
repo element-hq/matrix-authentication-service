@@ -8,6 +8,8 @@ Please see LICENSE in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% from "components/idp_brand.html" import logo %}
+
 {% block content %}
   {% if force_localpart %}
     <header class="page-heading">
@@ -22,6 +24,18 @@ Please see LICENSE in the repository root for full details.
         <p class="text">
           {{ _("mas.upstream_oauth2.register.import_data.description", server_name=branding.server_name) }}
         </p>
+      </div>
+    </header>
+  {% elif upstream_oauth_provider.human_name %}
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">
+          {{ _("mas.upstream_oauth2.register.signup_with_upstream.heading", human_name=upstream_oauth_provider.human_name) }}
+        </h1>
       </div>
     </header>
   {% else %}
@@ -39,6 +53,27 @@ Please see LICENSE in the repository root for full details.
         </p>
       </div>
     </header>
+  {% endif %}
+
+  {% if upstream_oauth_provider.human_name %}
+    <section class="upstream-oauth2-provider-account">
+      {% if upstream_oauth_provider.brand_name %}
+        {{ logo(brand=upstream_oauth_provider.brand_name, class="brand") }}
+      {% else %}
+        {{ icon.user_profile() }}
+      {% endif %}
+
+      <div class="infos">
+        <h3 class="provider">
+          {{- _("mas.upstream_oauth2.register.provider_name", human_name=upstream_oauth_provider.human_name) -}}
+        </h3>
+        {% if upstream_oauth_link.human_account_name %}
+          <p class="account">
+            {{- upstream_oauth_link.human_account_name -}}
+          </p>
+        {% endif %}
+      </div>
+    </section>
   {% endif %}
 
   <form method="POST" class="cpd-form-root">
@@ -80,7 +115,11 @@ Please see LICENSE in the repository root for full details.
           <input {{ field.attributes(f) }} class="cpd-text-control" type="email" value="{{ imported_email }}" readonly aria-describedby="{{ f.id }}-help" />
 
           <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
-            {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% if upstream_oauth_provider.human_name %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream_with_name", human_name=upstream_oauth_provider.human_name) -}}
+            {% else %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% endif %}
           </div>
         {% endcall %}
 
@@ -108,7 +147,11 @@ Please see LICENSE in the repository root for full details.
           <input {{ field.attributes(f) }} class="cpd-text-control" type="text" value="{{ imported_display_name }}" readonly />
 
           <div class="cpd-form-message cpd-form-help-message">
-            {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% if upstream_oauth_provider.human_name %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream_with_name", human_name=upstream_oauth_provider.human_name) -}}
+            {% else %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% endif %}
           </div>
         {% endcall %}
 
