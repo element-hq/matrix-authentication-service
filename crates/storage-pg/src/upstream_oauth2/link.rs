@@ -47,6 +47,7 @@ struct LinkLookup {
     upstream_oauth_provider_id: Uuid,
     user_id: Option<Uuid>,
     subject: String,
+    human_account_name: Option<String>,
     created_at: DateTime<Utc>,
 }
 
@@ -57,6 +58,7 @@ impl From<LinkLookup> for UpstreamOAuthLink {
             provider_id: Ulid::from(value.upstream_oauth_provider_id),
             user_id: value.user_id.map(Ulid::from),
             subject: value.subject,
+            human_account_name: value.human_account_name,
             created_at: value.created_at,
         }
     }
@@ -124,6 +126,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
                     upstream_oauth_provider_id,
                     user_id,
                     subject,
+                    human_account_name,
                     created_at
                 FROM upstream_oauth_links
                 WHERE upstream_oauth_link_id = $1
@@ -163,6 +166,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
                     upstream_oauth_provider_id,
                     user_id,
                     subject,
+                    human_account_name,
                     created_at
                 FROM upstream_oauth_links
                 WHERE upstream_oauth_provider_id = $1
@@ -186,6 +190,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
             db.query.text,
             upstream_oauth_link.id,
             upstream_oauth_link.subject = subject,
+            upstream_oauth_link.human_account_name = human_account_name,
             %upstream_oauth_provider.id,
             %upstream_oauth_provider.issuer,
             %upstream_oauth_provider.client_id,
@@ -198,6 +203,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: String,
+        human_account_name: Option<String>,
     ) -> Result<UpstreamOAuthLink, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
@@ -210,12 +216,14 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
                     upstream_oauth_provider_id,
                     user_id,
                     subject,
+                    human_account_name,
                     created_at
-                ) VALUES ($1, $2, NULL, $3, $4)
+                ) VALUES ($1, $2, NULL, $3, $4, $5)
             "#,
             Uuid::from(id),
             Uuid::from(upstream_oauth_provider.id),
             &subject,
+            human_account_name.as_deref(),
             created_at,
         )
         .traced()
@@ -227,6 +235,7 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
             provider_id: upstream_oauth_provider.id,
             user_id: None,
             subject,
+            human_account_name,
             created_at,
         })
     }
@@ -299,6 +308,13 @@ impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
             .expr_as(
                 Expr::col((UpstreamOAuthLinks::Table, UpstreamOAuthLinks::Subject)),
                 LinkLookupIden::Subject,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthLinks::Table,
+                    UpstreamOAuthLinks::HumanAccountName,
+                )),
+                LinkLookupIden::HumanAccountName,
             )
             .expr_as(
                 Expr::col((UpstreamOAuthLinks::Table, UpstreamOAuthLinks::CreatedAt)),

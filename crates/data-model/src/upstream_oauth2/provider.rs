@@ -302,9 +302,13 @@ pub struct ClaimsImports {
     pub email: ImportPreference,
 
     #[serde(default)]
+    pub account_name: SubjectPreference,
+
+    #[serde(default)]
     pub verify_email: SetEmailVerification,
 }
 
+// XXX: this should have another name
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct SubjectPreference {
     #[serde(default)]

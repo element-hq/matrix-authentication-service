@@ -285,6 +285,23 @@ impl EmailImportPreference {
     }
 }
 
+/// What should be done for the account name attribute
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+pub struct AccountNameImportPreference {
+    /// The Jinja2 template to use for the account name. This name is only used
+    /// for display purposes.
+    ///
+    /// If not provided, it will be ignored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<String>,
+}
+
+impl AccountNameImportPreference {
+    const fn is_default(&self) -> bool {
+        self.template.is_none()
+    }
+}
+
 /// How claims should be imported
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct ClaimsImports {
@@ -307,6 +324,13 @@ pub struct ClaimsImports {
     /// `email_verified` claims
     #[serde(default, skip_serializing_if = "EmailImportPreference::is_default")]
     pub email: EmailImportPreference,
+
+    /// Set a human-readable name for the upstream account for display purposes
+    #[serde(
+        default,
+        skip_serializing_if = "AccountNameImportPreference::is_default"
+    )]
+    pub account_name: AccountNameImportPreference,
 }
 
 impl ClaimsImports {

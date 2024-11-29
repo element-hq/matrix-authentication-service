@@ -67,6 +67,9 @@ fn map_claims_imports(
                 mas_data_model::UpsreamOAuthProviderSetEmailVerification::Import
             }
         },
+        account_name: mas_data_model::UpstreamOAuthProviderSubjectPreference {
+            template: config.account_name.template.clone(),
+        },
     }
 }
 

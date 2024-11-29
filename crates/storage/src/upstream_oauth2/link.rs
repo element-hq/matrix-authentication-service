@@ -128,6 +128,7 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
     /// * `upsream_oauth_provider`: The upstream OAuth provider for which to
     ///   create the link
     /// * `subject`: The subject of the upstream OAuth link to create
+    /// * `human_account_name`: A human-readable name for the upstream account
     ///
     /// # Errors
     ///
@@ -138,6 +139,7 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: String,
+        human_account_name: Option<String>,
     ) -> Result<UpstreamOAuthLink, Self::Error>;
 
     /// Associate an upstream OAuth link to a user
@@ -201,6 +203,7 @@ repository_impl!(UpstreamOAuthLinkRepository:
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: String,
+        human_account_name: Option<String>,
     ) -> Result<UpstreamOAuthLink, Self::Error>;
 
     async fn associate_to_user(

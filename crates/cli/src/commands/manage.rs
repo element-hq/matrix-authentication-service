@@ -955,9 +955,10 @@ impl UserCreationRequest<'_> {
         }
 
         for (provider, subject) in upstream_provider_mappings {
+            // Note that we don't pass a human_account_name here, as we don't ask for it
             let link = repo
                 .upstream_oauth_link()
-                .add(rng, clock, provider, subject)
+                .add(rng, clock, provider, subject, None)
                 .await?;
 
             repo.upstream_oauth_link()
