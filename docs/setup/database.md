@@ -4,6 +4,13 @@ The service uses a [PostgreSQL](https://www.postgresql.org/) database to store a
 Although it may be possible to run with earlier versions, it is recommended to use **PostgreSQL 13** or later.
 Connection to the database is configured in the [`database`](../reference/configuration.md#database) section of the configuration file.
 
+## A warning about database pooling software
+
+MAS must not be connected to a database pooler (such as pgBouncer or pgCat) when it is configured in transaction pooling mode.
+This is because MAS uses advisory locks, which are not compatible with transaction pooling.
+
+You should instead configure such poolers in session pooling mode.
+
 ## Set up a database
 
 You will need to create a dedicated PostgreSQL database for the service.
