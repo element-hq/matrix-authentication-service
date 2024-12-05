@@ -128,7 +128,7 @@ impl Filter for CompatSsoLoginFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> CompatSsoLoginRepository for PgCompatSsoLoginRepository<'c> {
+impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

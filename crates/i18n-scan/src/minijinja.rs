@@ -19,7 +19,7 @@ pub fn find_in_stmt<'a>(context: &mut Context, stmt: &'a Stmt<'a>) -> Result<(),
         Stmt::EmitRaw(_raw) => {}
         Stmt::ForLoop(for_loop) => {
             find_in_expr(context, &for_loop.iter)?;
-            find_in_optional_expr(context, &for_loop.filter_expr)?;
+            find_in_optional_expr(context, for_loop.filter_expr.as_ref())?;
             find_in_expr(context, &for_loop.target)?;
             find_in_stmts(context, &for_loop.body)?;
             find_in_stmts(context, &for_loop.else_body)?;
@@ -66,7 +66,7 @@ pub fn find_in_stmt<'a>(context: &mut Context, stmt: &'a Stmt<'a>) -> Result<(),
             find_in_expr(context, &from_import.expr)?;
             for (name, alias) in &from_import.names {
                 find_in_expr(context, name)?;
-                find_in_optional_expr(context, alias)?;
+                find_in_optional_expr(context, alias.as_ref())?;
             }
         }
         Stmt::Extends(extends) => {
@@ -185,9 +185,9 @@ fn find_in_expr<'a>(context: &mut Context, expr: &'a Expr<'a>) -> Result<(), min
         Expr::Const(_const) => {}
         Expr::Slice(slice) => {
             find_in_expr(context, &slice.expr)?;
-            find_in_optional_expr(context, &slice.start)?;
-            find_in_optional_expr(context, &slice.stop)?;
-            find_in_optional_expr(context, &slice.step)?;
+            find_in_optional_expr(context, slice.start.as_ref())?;
+            find_in_optional_expr(context, slice.stop.as_ref())?;
+            find_in_optional_expr(context, slice.step.as_ref())?;
         }
         Expr::UnaryOp(unary_op) => {
             find_in_expr(context, &unary_op.expr)?;
@@ -199,10 +199,10 @@ fn find_in_expr<'a>(context: &mut Context, expr: &'a Expr<'a>) -> Result<(), min
         Expr::IfExpr(if_expr) => {
             find_in_expr(context, &if_expr.test_expr)?;
             find_in_expr(context, &if_expr.true_expr)?;
-            find_in_optional_expr(context, &if_expr.false_expr)?;
+            find_in_optional_expr(context, if_expr.false_expr.as_ref())?;
         }
         Expr::Filter(filter) => {
-            find_in_optional_expr(context, &filter.expr)?;
+            find_in_optional_expr(context, filter.expr.as_ref())?;
             find_in_call_args(context, &filter.args)?;
         }
         Expr::Test(test) => {
@@ -241,7 +241,7 @@ fn find_in_exprs<'a>(context: &mut Context, exprs: &'a [Expr<'a>]) -> Result<(),
 
 fn find_in_optional_expr<'a>(
     context: &mut Context,
-    expr: &'a Option<Expr<'a>>,
+    expr: Option<&'a Expr<'a>>,
 ) -> Result<(), minijinja::Error> {
     if let Some(expr) = expr {
         find_in_expr(context, expr)?;

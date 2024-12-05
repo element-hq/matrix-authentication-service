@@ -56,7 +56,7 @@ where
     T: 'static,
 {
     type Iter<'a> = Box<dyn Iterator<Item = KeyValue> + 'a>;
-    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'_> {
+    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
         Box::new(self.iter().flat_map(|v| v.attributes(t)))
     }
 }
@@ -67,7 +67,7 @@ where
     T: 'static,
 {
     type Iter<'a> = Box<dyn Iterator<Item = KeyValue> + 'a>;
-    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'_> {
+    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
         Box::new(self.iter().flat_map(|v| v.attributes(t)))
     }
 }
@@ -100,7 +100,7 @@ where
 {
     type Iter<'a> = std::iter::Flatten<std::option::IntoIter<V::Iter<'a>>>;
 
-    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'_> {
+    fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
         self.as_ref().map(|v| v.attributes(t)).into_iter().flatten()
     }
 }

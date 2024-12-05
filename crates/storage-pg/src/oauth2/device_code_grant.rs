@@ -138,7 +138,7 @@ impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
 }
 
 #[async_trait]
-impl<'c> OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'c> {
+impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

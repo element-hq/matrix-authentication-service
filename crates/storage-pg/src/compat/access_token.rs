@@ -50,7 +50,7 @@ impl From<CompatAccessTokenLookup> for CompatAccessToken {
 }
 
 #[async_trait]
-impl<'c> CompatAccessTokenRepository for PgCompatAccessTokenRepository<'c> {
+impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

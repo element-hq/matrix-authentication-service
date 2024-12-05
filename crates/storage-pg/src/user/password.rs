@@ -37,7 +37,7 @@ struct UserPasswordLookup {
 }
 
 #[async_trait]
-impl<'c> UserPasswordRepository for PgUserPasswordRepository<'c> {
+impl UserPasswordRepository for PgUserPasswordRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

@@ -110,7 +110,7 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
 }
 
 #[async_trait]
-impl<'c> UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'c> {
+impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

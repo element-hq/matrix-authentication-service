@@ -25,7 +25,7 @@ impl RawJwt<'static> {
     }
 }
 
-impl<'a> std::fmt::Display for RawJwt<'a> {
+impl std::fmt::Display for RawJwt<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
     }
@@ -57,7 +57,7 @@ impl<'a> RawJwt<'a> {
     }
 }
 
-impl<'a> Deref for RawJwt<'a> {
+impl Deref for RawJwt<'_> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {

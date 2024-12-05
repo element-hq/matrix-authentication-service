@@ -95,7 +95,7 @@ pub struct UpstreamOAuthProviderFilter<'a> {
     _lifetime: PhantomData<&'a ()>,
 }
 
-impl<'a> UpstreamOAuthProviderFilter<'a> {
+impl UpstreamOAuthProviderFilter<'_> {
     /// Create a new [`UpstreamOAuthProviderFilter`] with default values
     #[must_use]
     pub fn new() -> Self {

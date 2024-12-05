@@ -77,7 +77,7 @@ impl From<UserRecoveryTicketRow> for UserRecoveryTicket {
 }
 
 #[async_trait]
-impl<'c> UserRecoveryRepository for PgUserRecoveryRepository<'c> {
+impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

@@ -137,7 +137,7 @@ impl Filter for OAuth2SessionFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> OAuth2SessionRepository for PgOAuth2SessionRepository<'c> {
+impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

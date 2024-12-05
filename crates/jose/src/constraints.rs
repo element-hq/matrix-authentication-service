@@ -91,7 +91,7 @@ pub trait Constrainable {
     fn kty(&self) -> JsonWebKeyType;
 }
 
-impl<'a> Constraint<'a> {
+impl Constraint<'_> {
     fn decide<T: Constrainable>(&self, constrainable: &T) -> ConstraintDecision {
         match self {
             Constraint::Alg { constraint_alg } => {

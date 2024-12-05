@@ -209,7 +209,7 @@ impl Filter for UpstreamOAuthProviderFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'c> {
+impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(
