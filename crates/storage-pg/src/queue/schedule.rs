@@ -8,7 +8,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_storage::queue::{QueueScheduleRepository, Schedule, ScheduleStatus};
+use mas_storage::queue::{QueueScheduleRepository, ScheduleStatus};
 use sqlx::PgConnection;
 
 use crate::{DatabaseError, ExecuteExt};
@@ -45,22 +45,17 @@ impl From<ScheduleLookup> for ScheduleStatus {
 }
 
 #[async_trait]
-impl<'c> QueueScheduleRepository for PgQueueScheduleRepository<'c> {
+impl QueueScheduleRepository for PgQueueScheduleRepository<'_> {
     type Error = DatabaseError;
 
-    async fn setup(&mut self, schedules: &[(&'static str, Schedule)]) -> Result<(), Self::Error> {
+    async fn setup(&mut self, schedules: &[&'static str]) -> Result<(), Self::Error> {
         sqlx::query!(
             r#"
-                INSERT INTO queue_schedules (schedule_name, schedule_expression)
-                SELECT * FROM UNNEST($1::text[], $2::text[]) AS t (schedule_name, schedule_expression)
-                ON CONFLICT (schedule_name) DO UPDATE
-                    SET schedule_expression = EXCLUDED.schedule_expression
+                INSERT INTO queue_schedules (schedule_name)
+                SELECT * FROM UNNEST($1::text[]) AS t (schedule_name)
+                ON CONFLICT (schedule_name) DO NOTHING
             "#,
-            &schedules.iter().map(|(name, _)| (*name).to_owned()).collect::<Vec<_>>(),
-            &schedules
-                .iter()
-                .map(|(_, schedule)| schedule.source().to_owned())
-                .collect::<Vec<_>>()
+            &schedules.iter().map(|&s| s.to_owned()).collect::<Vec<_>>(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -74,7 +69,7 @@ impl<'c> QueueScheduleRepository for PgQueueScheduleRepository<'c> {
             ScheduleLookup,
             r#"
                 SELECT
-                    queue_schedules.schedule_name as "schedule_name!",
+                    queue_schedules.schedule_name,
                     queue_schedules.last_scheduled_at,
                     queue_jobs.status IN ('completed', 'failed') as last_scheduled_job_completed
                 FROM queue_schedules

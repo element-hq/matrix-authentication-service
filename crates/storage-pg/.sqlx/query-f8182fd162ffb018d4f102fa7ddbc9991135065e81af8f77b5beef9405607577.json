@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO queue_schedules (schedule_name)\n                SELECT * FROM UNNEST($1::text[]) AS t (schedule_name)\n                ON CONFLICT (schedule_name) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f8182fd162ffb018d4f102fa7ddbc9991135065e81af8f77b5beef9405607577"
+}
