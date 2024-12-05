@@ -116,7 +116,7 @@ impl Filter for UserEmailFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> UserEmailRepository for PgUserEmailRepository<'c> {
+impl UserEmailRepository for PgUserEmailRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

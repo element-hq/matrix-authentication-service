@@ -229,7 +229,7 @@ impl Manifest {
         &'a self,
         current_entry: &'a ManifestEntry,
         entries: &mut BTreeSet<Asset<'a>>,
-    ) -> Result<Asset, InvalidManifest<'a>> {
+    ) -> Result<Asset<'a>, InvalidManifest<'a>> {
         let asset = Asset::new(current_entry)?;
         let inserted = entries.insert(asset);
 

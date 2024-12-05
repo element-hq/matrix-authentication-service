@@ -59,7 +59,7 @@ impl From<CompatRefreshTokenLookup> for CompatRefreshToken {
 }
 
 #[async_trait]
-impl<'c> CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'c> {
+impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

@@ -63,7 +63,7 @@ pub struct UserFilter<'a> {
     _phantom: std::marker::PhantomData<&'a ()>,
 }
 
-impl<'a> UserFilter<'a> {
+impl UserFilter<'_> {
     /// Create a new [`UserFilter`] with default values
     #[must_use]
     pub fn new() -> Self {

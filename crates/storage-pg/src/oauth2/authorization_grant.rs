@@ -192,7 +192,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
 }
 
 #[async_trait]
-impl<'c> OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository<'c> {
+impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

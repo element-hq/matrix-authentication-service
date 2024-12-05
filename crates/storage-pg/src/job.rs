@@ -26,7 +26,7 @@ impl<'c> PgJobRepository<'c> {
 }
 
 #[async_trait]
-impl<'c> JobRepository for PgJobRepository<'c> {
+impl JobRepository for PgJobRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

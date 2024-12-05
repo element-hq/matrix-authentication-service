@@ -57,7 +57,7 @@ impl From<OAuth2AccessTokenLookup> for AccessToken {
 }
 
 #[async_trait]
-impl<'c> OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'c> {
+impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
     type Error = DatabaseError;
 
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AccessToken>, Self::Error> {

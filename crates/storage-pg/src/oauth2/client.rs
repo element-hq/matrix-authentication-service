@@ -251,7 +251,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
 }
 
 #[async_trait]
-impl<'c> OAuth2ClientRepository for PgOAuth2ClientRepository<'c> {
+impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

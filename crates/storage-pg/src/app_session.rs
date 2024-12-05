@@ -245,7 +245,7 @@ fn split_filter(
 }
 
 #[async_trait]
-impl<'c> AppSessionRepository for PgAppSessionRepository<'c> {
+impl AppSessionRepository for PgAppSessionRepository<'_> {
     type Error = DatabaseError;
 
     #[allow(clippy::too_many_lines)]

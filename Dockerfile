@@ -8,11 +8,11 @@
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
-ARG RUSTC_VERSION=1.82.0
+ARG RUSTC_VERSION=1.83.0
 ARG NODEJS_VERSION=20.15.0
 ARG OPA_VERSION=0.64.1
-ARG CARGO_AUDITABLE_VERSION=0.6.4
-ARG CARGO_CHEF_VERSION=0.1.67
+ARG CARGO_AUDITABLE_VERSION=0.6.6
+ARG CARGO_CHEF_VERSION=0.1.68
 
 ##########################################
 ## Build stage that builds the frontend ##

@@ -105,7 +105,7 @@ impl Filter for UpstreamOAuthLinkFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'c> {
+impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

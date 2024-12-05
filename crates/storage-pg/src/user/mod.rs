@@ -110,7 +110,7 @@ impl Filter for UserFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> UserRepository for PgUserRepository<'c> {
+impl UserRepository for PgUserRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

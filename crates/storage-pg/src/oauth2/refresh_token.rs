@@ -57,7 +57,7 @@ impl From<OAuth2RefreshTokenLookup> for RefreshToken {
 }
 
 #[async_trait]
-impl<'c> OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'c> {
+impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

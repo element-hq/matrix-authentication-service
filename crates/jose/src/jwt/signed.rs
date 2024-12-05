@@ -21,13 +21,13 @@ pub struct Jwt<'a, T> {
     signature: Vec<u8>,
 }
 
-impl<'a, T> std::fmt::Display for Jwt<'a, T> {
+impl<T> std::fmt::Display for Jwt<'_, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.raw)
     }
 }
 
-impl<'a, T> std::fmt::Debug for Jwt<'a, T>
+impl<T> std::fmt::Debug for Jwt<'_, T>
 where
     T: std::fmt::Debug,
 {

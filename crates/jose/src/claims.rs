@@ -334,7 +334,7 @@ impl<'a> TokenHash<'a> {
     }
 }
 
-impl<'a> Validator<String> for TokenHash<'a> {
+impl Validator<String> for TokenHash<'_> {
     type Error = TokenHashError;
     fn validate(&self, value: &String) -> Result<(), Self::Error> {
         if hash_token(self.alg, self.token)? == *value {
@@ -362,7 +362,7 @@ impl<'a, T: ?Sized> Equality<'a, T> {
     }
 }
 
-impl<'a, T1, T2> Validator<T1> for Equality<'a, T2>
+impl<T1, T2> Validator<T1> for Equality<'_, T2>
 where
     T2: PartialEq<T1> + ?Sized,
 {
@@ -399,7 +399,7 @@ impl<'a, T> Contains<'a, T> {
 #[error("OneOrMany doesn't contain value")]
 pub struct ContainsError;
 
-impl<'a, T> Validator<OneOrMany<T>> for Contains<'a, T>
+impl<T> Validator<OneOrMany<T>> for Contains<'_, T>
 where
     T: PartialEq,
 {

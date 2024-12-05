@@ -29,7 +29,7 @@ impl<'c> PgUserTermsRepository<'c> {
 }
 
 #[async_trait]
-impl<'c> UserTermsRepository for PgUserTermsRepository<'c> {
+impl UserTermsRepository for PgUserTermsRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

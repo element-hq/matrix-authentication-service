@@ -260,7 +260,7 @@ impl Filter for CompatSessionFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> CompatSessionRepository for PgCompatSessionRepository<'c> {
+impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

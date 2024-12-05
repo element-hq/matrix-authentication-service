@@ -483,7 +483,7 @@ pub enum FormattedMessagePart<'a> {
     Placeholder(String),
 }
 
-impl<'a> FormattedMessagePart<'a> {
+impl FormattedMessagePart<'_> {
     fn len(&self) -> usize {
         match self {
             FormattedMessagePart::Text(text) => text.len(),

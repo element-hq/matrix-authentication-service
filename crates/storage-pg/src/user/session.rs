@@ -149,7 +149,7 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
 }
 
 #[async_trait]
-impl<'c> BrowserSessionRepository for PgBrowserSessionRepository<'c> {
+impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     type Error = DatabaseError;
 
     #[tracing::instrument(

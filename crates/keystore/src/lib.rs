@@ -354,11 +354,9 @@ impl PrivateKey {
             pkcs8::EncryptedPrivateKeyInfo::PEM_LABEL => {
                 let info = pkcs8::EncryptedPrivateKeyInfo::from_der(&doc)?;
                 let decrypted = info.decrypt(password)?;
-                return Self::load_der(decrypted.as_bytes()).map_err(|inner| {
-                    LoadError::InEncrypted {
-                        inner: Box::new(inner),
-                    }
-                });
+                Self::load_der(decrypted.as_bytes()).map_err(|inner| LoadError::InEncrypted {
+                    inner: Box::new(inner),
+                })
             }
 
             pkcs1::RsaPrivateKey::PEM_LABEL
