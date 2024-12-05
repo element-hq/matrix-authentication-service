@@ -7,7 +7,6 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-pub use cron::Schedule;
 
 use crate::repository_impl;
 
@@ -33,13 +32,12 @@ pub trait QueueScheduleRepository: Send + Sync {
     ///
     /// # Parameters
     ///
-    /// * `schedules` - The list of schedules to setup, as a list of (name,
-    ///   schedule)
+    /// * `schedules` - The list of schedules to setup
     ///
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
-    async fn setup(&mut self, schedules: &[(&'static str, Schedule)]) -> Result<(), Self::Error>;
+    async fn setup(&mut self, schedules: &[&'static str]) -> Result<(), Self::Error>;
 
     /// List the schedules in the repository, with the last time they were run
     ///
@@ -52,7 +50,7 @@ pub trait QueueScheduleRepository: Send + Sync {
 repository_impl!(QueueScheduleRepository:
     async fn setup(
         &mut self,
-        schedules: &[(&'static str, Schedule)],
+        schedules: &[&'static str],
     ) -> Result<(), Self::Error>;
 
     async fn list(&mut self) -> Result<Vec<ScheduleStatus>, Self::Error>;

@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use chrono::DateTime;
 use mas_data_model::{Device, User, UserEmail, UserRecoverySession};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;

@@ -7,8 +7,9 @@ use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
+use cron::Schedule;
 use mas_storage::{
-    queue::{InsertableJob, Job, JobMetadata, Schedule, Worker},
+    queue::{InsertableJob, Job, JobMetadata, Worker},
     Clock, RepositoryAccess, RepositoryError,
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
@@ -298,11 +299,7 @@ impl QueueWorker {
 
     #[tracing::instrument(name = "worker.setup_schedules", skip_all, err)]
     pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
-        let schedules: Vec<_> = self
-            .schedules
-            .iter()
-            .map(|s| (s.schedule_name, s.expression.clone()))
-            .collect();
+        let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
 
         // Start a transaction on the existing PgListener connection
         let txn = self

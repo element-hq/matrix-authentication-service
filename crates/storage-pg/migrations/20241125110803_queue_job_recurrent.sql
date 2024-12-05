@@ -6,11 +6,7 @@
 -- Add a table to track the state of scheduled recurring jobs.
 CREATE TABLE queue_schedules (
     -- A unique name for the schedule
-    schedule_name TEXT PRIMARY KEY,
-
-    -- The cron expression to use to schedule the job. This is there just for
-    -- convenience, as this is defined by the backend
-    schedule_expression TEXT NOT NULL,
+    schedule_name TEXT NOT NULL PRIMARY KEY,
 
     -- The last time the job was scheduled. If NULL, it means that the job was
     -- never scheduled.
@@ -22,7 +18,7 @@ CREATE TABLE queue_schedules (
         REFERENCES queue_jobs (queue_job_id)
 );
 
--- When a job is scheduled from a recurreing schedule, we keep a column
+-- When a job is scheduled from a recurring schedule, we keep a column
 -- referencing the name of the schedule
 ALTER TABLE queue_jobs
     ADD COLUMN schedule_name TEXT

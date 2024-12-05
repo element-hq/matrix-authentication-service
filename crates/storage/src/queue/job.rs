@@ -7,7 +7,6 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use cron::Schedule;
 use opentelemetry::trace::TraceContextExt;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
