@@ -87,6 +87,9 @@ The following additional resources are available, although it is recommended to 
 
 Configure how to connect to the PostgreSQL database.
 
+MAS must not be connected to a database pooler (such as pgBouncer or pgCat) when it is configured in transaction pooling mode.
+See [the relevant section of the database page](database.md#a-warning-about-database-pooling-software) for more information.
+
 ```yaml
 database:
   # Full connection string as per
