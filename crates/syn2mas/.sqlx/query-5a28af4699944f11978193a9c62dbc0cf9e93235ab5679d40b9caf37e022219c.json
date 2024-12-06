@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT conrelid::regclass::text AS \"table_name!\", conname AS \"name!\", pg_get_constraintdef(c.oid) AS \"definition!\"\n            FROM pg_constraint c\n            JOIN pg_namespace n ON n.oid = c.connamespace\n            WHERE contype IN ('f', 'p ', 'u') AND conrelid::regclass::text = $1\n            AND n.nspname = current_schema;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "table_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 2,
+        "name": "definition!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "5a28af4699944f11978193a9c62dbc0cf9e93235ab5679d40b9caf37e022219c"
+}

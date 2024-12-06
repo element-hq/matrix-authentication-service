@@ -1,4 +1,4 @@
-doc-valid-idents = ["OpenID", "OAuth", "..", "PostgreSQL"]
+doc-valid-idents = ["OpenID", "OAuth", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
     { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },
