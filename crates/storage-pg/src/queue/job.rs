@@ -7,6 +7,7 @@
 //! [`QueueJobRepository`].
 
 use async_trait::async_trait;
+use chrono::{DateTime, Duration, Utc};
 use mas_storage::{
     queue::{Job, QueueJobRepository, Worker},
     Clock,
@@ -109,6 +110,50 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             payload,
             metadata,
             created_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.schedule_later",
+        fields(
+            queue_job.id,
+            queue_job.queue_name = queue_name,
+            queue_job.scheduled_at = %scheduled_at,
+            db.query.text,
+        ),
+        skip_all,
+        err,
+    )]
+    async fn schedule_later(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        queue_name: &str,
+        payload: serde_json::Value,
+        metadata: serde_json::Value,
+        scheduled_at: DateTime<Utc>,
+    ) -> Result<(), Self::Error> {
+        let created_at = clock.now();
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current().record("queue_job.id", tracing::field::display(id));
+
+        sqlx::query!(
+            r#"
+                INSERT INTO queue_jobs
+                    (queue_job_id, queue_name, payload, metadata, created_at, scheduled_at, status)
+                VALUES ($1, $2, $3, $4, $5, $6, 'scheduled')
+            "#,
+            Uuid::from(id),
+            queue_name,
+            payload,
+            metadata,
+            created_at,
+            scheduled_at,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -264,8 +309,10 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         id: Ulid,
+        delay: Duration,
     ) -> Result<(), Self::Error> {
         let now = clock.now();
+        let scheduled_at = now + delay;
         let new_id = Ulid::from_datetime_with_source(now.into(), rng);
 
         // Create a new job with the same payload and metadata, but a new ID and
@@ -274,14 +321,15 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         let res = sqlx::query!(
             r#"
                 INSERT INTO queue_jobs
-                    (queue_job_id, queue_name, payload, metadata, created_at, attempt)
-                SELECT $1, queue_name, payload, metadata, $2, attempt + 1
+                    (queue_job_id, queue_name, payload, metadata, created_at, attempt, scheduled_at, status)
+                SELECT $1, queue_name, payload, metadata, $2, attempt + 1, $3, 'scheduled'
                 FROM queue_jobs
-                WHERE queue_job_id = $3
+                WHERE queue_job_id = $4
                   AND status = 'failed'
             "#,
             Uuid::from(new_id),
             now,
+            scheduled_at,
             Uuid::from(id),
         )
         .traced()
@@ -307,5 +355,33 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.schedule_available_jobs",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err
+    )]
+    async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
+        let now = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE queue_jobs
+                SET status = 'available'
+                WHERE
+                    status = 'scheduled'
+                    AND scheduled_at <= $1
+            "#,
+            now,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        let count = res.rows_affected();
+        Ok(usize::try_from(count).unwrap_or(usize::MAX))
     }
 }

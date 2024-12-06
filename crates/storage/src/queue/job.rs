@@ -6,6 +6,7 @@
 //! Repository to interact with jobs in the job queue
 
 use async_trait::async_trait;
+use chrono::{DateTime, Duration, Utc};
 use opentelemetry::trace::TraceContextExt;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
@@ -105,6 +106,30 @@ pub trait QueueJobRepository: Send + Sync {
         metadata: serde_json::Value,
     ) -> Result<(), Self::Error>;
 
+    /// Schedule a job to be executed at a later date by a worker.
+    ///
+    /// # Parameters
+    ///
+    /// * `rng` - The random number generator used to generate a new job ID
+    /// * `clock` - The clock used to generate timestamps
+    /// * `queue_name` - The name of the queue to schedule the job on
+    /// * `payload` - The payload of the job
+    /// * `metadata` - Arbitrary metadata about the job scheduled immediately.
+    /// * `scheduled_at` - The date and time to schedule the job for
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn schedule_later(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        queue_name: &str,
+        payload: serde_json::Value,
+        metadata: serde_json::Value,
+        scheduled_at: DateTime<Utc>,
+    ) -> Result<(), Self::Error>;
+
     /// Reserve multiple jobs from multiple queues
     ///
     /// # Parameters
@@ -171,7 +196,18 @@ pub trait QueueJobRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         id: Ulid,
+        delay: Duration,
     ) -> Result<(), Self::Error>;
+
+    /// Mark all scheduled jobs past their scheduled date as available to be
+    /// executed.
+    ///
+    /// Returns the number of jobs that were marked as available.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(QueueJobRepository:
@@ -182,6 +218,16 @@ repository_impl!(QueueJobRepository:
         queue_name: &str,
         payload: serde_json::Value,
         metadata: serde_json::Value,
+    ) -> Result<(), Self::Error>;
+
+    async fn schedule_later(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        queue_name: &str,
+        payload: serde_json::Value,
+        metadata: serde_json::Value,
+        scheduled_at: DateTime<Utc>,
     ) -> Result<(), Self::Error>;
 
     async fn reserve(
@@ -205,7 +251,10 @@ repository_impl!(QueueJobRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         id: Ulid,
+        delay: Duration,
     ) -> Result<(), Self::Error>;
+
+    async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 );
 
 /// Extension trait for [`QueueJobRepository`] to help adding a job to the queue
@@ -229,6 +278,26 @@ pub trait QueueJobRepositoryExt: QueueJobRepository {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         job: J,
+    ) -> Result<(), Self::Error>;
+
+    /// Schedule a job to be executed at a later date by a worker.
+    ///
+    /// # Parameters
+    ///
+    /// * `rng` - The random number generator used to generate a new job ID
+    /// * `clock` - The clock used to generate timestamps
+    /// * `job` - The job to schedule
+    /// * `scheduled_at` - The date and time to schedule the job for
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails.
+    async fn schedule_job_later<J: InsertableJob>(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        job: J,
+        scheduled_at: DateTime<Utc>,
     ) -> Result<(), Self::Error>;
 }
 
@@ -261,6 +330,34 @@ where
 
         let payload = serde_json::to_value(job).expect("Could not serialize job");
         self.schedule(rng, clock, J::QUEUE_NAME, payload, metadata)
+            .await
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.schedule_job_later",
+        fields(
+            queue_job.queue_name = J::QUEUE_NAME,
+        ),
+        skip_all,
+    )]
+    async fn schedule_job_later<J: InsertableJob>(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        job: J,
+        scheduled_at: DateTime<Utc>,
+    ) -> Result<(), Self::Error> {
+        // Grab the span context from the current span
+        let span = tracing::Span::current();
+        let ctx = span.context();
+        let span = ctx.span();
+        let span_context = span.span_context();
+
+        let metadata = JobMetadata::new(span_context);
+        let metadata = serde_json::to_value(metadata).expect("Could not serialize metadata");
+
+        let payload = serde_json::to_value(job).expect("Could not serialize job");
+        self.schedule_later(rng, clock, J::QUEUE_NAME, payload, metadata, scheduled_at)
             .await
     }
 }
