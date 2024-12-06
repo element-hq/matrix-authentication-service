@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO queue_leader (elected_at, expires_at, queue_worker_id)\n                VALUES ($1, NOW() + INTERVAL '5 seconds', $2)\n                ON CONFLICT (active)\n                DO UPDATE SET expires_at = EXCLUDED.expires_at\n                WHERE queue_leader.queue_worker_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "67cd4880d84b38f20c3960789934d55cbfb01492985ac2af5a1ad4af9b3ccc77"
+}

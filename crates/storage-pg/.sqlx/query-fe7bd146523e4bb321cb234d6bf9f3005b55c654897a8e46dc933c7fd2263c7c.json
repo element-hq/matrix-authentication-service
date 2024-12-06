@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM queue_leader\n                WHERE expires_at < NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "fe7bd146523e4bb321cb234d6bf9f3005b55c654897a8e46dc933c7fd2263c7c"
+}
