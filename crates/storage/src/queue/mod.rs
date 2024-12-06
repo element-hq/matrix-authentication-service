@@ -5,6 +5,12 @@
 
 //! A module containing repositories for the job queue
 
+mod job;
+mod tasks;
 mod worker;
 
-pub use self::worker::{QueueWorkerRepository, Worker};
+pub use self::{
+    job::{InsertableJob, Job, JobMetadata, QueueJobRepository, QueueJobRepositoryExt},
+    tasks::*,
+    worker::{QueueWorkerRepository, Worker},
+};

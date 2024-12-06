@@ -19,10 +19,6 @@ use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
-use rand::{
-    distributions::{Alphanumeric, DistString},
-    thread_rng,
-};
 use sqlx::migrate::Migrate;
 use tracing::{info, info_span, warn, Instrument};
 
@@ -161,13 +157,8 @@ impl Options {
             let mailer = mailer_from_config(&config.email, &templates)?;
             mailer.test_connection().await?;
 
-            #[allow(clippy::disallowed_methods)]
-            let mut rng = thread_rng();
-            let worker_name = Alphanumeric.sample_string(&mut rng, 10);
-
-            info!(worker_name, "Starting task worker");
-            let monitor = mas_tasks::init(
-                &worker_name,
+            info!("Starting task worker");
+            mas_tasks::init(
                 &pool,
                 &mailer,
                 homeserver_connection.clone(),
@@ -176,21 +167,6 @@ impl Options {
                 shutdown.task_tracker(),
             )
             .await?;
-
-            // XXX: The monitor from apalis is a bit annoying to use for graceful shutdowns,
-            // ideally we'd just give it a cancellation token
-            let shutdown_future = shutdown.soft_shutdown_token().cancelled_owned();
-            shutdown.task_tracker().spawn(async move {
-                if let Err(e) = monitor
-                    .run_with_signal(async move {
-                        shutdown_future.await;
-                        Ok(())
-                    })
-                    .await
-                {
-                    tracing::error!(error = &e as &dyn std::error::Error, "Task worker failed");
-                }
-            });
         }
 
         let listeners_config = config.http.listeners.clone();

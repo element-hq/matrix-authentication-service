@@ -195,44 +195,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 
 [[package]]
-name = "apalis-core"
-version = "0.4.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1deb48475efcdece1f23a0553209ee842f264c2a5e9bcc4928bfa6a15a044cde"
-dependencies = [
- "async-stream",
- "async-trait",
- "chrono",
- "futures",
- "graceful-shutdown",
- "http",
- "log",
- "pin-project-lite",
- "serde",
- "strum 0.25.0",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
- "tracing",
- "ulid",
-]
-
-[[package]]
-name = "apalis-cron"
-version = "0.4.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43310b7e0132f9520b09224fb6faafb32eec82a672aa79c09e46b5b488ed505b"
-dependencies = [
- "apalis-core",
- "async-stream",
- "chrono",
- "cron",
- "futures",
- "tokio",
- "tower 0.4.13",
-]
-
-[[package]]
 name = "arbitrary"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -391,7 +353,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "strum 0.26.3",
+ "strum",
  "syn",
  "thiserror 1.0.69",
 ]
@@ -638,7 +600,7 @@ dependencies = [
  "serde_urlencoded",
  "sync_wrapper 1.0.1",
  "tokio",
- "tower 0.5.1",
+ "tower",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -685,7 +647,7 @@ dependencies = [
  "multer",
  "pin-project-lite",
  "serde",
- "tower 0.5.1",
+ "tower",
  "tower-layer",
  "tower-service",
 ]
@@ -1350,17 +1312,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "cron"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f8c3e73077b4b4a6ab1ea5047c37c57aee77657bc8ecd6f29b0af082d0b0c07"
-dependencies = [
- "chrono",
- "nom",
- "once_cell",
 ]
 
 [[package]]
@@ -2136,17 +2087,6 @@ dependencies = [
  "rand",
  "smallvec",
  "spinning_top",
-]
-
-[[package]]
-name = "graceful-shutdown"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3effbaf774a1da3462925bb182ccf975c284cf46edca5569ea93420a657af484"
-dependencies = [
- "futures-core",
- "pin-project-lite",
- "tokio",
 ]
 
 [[package]]
@@ -3186,7 +3126,7 @@ dependencies = [
  "serde_with",
  "thiserror 2.0.3",
  "tokio",
- "tower 0.5.1",
+ "tower",
  "tracing",
  "ulid",
  "url",
@@ -3255,7 +3195,7 @@ dependencies = [
  "sqlx",
  "tokio",
  "tokio-util",
- "tower 0.5.1",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-appender",
@@ -3395,7 +3335,7 @@ dependencies = [
  "time",
  "tokio",
  "tokio-util",
- "tower 0.5.1",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -3420,7 +3360,7 @@ dependencies = [
  "reqwest",
  "rustls-platform-verifier",
  "tokio",
- "tower 0.5.1",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-opentelemetry",
@@ -3567,7 +3507,7 @@ dependencies = [
  "tokio-rustls",
  "tokio-test",
  "tokio-util",
- "tower 0.5.1",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -3599,7 +3539,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.3",
- "tower 0.5.1",
+ "tower",
  "tracing",
  "url",
  "urlencoding",
@@ -3683,7 +3623,6 @@ dependencies = [
 name = "mas-storage"
 version = "0.12.0"
 dependencies = [
- "apalis-core",
  "async-trait",
  "chrono",
  "futures-util",
@@ -3734,8 +3673,6 @@ name = "mas-tasks"
 version = "0.12.0"
 dependencies = [
  "anyhow",
- "apalis-core",
- "apalis-cron",
  "async-stream",
  "async-trait",
  "chrono",
@@ -3759,7 +3696,7 @@ dependencies = [
  "thiserror 2.0.3",
  "tokio",
  "tokio-util",
- "tower 0.5.1",
+ "tower",
  "tracing",
  "tracing-opentelemetry",
  "ulid",
@@ -3804,7 +3741,7 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
  "pin-project-lite",
- "tower 0.5.1",
+ "tower",
  "tracing",
  "tracing-opentelemetry",
 ]
@@ -6119,33 +6056,11 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
-dependencies = [
- "strum_macros 0.25.3",
-]
-
-[[package]]
-name = "strum"
 version = "0.26.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
 dependencies = [
- "strum_macros 0.26.4",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.25.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23dc1fa9ac9c169a78ba62f0b841814b7abae11bdd047b9c58f893439e309ea0"
-dependencies = [
- "heck 0.4.1",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn",
+ "strum_macros",
 ]
 
 [[package]]
@@ -6479,21 +6394,6 @@ dependencies = [
  "pin-project",
  "prost",
  "tokio-stream",
- "tower-layer",
- "tower-service",
- "tracing",
-]
-
-[[package]]
-name = "tower"
-version = "0.4.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
-dependencies = [
- "futures-core",
- "futures-util",
- "pin-project",
- "pin-project-lite",
  "tower-layer",
  "tower-service",
  "tracing",

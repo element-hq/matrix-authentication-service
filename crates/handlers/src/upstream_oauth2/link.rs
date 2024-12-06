@@ -23,7 +23,7 @@ use mas_matrix::BoxHomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository},
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
@@ -796,7 +796,7 @@ pub(crate) async fn post(
                 job = job.set_display_name(name);
             }
 
-            repo.job().schedule_job(job).await?;
+            repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
 
             // If we have an email, add it to the user
             if let Some(email) = email {

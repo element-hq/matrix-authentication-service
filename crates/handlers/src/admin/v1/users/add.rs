@@ -9,7 +9,7 @@ use axum::{extract::State, response::IntoResponse, Json};
 use hyper::StatusCode;
 use mas_matrix::BoxHomeserverConnection;
 use mas_storage::{
-    job::{JobRepositoryExt, ProvisionUserJob},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     BoxRng,
 };
 use schemars::JsonSchema;
@@ -164,8 +164,8 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
-    repo.job()
-        .schedule_job(ProvisionUserJob::new(&user))
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
         .await?;
 
     repo.save().await?;

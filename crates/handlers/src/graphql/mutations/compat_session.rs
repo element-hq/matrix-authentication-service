@@ -8,7 +8,7 @@ use anyhow::Context as _;
 use async_graphql::{Context, Enum, InputObject, Object, ID};
 use mas_storage::{
     compat::CompatSessionRepository,
-    job::{JobRepositoryExt, SyncDevicesJob},
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
     RepositoryAccess,
 };
 
@@ -72,6 +72,7 @@ impl CompatSessionMutations {
         input: EndCompatSessionInput,
     ) -> Result<EndCompatSessionPayload, async_graphql::Error> {
         let state = ctx.state();
+        let mut rng = state.rng();
         let compat_session_id = NodeType::CompatSession.extract_ulid(&input.compat_session_id)?;
         let requester = ctx.requester();
 
@@ -94,7 +95,9 @@ impl CompatSessionMutations {
             .context("Could not load user")?;
 
         // Schedule a job to sync the devices of the user with the homeserver
-        repo.job().schedule_job(SyncDevicesJob::new(&user)).await?;
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .await?;
 
         let session = repo.compat_session().finish(&clock, session).await?;
 
