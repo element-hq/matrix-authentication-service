@@ -312,7 +312,7 @@ features = ["full"]
 
 # Useful async utilities
 [workspace.dependencies.tokio-util]
-version = "0.7.12"
+version = "0.7.13"
 features = ["rt"]
 
 # Tower services
