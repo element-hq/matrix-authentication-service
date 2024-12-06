@@ -311,7 +311,7 @@ version = "2.0.3"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.41.1"
+version = "1.42.0"
 features = ["full"]
 
 # Useful async utilities
