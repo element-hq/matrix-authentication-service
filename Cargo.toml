@@ -327,7 +327,7 @@ features = ["cors", "fs", "add-extension", "set-header"]
 
 # Logging and tracing
 [workspace.dependencies.tracing]
-version = "0.1.40"
+version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
 version = "0.3.18"
 
