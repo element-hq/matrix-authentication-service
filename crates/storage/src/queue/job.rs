@@ -116,10 +116,13 @@ pub trait QueueJobRepository: Send + Sync {
     /// * `payload` - The payload of the job
     /// * `metadata` - Arbitrary metadata about the job scheduled immediately.
     /// * `scheduled_at` - The date and time to schedule the job for
+    /// * `schedule_name` - The name of the recurring schedule which scheduled
+    ///   this job
     ///
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
+    #[allow(clippy::too_many_arguments)]
     async fn schedule_later(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -128,6 +131,7 @@ pub trait QueueJobRepository: Send + Sync {
         payload: serde_json::Value,
         metadata: serde_json::Value,
         scheduled_at: DateTime<Utc>,
+        schedule_name: Option<&str>,
     ) -> Result<(), Self::Error>;
 
     /// Reserve multiple jobs from multiple queues
@@ -228,6 +232,7 @@ repository_impl!(QueueJobRepository:
         payload: serde_json::Value,
         metadata: serde_json::Value,
         scheduled_at: DateTime<Utc>,
+        schedule_name: Option<&str>,
     ) -> Result<(), Self::Error>;
 
     async fn reserve(
@@ -357,7 +362,15 @@ where
         let metadata = serde_json::to_value(metadata).expect("Could not serialize metadata");
 
         let payload = serde_json::to_value(job).expect("Could not serialize job");
-        self.schedule_later(rng, clock, J::QUEUE_NAME, payload, metadata, scheduled_at)
-            .await
+        self.schedule_later(
+            rng,
+            clock,
+            J::QUEUE_NAME,
+            payload,
+            metadata,
+            scheduled_at,
+            None,
+        )
+        .await
     }
 }

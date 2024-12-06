@@ -288,3 +288,11 @@ impl SendAccountRecoveryEmailsJob {
 impl InsertableJob for SendAccountRecoveryEmailsJob {
     const QUEUE_NAME: &'static str = "send-account-recovery-email";
 }
+
+/// Cleanup expired tokens
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupExpiredTokensJob;
+
+impl InsertableJob for CleanupExpiredTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
+}

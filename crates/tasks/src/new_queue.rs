@@ -7,6 +7,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
+use cron::Schedule;
 use mas_storage::{
     queue::{InsertableJob, Job, JobMetadata, Worker},
     Clock, RepositoryAccess, RepositoryError,
@@ -140,6 +141,9 @@ pub enum QueueRunnerError {
     #[error(transparent)]
     Database(#[from] DatabaseError),
 
+    #[error("Invalid schedule expression")]
+    InvalidSchedule(#[from] cron::error::Error),
+
     #[error("Worker is not the leader")]
     NotLeader,
 }
@@ -171,6 +175,13 @@ fn retry_delay(attempt: usize) -> Duration {
 type JobResult = Result<(), JobError>;
 type JobFactory = Arc<dyn Fn(JobPayload) -> Box<dyn RunnableJob> + Send + Sync>;
 
+struct ScheduleDefinition {
+    schedule_name: &'static str,
+    expression: Schedule,
+    queue_name: &'static str,
+    payload: serde_json::Value,
+}
+
 pub struct QueueWorker {
     rng: ChaChaRng,
     clock: Box<dyn Clock + Send>,
@@ -180,6 +191,7 @@ pub struct QueueWorker {
     last_heartbeat: DateTime<Utc>,
     cancellation_token: CancellationToken,
     state: State,
+    schedules: Vec<ScheduleDefinition>,
     tracker: JobTracker,
 }
 
@@ -237,6 +249,7 @@ impl QueueWorker {
             last_heartbeat: now,
             cancellation_token,
             state,
+            schedules: Vec::new(),
             tracker: JobTracker::default(),
         })
     }
@@ -254,12 +267,56 @@ impl QueueWorker {
         self
     }
 
+    pub fn add_schedule<T: InsertableJob>(
+        &mut self,
+        schedule_name: &'static str,
+        expression: Schedule,
+        job: T,
+    ) -> &mut Self {
+        let payload = serde_json::to_value(job).expect("failed to serialize job payload");
+
+        self.schedules.push(ScheduleDefinition {
+            schedule_name,
+            expression,
+            queue_name: T::QUEUE_NAME,
+            payload,
+        });
+
+        self
+    }
+
     pub async fn run(&mut self) -> Result<(), QueueRunnerError> {
+        self.setup_schedules().await?;
+
         while !self.cancellation_token.is_cancelled() {
             self.run_loop().await?;
         }
 
         self.shutdown().await?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument(name = "worker.setup_schedules", skip_all, err)]
+    pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
+        let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
+
+        // Start a transaction on the existing PgListener connection
+        let txn = self
+            .listener
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+
+        let mut repo = PgRepository::from_conn(txn);
+
+        // Setup the entries in the queue_schedules table
+        repo.queue_schedule().setup(&schedules).await?;
+
+        repo.into_inner()
+            .commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
 
         Ok(())
     }
@@ -515,6 +572,57 @@ impl QueueWorker {
         };
 
         let mut repo = PgRepository::from_conn(locked);
+
+        // Look at the state of schedules in the database
+        let schedules_status = repo.queue_schedule().list().await?;
+
+        let now = self.clock.now();
+        for schedule in &self.schedules {
+            // Find the schedule status from the database
+            let Some(schedule_status) = schedules_status
+                .iter()
+                .find(|s| s.schedule_name == schedule.schedule_name)
+            else {
+                tracing::error!(
+                    "Schedule {} was not found in the database",
+                    schedule.schedule_name
+                );
+                continue;
+            };
+
+            // Figure out if we should schedule a new job
+            if let Some(next_time) = schedule_status.last_scheduled_at {
+                if next_time > now {
+                    // We already have a job scheduled in the future, skip
+                    continue;
+                }
+
+                if schedule_status.last_scheduled_job_completed == Some(false) {
+                    // The last scheduled job has not completed yet, skip
+                    continue;
+                }
+            }
+
+            let next_tick = schedule.expression.after(&now).next().unwrap();
+
+            tracing::info!(
+                "Scheduling job for {}, next run at {}",
+                schedule.schedule_name,
+                next_tick
+            );
+
+            repo.queue_job()
+                .schedule_later(
+                    &mut self.rng,
+                    &self.clock,
+                    schedule.queue_name,
+                    schedule.payload.clone(),
+                    serde_json::json!({}),
+                    next_tick,
+                    Some(schedule.schedule_name),
+                )
+                .await?;
+        }
 
         // We also check if the worker is dead, and if so, we shutdown all the dead
         // workers that haven't checked in the last two minutes

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE queue_schedules\n                SET last_scheduled_at = $1,\n                    last_scheduled_job_id = $2\n                WHERE last_scheduled_job_id = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b21644dd3c094b0f2f8babb2c730554dc067d0a6cad963dd7e0c66a80b342bf"
+}
