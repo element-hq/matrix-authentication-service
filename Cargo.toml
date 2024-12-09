@@ -130,7 +130,7 @@ version = "0.4.0"
 
 # HTTP request/response
 [workspace.dependencies.http]
-version = "1.1.0"
+version = "1.2.0"
 
 # HTTP body trait
 [workspace.dependencies.http-body]
