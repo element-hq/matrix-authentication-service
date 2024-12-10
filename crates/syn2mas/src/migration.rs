@@ -9,7 +9,7 @@ use std::{collections::HashMap, pin::pin};
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::StreamExt as _;
-use rand::rngs::ThreadRng;
+use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 use ulid::Ulid;
@@ -61,7 +61,7 @@ pub async fn migrate(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
-    rng: &mut ThreadRng,
+    rng: &mut impl RngCore,
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
@@ -85,7 +85,7 @@ async fn migrate_users(
     mas: &mut MasWriter<'_>,
     user_count_hint: usize,
     server_name: &str,
-    rng: &mut ThreadRng,
+    rng: &mut impl RngCore,
 ) -> Result<UsersMigrated, Error> {
     let mut write_buffer = MasUserWriteBuffer::new(mas);
     let mut users_stream = pin!(synapse.read_users());
@@ -124,7 +124,7 @@ async fn migrate_users(
 fn transform_user(
     user: &SynapseUser,
     server_name: &str,
-    rng: &mut ThreadRng,
+    rng: &mut impl RngCore,
 ) -> Result<(MasNewUser, Option<MasNewUserPassword>), Error> {
     let username = user
         .name
