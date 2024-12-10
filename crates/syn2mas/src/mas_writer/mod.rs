@@ -219,24 +219,33 @@ pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &["users", "user_passwords
 /// - If some, but not all, syn2mas restoration tables are present.
 ///   (This shouldn't be possible without syn2mas having been sabotaged!)
 pub async fn is_syn2mas_in_progress(conn: &mut PgConnection) -> Result<bool, Error> {
-    // Check if there is a resumption table...
+    // Names of tables used for syn2mas resumption
+    // Must be `String`s, not just `&str`, for the query.
+    let restore_table_names = vec![
+        "syn2mas_restore_constraints".to_owned(),
+        "syn2mas_restore_indices".to_owned(),
+    ];
+
     let num_resumption_tables = query!(
         r#"
         SELECT 1 AS _dummy FROM pg_tables WHERE schemaname = current_schema
-        AND tablename IN ('syn2mas_restore_constraints', 'syn2mas_restore_indices')
-        "#
+        AND tablename = ANY($1)
+        "#,
+        &restore_table_names,
     )
     .fetch_all(conn.as_mut())
     .await
     .into_database("failed to query count of resumption tables")?
     .len();
 
-    match num_resumption_tables {
-        0 => Ok(false),
-        2 => Ok(true),
-        _other => Err(Error::inconsistent(
+    if num_resumption_tables == 0 {
+        Ok(false)
+    } else if num_resumption_tables == restore_table_names.len() {
+        Ok(true)
+    } else {
+        Err(Error::inconsistent(
             "some, but not all, syn2mas resumption tables were found",
-        )),
+        ))
     }
 }
 
