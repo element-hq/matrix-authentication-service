@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO syn2mas_restore_indices (name, table_name, definition)\n                    VALUES ($1, $2, $3)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "07ec66733b67a9990cc9d483b564c8d05c577cf8f049d8822746c7d1dbd23752"
+}

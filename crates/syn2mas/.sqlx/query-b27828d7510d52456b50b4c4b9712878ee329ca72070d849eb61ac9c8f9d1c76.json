@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT 1 AS _dummy FROM pg_tables WHERE schemaname = current_schema\n        AND tablename = ANY($1)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "_dummy",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "NameArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b27828d7510d52456b50b4c4b9712878ee329ca72070d849eb61ac9c8f9d1c76"
+}
