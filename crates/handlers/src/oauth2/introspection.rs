@@ -207,7 +207,7 @@ pub(crate) async fn post(
 
     let reply = match token_type {
         TokenType::AccessToken => {
-            let access_token = repo
+            let mut access_token = repo
                 .oauth2_access_token()
                 .find_by_token(token)
                 .await?
@@ -225,6 +225,14 @@ pub(crate) async fn post(
 
             if !session.is_valid() {
                 return Err(RouteError::InvalidOAuthSession);
+            }
+
+            // If this is the first time we're using this token, mark it as used
+            if !access_token.is_used() {
+                access_token = repo
+                    .oauth2_access_token()
+                    .mark_used(&clock, access_token)
+                    .await?;
             }
 
             // The session might not have a user on it (for Client Credentials grants for
@@ -443,6 +451,8 @@ pub(crate) async fn post(
         }
     };
 
+    repo.save().await?;
+
     Ok(Json(reply))
 }
 
@@ -625,6 +635,16 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(session.last_active_at, Some(state.clock.now()));
+
+        // And recorded the access token as used
+        let access_token_lookup = repo
+            .oauth2_access_token()
+            .find_by_token(&access_token)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(access_token_lookup.is_used());
+        assert_eq!(access_token_lookup.first_used_at, Some(state.clock.now()));
         repo.cancel().await.unwrap();
 
         // Advance the clock to invalidate the access token

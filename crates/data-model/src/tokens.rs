@@ -55,6 +55,7 @@ pub struct AccessToken {
     pub access_token: String,
     pub created_at: DateTime<Utc>,
     pub expires_at: Option<DateTime<Utc>>,
+    pub first_used_at: Option<DateTime<Utc>>,
 }
 
 impl AccessToken {
@@ -86,6 +87,12 @@ impl AccessToken {
             Some(expires_at) => expires_at < now,
             None => false,
         }
+    }
+
+    /// Whether the access token was used at least once
+    #[must_use]
+    pub fn is_used(&self) -> bool {
+        self.first_used_at.is_some()
     }
 
     /// Mark the access token as revoked
