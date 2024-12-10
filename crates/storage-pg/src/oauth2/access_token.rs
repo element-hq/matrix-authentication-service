@@ -36,6 +36,7 @@ struct OAuth2AccessTokenLookup {
     created_at: DateTime<Utc>,
     expires_at: Option<DateTime<Utc>>,
     revoked_at: Option<DateTime<Utc>>,
+    first_used_at: Option<DateTime<Utc>>,
 }
 
 impl From<OAuth2AccessTokenLookup> for AccessToken {
@@ -52,6 +53,7 @@ impl From<OAuth2AccessTokenLookup> for AccessToken {
             access_token: value.access_token,
             created_at: value.created_at,
             expires_at: value.expires_at,
+            first_used_at: value.first_used_at,
         }
     }
 }
@@ -70,6 +72,7 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
                      , expires_at
                      , revoked_at
                      , oauth2_session_id
+                     , first_used_at
 
                 FROM oauth2_access_tokens
 
@@ -106,6 +109,7 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
                      , expires_at
                      , revoked_at
                      , oauth2_session_id
+                     , first_used_at
 
                 FROM oauth2_access_tokens
 
@@ -170,9 +174,20 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             session_id: session.id,
             created_at,
             expires_at,
+            first_used_at: None,
         })
     }
 
+    #[tracing::instrument(
+        name = "db.oauth2_access_token.revoked",
+        skip_all,
+        fields(
+            db.query.text,
+            session.id = %access_token.session_id,
+            %access_token.id,
+        ),
+        err,
+    )]
     async fn revoke(
         &mut self,
         clock: &dyn Clock,
@@ -188,6 +203,7 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             Uuid::from(access_token.id),
             revoked_at,
         )
+        .traced()
         .execute(&mut *self.conn)
         .await?;
 
@@ -198,6 +214,49 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             .map_err(DatabaseError::to_invalid_operation)
     }
 
+    #[tracing::instrument(
+        name = "db.oauth2_access_token.mark_used",
+        skip_all,
+        fields(
+            db.query.text,
+            session.id = %access_token.session_id,
+            %access_token.id,
+        ),
+        err,
+    )]
+    async fn mark_used(
+        &mut self,
+        clock: &dyn Clock,
+        mut access_token: AccessToken,
+    ) -> Result<AccessToken, Self::Error> {
+        let now = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE oauth2_access_tokens
+                SET first_used_at = $2
+                WHERE oauth2_access_token_id = $1
+            "#,
+            Uuid::from(access_token.id),
+            now,
+        )
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        access_token.first_used_at = Some(now);
+
+        Ok(access_token)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_access_token.cleanup_expired",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
     async fn cleanup_expired(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
         // Cleanup token which expired more than 15 minutes ago
         let threshold = clock.now() - Duration::microseconds(15 * 60 * 1000 * 1000);
@@ -208,6 +267,7 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             "#,
             threshold,
         )
+        .traced()
         .execute(&mut *self.conn)
         .await?;
 

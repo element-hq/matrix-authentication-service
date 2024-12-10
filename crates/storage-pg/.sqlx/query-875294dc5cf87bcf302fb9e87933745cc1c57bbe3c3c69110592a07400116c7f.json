@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_access_token_id\n                     , access_token\n                     , created_at\n                     , expires_at\n                     , revoked_at\n                     , oauth2_session_id\n\n                FROM oauth2_access_tokens\n\n                WHERE oauth2_access_token_id = $1\n            ",
+  "query": "\n                SELECT oauth2_access_token_id\n                     , access_token\n                     , created_at\n                     , expires_at\n                     , revoked_at\n                     , oauth2_session_id\n                     , first_used_at\n\n                FROM oauth2_access_tokens\n\n                WHERE oauth2_access_token_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -32,6 +32,11 @@
         "ordinal": 5,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_used_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -45,8 +50,9 @@
       false,
       true,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "dd16942318bf38d9a245b2c86fedd3cbd6b65e7a13465552d79cd3c022122fd4"
+  "hash": "875294dc5cf87bcf302fb9e87933745cc1c57bbe3c3c69110592a07400116c7f"
 }
