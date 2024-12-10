@@ -109,6 +109,6 @@ zxcvbn = "3.1.0"
 [dev-dependencies]
 insta.workspace = true
 tracing-subscriber.workspace = true
-cookie_store = "0.21.1"
+cookie_store = { version = "0.21.1", default-features = false, features = ["serde_json"] }
 sqlx.workspace = true
 wiremock.workspace = true
