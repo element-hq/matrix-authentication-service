@@ -118,6 +118,9 @@ pub enum RefreshTokenState {
         consumed_at: DateTime<Utc>,
         next_refresh_token_id: Option<Ulid>,
     },
+    Revoked {
+        revoked_at: DateTime<Utc>,
+    },
 }
 
 impl RefreshTokenState {
@@ -125,18 +128,30 @@ impl RefreshTokenState {
     ///
     /// # Errors
     ///
-    /// Returns an error if the refresh token is already consumed.
+    /// Returns an error if the refresh token is revoked.
     fn consume(
         self,
         consumed_at: DateTime<Utc>,
         replaced_by: &RefreshToken,
     ) -> Result<Self, InvalidTransitionError> {
         match self {
-            Self::Valid => Ok(Self::Consumed {
+            Self::Valid | Self::Consumed { .. } => Ok(Self::Consumed {
                 consumed_at,
                 next_refresh_token_id: Some(replaced_by.id),
             }),
-            Self::Consumed { .. } => Err(InvalidTransitionError),
+            Self::Revoked { .. } => Err(InvalidTransitionError),
+        }
+    }
+
+    /// Revoke the refresh token, returning a new state.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the refresh token is already consumed or revoked.
+    pub fn revoke(self, revoked_at: DateTime<Utc>) -> Result<Self, InvalidTransitionError> {
+        match self {
+            Self::Valid => Ok(Self::Revoked { revoked_at }),
+            Self::Consumed { .. } | Self::Revoked { .. } => Err(InvalidTransitionError),
         }
     }
 
@@ -148,19 +163,11 @@ impl RefreshTokenState {
         matches!(self, Self::Valid)
     }
 
-    /// Returns `true` if the refresh token state is [`Consumed`].
-    ///
-    /// [`Consumed`]: RefreshTokenState::Consumed
-    #[must_use]
-    pub fn is_consumed(&self) -> bool {
-        matches!(self, Self::Consumed { .. })
-    }
-
     /// Returns the next refresh token ID, if any.
     #[must_use]
     pub fn next_refresh_token_id(&self) -> Option<Ulid> {
         match self {
-            Self::Valid => None,
+            Self::Valid | Self::Revoked { .. } => None,
             Self::Consumed {
                 next_refresh_token_id,
                 ..
@@ -197,13 +204,23 @@ impl RefreshToken {
     ///
     /// # Errors
     ///
-    /// Returns an error if the refresh token is already consumed.
+    /// Returns an error if the refresh token is revoked.
     pub fn consume(
         mut self,
         consumed_at: DateTime<Utc>,
         replaced_by: &Self,
     ) -> Result<Self, InvalidTransitionError> {
         self.state = self.state.consume(consumed_at, replaced_by)?;
+        Ok(self)
+    }
+
+    /// Revokes the refresh token and returns a new revoked token
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the refresh token is already revoked.
+    pub fn revoke(mut self, revoked_at: DateTime<Utc>) -> Result<Self, InvalidTransitionError> {
+        self.state = self.state.revoke(revoked_at)?;
         Ok(self)
     }
 }
