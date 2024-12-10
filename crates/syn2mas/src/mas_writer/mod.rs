@@ -295,7 +295,7 @@ impl<'conn> MasWriter<'conn> {
             info!("Starting new syn2mas migration");
 
             conn.as_mut()
-                .execute_many(include_str!("mas_writer/syn2mas_temporary_tables.sql"))
+                .execute_many(include_str!("syn2mas_temporary_tables.sql"))
                 // We don't care about any query results
                 .try_collect::<Vec<_>>()
                 .await
@@ -453,9 +453,7 @@ impl<'conn> MasWriter<'conn> {
 
         self.conn
             .as_mut()
-            .execute_many(include_str!(
-                "mas_writer/syn2mas_revert_temporary_tables.sql"
-            ))
+            .execute_many(include_str!("syn2mas_revert_temporary_tables.sql"))
             // We don't care about any query results
             .try_collect::<Vec<_>>()
             .await
