@@ -544,7 +544,7 @@ async fn refresh_token_grant(
 
     let refresh_token = repo
         .oauth2_refresh_token()
-        .consume(clock, refresh_token)
+        .consume(clock, refresh_token, &new_refresh_token)
         .await?;
 
     if let Some(access_token_id) = refresh_token.access_token_id {

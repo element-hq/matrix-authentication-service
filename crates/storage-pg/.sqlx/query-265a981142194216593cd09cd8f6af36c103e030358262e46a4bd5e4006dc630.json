@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_refresh_token_id\n                     , refresh_token\n                     , created_at\n                     , consumed_at\n                     , oauth2_access_token_id\n                     , oauth2_session_id\n                FROM oauth2_refresh_tokens\n\n                WHERE oauth2_refresh_token_id = $1\n            ",
+  "query": "\n                SELECT oauth2_refresh_token_id\n                     , refresh_token\n                     , created_at\n                     , consumed_at\n                     , oauth2_access_token_id\n                     , oauth2_session_id\n                     , next_oauth2_refresh_token_id\n                FROM oauth2_refresh_tokens\n\n                WHERE refresh_token = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -32,11 +32,16 @@
         "ordinal": 5,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "next_oauth2_refresh_token_id",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -45,8 +50,9 @@
       false,
       true,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "a6fa7811d0a7c62c7cccff96dc82db5b25462fa7669fde1941ccab4712585b20"
+  "hash": "265a981142194216593cd09cd8f6af36c103e030358262e46a4bd5e4006dc630"
 }

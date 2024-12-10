@@ -80,6 +80,7 @@ pub trait OAuth2RefreshTokenRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate timestamps
     /// * `refresh_token`: The [`RefreshToken`] to consume
+    /// * `replaced_by`: The [`RefreshToken`] which replaced this one
     ///
     /// # Errors
     ///
@@ -89,6 +90,7 @@ pub trait OAuth2RefreshTokenRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         refresh_token: RefreshToken,
+        replaced_by: &RefreshToken,
     ) -> Result<RefreshToken, Self::Error>;
 }
 
@@ -113,5 +115,6 @@ repository_impl!(OAuth2RefreshTokenRepository:
         &mut self,
         clock: &dyn Clock,
         refresh_token: RefreshToken,
+        replaced_by: &RefreshToken,
     ) -> Result<RefreshToken, Self::Error>;
 );
