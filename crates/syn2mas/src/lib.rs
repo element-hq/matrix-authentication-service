@@ -4,8 +4,8 @@ mod synapse_reader;
 mod checks;
 mod migration;
 
-pub use checks::synapse_pre_migration_checks;
-pub use mas_writer::locking::LockedMasDatabase;
-pub use mas_writer::{checks::mas_pre_migration_checks, MasWriter};
-pub use migration::migrate;
-pub use synapse_reader::SynapseReader;
+pub use self::checks::synapse_pre_migration_checks;
+pub use self::mas_writer::locking::LockedMasDatabase;
+pub use self::mas_writer::{checks::mas_pre_migration_checks, MasWriter};
+pub use self::migration::migrate;
+pub use self::synapse_reader::SynapseReader;

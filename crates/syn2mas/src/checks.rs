@@ -10,7 +10,7 @@ use crate::mas_writer;
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("problem with MAS database: {0}")]
-    MasDatabase(mas_writer::checks::Error),
+    MasDatabase(#[source] mas_writer::checks::Error),
 
     #[error("query failed: {0}")]
     Sqlx(#[from] sqlx::Error),

@@ -6,6 +6,7 @@
 
 use std::{collections::HashMap, pin::pin};
 
+use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::StreamExt as _;
 use rand::rngs::ThreadRng;
@@ -133,13 +134,13 @@ fn transform_user(
 
     let new_user = MasNewUser {
         user_id: Uuid::from(Ulid::from_datetime_with_source(
-            user.creation_ts.0.into(),
+            DateTime::<Utc>::from(user.creation_ts).into(),
             rng,
         )),
         username,
-        created_at: user.creation_ts.0,
-        locked_at: user.deactivated.0.then_some(user.creation_ts.0),
-        can_request_admin: user.admin.0,
+        created_at: user.creation_ts.into(),
+        locked_at: bool::from(user.deactivated).then_some(user.creation_ts.into()),
+        can_request_admin: bool::from(user.admin),
     };
 
     let mas_password = user
@@ -147,7 +148,7 @@ fn transform_user(
         .clone()
         .map(|password_hash| MasNewUserPassword {
             user_password_id: Uuid::from(Ulid::from_datetime_with_source(
-                user.creation_ts.0.into(),
+                DateTime::<Utc>::from(user.creation_ts).into(),
                 rng,
             )),
             user_id: new_user.user_id,

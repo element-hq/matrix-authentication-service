@@ -13,8 +13,9 @@ use thiserror_ext::ContextInto;
 
 #[derive(Debug, Error, ContextInto)]
 pub enum Error {
-    #[error("database error whilst {context}: {source}")]
+    #[error("database error whilst {context}")]
     Database {
+        #[source]
         source: sqlx::Error,
         context: String,
     },
@@ -76,8 +77,8 @@ impl FullUserId {
 /// A Synapse boolean.
 /// Synapse stores booleans as 0 or 1, due to compatibility with old SQLite versions
 /// that did not have native boolean support.
-#[derive(Clone, Debug)]
-pub struct SynapseBool(pub bool);
+#[derive(Copy, Clone, Debug)]
+pub struct SynapseBool(bool);
 
 impl<'r> sqlx::Decode<'r, Postgres> for SynapseBool {
     fn decode(
@@ -94,11 +95,23 @@ impl sqlx::Type<Postgres> for SynapseBool {
     }
 }
 
+impl From<SynapseBool> for bool {
+    fn from(SynapseBool(value): SynapseBool) -> Self {
+        value
+    }
+}
+
 /// A timestamp stored as the number of seconds since the Unix epoch.
 /// Note that Synapse stores MOST timestamps as numbers of **milliseconds** since the Unix epoch.
 /// But some timestamps are still stored in seconds.
-#[derive(Clone, Debug)]
-pub struct SecondsTimestamp(pub DateTime<Utc>);
+#[derive(Copy, Clone, Debug)]
+pub struct SecondsTimestamp(DateTime<Utc>);
+
+impl From<SecondsTimestamp> for DateTime<Utc> {
+    fn from(SecondsTimestamp(value): SecondsTimestamp) -> Self {
+        value
+    }
+}
 
 impl<'r> sqlx::Decode<'r, Postgres> for SecondsTimestamp {
     fn decode(

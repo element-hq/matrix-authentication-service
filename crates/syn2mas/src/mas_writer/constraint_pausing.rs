@@ -1,17 +1,15 @@
-use sqlx::{FromRow, PgConnection};
+use sqlx::PgConnection;
 use tracing::debug;
 
 use super::{Error, IntoDatabase};
 
 /// Description of a constraint, which allows recreating it later.
-#[derive(FromRow)]
 pub struct ConstraintDescription {
     pub name: String,
     pub table_name: String,
     pub definition: String,
 }
 
-#[derive(FromRow)]
 pub struct IndexDescription {
     pub name: String,
     pub table_name: String,
@@ -29,7 +27,7 @@ pub async fn describe_constraints_on_table(
             SELECT conrelid::regclass::text AS "table_name!", conname AS "name!", pg_get_constraintdef(c.oid) AS "definition!"
             FROM pg_constraint c
             JOIN pg_namespace n ON n.oid = c.connamespace
-            WHERE contype IN ('f', 'p ', 'u') AND conrelid::regclass::text = $1
+            WHERE contype IN ('f', 'p', 'u') AND conrelid::regclass::text = $1
             AND n.nspname = current_schema;
         "#,
         table_name

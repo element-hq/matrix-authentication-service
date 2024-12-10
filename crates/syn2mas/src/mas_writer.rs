@@ -25,8 +25,9 @@ mod constraint_pausing;
 
 #[derive(Debug, Error, Construct, ContextInto)]
 pub enum Error {
-    #[error("database error whilst {context}: {source}")]
+    #[error("database error whilst {context}")]
     Database {
+        #[source]
         source: sqlx::Error,
         context: String,
     },
@@ -252,8 +253,6 @@ impl<'conn> MasWriter<'conn> {
         mut conn: LockedMasDatabase<'conn>,
         mut writer_connections: Vec<PgConnection>,
     ) -> Result<Self, Error> {
-        // Acquire an advisory lock on the database.
-        // This lets us know that there is no other instance of syn2mas active.
         // Given that we don't have any concurrent transactions here,
         // the READ COMMITTED isolation level is sufficient.
         query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
@@ -590,7 +589,6 @@ impl<'conn> MasWriter<'conn> {
 // and also we won't be able to stream to two tables at once...)
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
-// TODO should split this out into the different stages
 pub struct MasUserWriteBuffer<'writer, 'conn> {
     users: Vec<MasNewUser>,
     passwords: Vec<MasNewUserPassword>,

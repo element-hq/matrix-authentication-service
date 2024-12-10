@@ -12,17 +12,18 @@ pub enum Error {
     #[error("the MAS database is not empty: rows found in at least `{table}`")]
     MasDatabaseNotEmpty { table: &'static str },
 
-    #[error("query against {table} failed — is this actually a MAS database?: {source}")]
+    #[error("query against {table} failed — is this actually a MAS database?")]
     MaybeNotMas {
+        #[source]
         source: sqlx::Error,
         table: &'static str,
     },
 
-    #[error("query failed: {0}")]
+    #[error(transparent)]
     Sqlx(#[from] sqlx::Error),
 
-    #[error("unable to check if syn2mas is already in progress: {0}")]
-    UnableToCheckInProgress(super::Error),
+    #[error("unable to check if syn2mas is already in progress")]
+    UnableToCheckInProgress(#[source] super::Error),
 }
 
 /// Check that a MAS database is ready for being migrated to.
