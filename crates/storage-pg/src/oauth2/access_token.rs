@@ -250,20 +250,20 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.oauth2_access_token.cleanup_expired",
+        name = "db.oauth2_access_token.cleanup_revoked",
         skip_all,
         fields(
             db.query.text,
         ),
         err,
     )]
-    async fn cleanup_expired(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
-        // Cleanup token which expired more than 15 minutes ago
-        let threshold = clock.now() - Duration::microseconds(15 * 60 * 1000 * 1000);
+    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
+        // Cleanup token that were revoked more than an hour ago
+        let threshold = clock.now() - Duration::microseconds(60 * 60 * 1000 * 1000);
         let res = sqlx::query!(
             r#"
                 DELETE FROM oauth2_access_tokens
-                WHERE expires_at < $1
+                WHERE revoked_at < $1
             "#,
             threshold,
         )
