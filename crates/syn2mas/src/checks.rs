@@ -16,6 +16,7 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
 }
 
+#[tracing::instrument(skip_all)]
 pub async fn synapse_pre_migration_checks(
     synapse_connection: &mut PgConnection,
 ) -> Result<(), Error> {

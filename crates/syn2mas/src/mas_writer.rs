@@ -10,7 +10,7 @@ use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{error, info, warn};
+use tracing::{error, info, warn, Level};
 use uuid::Uuid;
 
 use self::{
@@ -249,6 +249,7 @@ impl<'conn> MasWriter<'conn> {
     ///
     /// - If the database connection experiences an error.
     #[allow(clippy::missing_panics_doc)] // not real
+    #[tracing::instrument(skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase<'conn>,
         mut writer_connections: Vec<PgConnection>,
@@ -367,6 +368,7 @@ impl<'conn> MasWriter<'conn> {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn pause_indices(
         conn: &mut PgConnection,
     ) -> Result<(Vec<IndexDescription>, Vec<ConstraintDescription>), Error> {
@@ -427,6 +429,7 @@ impl<'conn> MasWriter<'conn> {
     /// Errors are returned in the following conditions:
     ///
     /// - If the database connection experiences an error.
+    #[tracing::instrument(skip_all)]
     pub async fn finish(mut self) -> Result<(), Error> {
         // Commit all writer transactions to the database.
         self.writer_pool
@@ -479,6 +482,7 @@ impl<'conn> MasWriter<'conn> {
     ///
     /// - If the database writer connection pool had an error.
     #[allow(clippy::missing_panics_doc)] // not a real panic
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub async fn write_users(&mut self, users: Vec<MasNewUser>) -> Result<(), Error> {
         self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
             // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows in one statement
@@ -536,6 +540,7 @@ impl<'conn> MasWriter<'conn> {
     ///
     /// - If the database writer connection pool had an error.
     #[allow(clippy::missing_panics_doc)] // not a real panic
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub async fn write_passwords(
         &mut self,
         passwords: Vec<MasNewUserPassword>,

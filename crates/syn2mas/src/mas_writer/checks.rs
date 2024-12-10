@@ -39,6 +39,7 @@ pub enum Error {
 /// - If any database access error occurs.
 /// - If any MAS tables involved in the migration are not empty.
 /// - If we can't check whether syn2mas is already in progress on this database or not.
+#[tracing::instrument(skip_all)]
 pub async fn mas_pre_migration_checks<'a>(
     mas_connection: &mut LockedMasDatabase<'a>,
 ) -> Result<(), Error> {
