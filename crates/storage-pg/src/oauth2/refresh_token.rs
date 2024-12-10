@@ -34,6 +34,7 @@ struct OAuth2RefreshTokenLookup {
     refresh_token: String,
     created_at: DateTime<Utc>,
     consumed_at: Option<DateTime<Utc>>,
+    revoked_at: Option<DateTime<Utc>>,
     oauth2_access_token_id: Option<Uuid>,
     oauth2_session_id: Uuid,
     next_oauth2_refresh_token_id: Option<Uuid>,
@@ -44,17 +45,22 @@ impl TryFrom<OAuth2RefreshTokenLookup> for RefreshToken {
 
     fn try_from(value: OAuth2RefreshTokenLookup) -> Result<Self, Self::Error> {
         let id = value.oauth2_refresh_token_id.into();
-        let state = match (value.consumed_at, value.next_oauth2_refresh_token_id) {
-            (None, None) => RefreshTokenState::Valid,
-            (Some(consumed_at), None) => RefreshTokenState::Consumed {
+        let state = match (
+            value.revoked_at,
+            value.consumed_at,
+            value.next_oauth2_refresh_token_id,
+        ) {
+            (None, None, None) => RefreshTokenState::Valid,
+            (Some(revoked_at), None, None) => RefreshTokenState::Revoked { revoked_at },
+            (None, Some(consumed_at), None) => RefreshTokenState::Consumed {
                 consumed_at,
                 next_refresh_token_id: None,
             },
-            (Some(consumed_at), Some(id)) => RefreshTokenState::Consumed {
+            (None, Some(consumed_at), Some(id)) => RefreshTokenState::Consumed {
                 consumed_at,
                 next_refresh_token_id: Some(Ulid::from(id)),
             },
-            (None, Some(_)) => {
+            _ => {
                 return Err(DatabaseInconsistencyError::on("oauth2_refresh_tokens")
                     .column("next_oauth2_refresh_token_id")
                     .row(id))
@@ -93,6 +99,7 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
                      , refresh_token
                      , created_at
                      , consumed_at
+                     , revoked_at
                      , oauth2_access_token_id
                      , oauth2_session_id
                      , next_oauth2_refresh_token_id
@@ -130,6 +137,7 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
                      , refresh_token
                      , created_at
                      , consumed_at
+                     , revoked_at
                      , oauth2_access_token_id
                      , oauth2_session_id
                      , next_oauth2_refresh_token_id
@@ -235,6 +243,42 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
 
         refresh_token
             .consume(consumed_at, replaced_by)
+            .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_refresh_token.revoke",
+        skip_all,
+        fields(
+            db.query.text,
+            %refresh_token.id,
+            session.id = %refresh_token.session_id,
+        ),
+        err,
+    )]
+    async fn revoke(
+        &mut self,
+        clock: &dyn Clock,
+        refresh_token: RefreshToken,
+    ) -> Result<RefreshToken, Self::Error> {
+        let revoked_at = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE oauth2_refresh_tokens
+                SET revoked_at = $2
+                WHERE oauth2_refresh_token_id = $1
+            "#,
+            Uuid::from(refresh_token.id),
+            revoked_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        refresh_token
+            .revoke(revoked_at)
             .map_err(DatabaseError::to_invalid_operation)
     }
 }

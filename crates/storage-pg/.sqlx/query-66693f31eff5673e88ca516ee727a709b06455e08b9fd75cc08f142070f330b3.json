@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE oauth2_refresh_tokens\n                SET revoked_at = $2\n                WHERE oauth2_refresh_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66693f31eff5673e88ca516ee727a709b06455e08b9fd75cc08f142070f330b3"
+}

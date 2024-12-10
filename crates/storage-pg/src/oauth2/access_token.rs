@@ -179,7 +179,7 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.oauth2_access_token.revoked",
+        name = "db.oauth2_access_token.revoke",
         skip_all,
         fields(
             db.query.text,
