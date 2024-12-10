@@ -117,6 +117,11 @@ impl<F: Send> UserAuthorization<F> {
             return Err(AuthorizationVerificationError::InvalidToken);
         }
 
+        if !token.is_used() {
+            // Mark the token as used
+            repo.oauth2_access_token().mark_used(clock, token).await?;
+        }
+
         Ok(session)
     }
 }
