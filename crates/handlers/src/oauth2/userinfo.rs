@@ -142,6 +142,8 @@ pub async fn get(
         .await?
         .ok_or(RouteError::NoSuchClient)?;
 
+    repo.save().await?;
+
     if let Some(alg) = client.userinfo_signed_response_alg {
         let key = key_store
             .signing_key_for_algorithm(&alg)
