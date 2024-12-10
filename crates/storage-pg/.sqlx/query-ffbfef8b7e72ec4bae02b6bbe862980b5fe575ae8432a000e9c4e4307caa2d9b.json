@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE oauth2_refresh_tokens\n                SET consumed_at = $2,\n                    next_oauth2_refresh_token_id = $3\n                WHERE oauth2_refresh_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ffbfef8b7e72ec4bae02b6bbe862980b5fe575ae8432a000e9c4e4307caa2d9b"
+}

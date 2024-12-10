@@ -121,7 +121,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
         .add_schedule(
             "cleanup-expired-tokens",
-            "*/15 * * * * *".parse()?,
+            "0 0 * * * *".parse()?,
             mas_storage::queue::CleanupExpiredTokensJob,
         );
 

@@ -24,7 +24,7 @@ impl RunnableJob for CleanupExpiredTokensJob {
 
         let count = repo
             .oauth2_access_token()
-            .cleanup_expired(&clock)
+            .cleanup_revoked(&clock)
             .await
             .map_err(JobError::retry)?;
         repo.save().await.map_err(JobError::retry)?;
@@ -32,7 +32,7 @@ impl RunnableJob for CleanupExpiredTokensJob {
         if count == 0 {
             debug!("no token to clean up");
         } else {
-            info!(count, "cleaned up expired tokens");
+            info!(count, "cleaned up revoked tokens");
         }
 
         Ok(())

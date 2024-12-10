@@ -341,6 +341,19 @@ mod tests {
         clock.advance(Duration::try_minutes(-6).unwrap()); // Go back in time
         assert!(access_token.is_valid(clock.now()));
 
+        // Create a new refresh token to be able to consume the old one
+        let new_refresh_token = repo
+            .oauth2_refresh_token()
+            .add(
+                &mut rng,
+                &clock,
+                &session,
+                &access_token,
+                "ddeeff".to_owned(),
+            )
+            .await
+            .unwrap();
+
         // Mark the access token as revoked
         let access_token = repo
             .oauth2_access_token()
@@ -353,7 +366,7 @@ mod tests {
         assert!(refresh_token.is_valid());
         let refresh_token = repo
             .oauth2_refresh_token()
-            .consume(&clock, refresh_token)
+            .consume(&clock, refresh_token, &new_refresh_token)
             .await
             .unwrap();
         assert!(!refresh_token.is_valid());

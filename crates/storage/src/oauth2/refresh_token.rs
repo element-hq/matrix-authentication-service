@@ -80,12 +80,33 @@ pub trait OAuth2RefreshTokenRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate timestamps
     /// * `refresh_token`: The [`RefreshToken`] to consume
+    /// * `replaced_by`: The [`RefreshToken`] which replaced this one
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails, or if the
-    /// token was already consumed
+    /// token was already consumed or revoked
     async fn consume(
+        &mut self,
+        clock: &dyn Clock,
+        refresh_token: RefreshToken,
+        replaced_by: &RefreshToken,
+    ) -> Result<RefreshToken, Self::Error>;
+
+    /// Revoke a refresh token
+    ///
+    /// Returns the updated [`RefreshToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock used to generate timestamps
+    /// * `refresh_token`: The [`RefreshToken`] to revoke
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails, or if the
+    /// token was already revoked or consumed
+    async fn revoke(
         &mut self,
         clock: &dyn Clock,
         refresh_token: RefreshToken,
@@ -110,6 +131,13 @@ repository_impl!(OAuth2RefreshTokenRepository:
     ) -> Result<RefreshToken, Self::Error>;
 
     async fn consume(
+        &mut self,
+        clock: &dyn Clock,
+        refresh_token: RefreshToken,
+        replaced_by: &RefreshToken,
+    ) -> Result<RefreshToken, Self::Error>;
+
+    async fn revoke(
         &mut self,
         clock: &dyn Clock,
         refresh_token: RefreshToken,
