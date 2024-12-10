@@ -107,7 +107,7 @@ pub trait OAuth2AccessTokenRepository: Send + Sync {
         access_token: AccessToken,
     ) -> Result<AccessToken, Self::Error>;
 
-    /// Cleanup expired access tokens
+    /// Cleanup revoked access tokens
     ///
     /// Returns the number of access tokens that were cleaned up
     ///
@@ -118,7 +118,7 @@ pub trait OAuth2AccessTokenRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    async fn cleanup_expired(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(OAuth2AccessTokenRepository:
@@ -150,5 +150,5 @@ repository_impl!(OAuth2AccessTokenRepository:
         access_token: AccessToken,
     ) -> Result<AccessToken, Self::Error>;
 
-    async fn cleanup_expired(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 );
