@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT indexname AS \"name!\", indexdef AS \"definition!\", schemaname AS \"table_name!\"\n            FROM pg_indexes\n            WHERE schemaname = current_schema AND tablename = $1 AND indexname IS NOT NULL AND indexdef IS NOT NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "definition!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "table_name!",
+        "type_info": "Name"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Name"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "486f3177dcf6117c6b966954a44d9f96a754eba64912566e81a90bd4cbd186f0"
+}
