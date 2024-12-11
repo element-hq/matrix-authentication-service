@@ -10,33 +10,18 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# TODO remove anything unnecessary! :-)
-anyhow.workspace = true
 thiserror.workspace = true
 thiserror-ext.workspace = true
-
-async-trait.workspace = true
 tokio.workspace = true
 sqlx.workspace = true
 chrono.workspace = true
 compact_str.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 tracing.workspace = true
 futures-util = "0.3.30"
-opentelemetry-semantic-conventions.workspace = true
 
 rand.workspace = true
-rand_chacha = "0.3.1"
-url.workspace = true
 uuid = "1.10.0"
 ulid = { workspace = true, features = ["uuid"] }
-
-oauth2-types.workspace = true
-mas-storage.workspace = true
-mas-data-model.workspace = true
-mas-iana.workspace = true
-mas-jose.workspace = true
 
 [lints]
 workspace = true
