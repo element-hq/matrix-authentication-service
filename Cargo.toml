@@ -63,7 +63,7 @@ features = ["axum", "axum-headers", "macros"]
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
-version = "7.0.11"
+version = "7.0.13"
 features = ["chrono", "url", "tracing"]
 
 # Utility to write and implement async traits
