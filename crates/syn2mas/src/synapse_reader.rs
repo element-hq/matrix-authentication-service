@@ -7,9 +7,8 @@
 //!
 //! This module provides facilities for streaming relevant types of database records from a Synapse database.
 
-use async_stream::stream;
 use chrono::{DateTime, Utc};
-use futures_util::Stream;
+use futures_util::{Stream, TryStreamExt};
 use sea_query::{enum_def, Expr, Iden, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use sqlx::{query, query_with, FromRow, PgConnection, Postgres, Row, Type};
@@ -259,37 +258,17 @@ impl<'conn> SynapseReader<'conn> {
     }
 
     /// Reads Synapse users, excluding application service users (which do not need to be migrated), from the database.
-    pub fn read_users<'a, 'ret>(
-        &'a mut self,
-    ) -> impl Stream<Item = Result<SynapseUser, Error>> + 'ret
-    where
-        'conn: 'a,
-        'a: 'ret,
-    {
-        // TODO no need for query builder here
-        let (sql, args) = Query::select()
-            .columns([
-                SynapseUserIden::Name,
-                SynapseUserIden::PasswordHash,
-                SynapseUserIden::Admin,
-                SynapseUserIden::Deactivated,
-                SynapseUserIden::CreationTs,
-            ])
-            .and_where(Expr::col(ExtraSynapseUserIden::AppserviceId).is_null())
-            // TODO support migrating at least skeleton records for guests
-            .and_where(Expr::col(ExtraSynapseUserIden::IsGuest).eq(0))
-            .from(SynapseUserIden::Table)
-            .build_sqlx(PostgresQueryBuilder);
-
-        let conn = &mut *self.conn;
-
-        // The async stream macro works around an issue where the QueryAs output stream borrows the SQL.
-        // See: https://github.com/launchbadge/sqlx/issues/1594#issuecomment-1493146479
-        stream! {
-            for await row in sqlx::query_as_with::<_, SynapseUser, _>(&sql, args).fetch(conn) {
-                yield row.into_database("reading Synapse users");
-            }
-        }
+    pub fn read_users(&mut self) -> impl Stream<Item = Result<SynapseUser, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              name, password_hash, admin, deactivated, creation_ts
+            FROM users
+            WHERE appservice_id IS NULL AND is_guest = 0
+            ",
+        )
+        .fetch(&mut *self.conn)
+        .map_err(|err| err.into_database("reading Synapse users"))
     }
 }
 

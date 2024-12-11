@@ -15,7 +15,6 @@ anyhow.workspace = true
 thiserror.workspace = true
 thiserror-ext.workspace = true
 
-async-stream.workspace = true
 async-trait.workspace = true
 tokio.workspace = true
 sqlx.workspace = true
