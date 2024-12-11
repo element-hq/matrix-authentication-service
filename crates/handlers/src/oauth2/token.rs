@@ -780,7 +780,11 @@ async fn device_code_grant(
     // Start the session
     let mut session = repo
         .oauth2_session()
-        .add_from_browser_session(rng, clock, client, &browser_session, grant.scope)
+        .add_from_browser_session(rng, clock, client, &browser_session, grant.scope.clone())
+        .await?;
+
+    repo.oauth2_device_code_grant()
+        .exchange(clock, grant, &session)
         .await?;
 
     // XXX: should we get the user agent from the device code grant instead?
@@ -1604,6 +1608,19 @@ mod tests {
         assert!(response.refresh_token.is_some());
         // We asked for the openid scope, so we should have an ID token
         assert!(response.id_token.is_some());
+
+        // Calling it again should fail
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": grant.device_code,
+                "client_id": client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::InvalidGrant);
 
         // Do another grant and make it expire
         let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
