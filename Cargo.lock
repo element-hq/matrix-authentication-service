@@ -6154,8 +6154,6 @@ dependencies = [
  "opentelemetry-semantic-conventions",
  "rand",
  "rand_chacha",
- "sea-query",
- "sea-query-binder",
  "serde",
  "serde_json",
  "sqlx",

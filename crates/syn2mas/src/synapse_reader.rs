@@ -9,9 +9,7 @@
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sea_query::{enum_def, Expr, Iden, PostgresQueryBuilder, Query};
-use sea_query_binder::SqlxBinder;
-use sqlx::{query, query_with, FromRow, PgConnection, Postgres, Row, Type};
+use sqlx::{query, FromRow, PgConnection, Postgres, Row, Type};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -136,7 +134,6 @@ impl sqlx::Type<Postgres> for SecondsTimestamp {
 }
 
 #[derive(Clone, Debug, FromRow)]
-#[enum_def(table_name = "users")]
 pub struct SynapseUser {
     /// Full User ID of the user
     pub name: FullUserId,
@@ -151,12 +148,6 @@ pub struct SynapseUser {
     // TODO ...
     // TODO is_guest
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
-}
-
-#[derive(Iden)]
-pub enum ExtraSynapseUserIden {
-    AppserviceId,
-    IsGuest,
 }
 
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
@@ -239,20 +230,17 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
-        // TODO no need for query builder here
-        let (sql, args) = Query::select()
-            .expr(Expr::val(1).count())
-            .and_where(Expr::col(ExtraSynapseUserIden::AppserviceId).is_null())
-            // TODO support migrating at least skeleton records for guests
-            .and_where(Expr::col(ExtraSynapseUserIden::IsGuest).eq(0))
-            .from(SynapseUserIden::Table)
-            .build_sqlx(PostgresQueryBuilder);
-        let users = query_with(&sql, args)
-            .fetch_one(&mut *self.conn)
-            .await
-            .into_database("counting Synapse users")?
-            .try_get::<i64, _>(0)
-            .into_database("couldn't decode count of Synapse users table")?;
+        let users = sqlx::query(
+            "
+            SELECT COUNT(1) FROM users
+            WHERE appservice_id IS NULL AND is_guest = 0
+            ",
+        )
+        .fetch_one(&mut *self.conn)
+        .await
+        .into_database("counting Synapse users")?
+        .try_get::<i64, _>(0)
+        .into_database("couldn't decode count of Synapse users table")?;
 
         Ok(SynapseRowCounts { users })
     }
