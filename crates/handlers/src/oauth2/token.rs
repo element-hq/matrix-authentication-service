@@ -601,13 +601,13 @@ async fn refresh_token_grant(
         }
 
         // Looks like it's a double-refresh, client lost their refresh token on
-        // the way back. Let's revoke the two new access and refresh tokens, and
+        // the way back. Let's revoke the unused access and refresh tokens, and
         // issue new ones
         info!(
             oauth2_session.id = %session.id,
             oauth2_client.id = %client.id,
             %refresh_token.id,
-            "A refresh token was used twice, but the new refresh token was lost. Revoking the old ones and issuing new ones."
+            "Refresh token already used, but issued refresh and access tokens are unused. Assuming those were lost; revoking those and reissuing new ones."
         );
 
         repo.oauth2_access_token()
