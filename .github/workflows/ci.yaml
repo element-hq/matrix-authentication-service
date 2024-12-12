@@ -150,7 +150,7 @@ jobs:
           rustup default stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Install Node
         uses: actions/setup-node@v4.1.0
@@ -209,7 +209,7 @@ jobs:
         run: make
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Run clippy
         run: |
@@ -236,7 +236,7 @@ jobs:
         uses: taiki-e/install-action@nextest
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
