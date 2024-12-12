@@ -16,7 +16,10 @@ use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use ulid::Ulid;
 
-use crate::activity_tracker::{Message, SessionKind};
+use crate::{
+    activity_tracker::{Message, SessionKind},
+    METER,
+};
 
 /// The maximum number of pending activity records before we flush them to the
 /// database automatically.
@@ -48,13 +51,7 @@ pub struct Worker {
 
 impl Worker {
     pub(crate) fn new(pool: PgPool) -> Self {
-        let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
-            .build();
-        let meter = opentelemetry::global::meter_with_scope(scope);
-
-        let message_counter = meter
+        let message_counter = METER
             .u64_counter("mas.activity_tracker.messages")
             .with_description("The number of messages received by the activity tracker")
             .with_unit("{messages}")
@@ -77,7 +74,7 @@ impl Worker {
         message_counter.add(0, &[KeyValue::new(TYPE, "flush")]);
         message_counter.add(0, &[KeyValue::new(TYPE, "shutdown")]);
 
-        let flush_time_histogram = meter
+        let flush_time_histogram = METER
             .u64_histogram("mas.activity_tracker.flush_time")
             .with_description("The time it took to flush the activity tracker")
             .with_unit("ms")

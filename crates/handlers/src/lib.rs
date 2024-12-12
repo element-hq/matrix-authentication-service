@@ -15,7 +15,7 @@
     clippy::let_with_type_underscore,
 )]
 
-use std::{convert::Infallible, time::Duration};
+use std::{convert::Infallible, sync::LazyLock, time::Duration};
 
 use axum::{
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
@@ -41,6 +41,7 @@ use mas_policy::Policy;
 use mas_router::{Route, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
+use opentelemetry::metrics::Meter;
 use passwords::PasswordManager;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
@@ -61,6 +62,15 @@ mod preferred_language;
 mod rate_limit;
 #[cfg(test)]
 mod test_utils;
+
+static METER: LazyLock<Meter> = LazyLock::new(|| {
+    let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
+        .build();
+
+    opentelemetry::global::meter_with_scope(scope)
+});
 
 /// Implement `From<E>` for `RouteError`, for "internal server error" kind of
 /// errors.

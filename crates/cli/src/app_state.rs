@@ -29,6 +29,8 @@ use opentelemetry::{metrics::Histogram, KeyValue};
 use rand::SeedableRng;
 use sqlx::PgPool;
 
+use crate::telemetry::METER;
+
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
@@ -53,15 +55,8 @@ pub struct AppState {
 impl AppState {
     /// Init the metrics for the app state.
     pub fn init_metrics(&mut self) {
-        // XXX: do we want to put that somewhere else?
-        let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
-            .build();
-        let meter = opentelemetry::global::meter_with_scope(scope);
-
         let pool = self.pool.clone();
-        meter
+        METER
             .i64_observable_up_down_counter("db.connections.usage")
             .with_description("The number of connections that are currently in `state` described by the state attribute.")
             .with_unit("{connection}")
@@ -74,7 +69,7 @@ impl AppState {
             .build();
 
         let pool = self.pool.clone();
-        meter
+        METER
             .i64_observable_up_down_counter("db.connections.max")
             .with_description("The maximum number of open connections allowed.")
             .with_unit("{connection}")
@@ -85,7 +80,7 @@ impl AppState {
             .build();
 
         // Track the connection acquisition time
-        let histogram = meter
+        let histogram = METER
             .u64_histogram("db.client.connections.create_time")
             .with_description("The time it took to create a new connection.")
             .with_unit("ms")

@@ -10,7 +10,7 @@ use opentelemetry::{metrics::UpDownCounter, KeyValue};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::MetricsAttributes;
+use crate::{MetricsAttributes, METER};
 
 /// A [`Layer`] that records the number of in-flight requests.
 ///
@@ -27,7 +27,7 @@ impl InFlightCounterLayer {
     /// Create a new [`InFlightCounterLayer`].
     #[must_use]
     pub fn new(name: &'static str) -> Self {
-        let counter = crate::meter()
+        let counter = METER
             .i64_up_down_counter(name)
             .with_unit("{request}")
             .with_description("The number of in-flight requests")
