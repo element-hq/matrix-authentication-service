@@ -232,7 +232,12 @@ fn init_meter(config: &MetricsConfig) -> anyhow::Result<()> {
 fn resource() -> Resource {
     let resource = Resource::new([
         KeyValue::new(semcov::resource::SERVICE_NAME, env!("CARGO_PKG_NAME")),
-        KeyValue::new(semcov::resource::SERVICE_VERSION, env!("CARGO_PKG_VERSION")),
+        KeyValue::new(semcov::resource::SERVICE_VERSION, crate::VERSION),
+        KeyValue::new(semcov::resource::PROCESS_RUNTIME_NAME, "rust"),
+        KeyValue::new(
+            semcov::resource::PROCESS_RUNTIME_VERSION,
+            env!("VERGEN_RUSTC_SEMVER"),
+        ),
     ]);
 
     let detected = Resource::from_detectors(

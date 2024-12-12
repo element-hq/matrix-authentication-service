@@ -60,6 +60,8 @@ impl Options {
         let shutdown = ShutdownManager::new()?;
         let config = AppConfig::extract(figment)?;
 
+        info!(version = crate::VERSION, "Starting up");
+
         if self.migrate {
             warn!("The `--migrate` flag is deprecated and will be removed in a future release. Please use `--no-migrate` to disable automatic migrations on startup.");
         }

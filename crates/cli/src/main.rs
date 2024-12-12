@@ -24,6 +24,9 @@ mod sync;
 mod telemetry;
 mod util;
 
+/// The application version, as reported by `git describe` at build time
+static VERSION: &str = env!("VERGEN_GIT_DESCRIBE");
+
 #[derive(Debug)]
 struct SentryTransportFactory {
     client: reqwest::Client,
