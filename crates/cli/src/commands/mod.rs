@@ -51,6 +51,7 @@ enum Subcommand {
 }
 
 #[derive(Parser, Debug)]
+#[command(version = crate::VERSION)]
 pub struct Options {
     /// Path to the configuration file
     #[arg(short, long, global = true, action = clap::ArgAction::Append)]
