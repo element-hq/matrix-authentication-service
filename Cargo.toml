@@ -238,7 +238,7 @@ features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.19"
+version = "0.23.20"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
