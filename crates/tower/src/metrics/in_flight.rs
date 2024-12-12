@@ -31,7 +31,7 @@ impl InFlightCounterLayer {
             .i64_up_down_counter(name)
             .with_unit("{request}")
             .with_description("The number of in-flight requests")
-            .init();
+            .build();
 
         Self {
             counter,

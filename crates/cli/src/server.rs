@@ -248,14 +248,14 @@ pub fn build_router(
     router
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((
-                name.map(|name| MAS_LISTENER_NAME.string(name.to_owned())),
+                name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
                 metrics_attributes_fn(on_http_request_labels),
             )),
         )
         .layer(
             DurationRecorderLayer::new("http.server.duration")
                 .on_request((
-                    name.map(|name| MAS_LISTENER_NAME.string(name.to_owned())),
+                    name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
                     metrics_attributes_fn(on_http_request_labels),
                 ))
                 .on_response_fn(on_http_response_labels),

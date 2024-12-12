@@ -25,7 +25,7 @@ impl DurationRecorderLayer {
     /// Create a new [`DurationRecorderLayer`].
     #[must_use]
     pub fn new(name: &'static str) -> Self {
-        let histogram = crate::meter().u64_histogram(name).init();
+        let histogram = crate::meter().u64_histogram(name).build();
         Self {
             histogram,
             on_request: (),

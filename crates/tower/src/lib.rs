@@ -14,10 +14,10 @@ mod utils;
 pub use self::{metrics::*, trace_context::*, tracing::*, utils::*};
 
 fn meter() -> opentelemetry::metrics::Meter {
-    opentelemetry::global::meter_with_version(
-        env!("CARGO_PKG_NAME"),
-        Some(env!("CARGO_PKG_VERSION")),
-        Some(opentelemetry_semantic_conventions::SCHEMA_URL),
-        None,
-    )
+    let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
+        .build();
+
+    opentelemetry::global::meter_with_scope(scope)
 }

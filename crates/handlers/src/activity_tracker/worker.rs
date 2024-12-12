@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use mas_storage::{user::BrowserSessionRepository, RepositoryAccess};
 use opentelemetry::{
     metrics::{Counter, Histogram},
-    Key,
+    Key, KeyValue,
 };
 use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
@@ -48,18 +48,17 @@ pub struct Worker {
 
 impl Worker {
     pub(crate) fn new(pool: PgPool) -> Self {
-        let meter = opentelemetry::global::meter_with_version(
-            env!("CARGO_PKG_NAME"),
-            Some(env!("CARGO_PKG_VERSION")),
-            Some(opentelemetry_semantic_conventions::SCHEMA_URL),
-            None,
-        );
+        let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+            .with_version(env!("CARGO_PKG_VERSION"))
+            .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
+            .build();
+        let meter = opentelemetry::global::meter_with_scope(scope);
 
         let message_counter = meter
             .u64_counter("mas.activity_tracker.messages")
             .with_description("The number of messages received by the activity tracker")
             .with_unit("{messages}")
-            .init();
+            .build();
 
         // Record stuff on the counter so that the metrics are initialized
         for kind in &[
@@ -69,17 +68,20 @@ impl Worker {
         ] {
             message_counter.add(
                 0,
-                &[TYPE.string("record"), SESSION_KIND.string(kind.as_str())],
+                &[
+                    KeyValue::new(TYPE, "record"),
+                    KeyValue::new(SESSION_KIND, kind.as_str()),
+                ],
             );
         }
-        message_counter.add(0, &[TYPE.string("flush")]);
-        message_counter.add(0, &[TYPE.string("shutdown")]);
+        message_counter.add(0, &[KeyValue::new(TYPE, "flush")]);
+        message_counter.add(0, &[KeyValue::new(TYPE, "shutdown")]);
 
         let flush_time_histogram = meter
             .u64_histogram("mas.activity_tracker.flush_time")
             .with_description("The time it took to flush the activity tracker")
             .with_unit("ms")
-            .init();
+            .build();
 
         Self {
             pool,
@@ -137,7 +139,10 @@ impl Worker {
 
                     self.message_counter.add(
                         1,
-                        &[TYPE.string("record"), SESSION_KIND.string(kind.as_str())],
+                        &[
+                            KeyValue::new(TYPE, "record"),
+                            KeyValue::new(SESSION_KIND, kind.as_str()),
+                        ],
                     );
 
                     let record =
@@ -153,7 +158,7 @@ impl Worker {
                 }
 
                 Message::Flush(tx) => {
-                    self.message_counter.add(1, &[TYPE.string("flush")]);
+                    self.message_counter.add(1, &[KeyValue::new(TYPE, "flush")]);
 
                     self.flush().await;
                     let _ = tx.send(());
@@ -182,11 +187,11 @@ impl Worker {
         match res {
             Ok(()) => {
                 self.flush_time_histogram
-                    .record(duration_ms, &[RESULT.string("success")]);
+                    .record(duration_ms, &[KeyValue::new(RESULT, "success")]);
             }
             Err(e) => {
                 self.flush_time_histogram
-                    .record(duration_ms, &[RESULT.string("failure")]);
+                    .record(duration_ms, &[KeyValue::new(RESULT, "failure")]);
                 tracing::error!("Failed to flush activity tracker: {}", e);
             }
         }

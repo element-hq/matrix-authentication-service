@@ -25,10 +25,7 @@ use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, SystemClock};
 use mas_storage_pg::PgRepository;
 use mas_templates::Templates;
-use opentelemetry::{
-    metrics::{Histogram, MetricsError},
-    KeyValue,
-};
+use opentelemetry::{metrics::Histogram, KeyValue};
 use rand::SeedableRng;
 use sqlx::PgPool;
 
@@ -55,50 +52,45 @@ pub struct AppState {
 
 impl AppState {
     /// Init the metrics for the app state.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the metrics could not be initialized.
-    pub fn init_metrics(&mut self) -> Result<(), MetricsError> {
+    pub fn init_metrics(&mut self) {
         // XXX: do we want to put that somewhere else?
-        let meter = opentelemetry::global::meter_with_version(
-            env!("CARGO_PKG_NAME"),
-            Some(env!("CARGO_PKG_VERSION")),
-            Some(opentelemetry_semantic_conventions::SCHEMA_URL),
-            None,
-        );
+        let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+            .with_version(env!("CARGO_PKG_VERSION"))
+            .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
+            .build();
+        let meter = opentelemetry::global::meter_with_scope(scope);
+
         let pool = self.pool.clone();
-        let usage = meter
+        meter
             .i64_observable_up_down_counter("db.connections.usage")
             .with_description("The number of connections that are currently in `state` described by the state attribute.")
             .with_unit("{connection}")
-            .init();
+            .with_callback(move |instrument| {
+                let idle = u32::try_from(pool.num_idle()).unwrap_or(u32::MAX);
+                let used = pool.size() - idle;
+                instrument.observe(i64::from(idle), &[KeyValue::new("state", "idle")]);
+                instrument.observe(i64::from(used), &[KeyValue::new("state", "used")]);
+            })
+            .build();
 
-        let max = meter
+        let pool = self.pool.clone();
+        meter
             .i64_observable_up_down_counter("db.connections.max")
             .with_description("The maximum number of open connections allowed.")
             .with_unit("{connection}")
-            .init();
-
-        // Observe the number of active and idle connections in the pool
-        meter.register_callback(&[usage.as_any(), max.as_any()], move |observer| {
-            let idle = u32::try_from(pool.num_idle()).unwrap_or(u32::MAX);
-            let used = pool.size() - idle;
-            let max_conn = pool.options().get_max_connections();
-            observer.observe_i64(&usage, i64::from(idle), &[KeyValue::new("state", "idle")]);
-            observer.observe_i64(&usage, i64::from(used), &[KeyValue::new("state", "used")]);
-            observer.observe_i64(&max, i64::from(max_conn), &[]);
-        })?;
+            .with_callback(move |instrument| {
+                let max_conn = pool.options().get_max_connections();
+                instrument.observe(i64::from(max_conn), &[]);
+            })
+            .build();
 
         // Track the connection acquisition time
         let histogram = meter
             .u64_histogram("db.client.connections.create_time")
             .with_description("The time it took to create a new connection.")
             .with_unit("ms")
-            .init();
+            .build();
         self.conn_acquisition_histogram = Some(histogram);
-
-        Ok(())
     }
 
     /// Init the metadata cache.
