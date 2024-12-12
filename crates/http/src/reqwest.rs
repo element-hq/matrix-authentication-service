@@ -44,7 +44,7 @@ static HTTP_REQUESTS_DURATION_HISTOGRAM: LazyLock<Histogram<u64>> = LazyLock::ne
         .u64_histogram(HTTP_CLIENT_REQUEST_DURATION)
         .with_unit("ms")
         .with_description("Duration of HTTP client requests")
-        .init()
+        .build()
 });
 
 static HTTP_REQUESTS_IN_FLIGHT: LazyLock<UpDownCounter<i64>> = LazyLock::new(|| {
@@ -52,7 +52,7 @@ static HTTP_REQUESTS_IN_FLIGHT: LazyLock<UpDownCounter<i64>> = LazyLock::new(|| 
         .i64_up_down_counter(HTTP_CLIENT_ACTIVE_REQUESTS)
         .with_unit("{requests}")
         .with_description("Number of HTTP client requests in flight")
-        .init()
+        .build()
 });
 
 struct TracingResolver {

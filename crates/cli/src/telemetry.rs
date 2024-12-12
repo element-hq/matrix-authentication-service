@@ -18,16 +18,13 @@ use opentelemetry::{
     global,
     propagation::{TextMapCompositePropagator, TextMapPropagator},
     trace::TracerProvider as _,
-    KeyValue,
+    InstrumentationScope, KeyValue,
 };
-use opentelemetry_otlp::MetricsExporterBuilder;
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_prometheus::PrometheusExporter;
 use opentelemetry_sdk::{
     self,
-    metrics::{
-        reader::{DefaultAggregationSelector, DefaultTemporalitySelector},
-        ManualReader, PeriodicReader, SdkMeterProvider,
-    },
+    metrics::{ManualReader, PeriodicReader, SdkMeterProvider},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{Sampler, Tracer, TracerProvider},
     Resource,
@@ -41,16 +38,6 @@ static METER_PROVIDER: OnceCell<SdkMeterProvider> = OnceCell::const_new();
 static PROMETHEUS_REGISTRY: OnceCell<Registry> = OnceCell::const_new();
 
 pub fn setup(config: &TelemetryConfig) -> anyhow::Result<Option<Tracer>> {
-    global::set_error_handler(|e| {
-        // Don't log the propagation errors, else we'll log an error on each request if
-        // the propagation errors aren't there
-        if matches!(e, opentelemetry::global::Error::Propagation(_)) {
-            return;
-        }
-
-        tracing::error!(error = &e as &dyn std::error::Error);
-    })?;
-
     let propagator = propagator(&config.tracing.propagators);
 
     // The CORS filter needs to know what headers it should whitelist for
@@ -96,21 +83,21 @@ fn stdout_tracer_provider() -> TracerProvider {
 }
 
 fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<TracerProvider> {
-    use opentelemetry_otlp::WithExportConfig;
-
-    let mut exporter = opentelemetry_otlp::new_exporter()
-        .http()
+    let mut exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_http()
         .with_http_client(mas_http::reqwest_client());
     if let Some(endpoint) = endpoint {
         exporter = exporter.with_endpoint(endpoint.to_string());
     }
-
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(exporter)
-        .with_trace_config(trace_config())
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
+    let exporter = exporter
+        .build()
         .context("Failed to configure OTLP trace exporter")?;
+
+    let tracer = opentelemetry_sdk::trace::TracerProvider::builder()
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        .with_resource(resource())
+        .with_sampler(Sampler::AlwaysOn)
+        .build();
 
     Ok(tracer)
 }
@@ -122,11 +109,12 @@ fn tracer(config: &TracingConfig) -> anyhow::Result<Option<Tracer>> {
         TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref())?,
     };
 
-    let tracer = tracer_provider
-        .tracer_builder(env!("CARGO_PKG_NAME"))
+    let scope = InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
         .with_version(env!("CARGO_PKG_VERSION"))
         .with_schema_url(semcov::SCHEMA_URL)
         .build();
+
+    let tracer = tracer_provider.tracer_with_scope(scope);
 
     global::set_tracer_provider(tracer_provider);
 
@@ -134,25 +122,22 @@ fn tracer(config: &TracingConfig) -> anyhow::Result<Option<Tracer>> {
 }
 
 fn otlp_metric_reader(endpoint: Option<&url::Url>) -> anyhow::Result<PeriodicReader> {
-    use opentelemetry_otlp::WithExportConfig;
-
-    let mut exporter = opentelemetry_otlp::new_exporter()
-        .http()
+    let mut exporter = opentelemetry_otlp::MetricExporter::builder()
+        .with_http()
         .with_http_client(mas_http::reqwest_client());
     if let Some(endpoint) = endpoint {
         exporter = exporter.with_endpoint(endpoint.to_string());
     }
+    let exporter = exporter
+        .build()
+        .context("Failed to configure OTLP metric exporter")?;
 
-    let exporter = MetricsExporterBuilder::from(exporter).build_metrics_exporter(
-        Box::new(DefaultTemporalitySelector::new()),
-        Box::new(DefaultAggregationSelector::new()),
-    )?;
-
-    Ok(PeriodicReader::builder(exporter, opentelemetry_sdk::runtime::Tokio).build())
+    let reader = PeriodicReader::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+    Ok(reader)
 }
 
 fn stdout_metric_reader() -> PeriodicReader {
-    let exporter = opentelemetry_stdout::MetricsExporter::default();
+    let exporter = opentelemetry_stdout::MetricExporter::builder().build();
     PeriodicReader::builder(exporter, opentelemetry_sdk::runtime::Tokio).build()
 }
 
@@ -228,12 +213,6 @@ fn init_meter(config: &MetricsConfig) -> anyhow::Result<()> {
     global::set_meter_provider(meter_provider.clone());
 
     Ok(())
-}
-
-fn trace_config() -> opentelemetry_sdk::trace::Config {
-    opentelemetry_sdk::trace::Config::default()
-        .with_resource(resource())
-        .with_sampler(Sampler::AlwaysOn)
 }
 
 fn resource() -> Resource {
