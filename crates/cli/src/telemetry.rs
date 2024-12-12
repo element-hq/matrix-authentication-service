@@ -4,7 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::time::Duration;
+use std::{
+    sync::{LazyLock, OnceLock},
+    time::Duration,
+};
 
 use anyhow::Context as _;
 use bytes::Bytes;
@@ -15,7 +18,7 @@ use mas_config::{
     TracingExporterKind,
 };
 use opentelemetry::{
-    global,
+    metrics::Meter,
     propagation::{TextMapCompositePropagator, TextMapPropagator},
     trace::TracerProvider as _,
     InstrumentationScope, KeyValue,
@@ -23,7 +26,6 @@ use opentelemetry::{
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_prometheus::PrometheusExporter;
 use opentelemetry_sdk::{
-    self,
     metrics::{ManualReader, PeriodicReader, SdkMeterProvider},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{Sampler, Tracer, TracerProvider},
@@ -31,29 +33,38 @@ use opentelemetry_sdk::{
 };
 use opentelemetry_semantic_conventions as semcov;
 use prometheus::Registry;
-use tokio::sync::OnceCell;
 use url::Url;
 
-static METER_PROVIDER: OnceCell<SdkMeterProvider> = OnceCell::const_new();
-static PROMETHEUS_REGISTRY: OnceCell<Registry> = OnceCell::const_new();
+static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
+    InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .with_schema_url(semcov::SCHEMA_URL)
+        .build()
+});
 
-pub fn setup(config: &TelemetryConfig) -> anyhow::Result<Option<Tracer>> {
+pub static METER: LazyLock<Meter> =
+    LazyLock::new(|| opentelemetry::global::meter_with_scope(SCOPE.clone()));
+
+pub static TRACER: OnceLock<Tracer> = OnceLock::new();
+static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
+static PROMETHEUS_REGISTRY: OnceLock<Registry> = OnceLock::new();
+
+pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     let propagator = propagator(&config.tracing.propagators);
 
     // The CORS filter needs to know what headers it should whitelist for
     // CORS-protected requests.
     mas_http::set_propagator(&propagator);
-    global::set_text_map_propagator(propagator);
+    opentelemetry::global::set_text_map_propagator(propagator);
 
-    let tracer = tracer(&config.tracing).context("Failed to configure traces exporter")?;
-
+    init_tracer(&config.tracing).context("Failed to configure traces exporter")?;
     init_meter(&config.metrics).context("Failed to configure metrics exporter")?;
 
-    Ok(tracer)
+    Ok(())
 }
 
 pub fn shutdown() {
-    global::shutdown_tracer_provider();
+    opentelemetry::global::shutdown_tracer_provider();
 
     if let Some(meter_provider) = METER_PROVIDER.get() {
         meter_provider.shutdown().unwrap();
@@ -93,32 +104,30 @@ fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<TracerProvider
         .build()
         .context("Failed to configure OTLP trace exporter")?;
 
-    let tracer = opentelemetry_sdk::trace::TracerProvider::builder()
+    let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
         .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
         .with_resource(resource())
         .with_sampler(Sampler::AlwaysOn)
         .build();
 
-    Ok(tracer)
+    Ok(tracer_provider)
 }
 
-fn tracer(config: &TracingConfig) -> anyhow::Result<Option<Tracer>> {
+fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
     let tracer_provider = match config.exporter {
-        TracingExporterKind::None => return Ok(None),
+        TracingExporterKind::None => return Ok(()),
         TracingExporterKind::Stdout => stdout_tracer_provider(),
         TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref())?,
     };
 
-    let scope = InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
-        .with_version(env!("CARGO_PKG_VERSION"))
-        .with_schema_url(semcov::SCHEMA_URL)
-        .build();
+    let tracer = tracer_provider.tracer_with_scope(SCOPE.clone());
+    TRACER
+        .set(tracer)
+        .map_err(|_| anyhow::anyhow!("TRACER was set twice"))?;
 
-    let tracer = tracer_provider.tracer_with_scope(scope);
+    opentelemetry::global::set_tracer_provider(tracer_provider);
 
-    global::set_tracer_provider(tracer_provider);
-
-    Ok(Some(tracer))
+    Ok(())
 }
 
 fn otlp_metric_reader(endpoint: Option<&url::Url>) -> anyhow::Result<PeriodicReader> {
@@ -175,7 +184,7 @@ fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
 }
 
 pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFuture> {
-    if !PROMETHEUS_REGISTRY.initialized() {
+    if PROMETHEUS_REGISTRY.get().is_none() {
         tracing::warn!("A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config");
     }
 
@@ -184,7 +193,10 @@ pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFut
 
 fn prometheus_metric_reader() -> anyhow::Result<PrometheusExporter> {
     let registry = Registry::new();
-    PROMETHEUS_REGISTRY.set(registry.clone())?;
+
+    PROMETHEUS_REGISTRY
+        .set(registry.clone())
+        .map_err(|_| anyhow::anyhow!("PROMETHEUS_REGISTRY was set twice"))?;
 
     let exporter = opentelemetry_prometheus::exporter()
         .with_registry(registry)
@@ -209,8 +221,10 @@ fn init_meter(config: &MetricsConfig) -> anyhow::Result<()> {
 
     let meter_provider = meter_provider_builder.with_resource(resource()).build();
 
-    METER_PROVIDER.set(meter_provider.clone())?;
-    global::set_meter_provider(meter_provider.clone());
+    METER_PROVIDER
+        .set(meter_provider.clone())
+        .map_err(|_| anyhow::anyhow!("METER_PROVIDER was set twice"))?;
+    opentelemetry::global::set_meter_provider(meter_provider.clone());
 
     Ok(())
 }

@@ -10,7 +10,7 @@ use opentelemetry::{metrics::Histogram, KeyValue};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::{utils::FnWrapper, MetricsAttributes};
+use crate::{utils::FnWrapper, MetricsAttributes, METER};
 
 /// A [`Layer`] that records the duration of requests in milliseconds.
 #[derive(Clone, Debug)]
@@ -25,7 +25,7 @@ impl DurationRecorderLayer {
     /// Create a new [`DurationRecorderLayer`].
     #[must_use]
     pub fn new(name: &'static str) -> Self {
-        let histogram = crate::meter().u64_histogram(name).build();
+        let histogram = METER.u64_histogram(name).build();
         Self {
             histogram,
             on_request: (),
