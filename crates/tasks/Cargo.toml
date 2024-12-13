@@ -29,6 +29,7 @@ tower.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true
 opentelemetry.workspace = true
+opentelemetry-semantic-conventions.workspace = true
 ulid.workspace = true
 url.workspace = true
 serde.workspace = true

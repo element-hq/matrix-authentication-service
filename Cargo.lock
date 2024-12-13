@@ -3696,6 +3696,7 @@ dependencies = [
  "mas-templates",
  "mas-tower",
  "opentelemetry",
+ "opentelemetry-semantic-conventions",
  "rand",
  "rand_chacha",
  "serde",

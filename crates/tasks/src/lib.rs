@@ -4,9 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-#![allow(dead_code)]
-
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
@@ -14,6 +12,7 @@ use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, RepositoryError, SystemClock};
 use mas_storage_pg::PgRepository;
 use new_queue::QueueRunnerError;
+use opentelemetry::metrics::Meter;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
@@ -24,6 +23,15 @@ mod matrix;
 mod new_queue;
 mod recovery;
 mod user;
+
+static METER: LazyLock<Meter> = LazyLock::new(|| {
+    let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .with_schema_url(opentelemetry_semantic_conventions::SCHEMA_URL)
+        .build();
+
+    opentelemetry::global::meter_with_scope(scope)
+});
 
 #[derive(Clone)]
 struct State {
