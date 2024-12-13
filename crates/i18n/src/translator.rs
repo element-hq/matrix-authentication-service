@@ -36,12 +36,37 @@ const FALLBACKER: LocaleFallbackerWithConfig<'static> = LocaleFallbacker::new().
 
 /// Error type for loading translations
 #[derive(Debug, Error)]
-#[error("Failed to load translations")]
 pub enum LoadError {
-    Io(#[from] std::io::Error),
-    Deserialize(#[from] serde_json::Error),
-    InvalidLocale(#[from] ParserError),
-    InvalidFileName(Utf8PathBuf),
+    #[error("Failed to load translation directory {path:?}")]
+    ReadDir {
+        path: Utf8PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+
+    #[error("Failed to read translation file {path:?}")]
+    ReadFile {
+        path: Utf8PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+
+    #[error("Failed to deserialize translation file {path:?}")]
+    Deserialize {
+        path: Utf8PathBuf,
+        #[source]
+        source: serde_json::Error,
+    },
+
+    #[error("Invalid locale for file {path:?}")]
+    InvalidLocale {
+        path: Utf8PathBuf,
+        #[source]
+        source: ParserError,
+    },
+
+    #[error("Invalid file name {path:?}")]
+    InvalidFileName { path: Utf8PathBuf },
 }
 
 /// A translator for a set of translations.
@@ -90,18 +115,36 @@ impl Translator {
     pub fn load_from_path(path: &Utf8Path) -> Result<Self, LoadError> {
         let mut translations = HashMap::new();
 
-        let dir = path.read_dir_utf8()?;
+        let dir = path.read_dir_utf8().map_err(|source| LoadError::ReadDir {
+            path: path.to_owned(),
+            source,
+        })?;
+
         for entry in dir {
-            let entry = entry?;
+            let entry = entry.map_err(|source| LoadError::ReadDir {
+                path: path.to_owned(),
+                source,
+            })?;
             let path = entry.into_path();
             let Some(name) = path.file_stem() else {
-                return Err(LoadError::InvalidFileName(path));
+                return Err(LoadError::InvalidFileName { path });
             };
 
-            let locale: Locale = Locale::from_str(name)?;
+            let locale: Locale = match Locale::from_str(name) {
+                Ok(locale) => locale,
+                Err(source) => return Err(LoadError::InvalidLocale { path, source }),
+            };
 
-            let mut file = File::open(path)?;
-            let content = serde_json::from_reader(&mut file)?;
+            let mut file = match File::open(&path) {
+                Ok(file) => file,
+                Err(source) => return Err(LoadError::ReadFile { path, source }),
+            };
+
+            let content = match serde_json::from_reader(&mut file) {
+                Ok(content) => content,
+                Err(source) => return Err(LoadError::Deserialize { path, source }),
+            };
+
             translations.insert(locale.into(), content);
         }
 
