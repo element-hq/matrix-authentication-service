@@ -1817,7 +1817,6 @@
       "required": [
         "client_id",
         "id",
-        "issuer",
         "scope",
         "token_endpoint_auth_method"
       ],
@@ -1832,7 +1831,7 @@
           "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
         },
         "issuer": {
-          "description": "The OIDC issuer URL",
+          "description": "The OIDC issuer URL\n\nThis is required if OIDC discovery is enabled (which is the default)",
           "type": "string"
         },
         "human_name": {

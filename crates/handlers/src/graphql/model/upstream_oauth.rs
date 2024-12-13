@@ -37,8 +37,8 @@ impl UpstreamOAuth2Provider {
     }
 
     /// OpenID Connect issuer URL.
-    pub async fn issuer(&self) -> &str {
-        &self.provider.issuer
+    pub async fn issuer(&self) -> Option<&str> {
+        self.provider.issuer.as_deref()
     }
 
     /// Client ID used for this provider.

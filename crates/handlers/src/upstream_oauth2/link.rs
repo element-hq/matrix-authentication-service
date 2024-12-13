@@ -916,7 +916,7 @@ mod tests {
                 &mut rng,
                 &state.clock,
                 UpstreamOAuthProviderParams {
-                    issuer: "https://example.com/".to_owned(),
+                    issuer: Some("https://example.com/".to_owned()),
                     human_name: Some("Example Ltd.".to_owned()),
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),

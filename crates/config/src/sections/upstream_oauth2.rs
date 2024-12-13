@@ -47,6 +47,14 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 Err(error)
             };
 
+            if !matches!(provider.discovery_mode, DiscoveryMode::Disabled)
+                && provider.issuer.is_none()
+            {
+                return annotate(figment::Error::custom(
+                    "The `issuer` field is required when discovery is enabled",
+                ));
+            }
+
             match provider.token_endpoint_auth_method {
                 TokenAuthMethod::None
                 | TokenAuthMethod::PrivateKeyJwt
@@ -438,7 +446,10 @@ pub struct Provider {
     pub id: Ulid,
 
     /// The OIDC issuer URL
-    pub issuer: String,
+    ///
+    /// This is required if OIDC discovery is enabled (which is the default)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issuer: Option<String>,
 
     /// A human-readable name for the provider, that will be shown to users
     #[serde(skip_serializing_if = "Option::is_none")]

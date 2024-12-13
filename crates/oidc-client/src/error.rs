@@ -55,6 +55,11 @@ pub enum DiscoveryError {
     /// An error occurred validating the metadata.
     Validation(#[from] ProviderMetadataVerificationError),
 
+    /// The provider doesn't have an issuer set, which is required if discovery
+    /// is enabled.
+    #[error("Provider doesn't have an issuer set")]
+    MissingIssuer,
+
     /// Discovery is disabled for this provider.
     #[error("Discovery is disabled for this provider")]
     Disabled,

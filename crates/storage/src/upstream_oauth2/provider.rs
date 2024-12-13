@@ -24,7 +24,7 @@ use crate::{pagination::Page, repository_impl, Clock, Pagination};
 /// OAuth 2.0 provider
 pub struct UpstreamOAuthProviderParams {
     /// The OIDC issuer of the provider
-    pub issuer: String,
+    pub issuer: Option<String>,
 
     /// A human-readable name for the provider
     pub human_name: Option<String>,

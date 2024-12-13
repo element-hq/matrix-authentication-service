@@ -103,9 +103,6 @@ pub enum ClientCredentials {
         /// The unique ID for the client.
         client_id: String,
 
-        /// The audience to use. Usually `https://appleid.apple.com`
-        audience: String,
-
         /// The ECDSA key used to sign
         key: elliptic_curve::SecretKey<p256::NistP256>,
 
@@ -240,7 +237,6 @@ impl ClientCredentials {
 
             ClientCredentials::SignInWithApple {
                 client_id,
-                audience,
                 key,
                 key_id,
                 team_id,
@@ -253,7 +249,7 @@ impl ClientCredentials {
 
                 claims::ISS.insert(&mut claims, team_id)?;
                 claims::SUB.insert(&mut claims, client_id)?;
-                claims::AUD.insert(&mut claims, audience.clone())?;
+                claims::AUD.insert(&mut claims, "https://appleid.apple.com".to_owned())?;
                 claims::IAT.insert(&mut claims, now)?;
                 claims::EXP.insert(&mut claims, now + Duration::microseconds(60 * 1000 * 1000))?;
 

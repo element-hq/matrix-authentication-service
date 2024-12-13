@@ -1156,7 +1156,7 @@ export type UpstreamOAuth2Provider = CreationEvent & Node & {
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** OpenID Connect issuer URL. */
-  issuer: Scalars['String']['output'];
+  issuer?: Maybe<Scalars['String']['output']>;
 };
 
 export type UpstreamOAuth2ProviderConnection = {

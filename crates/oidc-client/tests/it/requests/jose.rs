@@ -88,7 +88,7 @@ async fn pass_verify_id_token() {
     let (id_token, jwks) = id_token(issuer, None, Some(now));
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -111,7 +111,7 @@ async fn fail_verify_id_token_wrong_issuer() {
     let now = now();
 
     let verification_data = JwtVerificationData {
-        issuer: wrong_issuer,
+        issuer: Some(wrong_issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -135,7 +135,7 @@ async fn fail_verify_id_token_wrong_audience() {
     let now = now();
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &"wrong_client_id".to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -159,7 +159,7 @@ async fn fail_verify_id_token_wrong_signing_algorithm() {
     let now = now();
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &JsonWebSignatureAlg::Unknown("wrong_algorithm".to_owned()),
@@ -180,7 +180,7 @@ async fn fail_verify_id_token_wrong_expiration() {
     let now = now();
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -199,7 +199,7 @@ async fn fail_verify_id_token_wrong_subject() {
     let (id_token, jwks) = id_token(issuer, Some(IdTokenFlag::WrongSubject), None);
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -224,7 +224,7 @@ async fn fail_verify_id_token_wrong_auth_time() {
     let (id_token, jwks) = id_token(issuer, None, Some(now + Duration::try_hours(1).unwrap()));
 
     let verification_data = JwtVerificationData {
-        issuer,
+        issuer: Some(issuer),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,

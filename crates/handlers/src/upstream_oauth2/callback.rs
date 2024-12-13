@@ -284,7 +284,7 @@ pub(crate) async fn handler(
         );
 
         let id_token_verification_data = JwtVerificationData {
-            issuer: &provider.issuer,
+            issuer: provider.issuer.as_deref(),
             jwks: jwks.as_ref().unwrap(),
             signing_algorithm: &provider.id_token_signed_response_alg,
             client_id: &provider.client_id,
@@ -350,7 +350,7 @@ pub(crate) async fn handler(
                     lazy_metadata.userinfo_endpoint().await?,
                     token_response.access_token.as_str(),
                     Some(JwtVerificationData {
-                        issuer: &provider.issuer,
+                        issuer: provider.issuer.as_deref(),
                         jwks: &jwks,
                         signing_algorithm,
                         client_id: &provider.client_id,

@@ -1589,7 +1589,7 @@ type UpstreamOAuth2Provider implements Node & CreationEvent {
   """
   OpenID Connect issuer URL.
   """
-  issuer: String!
+  issuer: String
   """
   Client ID used for this provider.
   """
