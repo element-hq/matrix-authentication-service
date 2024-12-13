@@ -57,7 +57,7 @@ pub async fn fetch_jwks(
 #[derive(Clone, Copy)]
 pub struct JwtVerificationData<'a> {
     /// The URL of the issuer that generated the ID Token.
-    pub issuer: &'a str,
+    pub issuer: Option<&'a str>,
 
     /// The issuer's JWKS.
     pub jwks: &'a PublicJsonWebKeySet,
@@ -76,7 +76,7 @@ pub struct JwtVerificationData<'a> {
 ///
 /// * The signature is verified with the given JWKS.
 ///
-/// * The `iss` claim must be present and match the issuer.
+/// * The `iss` claim must be present and match the issuer, if present
 ///
 /// * The `aud` claim must be present and match the client ID.
 ///
@@ -117,8 +117,10 @@ pub fn verify_signed_jwt<'a>(
 
     let (header, mut claims) = jwt.clone().into_parts();
 
-    // Must have the proper issuer.
-    claims::ISS.extract_required_with_options(&mut claims, issuer)?;
+    if let Some(issuer) = issuer {
+        // Must have the proper issuer.
+        claims::ISS.extract_required_with_options(&mut claims, issuer)?;
+    }
 
     // Must have the proper audience.
     claims::AUD.extract_required_with_options(&mut claims, client_id)?;

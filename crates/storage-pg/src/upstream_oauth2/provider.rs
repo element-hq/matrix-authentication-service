@@ -48,7 +48,7 @@ impl<'c> PgUpstreamOAuthProviderRepository<'c> {
 #[enum_def]
 struct ProviderLookup {
     upstream_oauth_provider_id: Uuid,
-    issuer: String,
+    issuer: Option<String>,
     human_name: Option<String>,
     brand_name: Option<String>,
     scope: String,
@@ -294,7 +294,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         fields(
             db.query.text,
             upstream_oauth_provider.id,
-            upstream_oauth_provider.issuer = %params.issuer,
+            upstream_oauth_provider.issuer = params.issuer,
             upstream_oauth_provider.client_id = %params.client_id,
         ),
         err,
@@ -337,7 +337,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
         "#,
             Uuid::from(id),
-            &params.issuer,
+            params.issuer.as_deref(),
             params.human_name.as_deref(),
             params.brand_name.as_deref(),
             params.scope.to_string(),
@@ -476,7 +476,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         fields(
             db.query.text,
             upstream_oauth_provider.id = %id,
-            upstream_oauth_provider.issuer = %params.issuer,
+            upstream_oauth_provider.issuer = params.issuer,
             upstream_oauth_provider.client_id = %params.client_id,
         ),
         err,
@@ -543,7 +543,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 RETURNING created_at
             "#,
             Uuid::from(id),
-            &params.issuer,
+            params.issuer.as_deref(),
             params.human_name.as_deref(),
             params.brand_name.as_deref(),
             params.scope.to_string(),

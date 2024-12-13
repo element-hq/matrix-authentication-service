@@ -219,7 +219,7 @@ pub struct InvalidUpstreamOAuth2TokenAuthMethod(String);
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
-    pub issuer: String,
+    pub issuer: Option<String>,
     pub human_name: Option<String>,
     pub brand_name: Option<String>,
     pub discovery_mode: DiscoveryMode,

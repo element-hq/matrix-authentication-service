@@ -398,7 +398,7 @@ mod test {
                 &mut rng,
                 &state.clock,
                 UpstreamOAuthProviderParams {
-                    issuer: "https://first.com/".to_owned(),
+                    issuer: Some("https://first.com/".to_owned()),
                     human_name: Some("First Ltd.".to_owned()),
                     brand_name: None,
                     scope: [OPENID].into_iter().collect(),
@@ -438,7 +438,7 @@ mod test {
                 &mut rng,
                 &state.clock,
                 UpstreamOAuthProviderParams {
-                    issuer: "https://second.com/".to_owned(),
+                    issuer: Some("https://second.com/".to_owned()),
                     human_name: None,
                     brand_name: None,
                     scope: [OPENID].into_iter().collect(),

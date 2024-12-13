@@ -61,10 +61,11 @@ impl<'a> LazyProviderInfos<'a> {
                 }
             };
 
-            let metadata = self
-                .cache
-                .get(self.client, &self.provider.issuer, verify)
-                .await?;
+            let Some(issuer) = &self.provider.issuer else {
+                return Err(DiscoveryError::MissingIssuer);
+            };
+
+            let metadata = self.cache.get(self.client, issuer, verify).await?;
 
             self.loaded_metadata = Some(metadata);
         }
@@ -179,8 +180,13 @@ impl MetadataCache {
                 UpstreamOAuthProviderDiscoveryMode::Disabled => continue,
             };
 
-            if let Err(e) = self.fetch(client, &provider.issuer, verify).await {
-                tracing::error!(issuer = %provider.issuer, error = &e as &dyn std::error::Error, "Failed to fetch provider metadata");
+            let Some(issuer) = &provider.issuer else {
+                tracing::error!(%provider.id, "Provider doesn't have an issuer set, but discovery is enabled!");
+                continue;
+            };
+
+            if let Err(e) = self.fetch(client, issuer, verify).await {
+                tracing::error!(%issuer, error = &e as &dyn std::error::Error, "Failed to fetch provider metadata");
             }
         }
 
@@ -395,7 +401,7 @@ mod tests {
         let clock = MockClock::default();
         let provider = UpstreamOAuthProvider {
             id: Ulid::nil(),
-            issuer: mock_server.uri(),
+            issuer: Some(mock_server.uri()),
             human_name: Some("Example Ltd.".to_owned()),
             brand_name: None,
             discovery_mode: UpstreamOAuthProviderDiscoveryMode::Insecure,

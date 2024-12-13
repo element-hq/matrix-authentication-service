@@ -193,7 +193,7 @@ async fn pass_access_token_with_authorization_code() {
 
     let (id_token, jwks) = id_token(issuer.as_str());
     let id_token_verification_data = JwtVerificationData {
-        issuer: issuer.as_str(),
+        issuer: Some(issuer.as_str()),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -251,7 +251,7 @@ async fn fail_access_token_with_authorization_code_wrong_nonce() {
 
     let (id_token, jwks) = id_token(issuer.as_str());
     let id_token_verification_data = JwtVerificationData {
-        issuer: issuer.as_str(),
+        issuer: Some(issuer.as_str()),
         jwks: &jwks,
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,
@@ -312,7 +312,7 @@ async fn fail_access_token_with_authorization_code_no_id_token() {
     };
 
     let id_token_verification_data = JwtVerificationData {
-        issuer: issuer.as_str(),
+        issuer: Some(issuer.as_str()),
         jwks: &PublicJsonWebKeySet::default(),
         client_id: &CLIENT_ID.to_owned(),
         signing_algorithm: &ID_TOKEN_SIGNING_ALG,

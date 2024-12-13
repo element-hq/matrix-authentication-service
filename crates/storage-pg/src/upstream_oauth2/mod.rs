@@ -56,7 +56,7 @@ mod tests {
                 &mut rng,
                 &clock,
                 UpstreamOAuthProviderParams {
-                    issuer: "https://example.com/".to_owned(),
+                    issuer: Some("https://example.com/".to_owned()),
                     human_name: None,
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
@@ -88,13 +88,13 @@ mod tests {
             .await
             .unwrap()
             .expect("provider to be found in the database");
-        assert_eq!(provider.issuer, "https://example.com/");
+        assert_eq!(provider.issuer.as_deref(), Some("https://example.com/"));
         assert_eq!(provider.client_id, "client-id");
 
         // It should be in the list of all providers
         let providers = repo.upstream_oauth_provider().all_enabled().await.unwrap();
         assert_eq!(providers.len(), 1);
-        assert_eq!(providers[0].issuer, "https://example.com/");
+        assert_eq!(providers[0].issuer.as_deref(), Some("https://example.com/"));
         assert_eq!(providers[0].client_id, "client-id");
 
         // Start a session
@@ -277,7 +277,6 @@ mod tests {
     /// provider repository
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_provider_repository_pagination(pool: PgPool) {
-        const ISSUER: &str = "https://example.com/";
         let scope = Scope::from_iter([OPENID]);
 
         let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
@@ -302,7 +301,7 @@ mod tests {
                     &mut rng,
                     &clock,
                     UpstreamOAuthProviderParams {
-                        issuer: ISSUER.to_owned(),
+                        issuer: None,
                         human_name: None,
                         brand_name: None,
                         scope: scope.clone(),

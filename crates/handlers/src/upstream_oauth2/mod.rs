@@ -131,7 +131,6 @@ fn client_credentials_for_provider(
 
             ClientCredentials::SignInWithApple {
                 client_id,
-                audience: provider.issuer.clone(),
                 key,
                 key_id: params.key_id,
                 team_id: params.team_id,
