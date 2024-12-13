@@ -1,12 +1,12 @@
 {
   "action": {
-    "back": "Back",
+    "back": "Terug",
     "cancel": "Annuleren",
     "continue": "Doorgaan",
     "create_account": "Registreren",
     "sign_in": "Inloggen",
     "sign_out": "Uitloggen",
-    "start_over": "Start over",
+    "start_over": "Opnieuw beginnen",
     "submit": "Bevestigen"
   },
   "app": {
@@ -16,24 +16,25 @@
   },
   "branding": {
     "privacy_policy": {
-      "alt": "Link to the service privacy policy",
-      "link": "Privacy Policy"
+      "alt": "Link naar het privacybeleid van de service",
+      "link": "Privacybeleid"
     },
     "terms_and_conditions": {
-      "alt": "Link to the service terms and conditions",
-      "link": "Terms & Conditions"
+      "alt": "Link naar de servicevoorwaarden",
+      "link": "Algemene voorwaarden"
     }
   },
   "common": {
     "display_name": "Weergavenaam",
     "email_address": "E-mailadres",
+    "loading": "Loading…",
     "mxid": "Matrix ID",
     "password": "Wachtwoord",
     "password_confirm": "Bevestig wachtwoord",
     "username": "Gebruikersnaam"
   },
   "error": {
-    "unexpected": "Unexpected error"
+    "unexpected": "Onverwachte fout"
   },
   "mas": {
     "add_email": {
@@ -203,7 +204,12 @@
           "heading": "Importeer uw data"
         },
         "imported_from_upstream": "Imported from your upstream account",
+        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
         "link_existing": "Link to an existing account",
+        "provider_name": "%(human_name)s account",
+        "signup_with_upstream": {
+          "heading": "Continue signing up with your %(human_name)s account"
+        },
         "suggested_display_name": "Weergavenaam importeren",
         "suggested_email": "E-mailadres importeren",
         "use": "Gebruiken"
