@@ -9,7 +9,7 @@ jobs:
   download:
     runs-on: ubuntu-22.04
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout the code
@@ -25,10 +25,14 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7.0.5
         with:
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          sign-commits: true
+          branch-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           branch: actions/localazy-download
           delete-branch: true
-          title: Localazy Download
+          title: Translations updates
+          labels: |
+            T-Task
+            A-I18n
           commit-message: Translations updates
 
       - name: Enable automerge
