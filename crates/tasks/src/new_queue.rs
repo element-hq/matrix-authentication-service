@@ -200,6 +200,8 @@ pub struct QueueWorker {
     am_i_leader: bool,
     last_heartbeat: DateTime<Utc>,
     cancellation_token: CancellationToken,
+    #[expect(dead_code, reason = "This is used on Drop")]
+    cancellation_guard: tokio_util::sync::DropGuard,
     state: State,
     schedules: Vec<ScheduleDefinition>,
     tracker: JobTracker,
@@ -269,6 +271,10 @@ impl QueueWorker {
             )
             .build();
 
+        // We put a cancellation drop guard in the structure, so that when it gets
+        // dropped, we're sure to cancel the token
+        let cancellation_guard = cancellation_token.clone().drop_guard();
+
         Ok(Self {
             rng,
             clock,
@@ -277,6 +283,7 @@ impl QueueWorker {
             am_i_leader: false,
             last_heartbeat: now,
             cancellation_token,
+            cancellation_guard,
             state,
             schedules: Vec::new(),
             tracker: JobTracker::new(),
@@ -316,7 +323,16 @@ impl QueueWorker {
         self
     }
 
-    pub async fn run(&mut self) -> Result<(), QueueRunnerError> {
+    pub async fn run(mut self) {
+        if let Err(e) = self.run_inner().await {
+            tracing::error!(
+                error = &e as &dyn std::error::Error,
+                "Failed to run new queue"
+            );
+        }
+    }
+
+    async fn run_inner(&mut self) -> Result<(), QueueRunnerError> {
         self.setup_schedules().await?;
 
         while !self.cancellation_token.is_cancelled() {

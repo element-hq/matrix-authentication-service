@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::time::Duration;
+use std::{process::ExitCode, time::Duration};
 
 use tokio::signal::unix::{Signal, SignalKind};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
@@ -74,14 +74,22 @@ impl ShutdownManager {
     }
 
     /// Run until we finish completely shutting down.
-    pub async fn run(mut self) {
+    pub async fn run(mut self) -> ExitCode {
         // Wait for a first signal and trigger the soft shutdown
-        tokio::select! {
+        let likely_crashed = tokio::select! {
+            () = self.soft_shutdown_token.cancelled() => {
+                tracing::warn!("Another task triggered a shutdown, it likely crashed! Shutting down");
+                true
+            },
+
             _ = self.sigterm.recv() => {
                 tracing::info!("Shutdown signal received (SIGTERM), shutting down");
+                false
             },
+
             _ = self.sigint.recv() => {
                 tracing::info!("Shutdown signal received (SIGINT), shutting down");
+                false
             },
         };
 
@@ -112,5 +120,11 @@ impl ShutdownManager {
         self.task_tracker().wait().await;
 
         tracing::info!("All tasks are done, exitting");
+
+        if likely_crashed {
+            ExitCode::FAILURE
+        } else {
+            ExitCode::SUCCESS
+        }
     }
 }

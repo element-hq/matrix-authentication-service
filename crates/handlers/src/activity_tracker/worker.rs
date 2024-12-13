@@ -93,6 +93,10 @@ impl Worker {
         mut receiver: tokio::sync::mpsc::Receiver<Message>,
         cancellation_token: CancellationToken,
     ) {
+        // This guard on the shutdown token is to ensure that if this task crashes for
+        // any reason, the server will shut down
+        let _guard = cancellation_token.clone().drop_guard();
+
         loop {
             let message = tokio::select! {
                 // Because we want the cancellation token to trigger only once,
