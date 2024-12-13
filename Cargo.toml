@@ -320,7 +320,7 @@ features = ["rt"]
 
 # Tower services
 [workspace.dependencies.tower]
-version = "0.5.1"
+version = "0.5.2"
 features = ["util"]
 
 # Tower HTTP layers
