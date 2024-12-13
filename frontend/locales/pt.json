@@ -1,0 +1,347 @@
+{
+  "action": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "clear": "Limpar",
+    "close": "Fechar",
+    "continue": "Continuar",
+    "edit": "Editar",
+    "save": "Salvar",
+    "save_and_continue": "Guardar e Continuar"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link para a política de privacidade do serviço",
+      "link": "Política de privacidade"
+    },
+    "terms_and_conditions": {
+      "alt": "Link para os termos e condições do serviço",
+      "link": "Termos e Condições"
+    }
+  },
+  "common": {
+    "add": "Adicionar",
+    "e2ee": "Encriptação de ponta a ponta",
+    "error": "Erro",
+    "loading": "A carregar...",
+    "next": "Seguinte",
+    "previous": "Anterior",
+    "saved": "Guardado",
+    "saving": "A guardar…"
+  },
+  "frontend": {
+    "account": {
+      "edit_profile": {
+        "display_name_help": "Isso é o que os outros verão onde quer que você esteja conectado.",
+        "display_name_label": "Nome para exibição",
+        "title": "Editar perfil",
+        "username_label": "Nome de utilizador"
+      },
+      "password": {
+        "change": "Alterar palavra-passe",
+        "change_disabled": "As alterações de palavra-passe são desactivadas pelo administrador.",
+        "label": "Palavra-passe"
+      },
+      "title": "A sua conta"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "O e-mail inserido não é permitido pela política do servidor.",
+        "title": "E-mail negado pela política"
+      },
+      "email_denied_error": "O e-mail inserido não é permitido pela política do servidor",
+      "email_exists_alert": {
+        "text": "O e-mail introduzido já foi adicionado a esta conta",
+        "title": "O e-mail já existe"
+      },
+      "email_exists_error": "O e-mail introduzido já foi adicionado a esta conta",
+      "email_field_help": "Adicione um e-mail alternativo que você pode usar para acessar essa conta.",
+      "email_field_label": "Adicionar e-mail",
+      "email_invalid_alert": {
+        "text": "O e-mail introduzido é inválido",
+        "title": "E-mail inválido"
+      },
+      "email_invalid_error": "O e-mail introduzido é inválido"
+    },
+    "app_sessions_list": {
+      "error": "Falha ao carregar sessões do aplicativo",
+      "heading": "Aplicações"
+    },
+    "browser_session_details": {
+      "current_badge": "Atual",
+      "session_details_title": "Sessão"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} sessão ativa",
+      "body:other": "{{count}} sessões ativas",
+      "heading": "Navegadores",
+      "no_active_sessions": {
+        "default": "Você não está conectado a nenhum navegador da Web.",
+        "inactive_90_days": "Todas as suas sessões estiveram ativas nos últimos 90 dias."
+      },
+      "view_all_button": "Ver tudo"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Informação do cliente",
+      "name": "Nome",
+      "session_details_title": "Sessão"
+    },
+    "device_type_icon_label": {
+      "desktop": "Ambiente de trabalho",
+      "mobile": "Telemóvel",
+      "pc": "Computador",
+      "tablet": "Tablet",
+      "unknown": "Tipo de dispositivo desconhecido",
+      "web": "Web"
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
+      "text": "Sair"
+    },
+    "error": {
+      "hideDetails": "Ocultar detalhes",
+      "showDetails": "Mostrar detalhes",
+      "subtitle": "Ocorreu um erro inesperado. Por favor, tente novamente.",
+      "title": "Algo correu mal"
+    },
+    "error_boundary_title": "Algo correu mal",
+    "errors": {
+      "field_required": "Este campo é obrigatório"
+    },
+    "last_active": {
+      "active_date": "Ativo {{relativeDate}}",
+      "active_now": "Ativo agora",
+      "inactive_90_days": "Inativo por 90+ dias"
+    },
+    "nav": {
+      "devices": "Dispositivos",
+      "profile": "Perfil",
+      "sessions": "Sessões",
+      "settings": "Configurações"
+    },
+    "not_found_alert_title": "Não encontrado.",
+    "not_logged_in_alert": "Não tem sessão iniciada.",
+    "oauth2_client_detail": {
+      "details_title": "Informação do cliente",
+      "id": "ID do Cliente",
+      "name": "Nome",
+      "policy": "Política",
+      "terms": "Termos de serviço"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Nome",
+      "client_title": "Informação do cliente",
+      "session_details_title": "Sessão"
+    },
+    "pagination_controls": {
+      "total": "Total: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Palavra-passe atual",
+      "failure": {
+        "description": {
+          "account_locked": "A sua conta está bloqueada e não pode ser recuperada neste momento. Se isso não for esperado, entre em contato com o administrador do servidor.",
+          "expired_recovery_ticket": "O link de recuperação expirou. Por favor, inicie o processo de recuperação de conta novamente desde o início.",
+          "invalid_new_password": "A nova senha que você escolheu é inválida; ela pode não atender à política de segurança configurada.",
+          "no_current_password": "Você não tem uma senha atual.",
+          "no_such_recovery_ticket": "O link de recuperação é inválido. Se você copiou o link do e-mail de recuperação, verifique se o link completo foi copiado.",
+          "password_changes_disabled": "As alterações de palavra-passe estão desactivadas.",
+          "recovery_ticket_already_used": "O link de recuperação já foi usado. Não pode ser utilizado novamente.",
+          "unspecified": "Este pode ser um problema temporário, por isso, tente novamente mais tarde. Se o problema persistir, entre em contato com o administrador do servidor.",
+          "wrong_password": "A palavra-passe que forneceu como palavra-passe atual está incorreta. Por favor, tente novamente."
+        },
+        "title": "Falha na actualização da palavra-passe"
+      },
+      "new_password_again_label": "Introduzir novamente a nova palavra-passe",
+      "new_password_label": "Nova palavra-passe",
+      "passwords_match": "As palavras-passe coincidem!",
+      "passwords_no_match": "As palavras-passe não coincidem",
+      "subtitle": "Escolha uma nova palavra-passe para a sua conta.",
+      "success": {
+        "description": "A sua palavra-passe foi actualizada com sucesso.",
+        "title": "Palavra-passe Atualizada"
+      },
+      "title": "Alterar a sua palavra-passe"
+    },
+    "password_reset": {
+      "title": "Repor a sua palavra-passe"
+    },
+    "password_strength": {
+      "placeholder": "Força da palavra-passe",
+      "score": {
+        "0": "Palavra-passe extremamente fraca",
+        "1": "Palavra-passe muito fraca",
+        "2": "Palavra-passe fraca",
+        "3": "Palavra-passe forte",
+        "4": "Palavra-passe muito forte"
+      },
+      "suggestion": {
+        "all_uppercase": "Colocar algumas letras em maiúsculas, mas não todas.",
+        "another_word": "Adicione mais palavras que são menos comuns.",
+        "associated_years": "Evite anos que lhe estão associados.",
+        "capitalization": "Colocar mais maiúsculas do que a primeira letra.",
+        "dates": "Evite datas e anos associados a si.",
+        "l33t": "Evite substituições de letras previsíveis como '@' por 'a'.",
+        "longer_keyboard_pattern": "Use padrões de teclado mais longos e altere a direção da digitação várias vezes.",
+        "no_need": "Você pode criar senhas fortes sem usar símbolos, números ou letras maiúsculas.",
+        "pwned": "Se utilizar esta palavra-passe noutro local, deve alterá-la.",
+        "recent_years": "Evite os últimos anos.",
+        "repeated": "Evite palavras e caracteres repetidos.",
+        "reverse_words": "Evite grafias invertidas de palavras comuns.",
+        "sequences": "Evite sequências de caracteres comuns.",
+        "use_words": "Use várias palavras, mas evite frases comuns."
+      },
+      "too_weak": "Esta palavra-passe é demasiado fraca",
+      "warning": {
+        "common": "Esta é uma senha comumente usada.",
+        "common_names": "Nomes e sobrenomes comuns são fáceis de adivinhar.",
+        "dates": "As datas são fáceis de adivinhar.",
+        "extended_repeat": "Padrões de caracteres repetidos como \"abcabcabc\" são fáceis de adivinhar.",
+        "key_pattern": "Padrões de teclado curtos são fáceis de adivinhar.",
+        "names_by_themselves": "Nomes individuais ou sobrenomes são fáceis de adivinhar.",
+        "pwned": "A sua palavra-passe foi exposta por uma violação de dados na Internet.",
+        "recent_years": "Os últimos anos são fáceis de adivinhar.",
+        "sequences": "Sequências de caracteres comuns como \"abc\" são fáceis de adivinhar.",
+        "similar_to_common": "Isso é semelhante a uma senha comumente usada.",
+        "simple_repeat": "Caracteres repetidos como \"aaa\" são fáceis de adivinhar.",
+        "straight_row": "Linhas retas de teclas no teclado são fáceis de adivinhar.",
+        "top_hundred": "Esta é uma palavra-passe frequentemente utilizada.",
+        "top_ten": "Esta é uma palavra-passe muito utilizada.",
+        "user_inputs": "Não deve haver quaisquer dados pessoais ou relacionados com a página.",
+        "word_by_itself": "Palavras isoladas são fáceis de adivinhar."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Redefinir identidade",
+      "cancelled": {
+        "description_1": "Pode fechar esta janela e voltar à aplicação para continuar.",
+        "description_2": "Se você estiver desconectado em todos os lugares e não se lembrar do código de recuperação, ainda precisará redefinir sua identidade.",
+        "heading": "Redefinição de identidade cancelada."
+      },
+      "description": "Se não tiver sessão iniciada noutros dispositivos e tiver perdido a sua chave de recuperação, terá de repor a sua identidade para continuar a utilizar a aplicação.",
+      "effect_list": {
+        "negative_1": "Você perderá seu histórico de mensagens existente",
+        "negative_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
+        "neutral_1": "Você perderá qualquer histórico de mensagens armazenado apenas no servidor",
+        "neutral_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
+        "positive_1": "Os detalhes da sua conta, contactos, preferências e lista de conversação serão mantidos"
+      },
+      "failure": {
+        "description": "Este pode ser um problema temporário, por isso, tente novamente mais tarde. Se o problema persistir, entre em contato com o administrador do servidor.",
+        "heading": "Falha ao permitir a reposição da identidade criptográfica",
+        "title": "Falha ao permitir identidade de criptografia"
+      },
+      "finish_reset": "Concluir reposição",
+      "heading": "Redefina sua identidade caso não possa confirmar de outra forma",
+      "start_reset": "Iniciar reposição",
+      "success": {
+        "description": "A redefinição de identidade foi aprovada para os próximos {{minutes}} minutos. Pode fechar esta janela e voltar à aplicação para continuar.",
+        "heading": "Redefinição de identidade com êxito. Volte ao aplicativo para concluir o processo.",
+        "title": "Redefinição de identidade criptográfica permitida temporariamente"
+      },
+      "warning": "Só reponha a sua identidade se não tiver acesso a outro dispositivo com sessão iniciada e tiver perdido a sua chave de recuperação."
+    },
+    "selectable_session": {
+      "label": "Selecionar sessão"
+    },
+    "session": {
+      "client_id_label": "ID do Cliente",
+      "current": "Atual",
+      "current_badge": "Atual",
+      "device_id_label": "ID de dispositivo",
+      "finished_date": "Concluído <datetime/>",
+      "finished_label": "Concluído",
+      "id_label": "Identificação",
+      "ip_label": "Endereço IP",
+      "last_active_label": "Ativo pela última vez",
+      "last_auth_label": "Última autenticação",
+      "name_for_platform": "{{name}}para{{platform}}",
+      "scopes_label": "Âmbitos de aplicação",
+      "signed_in_date": "Conectado <datetime/>",
+      "signed_in_label": "Sessão iniciada",
+      "title": "Detalhes do dispositivo",
+      "unknown_browser": "Navegador desconhecido",
+      "unknown_device": "Dispositivo desconhecido",
+      "uri_label": "Uri",
+      "user_id_label": "ID de utilizador",
+      "username_label": "Nome do utilizador"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Volta atrás",
+        "text": "Esta sessão não existe ou não está mais ativa.",
+        "title": "Não é possível encontrar sessão: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Rota desconhecida {{route}}",
+    "unverified_email_alert": {
+      "button": "Rever e verificar",
+      "text:one": "Você tem {{count}} endereço de e-mail não verificado.",
+      "text:other": "Você tem {{count}} endereços de e-mail não verificados.",
+      "title": "E-mail não verificado"
+    },
+    "user_email": {
+      "cant_delete_primary": "Escolha um e-mail principal diferente para excluir este.",
+      "delete_button_confirmation_modal": {
+        "action": "Excluir e-mail",
+        "body": "Excluir este e-mail?"
+      },
+      "delete_button_title": "Remover endereço de e-mail",
+      "email": "Email",
+      "make_primary_button": "Tornar primário",
+      "not_verified": "Não verificado",
+      "primary_email": "E-mail primário",
+      "retry_button": "Reenviar código",
+      "unverified": "Não verificado"
+    },
+    "user_email_list": {
+      "heading": "E-mails",
+      "no_primary_email_alert": "Sem endereço de e-mail principal"
+    },
+    "user_greeting": {
+      "error": "Falha ao carregar o usuário"
+    },
+    "user_name": {
+      "display_name_field_label": "Nome para exibição"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} sessão ativa",
+      "active_sessions:other": "{{count}} sessões ativas",
+      "heading": "Onde você está conectado",
+      "no_active_sessions": {
+        "default": "Você não está conectado a nenhum aplicativo.",
+        "inactive_90_days": "Todas as suas sessões estiveram ativas nos últimos 90 dias."
+      }
+    },
+    "verify_email": {
+      "code_field_error": "Código não reconhecido",
+      "code_field_label": "Código de 6 dígitos",
+      "code_field_wrong_shape": "O código deve ter 6 dígitos",
+      "email_sent_alert": {
+        "description": "Insira o novo código abaixo.",
+        "title": "Novo código enviado"
+      },
+      "enter_code_prompt": "Insira o código de 6 dígitos enviado para: <email>{{email}}</email>",
+      "heading": "Verifique o seu e-mail",
+      "invalid_code_alert": {
+        "description": "Verifique o código enviado para o seu e-mail e atualize os campos abaixo para continuar.",
+        "title": "Introduziu o código errado"
+      },
+      "resend_code": "Reenviar código",
+      "resend_email": "Reenviar e-mail",
+      "sent": "Enviado!",
+      "unknown_email": "E-mail desconhecido"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Editar o seu perfil e detalhes de contacto",
+      "manage_sessions": "Gerir os seus dispositivos e sessões",
+      "mas_admin": "Administrar qualquer usuário no matrix-authentication-service",
+      "send_messages": "Envie novas mensagens em seu nome",
+      "synapse_admin": "Administrar o servidor Synapse",
+      "view_messages": "Ver as mensagens e os dados existentes",
+      "view_profile": "Ver as informações do seu perfil e detalhes de contacto"
+    }
+  }
+}

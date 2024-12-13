@@ -27,6 +27,7 @@
   "common": {
     "display_name": "显示名称",
     "email_address": "邮箱地址",
+    "loading": "Loading…",
     "mxid": "Matrix ID",
     "password": "密码",
     "password_confirm": "确认密码",
@@ -203,7 +204,12 @@
           "heading": "导入数据"
         },
         "imported_from_upstream": "从上游账户导入",
+        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
         "link_existing": "链接到现有账户",
+        "provider_name": "%(human_name)s account",
+        "signup_with_upstream": {
+          "heading": "Continue signing up with your %(human_name)s account"
+        },
         "suggested_display_name": "导入显示名称",
         "suggested_email": "导入电子邮件地址",
         "use": "使用"
