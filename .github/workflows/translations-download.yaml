@@ -26,7 +26,8 @@ jobs:
         uses: peter-evans/create-pull-request@v7.0.5
         with:
           sign-commits: true
-          branch-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          branch-token: ${{ secrets.GITHUB_TOKEN }}
           branch: actions/localazy-download
           delete-branch: true
           title: Translations updates
