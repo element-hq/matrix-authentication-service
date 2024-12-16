@@ -1535,6 +1535,10 @@ type UpstreamOAuth2Link implements Node & CreationEvent {
   """
   subject: String!
   """
+  A human-readable name for the link subject.
+  """
+  humanAccountName: String
+  """
   The provider for which this link is.
   """
   provider: UpstreamOAuth2Provider!
@@ -1594,6 +1598,20 @@ type UpstreamOAuth2Provider implements Node & CreationEvent {
   Client ID used for this provider.
   """
   clientId: String!
+  """
+  A human-readable name for this provider.
+  """
+  humanName: String
+  """
+  A brand identifier for this provider.
+
+  One of `google`, `github`, `gitlab`, `apple` or `facebook`.
+  """
+  brandName: String
+  """
+  URL to start the linking process of the current user with this provider.
+  """
+  linkUrl: Url!
 }
 
 type UpstreamOAuth2ProviderConnection {

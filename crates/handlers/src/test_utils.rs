@@ -212,6 +212,7 @@ impl TestState {
             rng: Arc::clone(&rng),
             clock: Arc::clone(&clock),
             password_manager: password_manager.clone(),
+            url_builder: url_builder.clone(),
         };
         let state: crate::graphql::BoxState = Box::new(graphql_state);
 
@@ -377,6 +378,7 @@ struct TestGraphQLState {
     clock: Arc<MockClock>,
     rng: Arc<Mutex<ChaChaRng>>,
     password_manager: PasswordManager,
+    url_builder: UrlBuilder,
 }
 
 #[async_trait]
@@ -399,6 +401,10 @@ impl graphql::State for TestGraphQLState {
 
     fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
         &self.homeserver_connection
+    }
+
+    fn url_builder(&self) -> &UrlBuilder {
+        &self.url_builder
     }
 
     fn clock(&self) -> BoxClock {

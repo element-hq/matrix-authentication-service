@@ -208,6 +208,7 @@ impl Options {
             homeserver_connection.clone(),
             site_config.clone(),
             password_manager.clone(),
+            url_builder.clone(),
         );
 
         let state = {

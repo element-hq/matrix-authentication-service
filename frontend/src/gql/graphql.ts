@@ -1116,6 +1116,8 @@ export type UpstreamOAuth2Link = CreationEvent & Node & {
   __typename?: 'UpstreamOAuth2Link';
   /** When the object was created. */
   createdAt: Scalars['DateTime']['output'];
+  /** A human-readable name for the link subject. */
+  humanAccountName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** The provider for which this link is. */
@@ -1149,14 +1151,24 @@ export type UpstreamOAuth2LinkEdge = {
 
 export type UpstreamOAuth2Provider = CreationEvent & Node & {
   __typename?: 'UpstreamOAuth2Provider';
+  /**
+   * A brand identifier for this provider.
+   *
+   * One of `google`, `github`, `gitlab`, `apple` or `facebook`.
+   */
+  brandName?: Maybe<Scalars['String']['output']>;
   /** Client ID used for this provider. */
   clientId: Scalars['String']['output'];
   /** When the object was created. */
   createdAt: Scalars['DateTime']['output'];
+  /** A human-readable name for this provider. */
+  humanName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** OpenID Connect issuer URL. */
   issuer?: Maybe<Scalars['String']['output']>;
+  /** URL to start the linking process of the current user with this provider. */
+  linkUrl: Scalars['Url']['output'];
 };
 
 export type UpstreamOAuth2ProviderConnection = {
