@@ -7,6 +7,7 @@
 use mas_data_model::SiteConfig;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
+use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryError};
 
 use crate::{graphql::Requester, passwords::PasswordManager};
@@ -20,6 +21,7 @@ pub trait State {
     fn clock(&self) -> BoxClock;
     fn rng(&self) -> BoxRng;
     fn site_config(&self) -> &SiteConfig;
+    fn url_builder(&self) -> &UrlBuilder;
 }
 
 pub type BoxState = Box<dyn State + Send + Sync + 'static>;

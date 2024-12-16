@@ -8,6 +8,7 @@ use anyhow::Context as _;
 use async_graphql::{Context, Object, ID};
 use chrono::{DateTime, Utc};
 use mas_storage::{upstream_oauth2::UpstreamOAuthProviderRepository, user::UserRepository};
+use url::Url;
 
 use super::{NodeType, User};
 use crate::graphql::state::ContextExt;
@@ -45,6 +46,26 @@ impl UpstreamOAuth2Provider {
     pub async fn client_id(&self) -> &str {
         &self.provider.client_id
     }
+
+    /// A human-readable name for this provider.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.provider.human_name.as_deref()
+    }
+
+    /// A brand identifier for this provider.
+    ///
+    /// One of `google`, `github`, `gitlab`, `apple` or `facebook`.
+    pub async fn brand_name(&self) -> Option<&str> {
+        self.provider.brand_name.as_deref()
+    }
+
+    /// URL to start the linking process of the current user with this provider.
+    pub async fn link_url(&self, context: &Context<'_>) -> Url {
+        let state = context.state();
+        let url_builder = state.url_builder();
+        let route = mas_router::UpstreamOAuth2Authorize::new(self.provider.id);
+        url_builder.absolute_url_for(&route)
+    }
 }
 
 impl UpstreamOAuth2Link {
@@ -80,6 +101,11 @@ impl UpstreamOAuth2Link {
     /// Subject used for linking
     pub async fn subject(&self) -> &str {
         &self.link.subject
+    }
+
+    /// A human-readable name for the link subject.
+    pub async fn human_account_name(&self) -> Option<&str> {
+        self.link.human_account_name.as_deref()
     }
 
     /// The provider for which this link is.
