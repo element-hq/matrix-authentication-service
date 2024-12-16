@@ -22,8 +22,8 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod, User, UserAgent,
-    UserEmail, UserEmailVerification, UserRecoverySession,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailVerification,
+    UserRecoverySession,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -1408,7 +1408,7 @@ impl TemplateContext for UpstreamRegister {
                 userinfo_signed_response_alg: None,
                 discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
                 pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
-                response_mode: UpstreamOAuthProviderResponseMode::Query,
+                response_mode: None,
                 additional_authorization_parameters: Vec::new(),
                 created_at: now,
                 disabled_at: None,

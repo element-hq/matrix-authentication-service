@@ -236,7 +236,7 @@ pub struct UpstreamOAuthProvider {
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
     pub token_endpoint_auth_method: TokenAuthMethod,
     pub id_token_signed_response_alg: JsonWebSignatureAlg,
-    pub response_mode: ResponseMode,
+    pub response_mode: Option<ResponseMode>,
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,

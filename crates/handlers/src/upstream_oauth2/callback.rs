@@ -109,9 +109,12 @@ pub(crate) enum RouteError {
     MissingFormParams,
 
     #[error("Invalid response mode, expected '{expected}'")]
-    InvalidParamsMode {
+    InvalidResponseMode {
         expected: UpstreamOAuthProviderResponseMode,
     },
+
+    #[error("Invalid request method '{method}'")]
+    InvalidReqMethod { method: Method },
 
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
@@ -184,25 +187,46 @@ pub(crate) async fn handler(
     // The `Form` extractor will use the body of the request for POST requests and
     // the query parameters for GET requests. We need to then look at the method do
     // make sure it matches the expected `response_mode`
-    match (provider.response_mode, method) {
-        (UpstreamOAuthProviderResponseMode::Query, Method::GET) => {}
-        (UpstreamOAuthProviderResponseMode::FormPost, Method::POST) => {
-            // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
-            // usually a cross-site form POST, we need to render a form with the
-            // same values, which posts back to the same URL. However, there are
-            // other valid reasons for the cookie to be missing, so to track whether we did
-            // this POST ourselves, we set a flag.
-            if sessions_cookie.is_empty() && !params.did_mas_repost_to_itself {
-                let params = Params {
-                    did_mas_repost_to_itself: true,
-                    ..params
-                };
-                let context = FormPostContext::new_for_current_url(params).with_language(&locale);
-                let html = templates.render_form_post(&context)?;
-                return Ok(Html(html).into_response());
-            }
+    match method {
+        Method::GET => {
+            match provider.response_mode {
+                Some(UpstreamOAuthProviderResponseMode::Query) | None => {}
+                Some(UpstreamOAuthProviderResponseMode::FormPost) => {
+                    return Err(RouteError::InvalidResponseMode {
+                        expected: UpstreamOAuthProviderResponseMode::Query,
+                    })
+                }
+            };
         }
-        (expected, _) => return Err(RouteError::InvalidParamsMode { expected }),
+        Method::POST => {
+            match provider.response_mode {
+                Some(UpstreamOAuthProviderResponseMode::FormPost) => {
+                    // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
+                    // usually a cross-site form POST, we need to render a form with the
+                    // same values, which posts back to the same URL. However, there are
+                    // other valid reasons for the cookie to be missing, so to track whether we did
+                    // this POST ourselves, we set a flag.
+                    if sessions_cookie.is_empty() && !params.did_mas_repost_to_itself {
+                        let params = Params {
+                            did_mas_repost_to_itself: true,
+                            ..params
+                        };
+                        let context =
+                            FormPostContext::new_for_current_url(params).with_language(&locale);
+                        let html = templates.render_form_post(&context)?;
+                        return Ok(Html(html).into_response());
+                    }
+                }
+                Some(UpstreamOAuthProviderResponseMode::Query) | None => {
+                    return Err(RouteError::InvalidResponseMode {
+                        expected: UpstreamOAuthProviderResponseMode::FormPost,
+                    })
+                }
+            };
+        }
+        method => {
+            return Err(RouteError::InvalidReqMethod { method });
+        }
     }
 
     let (session_id, _post_auth_action) = sessions_cookie

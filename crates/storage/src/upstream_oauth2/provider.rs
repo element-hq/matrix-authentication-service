@@ -91,7 +91,7 @@ pub struct UpstreamOAuthProviderParams {
     pub pkce_mode: UpstreamOAuthProviderPkceMode,
 
     /// What response mode it should ask
-    pub response_mode: UpstreamOAuthProviderResponseMode,
+    pub response_mode: Option<UpstreamOAuthProviderResponseMode>,
 
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,
