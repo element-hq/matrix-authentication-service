@@ -45,9 +45,8 @@ pub struct UpstreamOAuthProviderParams {
     /// Expected signature for the JWT payload returned by the token
     /// authentication endpoint.
     ///
-    /// If `None`, the response is expected to be an unsigned JSON payload.
     /// Defaults to `RS256`.
-    pub id_token_signed_response_alg: Option<JsonWebSignatureAlg>,
+    pub id_token_signed_response_alg: JsonWebSignatureAlg,
 
     /// Whether to fetch the user profile from the userinfo endpoint,
     /// or to rely on the data returned in the `id_token` from the

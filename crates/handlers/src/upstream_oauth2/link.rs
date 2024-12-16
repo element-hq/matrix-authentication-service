@@ -922,7 +922,7 @@ mod tests {
                     scope: Scope::from_iter([OPENID]),
                     token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
-                    id_token_signed_response_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                     client_id: "client".to_owned(),
                     encrypted_client_secret: None,
                     claims_imports,

@@ -3714,6 +3714,7 @@ dependencies = [
  "http",
  "mas-data-model",
  "mas-i18n",
+ "mas-iana",
  "mas-router",
  "mas-spa",
  "minijinja",

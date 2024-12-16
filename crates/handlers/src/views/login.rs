@@ -346,6 +346,7 @@ mod test {
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
     };
+    use mas_iana::jose::JsonWebSignatureAlg;
     use mas_router::Route;
     use mas_storage::{
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
@@ -403,7 +404,7 @@ mod test {
                     scope: [OPENID].into_iter().collect(),
                     token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
-                    id_token_signed_response_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                     fetch_userinfo: false,
                     userinfo_signed_response_alg: None,
                     client_id: "client".to_owned(),
@@ -443,7 +444,7 @@ mod test {
                     scope: [OPENID].into_iter().collect(),
                     token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                     token_endpoint_signing_alg: None,
-                    id_token_signed_response_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                     fetch_userinfo: false,
                     userinfo_signed_response_alg: None,
                     client_id: "client".to_owned(),

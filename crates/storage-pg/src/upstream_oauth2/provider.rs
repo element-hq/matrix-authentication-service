@@ -56,7 +56,7 @@ struct ProviderLookup {
     encrypted_client_secret: Option<String>,
     token_endpoint_signing_alg: Option<String>,
     token_endpoint_auth_method: String,
-    id_token_signed_response_alg: Option<String>,
+    id_token_signed_response_alg: String,
     fetch_userinfo: bool,
     userinfo_signed_response_alg: Option<String>,
     created_at: DateTime<Utc>,
@@ -100,11 +100,8 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
                     .row(id)
                     .source(e)
             })?;
-        let id_token_signed_response_alg = value
-            .id_token_signed_response_alg
-            .map(|x| x.parse())
-            .transpose()
-            .map_err(|e| {
+        let id_token_signed_response_alg =
+            value.id_token_signed_response_alg.parse().map_err(|e| {
                 DatabaseInconsistencyError::on("upstream_oauth_providers")
                     .column("id_token_signed_response_alg")
                     .row(id)
@@ -349,10 +346,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 .token_endpoint_signing_alg
                 .as_ref()
                 .map(ToString::to_string),
-            params
-                .id_token_signed_response_alg
-                .as_ref()
-                .map(ToString::to_string),
+            params.id_token_signed_response_alg.to_string(),
             params.fetch_userinfo,
             params
                 .userinfo_signed_response_alg
@@ -558,10 +552,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 .token_endpoint_signing_alg
                 .as_ref()
                 .map(ToString::to_string),
-            params
-                .id_token_signed_response_alg
-                .as_ref()
-                .map(ToString::to_string),
+            params.id_token_signed_response_alg.to_string(),
             params.fetch_userinfo,
             params
                 .userinfo_signed_response_alg

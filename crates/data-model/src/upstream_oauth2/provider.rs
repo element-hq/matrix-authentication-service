@@ -235,7 +235,7 @@ pub struct UpstreamOAuthProvider {
     pub encrypted_client_secret: Option<String>,
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
     pub token_endpoint_auth_method: TokenAuthMethod,
-    pub id_token_signed_response_alg: Option<JsonWebSignatureAlg>,
+    pub id_token_signed_response_alg: JsonWebSignatureAlg,
     pub response_mode: ResponseMode,
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,

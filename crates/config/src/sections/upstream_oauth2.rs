@@ -399,13 +399,25 @@ fn is_default_true(value: &bool) -> bool {
 }
 
 #[allow(clippy::ref_option)]
-fn is_signed_response_alg_default(signed_response_alg: &Option<JsonWebSignatureAlg>) -> bool {
+fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
     *signed_response_alg == signed_response_alg_default()
 }
 
+#[allow(clippy::ref_option)]
+fn is_optional_signed_response_alg_default(
+    optional_signed_response_alg: &Option<JsonWebSignatureAlg>,
+) -> bool {
+    *optional_signed_response_alg == optional_signed_response_alg_default()
+}
+
 #[allow(clippy::unnecessary_wraps)]
-fn signed_response_alg_default() -> Option<JsonWebSignatureAlg> {
-    Some(JsonWebSignatureAlg::Rs256)
+fn signed_response_alg_default() -> JsonWebSignatureAlg {
+    JsonWebSignatureAlg::Rs256
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn optional_signed_response_alg_default() -> Option<JsonWebSignatureAlg> {
+    Some(signed_response_alg_default())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -485,13 +497,12 @@ pub struct Provider {
     /// Expected signature for the JWT payload returned by the token
     /// authentication endpoint.
     ///
-    /// If null, the response is expected to be an unsigned JSON payload.
     /// Defaults to `RS256`.
     #[serde(
         default = "signed_response_alg_default",
         skip_serializing_if = "is_signed_response_alg_default"
     )]
-    pub id_token_signed_response_alg: Option<JsonWebSignatureAlg>,
+    pub id_token_signed_response_alg: JsonWebSignatureAlg,
 
     /// The scopes to request from the provider
     pub scope: String,
@@ -524,8 +535,8 @@ pub struct Provider {
     /// If null, the response is expected to be an unsigned JSON payload.
     /// Defaults to `RS256`.
     #[serde(
-        default = "signed_response_alg_default",
-        skip_serializing_if = "is_signed_response_alg_default"
+        default = "optional_signed_response_alg_default",
+        skip_serializing_if = "is_optional_signed_response_alg_default"
     )]
     pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 

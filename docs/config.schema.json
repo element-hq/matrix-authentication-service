@@ -1876,7 +1876,7 @@
           ]
         },
         "id_token_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the token authentication endpoint.\n\nIf null, the response is expected to be an unsigned JSON payload. Defaults to `RS256`.",
+          "description": "Expected signature for the JWT payload returned by the token authentication endpoint.\n\nDefaults to `RS256`.",
           "allOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"

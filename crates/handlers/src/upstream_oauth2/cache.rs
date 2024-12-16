@@ -289,6 +289,7 @@ mod tests {
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
     };
+    use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{clock::MockClock, Clock};
     use oauth2_types::scope::{Scope, OPENID};
     use ulid::Ulid;
@@ -411,7 +412,7 @@ mod tests {
             token_endpoint_signing_alg: None,
             token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
             response_mode: mas_data_model::UpstreamOAuthProviderResponseMode::Query,
-            id_token_signed_response_alg: None,
+            id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
             created_at: clock.now(),
             disabled_at: None,
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),

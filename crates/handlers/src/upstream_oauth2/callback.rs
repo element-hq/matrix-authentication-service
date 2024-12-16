@@ -278,62 +278,53 @@ pub(crate) async fn handler(
 
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
-        if let Some(signed_response_alg) = &provider.id_token_signed_response_alg {
-            jwks = Some(
-                mas_oidc_client::requests::jose::fetch_jwks(
-                    &client,
-                    lazy_metadata.jwks_uri().await?,
-                )
+        jwks = Some(
+            mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
                 .await?,
-            );
+        );
 
-            let id_token_verification_data = JwtVerificationData {
-                issuer: &provider.issuer,
-                jwks: &jwks.clone().unwrap(),
-                signing_algorithm: signed_response_alg,
-                client_id: &provider.client_id,
-            };
+        let id_token_verification_data = JwtVerificationData {
+            issuer: &provider.issuer,
+            jwks: &jwks.clone().unwrap(),
+            signing_algorithm: &provider.id_token_signed_response_alg,
+            client_id: &provider.client_id,
+        };
 
-            // Decode and verify the ID token
-            let id_token = mas_oidc_client::requests::jose::verify_id_token(
-                id_token,
-                id_token_verification_data,
-                None,
-                clock.now(),
-            )?;
+        // Decode and verify the ID token
+        let id_token = mas_oidc_client::requests::jose::verify_id_token(
+            id_token,
+            id_token_verification_data,
+            None,
+            clock.now(),
+        )?;
 
-            let (_headers, mut claims) = id_token.into_parts();
+        let (_headers, mut claims) = id_token.into_parts();
 
-            // Access token hash must match.
-            mas_jose::claims::AT_HASH
-                .extract_optional_with_options(
-                    &mut claims,
-                    TokenHash::new(
-                        id_token_verification_data.signing_algorithm,
-                        &token_response.access_token,
-                    ),
-                )
-                .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        // Access token hash must match.
+        mas_jose::claims::AT_HASH
+            .extract_optional_with_options(
+                &mut claims,
+                TokenHash::new(
+                    id_token_verification_data.signing_algorithm,
+                    &token_response.access_token,
+                ),
+            )
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
-            // Code hash must match.
-            mas_jose::claims::C_HASH
-                .extract_optional_with_options(
-                    &mut claims,
-                    TokenHash::new(id_token_verification_data.signing_algorithm, &code),
-                )
-                .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        // Code hash must match.
+        mas_jose::claims::C_HASH
+            .extract_optional_with_options(
+                &mut claims,
+                TokenHash::new(id_token_verification_data.signing_algorithm, &code),
+            )
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
-            // Nonce must match.
-            mas_jose::claims::NONCE
-                .extract_required_with_options(&mut claims, session.nonce.as_str())
-                .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        // Nonce must match.
+        mas_jose::claims::NONCE
+            .extract_required_with_options(&mut claims, session.nonce.as_str())
+            .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
-            context = context.with_id_token_claims(claims);
-        } else {
-            let claims = serde_json::from_str(id_token)
-                .map_err(mas_oidc_client::error::IdTokenError::from)?;
-            context = context.with_id_token_claims(claims);
-        }
+        context = context.with_id_token_claims(claims);
     }
 
     if let Some(extra_callback_parameters) = extra_callback_parameters.clone() {
