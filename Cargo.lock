@@ -4068,7 +4068,7 @@ dependencies = [
  "sha1",
  "sha2",
  "sprintf",
- "thiserror 1.0.69",
+ "thiserror 2.0.6",
  "tokio",
  "tracing",
  "urlencoding",
@@ -5070,9 +5070,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-common"
-version = "0.14.1"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad71c7f49abaa047ba228339d34f9aaefa4d8b50ebeb8e859d0340cc2138bda8"
+checksum = "6c537899b20312655aa9bf4cd825aaf00dd13203f215df2007bc4fbbeac8d8ba"
 dependencies = [
  "as_variant",
  "base64 0.22.1",
@@ -5087,7 +5087,7 @@ dependencies = [
  "serde",
  "serde_html_form",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.6",
  "time",
  "tracing",
  "url",
@@ -5107,12 +5107,11 @@ dependencies = [
 
 [[package]]
 name = "ruma-macros"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d57d3cb20e8e758e8f7c5e408ce831d46758003b615100099852e468631934"
+checksum = "ff7bc55ea278668253c9898dd905325bf1f72df4bf2abddd04ff1c99b7b3c4fb"
 dependencies = [
  "cfg-if",
- "once_cell",
  "proc-macro-crate",
  "proc-macro2",
  "quote",
