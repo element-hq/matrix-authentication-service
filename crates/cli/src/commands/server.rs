@@ -311,8 +311,8 @@ impl Options {
                 shutdown.hard_shutdown_token(),
             ));
 
-        shutdown.run().await;
+        let exit_code = shutdown.run().await;
 
-        Ok(ExitCode::SUCCESS)
+        Ok(exit_code)
     }
 }

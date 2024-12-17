@@ -182,6 +182,10 @@ impl ActivityTracker {
         interval: std::time::Duration,
         cancellation_token: CancellationToken,
     ) {
+        // This guard on the shutdown token is to ensure that if this task crashes for
+        // any reason, the server will shut down
+        let _guard = cancellation_token.clone().drop_guard();
+
         loop {
             tokio::select! {
                 biased;

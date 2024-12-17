@@ -314,6 +314,10 @@ pub async fn run_servers<S, B>(
     B::Data: Send,
     B::Error: std::error::Error + Send + Sync + 'static,
 {
+    // This guard on the shutdown token is to ensure that if this task crashes for
+    // any reason, the server will shut down
+    let _guard = soft_shutdown_token.clone().drop_guard();
+
     // Create a stream of accepted connections out of the listeners
     let mut accept_stream: SelectAll<_> = listeners
         .into_iter()
@@ -360,7 +364,7 @@ pub async fn run_servers<S, B>(
                         connection_tasks.spawn(conn);
                     },
                     Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
-                    Some(Err(e)) => tracing::error!("Join error: {e}"),
+                    Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                     None => tracing::error!("Join set was polled even though it was empty"),
                 }
             },
@@ -369,8 +373,8 @@ pub async fn run_servers<S, B>(
             res = connection_tasks.join_next(), if !connection_tasks.is_empty() => {
                 match res {
                     Some(Ok(Ok(()))) => tracing::trace!("Connection finished"),
-                    Some(Ok(Err(e))) => tracing::error!("Error while serving connection: {e}"),
-                    Some(Err(e)) => tracing::error!("Join error: {e}"),
+                    Some(Ok(Err(e))) => tracing::error!(error = &*e as &dyn std::error::Error, "Error while serving connection"),
+                    Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                     None => tracing::error!("Join set was polled even though it was empty"),
                 }
             },
@@ -412,7 +416,7 @@ pub async fn run_servers<S, B>(
                             connection_tasks.spawn(conn);
                         }
                         Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
-                        Some(Err(e)) => tracing::error!("Join error: {e}"),
+                        Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                         None => tracing::error!("Join set was polled even though it was empty"),
                     }
                 },
@@ -421,8 +425,8 @@ pub async fn run_servers<S, B>(
                 res = connection_tasks.join_next(), if !connection_tasks.is_empty() => {
                     match res {
                         Some(Ok(Ok(()))) => tracing::trace!("Connection finished"),
-                        Some(Ok(Err(e))) => tracing::error!("Error while serving connection: {e}"),
-                        Some(Err(e)) => tracing::error!("Join error: {e}"),
+                        Some(Ok(Err(e))) => tracing::error!(error = &*e as &dyn std::error::Error, "Error while serving connection"),
+                        Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                         None => tracing::error!("Join set was polled even though it was empty"),
                     }
                 },

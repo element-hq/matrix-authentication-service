@@ -133,14 +133,7 @@ pub async fn init(
             mas_storage::queue::CleanupExpiredTokensJob,
         );
 
-    task_tracker.spawn(async move {
-        if let Err(e) = worker.run().await {
-            tracing::error!(
-                error = &e as &dyn std::error::Error,
-                "Failed to run new queue"
-            );
-        }
-    });
+    task_tracker.spawn(worker.run());
 
     Ok(())
 }
