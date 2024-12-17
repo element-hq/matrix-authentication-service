@@ -520,7 +520,8 @@ pub struct Provider {
     /// Expected signature for the JWT payload returned by the userinfo
     /// endpoint.
     ///
-    /// If not specified, the response is expected to be an unsigned JSON payload.
+    /// If not specified, the response is expected to be an unsigned JSON
+    /// payload.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 
