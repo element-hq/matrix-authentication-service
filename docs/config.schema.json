@@ -1909,7 +1909,7 @@
           "type": "boolean"
         },
         "userinfo_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the userinfo endpoint.\n\nIf null, the response is expected to be an unsigned JSON payload. Defaults to `RS256`.",
+          "description": "Expected signature for the JWT payload returned by the userinfo endpoint.\n\nIf not specified, the response is expected to be an unsigned JSON payload.",
           "allOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
