@@ -285,7 +285,7 @@ pub(crate) async fn handler(
 
         let id_token_verification_data = JwtVerificationData {
             issuer: &provider.issuer,
-            jwks: &jwks.clone().unwrap(),
+            jwks: jwks.as_ref().unwrap(),
             signing_algorithm: &provider.id_token_signed_response_alg,
             client_id: &provider.client_id,
         };
