@@ -538,7 +538,8 @@ upstream_oauth2:
       # The issuer URL, which will be used to discover the provider's configuration.
       # If discovery is enabled, this *must* exactly match the `issuer` field
       # advertised in `<issuer>/.well-known/openid-configuration`.
-      issuer: https://example.com/
+      # It must be set if OIDC discovery is enabled (which is the default).
+      #issuer: https://example.com/
 
       # A human-readable name for the provider,
       # which will be displayed on the login page
@@ -569,7 +570,18 @@ upstream_oauth2:
       #   - `client_secret_post`
       #   - `client_secret_jwt`
       #   - `private_key_jwt` (using the keys defined in the `secrets.keys` section)
+      #   - `sign_in_with_apple` (a special authentication method for Sign-in with Apple)
       token_endpoint_auth_method: client_secret_post
+
+      # Additional paramaters for the `sign_in_with_apple` authentication method
+      # See https://www.oauth.com/oauth2-servers/pkce/authorization-code-flow-with-pkce/
+      #sign_in_with_apple:
+      #  private_key: |
+      #    -----BEGIN PRIVATE KEY-----
+      #    ...
+      #    -----END PRIVATE KEY-----
+      #  team_id: "<team-id>"
+      #  key_id: "<key-id>"
 
       # Which signing algorithm to use to sign the authentication request when using
       # the `private_key_jwt` or the `client_secret_jwt` authentication methods
@@ -595,6 +607,19 @@ upstream_oauth2:
       #  - `never`: never use PKCE
       #pkce_method: auto
 
+      # Whether to fetch user claims from the userinfo endpoint
+      # This is disabled by default, as most providers will return the necessary
+      # claims in the `id_token`
+      #fetch_userinfo: true
+
+      # If set, ask for a signed response on the userinfo endpoint, and validate
+      # the response uses the given algorithm
+      #userinfo_endpoint_auth_signing_alg: RS256
+
+      # The userinfo endpoint
+      # This takes precedence over the discovery mechanism
+      #userinfo_endpoint: https://example.com/oauth2/userinfo
+
       # The provider authorization endpoint
       # This takes precedence over the discovery mechanism
       #authorization_endpoint: https://example.com/oauth2/authorize
@@ -607,6 +632,10 @@ upstream_oauth2:
       # This takes precedence over the discovery mechanism
       #jwks_uri: https://example.com/oauth2/keys
 
+      # Additional parameters to include in the authorization request
+      #additional_authorization_parameters:
+      #  foo: "bar"
+
       # How user attributes should be mapped
       #
       # Most of those attributes have two main properties:
@@ -617,7 +646,8 @@ upstream_oauth2:
       #      - `require`: always import the attribute, and fail if it's missing
       #   - `template`: a Jinja2 template used to generate the value. In this template,
       #      the `user` variable is available, which contains the user's attributes
-      #      retrieved from the `id_token` given by the upstream provider.
+      #      retrieved from the `id_token` given by the upstream provider and/or through
+      #      the userinfo endpoint.
       #
       # Each attribute has a default template which follows the well-known OIDC claims.
       #
@@ -654,6 +684,11 @@ upstream_oauth2:
           #   - `always`: mark the email address as verified
           #   - `never`: mark the email address as not verified
           #set_email_verification: import
+
+        # An account name, for display purposes only
+        # This helps end user identify what account they are using
+        account_name:
+          #template: "@{{ user.preferred_username }}"
 ```
 
 ## `experimental`

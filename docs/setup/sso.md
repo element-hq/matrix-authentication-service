@@ -40,6 +40,7 @@ The authentication service supports importing the following user attributes from
  - The localpart/username (e.g. `@localpart:example.com`)
  - The display name
  - An email address
+ - An account name, to help end users identify what account they are using
 
 For each of those attributes, administrators can configure a mapping using the claims provided by the upstream provider.
 They can also configure what should be done for each of those attributes. It can either:
@@ -49,12 +50,20 @@ They can also configure what should be done for each of those attributes. It can
  - `force`: automatically import the attribute, but don't fail if it is not provided by the provider
  - `require`: automatically import the attribute, and fail if it is not provided by the provider
 
-A Jinja2 template is used as mapping for each attribute. The template currently has one `user` variable, which is an object with the claims got through the `id_token` given by the provider.
+A Jinja2 template is used as mapping for each attribute.
 The following default templates are used:
 
  - `localpart`: `{{ user.preferred_username }}`
  - `displayname`: `{{ user.name }}`
  - `email`: `{{ user.email }}`
+ - `account_name`: none
+
+The template has the following variables available:
+
+ - `id_token_claims`: an object with the claims got through the `id_token` given by the provider, if provided by the provider
+ - `userinfo_claims`: an object with the claims got through the `userinfo` endpoint, if `fetch_userinfo` is enabled
+ - `user`: an object which contains the claims from both the `id_token` and the `userinfo` endpoint
+ - `extra_callback_parameters`: an object with the additional parameters the provider sent to the redirect URL
 
 ## Multiple providers behaviour
 
@@ -95,10 +104,14 @@ upstream_oauth2:
           # SiWA passes down the user infos as query parameters in the callback
           # which is available in the extra_callback_parameters variable
           template: |
-            {%- set user = extra_callback_parameters["user"] | from_json -%}
-            {{- user.name.firstName }} {{ user.name.lastName -}}
+            {%- set u = extra_callback_parameters["user"] | from_json -%}
+            {{- u.name.firstName }} {{ u.name.lastName -}}
         email:
           action: suggest
+        account_name:
+          template: |
+            {%- set u = extra_callback_parameters["user"] | from_json -%}
+            {{- u.name.firstName }} {{ u.name.lastName -}}
 ```
 
 ### Authelia
@@ -230,6 +243,8 @@ upstream_oauth2:
           action: suggest
           template: "{{ user.email }}"
           set_email_verification: always
+        account_name:
+          template: "{{ user.name }}"
 ```
 
 
@@ -261,6 +276,51 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
+        account_name:
+          template: "@{{ user.preferred_username }}"
+```
+
+### GitHub
+
+GitHub doesn't support OpenID Connect, but it does support OAuth 2.0.
+It will use the `fetch_userinfo` option with a manual `userinfo_endpoint` to fetch the user's profile through the GitHub API.
+
+1. Create a [new application](https://github.com/settings/applications/new).
+2. Fill in the form with an application name and homepage URL.
+3. Use the following Authorization callback URL: `https://<auth-service-domain>/upstream/callback/<id>`
+4. Retrieve the Client ID
+5. Generate a Client Secret and copy it
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
+      human_name: GitHub
+      brand_name: github
+      discovery_mode: disabled
+      fetch_userinfo: true
+      token_endpoint_auth_method: "client_secret_post"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      authorization_endpoint: "https://github.com/login/oauth/authorize"
+      token_endpoint: "https://github.com/login/oauth/access_token"
+      userinfo_endpoint: "https://api.github.com/user"
+      scope: "read:user"
+      claims_imports:
+        subject:
+          template: "{{ userinfo_claims.id }}"
+        displayname:
+          action: suggest
+          template: "{{`{{ userinfo_claims.name }}"
+        localpart:
+          action: ignore
+        email:
+          action: suggest
+          template: "{{ userinfo_claims.email }}"
+        account_name:
+          template: "@{{ userinfo_claims.login }}"
 ```
 
 
@@ -290,6 +350,8 @@ upstream_oauth2:
           template: "{{ user.name }}"
         email:
           action: suggest
+          template: "{{ user.email }}"
+        account_name:
           template: "{{ user.email }}"
 ```
 
@@ -384,4 +446,6 @@ upstream_oauth2:
           action: suggest
           template: "{{ user.email }}"
           set_email_verification: always
+        account_name:
+          template: "{{ user.preferred_username }}"
 ```

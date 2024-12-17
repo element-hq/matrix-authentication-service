@@ -15,9 +15,10 @@ use minijinja::{
 /// Context passed to the attribute mapping template
 ///
 /// The variables available in the template are:
-/// - `user`: claims for the user, currently from the ID token. Later, we'll
-///   also allow importing from the userinfo endpoint
+/// - `user`: claims for the user, merged from the ID token and userinfo
+///   endpoint
 /// - `id_token_claims`: claims from the ID token
+/// - `userinfo_claims`: claims from the userinfo endpoint
 /// - `extra_callback_parameters`: extra parameters passed to the callback
 #[derive(Debug, Default)]
 pub(crate) struct AttributeMappingContext {
