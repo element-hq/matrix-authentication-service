@@ -56,8 +56,8 @@ pub struct UpstreamOAuthProviderParams {
     /// Expected signature for the JWT payload returned by the userinfo
     /// endpoint.
     ///
-    /// IIf not specified, the response is expected to be an unsigned JSON payload.
-    /// Defaults to `None`.
+    /// If not specified, the response is expected to be an unsigned JSON
+    /// payload. Defaults to `None`.
     pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 
     /// The client ID to use when authenticating to the upstream
