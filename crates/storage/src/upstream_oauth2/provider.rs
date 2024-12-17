@@ -42,10 +42,23 @@ pub struct UpstreamOAuthProviderParams {
     /// `private_key_jwt` authentication methods are used
     pub token_endpoint_signing_alg: Option<JsonWebSignatureAlg>,
 
+    /// Expected signature for the JWT payload returned by the token
+    /// authentication endpoint.
+    ///
+    /// Defaults to `RS256`.
+    pub id_token_signed_response_alg: JsonWebSignatureAlg,
+
     /// Whether to fetch the user profile from the userinfo endpoint,
     /// or to rely on the data returned in the `id_token` from the
     /// `token_endpoint`.
     pub fetch_userinfo: bool,
+
+    /// Expected signature for the JWT payload returned by the userinfo
+    /// endpoint.
+    ///
+    /// If not specified, the response is expected to be an unsigned JSON
+    /// payload. Defaults to `None`.
+    pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 
     /// The client ID to use when authenticating to the upstream
     pub client_id: String,

@@ -56,7 +56,9 @@ struct ProviderLookup {
     encrypted_client_secret: Option<String>,
     token_endpoint_signing_alg: Option<String>,
     token_endpoint_auth_method: String,
+    id_token_signed_response_alg: String,
     fetch_userinfo: bool,
+    userinfo_signed_response_alg: Option<String>,
     created_at: DateTime<Utc>,
     disabled_at: Option<DateTime<Utc>>,
     claims_imports: Json<UpstreamOAuthProviderClaimsImports>,
@@ -95,6 +97,24 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             .map_err(|e| {
                 DatabaseInconsistencyError::on("upstream_oauth_providers")
                     .column("token_endpoint_signing_alg")
+                    .row(id)
+                    .source(e)
+            })?;
+        let id_token_signed_response_alg =
+            value.id_token_signed_response_alg.parse().map_err(|e| {
+                DatabaseInconsistencyError::on("upstream_oauth_providers")
+                    .column("id_token_signed_response_alg")
+                    .row(id)
+                    .source(e)
+            })?;
+
+        let userinfo_signed_response_alg = value
+            .userinfo_signed_response_alg
+            .map(|x| x.parse())
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("upstream_oauth_providers")
+                    .column("userinfo_signed_response_alg")
                     .row(id)
                     .source(e)
             })?;
@@ -178,8 +198,10 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             client_id: value.client_id,
             encrypted_client_secret: value.encrypted_client_secret,
             token_endpoint_auth_method,
-            fetch_userinfo: value.fetch_userinfo,
             token_endpoint_signing_alg,
+            id_token_signed_response_alg,
+            fetch_userinfo: value.fetch_userinfo,
+            userinfo_signed_response_alg,
             created_at: value.created_at,
             disabled_at: value.disabled_at,
             claims_imports: value.claims_imports.0,
@@ -235,7 +257,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     encrypted_client_secret,
                     token_endpoint_signing_alg,
                     token_endpoint_auth_method,
+                    id_token_signed_response_alg,
                     fetch_userinfo,
+                    userinfo_signed_response_alg,
                     created_at,
                     disabled_at,
                     claims_imports as "claims_imports: Json<UpstreamOAuthProviderClaimsImports>",
@@ -294,8 +318,10 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 brand_name,
                 scope,
                 token_endpoint_auth_method,
-                fetch_userinfo,
                 token_endpoint_signing_alg,
+                id_token_signed_response_alg,
+                fetch_userinfo,
+                userinfo_signed_response_alg,
                 client_id,
                 encrypted_client_secret,
                 claims_imports,
@@ -308,7 +334,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 response_mode,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                      $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
         "#,
             Uuid::from(id),
             &params.issuer,
@@ -316,9 +342,14 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.brand_name.as_deref(),
             params.scope.to_string(),
             params.token_endpoint_auth_method.to_string(),
-            params.fetch_userinfo,
             params
                 .token_endpoint_signing_alg
+                .as_ref()
+                .map(ToString::to_string),
+            params.id_token_signed_response_alg.to_string(),
+            params.fetch_userinfo,
+            params
+                .userinfo_signed_response_alg
                 .as_ref()
                 .map(ToString::to_string),
             &params.client_id,
@@ -356,7 +387,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             encrypted_client_secret: params.encrypted_client_secret,
             token_endpoint_signing_alg: params.token_endpoint_signing_alg,
             token_endpoint_auth_method: params.token_endpoint_auth_method,
+            id_token_signed_response_alg: params.id_token_signed_response_alg,
             fetch_userinfo: params.fetch_userinfo,
+            userinfo_signed_response_alg: params.userinfo_signed_response_alg,
             created_at,
             disabled_at: None,
             claims_imports: params.claims_imports,
@@ -465,8 +498,10 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     brand_name,
                     scope,
                     token_endpoint_auth_method,
-                    fetch_userinfo,
                     token_endpoint_signing_alg,
+                    id_token_signed_response_alg,
+                    fetch_userinfo,
+                    userinfo_signed_response_alg,
                     client_id,
                     encrypted_client_secret,
                     claims_imports,
@@ -480,7 +515,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     additional_parameters,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                          $12, $13, $14, $15, $16, $17, $18, $19, $20)
+                          $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -489,8 +524,10 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         brand_name = EXCLUDED.brand_name,
                         scope = EXCLUDED.scope,
                         token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method,
-                        fetch_userinfo = EXCLUDED.fetch_userinfo,
                         token_endpoint_signing_alg = EXCLUDED.token_endpoint_signing_alg,
+                        id_token_signed_response_alg = EXCLUDED.id_token_signed_response_alg,
+                        fetch_userinfo = EXCLUDED.fetch_userinfo,
+                        userinfo_signed_response_alg = EXCLUDED.userinfo_signed_response_alg,
                         disabled_at = NULL,
                         client_id = EXCLUDED.client_id,
                         encrypted_client_secret = EXCLUDED.encrypted_client_secret,
@@ -511,9 +548,14 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.brand_name.as_deref(),
             params.scope.to_string(),
             params.token_endpoint_auth_method.to_string(),
-            params.fetch_userinfo,
             params
                 .token_endpoint_signing_alg
+                .as_ref()
+                .map(ToString::to_string),
+            params.id_token_signed_response_alg.to_string(),
+            params.fetch_userinfo,
+            params
+                .userinfo_signed_response_alg
                 .as_ref()
                 .map(ToString::to_string),
             &params.client_id,
@@ -552,7 +594,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             encrypted_client_secret: params.encrypted_client_secret,
             token_endpoint_signing_alg: params.token_endpoint_signing_alg,
             token_endpoint_auth_method: params.token_endpoint_auth_method,
+            id_token_signed_response_alg: params.id_token_signed_response_alg,
             fetch_userinfo: params.fetch_userinfo,
+            userinfo_signed_response_alg: params.userinfo_signed_response_alg,
             created_at,
             disabled_at: None,
             claims_imports: params.claims_imports,
@@ -679,9 +723,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             .expr_as(
                 Expr::col((
                     UpstreamOAuthProviders::Table,
-                    UpstreamOAuthProviders::CreatedAt,
+                    UpstreamOAuthProviders::IdTokenSignedResponseAlg,
                 )),
-                ProviderLookupIden::CreatedAt,
+                ProviderLookupIden::IdTokenSignedResponseAlg,
             )
             .expr_as(
                 Expr::col((
@@ -689,6 +733,20 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     UpstreamOAuthProviders::FetchUserinfo,
                 )),
                 ProviderLookupIden::FetchUserinfo,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::UserinfoSignedResponseAlg,
+                )),
+                ProviderLookupIden::UserinfoSignedResponseAlg,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::CreatedAt,
+                )),
+                ProviderLookupIden::CreatedAt,
             )
             .expr_as(
                 Expr::col((
@@ -839,7 +897,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     encrypted_client_secret,
                     token_endpoint_signing_alg,
                     token_endpoint_auth_method,
+                    id_token_signed_response_alg,
                     fetch_userinfo,
+                    userinfo_signed_response_alg,
                     created_at,
                     disabled_at,
                     claims_imports as "claims_imports: Json<UpstreamOAuthProviderClaimsImports>",

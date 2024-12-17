@@ -22,6 +22,7 @@ mod tests {
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
     };
+    use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{
         clock::MockClock,
         upstream_oauth2::{
@@ -60,7 +61,9 @@ mod tests {
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
                     token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                     fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
                     token_endpoint_signing_alg: None,
                     client_id: "client-id".to_owned(),
                     encrypted_client_secret: None,
@@ -305,7 +308,9 @@ mod tests {
                         scope: scope.clone(),
                         token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
                         fetch_userinfo: false,
+                        userinfo_signed_response_alg: None,
                         token_endpoint_signing_alg: None,
+                        id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                         client_id,
                         encrypted_client_secret: None,
                         claims_imports: UpstreamOAuthProviderClaimsImports::default(),

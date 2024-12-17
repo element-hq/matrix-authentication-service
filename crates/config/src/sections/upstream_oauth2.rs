@@ -398,6 +398,16 @@ fn is_default_true(value: &bool) -> bool {
     *value
 }
 
+#[allow(clippy::ref_option)]
+fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
+    *signed_response_alg == signed_response_alg_default()
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn signed_response_alg_default() -> JsonWebSignatureAlg {
+    JsonWebSignatureAlg::Rs256
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SignInWithApple {
     /// The private key used to sign the `id_token`
@@ -472,6 +482,16 @@ pub struct Provider {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
 
+    /// Expected signature for the JWT payload returned by the token
+    /// authentication endpoint.
+    ///
+    /// Defaults to `RS256`.
+    #[serde(
+        default = "signed_response_alg_default",
+        skip_serializing_if = "is_signed_response_alg_default"
+    )]
+    pub id_token_signed_response_alg: JsonWebSignatureAlg,
+
     /// The scopes to request from the provider
     pub scope: String,
 
@@ -496,6 +516,14 @@ pub struct Provider {
     /// Defaults to `false`.
     #[serde(default)]
     pub fetch_userinfo: bool,
+
+    /// Expected signature for the JWT payload returned by the userinfo
+    /// endpoint.
+    ///
+    /// If not specified, the response is expected to be an unsigned JSON
+    /// payload.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 
     /// The URL to use for the provider's authorization endpoint
     ///

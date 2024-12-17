@@ -280,9 +280,8 @@ pub async fn config_sync(
                         brand_name: provider.brand_name,
                         scope: provider.scope.parse()?,
                         token_endpoint_auth_method,
-                        token_endpoint_signing_alg: provider
-                            .token_endpoint_auth_signing_alg
-                            .clone(),
+                        token_endpoint_signing_alg: provider.token_endpoint_auth_signing_alg,
+                        id_token_signed_response_alg: provider.id_token_signed_response_alg,
                         client_id: provider.client_id,
                         encrypted_client_secret,
                         claims_imports: map_claims_imports(&provider.claims_imports),
@@ -293,6 +292,7 @@ pub async fn config_sync(
                         discovery_mode,
                         pkce_mode,
                         fetch_userinfo: provider.fetch_userinfo,
+                        userinfo_signed_response_alg: provider.userinfo_signed_response_alg,
                         response_mode,
                         additional_authorization_parameters: provider
                             .additional_authorization_parameters

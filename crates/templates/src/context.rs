@@ -26,6 +26,7 @@ use mas_data_model::{
     UserEmail, UserEmailVerification, UserRecoverySession,
 };
 use mas_i18n::DataLocale;
+use mas_iana::jose::JsonWebSignatureAlg;
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{Scope, OPENID};
 use rand::{
@@ -1395,6 +1396,7 @@ impl TemplateContext for UpstreamRegister {
                 scope: Scope::from_iter([OPENID]),
                 token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::ClientSecretBasic,
                 token_endpoint_signing_alg: None,
+                id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
                 client_id: "client-id".to_owned(),
                 encrypted_client_secret: None,
                 claims_imports: UpstreamOAuthProviderClaimsImports::default(),
@@ -1403,6 +1405,7 @@ impl TemplateContext for UpstreamRegister {
                 jwks_uri_override: None,
                 userinfo_endpoint_override: None,
                 fetch_userinfo: false,
+                userinfo_signed_response_alg: None,
                 discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
                 pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
                 response_mode: UpstreamOAuthProviderResponseMode::Query,

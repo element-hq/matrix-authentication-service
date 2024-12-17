@@ -274,25 +274,26 @@ pub(crate) async fn handler(
     )
     .await?;
 
+    let mut jwks = None;
+
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
-        // Fetch the JWKS
-        let jwks =
+        jwks = Some(
             mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
-                .await?;
+                .await?,
+        );
 
-        let verification_data = JwtVerificationData {
+        let id_token_verification_data = JwtVerificationData {
             issuer: &provider.issuer,
-            jwks: &jwks,
-            // TODO: make that configurable
-            signing_algorithm: &mas_iana::jose::JsonWebSignatureAlg::Rs256,
+            jwks: jwks.as_ref().unwrap(),
+            signing_algorithm: &provider.id_token_signed_response_alg,
             client_id: &provider.client_id,
         };
 
         // Decode and verify the ID token
         let id_token = mas_oidc_client::requests::jose::verify_id_token(
             id_token,
-            verification_data,
+            id_token_verification_data,
             None,
             clock.now(),
         )?;
@@ -304,7 +305,7 @@ pub(crate) async fn handler(
             .extract_optional_with_options(
                 &mut claims,
                 TokenHash::new(
-                    verification_data.signing_algorithm,
+                    id_token_verification_data.signing_algorithm,
                     &token_response.access_token,
                 ),
             )
@@ -314,7 +315,7 @@ pub(crate) async fn handler(
         mas_jose::claims::C_HASH
             .extract_optional_with_options(
                 &mut claims,
-                TokenHash::new(verification_data.signing_algorithm, &code),
+                TokenHash::new(id_token_verification_data.signing_algorithm, &code),
             )
             .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
@@ -331,15 +332,42 @@ pub(crate) async fn handler(
     }
 
     let userinfo = if provider.fetch_userinfo {
-        Some(json!(
-            mas_oidc_client::requests::userinfo::fetch_userinfo(
-                &client,
-                lazy_metadata.userinfo_endpoint().await?,
-                token_response.access_token.as_str(),
-                None,
-            )
-            .await?
-        ))
+        Some(json!(match &provider.userinfo_signed_response_alg {
+            Some(signing_algorithm) => {
+                let jwks = match jwks {
+                    Some(jwks) => jwks,
+                    None => {
+                        mas_oidc_client::requests::jose::fetch_jwks(
+                            &client,
+                            lazy_metadata.jwks_uri().await?,
+                        )
+                        .await?
+                    }
+                };
+
+                mas_oidc_client::requests::userinfo::fetch_userinfo(
+                    &client,
+                    lazy_metadata.userinfo_endpoint().await?,
+                    token_response.access_token.as_str(),
+                    Some(JwtVerificationData {
+                        issuer: &provider.issuer,
+                        jwks: &jwks,
+                        signing_algorithm,
+                        client_id: &provider.client_id,
+                    }),
+                )
+                .await?
+            }
+            None => {
+                mas_oidc_client::requests::userinfo::fetch_userinfo(
+                    &client,
+                    lazy_metadata.userinfo_endpoint().await?,
+                    token_response.access_token.as_str(),
+                    None,
+                )
+                .await?
+            }
+        }))
     } else {
         None
     };
