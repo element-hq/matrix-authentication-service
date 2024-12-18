@@ -4070,7 +4070,7 @@ dependencies = [
  "sha1",
  "sha2",
  "sprintf",
- "thiserror 1.0.69",
+ "thiserror 2.0.7",
  "tokio",
  "tracing",
  "urlencoding",
@@ -4731,9 +4731,9 @@ checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
 
 [[package]]
 name = "psl"
-version = "2.1.70"
+version = "2.1.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "964da327da54c7b63fb3973d28dcfebd2de43432a8c9ca4aea11d833830b56fa"
+checksum = "699f79b15ea465a0a1ef3c7f0ef2b6b6782a2f720f3587428f0eea37f5c1d3b9"
 dependencies = [
  "psl-types",
 ]
