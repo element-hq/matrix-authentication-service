@@ -68,7 +68,7 @@ struct ProviderLookup {
     userinfo_endpoint_override: Option<String>,
     discovery_mode: String,
     pkce_mode: String,
-    response_mode: String,
+    response_mode: Option<String>,
     additional_parameters: Option<Json<Vec<(String, String)>>>,
 }
 
@@ -177,12 +177,16 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
                 .source(e)
         })?;
 
-        let response_mode = value.response_mode.parse().map_err(|e| {
-            DatabaseInconsistencyError::on("upstream_oauth_providers")
-                .column("response_mode")
-                .row(id)
-                .source(e)
-        })?;
+        let response_mode = value
+            .response_mode
+            .map(|x| x.parse())
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("upstream_oauth_providers")
+                    .column("response_mode")
+                    .row(id)
+                    .source(e)
+            })?;
 
         let additional_authorization_parameters = value
             .additional_parameters
@@ -370,7 +374,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.jwks_uri_override.as_ref().map(ToString::to_string),
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
-            params.response_mode.as_str(),
+            params.response_mode.as_ref().map(ToString::to_string),
             created_at,
         )
         .traced()
@@ -576,7 +580,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.jwks_uri_override.as_ref().map(ToString::to_string),
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
-            params.response_mode.as_str(),
+            params.response_mode.as_ref().map(ToString::to_string),
             Json(&params.additional_authorization_parameters) as _,
             created_at,
         )

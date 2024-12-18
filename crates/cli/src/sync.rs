@@ -235,14 +235,16 @@ pub async fn config_sync(
                 }
             };
 
-            let response_mode = match provider.response_mode {
-                mas_config::UpstreamOAuth2ResponseMode::Query => {
-                    mas_data_model::UpstreamOAuthProviderResponseMode::Query
-                }
-                mas_config::UpstreamOAuth2ResponseMode::FormPost => {
-                    mas_data_model::UpstreamOAuthProviderResponseMode::FormPost
-                }
-            };
+            let response_mode = provider
+                .response_mode
+                .map(|response_mode| match response_mode {
+                    mas_config::UpstreamOAuth2ResponseMode::Query => {
+                        mas_data_model::UpstreamOAuthProviderResponseMode::Query
+                    }
+                    mas_config::UpstreamOAuth2ResponseMode::FormPost => {
+                        mas_data_model::UpstreamOAuthProviderResponseMode::FormPost
+                    }
+                });
 
             if discovery_mode.is_disabled() {
                 if provider.authorization_endpoint.is_none() {

@@ -109,7 +109,7 @@ pub(crate) enum RouteError {
     MissingFormParams,
 
     #[error("Invalid response mode, expected '{expected}'")]
-    InvalidParamsMode {
+    InvalidResponseMode {
         expected: UpstreamOAuthProviderResponseMode,
     },
 
@@ -185,8 +185,7 @@ pub(crate) async fn handler(
     // the query parameters for GET requests. We need to then look at the method do
     // make sure it matches the expected `response_mode`
     match (provider.response_mode, method) {
-        (UpstreamOAuthProviderResponseMode::Query, Method::GET) => {}
-        (UpstreamOAuthProviderResponseMode::FormPost, Method::POST) => {
+        (Some(UpstreamOAuthProviderResponseMode::FormPost) | None, Method::POST) => {
             // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
             // usually a cross-site form POST, we need to render a form with the
             // same values, which posts back to the same URL. However, there are
@@ -202,7 +201,8 @@ pub(crate) async fn handler(
                 return Ok(Html(html).into_response());
             }
         }
-        (expected, _) => return Err(RouteError::InvalidParamsMode { expected }),
+        (None, _) | (Some(UpstreamOAuthProviderResponseMode::Query), Method::GET) => {}
+        (Some(expected), _) => return Err(RouteError::InvalidResponseMode { expected }),
     }
 
     let (session_id, _post_auth_action) = sessions_cookie
