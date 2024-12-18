@@ -106,25 +106,18 @@ fn resolve_response_mode(
 ) -> Result<ResponseMode, RouteError> {
     use ResponseMode as M;
 
-    if response_type.has_token() || response_type.has_id_token() {
         // If the response type includes either "token" or "id_token", the default
         // response mode is "fragment" and the response mode "query" must not be
         // used
-        if let Some(suggested_response_mode) = suggested_response_mode {
+    if response_type.has_token() || response_type.has_id_token() {
             match suggested_response_mode {
-                M::Query => Err(RouteError::InvalidResponseMode),
-                mode => Ok(mode),
-            }
-        } else {
-            Ok(M::Fragment)
+            None => Ok(M::Fragment),
+            Some(M::Query) => Err(RouteError::InvalidResponseMode),
+            Some(mode) => Ok(mode),
         }
     } else {
         // In other cases, all response modes are allowed, defaulting to "query"
-        if let Some(suggested_response_mode) = suggested_response_mode {
-            Ok(suggested_response_mode)
-        } else {
-            Ok(M::Query)
-        }
+        Ok(suggested_response_mode.unwrap_or(M::Query))
     }
 }
 
