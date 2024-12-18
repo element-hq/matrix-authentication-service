@@ -185,7 +185,7 @@ pub(crate) async fn handler(
     // the query parameters for GET requests. We need to then look at the method do
     // make sure it matches the expected `response_mode`
     match (provider.response_mode, method) {
-        (Some(UpstreamOAuthProviderResponseMode::Query) | None, Method::GET) => {}
+        (None, _) | (Some(UpstreamOAuthProviderResponseMode::Query) | None, Method::GET) => {}
         (Some(UpstreamOAuthProviderResponseMode::FormPost) | None, Method::POST) => {
             // We set the cookies with a `Same-Site` policy set to `Lax`, so because this is
             // usually a cross-site form POST, we need to render a form with the
@@ -202,7 +202,6 @@ pub(crate) async fn handler(
                 return Ok(Html(html).into_response());
             }
         }
-        (None, _) => {}
         (Some(expected), _) => return Err(RouteError::InvalidResponseMode { expected }),
     }
 
