@@ -140,8 +140,7 @@ RUN --network=default \
   --package mas-cli
 
 # Build the rest
-COPY ./Cargo.toml ./Cargo.lock /app/
-COPY ./crates /app/crates
+COPY ./ /app
 ENV SQLX_OFFLINE=true
 # Network access: cargo auditable needs it
 RUN --network=default \
