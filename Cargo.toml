@@ -306,7 +306,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.7"
+version = "2.0.8"
 
 # Async runtime
 [workspace.dependencies.tokio]
