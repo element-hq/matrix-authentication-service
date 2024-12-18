@@ -32,6 +32,7 @@ use mas_axum_utils::{
 use mas_data_model::{BrowserSession, Session, SiteConfig, User};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
+use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, Clock, RepositoryError, SystemClock};
 use mas_storage_pg::PgRepository;
 use opentelemetry_semantic_conventions::trace::{GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME};
@@ -70,6 +71,7 @@ struct GraphQLState {
     policy_factory: Arc<PolicyFactory>,
     site_config: SiteConfig,
     password_manager: PasswordManager,
+    url_builder: UrlBuilder,
 }
 
 #[async_trait]
@@ -98,6 +100,10 @@ impl state::State for GraphQLState {
         self.homeserver_connection.as_ref()
     }
 
+    fn url_builder(&self) -> &UrlBuilder {
+        &self.url_builder
+    }
+
     fn clock(&self) -> BoxClock {
         let clock = SystemClock::default();
         Box::new(clock)
@@ -119,6 +125,7 @@ pub fn schema(
     homeserver_connection: impl HomeserverConnection<Error = anyhow::Error> + 'static,
     site_config: SiteConfig,
     password_manager: PasswordManager,
+    url_builder: UrlBuilder,
 ) -> Schema {
     let state = GraphQLState {
         pool: pool.clone(),
@@ -126,6 +133,7 @@ pub fn schema(
         homeserver_connection: Arc::new(homeserver_connection),
         site_config,
         password_manager,
+        url_builder,
     };
     let state: BoxState = Box::new(state);
 
