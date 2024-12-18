@@ -632,6 +632,14 @@ upstream_oauth2:
       # This takes precedence over the discovery mechanism
       #jwks_uri: https://example.com/oauth2/keys
 
+      # The response mode we ask the provider to use for the callback
+      # Possible values are:
+      #  - `query`: The provider will send the response as a query string in the
+      # URL search parameters. This is the default.
+      #  - `form_post`: The provider will send the response as a POST request with
+      # the response parameters in the request body
+      #response_mode: query
+
       # Additional parameters to include in the authorization request
       #additional_authorization_parameters:
       #  foo: "bar"
