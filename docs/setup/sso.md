@@ -418,7 +418,6 @@ upstream_oauth2:
   providers:
     - id: "01JFFHK7HJF70YSYF753GEWVRP"
       human_name: Rauthy
-      brand_name: "rauthy"
       issuer: "https://<rauthy>/auth/v1" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
