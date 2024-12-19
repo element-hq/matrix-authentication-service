@@ -385,3 +385,68 @@ upstream_oauth2:
           template: "{{ user.email }}"
           set_email_verification: always
 ```
+
+
+### Rauthy
+
+1. Click `Clients` in the Rauthy Admin sidebar and click `Add new Client`
+2. Fill in the fields as below:
+
+   | Field | Value |
+   |-----------|-----------|
+   | Client ID | `matrix-authentication-service` |
+   | Client Name | `matrix-authentication-service` |
+   | Redirect URI | `https://<auth-service-domain>/upstream/callback/<id>` |
+
+3. Set the client to be `Confidential`.
+
+4. Click `Save`
+
+5. Select the client you just created from the clients list.
+6. Enable the `authorization_code`, and `refresh_token` grant types.
+7. Set the allowed scopes to `openid`, `profile`, and `email`.
+8. Set both Access Algorithm and ID Algorithm to `RS256`.
+9. Set PKCE challenge method to `S256`.
+10. Click `Save`
+11. Copy the `Client ID` from the `Config` tab and the `Client Secret` from the `Secret` tab.
+
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: "01JFFHK7HJF70YSYF753GEWVRP"
+      human_name: Rauthy
+      brand_name: "rauthy"
+      issuer: "https://<rauthy>/auth/v1" # TO BE FILLED
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      scope: "openid profile email"
+      claims_imports:
+        localpart:
+          action: ignore
+        displayname:
+          action: suggest
+          template: "{{ user.given_name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+```
+
+To use a Rauthy-supported [Ephemeral Client](https://sebadob.github.io/rauthy/work/ephemeral_clients.html#ephemeral-clients), use this JSON document:
+
+```json
+{
+  "client_id": "https://path.to.this.json",
+  "redirect_uris": [
+    "https://your-app.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "access_token_signed_response_alg": "RS256",
+  "id_token_signed_response_alg": "RS256"
+}
+```
