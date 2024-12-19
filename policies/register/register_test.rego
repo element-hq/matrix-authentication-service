@@ -42,15 +42,29 @@ test_no_email if {
 	register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
 }
 
-test_short_username if {
-	not register.allow with input as {"username": "a", "registration_method": "upstream-oauth2"}
+test_empty_username if {
+	not register.allow with input as {"username": "", "registration_method": "upstream-oauth2"}
 }
 
 test_long_username if {
 	not register.allow with input as {
-		"username": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"username": concat("", ["a" | some x in numbers.range(1, 249)]),
 		"registration_method": "upstream-oauth2",
 	}
+		with data.server_name as "matrix.org"
+
+	# This makes a MXID that is exactly 255 characters long
+	register.allow with input as {
+		"username": concat("", ["a" | some x in numbers.range(1, 249)]),
+		"registration_method": "upstream-oauth2",
+	}
+		with data.server_name as "a.io"
+
+	not register.allow with input as {
+		"username": concat("", ["a" | some x in numbers.range(1, 250)]),
+		"registration_method": "upstream-oauth2",
+	}
+		with data.server_name as "a.io"
 }
 
 test_invalid_username if {

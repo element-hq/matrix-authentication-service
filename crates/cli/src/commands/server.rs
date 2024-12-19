@@ -123,7 +123,7 @@ impl Options {
 
         // Load and compile the WASM policies (and fallback to the default embedded one)
         info!("Loading and compiling the policy module");
-        let policy_factory = policy_factory_from_config(&config.policy).await?;
+        let policy_factory = policy_factory_from_config(&config.policy, &config.matrix).await?;
         let policy_factory = Arc::new(policy_factory);
 
         let url_builder = UrlBuilder::new(

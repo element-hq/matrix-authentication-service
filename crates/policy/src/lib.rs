@@ -12,6 +12,7 @@ use opa_wasm::{
     wasmtime::{Config, Engine, Module, OptLevel, Store},
     Runtime,
 };
+use serde::Serialize;
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
@@ -69,10 +70,34 @@ impl Entrypoints {
     }
 }
 
+#[derive(Serialize, Debug)]
+pub struct Data {
+    server_name: String,
+
+    #[serde(flatten)]
+    rest: Option<serde_json::Value>,
+}
+
+impl Data {
+    #[must_use]
+    pub fn new(server_name: String) -> Self {
+        Self {
+            server_name,
+            rest: None,
+        }
+    }
+
+    #[must_use]
+    pub fn with_rest(mut self, rest: serde_json::Value) -> Self {
+        self.rest = Some(rest);
+        self
+    }
+}
+
 pub struct PolicyFactory {
     engine: Engine,
     module: Module,
-    data: serde_json::Value,
+    data: Data,
     entrypoints: Entrypoints,
 }
 
@@ -80,7 +105,7 @@ impl PolicyFactory {
     #[tracing::instrument(name = "policy.load", skip(source), err)]
     pub async fn load(
         mut source: impl AsyncRead + std::marker::Unpin,
-        data: serde_json::Value,
+        data: Data,
         entrypoints: Entrypoints,
     ) -> Result<Self, LoadError> {
         let mut config = Config::default();
@@ -364,10 +389,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_register() {
-        let data = serde_json::json!({
+        let data = Data::new("example.com".to_owned()).with_rest(serde_json::json!({
             "allowed_domains": ["element.io", "*.element.io"],
             "banned_domains": ["staging.element.io"],
-        });
+        }));
 
         #[allow(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

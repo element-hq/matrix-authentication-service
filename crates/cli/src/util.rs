@@ -101,6 +101,7 @@ pub fn mailer_from_config(
 
 pub async fn policy_factory_from_config(
     config: &PolicyConfig,
+    matrix_config: &MatrixConfig,
 ) -> Result<PolicyFactory, anyhow::Error> {
     let policy_file = tokio::fs::File::open(&config.wasm_module)
         .await
@@ -113,7 +114,10 @@ pub async fn policy_factory_from_config(
         email: config.email_entrypoint.clone(),
     };
 
-    PolicyFactory::load(policy_file, config.data.clone(), entrypoints)
+    let data =
+        mas_policy::Data::new(matrix_config.homeserver.clone()).with_rest(config.data.clone());
+
+    PolicyFactory::load(policy_file, data, entrypoints)
         .await
         .context("failed to load the policy")
 }

@@ -69,6 +69,7 @@ pub(crate) fn setup() {
 }
 
 pub(crate) async fn policy_factory(
+    server_name: &str,
     data: serde_json::Value,
 ) -> Result<Arc<PolicyFactory>, anyhow::Error> {
     let workspace_root = camino::Utf8Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -83,6 +84,8 @@ pub(crate) async fn policy_factory(
         authorization_grant: "authorization_grant/violation".to_owned(),
         email: "email/violation".to_owned(),
     };
+
+    let data = mas_policy::Data::new(server_name.to_owned()).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
@@ -192,7 +195,8 @@ impl TestState {
             PasswordManager::disabled()
         };
 
-        let policy_factory = policy_factory(serde_json::json!({})).await?;
+        let policy_factory =
+            policy_factory(&site_config.server_name, serde_json::json!({})).await?;
 
         let homeserver_connection =
             Arc::new(MockHomeserverConnection::new(&site_config.server_name));
@@ -297,9 +301,12 @@ impl TestState {
         // Make the client admin
         let state = {
             let mut state = self.clone();
-            state.policy_factory = policy_factory(serde_json::json!({
-                "admin_clients": [client_id],
-            }))
+            state.policy_factory = policy_factory(
+                "example.com",
+                serde_json::json!({
+                    "admin_clients": [client_id],
+                }),
+            )
             .await
             .unwrap();
             state
