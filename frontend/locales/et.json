@@ -222,6 +222,8 @@
       "effect_list": {
         "negative_1": "Sa kaotad oma olemasolevate sõnumite ajaloo.",
         "negative_2": "Sa pead kõik oma kasutatavad seadmed ja kontaktid uuesti verifitseerima",
+        "neutral_1": "Sa kaotad ligipääsu kõikidele sõnumitele, mis on salvestatud vaid serveris.",
+        "neutral_2": "Sa pead kõik oma olemasolevad seadmed ning kontaktid verifitseerima.",
         "positive_1": "Sinu kasutajakonto andmed, kontaktid, eelistused ja vestluste loendid jäävad muutmata"
       },
       "failure": {
@@ -229,7 +231,9 @@
         "heading": "Krüptoidentiteedi lähtestamise lubamine ei õnnestunud",
         "title": "Viga krüptoidentiteedi oleku muutmisel"
       },
+      "finish_reset": "Lõpeta lähtestamine",
       "heading": "Kui sa ei saa leida ühtegi muud viisis, siis lähtesta oma krüptoidentiteet",
+      "start_reset": "Alusta lähtestamist",
       "success": {
         "description": "Sinu krüptoidentiteedi lähtestamine on lubatud järgneva {{minutes}} minuti jooksul. Jätkamiseks võid selle akna sulgeda ja minna tagasi rakenduse juurde.",
         "heading": "Krüptoidentiteedi lähtestamine õnnestus. Selle protsessi lõpetamiseks mine tagasi rakenduse juurde.",

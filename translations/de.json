@@ -27,6 +27,7 @@
   "common": {
     "display_name": "Anzeigename",
     "email_address": "E-Mail-Adresse",
+    "loading": "Wird geladen...",
     "mxid": "Matrix-ID",
     "password": "Passwort",
     "password_confirm": "Passwort wiederholen",
@@ -203,7 +204,12 @@
           "heading": "Ihre Daten importieren"
         },
         "imported_from_upstream": "Von Ihrem Konto importiert",
+        "imported_from_upstream_with_name": "Importiert von Ihrem%(human_name)s Konto",
         "link_existing": "Mit einem bestehenden Konto verknüpfen",
+        "provider_name": "%(human_name)s Konto",
+        "signup_with_upstream": {
+          "heading": "Setzen Sie die Anmeldung mit Ihrem %(human_name)s Konto fort."
+        },
         "suggested_display_name": "Anzeigenamen importieren",
         "suggested_email": "E-Mail-Adresse importieren",
         "use": "Verwenden"

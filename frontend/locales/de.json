@@ -21,7 +21,7 @@
   },
   "common": {
     "add": "Hinzufügen",
-    "e2ee": "End-to-end encryption",
+    "e2ee": "Ende-zu-Ende-Verschlüsselung",
     "error": "Fehler",
     "loading": "Lade …",
     "next": "Weiter",
@@ -212,30 +212,34 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Zurücksetzen der Kryptoidentität zulassen",
+      "button": "Identität zurücksetzen",
       "cancelled": {
-        "description_1": "You can close this window and go back to the app to continue.",
-        "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
-        "heading": "Identity reset cancelled."
+        "description_1": "Sie können dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
+        "description_2": "Wenn Sie überall abgemeldet sind und Ihren Wiederherstellungscode vergessen haben, müssen Sie Ihre Identität trotzdem zurücksetzen.",
+        "heading": "Identitätszurücksetzung abgebrochen."
       },
-      "description": "Wenn Sie nirgendwo anders angemeldet sind und alle Wiederherstellungsoptionen vergessen oder verloren haben, müssen Sie Ihre Krypto-Identität zurücksetzen. Das bedeutet, dass Sie ihren bestehenden Nachrichtenverlauf verlieren, andere Nutzer sehen, dass Sie ihre Identität zurückgesetzt haben und Sie ihre vorhandenen Geräte erneut verifizieren müssen.",
+      "description": "Wenn Sie nirgendwo anders angemeldet sind und alle Wiederherstellungsschlüssel verloren haben, müssen Sie Ihre Krypto-Identität zurücksetzen, bevor Sie die App weiterverwenden können",
       "effect_list": {
-        "negative_1": "You will lose your existing message history",
-        "negative_2": "You will need to verify all your existing devices and contacts again",
-        "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
+        "negative_1": "Sie werden Ihren bestehenden Nachrichtenverlauf verlieren",
+        "negative_2": "Sie müssen alle Ihre vorhandenen Geräte und Kontakte erneut überprüfen.",
+        "neutral_1": "Sie verlieren jeglichen Nachrichtenverlauf, der nur auf dem Server gespeichert ist",
+        "neutral_2": "Sie müssen alle Ihre vorhandenen Geräte und Kontakte erneut überprüfen.",
+        "positive_1": "Ihre Kontodaten, Kontakte, Einstellungen und Chat-Liste werden gespeichert"
       },
       "failure": {
         "description": "Dies könnte ein vorübergehendes Problem sein. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Administrator.",
-        "heading": "Failed to allow crypto identity reset",
+        "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden",
         "title": "Krypto-Identität konnte nicht zugelassen werden"
       },
-      "heading": "Krypto-Identität zurücksetzen",
+      "finish_reset": "Reset beenden",
+      "heading": "Setzen Sie Ihre Identität zurück für den Fall, dass Sie sie nicht anders bestätigen können",
+      "start_reset": "Reset starten",
       "success": {
-        "description": "Ein Client kann jetzt die Krypto-Identität Ihres Kontos vorübergehend zurücksetzen. Folgen Sie den Anweisungen in Ihrem Client, um den Vorgang abzuschließen.",
-        "heading": "Identity reset successfully. Go back to the app to finish the process.",
+        "description": "Das Zurücksetzen der Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Sie können dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
+        "heading": "Die Identität wurde erfolgreich zurückgesetzt. Kehren Sie zur App zurück, um den Vorgang abzuschließen.",
         "title": "Das Zurücksetzen der Krypto-Identität ist vorübergehend erlaubt"
       },
-      "warning": "Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key."
+      "warning": "Setzen Sie Ihre Identität nur zurück, wenn Sie keinen Zugriff auf ein anderes angemeldetes Gerät haben und Ihren Wiederherstellungsschlüssel verloren haben."
     },
     "selectable_session": {
       "label": "Sitzung auswählen"

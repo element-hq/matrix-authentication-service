@@ -1,0 +1,229 @@
+{
+  "action": {
+    "back": "Tillbaka",
+    "cancel": "Avbryt",
+    "continue": "Fortsätt",
+    "create_account": "Skapa konto",
+    "sign_in": "Logga in",
+    "sign_out": "Logga ut",
+    "start_over": "Börja om",
+    "submit": "Skicka in"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "Dokument för OpenID Connect-identifiering: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Länk till tjänstens sekretesspolicy",
+      "link": "Sekretesspolicy"
+    },
+    "terms_and_conditions": {
+      "alt": "Länk till användarvillkoren för tjänsten",
+      "link": "Allmänna villkor"
+    }
+  },
+  "common": {
+    "display_name": "Visningsnamn",
+    "email_address": "E-postadress",
+    "loading": "Laddar...",
+    "mxid": "Matrix ID",
+    "password": "Lösenord",
+    "password_confirm": "Bekräfta lösenordet",
+    "username": "Användarnamn"
+  },
+  "error": {
+    "unexpected": "Oväntat fel"
+  },
+  "mas": {
+    "add_email": {
+      "description": "Ange en e-postadress för att återställa ditt konto om du förlorar åtkomsten till det.",
+      "heading": "Lägg till en e-postadress"
+    },
+    "back_to_homepage": "Gå tillbaka till startsidan",
+    "captcha": {
+      "noscript": "Detta formulär är skyddat av en CAPTCHA och kräver att JavaScript aktiveras för att kunna skickas. Aktivera JavaScript i din webbläsare och ladda om den här sidan."
+    },
+    "change_password": {
+      "change": "Ändra lösenord",
+      "confirm": "Bekräfta lösenordet",
+      "current": "Nuvarande lösenord",
+      "description": "Detta kommer att ändra lösenordet på ditt konto.",
+      "heading": "Ändra mitt lösenord",
+      "new": "Nytt lösenord"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> vill få tillgång till ditt konto.",
+      "heading": "Tillåt åtkomst till ditt konto?",
+      "make_sure_you_trust": "Se till att du litar på <span>%(client_name)s</span>.",
+      "this_will_allow": "Detta kommer att tillåta <span>%(client_name)s</span> till:",
+      "you_may_be_sharing": "Du kanske delar känslig information med den här webbplatsen eller appen."
+    },
+    "device_card": {
+      "access_requested": "Åtkomst begärd",
+      "device_code": "Kod",
+      "generic_device": "Enhet",
+      "ip_address": "IP-adress"
+    },
+    "device_code_link": {
+      "description": "Länka en enhet",
+      "headline": "Ange koden som visas på din enhet"
+    },
+    "device_consent": {
+      "another_device_access": "En annan enhet vill komma åt ditt konto.",
+      "denied": {
+        "description": "Du nekade åtkomst till %(client_name)s . Du kan stänga det här fönstret.",
+        "heading": "Åtkomst nekad"
+      },
+      "granted": {
+        "description": "Du beviljade tillgång till %(client_name)s. Du kan stänga det här fönstret.",
+        "heading": "Åtkomst beviljad"
+      }
+    },
+    "emails": {
+      "greeting": "Hej %(username)s,",
+      "recovery": {
+        "click_button": "Klicka på knappen nedan för att skapa ett nytt lösenord:",
+        "copy_link": "Kopiera följande länk och klistra in den i en webbläsare för att skapa ett nytt lösenord:",
+        "create_new_password": "Skapa nytt lösenord",
+        "headline": "Du begärde en lösenordsåterställning för ditt %(server_name)s konto.",
+        "subject": "Återställ ditt kontolösenord (%(mxid)s)",
+        "you_can_ignore": "Om du inte har bett om ett nytt lösenord kan du ignorera detta e-postmeddelande. Ditt nuvarande lösenord kommer att fortsätta att fungera."
+      },
+      "verify": {
+        "body_html": "Din verifieringskod för att bekräfta den här e-postadressen är: <strong>%(code)s</strong>",
+        "body_text": "Din verifieringskod för att bekräfta den här e-postadressen är: %(code)s",
+        "subject": "Din e-postverifieringskod är: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "CAPTCHA-verifiering misslyckades, försök igen",
+      "denied_policy": "Nekad av policy: %(policy)s",
+      "field_required": "Detta fält är obligatoriskt",
+      "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
+      "password_mismatch": "Lösenordsfälten matchar inte",
+      "rate_limit_exceeded": "Du har gjort för många förfrågningar under en kort period. Vänta några minuter och försök igen.",
+      "username_taken": "Detta användarnamn är redan upptaget"
+    },
+    "login": {
+      "call_to_register": "Har du inget konto ännu?",
+      "continue_with_provider": "Fortsätt med %(provider)s",
+      "description": "Logga in för att fortsätta:",
+      "forgot_password": "Glömt ditt lösenord?",
+      "headline": "Logga in",
+      "link": {
+        "description": "Länka ditt <span class=\"break-keep text-links\">%(provider)s</span> konto",
+        "headline": "Logga in för att länka"
+      },
+      "no_login_methods": "Inga inloggningsmetoder tillgängliga.",
+      "separator": "eller"
+    },
+    "navbar": {
+      "my_account": "Mitt konto",
+      "register": "Skapa ett konto",
+      "signed_in_as": "Inloggad som <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Sidan du letade efter finns inte eller har flyttats",
+      "heading": "Sidan kunde inte hittas"
+    },
+    "not_you": "Inte %(username)s?",
+    "or_separator": "eller",
+    "policy_violation": {
+      "description": "Detta kan bero på klienten som skapade begäran, den inloggade användaren eller själva begäran.",
+      "heading": "Auktoriseringsbegäran nekades den policy som tillämpas av den här tjänsten",
+      "logged_as": "Inloggad som <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "För att skapa ett nytt lösenord, börja om och välj ”Glömt lösenord”.",
+        "heading": "Länken för att återställa ditt lösenord har redan använts"
+      },
+      "disabled": {
+        "description": "Om du har tappat bort dina inloggningsuppgifter, kontakta administratören för att återställa ditt konto.",
+        "heading": "Kontoåterställning är inaktiverad"
+      },
+      "expired": {
+        "description": "Begär ett nytt e-postmeddelande som kommer att skickas till: <span>%(email)s</span>.",
+        "heading": "Länken för att återställa ditt lösenord har upphört att gälla",
+        "resend_email": "Skicka e-post på nytt"
+      },
+      "finish": {
+        "confirm": "Ange det nya lösenordet igen",
+        "description": "Välj ett nytt lösenord för ditt konto.",
+        "heading": "Återställ ditt lösenord",
+        "new": "Nytt lösenord",
+        "save_and_continue": "Spara och fortsätt"
+      },
+      "progress": {
+        "change_email": "Försök med en annan e-postadress",
+        "description": "Vi skickade ett e-postmeddelande med en länk för att återställa ditt lösenord om det finns ett konto som använder <span>%(email)s</span>.",
+        "heading": "Kontrollera din e-post",
+        "resend_email": "Skicka e-post igen"
+      },
+      "start": {
+        "description": "Ett e-postmeddelande kommer att skickas med en länk för att återställa ditt lösenord.",
+        "heading": "Ange din e-postadress för att fortsätta"
+      }
+    },
+    "register": {
+      "call_to_login": "Har redan ett konto",
+      "create_account": {
+        "description": "Skapa ett konto för att komma igång:",
+        "heading": "Skapa ett konto"
+      },
+      "sign_in_instead": "Logga in istället",
+      "terms_of_service": "Jag samtycker till <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Villkor och bestämmelser</a>"
+    },
+    "scope": {
+      "edit_profile": "Ändra din profil och kontaktuppgifter",
+      "manage_sessions": "Hantera dina enheter och sessioner",
+      "mas_admin": "Administrera valfri användare på matrix-authentication-service",
+      "send_messages": "Skicka nya meddelanden för din räkning",
+      "synapse_admin": "Administrera Synapse-hemservern",
+      "view_messages": "Visa dina befintliga meddelanden och data",
+      "view_profile": "Visa din profilinformation och kontaktuppgifter"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Detta upstream-konto är redan kopplat till ett annat konto."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Detta kan inte ändras senare.",
+          "heading": "Välj ditt användarnamn"
+        },
+        "create_account": "Skapa ett nytt konto",
+        "enforced_by_policy": "Framtvingad av serverprincip",
+        "forced_display_name": "Kommer att använda följande visningsnamn",
+        "forced_email": "Kommer att använda följande e-postadress",
+        "forced_localpart": "Kommer att använda följande användarnamn",
+        "import_data": {
+          "description": "Bekräfta informationen som kommer att länkas till ditt nya %(server_name)s konto.",
+          "heading": "Importera dina data"
+        },
+        "imported_from_upstream": "Importeras från ditt upstream-konto",
+        "imported_from_upstream_with_name": "Importerad från ditt %(human_name)s konto",
+        "link_existing": "Länka till ett befintligt konto",
+        "provider_name": "%(human_name)s konto",
+        "signup_with_upstream": {
+          "heading": "Fortsätt registrera dig med ditt %(human_name)s konto"
+        },
+        "suggested_display_name": "Importera visningsnamn",
+        "suggested_email": "Importera e-postadress",
+        "use": "Använd"
+      },
+      "suggest_link": {
+        "action": "Länk",
+        "heading": "Länka till ditt befintliga konto"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6-siffrig kod",
+      "code": "Kod",
+      "description": "Ange den 6-siffriga koden som skickas till: <em>%(email)s</em>",
+      "headline": "Verifiera din e-postadress"
+    }
+  }
+}

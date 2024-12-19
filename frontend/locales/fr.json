@@ -222,6 +222,8 @@
       "effect_list": {
         "negative_1": "Vous perdrez votre historique de messages existant",
         "negative_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
+        "neutral_1": "Vous perdrez l’historique de vos messages",
+        "neutral_2": "Vous devrez vérifier à nouveau tous vos appareils et tous vos contacts",
         "positive_1": "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussion seront conservés"
       },
       "failure": {
@@ -229,7 +231,9 @@
         "heading": "Impossible d'autoriser la réinitialisation de l'identité cryptographique",
         "title": "Impossible d'autoriser le remplacement de l'identité cryptographique"
       },
+      "finish_reset": "Terminer la réinitialisation",
       "heading": "Réinitialisez votre identité au cas où vous ne pourriez pas la vérifier autrement",
+      "start_reset": "Démarrer la réinitialisation",
       "success": {
         "description": "La réinitialisation de l'identité a été approuvée pour les prochaines {{minutes}} minutes. Vous pouvez fermer cette fenêtre et revenir à l'application pour continuer.",
         "heading": "Réinitialisation de l'identité réussie. Retournez dans l'application pour terminer le processus.",

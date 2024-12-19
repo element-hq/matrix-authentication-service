@@ -1,0 +1,347 @@
+{
+  "action": {
+    "back": "Tillbaka",
+    "cancel": "Avbryt",
+    "clear": "Rensa",
+    "close": "Stäng",
+    "continue": "Fortsätt",
+    "edit": "Redigera",
+    "save": "Spara",
+    "save_and_continue": "Spara och fortsätt"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Länk till tjänstens integritetspolicy",
+      "link": "Integritetspolicy"
+    },
+    "terms_and_conditions": {
+      "alt": "Länk till användarvillkoren för tjänsten",
+      "link": "Allmänna villkor"
+    }
+  },
+  "common": {
+    "add": "Lägg till",
+    "e2ee": "End-to-end-kryptering",
+    "error": "Fel",
+    "loading": "Laddar …",
+    "next": "Nästa",
+    "previous": "Föregående",
+    "saved": "Sparat",
+    "saving": "Sparar..."
+  },
+  "frontend": {
+    "account": {
+      "edit_profile": {
+        "display_name_help": "Detta är vad andra kommer att se var du än är inloggad.",
+        "display_name_label": "Visningsnamn",
+        "title": "Redigera profil",
+        "username_label": "Användarnamn"
+      },
+      "password": {
+        "change": "Ändra lösenord",
+        "change_disabled": "Lösenordsändringar är inaktiverad av administratören.",
+        "label": "Lösenord"
+      },
+      "title": "Ditt konto"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Det angivna e-postmeddelandet är inte tillåtet enligt serverpolicyn.",
+        "title": "E-post nekas av policy"
+      },
+      "email_denied_error": "Den angivna e-posten tillåts inte av serverpolicyn",
+      "email_exists_alert": {
+        "text": "Det angivna e-postmeddelandet har redan lagts till i det här kontot",
+        "title": "E-postadressen finns redan"
+      },
+      "email_exists_error": "Den angivna e-postadressen har redan lagts till i det här kontot",
+      "email_field_help": "Lägg till en alternativ e-postadress som du kan använda för att komma åt det här kontot.",
+      "email_field_label": "Lägg till e-post",
+      "email_invalid_alert": {
+        "text": "Den angivna e-postadressen är ogiltig",
+        "title": "Ogiltig e-postadress"
+      },
+      "email_invalid_error": "Den angivna e-postadressen är ogiltig"
+    },
+    "app_sessions_list": {
+      "error": "Det gick inte att läsa in appsessioner",
+      "heading": "Appar"
+    },
+    "browser_session_details": {
+      "current_badge": "Nuvarande",
+      "session_details_title": "Session"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}}aktiv session",
+      "body:other": "{{count}}aktiva sessioner",
+      "heading": "Webbläsare",
+      "no_active_sessions": {
+        "default": "Du är inte inloggad i någon webbläsare.",
+        "inactive_90_days": "Alla dina sessioner har varit aktiva under de senaste 90 dagarna."
+      },
+      "view_all_button": "Visa alla"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Kundinformation",
+      "name": "Namn",
+      "session_details_title": "Session"
+    },
+    "device_type_icon_label": {
+      "desktop": "Skrivbord",
+      "mobile": "Mobil",
+      "pc": "Dator",
+      "tablet": "Läsplatta",
+      "unknown": "Okänd enhetstyp",
+      "web": "Webb"
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Are you sure you want to end this session?",
+      "text": "Logga ut"
+    },
+    "error": {
+      "hideDetails": "Dölj detaljer",
+      "showDetails": "Visa detaljer",
+      "subtitle": "Ett oväntat fel inträffade. Vänligen försök igen.",
+      "title": "Något gick fel"
+    },
+    "error_boundary_title": "Något gick fel",
+    "errors": {
+      "field_required": "Detta fält är obligatoriskt"
+    },
+    "last_active": {
+      "active_date": "Aktiv {{relativeDate}}",
+      "active_now": "Aktiv nu",
+      "inactive_90_days": "Inaktiv i 90+ dagar"
+    },
+    "nav": {
+      "devices": "Enheter",
+      "profile": "Profil",
+      "sessions": "Sessioner",
+      "settings": "Inställningar"
+    },
+    "not_found_alert_title": "Hittades inte.",
+    "not_logged_in_alert": "Du är inte inloggad.",
+    "oauth2_client_detail": {
+      "details_title": "Kundinformation",
+      "id": "Kund-ID",
+      "name": "Namn",
+      "policy": "Policy",
+      "terms": "Terms Of Service"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Namn",
+      "client_title": "Kundinformation",
+      "session_details_title": "Session"
+    },
+    "pagination_controls": {
+      "total": "Totalt: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Nuvarande lösenord",
+      "failure": {
+        "description": {
+          "account_locked": "Ditt konto är låst och kan inte återställas just nu. Om du inte förväntat dig detta, kontakta din serveradministratör.",
+          "expired_recovery_ticket": "Återställningslänken har upphört att gälla. Vänligen starta kontoåterställningsprocessen igen från början.",
+          "invalid_new_password": "Det nya lösenordet du valde är ogiltigt; det kanske inte uppfyller den konfigurerade säkerhetspolicyn.",
+          "no_current_password": "Du har inget aktuellt lösenord.",
+          "no_such_recovery_ticket": "Återställningslänken är ogiltig. Om du kopierade länken från återställnings-e-postmeddelandet, kontrollera att hela länken kopierades.",
+          "password_changes_disabled": "Lösenordsändringar är inaktiverade.",
+          "recovery_ticket_already_used": "Återställningslänken har redan använts. Den kan inte användas igen.",
+          "unspecified": "Detta kan vara ett tillfälligt problem, så försök igen senare. Om problemet kvarstår kontaktar du serveradministratören.",
+          "wrong_password": "Lösenordet du angav som ditt nuvarande lösenord är felaktigt. Vänligen försök igen."
+        },
+        "title": "Det gick inte att uppdatera lösenordet"
+      },
+      "new_password_again_label": "Ange det nya lösenordet igen",
+      "new_password_label": "Nytt lösenord",
+      "passwords_match": "Lösenorden matchar!",
+      "passwords_no_match": "Lösenorden matchar inte",
+      "subtitle": "Välj ett nytt lösenord för ditt konto.",
+      "success": {
+        "description": "Ditt lösenord har uppdaterats framgångsrikt.",
+        "title": "Lösenord uppdaterat"
+      },
+      "title": "Ändra ditt lösenord"
+    },
+    "password_reset": {
+      "title": "Återställ ditt lösenord"
+    },
+    "password_strength": {
+      "placeholder": "Lösenordets styrka",
+      "score": {
+        "0": "Extremt svagt lösenord",
+        "1": "Mycket svagt lösenord",
+        "2": "Svagt lösenord",
+        "3": "Starkt lösenord",
+        "4": "Mycket starkt lösenord"
+      },
+      "suggestion": {
+        "all_uppercase": "Skriv vissa bokstäver med stor bokstav, men inte alla.",
+        "another_word": "Lägg till fler ord som är mindre vanliga.",
+        "associated_years": "Undvik år som är förknippade med dig.",
+        "capitalization": "Använd stor bokstav på fler än den första bokstaven.",
+        "dates": "Undvik datum och årtal som är förknippade med dig.",
+        "l33t": "Undvik förutsägbara bokstavsersättningar som '@' för 'a'.",
+        "longer_keyboard_pattern": "Använd längre tangentbordsmönster och ändra skrivriktning flera gånger.",
+        "no_need": "Du kan skapa starka lösenord utan att använda symboler, siffror eller versaler.",
+        "pwned": "Om du använder det här lösenordet någon annanstans bör du ändra det.",
+        "recent_years": "Undvik de senaste åren.",
+        "repeated": "Undvik upprepade ord och tecken.",
+        "reverse_words": "Undvik omvänd stavning av vanliga ord.",
+        "sequences": "Undvik vanliga teckensekvenser.",
+        "use_words": "Använd flera ord, men undvik vanliga fraser."
+      },
+      "too_weak": "Detta lösenord är för svagt",
+      "warning": {
+        "common": "Detta är ett vanligt lösenord.",
+        "common_names": "Vanliga namn och efternamn är lätta att gissa.",
+        "dates": "Datum är lätta att gissa.",
+        "extended_repeat": "Upprepade teckenmönster som \"abcabcabc\" är lätta att gissa.",
+        "key_pattern": "Korta tangentbordsmönster är lätta att gissa.",
+        "names_by_themselves": "Enstaka namn eller efternamn är lätta att gissa.",
+        "pwned": "Ditt lösenord har röjts genom ett dataintrång på Internet.",
+        "recent_years": "De senaste åren är lätta att gissa.",
+        "sequences": "Vanliga karaktärssekvenser som ”abc” är lätta att gissa.",
+        "similar_to_common": "Detta liknar ett vanligt använt lösenord.",
+        "simple_repeat": "Upprepade tecken som ”aaa” är lätta att gissa.",
+        "straight_row": "Raka rader med tangenter på tangentbordet är lätta att gissa.",
+        "top_hundred": "Detta är ett lösenord som används ofta.",
+        "top_ten": "Detta är ett flitigt använt lösenord.",
+        "user_inputs": "Det ska inte finnas några personliga eller sidrelaterade uppgifter.",
+        "word_by_itself": "Enstaka ord är lätta att gissa."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Återställ identitet",
+      "cancelled": {
+        "description_1": "Du kan stänga det här fönstret och gå tillbaka till appen för att fortsätta.",
+        "description_2": "Om du är utloggad överallt och inte kommer ihåg din återställningskod måste du fortfarande återställa din identitet.",
+        "heading": "Identitetsåterställningen har avbrutits."
+      },
+      "description": "Om du inte är inloggad på någon annan enhet och du har tappat bort din återställningsnyckel måste du återställa din identitet för att fortsätta använda appen.",
+      "effect_list": {
+        "negative_1": "Du kommer att förlora din befintliga meddelandehistorik",
+        "negative_2": "Du kommer att behöva verifiera alla dina befintliga enheter och kontakter igen",
+        "neutral_1": "Du kommer att förlora all meddelandehistorik som bara är lagrad på servern",
+        "neutral_2": "Du måste verifiera alla dina befintliga enheter och kontakter igen",
+        "positive_1": "Dina kontouppgifter, kontakter, preferenser och chattlista kommer att behållas"
+      },
+      "failure": {
+        "description": "Detta kan vara ett tillfälligt problem, så försök igen senare. Kontakta din serveradministratör om problemet kvarstår.",
+        "heading": "Det gick inte att tillåta återställning av kryptoidentitet",
+        "title": "Misslyckades med att tillåta kryptoidentitet"
+      },
+      "finish_reset": "Slutför återställningen",
+      "heading": "Återställ din identitet om du inte kan bekräfta på annat sätt",
+      "start_reset": "Starta återställning",
+      "success": {
+        "description": "Identitetsåterställningen har godkänts för nästa{{minutes}} minuter. Du kan stänga det här fönstret och gå tillbaka till appen för att fortsätta.",
+        "heading": "Identiteten har återställts. Gå tillbaka till appen för att avsluta processen.",
+        "title": "Återställning av kryptoidentitet är tillfälligt tillåten"
+      },
+      "warning": "Återställ bara din identitet om du inte har tillgång till en annan inloggad enhet och du har tappat bort din återställningsnyckel."
+    },
+    "selectable_session": {
+      "label": "Välj session"
+    },
+    "session": {
+      "client_id_label": "Klient ID",
+      "current": "Nuvarande",
+      "current_badge": "Nuvarande",
+      "device_id_label": "Enhets-ID",
+      "finished_date": "Slutförd <datetime/>",
+      "finished_label": "Slutförda",
+      "id_label": "ID",
+      "ip_label": "IP-adress",
+      "last_active_label": "Senast aktiv",
+      "last_auth_label": "Senaste autentisering",
+      "name_for_platform": "{{name}} för {{platform}}",
+      "scopes_label": "Scope",
+      "signed_in_date": "Inloggad <datetime/>",
+      "signed_in_label": "Inloggad",
+      "title": "Enhetsdetaljer",
+      "unknown_browser": "Okänd webbläsare",
+      "unknown_device": "Okänd enhet",
+      "uri_label": "Uri",
+      "user_id_label": "Användar-ID",
+      "username_label": "Användarnamn"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Gå tillbaka",
+        "text": "Den här sessionen existerar inte eller är inte längre aktiv.",
+        "title": "Kan inte hitta sessionen: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Okänd rutt {{route}}",
+    "unverified_email_alert": {
+      "button": "Granska och verifiera",
+      "text:one": "Du har {{count}} obekräftad e-postadress.",
+      "text:other": "Du har {{count}} obekräftade e-postadresser.",
+      "title": "Overifierad e-postadress"
+    },
+    "user_email": {
+      "cant_delete_primary": "Välj en annan primär e-postadress för att radera denna.",
+      "delete_button_confirmation_modal": {
+        "action": "Ta bort e-post",
+        "body": "Radera det här e-postmeddelandet?"
+      },
+      "delete_button_title": "Ta bort e-postadress",
+      "email": "E-post",
+      "make_primary_button": "Gör primär",
+      "not_verified": "Ej verifierad",
+      "primary_email": "Primär e-post",
+      "retry_button": "Skicka kod igen",
+      "unverified": "Overifierad"
+    },
+    "user_email_list": {
+      "heading": "E-postmeddelanden",
+      "no_primary_email_alert": "Ingen primär e-postadress"
+    },
+    "user_greeting": {
+      "error": "Det gick inte att läsa in användaren"
+    },
+    "user_name": {
+      "display_name_field_label": "Visningsnamn"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}}aktiv session",
+      "active_sessions:other": "{{count}}aktiva sessioner",
+      "heading": "Var du är inloggad",
+      "no_active_sessions": {
+        "default": "Du är inte inloggad på någon applikation.",
+        "inactive_90_days": "Alla dina sessioner har varit aktiva under de senaste 90 dagarna."
+      }
+    },
+    "verify_email": {
+      "code_field_error": "Koden känns inte igen",
+      "code_field_label": "6-siffrig kod",
+      "code_field_wrong_shape": "Koden måste vara 6 siffror",
+      "email_sent_alert": {
+        "description": "Ange den nya koden nedan.",
+        "title": "Ny kod har skickats."
+      },
+      "enter_code_prompt": "Ange den 6-siffriga koden som skickas till: <email>{{email}}</email>",
+      "heading": "Verifiera din e-postadress",
+      "invalid_code_alert": {
+        "description": "Kontrollera koden som skickats till din e-post och uppdatera fälten nedan för att fortsätta.",
+        "title": "Du har angett fel kod"
+      },
+      "resend_code": "Skicka koden igen",
+      "resend_email": "Skicka e-post på nytt",
+      "sent": "Skickat!",
+      "unknown_email": "Okänd e-postadress"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Redigera din profil och kontaktuppgifter",
+      "manage_sessions": "Hantera dina enheter och sessioner",
+      "mas_admin": "Administrera valfri användare på matrix-authentication-service",
+      "send_messages": "Skicka nya meddelanden för din räkning",
+      "synapse_admin": "Administrera Synapse-hemservern",
+      "view_messages": "Visa dina befintliga meddelanden och data",
+      "view_profile": "Se din profilinformation och kontaktuppgifter"
+    }
+  }
+}

@@ -27,6 +27,7 @@
   "common": {
     "display_name": "Kuvatav nimi",
     "email_address": "E-posti aadress",
+    "loading": "Laadime…",
     "mxid": "Matrixi kasutajatunnus",
     "password": "Salasõna",
     "password_confirm": "Korda salasõna",
@@ -203,7 +204,12 @@
           "heading": "Impordi oma andmed"
         },
         "imported_from_upstream": "Imporditud algsest teenusest",
+        "imported_from_upstream_with_name": "Importisime andmed sinu kasutajakontolt: %(human_name)s",
         "link_existing": "Seo olemasoleva kasutajakontoga",
+        "provider_name": "Kasutajakonto: %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Jätka sisselogimist oma kasutajakontoga: %(human_name)s"
+        },
         "suggested_display_name": "Impordi kuvatav nimi",
         "suggested_email": "Impordi e-posti aadress",
         "use": "Kasuta"

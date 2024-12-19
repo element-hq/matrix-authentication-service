@@ -27,6 +27,7 @@
   "common": {
     "display_name": "Pseudonyme",
     "email_address": "Adresse e-mail",
+    "loading": "Chargement…",
     "mxid": "Matrix ID",
     "password": "Mot de passe",
     "password_confirm": "Confirmer le mot de passe",
@@ -203,7 +204,12 @@
           "heading": "Importez vos données"
         },
         "imported_from_upstream": "Importé de votre compte en amont",
+        "imported_from_upstream_with_name": "Importé depuis votre compte %(human_name)s",
         "link_existing": "Associer un compte existant",
+        "provider_name": "Compte %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Continuez à vous inscrire avec votre compte %(human_name)s"
+        },
         "suggested_display_name": "Importer le pseudonyme",
         "suggested_email": "Importer l’adresse e-mail",
         "use": "Importer"
