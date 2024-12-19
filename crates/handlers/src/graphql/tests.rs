@@ -469,9 +469,12 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     // Now make the client admin and try again
     let state = {
         let mut state = state;
-        state.policy_factory = test_utils::policy_factory(serde_json::json!({
-            "admin_clients": [client_id],
-        }))
+        state.policy_factory = test_utils::policy_factory(
+            "example.com",
+            serde_json::json!({
+                "admin_clients": [client_id],
+            }),
+        )
         .await
         .unwrap();
         state
@@ -593,9 +596,12 @@ async fn test_add_user(pool: PgPool) {
     // Make the client admin
     let state = {
         let mut state = state;
-        state.policy_factory = test_utils::policy_factory(serde_json::json!({
-            "admin_clients": [client_id],
-        }))
+        state.policy_factory = test_utils::policy_factory(
+            "example.com",
+            serde_json::json!({
+                "admin_clients": [client_id],
+            }),
+        )
         .await
         .unwrap();
         state
