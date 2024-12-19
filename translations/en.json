@@ -284,7 +284,15 @@
       },
       "denied_policy": "Denied by policy: %(policy)s",
       "@denied_policy": {
-        "context": "components/errors.html:17:7-58, components/field.html:64:17-68"
+        "context": "components/errors.html:17:7-58, components/field.html:77:19-70"
+      },
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "@email_domain_banned": {
+        "context": "components/field.html:75:19-54"
+      },
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "@email_domain_not_allowed": {
+        "context": "components/field.html:73:19-59"
       },
       "field_required": "This field is required",
       "@field_required": {
@@ -296,15 +304,31 @@
       },
       "password_mismatch": "Password fields don't match",
       "@password_mismatch": {
-        "context": "components/errors.html:13:7-40, components/field.html:66:17-50"
+        "context": "components/errors.html:13:7-40, components/field.html:80:17-50"
       },
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
       "@rate_limit_exceeded": {
         "context": "components/errors.html:15:7-42, pages/recovery/progress.html:26:11-46"
       },
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "@username_all_numeric": {
+        "context": "components/field.html:71:19-55"
+      },
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "@username_invalid_chars": {
+        "context": "components/field.html:69:19-57"
+      },
       "username_taken": "This username is already taken",
       "@username_taken": {
         "context": "components/field.html:62:17-47"
+      },
+      "username_too_long": "Username is too long",
+      "@username_too_long": {
+        "context": "components/field.html:67:19-52"
+      },
+      "username_too_short": "Username is too short",
+      "@username_too_short": {
+        "context": "components/field.html:65:19-53"
       }
     },
     "login": {
@@ -377,7 +401,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:85:10-31",
+      "context": "components/field.html:99:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {

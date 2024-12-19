@@ -36,6 +36,9 @@ pub enum FieldError {
 
     /// Denied by the policy
     Policy {
+        /// Well-known policy code
+        code: Option<&'static str>,
+
         /// Message for this policy violation
         message: String,
     },
@@ -59,6 +62,9 @@ pub enum FormError {
 
     /// Denied by the policy
     Policy {
+        /// Well-known policy code
+        code: Option<&'static str>,
+
         /// Message for this policy violation
         message: String,
     },

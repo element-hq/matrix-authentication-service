@@ -1475,9 +1475,12 @@ mod tests {
         // Now, if we add the client to the admin list in the policy, it should work
         let state = {
             let mut state = state;
-            state.policy_factory = crate::test_utils::policy_factory(serde_json::json!({
-                "admin_clients": [client_id]
-            }))
+            state.policy_factory = crate::test_utils::policy_factory(
+                "example.com",
+                serde_json::json!({
+                    "admin_clients": [client_id]
+                }),
+            )
             .await
             .unwrap();
             state

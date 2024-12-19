@@ -759,10 +759,12 @@ pub(crate) async fn post(
                                 Some("username") => form_state.with_error_on_field(
                                     mas_templates::UpstreamRegisterFormField::Username,
                                     FieldError::Policy {
+                                        code: violation.code.map(|c| c.as_str()),
                                         message: violation.msg,
                                     },
                                 ),
                                 _ => form_state.with_error_on_form(FormError::Policy {
+                                    code: violation.code.map(|c| c.as_str()),
                                     message: violation.msg,
                                 }),
                             }

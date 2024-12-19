@@ -25,12 +25,12 @@ domain_allowed if {
 
 # METADATA
 # entrypoint: true
-violation contains {"msg": "email domain is not allowed"} if {
+violation contains {"code": "email-domain-not-allowed", "msg": "email domain is not allowed"} if {
 	not domain_allowed
 }
 
 # Deny emails with their domain in the domains banlist
-violation contains {"msg": "email domain is banned"} if {
+violation contains {"code": "email-domain-banned", "msg": "email domain is banned"} if {
 	[_, domain] := split(input.email, "@")
 	some banned_domain in data.banned_domains
 	glob.match(banned_domain, ["."], domain)
