@@ -29,7 +29,7 @@ jobs:
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2.2.0
         with:
-          version: 0.64.1
+          version: 0.70.0
 
       - name: Run OPA tests with coverage
         working-directory: ./policies

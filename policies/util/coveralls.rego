@@ -1,6 +1,6 @@
-package coveralls
+package util
 
-import future.keywords
+import rego.v1
 
 from_opa := {"source_files": coverage}
 
@@ -9,7 +9,7 @@ coverage contains obj if {
 	obj := {"name": file, "coverage": to_lines(report)}
 }
 
-covered_map(report) = cm if {
+covered_map(report) := cm if {
 	covered := object.get(report, "covered", [])
 	cm := {line: 1 |
 		some item in covered
@@ -17,7 +17,7 @@ covered_map(report) = cm if {
 	}
 }
 
-not_covered_map(report) = ncm if {
+not_covered_map(report) := ncm if {
 	not_covered := object.get(report, "not_covered", [])
 	ncm := {line: 0 |
 		some item in not_covered
@@ -25,7 +25,7 @@ not_covered_map(report) = ncm if {
 	}
 }
 
-to_lines(report) = lines if {
+to_lines(report) := lines if {
 	cm := covered_map(report)
 	ncm := not_covered_map(report)
 	keys := sort([line | some line, _ in object.union(cm, ncm)])
@@ -37,15 +37,15 @@ to_lines(report) = lines if {
 	]
 }
 
-to_value(cm, _, line) = 1 if {
+to_value(cm, _, line) := 1 if {
 	cm[line]
 }
 
-to_value(_, ncm, line) = 0 if {
+to_value(_, ncm, line) := 0 if {
 	ncm[line]
 }
 
-to_value(cm, ncm, line) = null if {
+to_value(cm, ncm, line) := null if {
 	not cm[line]
 	not ncm[line]
 }

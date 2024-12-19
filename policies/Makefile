@@ -1,24 +1,28 @@
 # Set to 1 to run OPA through Docker
 DOCKER := 0
 PODMAN := 0
-OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:0.64.1-debug
+OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:0.70.0-debug
+REGAL_DOCKER_IMAGE := ghcr.io/styrainc/regal:0.29.2
 
 INPUTS := \
-	client_registration.rego \
-	register.rego \
-	authorization_grant.rego \
-	email.rego
+	client_registration/client_registration.rego \
+	register/register.rego \
+	authorization_grant/authorization_grant.rego \
+	email/email.rego
 
 ifeq ($(DOCKER), 1)
 	OPA := docker run -i -v $(shell pwd):/policies:ro -w /policies --rm $(OPA_DOCKER_IMAGE)
 	OPA_RW := docker run -i -v $(shell pwd):/policies -w /policies --rm $(OPA_DOCKER_IMAGE)
+	REGAL := docker run -i -v $(shell pwd):/policies:ro -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else ifeq ($(PODMAN), 1)
 	# When running rootless, the volume directory may need to be given global write permissions on the host
 	OPA := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
 	OPA_RW := podman run -i -v $(shell pwd):/policies:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
+	REGAL := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else
 	OPA := opa
 	OPA_RW := opa
+	REGAL := regal
 endif
 
 policy.wasm: $(INPUTS)
@@ -38,16 +42,17 @@ fmt:
 
 .PHONY: test
 test:
-	$(OPA) test --schema ./schema/ -v ./*.rego
+	$(OPA) test --schema ./schema/ --ignore schema -v ./
 
 .PHONY: coverage
 coverage:
-	$(OPA) test --coverage ./*.rego | $(OPA) eval --format pretty \
+	$(OPA) test --coverage --schema ./schema/ --ignore schema ./ | $(OPA) eval --format pretty \
 		--stdin-input \
 		--data util/coveralls.rego \
 		data.coveralls.from_opa > coverage.json
 
 .PHONY: lint
 lint:
-	$(OPA) fmt -d --fail ./*.rego util/*.rego
-	$(OPA) check --strict --schema schema/ ./*.rego util/*.rego
+	$(OPA) fmt -d --fail .
+	$(OPA) check --strict --schema schema/ --ignore schema .
+	$(REGAL) lint .

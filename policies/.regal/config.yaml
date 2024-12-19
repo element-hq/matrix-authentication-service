@@ -1,0 +1,6 @@
+rules:
+  style:
+    external-reference:
+      level: ignore
+    line-length:
+      level: ignore
