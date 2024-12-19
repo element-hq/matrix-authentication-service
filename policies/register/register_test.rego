@@ -70,3 +70,7 @@ test_long_username if {
 test_invalid_username if {
 	not register.allow with input as {"username": "hello world", "registration_method": "upstream-oauth2"}
 }
+
+test_numeric_username if {
+	not register.allow with input as {"username": "1234", "registration_method": "upstream-oauth2"}
+}

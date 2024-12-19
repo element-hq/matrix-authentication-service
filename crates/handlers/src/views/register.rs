@@ -154,6 +154,7 @@ pub(crate) async fn post(
             state.add_error_on_form(FormError::Captcha);
         }
 
+        let mut homeserver_denied_username = false;
         if form.username.is_empty() {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
         } else if repo.user().exists(&form.username).await? {
@@ -161,13 +162,14 @@ pub(crate) async fn post(
             state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
         } else if !homeserver.is_localpart_available(&form.username).await? {
             // The user already exists on the homeserver
-            // XXX: we may want to return different errors like "this username is reserved"
             tracing::warn!(
                 username = &form.username,
-                "User tried to register with a reserved username"
+                "Homeserver denied username provided by user"
             );
 
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
+            // We defer adding the error on the field, until we know whether we had another
+            // error from the policy, to avoid showing both
+            homeserver_denied_username = true;
         }
 
         if form.email.is_empty() {
@@ -197,6 +199,7 @@ pub(crate) async fn post(
             state.add_error_on_field(
                 RegisterFormField::Password,
                 FieldError::Policy {
+                    code: None,
                     message: "Password is too weak".to_owned(),
                 },
             );
@@ -216,25 +219,39 @@ pub(crate) async fn post(
                 Some("email") => state.add_error_on_field(
                     RegisterFormField::Email,
                     FieldError::Policy {
+                        code: violation.code.map(|c| c.as_str()),
                         message: violation.msg,
                     },
                 ),
-                Some("username") => state.add_error_on_field(
-                    RegisterFormField::Username,
-                    FieldError::Policy {
-                        message: violation.msg,
-                    },
-                ),
+                Some("username") => {
+                    // If the homeserver denied the username, but we also had an error on the policy
+                    // side, we don't want to show both, so we reset the state here
+                    homeserver_denied_username = false;
+                    state.add_error_on_field(
+                        RegisterFormField::Username,
+                        FieldError::Policy {
+                            code: violation.code.map(|c| c.as_str()),
+                            message: violation.msg,
+                        },
+                    );
+                }
                 Some("password") => state.add_error_on_field(
                     RegisterFormField::Password,
                     FieldError::Policy {
+                        code: violation.code.map(|c| c.as_str()),
                         message: violation.msg,
                     },
                 ),
                 _ => state.add_error_on_form(FormError::Policy {
+                    code: violation.code.map(|c| c.as_str()),
                     message: violation.msg,
                 }),
             }
+        }
+
+        if homeserver_denied_username {
+            // XXX: we may want to return different errors like "this username is reserved"
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
         }
 
         if state.is_valid() {

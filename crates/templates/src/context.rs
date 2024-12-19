@@ -462,6 +462,7 @@ impl TemplateContext for LoginContext {
                     .with_error_on_field(
                         LoginFormField::Password,
                         FieldError::Policy {
+                            code: None,
                             message: "password too short".to_owned(),
                         },
                     ),
