@@ -13,6 +13,45 @@ use mas_data_model::{Client, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use serde::{Deserialize, Serialize};
 
+/// A well-known policy code.
+#[derive(Deserialize, Debug, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+pub enum Code {
+    /// The username is too short.
+    UsernameTooShort,
+
+    /// The username is too long.
+    UsernameTooLong,
+
+    /// The username contains invalid characters.
+    UsernameInvalidChars,
+
+    /// The username contains only numeric characters.
+    UsernameAllNumeric,
+
+    /// The email domain is not allowed.
+    EmailDomainNotAllowed,
+
+    /// The email domain is banned.
+    EmailDomainBanned,
+}
+
+impl Code {
+    /// Returns the code as a string
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::UsernameTooShort => "username-too-short",
+            Self::UsernameTooLong => "username-too-long",
+            Self::UsernameInvalidChars => "username-invalid-chars",
+            Self::UsernameAllNumeric => "username-all-numeric",
+            Self::EmailDomainNotAllowed => "email-domain-not-allowed",
+            Self::EmailDomainBanned => "email-domain-banned",
+        }
+    }
+}
+
 /// A single violation of a policy.
 #[derive(Deserialize, Debug)]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
@@ -20,6 +59,7 @@ pub struct Violation {
     pub msg: String,
     pub redirect_uri: Option<String>,
     pub field: Option<String>,
+    pub code: Option<Code>,
 }
 
 /// The result of a policy evaluation.

@@ -17,16 +17,26 @@ mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
 
 # METADATA
 # entrypoint: true
-violation contains {"field": "username", "msg": "username too short"} if {
+violation contains {"field": "username", "code": "username-too-short", "msg": "username too short"} if {
 	count(input.username) == 0
 }
 
-violation contains {"field": "username", "msg": "username too long"} if {
+violation contains {"field": "username", "code": "username-too-long", "msg": "username too long"} if {
 	user_id := mxid(input.username, data.server_name)
 	count(user_id) > 255
 }
 
-violation contains {"field": "username", "msg": "username contains invalid characters"} if {
+violation contains {
+	"field": "username", "code": "username-all-numeric",
+	"msg": "username must contain at least one non-numeric character",
+} if {
+	regex.match(`^[0-9]+$`, input.username)
+}
+
+violation contains {
+	"field": "username", "code": "username-invalid-chars",
+	"msg": "username contains invalid characters",
+} if {
 	not regex.match(`^[a-z0-9.=_/-]+$`, input.username)
 }
 

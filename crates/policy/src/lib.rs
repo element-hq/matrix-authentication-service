@@ -17,7 +17,7 @@ use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
 use self::model::{AuthorizationGrantInput, ClientRegistrationInput, EmailInput, RegisterInput};
-pub use self::model::{EvaluationResult, Violation};
+pub use self::model::{Code as ViolationCode, EvaluationResult, Violation};
 use crate::model::GrantType;
 
 #[derive(Debug, Error)]
