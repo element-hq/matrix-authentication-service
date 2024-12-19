@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_register_username_too_short(pool: PgPool) {
+    async fn test_register_username_too_long(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
@@ -524,7 +524,7 @@ mod tests {
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
             serde_json::json!({
                 "csrf": csrf_token,
-                "username": "",
+                "username": "a".repeat(256),
                 "email": "john@example.com",
                 "password": "hunter2",
                 "password_confirm": "hunter2",
@@ -535,7 +535,11 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("username too short"));
+        assert!(
+            response.body().contains("Username is too long"),
+            "response body: {}",
+            response.body()
+        );
     }
 
     /// When the user already exists in the database, it should give an error
