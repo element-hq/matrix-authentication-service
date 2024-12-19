@@ -507,7 +507,7 @@ mod tests {
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
             serde_json::json!({
                 "csrf": csrf_token,
-                "username": "a",
+                "username": "",
                 "email": "john@example.com",
                 "password": "hunter2",
                 "password_confirm": "hunter2",
