@@ -13,14 +13,17 @@ allow if {
 	count(violation) == 0
 }
 
+mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
+
 # METADATA
 # entrypoint: true
 violation contains {"field": "username", "msg": "username too short"} if {
-	count(input.username) <= 2
+	count(input.username) == 0
 }
 
 violation contains {"field": "username", "msg": "username too long"} if {
-	count(input.username) > 64
+	user_id := mxid(input.username, data.server_name)
+	count(user_id) > 255
 }
 
 violation contains {"field": "username", "msg": "username contains invalid characters"} if {
