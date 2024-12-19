@@ -9,6 +9,12 @@ target "docker-metadata-action-syn2mas" {}
 // This sets the platforms and is further extended by GitHub Actions to set the
 // output and the cache locations
 target "base" {
+  args = {
+    // This is set so that when we use a git context, the .git directory is
+    // present, as we infer the version at build time out of it
+    BUILDKIT_CONTEXT_KEEP_GIT_DIR = 1
+  }
+
   platforms = [
     "linux/amd64",
     "linux/arm64",

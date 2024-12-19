@@ -6,7 +6,6 @@ frontend/dist
 tools/syn2mas/**
 docs/
 .devcontainer/
-.git/
 .github/
 .gitignore
 Dockerfile
