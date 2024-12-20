@@ -315,7 +315,7 @@ impl From<Option<PostAuthAction>> for Reauth {
     }
 }
 
-/// `GET|POST /register`
+/// `POST /register`
 #[derive(Default, Debug, Clone)]
 pub struct Register {
     post_auth_action: Option<PostAuthAction>,
@@ -372,6 +372,75 @@ impl Route for Register {
 impl From<Option<PostAuthAction>> for Register {
     fn from(post_auth_action: Option<PostAuthAction>) -> Self {
         Self { post_auth_action }
+    }
+}
+
+/// `GET|POST /register/password`
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordRegister {
+    username: Option<String>,
+
+    #[serde(flatten)]
+    post_auth_action: Option<PostAuthAction>,
+}
+
+impl PasswordRegister {
+    #[must_use]
+    pub fn and_then(mut self, action: PostAuthAction) -> Self {
+        self.post_auth_action = Some(action);
+        self
+    }
+
+    #[must_use]
+    pub fn and_continue_grant(mut self, data: Ulid) -> Self {
+        self.post_auth_action = Some(PostAuthAction::continue_grant(data));
+        self
+    }
+
+    #[must_use]
+    pub fn and_continue_compat_sso_login(mut self, data: Ulid) -> Self {
+        self.post_auth_action = Some(PostAuthAction::continue_compat_sso_login(data));
+        self
+    }
+
+    /// Get a reference to the post auth action.
+    #[must_use]
+    pub fn post_auth_action(&self) -> Option<&PostAuthAction> {
+        self.post_auth_action.as_ref()
+    }
+
+    /// Get a reference to the username chosen by the user.
+    #[must_use]
+    pub fn username(&self) -> Option<&str> {
+        self.username.as_deref()
+    }
+
+    pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
+        match &self.post_auth_action {
+            Some(action) => action.go_next(url_builder),
+            None => url_builder.redirect(&Index),
+        }
+    }
+}
+
+impl Route for PasswordRegister {
+    type Query = Self;
+
+    fn route() -> &'static str {
+        "/register/password"
+    }
+
+    fn query(&self) -> Option<&Self::Query> {
+        Some(self)
+    }
+}
+
+impl From<Option<PostAuthAction>> for PasswordRegister {
+    fn from(post_auth_action: Option<PostAuthAction>) -> Self {
+        Self {
+            username: None,
+            post_auth_action,
+        }
     }
 }
 

@@ -38,12 +38,13 @@ pub use self::{
         DeviceLinkContext, DeviceLinkFormField, EmailAddContext, EmailRecoveryContext,
         EmailVerificationContext, EmailVerificationPageContext, EmptyContext, ErrorContext,
         FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PolicyViolationContext, PostAuthContext, PostAuthContextInner, ReauthContext,
-        ReauthFormField, RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, SiteBranding, SiteConfigExt, SiteFeatures, TemplateContext,
-        UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
-        UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage, WithOptionalSession, WithSession,
+        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
+        ReauthContext, ReauthFormField, RecoveryExpiredContext, RecoveryFinishContext,
+        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
+        RecoveryStartFormField, RegisterContext, RegisterFormField, SiteBranding, SiteConfigExt,
+        SiteFeatures, TemplateContext, UpstreamExistingLinkContext, UpstreamRegister,
+        UpstreamRegisterFormField, UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage,
+        WithOptionalSession, WithSession,
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
@@ -326,7 +327,10 @@ register_templates! {
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
 
     /// Render the registration page
-    pub fn render_register(WithLanguage<WithCsrf<WithCaptcha<RegisterContext>>>) { "pages/register.html" }
+    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register.html" }
+
+    /// Render the password registration page
+    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/password_register.html" }
 
     /// Render the client consent page
     pub fn render_consent(WithLanguage<WithCsrf<WithSession<ConsentContext>>>) { "pages/consent.html" }

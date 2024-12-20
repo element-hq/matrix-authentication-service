@@ -8,91 +8,51 @@ Please see LICENSE in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% from "components/idp_brand.html" import logo %}
+
 {% block content %}
-  <header class="page-heading">
-    <div class="icon">
-      {{ icon.user_profile_solid() }}
-    </div>
+  <form method="GET" class="flex flex-col gap-10" action="{{ "/register/password" | prefix_url }}">
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
 
-    <div class="header">
-      <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
-      <p class="text">{{ _("mas.register.create_account.description") }}</p>
-    </div>
-  </header>
+      <div class="header">
+        <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
 
-  <section class="flex flex-col gap-6">
-    <form method="POST" class="cpd-form-root">
-      {% for error in form.errors %}
-        {# Special case for the captcha error, as we want to put it at the bottom #}
-        {% if error.kind != "captcha" %}
-          <div class="text-critical font-medium">
-            {{ errors.form_error_message(error=error) }}
-          </div>
+        {% if features.password_registration %}
+          <p class="text">{{ _("mas.register.create_account.description") }}</p>
         {% endif %}
-      {% endfor %}
+      </div>
+    </header>
 
-      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
-
+    {% if features.password_registration %}
       {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" required />
+        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
+        <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
+          @username:{{ branding.server_name }}
+        </div>
       {% endcall %}
-
-      {% call(f) field.field(label=_("common.email_address"), name="email", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="email" autocomplete="email" required />
-      {% endcall %}
-
-      {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="new-password" required />
-      {% endcall %}
-
-      {% call(f) field.field(label=_("common.password_confirm"), name="password_confirm", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="new-password" required />
-      {% endcall %}
-
-      {% if branding.tos_uri %}
-        {% call(f) field.field(label=_("mas.register.terms_of_service", tos_uri=branding.tos_uri), name="accept_terms", form_state=form, inline=true, class="my-4") %}
-          <div class="cpd-form-inline-field-control">
-            <div class="cpd-checkbox-container">
-              <input {{ field.attributes(f) }} class="cpd-checkbox-input" type="checkbox" required />
-              <div class="cpd-checkbox-ui">
-                {{ icon.check() }}
-              </div>
-            </div>
-          </div>
-        {% endcall %}
-      {% endif %}
-
-      {{ captcha.form(class="mb-4 self-center") }}
-
-      {% for error in form.errors %}
-        {# Special case for the captcha error #}
-        {% if error.kind == "captcha" %}
-          <div class="text-critical font-medium text-center -mt-4 mb-4">
-            {{ errors.form_error_message(error=error) }}
-          </div>
-        {% endif %}
-      {% endfor %}
-
-      {{ button.button(text=_("action.continue")) }}
-    </form>
-
-    {% if next and next.kind == "continue_authorization_grant" %}
-      {{ back_to_client.link(
-        text=_("action.cancel"),
-        destructive=True,
-        uri=next.grant.redirect_uri,
-        mode=next.grant.response_mode,
-        params=dict(error="access_denied", state=next.grant.state)
-      ) }}
     {% endif %}
 
-    <div class="flex gap-1 justify-center items-center">
-      <p class="cpd-text-secondary cpd-text-body-md-regular">
-        {{ _("mas.register.call_to_login") }}
-      </p>
+    <div class="cpd-form-root">
+      {% if features.password_registration %}
+        {{ button.button(text=_("mas.register.continue_with_email")) }}
+      {% endif %}
+
+      {% if providers %}
+        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+        {% for provider in providers %}
+          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+          <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+            {{ logo(provider.brand_name) }}
+            {{ _("mas.login.continue_with_provider", provider=name) }}
+          </a>
+        {% endfor %}
+      {% endif %}
 
       {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-      {{ button.link_text(text=_("mas.register.sign_in_instead"), href="/login" ~ params) }}
+      {{ button.link_tertiary(text=_("mas.register.call_to_login"), href="/login" ~ params) }}
     </div>
-  </section>
+  </form>
 {% endblock content %}
