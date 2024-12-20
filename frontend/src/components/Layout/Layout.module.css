@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
 
-  max-width: calc(420px + var(--cpd-space-5x) * 2);
+  max-width: calc(378px + var(--cpd-space-5x) * 2);
 
   /* Fallback for browsers that do not support 100svh */
   min-height: 100vh;
@@ -20,6 +20,10 @@
   padding-inline: var(--cpd-space-5x);
   padding-block: var(--cpd-space-12x);
   gap: var(--cpd-space-8x);
+
+  &.consent {
+    max-width: calc(460px + var(--cpd-space-5x) * 2);
+  }
 
   &.wide {
     max-width: calc(520px + var(--cpd-space-5x) * 2);
