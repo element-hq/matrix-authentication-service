@@ -12,27 +12,27 @@ Please see LICENSE in the repository root for full details.
 
 {% block content %}
   <main class="flex flex-col gap-10">
-    {% if features.password_login %}
-      <header class="page-heading">
-        <div class="icon">
-          {{ icon.user_profile_solid() }}
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
+
+      {% if next and next.kind == "link_upstream" %}
+        <div class="header">
+          <h1 class="title">{{ _("mas.login.link.headline") }}</h1>
+          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+          <p class="text">{{ _("mas.login.link.description", provider=name) }}</p>
         </div>
+      {% else %}
+        <div class="header">
+          <h1 class="title">{{ _("mas.login.headline") }}</h1>
+          <p class="text">{{ _("mas.login.description") }}</p>
+        </div>
+      {% endif %}
+    </header>
 
-        {% if next and next.kind == "link_upstream" %}
-          <div class="header">
-            <h1 class="title">{{ _("mas.login.link.headline") }}</h1>
-            {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-            <p class="text">{{ _("mas.login.link.description", provider=name) }}</p>
-          </div>
-        {% else %}
-          <div class="header">
-            <h1 class="title">{{ _("mas.login.headline") }}</h1>
-            <p class="text">{{ _("mas.login.description") }}</p>
-          </div>
-        {% endif %}
-      </header>
-
-      <form method="POST" class="cpd-form-root">
+    <form method="POST" class="flex flex-col gap-10">
+      <div class="cpd-form-root">
         {% if form.errors is not empty %}
           {% for error in form.errors %}
             <div class="text-critical font-medium">
@@ -47,47 +47,47 @@ Please see LICENSE in the repository root for full details.
           <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
         {% endcall %}
 
-        {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
-        {% endcall %}
+        {% if features.password_login %}
+          {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
+            <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
+          {% endcall %}
 
-        {% if features.account_recovery %}
-          {{ button.link_text(text=_("mas.login.forgot_password"), href="/recover", class="self-center") }}
+          {% if features.account_recovery %}
+            {{ button.link_text(text=_("mas.login.forgot_password"), href="/recover", class="self-center") }}
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="cpd-form-root">
+        {% if features.password_login %}
+          {{ button.button(text=_("action.continue")) }}
         {% endif %}
 
-        {{ button.button(text=_("action.continue")) }}
-      </form>
+        {% if features.password_login and providers %}
+          {{ field.separator() }}
+        {% endif %}
 
-      {% if (not next or next.kind != "link_upstream") and features.password_registration %}
-        <div class="flex gap-1 justify-center items-center cpd-text-body-md-regular">
-          <p class="cpd-text-secondary">
-            {{ _("mas.login.call_to_register") }}
-          </p>
-
+        {% if providers %}
           {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-          {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
-        </div>
-      {% endif %}
-    {% endif %}
+          {% for provider in providers %}
+            {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+            <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+              {{ logo(provider.brand_name) }}
+              {{ _("mas.login.continue_with_provider", provider=name) }}
+            </a>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </form>
 
-    {% if providers %}
-      {% if features.password_login %}
-        {{ field.separator() }}
-      {% endif %}
+    {% if (not next or next.kind != "link_upstream") and features.password_registration %}
+      <div class="flex gap-1 justify-center items-center cpd-text-body-md-regular">
+        <p class="cpd-text-secondary">
+          {{ _("mas.login.call_to_register") }}
+        </p>
 
-      {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-      {% for provider in providers %}
-        {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-        <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
-          {{ logo(provider.brand_name) }}
-          {{ _("mas.login.continue_with_provider", provider=name) }}
-        </a>
-      {% endfor %}
-    {% endif %}
-
-    {% if not providers and not features.password_login %}
-      <div class="text-center">
-        {{ _("mas.login.no_login_methods") }}
+        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+        {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
       </div>
     {% endif %}
 
@@ -100,6 +100,12 @@ Please see LICENSE in the repository root for full details.
         mode=next.grant.response_mode,
         params=dict(error="access_denied", state=next.grant.state)
       ) }}
+    {% endif %}
+
+    {% if not providers and not features.password_login %}
+      <div class="text-center">
+        {{ _("mas.login.no_login_methods") }}
+      </div>
     {% endif %}
   </main>
 {% endblock content %}
