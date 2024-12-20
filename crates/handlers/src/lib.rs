@@ -370,7 +370,11 @@ where
         )
         .route(
             mas_router::Register::route(),
-            get(self::views::register::get).post(self::views::register::post),
+            get(self::views::register::get),
+        )
+        .route(
+            mas_router::PasswordRegister::route(),
+            get(self::views::password_register::get).post(self::views::password_register::post),
         )
         .route(
             mas_router::AccountVerifyEmail::route(),

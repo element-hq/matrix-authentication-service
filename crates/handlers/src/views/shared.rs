@@ -21,6 +21,12 @@ pub(crate) struct OptionalPostAuthAction {
     pub post_auth_action: Option<PostAuthAction>,
 }
 
+impl From<Option<PostAuthAction>> for OptionalPostAuthAction {
+    fn from(post_auth_action: Option<PostAuthAction>) -> Self {
+        Self { post_auth_action }
+    }
+}
+
 impl OptionalPostAuthAction {
     pub fn go_next_or_default<T: Route>(
         &self,
