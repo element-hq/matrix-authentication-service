@@ -54,6 +54,7 @@ mas-tasks = { path = "./crates/tasks/", version = "=0.13.0-rc.1" }
 mas-templates = { path = "./crates/templates/", version = "=0.13.0-rc.1" }
 mas-tower = { path = "./crates/tower/", version = "=0.13.0-rc.1" }
 oauth2-types = { path = "./crates/oauth2-types/", version = "=0.13.0-rc.1" }
+syn2mas = { path = "./crates/syn2mas", version = "=0.13.0-rc.1" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
@@ -64,6 +65,9 @@ features = ["axum", "axum-headers", "macros"]
 [workspace.dependencies.async-graphql]
 version = "7.0.14"
 features = ["chrono", "url", "tracing"]
+
+[workspace.dependencies.async-stream]
+version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
@@ -93,6 +97,10 @@ version = "1.9.0"
 # UTF-8 paths
 [workspace.dependencies.camino]
 version = "1.1.9"
+
+# Memory optimisation for short strings
+[workspace.dependencies.compact_str]
+version = "0.8.0"
 
 # Time utilities
 [workspace.dependencies.chrono]
@@ -312,10 +320,16 @@ features = [
 [workspace.dependencies.thiserror]
 version = "2.0.11"
 
+[workspace.dependencies.thiserror-ext]
+version = "0.2.0"
+
 # Async runtime
 [workspace.dependencies.tokio]
 version = "1.43.0"
 features = ["full"]
+
+[workspace.dependencies.tokio-stream]
+version = "0.1.16"
 
 # Useful async utilities
 [workspace.dependencies.tokio-util]
