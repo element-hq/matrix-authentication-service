@@ -38,6 +38,7 @@ serde_yaml = "0.9.34"
 sqlx.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
+tokio-stream.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 url.workspace = true
@@ -89,6 +90,7 @@ mas-tasks.workspace = true
 mas-templates.workspace = true
 mas-tower.workspace = true
 oauth2-types.workspace = true
+syn2mas.workspace = true
 
 [features]
 # Features used for the prebuilt binaries
