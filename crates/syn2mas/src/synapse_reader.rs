@@ -9,7 +9,7 @@
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{query, FromRow, PgConnection, Postgres, Row, Type};
+use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Row, Transaction, Type};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -165,7 +165,7 @@ pub struct SynapseRowCounts {
 }
 
 pub struct SynapseReader<'c> {
-    conn: &'c mut PgConnection,
+    txn: Transaction<'c, Postgres>,
 }
 
 impl<'conn> SynapseReader<'conn> {
@@ -181,10 +181,15 @@ impl<'conn> SynapseReader<'conn> {
         synapse_connection: &'conn mut PgConnection,
         dry_run: bool,
     ) -> Result<Self, Error> {
-        query("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;")
-            .execute(&mut *synapse_connection)
+        let mut txn = synapse_connection
+            .begin()
             .await
             .into_database("begin transaction")?;
+
+        query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE;")
+            .execute(&mut *txn)
+            .await
+            .into_database("set transaction")?;
 
         let lock_type = if dry_run {
             // We expect dry runs to be done alongside Synapse running, so we don't want to
@@ -195,14 +200,12 @@ impl<'conn> SynapseReader<'conn> {
         };
         for table in TABLES_TO_LOCK {
             query(&format!("LOCK TABLE {table} IN {lock_type} MODE NOWAIT;"))
-                .execute(&mut *synapse_connection)
+                .execute(&mut *txn)
                 .await
                 .into_database_with(|| format!("locking Synapse table `{table}`"))?;
         }
 
-        Ok(Self {
-            conn: synapse_connection,
-        })
+        Ok(Self { txn })
     }
 
     /// Finishes the Synapse reader, committing the transaction.
@@ -214,11 +217,7 @@ impl<'conn> SynapseReader<'conn> {
     /// - An underlying database error whilst committing the transaction.
     pub async fn finish(self) -> Result<(), Error> {
         // TODO enforce that this is called somehow.
-
-        query("COMMIT;")
-            .execute(self.conn)
-            .await
-            .into_database("end transaction")?;
+        self.txn.commit().await.into_database("end transaction")?;
         Ok(())
     }
 
@@ -236,7 +235,7 @@ impl<'conn> SynapseReader<'conn> {
             WHERE appservice_id IS NULL AND is_guest = 0
             ",
         )
-        .fetch_one(&mut *self.conn)
+        .fetch_one(&mut *self.txn)
         .await
         .into_database("counting Synapse users")?
         .try_get::<i64, _>(0)
@@ -255,7 +254,7 @@ impl<'conn> SynapseReader<'conn> {
             WHERE appservice_id IS NULL AND is_guest = 0
             ",
         )
-        .fetch(&mut *self.conn)
+        .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse users"))
     }
 }
