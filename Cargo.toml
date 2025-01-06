@@ -292,7 +292,7 @@ features = ["preserve_order"]
 
 # SQL database support
 [workspace.dependencies.sqlx]
-version = "0.8.2"
+version = "0.8.3"
 features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
@@ -405,10 +405,3 @@ rayon.opt-level = 3
 regalloc2.opt-level = 3
 sha2.opt-level = 3
 sqlx-macros.opt-level = 3
-
-[patch.crates-io]
-sqlx = { git = "https://github.com/launchbadge/sqlx.git", branch = "main" }
-sqlx-core = { git = "https://github.com/launchbadge/sqlx.git", branch = "main" }
-sqlx-macros = { git = "https://github.com/launchbadge/sqlx.git", branch = "main" }
-sqlx-macros-core = { git = "https://github.com/launchbadge/sqlx.git", branch = "main" }
-sqlx-postgres = { git = "https://github.com/launchbadge/sqlx.git", branch = "main" }
