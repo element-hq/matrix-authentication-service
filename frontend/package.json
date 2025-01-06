@@ -24,7 +24,7 @@
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-router": "^1.94.1",
     "@tanstack/router-zod-adapter": "^1.81.5",
-    "@urql/core": "^5.0.8",
+    "@urql/core": "^5.1.0",
     "@urql/devtools": "^2.0.3",
     "@urql/exchange-refocus": "^1.1.0",
     "@urql/exchange-request-policy": "^1.2.0",
