@@ -206,8 +206,9 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
         class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
       >
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="/clients/test-id"
           rel="noreferrer noopener"
         >
@@ -453,8 +454,9 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
         class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
       >
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="/clients/test-id"
           rel="noreferrer noopener"
         >
