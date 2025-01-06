@@ -238,7 +238,9 @@ jobs:
           rustup default stable
 
       - name: Install nextest
-        uses: taiki-e/install-action@nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.7
@@ -288,7 +290,9 @@ jobs:
 
       - run: mkdir -p ~/.cargo/bin
       - name: Install nextest
-        uses: taiki-e/install-action@nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Install Node
         uses: actions/setup-node@v4.1.0
