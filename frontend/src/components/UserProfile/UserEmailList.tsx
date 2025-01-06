@@ -49,7 +49,7 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-export const FRAGMENT = graphql(/* GraphQL */ `
+const FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmailList_user on User {
     id
     primaryEmail {

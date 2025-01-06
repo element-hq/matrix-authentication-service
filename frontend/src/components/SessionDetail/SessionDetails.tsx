@@ -21,7 +21,7 @@ import { VisualList, VisualListItem } from "../VisualList/VisualList";
 
 import styles from "./SessionDetails.module.css";
 
-export type Detail = { label: string; value: ReactNode };
+type Detail = { label: string; value: ReactNode };
 type Props = {
   title: string | ReactNode;
   lastActive?: Date;

@@ -96,7 +96,6 @@
       "settings": "Settings"
     },
     "not_found_alert_title": "Not found.",
-    "not_logged_in_alert": "You're not logged in.",
     "oauth2_client_detail": {
       "details_title": "Client info",
       "name": "Name",
