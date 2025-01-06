@@ -10,19 +10,40 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  matchContext,
+  useRouterState,
 } from "@tanstack/react-router";
 
 const rootRoute = createRootRoute();
-const index = createRoute({ getParentRoute: () => rootRoute, path: "/" });
+const index = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => null,
+});
 
 const router = createRouter({
   history: createMemoryHistory(),
   routeTree: rootRoute.addChildren([index]),
 });
+router.load();
+
+const InnerProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const matchId = useRouterState({
+    select: (s) => {
+      return s.matches[0]?.id;
+    },
+  });
+
+  return (
+    <matchContext.Provider value={matchId}>{children}</matchContext.Provider>
+  );
+};
 
 export const DummyRouter: React.FC<React.PropsWithChildren> = ({
   children,
 }) => (
   /** @ts-expect-error: The router we pass doesn't match the "real" router, which is fine for tests */
-  <RouterContextProvider router={router}>{children}</RouterContextProvider>
+  <RouterContextProvider router={router}>
+    <InnerProvider>{children}</InnerProvider>
+  </RouterContextProvider>
 );
