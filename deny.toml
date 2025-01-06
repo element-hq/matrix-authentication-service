@@ -66,8 +66,8 @@ skip = [
     { name = "heck", version = "0.4.1" },
     # wasmtime -> cranelift is depending on this old version
     { name = "itertools", version = "0.12.1" },
-    # For some reason, axum-core depends on this old version, even though axum is on the new one
-    { name = "sync_wrapper", version = "0.1.2" },
+    # pad depends on an old version
+    { name = "unicode-width", version = "0.1.14" },
 ]
 
 skip-tree = []
