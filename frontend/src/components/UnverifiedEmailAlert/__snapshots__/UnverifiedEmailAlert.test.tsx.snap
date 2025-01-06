@@ -37,8 +37,9 @@ exports[`<UnverifiedEmailAlert /> > renders a warning when there are unverified 
            
           <a
             aria-current="page"
-            class="_link_1mzip_17 active"
+            class="_link_ue21z_17 active"
             data-kind="primary"
+            data-size="medium"
             data-status="active"
             href="/#emails"
             rel="noreferrer noopener"

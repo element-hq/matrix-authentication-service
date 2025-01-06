@@ -27,47 +27,86 @@ exports[`Account home page > display name edit box > displays an error if the di
   >
     A
   </span>
-  bound HTMLFormElement {
-    "0": <input
-      aria-describedby="radix-:r4m:"
-      aria-invalid="true"
-      autocomplete="name"
-      class="_control_9gon8_18 _control_1qov4_22"
-      data-invalid="true"
-      id="radix-:r4f:"
-      name="displayname"
-      title=""
-      type="text"
-      value="Alice"
-    />,
-    "1": <button
-      aria-controls=":r4g:"
-      aria-labelledby=":r4h:"
-      class="_action_1qov4_33"
-      type="button"
+  <form
+    class="_root_ssths_24"
+  >
+    <div
+      class="_dialogForm_66f22a"
     >
-      <svg
-        aria-hidden="true"
-        fill="currentColor"
-        height="1em"
-        viewBox="0 0 24 24"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
+      <div
+        class="_field_ssths_34"
+        data-invalid="true"
       >
-        <path
-          d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+        <label
+          class="_label_ssths_67"
+          data-invalid="true"
+          for="radix-:r4f:"
+        >
+          Display name
+        </label>
+        <div
+          class="_container_1qov4_17"
+          id=":r4g:"
+        >
+          <input
+            aria-describedby="radix-:r4m:"
+            aria-invalid="true"
+            autocomplete="name"
+            class="_control_9gon8_18 _control_1qov4_22"
+            data-invalid="true"
+            id="radix-:r4f:"
+            name="displayname"
+            title=""
+            type="text"
+            value="Alice"
+          />
+          <button
+            aria-controls=":r4g:"
+            aria-labelledby=":r4h:"
+            class="_action_1qov4_33"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+              />
+            </svg>
+          </button>
+        </div>
+        <span
+          class="_message_ssths_93 _help-message_ssths_99"
+          id="radix-:r4m:"
+        >
+          This is what others will see wherever you’re signed in.
+        </span>
+      </div>
+      <div
+        class="_field_ssths_34"
+      >
+        <label
+          class="_label_ssths_67"
+          for="radix-:r4n:"
+        >
+          Username
+        </label>
+        <input
+          class="_control_9gon8_18"
+          id="radix-:r4n:"
+          name="mxid"
+          readonly=""
+          title=""
+          value="@alice:example.com"
         />
-      </svg>
-    </button>,
-    "2": <input
-      class="_control_9gon8_18"
-      id="radix-:r4n:"
-      name="mxid"
-      readonly=""
-      title=""
-      value="@alice:example.com"
-    />,
-    "3": <button
+      </div>
+    </div>
+    <button
       aria-disabled="false"
       class="_button_i91xf_17"
       data-kind="primary"
@@ -77,8 +116,8 @@ exports[`Account home page > display name edit box > displays an error if the di
       type="submit"
     >
       Save
-    </button>,
-  }
+    </button>
+  </form>
   <button
     class="_button_i91xf_17"
     data-kind="tertiary"
@@ -136,45 +175,82 @@ exports[`Account home page > display name edit box > lets edit the display name 
   >
     A
   </span>
-  bound HTMLFormElement {
-    "0": <input
-      aria-describedby="radix-:r1d:"
-      autocomplete="name"
-      class="_control_9gon8_18 _control_1qov4_22"
-      id="radix-:r16:"
-      name="displayname"
-      title=""
-      type="text"
-      value="Alice"
-    />,
-    "1": <button
-      aria-controls=":r17:"
-      aria-labelledby=":r18:"
-      class="_action_1qov4_33"
-      type="button"
+  <form
+    class="_root_ssths_24"
+  >
+    <div
+      class="_dialogForm_66f22a"
     >
-      <svg
-        aria-hidden="true"
-        fill="currentColor"
-        height="1em"
-        viewBox="0 0 24 24"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
+      <div
+        class="_field_ssths_34"
       >
-        <path
-          d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+        <label
+          class="_label_ssths_67"
+          for="radix-:r16:"
+        >
+          Display name
+        </label>
+        <div
+          class="_container_1qov4_17"
+          id=":r17:"
+        >
+          <input
+            aria-describedby="radix-:r1d:"
+            autocomplete="name"
+            class="_control_9gon8_18 _control_1qov4_22"
+            id="radix-:r16:"
+            name="displayname"
+            title=""
+            type="text"
+            value="Alice"
+          />
+          <button
+            aria-controls=":r17:"
+            aria-labelledby=":r18:"
+            class="_action_1qov4_33"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+              />
+            </svg>
+          </button>
+        </div>
+        <span
+          class="_message_ssths_93 _help-message_ssths_99"
+          id="radix-:r1d:"
+        >
+          This is what others will see wherever you’re signed in.
+        </span>
+      </div>
+      <div
+        class="_field_ssths_34"
+      >
+        <label
+          class="_label_ssths_67"
+          for="radix-:r1e:"
+        >
+          Username
+        </label>
+        <input
+          class="_control_9gon8_18"
+          id="radix-:r1e:"
+          name="mxid"
+          readonly=""
+          title=""
+          value="@alice:example.com"
         />
-      </svg>
-    </button>,
-    "2": <input
-      class="_control_9gon8_18"
-      id="radix-:r1e:"
-      name="mxid"
-      readonly=""
-      title=""
-      value="@alice:example.com"
-    />,
-    "3": <button
+      </div>
+    </div>
+    <button
       aria-disabled="false"
       class="_button_i91xf_17"
       data-kind="primary"
@@ -184,8 +260,8 @@ exports[`Account home page > display name edit box > lets edit the display name 
       type="submit"
     >
       Save
-    </button>,
-  }
+    </button>
+  </form>
   <button
     class="_button_i91xf_17"
     data-kind="tertiary"
@@ -356,18 +432,40 @@ exports[`Account home page > renders the page 1`] = `
         class="flex flex-col gap-4"
         id="emails"
       >
-        bound HTMLFormElement {
-          "0": <input
-            aria-describedby="radix-:rc:"
-            class="_control_9gon8_18 _userEmailField_e2a518"
-            id="radix-:rb:"
-            name="email"
-            readonly=""
-            title=""
-            type="email"
-            value="alice@example.com"
-          />,
-        }
+        <form
+          class="_root_ssths_24"
+        >
+          <div
+            class="_field_ssths_34"
+          >
+            <label
+              class="_label_ssths_67"
+              for="radix-:rb:"
+            >
+              Primary email
+            </label>
+            <div
+              class="flex items-center gap-2"
+            >
+              <input
+                aria-describedby="radix-:rc:"
+                class="_control_9gon8_18 _userEmailField_e2a518"
+                id="radix-:rb:"
+                name="email"
+                readonly=""
+                title=""
+                type="email"
+                value="alice@example.com"
+              />
+            </div>
+            <span
+              class="_message_ssths_93 _help-message_ssths_99"
+              id="radix-:rc:"
+            >
+              Choose a different primary email to delete this one.
+            </span>
+          </div>
+        </form>
         <div
           aria-busy="true"
           class="self-center _mini_0c7436"
@@ -389,17 +487,39 @@ exports[`Account home page > renders the page 1`] = `
             />
           </svg>
         </div>
-        bound HTMLFormElement {
-          "0": <input
-            aria-describedby="radix-:re:"
-            class="_control_9gon8_18"
-            id="radix-:rd:"
-            name="input"
-            required=""
-            title=""
-            type="email"
-          />,
-        }
+        <form
+          class="_root_ssths_24"
+        >
+          <div
+            class="_field_ssths_34"
+          >
+            <label
+              class="_label_ssths_67"
+              for="radix-:rd:"
+            >
+              Add email
+            </label>
+            <div
+              class="_controls_1h4nb_17"
+            >
+              <input
+                aria-describedby="radix-:re:"
+                class="_control_9gon8_18"
+                id="radix-:rd:"
+                name="input"
+                required=""
+                title=""
+                type="email"
+              />
+            </div>
+            <span
+              class="_message_ssths_93 _help-message_ssths_99"
+              id="radix-:re:"
+            >
+              Add an alternative email you can use to access this account.
+            </span>
+          </div>
+        </form>
       </div>
       <div
         class="_separator_144s5_17"
@@ -407,18 +527,41 @@ exports[`Account home page > renders the page 1`] = `
         data-orientation="horizontal"
         role="separator"
       />
-      bound HTMLFormElement {
-        "0": <input
-          aria-describedby="radix-:rg:"
-          class="_control_9gon8_18"
-          id="radix-:rf:"
-          name="password_preview"
-          readonly=""
-          title=""
-          type="password"
-          value="this looks like a password"
-        />,
-      }
+      <form
+        class="_root_ssths_24"
+      >
+        <div
+          class="_field_ssths_34"
+        >
+          <label
+            class="_label_ssths_67"
+            for="radix-:rf:"
+          >
+            Password
+          </label>
+          <input
+            aria-describedby="radix-:rg:"
+            class="_control_9gon8_18"
+            id="radix-:rf:"
+            name="password_preview"
+            readonly=""
+            title=""
+            type="password"
+            value="this looks like a password"
+          />
+          <span
+            class="_message_ssths_93 _help-message_ssths_99"
+            id="radix-:rg:"
+          >
+            <a
+              class="_link_7634c3"
+              href="/password/change"
+            >
+              Change password
+            </a>
+          </span>
+        </div>
+      </form>
       <div
         class="_separator_144s5_17"
         data-kind="primary"
@@ -470,8 +613,9 @@ exports[`Account home page > renders the page 1`] = `
     >
       <nav>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/policy"
           rel="noreferrer noopener"
           title="Link to the service privacy policy"
@@ -485,8 +629,9 @@ exports[`Account home page > renders the page 1`] = `
           •
         </div>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/tos"
           rel="noreferrer noopener"
           title="Link to the service terms and conditions"

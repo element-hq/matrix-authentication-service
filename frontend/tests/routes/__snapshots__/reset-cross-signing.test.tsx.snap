@@ -201,8 +201,9 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     >
       <nav>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/policy"
           rel="noreferrer noopener"
           title="Link to the service privacy policy"
@@ -216,8 +217,9 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
           •
         </div>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/tos"
           rel="noreferrer noopener"
           title="Link to the service terms and conditions"
@@ -432,8 +434,9 @@ exports[`Reset cross signing > renders the page 1`] = `
     >
       <nav>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/policy"
           rel="noreferrer noopener"
           title="Link to the service privacy policy"
@@ -447,8 +450,9 @@ exports[`Reset cross signing > renders the page 1`] = `
           •
         </div>
         <a
-          class="_link_1mzip_17"
+          class="_link_ue21z_17"
           data-kind="primary"
+          data-size="medium"
           href="https://matrix.org/tos"
           rel="noreferrer noopener"
           title="Link to the service terms and conditions"

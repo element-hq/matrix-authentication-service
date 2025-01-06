@@ -219,8 +219,9 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
             Uri
           </h5>
           <a
-            class="_link_1mzip_17 _externalLink_a97355"
+            class="_link_ue21z_17 _externalLink_a97355"
             data-kind="primary"
+            data-size="medium"
             href="https://element.io"
             rel="noreferrer noopener"
             target="_blank"
@@ -708,8 +709,9 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
             Uri
           </h5>
           <a
-            class="_link_1mzip_17 _externalLink_a97355"
+            class="_link_ue21z_17 _externalLink_a97355"
             data-kind="primary"
+            data-size="medium"
             href="https://element.io"
             rel="noreferrer noopener"
             target="_blank"
