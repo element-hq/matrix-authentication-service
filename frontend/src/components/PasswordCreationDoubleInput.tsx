@@ -20,7 +20,9 @@ const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
 
 // This will load the password complexity module lazily,
 // so that it doesn't block the initial render and can be code-split
-const loadPromise = import("../utils/password_complexity");
+const loadPromise = import("../utils/password_complexity").then(
+  ({ estimatePasswordComplexity }) => estimatePasswordComplexity,
+);
 
 const usePasswordComplexity = (password: string): PasswordComplexity => {
   const { t } = useTranslation();
@@ -40,7 +42,7 @@ const usePasswordComplexity = (password: string): PasswordComplexity => {
       });
     } else {
       loadPromise
-        .then(({ estimatePasswordComplexity }) =>
+        .then((estimatePasswordComplexity) =>
           estimatePasswordComplexity(deferredPassword, t),
         )
         .then((response) => setResult(response));

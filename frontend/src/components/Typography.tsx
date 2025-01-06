@@ -48,31 +48,4 @@ const Typography: React.FC<Props> = ({
   return createElement(element, { className }, ...Children.toArray(children));
 };
 
-type SimpleProps = { children: React.ReactNode };
-
-export const Bold: React.FC<SimpleProps> = ({ children }) => (
-  <strong className="font-semibold">{children}</strong>
-);
-
-export const Code: React.FC<SimpleProps> = ({ children }) => (
-  <code className="font-mono text-sm">{children}</code>
-);
-
-export const Title: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="title">{children}</Typography>
-);
-
-export const Subtitle: React.FC<SimpleProps> = ({ children }) => (
-  <Typography variant="subtitle">{children}</Typography>
-);
-
-export const Body: React.FC<{
-  children: React.ReactNode;
-  justified?: boolean;
-}> = ({ children, justified }) => (
-  <Typography variant="body" justified={justified}>
-    {children}
-  </Typography>
-);
-
 export default Typography;

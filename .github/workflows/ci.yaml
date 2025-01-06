@@ -98,6 +98,31 @@ jobs:
         run: npm test
 
 
+  frontend-knip:
+    name: Check the frontend for unused dependencies
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+
+      - name: Install Node dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Check for unused dependencies
+        working-directory: ./frontend
+        run: npm run knip
+
+
   rustfmt:
     name: Check Rust style
     runs-on: ubuntu-latest
@@ -362,6 +387,7 @@ jobs:
       - opa-lint
       - frontend-lint
       - frontend-test
+      - frontend-knip
       - rustfmt
       - cargo-deny
       - clippy

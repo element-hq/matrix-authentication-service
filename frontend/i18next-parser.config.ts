@@ -6,7 +6,7 @@
 
 import type { UserConfig } from "i18next-parser";
 
-const config: UserConfig = {
+export default {
   keySeparator: ".",
   pluralSeparator: ":",
   defaultNamespace: "frontend",
@@ -30,6 +30,4 @@ const config: UserConfig = {
   output: "locales/$LOCALE.json",
   input: ["src/**/*.{ts,tsx}"],
   sort: true,
-};
-
-export default config;
+} satisfies UserConfig;

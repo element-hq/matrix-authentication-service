@@ -16,7 +16,7 @@ type PageInfo = {
 };
 
 export const FIRST_PAGE = Symbol("FIRST_PAGE");
-export const LAST_PAGE = Symbol("LAST_PAGE");
+const LAST_PAGE = Symbol("LAST_PAGE");
 
 export const anyPaginationSchema = z.object({
   first: z.number().nullish(),
@@ -25,7 +25,7 @@ export const anyPaginationSchema = z.object({
   before: z.string().nullish(),
 });
 
-export const forwardPaginationSchema = z.object({
+const forwardPaginationSchema = z.object({
   first: z.number(),
   after: z.string().nullish(),
 });
@@ -46,20 +46,20 @@ export type Pagination = z.infer<typeof paginationSchema>;
 export type AnyPagination = z.infer<typeof anyPaginationSchema>;
 
 // Check if the pagination is a valid pagination
-export const isValidPagination = (
+const isValidPagination = (
   pagination: AnyPagination,
 ): pagination is Pagination =>
   typeof pagination.first === "number" || typeof pagination.last === "number";
 
 // Check if the pagination is forward pagination.
-export const isForwardPagination = (
+const isForwardPagination = (
   pagination: Pagination,
 ): pagination is ForwardPagination => {
   return Object.hasOwn(pagination, "first");
 };
 
 // Check if the pagination is backward pagination.
-export const isBackwardPagination = (
+const isBackwardPagination = (
   pagination: Pagination,
 ): pagination is BackwardPagination => {
   return Object.hasOwn(pagination, "last");
