@@ -85,9 +85,9 @@ dependencies = [
 
 [[package]]
 name = "aide"
-version = "0.13.4"
+version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b0e3b97a21e41ec5c19bfd9b4fc1f7086be104f8b988681230247ffc91cc8ed"
+checksum = "5678d2978845ddb4bd736a026f467dd652d831e9e6254b0e41b07f7ee7523309"
 dependencies = [
  "aide-macros",
  "axum",
