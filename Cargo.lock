@@ -2812,6 +2812,15 @@ version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf466541e9d546596ee94f9f69590f89473455f88372423e0008fc1a7daf100e"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "ipnetwork"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f7d1e51dceb94e362a3bd4849c5b8b44989faf8b66998fc0a44ff11923393c9"
+dependencies = [
  "schemars",
  "serde",
 ]
@@ -3157,7 +3166,7 @@ dependencies = [
  "http-body-util",
  "httpdate",
  "hyper",
- "ipnetwork",
+ "ipnetwork 0.21.0",
  "itertools 0.13.0",
  "listenfd",
  "mas-config",
@@ -3223,7 +3232,7 @@ dependencies = [
  "figment",
  "governor",
  "indoc",
- "ipnetwork",
+ "ipnetwork 0.21.0",
  "lettre",
  "mas-iana",
  "mas-jose",
@@ -5870,7 +5879,7 @@ dependencies = [
  "hashbrown 0.15.2",
  "hashlink",
  "indexmap 2.7.0",
- "ipnetwork",
+ "ipnetwork 0.20.0",
  "log",
  "memchr",
  "once_cell",
@@ -5994,7 +6003,7 @@ dependencies = [
  "hkdf",
  "hmac",
  "home",
- "ipnetwork",
+ "ipnetwork 0.20.0",
  "itoa",
  "log",
  "md-5",
