@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -118,6 +118,8 @@ where
     BoxClock: FromRequestParts<S>,
     Encrypter: FromRef<S>,
     CookieJar: FromRequestParts<S>,
+    Limiter: FromRef<S>,
+    RequesterFingerprint: FromRequestParts<S>,
 {
     let mut router = Router::new()
         .route(

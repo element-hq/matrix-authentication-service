@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -764,4 +764,102 @@ pub enum UserEmailState {
 
     /// The email address has been confirmed.
     Confirmed,
+}
+
+/// A recovery ticket
+#[derive(Description)]
+pub struct UserRecoveryTicket(pub mas_data_model::UserRecoveryTicket);
+
+/// The status of a recovery ticket
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum UserRecoveryTicketStatus {
+    /// The ticket is valid
+    Valid,
+
+    /// The ticket has expired
+    Expired,
+
+    /// The ticket has been consumed
+    Consumed,
+}
+
+#[Object(use_type_description)]
+impl UserRecoveryTicket {
+    /// ID of the object.
+    pub async fn id(&self) -> ID {
+        NodeType::UserRecoveryTicket.id(self.0.id)
+    }
+
+    /// When the object was created.
+    pub async fn created_at(&self) -> DateTime<Utc> {
+        self.0.created_at
+    }
+
+    /// The status of the ticket
+    pub async fn status(
+        &self,
+        context: &Context<'_>,
+    ) -> Result<UserRecoveryTicketStatus, async_graphql::Error> {
+        let state = context.state();
+        let clock = state.clock();
+        let mut repo = state.repository().await?;
+
+        // Lookup the session associated with the ticket
+        let session = repo
+            .user_recovery()
+            .lookup_session(self.0.user_recovery_session_id)
+            .await?
+            .context("Failed to lookup session")?;
+        repo.cancel().await?;
+
+        if session.consumed_at.is_some() {
+            return Ok(UserRecoveryTicketStatus::Consumed);
+        }
+
+        if self.0.expires_at < clock.now() {
+            return Ok(UserRecoveryTicketStatus::Expired);
+        }
+
+        Ok(UserRecoveryTicketStatus::Valid)
+    }
+
+    /// The username associated with this ticket
+    pub async fn username(&self, ctx: &Context<'_>) -> Result<String, async_graphql::Error> {
+        // We could expose the UserEmail, then the User, but this is unauthenticated, so
+        // we don't want to risk leaking too many objects. Instead, we just give the
+        // username as a property of the UserRecoveryTicket
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+        let user_email = repo
+            .user_email()
+            .lookup(self.0.user_email_id)
+            .await?
+            .context("Failed to lookup user email")?;
+
+        let user = repo
+            .user()
+            .lookup(user_email.user_id)
+            .await?
+            .context("Failed to lookup user")?;
+        repo.cancel().await?;
+
+        Ok(user.username)
+    }
+
+    /// The email address associated with this ticket
+    pub async fn email(&self, ctx: &Context<'_>) -> Result<String, async_graphql::Error> {
+        // We could expose the UserEmail directly, but this is unauthenticated, so we
+        // don't want to risk leaking too many objects. Instead, we just give
+        // the email as a property of the UserRecoveryTicket
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+        let user_email = repo
+            .user_email()
+            .lookup(self.0.user_email_id)
+            .await?
+            .context("Failed to lookup user email")?;
+        repo.cancel().await?;
+
+        Ok(user_email.email)
+    }
 }
