@@ -152,7 +152,7 @@
       }
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> at <span>%(redirect_uri)s</span> wants to acccess your account.",
+      "client_wants_access": "<span>%(client_name)s</span> at <span>%(redirect_uri)s</span> wants to access your account.",
       "@client_wants_access": {
         "context": "pages/consent.html:27:11-122"
       },
