@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -53,7 +53,10 @@ use self::{
     mutations::Mutation,
     query::Query,
 };
-use crate::{impl_from_error_for_route, passwords::PasswordManager, BoundActivityTracker};
+use crate::{
+    impl_from_error_for_route, passwords::PasswordManager, BoundActivityTracker, Limiter,
+    RequesterFingerprint,
+};
 
 #[cfg(test)]
 mod tests;
@@ -72,6 +75,7 @@ struct GraphQLState {
     site_config: SiteConfig,
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
+    limiter: Limiter,
 }
 
 #[async_trait]
@@ -104,6 +108,10 @@ impl state::State for GraphQLState {
         &self.url_builder
     }
 
+    fn limiter(&self) -> &Limiter {
+        &self.limiter
+    }
+
     fn clock(&self) -> BoxClock {
         let clock = SystemClock::default();
         Box::new(clock)
@@ -126,6 +134,7 @@ pub fn schema(
     site_config: SiteConfig,
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
+    limiter: Limiter,
 ) -> Schema {
     let state = GraphQLState {
         pool: pool.clone(),
@@ -134,6 +143,7 @@ pub fn schema(
         site_config,
         password_manager,
         url_builder,
+        limiter,
     };
     let state: BoxState = Box::new(state);
 
@@ -303,6 +313,7 @@ pub async fn post(
     cookie_jar: CookieJar,
     content_type: Option<TypedHeader<ContentType>>,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
+    requester_fingerprint: RequesterFingerprint,
     body: Body,
 ) -> Result<impl IntoResponse, RouteError> {
     let body = body.into_data_stream();
@@ -329,6 +340,7 @@ pub async fn post(
         MultipartOptions::default(),
     )
     .await?
+    .data(requester_fingerprint)
     .data(requester); // XXX: this should probably return another error response?
 
     let span = span_for_graphql_request(&request);
@@ -355,6 +367,7 @@ pub async fn get(
     activity_tracker: BoundActivityTracker,
     cookie_jar: CookieJar,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
+    requester_fingerprint: RequesterFingerprint,
     RawQuery(query): RawQuery,
 ) -> Result<impl IntoResponse, FancyError> {
     let token = authorization
@@ -371,8 +384,9 @@ pub async fn get(
     )
     .await?;
 
-    let request =
-        async_graphql::http::parse_query_string(&query.unwrap_or_default())?.data(requester);
+    let request = async_graphql::http::parse_query_string(&query.unwrap_or_default())?
+        .data(requester)
+        .data(requester_fingerprint);
 
     let span = span_for_graphql_request(&request);
     let response = schema.execute(request).instrument(span).await;

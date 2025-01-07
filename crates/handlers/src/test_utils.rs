@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -204,6 +204,8 @@ impl TestState {
         let clock = Arc::new(MockClock::default());
         let rng = Arc::new(Mutex::new(ChaChaRng::seed_from_u64(42)));
 
+        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+
         let graphql_state = TestGraphQLState {
             pool: pool.clone(),
             policy_factory: Arc::clone(&policy_factory),
@@ -213,6 +215,7 @@ impl TestState {
             clock: Arc::clone(&clock),
             password_manager: password_manager.clone(),
             url_builder: url_builder.clone(),
+            limiter: limiter.clone(),
         };
         let state: crate::graphql::BoxState = Box::new(graphql_state);
 
@@ -224,8 +227,6 @@ impl TestState {
             &task_tracker,
             shutdown_token.child_token(),
         );
-
-        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
 
         Ok(Self {
             pool,
@@ -379,6 +380,7 @@ struct TestGraphQLState {
     rng: Arc<Mutex<ChaChaRng>>,
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
+    limiter: Limiter,
 }
 
 #[async_trait]
@@ -413,6 +415,10 @@ impl graphql::State for TestGraphQLState {
 
     fn site_config(&self) -> &SiteConfig {
         &self.site_config
+    }
+
+    fn limiter(&self) -> &Limiter {
+        &self.limiter
     }
 
     fn rng(&self) -> BoxRng {
