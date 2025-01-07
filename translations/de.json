@@ -27,6 +27,7 @@
   "common": {
     "display_name": "Anzeigename",
     "email_address": "E-Mail-Adresse",
+    "loading": "Wird geladen...",
     "mxid": "Matrix-ID",
     "password": "Passwort",
     "password_confirm": "Passwort wiederholen",
@@ -99,11 +100,17 @@
     "errors": {
       "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuchen Sie es erneut",
       "denied_policy": "Abgelehnt durch Richtlinie: %(policy)s",
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "invalid_credentials": "Ungültige Anmeldeinformationen",
       "password_mismatch": "Die Passwortfelder stimmen nicht überein",
       "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
-      "username_taken": "Dieser Benutzername ist bereits vergeben"
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_taken": "Dieser Benutzername ist bereits vergeben",
+      "username_too_long": "Username is too long",
+      "username_too_short": "Username is too short"
     },
     "login": {
       "call_to_register": "Sie haben noch kein Konto?",
@@ -168,6 +175,7 @@
     },
     "register": {
       "call_to_login": "Sie haben bereits ein Konto?",
+      "continue_with_email": "Continue with email address",
       "create_account": {
         "description": "Bitte erstellen Sie ein Konto, um loszulegen:",
         "heading": "Konto erstellen"
@@ -203,7 +211,12 @@
           "heading": "Ihre Daten importieren"
         },
         "imported_from_upstream": "Von Ihrem Konto importiert",
+        "imported_from_upstream_with_name": "Importiert von Ihrem%(human_name)s Konto",
         "link_existing": "Mit einem bestehenden Konto verknüpfen",
+        "provider_name": "%(human_name)s Konto",
+        "signup_with_upstream": {
+          "heading": "Setzen Sie die Anmeldung mit Ihrem %(human_name)s Konto fort."
+        },
         "suggested_display_name": "Anzeigenamen importieren",
         "suggested_email": "E-Mail-Adresse importieren",
         "use": "Verwenden"

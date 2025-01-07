@@ -221,6 +221,8 @@
       "effect_list": {
         "negative_1": "You will lose your existing message history",
         "negative_2": "You will need to verify all your existing devices and contacts again",
+        "neutral_1": "You will lose any message history that's stored only on the server",
+        "neutral_2": "You will need to verify all your existing devices and contacts again",
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
@@ -228,7 +230,9 @@
         "heading": "Failed to allow crypto identity reset",
         "title": "无法允许加密身份"
       },
+      "finish_reset": "Finish reset",
       "heading": "重置加密身份",
+      "start_reset": "Start reset",
       "success": {
         "description": "客户端现在可以临时重置您的账户加密身份。请按照客户端中的说明完成该过程。",
         "heading": "Identity reset successfully. Go back to the app to finish the process.",

@@ -7,7 +7,7 @@
     "continue": "Doorgaan",
     "edit": "Bewerken",
     "save": "Opslaan",
-    "save_and_continue": "Save and continue"
+    "save_and_continue": "Opslaan en doorgaan"
   },
   "branding": {
     "privacy_policy": {
@@ -21,13 +21,13 @@
   },
   "common": {
     "add": "Toevoegen",
-    "e2ee": "End-to-end encryption",
+    "e2ee": "End-to-end-encryptie",
     "error": "Fout",
     "loading": "Laden...",
     "next": "Volgende",
     "previous": "Vorige",
-    "saved": "Saved",
-    "saving": "Saving…"
+    "saved": "Opgeslagen",
+    "saving": "Opslaan..."
   },
   "frontend": {
     "account": {
@@ -38,9 +38,9 @@
         "username_label": "Gebruikersnaam"
       },
       "password": {
-        "change": "Change password",
+        "change": "Wachtwoord wijzigen",
         "change_disabled": "Password changes are disabled by the administrator.",
-        "label": "Password"
+        "label": "Wachtwoord"
       },
       "title": "Uw account"
     },
@@ -61,7 +61,7 @@
         "text": "Het ingevoerde e-mailadres is ongeldig",
         "title": "Ongeldig e-mailadres"
       },
-      "email_invalid_error": "The entered email is invalid"
+      "email_invalid_error": "Het ingevoerde e-mailadres is ongeldig"
     },
     "app_sessions_list": {
       "error": "Kan app-sessies niet laden",
@@ -106,7 +106,7 @@
     },
     "error_boundary_title": "Er is iets misgegaan",
     "errors": {
-      "field_required": "This field is required"
+      "field_required": "Dit veld is verplicht"
     },
     "last_active": {
       "active_date": "Actief {{relativeDate}}",
@@ -137,7 +137,7 @@
       "total": "Totaal: {{totalCount}}"
     },
     "password_change": {
-      "current_password_label": "Current password",
+      "current_password_label": "Huidig wachtwoord",
       "failure": {
         "description": {
           "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
@@ -152,9 +152,9 @@
         },
         "title": "Failed to update password"
       },
-      "new_password_again_label": "Enter new password again",
-      "new_password_label": "New password",
-      "passwords_match": "Passwords match!",
+      "new_password_again_label": "Voer het nieuwe wachtwoord opnieuw in",
+      "new_password_label": "Nieuw wachtwoord",
+      "passwords_match": "Wachtwoorden komen overeen!",
       "passwords_no_match": "Passwords don't match",
       "subtitle": "Choose a new password for your account.",
       "success": {
@@ -212,16 +212,18 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Het resetten van de crypto identiteit toestaan",
+      "button": "Identiteit resetten",
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
         "heading": "Identity reset cancelled."
       },
-      "description": "Als u nergens anders bent ingelogd en alle herstelopties bent vergeten of verloren, moet u uw crypto identiteit opnieuw instellen. Dit betekent dat u uw bestaande berichtgeschiedenis kwijtraakt, dat andere gebruikers zien dat u uw identiteit opnieuw hebt ingesteld en dat u uw bestaande apparaten opnieuw moet verifiëren.",
+      "description": "Als u niet bent aangemeld bij andere apparaten en u bent uw herstelsleutel kwijt, moet u uw identiteit opnieuw instellen om de app te kunnen blijven gebruiken.",
       "effect_list": {
         "negative_1": "You will lose your existing message history",
         "negative_2": "You will need to verify all your existing devices and contacts again",
+        "neutral_1": "You will lose any message history that's stored only on the server",
+        "neutral_2": "You will need to verify all your existing devices and contacts again",
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
@@ -229,9 +231,11 @@
         "heading": "Failed to allow crypto identity reset",
         "title": "Kan crypto identiteit niet toestaan"
       },
-      "heading": "Crypto identiteit opnieuw instellen",
+      "finish_reset": "Finish reset",
+      "heading": "Stel uw identiteit opnieuw in als u op een andere manier niet kunt bevestigen",
+      "start_reset": "Start reset",
       "success": {
-        "description": "Een client kan nu tijdelijk de crypto identiteit van uw account resetten. Volg de instructies in uw client om het proces te voltooien.",
+        "description": "De identiteits reset is goedgekeurd voor de volgende {{minutes}} minuten. U kunt dit venster sluiten en teruggaan naar de app om door te gaan.",
         "heading": "Identity reset successfully. Go back to the app to finish the process.",
         "title": "Het opnieuw instellen van de crypto identiteit is tijdelijk toegestaan"
       },

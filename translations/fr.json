@@ -27,6 +27,7 @@
   "common": {
     "display_name": "Pseudonyme",
     "email_address": "Adresse e-mail",
+    "loading": "Chargement…",
     "mxid": "Matrix ID",
     "password": "Mot de passe",
     "password_confirm": "Confirmer le mot de passe",
@@ -99,11 +100,17 @@
     "errors": {
       "captcha": "La vérification du CAPTCHA a échoué, veuillez réessayer",
       "denied_policy": "Refusé par la politique du serveur : %(policy)s",
+      "email_domain_banned": "Le domaine de l'adresse e-mail est interdit par la politique du serveur.",
+      "email_domain_not_allowed": "Le domaine de l'adresse e-mail n'est pas autorisée par la politique du serveur.",
       "field_required": "Ce champ est requis",
       "invalid_credentials": "Identifiants invalides",
       "password_mismatch": "Les champs du mot de passe ne correspondent pas.",
       "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer.",
-      "username_taken": "Ce nom d'utilisateur est déjà utilisé"
+      "username_all_numeric": "Le nom d'utilisateur ne peut pas être composé uniquement de chiffres",
+      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, des tirets et des traits de soulignement.",
+      "username_taken": "Ce nom d'utilisateur est déjà utilisé",
+      "username_too_long": "Le nom d'utilisateur est trop long",
+      "username_too_short": "Le nom d'utilisateur est trop court"
     },
     "login": {
       "call_to_register": "Vous n’avez pas encore de compte ?",
@@ -168,8 +175,9 @@
     },
     "register": {
       "call_to_login": "Vous avez déjà un compte ?",
+      "continue_with_email": "Continuer avec une adresse e-mail",
       "create_account": {
-        "description": "Créer un compte pour commencer :",
+        "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
       },
       "sign_in_instead": "Se connecter",
@@ -203,7 +211,12 @@
           "heading": "Importez vos données"
         },
         "imported_from_upstream": "Importé de votre compte en amont",
+        "imported_from_upstream_with_name": "Importé depuis votre compte %(human_name)s",
         "link_existing": "Associer un compte existant",
+        "provider_name": "Compte %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Continuez à vous inscrire avec votre compte %(human_name)s"
+        },
         "suggested_display_name": "Importer le pseudonyme",
         "suggested_email": "Importer l’adresse e-mail",
         "use": "Importer"

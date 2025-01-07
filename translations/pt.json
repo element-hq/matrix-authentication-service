@@ -1,0 +1,236 @@
+{
+  "action": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "create_account": "Criar conta",
+    "sign_in": "Iniciar sessão",
+    "sign_out": "Sair",
+    "start_over": "Recomeçar",
+    "submit": "Enviar"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "Documento de descoberta do OpenID Connect: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link para a política de privacidade do serviço",
+      "link": "Política de privacidade"
+    },
+    "terms_and_conditions": {
+      "alt": "Link para os termos e condições do serviço",
+      "link": "Termos e Condições"
+    }
+  },
+  "common": {
+    "display_name": "Nome para exibição",
+    "email_address": "Endereço de email",
+    "loading": "A carregar...",
+    "mxid": "ID Matrix",
+    "password": "Palavra-Passe",
+    "password_confirm": "Confirmar palavra-passe",
+    "username": "Nome de utilizador"
+  },
+  "error": {
+    "unexpected": "Erro inesperado"
+  },
+  "mas": {
+    "add_email": {
+      "description": "Introduza um endereço de e-mail para recuperar a sua conta no caso de perder o acesso à mesma.",
+      "heading": "Adicionar um endereço de e-mail"
+    },
+    "back_to_homepage": "Voltar à página inicial",
+    "captcha": {
+      "noscript": "Este formulário é protegido por um CAPTCHA e requer que o JavaScript esteja habilitado para enviá-lo. Por favor, habilite o JavaScript no seu navegador e recarregue esta página."
+    },
+    "change_password": {
+      "change": "Alterar palavra-passe",
+      "confirm": "Confirmar palavra-passe",
+      "current": "Palavra-passe atual",
+      "description": "Isto irá alterar a palavra-passe da sua conta.",
+      "heading": "Alterar a minha palavra-passe",
+      "new": "Nova palavra-passe"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> em <span>%(redirect_uri)s</span> quer aceder à sua conta.",
+      "heading": "Permitir acesso à sua conta?",
+      "make_sure_you_trust": "Certifique-se de que confia em <span>%(client_name)s</span>.",
+      "this_will_allow": "Isso permitirá que <span>%(client_name)s</span>:",
+      "you_may_be_sharing": "Você pode estar compartilhando informações confidenciais com este site ou aplicativo."
+    },
+    "device_card": {
+      "access_requested": "Acesso solicitado",
+      "device_code": "Código",
+      "generic_device": "Dispositivo",
+      "ip_address": "Endereço de IP"
+    },
+    "device_code_link": {
+      "description": "Vincular um dispositivo",
+      "headline": "Digite o código exibido no seu dispositivo"
+    },
+    "device_consent": {
+      "another_device_access": "Outro dispositivo deseja acessar sua conta.",
+      "denied": {
+        "description": "Você negou acesso a%(client_name)s . Você pode fechar esta janela.",
+        "heading": "Acesso negado"
+      },
+      "granted": {
+        "description": "Você concedeu acesso a%(client_name)s . Você pode fechar esta janela.",
+        "heading": "Acesso concedido"
+      }
+    },
+    "emails": {
+      "greeting": "Olá %(username)s,",
+      "recovery": {
+        "click_button": "Clique no botão abaixo para criar uma nova senha:",
+        "copy_link": "Copie o link a seguir e cole-o em um navegador para criar uma nova senha:",
+        "create_new_password": "Criar nova palavra-passe",
+        "headline": "Você solicitou uma redefinição de senha para sua conta %(server_name)s.",
+        "subject": "Repor a palavra-passe da sua conta (%(mxid)s)",
+        "you_can_ignore": "Se não pediu uma nova palavra-passe, pode ignorar este e-mail. A sua palavra-passe atual continuará a funcionar."
+      },
+      "verify": {
+        "body_html": "O seu código de verificação para confirmar este endereço de e-mail é: <strong>%(code)s</strong>",
+        "body_text": "O seu código de verificação para confirmar este endereço de e-mail é: %(code)s",
+        "subject": "Seu código de verificação de e-mail é: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "A verificação do CAPTCHA falhou, tente novamente",
+      "denied_policy": "Negado pela política: %(policy)s",
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "field_required": "Este campo é obrigatório",
+      "invalid_credentials": "Credenciais inválidas",
+      "password_mismatch": "Os campos de palavra-passe não correspondem",
+      "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente.",
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_taken": "Este nome de utilizador já foi utilizado",
+      "username_too_long": "Username is too long",
+      "username_too_short": "Username is too short"
+    },
+    "login": {
+      "call_to_register": "Ainda não tem uma conta?",
+      "continue_with_provider": "Continue com %(provider)s",
+      "description": "Inicie sessão para continuar:",
+      "forgot_password": "Esqueceu-se da palavra-passe?",
+      "headline": "Iniciar sessão",
+      "link": {
+        "description": "Vinculando sua conta <span class=\"break-keep text-links\">%(provider)s</span>",
+        "headline": "Faça login para vincular"
+      },
+      "no_login_methods": "Não há métodos de login disponíveis.",
+      "separator": "Ou"
+    },
+    "navbar": {
+      "my_account": "A minha conta",
+      "register": "Criar uma conta",
+      "signed_in_as": "Conectado como <span class=\"font-semibold\">%(username)s</span> ."
+    },
+    "not_found": {
+      "description": "A página que procurava não existe ou foi movida",
+      "heading": "Página não encontrada"
+    },
+    "not_you": "Não é %(username)s?",
+    "or_separator": "Ou",
+    "policy_violation": {
+      "description": "Isso pode ser devido ao cliente que criou a solicitação, ao usuário conectado no momento ou à própria solicitação.",
+      "heading": "O pedido de autorização foi negado a política imposta por este serviço",
+      "logged_as": "Registrado como <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Para criar uma nova palavra-passe, comece de novo e selecione \"Esqueci-me da palavra-passe\".",
+        "heading": "O link para redefinir sua senha já foi usado"
+      },
+      "disabled": {
+        "description": "Se você perdeu suas credenciais, entre em contato com o administrador para recuperar sua conta.",
+        "heading": "A recuperação de conta está desativada"
+      },
+      "expired": {
+        "description": "Solicite um novo e-mail que será enviado para: <span>%(email)s</span>.",
+        "heading": "A ligação para redefinir a sua palavra-passe expirou",
+        "resend_email": "Reenviar e-mail"
+      },
+      "finish": {
+        "confirm": "Introduza novamente a nova palavra-passe",
+        "description": "Escolha uma nova palavra-passe para a sua conta.",
+        "heading": "Repor a sua palavra-passe",
+        "new": "Nova palavra-passe",
+        "save_and_continue": "Guardar e Continuar"
+      },
+      "progress": {
+        "change_email": "Experimente um e-mail diferente",
+        "description": "Enviamos um e-mail com um link para redefinir sua senha se houver uma conta usando <span>%(email)s</span>.",
+        "heading": "Verifique seu e-mail",
+        "resend_email": "Reenviar e-mail"
+      },
+      "start": {
+        "description": "Será enviado um e-mail com um link para redefinir sua senha.",
+        "heading": "Introduza o seu e-mail para continuar"
+      }
+    },
+    "register": {
+      "call_to_login": "Já tem uma conta?",
+      "continue_with_email": "Continue with email address",
+      "create_account": {
+        "description": "Por favor, crie uma conta para começar:",
+        "heading": "Criar uma conta"
+      },
+      "sign_in_instead": "Em vez disso, inicie sessão",
+      "terms_of_service": "Concordo com o <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Termos e Condições</a>"
+    },
+    "scope": {
+      "edit_profile": "Editar o seu perfil e detalhes de contacto",
+      "manage_sessions": "Gerir os seus dispositivos e sessões",
+      "mas_admin": "Administrar qualquer usuário no matrix-authentication-service",
+      "send_messages": "Envie novas mensagens em seu nome",
+      "synapse_admin": "Administrar o servidor Synapse",
+      "view_messages": "Ver as mensagens e os dados existentes",
+      "view_profile": "Ver as informações do seu perfil e detalhes de contacto"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Esta conta upstream já está vinculada a outra conta."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Isto não pode ser alterado posteriormente.",
+          "heading": "Escolha o seu nome de utilizador"
+        },
+        "create_account": "Criar uma nova conta",
+        "enforced_by_policy": "Imposto pela política do servidor",
+        "forced_display_name": "Usará o seguinte nome de exibição",
+        "forced_email": "Usará o seguinte endereço de e-mail",
+        "forced_localpart": "Utilizará o seguinte nome de utilizador",
+        "import_data": {
+          "description": "Confirme as informações que serão vinculadas à sua nova conta %(server_name)s.",
+          "heading": "Importe os seus dados"
+        },
+        "imported_from_upstream": "Importado da sua conta upstream",
+        "imported_from_upstream_with_name": "Importado da sua conta %(human_name)s",
+        "link_existing": "Vincular a uma conta existente",
+        "provider_name": "conta de %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Continue a inscrever-se com a sua conta %(human_name)s"
+        },
+        "suggested_display_name": "Importar nome para exibição",
+        "suggested_email": "Importar endereço de e-mail",
+        "use": "Usar"
+      },
+      "suggest_link": {
+        "action": "Link",
+        "heading": "Vincular à sua conta existente"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "Código de 6 dígitos",
+      "code": "Código",
+      "description": "Insira o código de 6 dígitos enviado para: <em>%(email)s</em>",
+      "headline": "Verifique o seu e-mail"
+    }
+  }
+}
