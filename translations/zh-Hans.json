@@ -27,6 +27,7 @@
   "common": {
     "display_name": "显示名称",
     "email_address": "邮箱地址",
+    "loading": "Loading…",
     "mxid": "Matrix ID",
     "password": "密码",
     "password_confirm": "确认密码",
@@ -99,11 +100,17 @@
     "errors": {
       "captcha": "验证码验证失败，请重试",
       "denied_policy": "被该策略拒绝：%(policy)s",
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
       "field_required": "此字段为必填项",
       "invalid_credentials": "无效的凭据",
       "password_mismatch": "密码字段不匹配",
       "rate_limit_exceeded": "您在短时间内发出了过多请求。请等待几分钟后重试。",
-      "username_taken": "此用户名已被使用"
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_taken": "此用户名已被使用",
+      "username_too_long": "Username is too long",
+      "username_too_short": "Username is too short"
     },
     "login": {
       "call_to_register": "还没有账户？",
@@ -168,6 +175,7 @@
     },
     "register": {
       "call_to_login": "已有账户？",
+      "continue_with_email": "Continue with email address",
       "create_account": {
         "description": "请创建一个账户以开始使用：",
         "heading": "创建账户"
@@ -203,7 +211,12 @@
           "heading": "导入数据"
         },
         "imported_from_upstream": "从上游账户导入",
+        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
         "link_existing": "链接到现有账户",
+        "provider_name": "%(human_name)s account",
+        "signup_with_upstream": {
+          "heading": "Continue signing up with your %(human_name)s account"
+        },
         "suggested_display_name": "导入显示名称",
         "suggested_email": "导入电子邮件地址",
         "use": "使用"
