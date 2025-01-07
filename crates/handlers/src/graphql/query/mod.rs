@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +9,7 @@ use async_graphql::{Context, MergedObject, Object, ID};
 use crate::graphql::{
     model::{
         Anonymous, BrowserSession, CompatSession, Node, NodeType, OAuth2Client, OAuth2Session,
-        SiteConfig, User, UserEmail,
+        SiteConfig, User, UserEmail, UserRecoveryTicket,
     },
     state::ContextExt,
 };
@@ -182,6 +182,20 @@ impl BaseQuery {
         Ok(Some(UserEmail(user_email)))
     }
 
+    /// Fetch a user recovery ticket.
+    async fn user_recovery_ticket(
+        &self,
+        ctx: &Context<'_>,
+        ticket: String,
+    ) -> Result<Option<UserRecoveryTicket>, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+        let ticket = repo.user_recovery().find_ticket(&ticket).await?;
+        repo.cancel().await?;
+
+        Ok(ticket.map(UserRecoveryTicket))
+    }
+
     /// Fetches an object given its ID.
     async fn node(&self, ctx: &Context<'_>, id: ID) -> Result<Option<Node>, async_graphql::Error> {
         // Special case for the anonymous user
@@ -199,7 +213,9 @@ impl BaseQuery {
 
         let ret = match node_type {
             // TODO
-            NodeType::Authentication | NodeType::CompatSsoLogin => None,
+            NodeType::Authentication | NodeType::CompatSsoLogin | NodeType::UserRecoveryTicket => {
+                None
+            }
 
             NodeType::UpstreamOAuth2Provider => UpstreamOAuthQuery
                 .upstream_oauth2_provider(ctx, id)
