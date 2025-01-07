@@ -22,23 +22,23 @@ export const UNVERIFIED_EMAILS_FRAGMENT = graphql(/* GraphQL */ `
 `);
 
 const UnverifiedEmailAlert: React.FC<{
-  user?: FragmentType<typeof UNVERIFIED_EMAILS_FRAGMENT>;
+  user: FragmentType<typeof UNVERIFIED_EMAILS_FRAGMENT>;
 }> = ({ user }) => {
   const data = useFragment(UNVERIFIED_EMAILS_FRAGMENT, user);
   const [dismiss, setDismiss] = useState(false);
   const { t } = useTranslation();
-  const currentCount = useRef<number>();
+  const currentCount = useRef<number>(data.unverifiedEmails.totalCount);
 
   const doDismiss = (): void => setDismiss(true);
 
   useEffect(() => {
-    if (currentCount.current !== data?.unverifiedEmails?.totalCount) {
-      currentCount.current = data?.unverifiedEmails?.totalCount;
+    if (currentCount.current !== data.unverifiedEmails.totalCount) {
+      currentCount.current = data.unverifiedEmails.totalCount;
       setDismiss(false);
     }
   }, [data]);
 
-  if (!data?.unverifiedEmails?.totalCount || dismiss) {
+  if (!data.unverifiedEmails.totalCount || dismiss) {
     return null;
   }
 
