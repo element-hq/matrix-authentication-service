@@ -72,7 +72,8 @@ const CompatSessionDetail: React.FC<Props> = ({ session }) => {
 
   const sessionDetails = [...finishedAt];
 
-  const clientDetails: { label: string; value: string | JSX.Element }[] = [];
+  const clientDetails: { label: string; value: string | React.ReactElement }[] =
+    [];
 
   if (data.ssoLogin?.redirectUri) {
     clientDetails.push({
