@@ -2,18 +2,18 @@
 
 exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
 <div
-  aria-describedby="radix-:r41:"
-  aria-labelledby="radix-:r40:"
+  aria-describedby="radix-:r79:"
+  aria-labelledby="radix-:r78:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r3v:"
+  id="radix-:r77:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r40:"
+    id="radix-:r78:"
   >
     Edit profile
   </h2>
@@ -40,29 +40,29 @@ exports[`Account home page > display name edit box > displays an error if the di
         <label
           class="_label_ssths_67"
           data-invalid="true"
-          for="radix-:r4f:"
+          for="radix-:r8h:"
         >
           Display name
         </label>
         <div
           class="_container_1qov4_17"
-          id=":r4g:"
+          id=":r8i:"
         >
           <input
-            aria-describedby="radix-:r4m:"
+            aria-describedby="radix-:r8o:"
             aria-invalid="true"
             autocomplete="name"
             class="_control_9gon8_18 _control_1qov4_22"
             data-invalid="true"
-            id="radix-:r4f:"
+            id="radix-:r8h:"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls=":r4g:"
-            aria-labelledby=":r4h:"
+            aria-controls=":r8i:"
+            aria-labelledby=":r8j:"
             class="_action_1qov4_33"
             type="button"
           >
@@ -82,7 +82,7 @@ exports[`Account home page > display name edit box > displays an error if the di
         </div>
         <span
           class="_message_ssths_93 _help-message_ssths_99"
-          id="radix-:r4m:"
+          id="radix-:r8o:"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -92,13 +92,13 @@ exports[`Account home page > display name edit box > displays an error if the di
       >
         <label
           class="_label_ssths_67"
-          for="radix-:r4n:"
+          for="radix-:r8p:"
         >
           Username
         </label>
         <input
           class="_control_9gon8_18"
-          id="radix-:r4n:"
+          id="radix-:r8p:"
           name="mxid"
           readonly=""
           title=""
@@ -129,7 +129,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     Cancel
   </button>
   <button
-    aria-labelledby=":r4o:"
+    aria-labelledby=":r8q:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -150,18 +150,18 @@ exports[`Account home page > display name edit box > displays an error if the di
 
 exports[`Account home page > display name edit box > lets edit the display name 1`] = `
 <div
-  aria-describedby="radix-:ro:"
-  aria-labelledby="radix-:rn:"
+  aria-describedby="radix-:r1i:"
+  aria-labelledby="radix-:r1h:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:rm:"
+  id="radix-:r1g:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:rn:"
+    id="radix-:r1h:"
   >
     Edit profile
   </h2>
@@ -186,27 +186,27 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_ssths_67"
-          for="radix-:r16:"
+          for="radix-:r2q:"
         >
           Display name
         </label>
         <div
           class="_container_1qov4_17"
-          id=":r17:"
+          id=":r2r:"
         >
           <input
-            aria-describedby="radix-:r1d:"
+            aria-describedby="radix-:r31:"
             autocomplete="name"
             class="_control_9gon8_18 _control_1qov4_22"
-            id="radix-:r16:"
+            id="radix-:r2q:"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls=":r17:"
-            aria-labelledby=":r18:"
+            aria-controls=":r2r:"
+            aria-labelledby=":r2s:"
             class="_action_1qov4_33"
             type="button"
           >
@@ -226,7 +226,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
         </div>
         <span
           class="_message_ssths_93 _help-message_ssths_99"
-          id="radix-:r1d:"
+          id="radix-:r31:"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -236,13 +236,13 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_ssths_67"
-          for="radix-:r1e:"
+          for="radix-:r32:"
         >
           Username
         </label>
         <input
           class="_control_9gon8_18"
-          id="radix-:r1e:"
+          id="radix-:r32:"
           name="mxid"
           readonly=""
           title=""
@@ -273,7 +273,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     Cancel
   </button>
   <button
-    aria-labelledby=":r1f:"
+    aria-labelledby=":r33:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -426,187 +426,301 @@ exports[`Account home page > renders the page 1`] = `
       </nav>
     </div>
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-4 mb-4"
     >
-      <div
-        class="flex flex-col gap-4"
-        id="emails"
+      <section
+        aria-labelledby=":rb:"
+        class="_root_f1daaa"
+        data-state="open"
       >
-        <form
-          class="_root_ssths_24"
+        <header
+          class="_heading_f1daaa"
         >
           <div
-            class="_field_ssths_34"
+            class="_trigger_f1daaa"
           >
-            <label
-              class="_label_ssths_67"
-              for="radix-:rb:"
+            <h4
+              class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
+              id=":rb:"
             >
-              Primary email
-            </label>
+              Contact info
+            </h4>
+            <button
+              aria-controls="radix-:rd:"
+              aria-expanded="true"
+              aria-labelledby=":re:"
+              class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
+              data-state="open"
+              role="button"
+              style="--cpd-icon-button-size: 32px;"
+              tabindex="0"
+              type="button"
+            >
+              <div
+                class="_indicator-icon_133tf_26"
+                style="--cpd-icon-button-size: 100%;"
+              >
+                <svg
+                  fill="currentColor"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  width="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m12 10.775-3.9 3.9a.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275.948.948 0 0 1-.275-.7.95.95 0 0 1 .275-.7l4.6-4.6c.1-.1.208-.17.325-.213.117-.041.242-.062.375-.062s.258.02.375.062a.877.877 0 0 1 .325.213l4.6 4.6a.948.948 0 0 1 .275.7.949.949 0 0 1-.275.7.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275l-3.9-3.9Z"
+                  />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </header>
+        <article
+          class="_content_f1daaa"
+          data-state="open"
+          id="radix-:rd:"
+          style="transition-duration: 0s; animation-name: none;"
+        >
+          <form
+            class="_root_ssths_24"
+          >
             <div
-              class="flex items-center gap-2"
+              class="_field_ssths_34"
             >
+              <label
+                class="_label_ssths_67"
+                for="radix-:rj:"
+              >
+                Primary email
+              </label>
+              <div
+                class="flex items-center gap-2"
+              >
+                <input
+                  aria-describedby="radix-:rk:"
+                  class="_control_9gon8_18 _userEmailField_e2a518"
+                  id="radix-:rj:"
+                  name="email"
+                  readonly=""
+                  title=""
+                  type="email"
+                  value="alice@example.com"
+                />
+              </div>
+              <span
+                class="_message_ssths_93 _help-message_ssths_99"
+                id="radix-:rk:"
+              >
+                Choose a different primary email to delete this one.
+              </span>
+            </div>
+          </form>
+          <div
+            aria-busy="true"
+            class="self-center _mini_0c7436"
+            role="alert"
+          >
+            <svg
+              class="_loadingSpinnerInner_0c7436"
+              fill="none"
+              role="img"
+              viewBox="0 0 100 101"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title>
+                Loading…
+              </title>
+              <path
+                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                fill="currentFill"
+              />
+            </svg>
+          </div>
+          <form
+            class="_root_ssths_24"
+          >
+            <div
+              class="_field_ssths_34"
+            >
+              <label
+                class="_label_ssths_67"
+                for="radix-:rl:"
+              >
+                Add email
+              </label>
+              <div
+                class="_controls_1h4nb_17"
+              >
+                <input
+                  aria-describedby="radix-:rm:"
+                  class="_control_9gon8_18"
+                  id="radix-:rl:"
+                  name="input"
+                  required=""
+                  title=""
+                  type="email"
+                />
+              </div>
+              <span
+                class="_message_ssths_93 _help-message_ssths_99"
+                id="radix-:rm:"
+              >
+                Add an alternative email you can use to access this account.
+              </span>
+            </div>
+          </form>
+        </article>
+      </section>
+      <div
+        class="_separator_144s5_17"
+        data-kind="section"
+        data-orientation="horizontal"
+        role="separator"
+      />
+      <section
+        aria-labelledby=":rn:"
+        class="_root_f1daaa"
+        data-state="open"
+      >
+        <header
+          class="_heading_f1daaa"
+        >
+          <div
+            class="_trigger_f1daaa"
+          >
+            <h4
+              class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
+              id=":rn:"
+            >
+              Account password
+            </h4>
+            <button
+              aria-controls="radix-:rp:"
+              aria-expanded="true"
+              aria-labelledby=":rq:"
+              class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
+              data-state="open"
+              role="button"
+              style="--cpd-icon-button-size: 32px;"
+              tabindex="0"
+              type="button"
+            >
+              <div
+                class="_indicator-icon_133tf_26"
+                style="--cpd-icon-button-size: 100%;"
+              >
+                <svg
+                  fill="currentColor"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  width="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m12 10.775-3.9 3.9a.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275.948.948 0 0 1-.275-.7.95.95 0 0 1 .275-.7l4.6-4.6c.1-.1.208-.17.325-.213.117-.041.242-.062.375-.062s.258.02.375.062a.877.877 0 0 1 .325.213l4.6 4.6a.948.948 0 0 1 .275.7.949.949 0 0 1-.275.7.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275l-3.9-3.9Z"
+                  />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </header>
+        <article
+          class="_content_f1daaa"
+          data-state="open"
+          id="radix-:rp:"
+          style="transition-duration: 0s; animation-name: none;"
+        >
+          <form
+            class="_root_ssths_24"
+          >
+            <div
+              class="_field_ssths_34"
+            >
+              <label
+                class="_label_ssths_67"
+                for="radix-:rv:"
+              >
+                Password
+              </label>
               <input
-                aria-describedby="radix-:rc:"
-                class="_control_9gon8_18 _userEmailField_e2a518"
-                id="radix-:rb:"
-                name="email"
+                aria-describedby="radix-:r10:"
+                class="_control_9gon8_18"
+                id="radix-:rv:"
+                name="password_preview"
                 readonly=""
                 title=""
-                type="email"
-                value="alice@example.com"
+                type="password"
+                value="this looks like a password"
               />
+              <span
+                class="_message_ssths_93 _help-message_ssths_99"
+                id="radix-:r10:"
+              >
+                <a
+                  class="_link_7634c3"
+                  href="/password/change"
+                >
+                  Change password
+                </a>
+              </span>
             </div>
-            <span
-              class="_message_ssths_93 _help-message_ssths_99"
-              id="radix-:rc:"
-            >
-              Choose a different primary email to delete this one.
-            </span>
-          </div>
-        </form>
-        <div
-          aria-busy="true"
-          class="self-center _mini_0c7436"
-          role="alert"
-        >
-          <svg
-            class="_loadingSpinnerInner_0c7436"
-            fill="none"
-            role="img"
-            viewBox="0 0 100 101"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <title>
-              Loading…
-            </title>
-            <path
-              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-              fill="currentFill"
-            />
-          </svg>
-        </div>
-        <form
-          class="_root_ssths_24"
-        >
-          <div
-            class="_field_ssths_34"
-          >
-            <label
-              class="_label_ssths_67"
-              for="radix-:rd:"
-            >
-              Add email
-            </label>
-            <div
-              class="_controls_1h4nb_17"
-            >
-              <input
-                aria-describedby="radix-:re:"
-                class="_control_9gon8_18"
-                id="radix-:rd:"
-                name="input"
-                required=""
-                title=""
-                type="email"
-              />
-            </div>
-            <span
-              class="_message_ssths_93 _help-message_ssths_99"
-              id="radix-:re:"
-            >
-              Add an alternative email you can use to access this account.
-            </span>
-          </div>
-        </form>
-      </div>
+          </form>
+        </article>
+      </section>
       <div
         class="_separator_144s5_17"
-        data-kind="primary"
+        data-kind="section"
         data-orientation="horizontal"
         role="separator"
       />
-      <form
-        class="_root_ssths_24"
-      >
-        <div
-          class="_field_ssths_34"
-        >
-          <label
-            class="_label_ssths_67"
-            for="radix-:rf:"
-          >
-            Password
-          </label>
-          <input
-            aria-describedby="radix-:rg:"
-            class="_control_9gon8_18"
-            id="radix-:rf:"
-            name="password_preview"
-            readonly=""
-            title=""
-            type="password"
-            value="this looks like a password"
-          />
-          <span
-            class="_message_ssths_93 _help-message_ssths_99"
-            id="radix-:rg:"
-          >
-            <a
-              class="_link_7634c3"
-              href="/password/change"
-            >
-              Change password
-            </a>
-          </span>
-        </div>
-      </form>
-      <div
-        class="_separator_144s5_17"
-        data-kind="primary"
-        data-orientation="horizontal"
-        role="separator"
-      />
-      <div
+      <section
+        aria-labelledby=":r11:"
+        class="_root_f1daaa"
         data-state="closed"
       >
-        <button
-          aria-controls="radix-:rh:"
-          aria-expanded="false"
-          class="_trigger_f1daaa"
-          data-state="closed"
-          type="button"
+        <header
+          class="_heading_f1daaa"
         >
           <div
-            class="_triggerTitle_f1daaa"
+            class="_trigger_f1daaa"
           >
-            <h1
-              class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
+            <h4
+              class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
+              id=":r11:"
             >
               End-to-end encryption
-            </h1>
+            </h4>
+            <button
+              aria-controls="radix-:r13:"
+              aria-expanded="false"
+              aria-labelledby=":r14:"
+              class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
+              data-state="closed"
+              role="button"
+              style="--cpd-icon-button-size: 32px;"
+              tabindex="0"
+              type="button"
+            >
+              <div
+                class="_indicator-icon_133tf_26"
+                style="--cpd-icon-button-size: 100%;"
+              >
+                <svg
+                  fill="currentColor"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  width="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m12 10.775-3.9 3.9a.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275.948.948 0 0 1-.275-.7.95.95 0 0 1 .275-.7l4.6-4.6c.1-.1.208-.17.325-.213.117-.041.242-.062.375-.062s.258.02.375.062a.877.877 0 0 1 .325.213l4.6 4.6a.948.948 0 0 1 .275.7.949.949 0 0 1-.275.7.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275l-3.9-3.9Z"
+                  />
+                </svg>
+              </div>
+            </button>
           </div>
-          <svg
-            class="_triggerIcon_f1daaa"
-            fill="currentColor"
-            height="24px"
-            viewBox="0 0 24 24"
-            width="24px"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="m12 10.775-3.9 3.9a.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275.948.948 0 0 1-.275-.7.95.95 0 0 1 .275-.7l4.6-4.6c.1-.1.208-.17.325-.213.117-.041.242-.062.375-.062s.258.02.375.062a.877.877 0 0 1 .325.213l4.6 4.6a.948.948 0 0 1 .275.7.949.949 0 0 1-.275.7.948.948 0 0 1-.7.275.948.948 0 0 1-.7-.275l-3.9-3.9Z"
-            />
-          </svg>
-        </button>
-        <div
-          class="_content_f1daaa"
-          data-state="closed"
-          hidden=""
-          id="radix-:rh:"
-        />
-      </div>
+        </header>
+      </section>
     </div>
     <footer
       class="_legalFooter_eb428f"
