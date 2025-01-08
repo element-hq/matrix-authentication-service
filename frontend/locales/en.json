@@ -4,8 +4,10 @@
     "cancel": "Cancel",
     "clear": "Clear",
     "close": "Close",
+    "collapse": "Collapse",
     "continue": "Continue",
     "edit": "Edit",
+    "expand": "Expand",
     "save": "Save",
     "save_and_continue": "Save and continue",
     "start_over": "Start over"
@@ -30,6 +32,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
       "edit_profile": {
         "display_name_help": "This is what others will see wherever you’re signed in.",
         "display_name_label": "Display name",
