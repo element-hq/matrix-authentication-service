@@ -298,13 +298,13 @@ exports[`Account home page > renders the page 1`] = `
     class="_layoutContainer_0c8bf9 _wide_0c8bf9"
   >
     <div
-      class="flex flex-col gap-4"
+      class="flex flex-col gap-10"
     >
       <header
-        class="flex justify-between mb-4"
+        class="flex justify-between items-center"
       >
         <h1
-          class="_typography_yh5dq_162 _font-heading-lg-semibold_yh5dq_135"
+          class="_typography_yh5dq_162 _font-heading-md-semibold_yh5dq_121"
         >
           Your account
         </h1>
@@ -336,94 +336,98 @@ exports[`Account home page > renders the page 1`] = `
         </button>
       </header>
       <div
-        class="_user_66f22a"
+        class="flex flex-col gap-4"
       >
-        <span
-          aria-label="@alice:example.com"
-          class="_avatar_mcap2_17 _avatar_66f22a _avatar-imageless_mcap2_61"
-          data-color="6"
-          data-type="round"
-          role="img"
-          style="--cpd-avatar-size: var(--cpd-space-14x);"
-        >
-          A
-        </span>
         <div
-          class="_meta_66f22a"
+          class="_user_66f22a"
         >
-          <p
-            class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
+          <span
+            aria-label="@alice:example.com"
+            class="_avatar_mcap2_17 _avatar_66f22a _avatar-imageless_mcap2_61"
+            data-color="6"
+            data-type="round"
+            role="img"
+            style="--cpd-avatar-size: var(--cpd-space-14x);"
           >
-            Alice
-          </p>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _mxid_66f22a"
-          >
-            @alice:example.com
-          </p>
-        </div>
-        <button
-          aria-controls="radix-:r3:"
-          aria-expanded="false"
-          aria-haspopup="dialog"
-          aria-labelledby=":r6:"
-          class="_icon-button_bh2qc_17 _editButton_66f22a"
-          data-state="closed"
-          role="button"
-          style="--cpd-icon-button-size: var(--cpd-space-6x);"
-          tabindex="0"
-          type="button"
-        >
+            A
+          </span>
           <div
-            class="_indicator-icon_133tf_26"
-            style="--cpd-icon-button-size: 100%;"
+            class="_meta_66f22a"
           >
-            <svg
-              fill="currentColor"
-              height="1em"
-              viewBox="0 0 24 24"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
+            <p
+              class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
             >
-              <path
-                clip-rule="evenodd"
-                d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.212l1.414-5.657a1 1 0 0 1 .263-.465L15.706 2.637Zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.77 3.771-.942L16.93 9.9Z"
-                fill-rule="evenodd"
-              />
-            </svg>
+              Alice
+            </p>
+            <p
+              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _mxid_66f22a"
+            >
+              @alice:example.com
+            </p>
           </div>
-        </button>
-      </div>
-      <nav
-        class="_navBar_214497"
-      >
-        <ul
-          class="_navBarItems_214497"
+          <button
+            aria-controls="radix-:r3:"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            aria-labelledby=":r6:"
+            class="_icon-button_bh2qc_17 _editButton_66f22a"
+            data-state="closed"
+            role="button"
+            style="--cpd-icon-button-size: var(--cpd-space-6x);"
+            tabindex="0"
+            type="button"
+          >
+            <div
+              class="_indicator-icon_133tf_26"
+              style="--cpd-icon-button-size: 100%;"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 24 24"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  clip-rule="evenodd"
+                  d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.212l1.414-5.657a1 1 0 0 1 .263-.465L15.706 2.637Zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.77 3.771-.942L16.93 9.9Z"
+                  fill-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <nav
+          class="_navBar_214497"
         >
-          <li
-            class="_navTab_8603fc"
+          <ul
+            class="_navBarItems_214497"
           >
-            <a
-              aria-current="page"
-              class="_navItem_8603fc"
-              data-status="active"
-              href="/"
+            <li
+              class="_navTab_8603fc"
             >
-              Settings
-            </a>
-          </li>
-          <li
-            class="_navTab_8603fc"
-          >
-            <a
-              class="_navItem_8603fc"
-              href="/sessions"
+              <a
+                aria-current="page"
+                class="_navItem_8603fc"
+                data-status="active"
+                href="/"
+              >
+                Settings
+              </a>
+            </li>
+            <li
+              class="_navTab_8603fc"
             >
-              Devices
-            </a>
-          </li>
-        </ul>
-      </nav>
+              <a
+                class="_navItem_8603fc"
+                href="/sessions"
+              >
+                Devices
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
     <div
       class="flex flex-col gap-4 mb-4"
