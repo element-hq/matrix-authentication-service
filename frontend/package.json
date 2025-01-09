@@ -88,7 +88,7 @@
     "vitest": "^2.1.8"
   },
   "msw": {
-    "workerDirectory": [".storybook"]
+    "workerDirectory": [".storybook/public"]
   },
   "overrides": {
     "swagger-ui-react": {

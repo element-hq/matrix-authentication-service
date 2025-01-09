@@ -57,9 +57,8 @@ const config: StorybookConfig = {
   },
 
   viteFinal: async (config) => {
-    // Host all the assets in the root directory,
-    // so that the service worker is correctly scoped to the root
-    config.build.assetsDir = "";
+    // Serve the storybook-specific assets, which has the service worker
+    config.publicDir = ".storybook/public";
     return config;
   },
 };
