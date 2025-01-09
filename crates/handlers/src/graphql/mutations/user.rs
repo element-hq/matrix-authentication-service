@@ -822,6 +822,10 @@ impl UserMutations {
     }
 
     /// Resend a user recovery email
+    ///
+    /// This is used when a user opens a recovery link that has expired. In this
+    /// case, we display a link for them to get a new recovery email, which
+    /// calls this mutation.
     pub async fn resend_recovery_email(
         &self,
         ctx: &Context<'_>,

@@ -493,7 +493,13 @@ export type Mutation = {
   lockUser: LockUserPayload;
   /** Remove an email address */
   removeEmail: RemoveEmailPayload;
-  /** Resend a user recovery email */
+  /**
+   * Resend a user recovery email
+   *
+   * This is used when a user opens a recovery link that has expired. In this
+   * case, we display a link for them to get a new recovery email, which
+   * calls this mutation.
+   */
   resendRecoveryEmail: ResendRecoveryEmailPayload;
   /** Send a verification code for an email address */
   sendVerificationEmail: SendVerificationEmailPayload;
