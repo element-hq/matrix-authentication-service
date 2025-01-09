@@ -78,19 +78,6 @@ impl User {
         Ok(MatrixUser::load(conn, &self.0.username).await?)
     }
 
-    /// Primary email address of the user.
-    async fn primary_email(
-        &self,
-        ctx: &Context<'_>,
-    ) -> Result<Option<UserEmail>, async_graphql::Error> {
-        let state = ctx.state();
-        let mut repo = state.repository().await?;
-
-        let user_email = repo.user_email().get_primary(&self.0).await?.map(UserEmail);
-        repo.cancel().await?;
-        Ok(user_email)
-    }
-
     /// Get the list of compatibility SSO logins, chronologically sorted
     async fn compat_sso_logins(
         &self,

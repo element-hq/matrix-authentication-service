@@ -19,7 +19,7 @@ use mas_axum_utils::{
 };
 use mas_data_model::Device;
 use mas_matrix::BoxHomeserverConnection;
-use mas_router::{CompatLoginSsoAction, PostAuthAction, UrlBuilder};
+use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{
     compat::{CompatSessionRepository, CompatSsoLoginRepository},
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
@@ -79,13 +79,6 @@ pub async fn get(
 
         return Ok((cookie_jar, url).into_response());
     };
-
-    // TODO: make that more generic, check that the email has been confirmed
-    if session.user.primary_user_email_id.is_none() {
-        let destination = mas_router::AccountAddEmail::default()
-            .and_then(PostAuthAction::continue_compat_sso_login(id));
-        return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
-    }
 
     let login = repo
         .compat_sso_login()
@@ -151,13 +144,6 @@ pub async fn post(
 
         return Ok((cookie_jar, url).into_response());
     };
-
-    // TODO: make that more generic
-    if session.user.primary_user_email_id.is_none() {
-        let destination = mas_router::AccountAddEmail::default()
-            .and_then(PostAuthAction::continue_compat_sso_login(id));
-        return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
-    }
 
     let login = repo
         .compat_sso_login()

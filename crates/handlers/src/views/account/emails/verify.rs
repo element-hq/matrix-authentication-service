@@ -134,10 +134,6 @@ pub(crate) async fn post(
         .consume_verification_code(&clock, verification)
         .await?;
 
-    if session.user.primary_user_email_id.is_none() {
-        repo.user_email().set_as_primary(&user_email).await?;
-    }
-
     repo.user_email()
         .mark_as_verified(&clock, user_email)
         .await?;

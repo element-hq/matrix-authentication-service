@@ -131,19 +131,6 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
 
-    /// Get the primary [`UserEmail`] of a [`User`]
-    ///
-    /// Returns `None` if no the user has no primary [`UserEmail`]
-    ///
-    /// # Parameters
-    ///
-    /// * `user`: The [`User`] for whom to lookup the primary [`UserEmail`]
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error>;
-
     /// Get all [`UserEmail`] of a [`User`]
     ///
     /// # Parameters
@@ -233,17 +220,6 @@ pub trait UserEmailRepository: Send + Sync {
         user_email: UserEmail,
     ) -> Result<UserEmail, Self::Error>;
 
-    /// Mark a [`UserEmail`] as primary
-    ///
-    /// # Parameters
-    ///
-    /// * `user_email`: The [`UserEmail`] to mark as primary
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error>;
-
     /// Add a [`UserEmailVerification`] for a [`UserEmail`]
     ///
     /// # Parameters
@@ -310,7 +286,6 @@ pub trait UserEmailRepository: Send + Sync {
 repository_impl!(UserEmailRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserEmail>, Self::Error>;
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error>;
 
     async fn all(&mut self, user: &User) -> Result<Vec<UserEmail>, Self::Error>;
     async fn list(
@@ -334,8 +309,6 @@ repository_impl!(UserEmailRepository:
         clock: &dyn Clock,
         user_email: UserEmail,
     ) -> Result<UserEmail, Self::Error>;
-
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error>;
 
     async fn add_verification_code(
         &mut self,

@@ -13,6 +13,5 @@ export interface MUser {
   username: string; // localpart only without @
   created_at: Date;
   locked_at: Date | null;
-  primary_user_email_id: UUID<MUserEmail> | null;
   can_request_admin: boolean;
 }
