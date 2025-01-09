@@ -7,37 +7,17 @@
 use async_trait::async_trait;
 use mas_data_model::{
     BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
-    UserEmailVerification,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
 
 use crate::{pagination::Page, repository_impl, Clock, Pagination};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum UserEmailState {
-    Pending,
-    Verified,
-}
-
-impl UserEmailState {
-    /// Returns true if the filter should only return non-verified emails
-    pub fn is_pending(self) -> bool {
-        matches!(self, Self::Pending)
-    }
-
-    /// Returns true if the filter should only return verified emails
-    pub fn is_verified(self) -> bool {
-        matches!(self, Self::Verified)
-    }
-}
-
 /// Filter parameters for listing user emails
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct UserEmailFilter<'a> {
     user: Option<&'a User>,
     email: Option<&'a str>,
-    state: Option<UserEmailState>,
 }
 
 impl<'a> UserEmailFilter<'a> {
@@ -75,28 +55,6 @@ impl<'a> UserEmailFilter<'a> {
     #[must_use]
     pub fn email(&self) -> Option<&str> {
         self.email
-    }
-
-    /// Filter for emails that are verified
-    #[must_use]
-    pub fn verified_only(mut self) -> Self {
-        self.state = Some(UserEmailState::Verified);
-        self
-    }
-
-    /// Filter for emails that are not verified
-    #[must_use]
-    pub fn pending_only(mut self) -> Self {
-        self.state = Some(UserEmailState::Pending);
-        self
-    }
-
-    /// Get the state filter
-    ///
-    /// Returns [`None`] if no state filter is set
-    #[must_use]
-    pub fn state(&self) -> Option<UserEmailState> {
-        self.state
     }
 }
 
@@ -204,86 +162,6 @@ pub trait UserEmailRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
-
-    /// Mark a [`UserEmail`] as verified
-    ///
-    /// Returns the updated [`UserEmail`]
-    ///
-    /// # Parameters
-    ///
-    /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] to mark as verified
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn mark_as_verified(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: UserEmail,
-    ) -> Result<UserEmail, Self::Error>;
-
-    /// Add a [`UserEmailVerification`] for a [`UserEmail`]
-    ///
-    /// # Parameters
-    ///
-    /// * `rng`: The random number generator to use
-    /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] for which to add the
-    ///   [`UserEmailVerification`]
-    /// * `max_age`: The duration for which the [`UserEmailVerification`] is
-    ///   valid
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn add_verification_code(
-        &mut self,
-        rng: &mut (dyn RngCore + Send),
-        clock: &dyn Clock,
-        user_email: &UserEmail,
-        max_age: chrono::Duration,
-        code: String,
-    ) -> Result<UserEmailVerification, Self::Error>;
-
-    /// Find a [`UserEmailVerification`] for a [`UserEmail`] by its code
-    ///
-    /// Returns `None` if no matching [`UserEmailVerification`] was found
-    ///
-    /// # Parameters
-    ///
-    /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] for which to lookup the
-    ///   [`UserEmailVerification`]
-    /// * `code`: The code used to lookup
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn find_verification_code(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: &UserEmail,
-        code: &str,
-    ) -> Result<Option<UserEmailVerification>, Self::Error>;
-
-    /// Consume a [`UserEmailVerification`]
-    ///
-    /// Returns the consumed [`UserEmailVerification`]
-    ///
-    /// # Parameters
-    ///
-    /// * `clock`: The clock to use
-    /// * `verification`: The [`UserEmailVerification`] to consume
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn consume_verification_code(
-        &mut self,
-        clock: &dyn Clock,
-        verification: UserEmailVerification,
-    ) -> Result<UserEmailVerification, Self::Error>;
 
     /// Add a new [`UserEmailAuthentication`] for a [`BrowserSession`]
     ///
@@ -402,34 +280,6 @@ repository_impl!(UserEmailRepository:
         email: String,
     ) -> Result<UserEmail, Self::Error>;
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
-
-    async fn mark_as_verified(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: UserEmail,
-    ) -> Result<UserEmail, Self::Error>;
-
-    async fn add_verification_code(
-        &mut self,
-        rng: &mut (dyn RngCore + Send),
-        clock: &dyn Clock,
-        user_email: &UserEmail,
-        max_age: chrono::Duration,
-        code: String,
-    ) -> Result<UserEmailVerification, Self::Error>;
-
-    async fn find_verification_code(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: &UserEmail,
-        code: &str,
-    ) -> Result<Option<UserEmailVerification>, Self::Error>;
-
-    async fn consume_verification_code(
-        &mut self,
-        clock: &dyn Clock,
-        verification: UserEmailVerification,
-    ) -> Result<UserEmailVerification, Self::Error>;
 
     async fn add_authentication_for_session(
         &mut self,

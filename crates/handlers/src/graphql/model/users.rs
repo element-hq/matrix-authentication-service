@@ -323,7 +323,11 @@ impl User {
         &self,
         ctx: &Context<'_>,
 
-        #[graphql(name = "state", desc = "List only emails in the given state.")]
+        #[graphql(
+            deprecation = "Emails are always confirmed, and have only one state",
+            name = "state",
+            desc = "List only emails in the given state."
+        )]
         state_param: Option<UserEmailState>,
 
         #[graphql(desc = "Returns the elements in the list that come after the cursor.")]
@@ -335,6 +339,7 @@ impl User {
     ) -> Result<Connection<Cursor, UserEmail, PreloadedTotalCount>, async_graphql::Error> {
         let state = ctx.state();
         let mut repo = state.repository().await?;
+        let _ = state_param;
 
         query(
             after,
@@ -351,12 +356,6 @@ impl User {
                 let pagination = Pagination::try_new(before_id, after_id, first, last)?;
 
                 let filter = UserEmailFilter::new().for_user(&self.0);
-
-                let filter = match state_param {
-                    Some(UserEmailState::Pending) => filter.pending_only(),
-                    Some(UserEmailState::Confirmed) => filter.verified_only(),
-                    None => filter,
-                };
 
                 let page = repo.user_email().list(filter, pagination).await?;
 
@@ -738,8 +737,9 @@ impl UserEmail {
 
     /// When the email address was confirmed. Is `null` if the email was never
     /// verified by the user.
+    #[graphql(deprecation = "Emails are always confirmed now.")]
     async fn confirmed_at(&self) -> Option<DateTime<Utc>> {
-        self.0.confirmed_at
+        Some(self.0.created_at)
     }
 }
 

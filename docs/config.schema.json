@@ -2240,42 +2240,8 @@
         "template": {
           "description": "The Jinja2 template to use for the email address attribute\n\nIf not provided, the default template is `{{ user.email }}`",
           "type": "string"
-        },
-        "set_email_verification": {
-          "description": "Should the email address be marked as verified",
-          "allOf": [
-            {
-              "$ref": "#/definitions/SetEmailVerification"
-            }
-          ]
         }
       }
-    },
-    "SetEmailVerification": {
-      "description": "Should the email address be marked as verified",
-      "oneOf": [
-        {
-          "description": "Mark the email address as verified",
-          "type": "string",
-          "enum": [
-            "always"
-          ]
-        },
-        {
-          "description": "Don't mark the email address as verified",
-          "type": "string",
-          "enum": [
-            "never"
-          ]
-        },
-        {
-          "description": "Mark the email address as verified if the upstream provider says it is through the `email_verified` claim",
-          "type": "string",
-          "enum": [
-            "import"
-          ]
-        }
-      ]
     },
     "AccountNameImportPreference": {
       "description": "What should be done for the account name attribute",

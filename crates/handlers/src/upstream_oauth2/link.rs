@@ -590,11 +590,6 @@ pub(crate) async fn post(
             }
             let context = context.build();
 
-            // Is the email verified according to the upstream provider?
-            let provider_email_verified = env
-                .render_str("{{ user.email_verified | string }}", &context)
-                .map_or(false, |v| v == "true");
-
             // Create a template context in case we need to re-render because of an error
             let ctx = UpstreamRegister::new(link.clone(), provider.clone());
 
@@ -802,21 +797,9 @@ pub(crate) async fn post(
 
             // If we have an email, add it to the user
             if let Some(email) = email {
-                let user_email = repo
-                    .user_email()
+                repo.user_email()
                     .add(&mut rng, &clock, &user, email)
                     .await?;
-                // Mark the email as verified according to the policy and whether the provider
-                // claims it is, and make it the primary email.
-                if provider
-                    .claims_imports
-                    .verify_email
-                    .should_mark_as_verified(provider_email_verified)
-                {
-                    repo.user_email()
-                        .mark_as_verified(&clock, user_email)
-                        .await?;
-                }
             }
 
             repo.upstream_oauth_link()
@@ -1046,6 +1029,5 @@ mod tests {
         let email = page.edges.first().expect("email exists");
 
         assert_eq!(email.email, "john@example.com");
-        assert!(email.confirmed_at.is_some());
     }
 }

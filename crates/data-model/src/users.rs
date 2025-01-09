@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{net::IpAddr, ops::Deref};
+use std::net::IpAddr;
 
-use chrono::{DateTime, Duration, Utc};
-use rand::{Rng, SeedableRng};
+use chrono::{DateTime, Utc};
+use rand::Rng;
 use serde::Serialize;
 use ulid::Ulid;
 
@@ -171,7 +171,6 @@ pub struct UserEmail {
     pub user_id: Ulid,
     pub email: String,
     pub created_at: DateTime<Utc>,
-    pub confirmed_at: Option<DateTime<Utc>>,
 }
 
 impl UserEmail {
@@ -183,79 +182,13 @@ impl UserEmail {
                 user_id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "alice@example.com".to_owned(),
                 created_at: now,
-                confirmed_at: Some(now),
             },
             Self {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 user_id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "bob@example.com".to_owned(),
                 created_at: now,
-                confirmed_at: None,
             },
         ]
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub enum UserEmailVerificationState {
-    AlreadyUsed { when: DateTime<Utc> },
-    Expired { when: DateTime<Utc> },
-    Valid,
-}
-
-impl UserEmailVerificationState {
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        matches!(self, Self::Valid)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct UserEmailVerification {
-    pub id: Ulid,
-    pub user_email_id: Ulid,
-    pub code: String,
-    pub created_at: DateTime<Utc>,
-    pub state: UserEmailVerificationState,
-}
-
-impl Deref for UserEmailVerification {
-    type Target = UserEmailVerificationState;
-
-    fn deref(&self) -> &Self::Target {
-        &self.state
-    }
-}
-
-impl UserEmailVerification {
-    #[doc(hidden)]
-    #[must_use]
-    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
-        let states = [
-            UserEmailVerificationState::AlreadyUsed {
-                when: now - Duration::microseconds(5 * 60 * 1000 * 1000),
-            },
-            UserEmailVerificationState::Expired {
-                when: now - Duration::microseconds(5 * 60 * 1000 * 1000),
-            },
-            UserEmailVerificationState::Valid,
-        ];
-
-        states
-            .into_iter()
-            .flat_map(move |state| {
-                let mut rng =
-                    rand_chacha::ChaChaRng::from_rng(&mut *rng).expect("could not seed rng");
-                UserEmail::samples(now, &mut rng)
-                    .into_iter()
-                    .map(move |email| Self {
-                        id: Ulid::from_datetime_with_source(now.into(), &mut rng),
-                        user_email_id: email.id,
-                        code: "123456".to_owned(),
-                        created_at: now - Duration::microseconds(10 * 60 * 1000 * 1000),
-                        state: state.clone(),
-                    })
-            })
-            .collect()
     }
 }

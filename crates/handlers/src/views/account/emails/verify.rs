@@ -26,6 +26,7 @@ use ulid::Ulid;
 
 use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker, PreferredLanguage};
 
+#[expect(dead_code)]
 #[derive(Deserialize, Debug)]
 pub struct CodeForm {
     code: String,
@@ -45,7 +46,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(_query): Query<OptionalPostAuthAction>,
     Path(id): Path<Ulid>,
     cookie_jar: CookieJar,
 ) -> Result<Response, FancyError> {
@@ -69,12 +70,6 @@ pub(crate) async fn get(
         .await?
         .filter(|u| u.user_id == session.user.id)
         .context("Could not find user email")?;
-
-    if user_email.confirmed_at.is_some() {
-        // This email was already verified, skip
-        let destination = query.go_next_or_default(&url_builder, &mas_router::Account::default());
-        return Ok((cookie_jar, destination).into_response());
-    }
 
     let ctx = EmailVerificationPageContext::new(user_email)
         .with_session(session)
@@ -103,7 +98,7 @@ pub(crate) async fn post(
     Path(id): Path<Ulid>,
     Form(form): Form<ProtectedForm<CodeForm>>,
 ) -> Result<Response, FancyError> {
-    let form = cookie_jar.verify_form(&clock, form)?;
+    let _form = cookie_jar.verify_form(&clock, form)?;
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
     let maybe_session = session_info.load_session(&mut repo).await?;
@@ -113,7 +108,7 @@ pub(crate) async fn post(
         return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
     };
 
-    let user_email = repo
+    let _user_email = repo
         .user_email()
         .lookup(id)
         .await?
@@ -123,20 +118,7 @@ pub(crate) async fn post(
     // XXX: this logic should be extracted somewhere else, since most of it is
     // duplicated in mas_graphql
 
-    let verification = repo
-        .user_email()
-        .find_verification_code(&clock, &user_email, &form.code)
-        .await?
-        .context("Invalid code")?;
-
-    // TODO: display nice errors if the code was already consumed or expired
-    repo.user_email()
-        .consume_verification_code(&clock, verification)
-        .await?;
-
-    repo.user_email()
-        .mark_as_verified(&clock, user_email)
-        .await?;
+    // TODO: Use the new email authentication codes
 
     repo.queue_job()
         .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&session.user))

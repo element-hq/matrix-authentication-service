@@ -111,8 +111,6 @@ impl Mailer {
             email.to = %to,
             email.language = %context.language(),
             user.id = %context.user().id,
-            user_email_verification.id = %context.verification().id,
-            user_email_verification.code = context.verification().code,
         ),
         err,
     )]

@@ -56,17 +56,6 @@ fn map_claims_imports(
             action: map_import_action(config.email.action),
             template: config.email.template.clone(),
         },
-        verify_email: match config.email.set_email_verification {
-            mas_config::UpstreamOAuth2SetEmailVerification::Always => {
-                mas_data_model::UpsreamOAuthProviderSetEmailVerification::Always
-            }
-            mas_config::UpstreamOAuth2SetEmailVerification::Never => {
-                mas_data_model::UpsreamOAuthProviderSetEmailVerification::Never
-            }
-            mas_config::UpstreamOAuth2SetEmailVerification::Import => {
-                mas_data_model::UpsreamOAuthProviderSetEmailVerification::Import
-            }
-        },
         account_name: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.account_name.template.clone(),
         },

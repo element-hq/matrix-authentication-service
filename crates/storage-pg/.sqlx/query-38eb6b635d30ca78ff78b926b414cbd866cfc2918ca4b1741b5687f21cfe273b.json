@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_email_id\n                     , user_id\n                     , email\n                     , created_at\n                     , confirmed_at\n                FROM user_emails\n\n                WHERE user_id = $1\n\n                ORDER BY email ASC\n            ",
+  "query": "\n                SELECT user_email_id\n                     , user_id\n                     , email\n                     , created_at\n                FROM user_emails\n\n                WHERE user_email_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -22,11 +22,6 @@
         "ordinal": 3,
         "name": "created_at",
         "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 4,
-        "name": "confirmed_at",
-        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -38,9 +33,8 @@
       false,
       false,
       false,
-      false,
-      true
+      false
     ]
   },
-  "hash": "a300fe99c95679c5664646a6a525c0491829e97db45f3234483872ed38436322"
+  "hash": "38eb6b635d30ca78ff78b926b414cbd866cfc2918ca4b1741b5687f21cfe273b"
 }
