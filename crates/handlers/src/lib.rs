@@ -384,11 +384,6 @@ where
                 .post(self::views::account::emails::verify::post),
         )
         .route(
-            mas_router::AccountAddEmail::route(),
-            get(self::views::account::emails::add::get)
-                .post(self::views::account::emails::add::post),
-        )
-        .route(
             mas_router::AccountRecoveryStart::route(),
             get(self::views::recovery::start::get).post(self::views::recovery::start::post),
         )

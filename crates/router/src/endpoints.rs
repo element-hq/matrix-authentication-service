@@ -488,31 +488,6 @@ impl Route for AccountVerifyEmail {
     }
 }
 
-/// `GET /add-email`
-#[derive(Default, Debug, Clone)]
-pub struct AccountAddEmail {
-    post_auth_action: Option<PostAuthAction>,
-}
-
-impl Route for AccountAddEmail {
-    type Query = PostAuthAction;
-    fn route() -> &'static str {
-        "/add-email"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
-    }
-}
-
-impl AccountAddEmail {
-    #[must_use]
-    pub fn and_then(mut self, action: PostAuthAction) -> Self {
-        self.post_auth_action = Some(action);
-        self
-    }
-}
-
 /// Actions parameters as defined by MSC2965
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "action")]
