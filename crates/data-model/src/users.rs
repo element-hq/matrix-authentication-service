@@ -107,6 +107,26 @@ impl UserRecoveryTicket {
     }
 }
 
+/// A user email authentication session
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserEmailAuthentication {
+    pub id: Ulid,
+    pub user_session_id: Option<Ulid>,
+    pub email: String,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+/// A user email authentication code
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserEmailAuthenticationCode {
+    pub id: Ulid,
+    pub user_email_authentication_id: Ulid,
+    pub code: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct BrowserSession {
     pub id: Ulid,

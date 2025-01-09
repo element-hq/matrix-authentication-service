@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -6,7 +6,10 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{User, UserEmail, UserEmailVerification, UserEmailVerificationState};
+use mas_data_model::{
+    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserEmailVerification, UserEmailVerificationState,
+};
 use mas_storage::{
     user::{UserEmailFilter, UserEmailRepository},
     Clock, Page, Pagination,
@@ -91,6 +94,46 @@ impl UserEmailConfirmationCodeLookup {
             code: self.code,
             state,
             created_at: self.created_at,
+        }
+    }
+}
+
+struct UserEmailAuthenticationLookup {
+    user_email_authentication_id: Uuid,
+    user_session_id: Option<Uuid>,
+    email: String,
+    created_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>,
+}
+
+impl From<UserEmailAuthenticationLookup> for UserEmailAuthentication {
+    fn from(value: UserEmailAuthenticationLookup) -> Self {
+        UserEmailAuthentication {
+            id: value.user_email_authentication_id.into(),
+            user_session_id: value.user_session_id.map(Ulid::from),
+            email: value.email,
+            created_at: value.created_at,
+            completed_at: value.completed_at,
+        }
+    }
+}
+
+struct UserEmailAuthenticationCodeLookup {
+    user_email_authentication_code_id: Uuid,
+    user_email_authentication_id: Uuid,
+    code: String,
+    created_at: DateTime<Utc>,
+    expires_at: DateTime<Utc>,
+}
+
+impl From<UserEmailAuthenticationCodeLookup> for UserEmailAuthenticationCode {
+    fn from(value: UserEmailAuthenticationCodeLookup) -> Self {
+        UserEmailAuthenticationCode {
+            id: value.user_email_authentication_code_id.into(),
+            user_email_authentication_id: value.user_email_authentication_id.into(),
+            code: value.code,
+            created_at: value.created_at,
+            expires_at: value.expires_at,
         }
     }
 }
@@ -543,5 +586,230 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             UserEmailVerificationState::AlreadyUsed { when: consumed_at };
 
         Ok(user_email_verification)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.add_authentication_for_session",
+        skip_all,
+        fields(
+            db.query.text,
+            %session.id,
+            user_email_authentication.id,
+            user_email_authentication.email = email,
+        ),
+        err,
+    )]
+    async fn add_authentication_for_session(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        let created_at = clock.now();
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current()
+            .record("user_email_authentication.id", tracing::field::display(id));
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_email_authentications
+                  ( user_email_authentication_id
+                  , user_session_id
+                  , email
+                  , created_at
+                  )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            Uuid::from(id),
+            Uuid::from(session.id),
+            &email,
+            created_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(UserEmailAuthentication {
+            id,
+            user_session_id: Some(session.id),
+            email,
+            created_at,
+            completed_at: None,
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.add_authentication_code",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            user_email_authentication_code.id,
+            user_email_authentication_code.code = code,
+        ),
+        err,
+    )]
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        user_email_authentication: &UserEmailAuthentication,
+        code: String,
+    ) -> Result<UserEmailAuthenticationCode, Self::Error> {
+        let created_at = clock.now();
+        let expires_at = created_at + duration;
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current().record(
+            "user_email_authentication_code.id",
+            tracing::field::display(id),
+        );
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_email_authentication_codes
+                  ( user_email_authentication_code_id
+                  , user_email_authentication_id
+                  , code
+                  , created_at
+                  , expires_at
+                  )
+                VALUES ($1, $2, $3, $4, $5)
+            "#,
+            Uuid::from(id),
+            Uuid::from(user_email_authentication.id),
+            &code,
+            created_at,
+            expires_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(UserEmailAuthenticationCode {
+            id,
+            user_email_authentication_id: user_email_authentication.id,
+            code,
+            created_at,
+            expires_at,
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.lookup_authentication",
+        skip_all,
+        fields(
+            db.query.text,
+            user_email_authentication.id = %id,
+        ),
+        err,
+    )]
+    async fn lookup_authentication(
+        &mut self,
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error> {
+        let res = sqlx::query_as!(
+            UserEmailAuthenticationLookup,
+            r#"
+                SELECT user_email_authentication_id
+                     , user_session_id
+                     , email
+                     , created_at
+                     , completed_at
+                FROM user_email_authentications
+                WHERE user_email_authentication_id = $1
+            "#,
+            Uuid::from(id),
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        Ok(res.map(UserEmailAuthentication::from))
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.find_authentication_by_code",
+        skip_all,
+        fields(
+            db.query.text,
+            %authentication.id,
+            user_email_authentication_code.code = code,
+        ),
+        err,
+    )]
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
+        code: &str,
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error> {
+        let res = sqlx::query_as!(
+            UserEmailAuthenticationCodeLookup,
+            r#"
+                SELECT user_email_authentication_code_id
+                     , user_email_authentication_id
+                     , code
+                     , created_at
+                     , expires_at
+                FROM user_email_authentication_codes
+                WHERE user_email_authentication_id = $1
+                  AND code = $2
+            "#,
+            Uuid::from(authentication.id),
+            code,
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        Ok(res.map(UserEmailAuthenticationCode::from))
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.complete_email_authentication",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            %user_email_authentication_code.id,
+            %user_email_authentication_code.code,
+        ),
+        err,
+    )]
+    async fn complete_authentication(
+        &mut self,
+        clock: &dyn Clock,
+        mut user_email_authentication: UserEmailAuthentication,
+        user_email_authentication_code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        // We technically don't use the authentication code here (other than
+        // recording it in the span), but this is to make sure the caller has
+        // fetched one before calling this
+        let completed_at = clock.now();
+
+        // We'll assume the caller has checked that completed_at is None, so in case
+        // they haven't, the update will not affect any rows, which will raise
+        // an error
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_email_authentications
+                SET completed_at = $2
+                WHERE user_email_authentication_id = $1
+                  AND completed_at IS NULL
+            "#,
+            Uuid::from(user_email_authentication.id),
+            completed_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user_email_authentication.completed_at = Some(completed_at);
+        Ok(user_email_authentication)
     }
 }

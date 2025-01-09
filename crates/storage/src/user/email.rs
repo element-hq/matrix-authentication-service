@@ -1,11 +1,14 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{User, UserEmail, UserEmailVerification};
+use mas_data_model::{
+    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserEmailVerification,
+};
 use rand_core::RngCore;
 use ulid::Ulid;
 
@@ -281,6 +284,102 @@ pub trait UserEmailRepository: Send + Sync {
         clock: &dyn Clock,
         verification: UserEmailVerification,
     ) -> Result<UserEmailVerification, Self::Error>;
+
+    /// Add a new [`UserEmailAuthentication`] for a [`BrowserSession`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock to use
+    /// * `email`: The email address to add
+    /// * `session`: The [`BrowserSession`] for which to add the
+    ///   [`UserEmailAuthentication`]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn add_authentication_for_session(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    /// Add a new [`UserEmailAuthenticationCode`] for a
+    /// [`UserEmailAuthentication`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock to use
+    /// * `duration`: The duration for which the code is valid
+    /// * `authentication`: The [`UserEmailAuthentication`] for which to add the
+    ///   [`UserEmailAuthenticationCode`]
+    /// * `code`: The code to add
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails or if the code
+    /// already exists for this session
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        authentication: &UserEmailAuthentication,
+        code: String,
+    ) -> Result<UserEmailAuthenticationCode, Self::Error>;
+
+    /// Lookup a [`UserEmailAuthentication`]
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: The ID of the [`UserEmailAuthentication`] to lookup
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn lookup_authentication(
+        &mut self,
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error>;
+
+    /// Find a [`UserEmailAuthenticationCode`] by its code and session
+    ///
+    /// # Parameters
+    ///
+    /// * `authentication`: The [`UserEmailAuthentication`] to find the code for
+    /// * `code`: The code of the [`UserEmailAuthentication`] to lookup
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
+        code: &str,
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error>;
+
+    /// Complete a [`UserEmailAuthentication`] by using the given code
+    ///
+    /// Returns the completed [`UserEmailAuthentication`]
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock to use to generate timestamps
+    /// * `authentication`: The [`UserEmailAuthentication`] to complete
+    /// * `code`: The [`UserEmailAuthenticationCode`] to use
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn complete_authentication(
+        &mut self,
+        clock: &dyn Clock,
+        authentication: UserEmailAuthentication,
+        code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
 }
 
 repository_impl!(UserEmailRepository:
@@ -331,4 +430,39 @@ repository_impl!(UserEmailRepository:
         clock: &dyn Clock,
         verification: UserEmailVerification,
     ) -> Result<UserEmailVerification, Self::Error>;
+
+    async fn add_authentication_for_session(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        authentication: &UserEmailAuthentication,
+        code: String,
+    ) -> Result<UserEmailAuthenticationCode, Self::Error>;
+
+    async fn lookup_authentication(
+        &mut self,
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error>;
+
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
+        code: &str,
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error>;
+
+    async fn complete_authentication(
+        &mut self,
+        clock: &dyn Clock,
+        authentication: UserEmailAuthentication,
+        code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
 );

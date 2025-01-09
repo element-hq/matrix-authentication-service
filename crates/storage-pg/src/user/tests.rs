@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -11,7 +11,7 @@ use mas_storage::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
     },
-    Pagination, RepositoryAccess,
+    Clock, Pagination, RepositoryAccess,
 };
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
@@ -397,6 +397,121 @@ async fn test_user_email_repo(pool: PgPool) {
     assert_eq!(repo.user_email().count(verified).await.unwrap(), 0);
 
     repo.save().await.unwrap();
+}
+
+/// Test the authentication codes methods in the user email repository
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_email_repo_authentications(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    // Create a user and a user session so that we can create an authentication
+    let user = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+
+    // Create an authentication session
+    let authentication = repo
+        .user_email()
+        .add_authentication_for_session(
+            &mut rng,
+            &clock,
+            "alice@example.com".to_owned(),
+            &browser_session,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(authentication.email, "alice@example.com");
+    assert_eq!(authentication.user_session_id, Some(browser_session.id));
+    assert_eq!(authentication.created_at, clock.now());
+    assert_eq!(authentication.completed_at, None);
+
+    // Check that we can find the authentication by its ID
+    let lookup = repo
+        .user_email()
+        .lookup_authentication(authentication.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(lookup.id, authentication.id);
+    assert_eq!(lookup.email, "alice@example.com");
+    assert_eq!(lookup.user_session_id, Some(browser_session.id));
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.completed_at, None);
+
+    // Add a code to the session
+    let code = repo
+        .user_email()
+        .add_authentication_code(
+            &mut rng,
+            &clock,
+            Duration::minutes(5),
+            &authentication,
+            "123456".to_owned(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(code.code, "123456");
+    assert_eq!(code.created_at, clock.now());
+    assert_eq!(code.expires_at, clock.now() + Duration::minutes(5));
+
+    // Check that we can find the code by its ID
+    let id = code.id;
+    let lookup = repo
+        .user_email()
+        .find_authentication_code(&authentication, "123456")
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(lookup.id, id);
+    assert_eq!(lookup.code, "123456");
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.expires_at, clock.now() + Duration::minutes(5));
+
+    // Complete the authentication
+    let authentication = repo
+        .user_email()
+        .complete_authentication(&clock, authentication, &code)
+        .await
+        .unwrap();
+
+    assert_eq!(authentication.id, authentication.id);
+    assert_eq!(authentication.email, "alice@example.com");
+    assert_eq!(authentication.user_session_id, Some(browser_session.id));
+    assert_eq!(authentication.created_at, clock.now());
+    assert_eq!(authentication.completed_at, Some(clock.now()));
+
+    // Check that we can find the completed authentication by its ID
+    let lookup = repo
+        .user_email()
+        .lookup_authentication(authentication.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(lookup.id, authentication.id);
+    assert_eq!(lookup.email, "alice@example.com");
+    assert_eq!(lookup.user_session_id, Some(browser_session.id));
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.completed_at, Some(clock.now()));
+
+    // Completing a second time should fail
+    let res = repo
+        .user_email()
+        .complete_authentication(&clock, authentication, &code)
+        .await;
+    assert!(res.is_err());
 }
 
 /// Test the user password repository implementation.
