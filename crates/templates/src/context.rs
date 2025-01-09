@@ -992,51 +992,6 @@ impl TemplateContext for EmailVerificationPageContext {
     }
 }
 
-/// Fields of the account email add form
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum EmailAddFormField {
-    /// The email
-    Email,
-}
-
-impl FormField for EmailAddFormField {
-    fn keep(&self) -> bool {
-        match self {
-            Self::Email => true,
-        }
-    }
-}
-
-/// Context used by the `pages/account/verify.html` templates
-#[derive(Serialize, Default)]
-pub struct EmailAddContext {
-    form: FormState<EmailAddFormField>,
-}
-
-impl EmailAddContext {
-    /// Constructs a context for the email add page
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Set the form state
-    #[must_use]
-    pub fn with_form_state(form: FormState<EmailAddFormField>) -> Self {
-        Self { form }
-    }
-}
-
-impl TemplateContext for EmailAddContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
-    where
-        Self: Sized,
-    {
-        vec![Self::default()]
-    }
-}
-
 /// Fields of the account recovery start form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
