@@ -1551,9 +1551,7 @@ export type CompatSession_DetailFragment = { __typename?: 'CompatSession', id: s
 
 export type OAuth2Session_DetailFragment = { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } } & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 
-export type UnverifiedEmailAlert_UserFragment = { __typename?: 'User', unverifiedEmails: { __typename?: 'UserEmailConnection', totalCount: number } } & { ' $fragmentName'?: 'UnverifiedEmailAlert_UserFragment' };
-
-export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string, confirmedAt?: string | null } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
+export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
 export type UserEmail_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmail_SiteConfigFragment' };
 
@@ -1563,13 +1561,6 @@ export type RemoveEmailMutationVariables = Exact<{
 
 
 export type RemoveEmailMutation = { __typename?: 'Mutation', removeEmail: { __typename?: 'RemoveEmailPayload', status: RemoveEmailStatus, user?: { __typename?: 'User', id: string } | null } };
-
-export type SetPrimaryEmailMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type SetPrimaryEmailMutation = { __typename?: 'Mutation', setPrimaryEmail: { __typename?: 'SetPrimaryEmailPayload', status: SetPrimaryEmailStatus, user?: { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } | null } };
 
 export type UserGreeting_UserFragment = { __typename?: 'User', id: string, matrix: { __typename?: 'MatrixUser', mxid: string, displayName?: string | null } } & { ' $fragmentName'?: 'UserGreeting_UserFragment' };
 
@@ -1595,7 +1586,6 @@ export type AddEmailMutation = { __typename?: 'Mutation', addEmail: { __typename
     ) | null } };
 
 export type UserEmailListQueryVariables = Exact<{
-  userId: Scalars['ID']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -1603,17 +1593,12 @@ export type UserEmailListQueryVariables = Exact<{
 }>;
 
 
-export type UserEmailListQuery = { __typename?: 'Query', user?: { __typename?: 'User', id: string, emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
-          { __typename?: 'UserEmail', id: string }
+export type UserEmailListQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
+          { __typename?: 'UserEmail' }
           & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-        ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } | null };
+        ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } };
 
-export type UserEmailList_UserFragment = { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } & { ' $fragmentName'?: 'UserEmailList_UserFragment' };
-
-export type UserEmailList_SiteConfigFragment = (
-  { __typename?: 'SiteConfig' }
-  & { ' $fragmentRefs'?: { 'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment } }
-) & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
+export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
@@ -1625,31 +1610,19 @@ export type DoVerifyEmailMutationVariables = Exact<{
 }>;
 
 
-export type DoVerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerifyEmailPayload', status: VerifyEmailStatus, user?: { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null } | null, email?: (
-      { __typename?: 'UserEmail', id: string }
-      & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-    ) | null } };
+export type DoVerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerifyEmailPayload', status: VerifyEmailStatus } };
 
 export type ResendVerificationEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type ResendVerificationEmailMutation = { __typename?: 'Mutation', sendVerificationEmail: { __typename?: 'SendVerificationEmailPayload', status: SendVerificationEmailStatus, user: { __typename?: 'User', id: string, primaryEmail?: { __typename?: 'UserEmail', id: string } | null }, email: (
-      { __typename?: 'UserEmail', id: string }
-      & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-    ) } };
+export type ResendVerificationEmailMutation = { __typename?: 'Mutation', sendVerificationEmail: { __typename?: 'SendVerificationEmailPayload', status: SendVerificationEmailStatus } };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
-    { __typename: 'User', id: string, primaryEmail?: (
-      { __typename?: 'UserEmail', id: string }
-      & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-    ) | null }
-    & { ' $fragmentRefs'?: { 'UserEmailList_UserFragment': UserEmailList_UserFragment } }
-  ), siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', id: string, emails: { __typename?: 'UserEmailConnection', totalCount: number } }, siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
@@ -1714,7 +1687,7 @@ export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>
 
 export type CurrentUserGreetingQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
       { __typename?: 'User' }
-      & { ' $fragmentRefs'?: { 'UnverifiedEmailAlert_UserFragment': UnverifiedEmailAlert_UserFragment;'UserGreeting_UserFragment': UserGreeting_UserFragment } }
+      & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
     ) } | { __typename: 'Oauth2Session' }, siteConfig: (
     { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
@@ -1972,20 +1945,17 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
   }
 }
     `, {"fragmentName":"OAuth2Session_detail"}) as unknown as TypedDocumentString<OAuth2Session_DetailFragment, unknown>;
-export const UnverifiedEmailAlert_UserFragmentDoc = new TypedDocumentString(`
-    fragment UnverifiedEmailAlert_user on User {
-  unverifiedEmails: emails(first: 0, state: PENDING) {
-    totalCount
-  }
-}
-    `, {"fragmentName":"UnverifiedEmailAlert_user"}) as unknown as TypedDocumentString<UnverifiedEmailAlert_UserFragment, unknown>;
 export const UserEmail_EmailFragmentDoc = new TypedDocumentString(`
     fragment UserEmail_email on UserEmail {
   id
   email
-  confirmedAt
 }
     `, {"fragmentName":"UserEmail_email"}) as unknown as TypedDocumentString<UserEmail_EmailFragment, unknown>;
+export const UserEmail_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment UserEmail_siteConfig on SiteConfig {
+  emailChangeAllowed
+}
+    `, {"fragmentName":"UserEmail_siteConfig"}) as unknown as TypedDocumentString<UserEmail_SiteConfigFragment, unknown>;
 export const UserGreeting_UserFragmentDoc = new TypedDocumentString(`
     fragment UserGreeting_user on User {
   id
@@ -2000,26 +1970,11 @@ export const UserGreeting_SiteConfigFragmentDoc = new TypedDocumentString(`
   displayNameChangeAllowed
 }
     `, {"fragmentName":"UserGreeting_siteConfig"}) as unknown as TypedDocumentString<UserGreeting_SiteConfigFragment, unknown>;
-export const UserEmailList_UserFragmentDoc = new TypedDocumentString(`
-    fragment UserEmailList_user on User {
-  id
-  primaryEmail {
-    id
-  }
-}
-    `, {"fragmentName":"UserEmailList_user"}) as unknown as TypedDocumentString<UserEmailList_UserFragment, unknown>;
-export const UserEmail_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment UserEmail_siteConfig on SiteConfig {
-  emailChangeAllowed
-}
-    `, {"fragmentName":"UserEmail_siteConfig"}) as unknown as TypedDocumentString<UserEmail_SiteConfigFragment, unknown>;
 export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserEmailList_siteConfig on SiteConfig {
-  ...UserEmail_siteConfig
-}
-    fragment UserEmail_siteConfig on SiteConfig {
   emailChangeAllowed
-}`, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
+}
+    `, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
     fragment BrowserSessionsOverview_user on User {
   id
@@ -2125,19 +2080,6 @@ export const RemoveEmailDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RemoveEmailMutation, RemoveEmailMutationVariables>;
-export const SetPrimaryEmailDocument = new TypedDocumentString(`
-    mutation SetPrimaryEmail($id: ID!) {
-  setPrimaryEmail(input: {userEmailId: $id}) {
-    status
-    user {
-      id
-      primaryEmail {
-        id
-      }
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>;
 export const SetDisplayNameDocument = new TypedDocumentString(`
     mutation SetDisplayName($userId: ID!, $displayName: String) {
   setDisplayName(input: {userId: $userId, displayName: $displayName}) {
@@ -2159,26 +2101,26 @@ export const AddEmailDocument = new TypedDocumentString(`
     fragment UserEmail_email on UserEmail {
   id
   email
-  confirmedAt
 }`) as unknown as TypedDocumentString<AddEmailMutation, AddEmailMutationVariables>;
 export const UserEmailListDocument = new TypedDocumentString(`
-    query UserEmailList($userId: ID!, $first: Int, $after: String, $last: Int, $before: String) {
-  user(id: $userId) {
-    id
-    emails(first: $first, after: $after, last: $last, before: $before) {
-      edges {
-        cursor
-        node {
-          id
-          ...UserEmail_email
+    query UserEmailList($first: Int, $after: String, $last: Int, $before: String) {
+  viewer {
+    __typename
+    ... on User {
+      emails(first: $first, after: $after, last: $last, before: $before) {
+        edges {
+          cursor
+          node {
+            ...UserEmail_email
+          }
         }
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
+        totalCount
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
       }
     }
   }
@@ -2186,61 +2128,30 @@ export const UserEmailListDocument = new TypedDocumentString(`
     fragment UserEmail_email on UserEmail {
   id
   email
-  confirmedAt
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
 export const DoVerifyEmailDocument = new TypedDocumentString(`
     mutation DoVerifyEmail($id: ID!, $code: String!) {
   verifyEmail(input: {userEmailId: $id, code: $code}) {
     status
-    user {
-      id
-      primaryEmail {
-        id
-      }
-    }
-    email {
-      id
-      ...UserEmail_email
-    }
   }
 }
-    fragment UserEmail_email on UserEmail {
-  id
-  email
-  confirmedAt
-}`) as unknown as TypedDocumentString<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>;
+    `) as unknown as TypedDocumentString<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>;
 export const ResendVerificationEmailDocument = new TypedDocumentString(`
     mutation ResendVerificationEmail($id: ID!) {
   sendVerificationEmail(input: {userEmailId: $id}) {
     status
-    user {
-      id
-      primaryEmail {
-        id
-      }
-    }
-    email {
-      id
-      ...UserEmail_email
-    }
   }
 }
-    fragment UserEmail_email on UserEmail {
-  id
-  email
-  confirmedAt
-}`) as unknown as TypedDocumentString<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>;
+    `) as unknown as TypedDocumentString<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewer {
     __typename
     ... on User {
       id
-      primaryEmail {
-        id
-        ...UserEmail_email
+      emails(first: 0) {
+        totalCount
       }
-      ...UserEmailList_user
     }
   }
   siteConfig {
@@ -2254,22 +2165,11 @@ export const UserProfileDocument = new TypedDocumentString(`
     fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
 }
-fragment UserEmail_email on UserEmail {
-  id
-  email
-  confirmedAt
-}
 fragment UserEmail_siteConfig on SiteConfig {
   emailChangeAllowed
 }
-fragment UserEmailList_user on User {
-  id
-  primaryEmail {
-    id
-  }
-}
 fragment UserEmailList_siteConfig on SiteConfig {
-  ...UserEmail_siteConfig
+  emailChangeAllowed
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
 export const SessionDetailDocument = new TypedDocumentString(`
     query SessionDetail($id: ID!) {
@@ -2486,7 +2386,6 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
     ... on BrowserSession {
       id
       user {
-        ...UnverifiedEmailAlert_user
         ...UserGreeting_user
       }
     }
@@ -2495,12 +2394,7 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
     ...UserGreeting_siteConfig
   }
 }
-    fragment UnverifiedEmailAlert_user on User {
-  unverifiedEmails: emails(first: 0, state: PENDING) {
-    totalCount
-  }
-}
-fragment UserGreeting_user on User {
+    fragment UserGreeting_user on User {
   id
   matrix {
     mxid
@@ -2741,28 +2635,6 @@ export const mockRemoveEmailMutation = (resolver: GraphQLResponseResolver<Remove
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
- * mockSetPrimaryEmailMutation(
- *   ({ query, variables }) => {
- *     const { id } = variables;
- *     return HttpResponse.json({
- *       data: { setPrimaryEmail }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockSetPrimaryEmailMutation = (resolver: GraphQLResponseResolver<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>, options?: RequestHandlerOptions) =>
-  graphql.mutation<SetPrimaryEmailMutation, SetPrimaryEmailMutationVariables>(
-    'SetPrimaryEmail',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
  * mockSetDisplayNameMutation(
  *   ({ query, variables }) => {
  *     const { userId, displayName } = variables;
@@ -2809,9 +2681,9 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
  * @example
  * mockUserEmailListQuery(
  *   ({ query, variables }) => {
- *     const { userId, first, after, last, before } = variables;
+ *     const { first, after, last, before } = variables;
  *     return HttpResponse.json({
- *       data: { user }
+ *       data: { viewer }
  *     })
  *   },
  *   requestOptions

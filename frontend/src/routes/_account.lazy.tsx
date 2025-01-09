@@ -13,7 +13,6 @@ import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
 import NavItem from "../components/NavItem";
 import EndSessionButton from "../components/Session/EndSessionButton";
-import UnverifiedEmailAlert from "../components/UnverifiedEmailAlert";
 import UserGreeting from "../components/UserGreeting";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -44,8 +43,6 @@ function Account(): React.ReactElement {
 
         <div className="flex flex-col gap-4">
           <UserGreeting user={session.user} siteConfig={siteConfig} />
-
-          <UnverifiedEmailAlert user={session.user} />
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>

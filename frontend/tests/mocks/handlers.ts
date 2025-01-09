@@ -1,7 +1,11 @@
+// Copyright 2024, 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+// Please see LICENSE in the repository root for full details.
+
 import { HttpResponse } from "msw";
 import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
 import { FRAGMENT as FOOTER_FRAGMENT } from "../../src/components/Footer/Footer";
-import { UNVERIFIED_EMAILS_FRAGMENT } from "../../src/components/UnverifiedEmailAlert/UnverifiedEmailAlert";
 import {
   CONFIG_FRAGMENT as USER_EMAIL_CONFIG_FRAGMENT,
   FRAGMENT as USER_EMAIL_FRAGMENT,
@@ -71,15 +75,6 @@ export const handlers = [
               },
               USER_GREETING_FRAGMENT,
             ),
-
-            makeFragmentData(
-              {
-                unverifiedEmails: {
-                  totalCount: 0,
-                },
-              },
-              UNVERIFIED_EMAILS_FRAGMENT,
-            ),
           ),
         },
 
@@ -99,16 +94,8 @@ export const handlers = [
         viewer: {
           __typename: "User",
           id: "user-id",
-          primaryEmail: {
-            id: "primary-email-id",
-            ...makeFragmentData(
-              {
-                id: "primary-email-id",
-                email: "alice@example.com",
-                confirmedAt: new Date().toISOString(),
-              },
-              USER_EMAIL_FRAGMENT,
-            ),
+          emails: {
+            totalCount: 1,
           },
         },
 
@@ -124,12 +111,9 @@ export const handlers = [
             USER_EMAIL_CONFIG_FRAGMENT,
           ),
           makeFragmentData(
-            makeFragmentData(
-              {
-                emailChangeAllowed: true,
-              },
-              USER_EMAIL_CONFIG_FRAGMENT,
-            ),
+            {
+              emailChangeAllowed: true,
+            },
             USER_EMAIL_LIST_CONFIG_FRAGMENT,
           ),
           makeFragmentData(
@@ -146,11 +130,24 @@ export const handlers = [
   mockUserEmailListQuery(() =>
     HttpResponse.json({
       data: {
-        user: {
-          id: "user-id",
+        viewer: {
+          __typename: "User",
           emails: {
-            edges: [],
-            totalCount: 0,
+            edges: [
+              {
+                cursor: "primary-email-id",
+                node: {
+                  ...makeFragmentData(
+                    {
+                      id: "primary-email-id",
+                      email: "alice@example.com",
+                    },
+                    USER_EMAIL_FRAGMENT,
+                  ),
+                },
+              },
+            ],
+            totalCount: 1,
             pageInfo: {
               hasNextPage: false,
               hasPreviousPage: false,

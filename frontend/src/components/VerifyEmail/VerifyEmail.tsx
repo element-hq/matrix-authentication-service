@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -26,18 +26,6 @@ const VERIFY_EMAIL_MUTATION = graphql(/* GraphQL */ `
   mutation DoVerifyEmail($id: ID!, $code: String!) {
     verifyEmail(input: { userEmailId: $id, code: $code }) {
       status
-
-      user {
-        id
-        primaryEmail {
-          id
-        }
-      }
-
-      email {
-        id
-        ...UserEmail_email
-      }
     }
   }
 `);
@@ -46,18 +34,6 @@ const RESEND_VERIFICATION_EMAIL_MUTATION = graphql(/* GraphQL */ `
   mutation ResendVerificationEmail($id: ID!) {
     sendVerificationEmail(input: { userEmailId: $id }) {
       status
-
-      user {
-        id
-        primaryEmail {
-          id
-        }
-      }
-
-      email {
-        id
-        ...UserEmail_email
-      }
     }
   }
 `);
