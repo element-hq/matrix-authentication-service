@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -10,7 +10,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryError};
 
-use crate::{graphql::Requester, passwords::PasswordManager};
+use crate::{graphql::Requester, passwords::PasswordManager, Limiter, RequesterFingerprint};
 
 #[async_trait::async_trait]
 pub trait State {
@@ -22,6 +22,7 @@ pub trait State {
     fn rng(&self) -> BoxRng;
     fn site_config(&self) -> &SiteConfig;
     fn url_builder(&self) -> &UrlBuilder;
+    fn limiter(&self) -> &Limiter;
 }
 
 pub type BoxState = Box<dyn State + Send + Sync + 'static>;
@@ -30,6 +31,8 @@ pub trait ContextExt {
     fn state(&self) -> &BoxState;
 
     fn requester(&self) -> &Requester;
+
+    fn requester_fingerprint(&self) -> RequesterFingerprint;
 }
 
 impl ContextExt for async_graphql::Context<'_> {
@@ -39,5 +42,9 @@ impl ContextExt for async_graphql::Context<'_> {
 
     fn requester(&self) -> &Requester {
         self.data_unchecked()
+    }
+
+    fn requester_fingerprint(&self) -> RequesterFingerprint {
+        *self.data_unchecked()
     }
 }

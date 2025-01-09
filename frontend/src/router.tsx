@@ -5,6 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createRouter } from "@tanstack/react-router";
+import LoadingScreen from "./components/LoadingScreen";
 import config from "./config";
 import { queryClient } from "./graphql";
 import { routeTree } from "./routeTree.gen";
@@ -13,6 +14,7 @@ import { routeTree } from "./routeTree.gen";
 export const router = createRouter({
   routeTree,
   basepath: config.root,
+  defaultPendingComponent: LoadingScreen,
   defaultPreload: "intent",
   context: { queryClient },
 });

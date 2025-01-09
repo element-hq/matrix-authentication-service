@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -7,10 +7,15 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    queue::{DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _},
+    queue::{
+        DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _,
+        SendAccountRecoveryEmailsJob,
+    },
     user::UserRepository,
 };
 use tracing::{info, warn};
+use ulid::Ulid;
+use url::Url;
 use zeroize::Zeroizing;
 
 use crate::graphql::{
@@ -320,6 +325,61 @@ impl SetPasswordPayload {
     /// Status of the operation
     async fn status(&self) -> SetPasswordStatus {
         self.status
+    }
+}
+
+/// The input for the `resendRecoveryEmail` mutation.
+#[derive(InputObject)]
+pub struct ResendRecoveryEmailInput {
+    /// The recovery ticket to use.
+    ticket: String,
+}
+
+/// The return type for the `resendRecoveryEmail` mutation.
+#[derive(Description)]
+pub enum ResendRecoveryEmailPayload {
+    NoSuchRecoveryTicket,
+    RateLimited,
+    Sent { recovery_session_id: Ulid },
+}
+
+/// The status of the `resendRecoveryEmail` mutation.
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum ResendRecoveryEmailStatus {
+    /// The recovery ticket was not found.
+    NoSuchRecoveryTicket,
+
+    /// The rate limit was exceeded.
+    RateLimited,
+
+    /// The recovery email was sent.
+    Sent,
+}
+
+#[Object(use_type_description)]
+impl ResendRecoveryEmailPayload {
+    /// Status of the operation
+    async fn status(&self) -> ResendRecoveryEmailStatus {
+        match self {
+            Self::NoSuchRecoveryTicket => ResendRecoveryEmailStatus::NoSuchRecoveryTicket,
+            Self::RateLimited => ResendRecoveryEmailStatus::RateLimited,
+            Self::Sent { .. } => ResendRecoveryEmailStatus::Sent,
+        }
+    }
+
+    /// URL to continue the recovery process
+    async fn progress_url(&self, context: &Context<'_>) -> Option<Url> {
+        let state = context.state();
+        let url_builder = state.url_builder();
+        match self {
+            Self::NoSuchRecoveryTicket | Self::RateLimited => None,
+            Self::Sent {
+                recovery_session_id,
+            } => {
+                let route = mas_router::AccountRecoveryProgress::new(*recovery_session_id);
+                Some(url_builder.absolute_url_for(&route))
+            }
+        }
     }
 }
 
@@ -758,6 +818,56 @@ impl UserMutations {
 
         Ok(SetPasswordPayload {
             status: SetPasswordStatus::Allowed,
+        })
+    }
+
+    /// Resend a user recovery email
+    ///
+    /// This is used when a user opens a recovery link that has expired. In this
+    /// case, we display a link for them to get a new recovery email, which
+    /// calls this mutation.
+    pub async fn resend_recovery_email(
+        &self,
+        ctx: &Context<'_>,
+        input: ResendRecoveryEmailInput,
+    ) -> Result<ResendRecoveryEmailPayload, async_graphql::Error> {
+        let state = ctx.state();
+        let requester_fingerprint = ctx.requester_fingerprint();
+        let clock = state.clock();
+        let mut rng = state.rng();
+        let limiter = state.limiter();
+        let mut repo = state.repository().await?;
+
+        let Some(recovery_ticket) = repo.user_recovery().find_ticket(&input.ticket).await? else {
+            return Ok(ResendRecoveryEmailPayload::NoSuchRecoveryTicket);
+        };
+
+        let recovery_session = repo
+            .user_recovery()
+            .lookup_session(recovery_ticket.user_recovery_session_id)
+            .await?
+            .context("Could not load recovery session")?;
+
+        if let Err(e) =
+            limiter.check_account_recovery(requester_fingerprint, &recovery_session.email)
+        {
+            tracing::warn!(error = &e as &dyn std::error::Error);
+            return Ok(ResendRecoveryEmailPayload::RateLimited);
+        }
+
+        // Schedule a new batch of emails
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SendAccountRecoveryEmailsJob::new(&recovery_session),
+            )
+            .await?;
+
+        repo.save().await?;
+
+        Ok(ResendRecoveryEmailPayload::Sent {
+            recovery_session_id: recovery_session.id,
         })
     }
 }

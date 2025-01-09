@@ -39,7 +39,7 @@ function ResetCrossSigningError({
 }: ErrorComponentProps): React.ReactElement {
   const { t } = useTranslation();
   return (
-    <>
+    <Layout>
       <PageHeading
         Icon={IconError}
         title={t("frontend.reset_cross_signing.failure.heading")}
@@ -53,6 +53,6 @@ function ResetCrossSigningError({
       <Button kind="tertiary" size="lg" onClick={() => reset()}>
         {t("action.back")}
       </Button>
-    </>
+    </Layout>
   );
 }

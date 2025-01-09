@@ -17,7 +17,7 @@ export const Route = createFileRoute("/reset-cross-signing/cancelled")({
         <PageHeading
           Icon={IconKeyOffSolid}
           title={t("frontend.reset_cross_signing.cancelled.heading")}
-          success
+          invalid
         />
         <Text className="text-center text-secondary" size="lg">
           {t("frontend.reset_cross_signing.cancelled.description_1")}

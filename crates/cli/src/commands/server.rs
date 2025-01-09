@@ -209,6 +209,7 @@ impl Options {
             site_config.clone(),
             password_manager.clone(),
             url_builder.clone(),
+            limiter.clone(),
         );
 
         let state = {

@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -12,6 +12,7 @@ use ulid::Ulid;
 use super::{
     Anonymous, Authentication, BrowserSession, CompatSession, CompatSsoLogin, OAuth2Client,
     OAuth2Session, SiteConfig, UpstreamOAuth2Link, UpstreamOAuth2Provider, User, UserEmail,
+    UserRecoveryTicket,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -26,6 +27,7 @@ pub enum NodeType {
     UpstreamOAuth2Link,
     User,
     UserEmail,
+    UserRecoveryTicket,
 }
 
 #[derive(Debug, Error)]
@@ -50,6 +52,7 @@ impl NodeType {
             NodeType::UpstreamOAuth2Link => "upstream_oauth2_link",
             NodeType::User => "user",
             NodeType::UserEmail => "user_email",
+            NodeType::UserRecoveryTicket => "user_recovery_ticket",
         }
     }
 
@@ -65,6 +68,7 @@ impl NodeType {
             "upstream_oauth2_link" => Some(NodeType::UpstreamOAuth2Link),
             "user" => Some(NodeType::User),
             "user_email" => Some(NodeType::UserEmail),
+            "user_recovery_ticket" => Some(NodeType::UserRecoveryTicket),
             _ => None,
         }
     }
@@ -120,4 +124,5 @@ pub enum Node {
     UpstreamOAuth2Link(Box<UpstreamOAuth2Link>),
     User(Box<User>),
     UserEmail(Box<UserEmail>),
+    UserRecoveryTicket(Box<UserRecoveryTicket>),
 }

@@ -33,23 +33,25 @@ function Account(): React.ReactElement {
 
   return (
     <Layout wide>
-      <div className="flex flex-col gap-4">
-        <header className="flex justify-between mb-4">
-          <Heading size="lg" weight="semibold">
+      <div className="flex flex-col gap-10">
+        <header className="flex justify-between items-center">
+          <Heading size="md" weight="semibold">
             {t("frontend.account.title")}
           </Heading>
 
           <EndSessionButton endSession={onSessionEnd} />
         </header>
 
-        <UserGreeting user={session.user} siteConfig={siteConfig} />
+        <div className="flex flex-col gap-4">
+          <UserGreeting user={session.user} siteConfig={siteConfig} />
 
-        <UnverifiedEmailAlert user={session.user} />
+          <UnverifiedEmailAlert user={session.user} />
 
-        <NavBar>
-          <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
-          <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
-        </NavBar>
+          <NavBar>
+            <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
+            <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
+          </NavBar>
+        </div>
       </div>
 
       <Outlet />

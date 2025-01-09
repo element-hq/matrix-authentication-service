@@ -493,6 +493,14 @@ export type Mutation = {
   lockUser: LockUserPayload;
   /** Remove an email address */
   removeEmail: RemoveEmailPayload;
+  /**
+   * Resend a user recovery email
+   *
+   * This is used when a user opens a recovery link that has expired. In this
+   * case, we display a link for them to get a new recovery email, which
+   * calls this mutation.
+   */
+  resendRecoveryEmail: ResendRecoveryEmailPayload;
   /** Send a verification code for an email address */
   sendVerificationEmail: SendVerificationEmailPayload;
   /**
@@ -573,6 +581,12 @@ export type MutationLockUserArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationRemoveEmailArgs = {
   input: RemoveEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationResendRecoveryEmailArgs = {
+  input: ResendRecoveryEmailInput;
 };
 
 
@@ -762,6 +776,8 @@ export type Query = {
   userByUsername?: Maybe<User>;
   /** Fetch a user email by its ID. */
   userEmail?: Maybe<UserEmail>;
+  /** Fetch a user recovery ticket. */
+  userRecoveryTicket?: Maybe<UserRecoveryTicket>;
   /**
    * Get a list of users.
    *
@@ -852,6 +868,12 @@ export type QueryUserEmailArgs = {
 
 
 /** The query root of the GraphQL interface. */
+export type QueryUserRecoveryTicketArgs = {
+  ticket: Scalars['String']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -886,6 +908,30 @@ export type RemoveEmailStatus =
   | 'PRIMARY'
   /** The email address was removed */
   | 'REMOVED';
+
+/** The input for the `resendRecoveryEmail` mutation. */
+export type ResendRecoveryEmailInput = {
+  /** The recovery ticket to use. */
+  ticket: Scalars['String']['input'];
+};
+
+/** The return type for the `resendRecoveryEmail` mutation. */
+export type ResendRecoveryEmailPayload = {
+  __typename?: 'ResendRecoveryEmailPayload';
+  /** URL to continue the recovery process */
+  progressUrl?: Maybe<Scalars['Url']['output']>;
+  /** Status of the operation */
+  status: ResendRecoveryEmailStatus;
+};
+
+/** The status of the `resendRecoveryEmail` mutation. */
+export type ResendRecoveryEmailStatus =
+  /** The recovery ticket was not found. */
+  | 'NO_SUCH_RECOVERY_TICKET'
+  /** The rate limit was exceeded. */
+  | 'RATE_LIMITED'
+  /** The recovery email was sent. */
+  | 'SENT';
 
 /** The input for the `sendVerificationEmail` mutation */
 export type SendVerificationEmailInput = {
@@ -1388,6 +1434,30 @@ export type UserEmailState =
   /** The email address is pending confirmation. */
   | 'PENDING';
 
+/** A recovery ticket */
+export type UserRecoveryTicket = CreationEvent & Node & {
+  __typename?: 'UserRecoveryTicket';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The email address associated with this ticket */
+  email: Scalars['String']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  /** The status of the ticket */
+  status: UserRecoveryTicketStatus;
+  /** The username associated with this ticket */
+  username: Scalars['String']['output'];
+};
+
+/** The status of a recovery ticket */
+export type UserRecoveryTicketStatus =
+  /** The ticket has been consumed */
+  | 'CONSUMED'
+  /** The ticket has expired */
+  | 'EXPIRED'
+  /** The ticket is valid */
+  | 'VALID';
+
 /** The state of a user. */
 export type UserState =
   /** The user is active. */
@@ -1598,7 +1668,7 @@ export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __type
   ) | { __typename: 'CompatSsoLogin', id: string } | { __typename: 'Oauth2Client', id: string } | (
     { __typename: 'Oauth2Session', id: string }
     & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
-  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | null };
+  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
 
 export type BrowserSessionListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1708,13 +1778,32 @@ export type RecoverPasswordMutationVariables = Exact<{
 
 export type RecoverPasswordMutation = { __typename?: 'Mutation', setPasswordByRecovery: { __typename?: 'SetPasswordPayload', status: SetPasswordStatus } };
 
-export type PasswordRecoveryQueryVariables = Exact<{ [key: string]: never; }>;
+export type ResendRecoveryEmailMutationVariables = Exact<{
+  ticket: Scalars['String']['input'];
+}>;
+
+
+export type ResendRecoveryEmailMutation = { __typename?: 'Mutation', resendRecoveryEmail: { __typename?: 'ResendRecoveryEmailPayload', status: ResendRecoveryEmailStatus, progressUrl?: string | null } };
+
+export type RecoverPassword_UserRecoveryTicketFragment = { __typename?: 'UserRecoveryTicket', username: string, email: string } & { ' $fragmentName'?: 'RecoverPassword_UserRecoveryTicketFragment' };
+
+export type RecoverPassword_SiteConfigFragment = (
+  { __typename?: 'SiteConfig' }
+  & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
+) & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
+
+export type PasswordRecoveryQueryVariables = Exact<{
+  ticket: Scalars['String']['input'];
+}>;
 
 
 export type PasswordRecoveryQuery = { __typename?: 'Query', siteConfig: (
     { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-  ) };
+    & { ' $fragmentRefs'?: { 'RecoverPassword_SiteConfigFragment': RecoverPassword_SiteConfigFragment } }
+  ), userRecoveryTicket?: (
+    { __typename?: 'UserRecoveryTicket', status: UserRecoveryTicketStatus }
+    & { ' $fragmentRefs'?: { 'RecoverPassword_UserRecoveryTicketFragment': RecoverPassword_UserRecoveryTicketFragment } }
+  ) | null };
 
 export type AllowCrossSigningResetMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1825,12 +1914,6 @@ export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
   }
 }
     `, {"fragmentName":"OAuth2Session_session"}) as unknown as TypedDocumentString<OAuth2Session_SessionFragment, unknown>;
-export const PasswordCreationDoubleInput_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-    `, {"fragmentName":"PasswordCreationDoubleInput_siteConfig"}) as unknown as TypedDocumentString<PasswordCreationDoubleInput_SiteConfigFragment, unknown>;
 export const BrowserSession_DetailFragmentDoc = new TypedDocumentString(`
     fragment BrowserSession_detail on BrowserSession {
   id
@@ -1951,6 +2034,26 @@ export const UserEmail_VerifyEmailFragmentDoc = new TypedDocumentString(`
   email
 }
     `, {"fragmentName":"UserEmail_verifyEmail"}) as unknown as TypedDocumentString<UserEmail_VerifyEmailFragment, unknown>;
+export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentString(`
+    fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
+  username
+  email
+}
+    `, {"fragmentName":"RecoverPassword_userRecoveryTicket"}) as unknown as TypedDocumentString<RecoverPassword_UserRecoveryTicketFragment, unknown>;
+export const PasswordCreationDoubleInput_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
+  id
+  minimumPasswordComplexity
+}
+    `, {"fragmentName":"PasswordCreationDoubleInput_siteConfig"}) as unknown as TypedDocumentString<PasswordCreationDoubleInput_SiteConfigFragment, unknown>;
+export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment RecoverPassword_siteConfig on SiteConfig {
+  ...PasswordCreationDoubleInput_siteConfig
+}
+    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
+  id
+  minimumPasswordComplexity
+}`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
 export const EndBrowserSessionDocument = new TypedDocumentString(`
     mutation EndBrowserSession($id: ID!) {
   endBrowserSession(input: {browserSessionId: $id}) {
@@ -2485,15 +2588,34 @@ export const RecoverPasswordDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RecoverPasswordMutation, RecoverPasswordMutationVariables>;
+export const ResendRecoveryEmailDocument = new TypedDocumentString(`
+    mutation ResendRecoveryEmail($ticket: String!) {
+  resendRecoveryEmail(input: {ticket: $ticket}) {
+    status
+    progressUrl
+  }
+}
+    `) as unknown as TypedDocumentString<ResendRecoveryEmailMutation, ResendRecoveryEmailMutationVariables>;
 export const PasswordRecoveryDocument = new TypedDocumentString(`
-    query PasswordRecovery {
+    query PasswordRecovery($ticket: String!) {
   siteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    ...RecoverPassword_siteConfig
+  }
+  userRecoveryTicket(ticket: $ticket) {
+    status
+    ...RecoverPassword_userRecoveryTicket
   }
 }
     fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
   id
   minimumPasswordComplexity
+}
+fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
+  username
+  email
+}
+fragment RecoverPassword_siteConfig on SiteConfig {
+  ...PasswordCreationDoubleInput_siteConfig
 }`) as unknown as TypedDocumentString<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>;
 export const AllowCrossSigningResetDocument = new TypedDocumentString(`
     mutation AllowCrossSigningReset($userId: ID!) {
@@ -3032,10 +3154,33 @@ export const mockRecoverPasswordMutation = (resolver: GraphQLResponseResolver<Re
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockResendRecoveryEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { ticket } = variables;
+ *     return HttpResponse.json({
+ *       data: { resendRecoveryEmail }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockResendRecoveryEmailMutation = (resolver: GraphQLResponseResolver<ResendRecoveryEmailMutation, ResendRecoveryEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<ResendRecoveryEmailMutation, ResendRecoveryEmailMutationVariables>(
+    'ResendRecoveryEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockPasswordRecoveryQuery(
  *   ({ query, variables }) => {
+ *     const { ticket } = variables;
  *     return HttpResponse.json({
- *       data: { siteConfig }
+ *       data: { siteConfig, userRecoveryTicket }
  *     })
  *   },
  *   requestOptions

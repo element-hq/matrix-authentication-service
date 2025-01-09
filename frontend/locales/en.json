@@ -4,10 +4,13 @@
     "cancel": "Cancel",
     "clear": "Clear",
     "close": "Close",
+    "collapse": "Collapse",
     "continue": "Continue",
     "edit": "Edit",
+    "expand": "Expand",
     "save": "Save",
-    "save_and_continue": "Save and continue"
+    "save_and_continue": "Save and continue",
+    "start_over": "Start over"
   },
   "branding": {
     "privacy_policy": {
@@ -29,6 +32,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
       "edit_profile": {
         "display_name_help": "This is what others will see wherever you’re signed in.",
         "display_name_label": "Display name",
@@ -84,7 +89,8 @@
       "title": "Something went wrong"
     },
     "errors": {
-      "field_required": "This field is required"
+      "field_required": "This field is required",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
       "active_date": "Active {{relativeDate}}",
@@ -137,6 +143,16 @@
       "title": "Change your password"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "title": "The link to reset your password has already been used"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "title": "The link to reset your password has expired"
+      },
+      "subtitle": "Choose a new password for your account.",
       "title": "Reset your password"
     },
     "password_strength": {
