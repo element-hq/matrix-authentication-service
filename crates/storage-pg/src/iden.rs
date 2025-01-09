@@ -35,7 +35,6 @@ pub enum UserEmails {
     UserId,
     Email,
     CreatedAt,
-    ConfirmedAt,
 }
 
 #[derive(sea_query::Iden)]

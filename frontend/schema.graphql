@@ -765,6 +765,9 @@ type Mutation {
   Set an email address as primary
   """
   setPrimaryEmail(input: SetPrimaryEmailInput!): SetPrimaryEmailPayload!
+    @deprecated(
+      reason: "This doesn't do anything anymore, but is kept to avoid breaking existing queries"
+    )
   """
   Add a user. This is only available to administrators.
   """
@@ -1166,10 +1169,6 @@ enum RemoveEmailStatus {
   """
   REMOVED
   """
-  Can't remove the primary email address
-  """
-  PRIMARY
-  """
   The email address was not found
   """
   NOT_FOUND
@@ -1249,10 +1248,6 @@ type SendVerificationEmailPayload {
 The status of the `sendVerificationEmail` mutation
 """
 enum SendVerificationEmailStatus {
-  """
-  The verification email was sent
-  """
-  SENT
   """
   The email address is already verified
   """
@@ -1737,10 +1732,6 @@ type User implements Node {
   """
   matrix: MatrixUser!
   """
-  Primary email address of the user.
-  """
-  primaryEmail: UserEmail
-  """
   Get the list of compatibility SSO logins, chronologically sorted
   """
   compatSsoLogins(
@@ -1831,6 +1822,9 @@ type User implements Node {
     List only emails in the given state.
     """
     state: UserEmailState
+      @deprecated(
+        reason: "Emails are always confirmed, and have only one state"
+      )
     """
     Returns the elements in the list that come after the cursor.
     """
@@ -2029,7 +2023,7 @@ type UserEmail implements Node & CreationEvent {
   When the email address was confirmed. Is `null` if the email was never
   verified by the user.
   """
-  confirmedAt: DateTime
+  confirmedAt: DateTime @deprecated(reason: "Emails are always confirmed now.")
 }
 
 type UserEmailConnection {
@@ -2174,17 +2168,9 @@ The status of the `verifyEmail` mutation
 """
 enum VerifyEmailStatus {
   """
-  The email address was just verified
-  """
-  VERIFIED
-  """
   The email address was already verified before
   """
   ALREADY_VERIFIED
-  """
-  The verification code is invalid
-  """
-  INVALID_CODE
 }
 
 """

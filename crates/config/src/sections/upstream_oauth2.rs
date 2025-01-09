@@ -180,29 +180,6 @@ impl ImportAction {
     }
 }
 
-/// Should the email address be marked as verified
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum SetEmailVerification {
-    /// Mark the email address as verified
-    Always,
-
-    /// Don't mark the email address as verified
-    Never,
-
-    /// Mark the email address as verified if the upstream provider says it is
-    /// through the `email_verified` claim
-    #[default]
-    Import,
-}
-
-impl SetEmailVerification {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    const fn is_default(&self) -> bool {
-        matches!(self, SetEmailVerification::Import)
-    }
-}
-
 /// What should be done for the subject attribute
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct SubjectImportPreference {
@@ -271,17 +248,11 @@ pub struct EmailImportPreference {
     /// If not provided, the default template is `{{ user.email }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
-
-    /// Should the email address be marked as verified
-    #[serde(default, skip_serializing_if = "SetEmailVerification::is_default")]
-    pub set_email_verification: SetEmailVerification,
 }
 
 impl EmailImportPreference {
     const fn is_default(&self) -> bool {
-        self.action.is_default()
-            && self.template.is_none()
-            && self.set_email_verification.is_default()
+        self.action.is_default() && self.template.is_none()
     }
 }
 

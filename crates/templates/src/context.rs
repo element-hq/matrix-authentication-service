@@ -22,8 +22,7 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailVerification,
-    UserRecoverySession,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserRecoverySession,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -879,13 +878,13 @@ impl TemplateContext for EmailRecoveryContext {
 #[derive(Serialize)]
 pub struct EmailVerificationContext {
     user: User,
-    verification: UserEmailVerification,
+    verification: serde_json::Value,
 }
 
 impl EmailVerificationContext {
     /// Constructs a context for the verification email
     #[must_use]
-    pub fn new(user: User, verification: UserEmailVerification) -> Self {
+    pub fn new(user: User, verification: serde_json::Value) -> Self {
         Self { user, verification }
     }
 
@@ -897,7 +896,7 @@ impl EmailVerificationContext {
 
     /// Get the verification code being sent
     #[must_use]
-    pub fn verification(&self) -> &UserEmailVerification {
+    pub fn verification(&self) -> &serde_json::Value {
         &self.verification
     }
 }
@@ -910,22 +909,7 @@ impl TemplateContext for EmailVerificationContext {
         User::samples(now, rng)
             .into_iter()
             .map(|user| {
-                let email = UserEmail {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_id: user.id,
-                    email: "foobar@example.com".to_owned(),
-                    created_at: now,
-                    confirmed_at: None,
-                };
-
-                let verification = UserEmailVerification {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_email_id: email.id,
-                    code: "123456".to_owned(),
-                    created_at: now,
-                    state: mas_data_model::UserEmailVerificationState::Valid,
-                };
-
+                let verification = serde_json::json!({"code": "123456"});
                 Self { user, verification }
             })
             .collect()
@@ -982,7 +966,6 @@ impl TemplateContext for EmailVerificationPageContext {
             user_id: Ulid::from_datetime_with_source(now.into(), rng),
             email: "foobar@example.com".to_owned(),
             created_at: now,
-            confirmed_at: None,
         };
 
         vec![Self {

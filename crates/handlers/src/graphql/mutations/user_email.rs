@@ -7,7 +7,7 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
 use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _, VerifyEmailJob},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     user::{UserEmailRepository, UserRepository},
     RepositoryAccess,
 };
@@ -125,8 +125,6 @@ struct SendVerificationEmailInput {
 /// The status of the `sendVerificationEmail` mutation
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 enum SendVerificationEmailStatus {
-    /// The verification email was sent
-    Sent,
     /// The email address is already verified
     AlreadyVerified,
 }
@@ -134,7 +132,6 @@ enum SendVerificationEmailStatus {
 /// The payload of the `sendVerificationEmail` mutation
 #[derive(Description)]
 enum SendVerificationEmailPayload {
-    Sent(mas_data_model::UserEmail),
     AlreadyVerified(mas_data_model::UserEmail),
 }
 
@@ -143,7 +140,6 @@ impl SendVerificationEmailPayload {
     /// Status of the operation
     async fn status(&self) -> SendVerificationEmailStatus {
         match self {
-            SendVerificationEmailPayload::Sent(_) => SendVerificationEmailStatus::Sent,
             SendVerificationEmailPayload::AlreadyVerified(_) => {
                 SendVerificationEmailStatus::AlreadyVerified
             }
@@ -153,8 +149,7 @@ impl SendVerificationEmailPayload {
     /// The email address to which the verification email was sent
     async fn email(&self) -> UserEmail {
         match self {
-            SendVerificationEmailPayload::Sent(email)
-            | SendVerificationEmailPayload::AlreadyVerified(email) => UserEmail(email.clone()),
+            SendVerificationEmailPayload::AlreadyVerified(email) => UserEmail(email.clone()),
         }
     }
 
@@ -164,8 +159,7 @@ impl SendVerificationEmailPayload {
         let mut repo = state.repository().await?;
 
         let user_id = match self {
-            SendVerificationEmailPayload::Sent(email)
-            | SendVerificationEmailPayload::AlreadyVerified(email) => email.user_id,
+            SendVerificationEmailPayload::AlreadyVerified(email) => email.user_id,
         };
 
         let user = repo
@@ -190,20 +184,14 @@ struct VerifyEmailInput {
 /// The status of the `verifyEmail` mutation
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 enum VerifyEmailStatus {
-    /// The email address was just verified
-    Verified,
     /// The email address was already verified before
     AlreadyVerified,
-    /// The verification code is invalid
-    InvalidCode,
 }
 
 /// The payload of the `verifyEmail` mutation
 #[derive(Description)]
 enum VerifyEmailPayload {
-    Verified(mas_data_model::UserEmail),
     AlreadyVerified(mas_data_model::UserEmail),
-    InvalidCode,
 }
 
 #[Object(use_type_description)]
@@ -211,19 +199,14 @@ impl VerifyEmailPayload {
     /// Status of the operation
     async fn status(&self) -> VerifyEmailStatus {
         match self {
-            VerifyEmailPayload::Verified(_) => VerifyEmailStatus::Verified,
             VerifyEmailPayload::AlreadyVerified(_) => VerifyEmailStatus::AlreadyVerified,
-            VerifyEmailPayload::InvalidCode => VerifyEmailStatus::InvalidCode,
         }
     }
 
     /// The email address that was verified
     async fn email(&self) -> Option<UserEmail> {
         match self {
-            VerifyEmailPayload::Verified(email) | VerifyEmailPayload::AlreadyVerified(email) => {
-                Some(UserEmail(email.clone()))
-            }
-            VerifyEmailPayload::InvalidCode => None,
+            VerifyEmailPayload::AlreadyVerified(email) => Some(UserEmail(email.clone())),
         }
     }
 
@@ -233,10 +216,7 @@ impl VerifyEmailPayload {
         let mut repo = state.repository().await?;
 
         let user_id = match self {
-            VerifyEmailPayload::Verified(email) | VerifyEmailPayload::AlreadyVerified(email) => {
-                email.user_id
-            }
-            VerifyEmailPayload::InvalidCode => return Ok(None),
+            VerifyEmailPayload::AlreadyVerified(email) => email.user_id,
         };
 
         let user = repo
@@ -384,7 +364,7 @@ impl UserEmailMutations {
             return Err(async_graphql::Error::new("Unauthorized"));
         }
 
-        let skip_verification = input.skip_verification.unwrap_or(false);
+        let _skip_verification = input.skip_verification.unwrap_or(false);
         let skip_policy_check = input.skip_policy_check.unwrap_or(false);
 
         let mut repo = state.repository().await?;
@@ -415,7 +395,7 @@ impl UserEmailMutations {
 
         // Find an existing email address
         let existing_user_email = repo.user_email().find(&user, &input.email).await?;
-        let (added, mut user_email) = if let Some(user_email) = existing_user_email {
+        let (added, user_email) = if let Some(user_email) = existing_user_email {
             (false, user_email)
         } else {
             let user_email = repo
@@ -426,20 +406,7 @@ impl UserEmailMutations {
             (true, user_email)
         };
 
-        // Schedule a job to verify the email address if needed
-        if user_email.confirmed_at.is_none() {
-            if skip_verification {
-                user_email = repo
-                    .user_email()
-                    .mark_as_verified(&state.clock(), user_email)
-                    .await?;
-            } else {
-                // TODO: figure out the locale
-                repo.queue_job()
-                    .schedule_job(&mut rng, &clock, VerifyEmailJob::new(&user_email))
-                    .await?;
-            }
-        }
+        // TODO: Use the new email authentication codes
 
         repo.save().await?;
 
@@ -458,8 +425,6 @@ impl UserEmailMutations {
         input: SendVerificationEmailInput,
     ) -> Result<SendVerificationEmailPayload, async_graphql::Error> {
         let state = ctx.state();
-        let clock = state.clock();
-        let mut rng = state.rng();
         let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
         let requester = ctx.requester();
 
@@ -476,22 +441,11 @@ impl UserEmailMutations {
         }
 
         // Schedule a job to verify the email address if needed
-        let needs_verification = user_email.confirmed_at.is_none();
-        if needs_verification {
-            // TODO: figure out the locale
-            repo.queue_job()
-                .schedule_job(&mut rng, &clock, VerifyEmailJob::new(&user_email))
-                .await?;
-        }
+        // TODO: use the new email authentication codes
 
         repo.save().await?;
 
-        let payload = if needs_verification {
-            SendVerificationEmailPayload::Sent(user_email)
-        } else {
-            SendVerificationEmailPayload::AlreadyVerified(user_email)
-        };
-        Ok(payload)
+        Ok(SendVerificationEmailPayload::AlreadyVerified(user_email))
     }
 
     /// Submit a verification code for an email address
@@ -504,8 +458,6 @@ impl UserEmailMutations {
         let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
         let requester = ctx.requester();
 
-        let clock = state.clock();
-        let mut rng = state.rng();
         let mut repo = state.repository().await?;
 
         let user_email = repo
@@ -518,48 +470,10 @@ impl UserEmailMutations {
             return Err(async_graphql::Error::new("User email not found"));
         }
 
-        if user_email.confirmed_at.is_some() {
-            // Just return the email address if it's already verified
-            // XXX: should we return an error instead?
-            return Ok(VerifyEmailPayload::AlreadyVerified(user_email));
-        }
+        repo.cancel().await?;
 
-        // XXX: this logic should be extracted somewhere else, since most of it is
-        // duplicated in mas_handlers
-
-        // Find the verification code
-        let verification = repo
-            .user_email()
-            .find_verification_code(&clock, &user_email, &input.code)
-            .await?
-            .filter(|v| v.is_valid());
-
-        let Some(verification) = verification else {
-            return Ok(VerifyEmailPayload::InvalidCode);
-        };
-
-        repo.user_email()
-            .consume_verification_code(&clock, verification)
-            .await?;
-
-        let user = repo
-            .user()
-            .lookup(user_email.user_id)
-            .await?
-            .context("Failed to load user")?;
-
-        let user_email = repo
-            .user_email()
-            .mark_as_verified(&clock, user_email)
-            .await?;
-
-        repo.queue_job()
-            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
-            .await?;
-
-        repo.save().await?;
-
-        Ok(VerifyEmailPayload::Verified(user_email))
+        // TODO: Use the new email authentication codes
+        Ok(VerifyEmailPayload::AlreadyVerified(user_email))
     }
 
     /// Remove an email address

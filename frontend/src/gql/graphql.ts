@@ -521,7 +521,10 @@ export type Mutation = {
   setPassword: SetPasswordPayload;
   /** Set the password for yourself, using a recovery ticket sent by e-mail. */
   setPasswordByRecovery: SetPasswordPayload;
-  /** Set an email address as primary */
+  /**
+   * Set an email address as primary
+   * @deprecated This doesn't do anything anymore, but is kept to avoid breaking existing queries
+   */
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Unlock a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
@@ -904,8 +907,6 @@ export type RemoveEmailPayload = {
 export type RemoveEmailStatus =
   /** The email address was not found */
   | 'NOT_FOUND'
-  /** Can't remove the primary email address */
-  | 'PRIMARY'
   /** The email address was removed */
   | 'REMOVED';
 
@@ -953,9 +954,7 @@ export type SendVerificationEmailPayload = {
 /** The status of the `sendVerificationEmail` mutation */
 export type SendVerificationEmailStatus =
   /** The email address is already verified */
-  | 'ALREADY_VERIFIED'
-  /** The verification email was sent */
-  | 'SENT';
+  | 'ALREADY_VERIFIED';
 
 /** A client session, either compat or OAuth 2.0 */
 export type Session = CompatSession | Oauth2Session;
@@ -1266,8 +1265,6 @@ export type User = Node & {
   matrix: MatrixUser;
   /** Get the list of OAuth 2.0 sessions, chronologically sorted */
   oauth2Sessions: Oauth2SessionConnection;
-  /** Primary email address of the user. */
-  primaryEmail?: Maybe<UserEmail>;
   /** Get the list of upstream OAuth 2.0 links */
   upstreamOauth2Links: UpstreamOAuth2LinkConnection;
   /** Username chosen by the user. */
@@ -1396,6 +1393,7 @@ export type UserEmail = CreationEvent & Node & {
   /**
    * When the email address was confirmed. Is `null` if the email was never
    * verified by the user.
+   * @deprecated Emails are always confirmed now.
    */
   confirmedAt?: Maybe<Scalars['DateTime']['output']>;
   /** When the object was created. */
@@ -1487,11 +1485,7 @@ export type VerifyEmailPayload = {
 /** The status of the `verifyEmail` mutation */
 export type VerifyEmailStatus =
   /** The email address was already verified before */
-  | 'ALREADY_VERIFIED'
-  /** The verification code is invalid */
-  | 'INVALID_CODE'
-  /** The email address was just verified */
-  | 'VERIFIED';
+  | 'ALREADY_VERIFIED';
 
 /** Represents the current viewer */
 export type Viewer = Anonymous | User;
