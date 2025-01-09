@@ -1,10 +1,11 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { notFound } from "@tanstack/react-router";
 import { useTransition } from "react";
 import { type FragmentType, graphql, useFragment } from "../../gql";
 import { graphqlRequest } from "../../graphql";
@@ -20,77 +21,63 @@ import UserEmail from "../UserEmail";
 
 const QUERY = graphql(/* GraphQL */ `
   query UserEmailList(
-    $userId: ID!
     $first: Int
     $after: String
     $last: Int
     $before: String
   ) {
-    user(id: $userId) {
-      id
-
-      emails(first: $first, after: $after, last: $last, before: $before) {
-        edges {
-          cursor
-          node {
-            id
-            ...UserEmail_email
+    viewer {
+      __typename
+      ... on User {
+        emails(first: $first, after: $after, last: $last, before: $before) {
+          edges {
+            cursor
+            node {
+              ...UserEmail_email
+            }
           }
-        }
-        totalCount
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-          startCursor
-          endCursor
+          totalCount
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+          }
         }
       }
     }
   }
 `);
 
-const FRAGMENT = graphql(/* GraphQL */ `
-  fragment UserEmailList_user on User {
-    id
-    primaryEmail {
-      id
-    }
-  }
-`);
-
-export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
-  fragment UserEmailList_siteConfig on SiteConfig {
-    ...UserEmail_siteConfig
-  }
-`);
-
-const UserEmailList: React.FC<{
-  user: FragmentType<typeof FRAGMENT>;
-  siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
-}> = ({ user, siteConfig }) => {
-  const data = useFragment(FRAGMENT, user);
-  const config = useFragment(CONFIG_FRAGMENT, siteConfig);
-  const [pending, startTransition] = useTransition();
-
-  const [pagination, setPagination] = usePagination();
-  const result = useSuspenseQuery({
+export const query = (pagination: AnyPagination = { first: 6 }) =>
+  queryOptions({
     queryKey: ["userEmails", pagination],
     queryFn: ({ signal }) =>
       graphqlRequest({
         query: QUERY,
-        variables: {
-          userId: data.id,
-          ...(pagination as AnyPagination),
-        },
+        variables: pagination,
         signal,
       }),
   });
-  const emails = result.data.user?.emails;
-  if (!emails) throw new Error();
+
+export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
+  fragment UserEmailList_siteConfig on SiteConfig {
+    emailChangeAllowed
+  }
+`);
+
+const UserEmailList: React.FC<{
+  siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
+}> = ({ siteConfig }) => {
+  const { emailChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);
+  const [pending, startTransition] = useTransition();
+
+  const [pagination, setPagination] = usePagination();
+  const result = useSuspenseQuery(query(pagination));
+  if (result.data.viewer.__typename !== "User") throw notFound();
+  const emails = result.data.viewer.emails;
 
   const [prevPage, nextPage] = usePages(pagination, emails.pageInfo);
-
-  const primaryEmailId = data.primaryEmail?.id;
 
   const paginate = (pagination: Pagination): void => {
     startTransition(() => {
@@ -105,22 +92,23 @@ const UserEmailList: React.FC<{
     });
   };
 
+  // Is it allowed to remove an email? If there's only one, we can't
+  const canRemove = emailChangeAllowed && emails.totalCount > 1;
+
   return (
     <>
-      {emails.edges.map((edge) =>
-        primaryEmailId === edge.node.id ? null : (
-          <UserEmail
-            email={edge.node}
-            key={edge.cursor}
-            siteConfig={config}
-            onRemove={onRemove}
-          />
-        ),
-      )}
+      {emails.edges.map((edge) => (
+        <UserEmail
+          email={edge.node}
+          key={edge.cursor}
+          canRemove={canRemove}
+          onRemove={onRemove}
+        />
+      ))}
 
       <PaginationControls
         autoHide
-        count={emails.totalCount ?? 0}
+        count={emails.totalCount}
         onPrev={prevPage ? (): void => paginate(prevPage) : null}
         onNext={nextPage ? (): void => paginate(nextPage) : null}
         disabled={pending}

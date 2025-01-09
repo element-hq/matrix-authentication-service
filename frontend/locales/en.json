@@ -247,24 +247,13 @@
         "title": "Cannot find session: {{deviceId}}"
       }
     },
-    "unverified_email_alert": {
-      "button": "Review and verify",
-      "text:one": "You have {{count}} unverified email address.",
-      "text:other": "You have {{count}} unverified email addresses.",
-      "title": "Unverified email"
-    },
     "user_email": {
-      "cant_delete_primary": "Choose a different primary email to delete this one.",
       "delete_button_confirmation_modal": {
         "action": "Delete email",
         "body": "Delete this email?"
       },
       "delete_button_title": "Remove email address",
-      "email": "Email",
-      "make_primary_button": "Make primary",
-      "not_verified": "Not verified",
-      "primary_email": "Primary email",
-      "retry_button": "Resend code"
+      "email": "Email"
     },
     "user_email_list": {
       "no_primary_email_alert": "No primary email address"
