@@ -25,7 +25,7 @@ use crate::{
     iden::UserEmails,
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
+    DatabaseError,
 };
 
 /// An implementation of [`UserEmailRepository`] for a PostgreSQL connection
@@ -189,29 +189,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         };
 
         Ok(Some(user_email.into()))
-    }
-
-    #[tracing::instrument(
-        name = "db.user_email.get_primary",
-        skip_all,
-        fields(
-            db.query.text,
-            %user.id,
-        ),
-        err,
-    )]
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error> {
-        let Some(id) = user.primary_user_email_id else {
-            return Ok(None);
-        };
-
-        let user_email = self.lookup(id).await?.ok_or_else(|| {
-            DatabaseInconsistencyError::on("users")
-                .column("primary_user_email_id")
-                .row(user.id)
-        })?;
-
-        Ok(Some(user_email))
     }
 
     #[tracing::instrument(
@@ -430,23 +407,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
 
         user_email.confirmed_at = Some(confirmed_at);
         Ok(user_email)
-    }
-
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error> {
-        sqlx::query!(
-            r#"
-                UPDATE users
-                SET primary_user_email_id = user_emails.user_email_id
-                FROM user_emails
-                WHERE user_emails.user_email_id = $1
-                  AND users.user_id = user_emails.user_id
-            "#,
-            Uuid::from(user_email.id),
-        )
-        .execute(&mut *self.conn)
-        .await?;
-
-        Ok(())
     }
 
     #[tracing::instrument(

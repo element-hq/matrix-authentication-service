@@ -331,32 +331,6 @@ async fn test_user_email_repo(pool: PgPool) {
         .await
         .is_err());
 
-    // The user shouldn't have a primary email yet
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_none());
-
-    repo.user_email().set_as_primary(&user_email).await.unwrap();
-
-    // Reload the user
-    let user = repo
-        .user()
-        .lookup(user.id)
-        .await
-        .unwrap()
-        .expect("user was not found");
-
-    // Now it should have one
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_some());
-
     // Listing the user emails should work
     let emails = repo
         .user_email()
@@ -421,22 +395,6 @@ async fn test_user_email_repo(pool: PgPool) {
     assert_eq!(repo.user_email().count(all).await.unwrap(), 0);
     assert_eq!(repo.user_email().count(pending).await.unwrap(), 0);
     assert_eq!(repo.user_email().count(verified).await.unwrap(), 0);
-
-    // Reload the user
-    let user = repo
-        .user()
-        .lookup(user.id)
-        .await
-        .unwrap()
-        .expect("user was not found");
-
-    // The primary user email should be gone
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_none());
 
     repo.save().await.unwrap();
 }

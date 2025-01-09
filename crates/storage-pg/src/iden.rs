@@ -23,7 +23,6 @@ pub enum Users {
     Table,
     UserId,
     Username,
-    PrimaryUserEmailId,
     CreatedAt,
     LockedAt,
     CanRequestAdmin,

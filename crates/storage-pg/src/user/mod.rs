@@ -69,7 +69,6 @@ mod priv_ {
     pub(super) struct UserLookup {
         pub(super) user_id: Uuid,
         pub(super) username: String,
-        pub(super) primary_user_email_id: Option<Uuid>,
         pub(super) created_at: DateTime<Utc>,
         pub(super) locked_at: Option<DateTime<Utc>>,
         pub(super) can_request_admin: bool,
@@ -85,7 +84,6 @@ impl From<UserLookup> for User {
             id,
             username: value.username,
             sub: id.to_string(),
-            primary_user_email_id: value.primary_user_email_id.map(Into::into),
             created_at: value.created_at,
             locked_at: value.locked_at,
             can_request_admin: value.can_request_admin,
@@ -128,7 +126,6 @@ impl UserRepository for PgUserRepository<'_> {
             r#"
                 SELECT user_id
                      , username
-                     , primary_user_email_id
                      , created_at
                      , locked_at
                      , can_request_admin
@@ -161,7 +158,6 @@ impl UserRepository for PgUserRepository<'_> {
             r#"
                 SELECT user_id
                      , username
-                     , primary_user_email_id
                      , created_at
                      , locked_at
                      , can_request_admin
@@ -221,7 +217,6 @@ impl UserRepository for PgUserRepository<'_> {
             id,
             username,
             sub: id.to_string(),
-            primary_user_email_id: None,
             created_at,
             locked_at: None,
             can_request_admin: false,
@@ -377,10 +372,6 @@ impl UserRepository for PgUserRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::Username)),
                 UserLookupIden::Username,
-            )
-            .expr_as(
-                Expr::col((Users::Table, Users::PrimaryUserEmailId)),
-                UserLookupIden::PrimaryUserEmailId,
             )
             .expr_as(
                 Expr::col((Users::Table, Users::CreatedAt)),

@@ -262,9 +262,6 @@ enum RemoveEmailStatus {
     /// The email address was removed
     Removed,
 
-    /// Can't remove the primary email address
-    Primary,
-
     /// The email address was not found
     NotFound,
 }
@@ -273,7 +270,6 @@ enum RemoveEmailStatus {
 #[derive(Description)]
 enum RemoveEmailPayload {
     Removed(mas_data_model::UserEmail),
-    Primary(mas_data_model::UserEmail),
     NotFound,
 }
 
@@ -283,7 +279,6 @@ impl RemoveEmailPayload {
     async fn status(&self) -> RemoveEmailStatus {
         match self {
             RemoveEmailPayload::Removed(_) => RemoveEmailStatus::Removed,
-            RemoveEmailPayload::Primary(_) => RemoveEmailStatus::Primary,
             RemoveEmailPayload::NotFound => RemoveEmailStatus::NotFound,
         }
     }
@@ -291,9 +286,7 @@ impl RemoveEmailPayload {
     /// The email address that was removed
     async fn email(&self) -> Option<UserEmail> {
         match self {
-            RemoveEmailPayload::Removed(email) | RemoveEmailPayload::Primary(email) => {
-                Some(UserEmail(email.clone()))
-            }
+            RemoveEmailPayload::Removed(email) => Some(UserEmail(email.clone())),
             RemoveEmailPayload::NotFound => None,
         }
     }
@@ -304,9 +297,7 @@ impl RemoveEmailPayload {
         let mut repo = state.repository().await?;
 
         let user_id = match self {
-            RemoveEmailPayload::Removed(email) | RemoveEmailPayload::Primary(email) => {
-                email.user_id
-            }
+            RemoveEmailPayload::Removed(email) => email.user_id,
             RemoveEmailPayload::NotFound => return Ok(None),
         };
 
@@ -343,7 +334,6 @@ enum SetPrimaryEmailStatus {
 enum SetPrimaryEmailPayload {
     Set(mas_data_model::User),
     NotFound,
-    Unverified,
 }
 
 #[Object(use_type_description)]
@@ -352,7 +342,6 @@ impl SetPrimaryEmailPayload {
         match self {
             SetPrimaryEmailPayload::Set(_) => SetPrimaryEmailStatus::Set,
             SetPrimaryEmailPayload::NotFound => SetPrimaryEmailStatus::NotFound,
-            SetPrimaryEmailPayload::Unverified => SetPrimaryEmailStatus::Unverified,
         }
     }
 
@@ -360,7 +349,7 @@ impl SetPrimaryEmailPayload {
     async fn user(&self) -> Option<User> {
         match self {
             SetPrimaryEmailPayload::Set(user) => Some(User(user.clone())),
-            SetPrimaryEmailPayload::NotFound | SetPrimaryEmailPayload::Unverified => None,
+            SetPrimaryEmailPayload::NotFound => None,
         }
     }
 }
@@ -559,11 +548,6 @@ impl UserEmailMutations {
             .await?
             .context("Failed to load user")?;
 
-        // XXX: is this the right place to do this?
-        if user.primary_user_email_id.is_none() {
-            repo.user_email().set_as_primary(&user_email).await?;
-        }
-
         let user_email = repo
             .user_email()
             .mark_as_verified(&clock, user_email)
@@ -612,10 +596,7 @@ impl UserEmailMutations {
             .await?
             .context("Failed to load user")?;
 
-        if user.primary_user_email_id == Some(user_email.id) {
-            // Prevent removing the primary email address
-            return Ok(RemoveEmailPayload::Primary(user_email));
-        }
+        // TODO: don't allow removing the last email address
 
         repo.user_email().remove(user_email.clone()).await?;
 
@@ -630,6 +611,9 @@ impl UserEmailMutations {
     }
 
     /// Set an email address as primary
+    #[graphql(
+        deprecation = "This doesn't do anything anymore, but is kept to avoid breaking existing queries"
+    )]
     async fn set_primary_email(
         &self,
         ctx: &Context<'_>,
@@ -655,12 +639,6 @@ impl UserEmailMutations {
         if !requester.is_admin() && !state.site_config().email_change_allowed {
             return Err(async_graphql::Error::new("Unauthorized"));
         }
-
-        if user_email.confirmed_at.is_none() {
-            return Ok(SetPrimaryEmailPayload::Unverified);
-        }
-
-        repo.user_email().set_as_primary(&user_email).await?;
 
         // The user primary email should already be up to date
         let user = repo

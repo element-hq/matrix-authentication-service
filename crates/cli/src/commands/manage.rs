@@ -254,11 +254,6 @@ impl Options {
 
                 let email = repo.user_email().mark_as_verified(&clock, email).await?;
 
-                // If the user has no primary email, set this one as primary.
-                if user.primary_user_email_id.is_none() {
-                    repo.user_email().set_as_primary(&email).await?;
-                }
-
                 repo.into_inner().commit().await?;
                 info!(?email, "Email added and marked as verified");
 
@@ -290,11 +285,6 @@ impl Options {
                     .await?
                     .context("Email not found")?;
                 let email = repo.user_email().mark_as_verified(&clock, email).await?;
-
-                // If the user has no primary email, set this one as primary.
-                if user.primary_user_email_id.is_none() {
-                    repo.user_email().set_as_primary(&email).await?;
-                }
 
                 repo.into_inner().commit().await?;
                 info!(?email, "Email marked as verified");
@@ -948,15 +938,9 @@ impl UserCreationRequest<'_> {
                 .add(rng, clock, &user, email.to_string())
                 .await?;
 
-            let user_email = repo
-                .user_email()
+            repo.user_email()
                 .mark_as_verified(clock, user_email)
                 .await?;
-
-            if user.primary_user_email_id.is_none() {
-                repo.user_email().set_as_primary(&user_email).await?;
-                user.primary_user_email_id = Some(user_email.id);
-            }
         }
 
         for (provider, subject) in upstream_provider_mappings {
