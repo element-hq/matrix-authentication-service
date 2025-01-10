@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_email_authentication_codes\n                  ( user_email_authentication_code_id\n                  , user_email_authentication_id\n                  , code\n                  , created_at\n                  , expires_at\n                  )\n                VALUES ($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f8d402b7217aef47a5c45d4f7cfddbaeedcbbc6963ee573409bfc98e57de6ed"
+}

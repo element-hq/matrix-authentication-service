@@ -52,7 +52,6 @@ pub use self::{
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction, PkceMethod as UpstreamOAuth2PkceMethod,
         ResponseMode as UpstreamOAuth2ResponseMode,
-        SetEmailVerification as UpstreamOAuth2SetEmailVerification,
         TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
     },
 };

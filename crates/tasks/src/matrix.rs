@@ -59,7 +59,6 @@ impl RunnableJob for ProvisionUserJob {
             .await
             .map_err(JobError::retry)?
             .into_iter()
-            .filter(|email| email.confirmed_at.is_some())
             .map(|email| email.email)
             .collect();
         let mut request = ProvisionRequest::new(mxid.clone(), user.sub.clone()).set_emails(emails);

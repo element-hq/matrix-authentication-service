@@ -213,7 +213,6 @@ export async function migrate(): Promise<void> {
       username: localpart,
       created_at: userCreatedAt,
       locked_at: user.deactivated === 1 ? userCreatedAt : null,
-      primary_user_email_id: null,
       can_request_admin: user.admin === 1,
     };
     executions.push(() => mas.insert(masUser).into("users"));
@@ -237,7 +236,6 @@ export async function migrate(): Promise<void> {
     }
 
     // user_threepids => user_emails
-    let primaryEmail: MUserEmail | undefined;
     const synapseThreePids = await synapse
       .select("*")
       .from<SUserThreePid>("user_threepids")
@@ -271,20 +269,7 @@ export async function migrate(): Promise<void> {
           masUserEmail,
         )}`,
       );
-      if (!primaryEmail && threePid.validated_at) {
-        primaryEmail = masUserEmail;
-      }
       executions.push(() => mas.insert(masUserEmail).into("user_emails"));
-    }
-    if (primaryEmail) {
-      log.debug(
-        `Setting primary email for existing user ${masUser.username} to ${primaryEmail.email} as update`,
-      );
-      executions.push(() =>
-        mas("users")
-          .where({ user_id: masUser?.user_id })
-          .update({ primary_user_email_id: primaryEmail?.user_email_id }),
-      );
     }
 
     // user_external_ids => upstream_oauth_links

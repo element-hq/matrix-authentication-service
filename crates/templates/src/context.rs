@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -22,7 +22,7 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailVerification,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailAuthenticationCode,
     UserRecoverySession,
 };
 use mas_i18n::DataLocale;
@@ -878,27 +878,33 @@ impl TemplateContext for EmailRecoveryContext {
 /// Context used by the `emails/verification.{txt,html,subject}` templates
 #[derive(Serialize)]
 pub struct EmailVerificationContext {
-    user: User,
-    verification: UserEmailVerification,
+    browser_session: Option<BrowserSession>,
+    authentication_code: UserEmailAuthenticationCode,
 }
 
 impl EmailVerificationContext {
     /// Constructs a context for the verification email
     #[must_use]
-    pub fn new(user: User, verification: UserEmailVerification) -> Self {
-        Self { user, verification }
+    pub fn new(
+        authentication_code: UserEmailAuthenticationCode,
+        browser_session: Option<BrowserSession>,
+    ) -> Self {
+        Self {
+            browser_session,
+            authentication_code,
+        }
     }
 
     /// Get the user to which this email is being sent
     #[must_use]
-    pub fn user(&self) -> &User {
-        &self.user
+    pub fn user(&self) -> Option<&User> {
+        self.browser_session.as_ref().map(|s| &s.user)
     }
 
     /// Get the verification code being sent
     #[must_use]
-    pub fn verification(&self) -> &UserEmailVerification {
-        &self.verification
+    pub fn code(&self) -> &str {
+        &self.authentication_code.code
     }
 }
 
@@ -907,26 +913,21 @@ impl TemplateContext for EmailVerificationContext {
     where
         Self: Sized,
     {
-        User::samples(now, rng)
+        BrowserSession::samples(now, rng)
             .into_iter()
-            .map(|user| {
-                let email = UserEmail {
+            .map(|browser_session| {
+                let authentication_code = UserEmailAuthenticationCode {
                     id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_id: user.id,
-                    email: "foobar@example.com".to_owned(),
-                    created_at: now,
-                    confirmed_at: None,
-                };
-
-                let verification = UserEmailVerification {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_email_id: email.id,
+                    user_email_authentication_id: Ulid::from_datetime_with_source(now.into(), rng),
                     code: "123456".to_owned(),
-                    created_at: now,
-                    state: mas_data_model::UserEmailVerificationState::Valid,
+                    created_at: now - Duration::try_minutes(5).unwrap(),
+                    expires_at: now + Duration::try_minutes(25).unwrap(),
                 };
 
-                Self { user, verification }
+                Self {
+                    browser_session: Some(browser_session),
+                    authentication_code,
+                }
             })
             .collect()
     }
@@ -982,7 +983,6 @@ impl TemplateContext for EmailVerificationPageContext {
             user_id: Ulid::from_datetime_with_source(now.into(), rng),
             email: "foobar@example.com".to_owned(),
             created_at: now,
-            confirmed_at: None,
         };
 
         vec![Self {

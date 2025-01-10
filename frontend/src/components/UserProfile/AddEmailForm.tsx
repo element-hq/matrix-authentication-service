@@ -15,44 +15,42 @@ import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 
 const ADD_EMAIL_MUTATION = graphql(/* GraphQL */ `
-  mutation AddEmail($userId: ID!, $email: String!) {
-    addEmail(input: { userId: $userId, email: $email }) {
+  mutation AddEmail($email: String!, $language: String!) {
+    startEmailAuthentication(input: { email: $email, language: $language }) {
       status
       violations
-      email {
+      authentication {
         id
-        ...UserEmail_email
       }
     }
   }
 `);
 
 const AddEmailForm: React.FC<{
-  userId: string;
   onAdd: (id: string) => Promise<void>;
-}> = ({ userId, onAdd }) => {
-  const { t } = useTranslation();
+}> = ({ onAdd }) => {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const addEmail = useMutation({
-    mutationFn: ({ userId, email }: { userId: string; email: string }) =>
+    mutationFn: ({ email, language }: { email: string; language: string }) =>
       graphqlRequest({
         query: ADD_EMAIL_MUTATION,
-        variables: { userId, email },
+        variables: { email, language },
       }),
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["userEmails"] });
 
       // Don't clear the form if the email was invalid or already exists
-      if (data.addEmail.status !== "ADDED") {
+      if (data.startEmailAuthentication.status !== "STARTED") {
         return;
       }
 
-      if (!data.addEmail.email?.id) {
+      if (!data.startEmailAuthentication.authentication?.id) {
         throw new Error("Unexpected response from server");
       }
 
       // Call the onAdd callback
-      await onAdd(data.addEmail.email?.id);
+      await onAdd(data.startEmailAuthentication.authentication?.id);
     },
   });
 
@@ -63,20 +61,18 @@ const AddEmailForm: React.FC<{
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("input") as string;
-    addEmail.mutate({ userId, email });
+    addEmail.mutate({ email, language: i18n.languages[0] });
   };
 
-  const status = addEmail.data?.addEmail.status ?? null;
-  const violations = addEmail.data?.addEmail.violations ?? [];
+  const status = addEmail.data?.startEmailAuthentication.status ?? null;
+  const violations = addEmail.data?.startEmailAuthentication.violations ?? [];
 
   return (
     <EditInPlace
       onSave={handleSubmit}
       required
       type="email"
-      serverInvalid={
-        status === "INVALID" || status === "EXISTS" || status === "DENIED"
-      }
+      serverInvalid={!!status && status !== "STARTED"}
       label={t("frontend.add_email_form.email_field_label")}
       helpLabel={t("frontend.add_email_form.email_field_help")}
       saveButtonLabel={t("action.save")}
@@ -84,13 +80,16 @@ const AddEmailForm: React.FC<{
       savedLabel={t("common.saved")}
       cancelButtonLabel={t("action.cancel")}
     >
-      <ErrorMessage match="typeMismatch" forceMatch={status === "INVALID"}>
+      <ErrorMessage
+        match="typeMismatch"
+        forceMatch={status === "INVALID_EMAIL_ADDRESS"}
+      >
         {t("frontend.add_email_form.email_invalid_error")}
       </ErrorMessage>
 
-      {status === "EXISTS" && (
+      {status === "IN_USE" && (
         <ErrorMessage>
-          {t("frontend.add_email_form.email_exists_error")}
+          {t("frontend.add_email_form.email_in_use_error")}
         </ErrorMessage>
       )}
 

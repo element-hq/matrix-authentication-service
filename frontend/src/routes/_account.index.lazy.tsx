@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -10,15 +10,12 @@ import {
   notFound,
   useNavigate,
 } from "@tanstack/react-router";
-import { Alert, Separator, Text } from "@vector-im/compound-web";
-import { Suspense } from "react";
+import { Separator, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
 import AccountManagementPasswordPreview from "../components/AccountManagementPasswordPreview";
 import { ButtonLink } from "../components/ButtonLink";
 import * as Collapsible from "../components/Collapsible";
-import LoadingSpinner from "../components/LoadingSpinner";
-import UserEmail from "../components/UserEmail";
 import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList from "../components/UserProfile/UserEmailList";
 
@@ -43,45 +40,35 @@ function Index(): React.ReactElement {
 
   return (
     <div className="flex flex-col gap-4 mb-4">
-      <Collapsible.Section
-        defaultOpen
-        title={t("frontend.account.contact_info")}
-      >
-        {viewer.primaryEmail ? (
-          <UserEmail
-            email={viewer.primaryEmail}
-            isPrimary
-            siteConfig={siteConfig}
-          />
-        ) : (
-          <Alert
-            type="critical"
-            title={t("frontend.user_email_list.no_primary_email_alert")}
-          />
-        )}
+      {/* Only display this section if the user can add email addresses to their
+          account *or* if they have any existing email addresses */}
+      {(siteConfig.emailChangeAllowed || viewer.emails.totalCount > 0) && (
+        <>
+          <Collapsible.Section
+            defaultOpen
+            title={t("frontend.account.contact_info")}
+          >
+            <UserEmailList siteConfig={siteConfig} />
 
-        <Suspense fallback={<LoadingSpinner mini className="self-center" />}>
-          <UserEmailList siteConfig={siteConfig} user={viewer} />
-        </Suspense>
+            {siteConfig.emailChangeAllowed && <AddEmailForm onAdd={onAdd} />}
+          </Collapsible.Section>
 
-        {siteConfig.emailChangeAllowed && (
-          <AddEmailForm userId={viewer.id} onAdd={onAdd} />
-        )}
-      </Collapsible.Section>
+          <Separator kind="section" />
+        </>
+      )}
 
       {siteConfig.passwordLoginEnabled && (
         <>
-          <Separator kind="section" />
           <Collapsible.Section
             defaultOpen
             title={t("frontend.account.account_password")}
           >
             <AccountManagementPasswordPreview siteConfig={siteConfig} />
           </Collapsible.Section>
+
+          <Separator kind="section" />
         </>
       )}
-
-      <Separator kind="section" />
 
       <Collapsible.Section title={t("common.e2ee")}>
         <Text className="text-secondary" size="md">
