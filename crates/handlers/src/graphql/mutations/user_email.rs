@@ -6,16 +6,16 @@
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
+use mas_i18n::DataLocale;
 use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-    user::{UserEmailRepository, UserRepository},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
+    user::{UserEmailFilter, UserEmailRepository, UserRepository},
     RepositoryAccess,
 };
 
 use crate::graphql::{
-    model::{NodeType, User, UserEmail},
+    model::{NodeType, User, UserEmail, UserEmailAuthentication},
     state::ContextExt,
-    UserId,
 };
 
 #[derive(Default)]
@@ -112,120 +112,6 @@ impl AddEmailPayload {
 
         let messages = violations.iter().map(|v| v.msg.clone()).collect();
         Some(messages)
-    }
-}
-
-/// The input for the `sendVerificationEmail` mutation
-#[derive(InputObject)]
-struct SendVerificationEmailInput {
-    /// The ID of the email address to verify
-    user_email_id: ID,
-}
-
-/// The status of the `sendVerificationEmail` mutation
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-enum SendVerificationEmailStatus {
-    /// The email address is already verified
-    AlreadyVerified,
-}
-
-/// The payload of the `sendVerificationEmail` mutation
-#[derive(Description)]
-enum SendVerificationEmailPayload {
-    AlreadyVerified(mas_data_model::UserEmail),
-}
-
-#[Object(use_type_description)]
-impl SendVerificationEmailPayload {
-    /// Status of the operation
-    async fn status(&self) -> SendVerificationEmailStatus {
-        match self {
-            SendVerificationEmailPayload::AlreadyVerified(_) => {
-                SendVerificationEmailStatus::AlreadyVerified
-            }
-        }
-    }
-
-    /// The email address to which the verification email was sent
-    async fn email(&self) -> UserEmail {
-        match self {
-            SendVerificationEmailPayload::AlreadyVerified(email) => UserEmail(email.clone()),
-        }
-    }
-
-    /// The user to whom the email address belongs
-    async fn user(&self, ctx: &Context<'_>) -> Result<User, async_graphql::Error> {
-        let state = ctx.state();
-        let mut repo = state.repository().await?;
-
-        let user_id = match self {
-            SendVerificationEmailPayload::AlreadyVerified(email) => email.user_id,
-        };
-
-        let user = repo
-            .user()
-            .lookup(user_id)
-            .await?
-            .context("User not found")?;
-
-        Ok(User(user))
-    }
-}
-
-/// The input for the `verifyEmail` mutation
-#[derive(InputObject)]
-struct VerifyEmailInput {
-    /// The ID of the email address to verify
-    user_email_id: ID,
-    /// The verification code
-    code: String,
-}
-
-/// The status of the `verifyEmail` mutation
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-enum VerifyEmailStatus {
-    /// The email address was already verified before
-    AlreadyVerified,
-}
-
-/// The payload of the `verifyEmail` mutation
-#[derive(Description)]
-enum VerifyEmailPayload {
-    AlreadyVerified(mas_data_model::UserEmail),
-}
-
-#[Object(use_type_description)]
-impl VerifyEmailPayload {
-    /// Status of the operation
-    async fn status(&self) -> VerifyEmailStatus {
-        match self {
-            VerifyEmailPayload::AlreadyVerified(_) => VerifyEmailStatus::AlreadyVerified,
-        }
-    }
-
-    /// The email address that was verified
-    async fn email(&self) -> Option<UserEmail> {
-        match self {
-            VerifyEmailPayload::AlreadyVerified(email) => Some(UserEmail(email.clone())),
-        }
-    }
-
-    /// The user to whom the email address belongs
-    async fn user(&self, ctx: &Context<'_>) -> Result<Option<User>, async_graphql::Error> {
-        let state = ctx.state();
-        let mut repo = state.repository().await?;
-
-        let user_id = match self {
-            VerifyEmailPayload::AlreadyVerified(email) => email.user_id,
-        };
-
-        let user = repo
-            .user()
-            .lookup(user_id)
-            .await?
-            .context("User not found")?;
-
-        Ok(Some(User(user)))
     }
 }
 
@@ -334,9 +220,157 @@ impl SetPrimaryEmailPayload {
     }
 }
 
+/// The input for the `startEmailAuthentication` mutation
+#[derive(InputObject)]
+struct StartEmailAuthenticationInput {
+    /// The email address to add to the account
+    email: String,
+
+    /// The language to use for the email
+    #[graphql(default = "en")]
+    language: String,
+}
+
+/// The status of the `startEmailAuthentication` mutation
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+enum StartEmailAuthenticationStatus {
+    /// The email address was started
+    Started,
+    /// The email address is invalid
+    InvalidEmailAddress,
+    /// The email address isn't allowed by the policy
+    Denied,
+    /// The email address is already in use
+    InUse,
+}
+
+/// The payload of the `startEmailAuthentication` mutation
+#[derive(Description)]
+enum StartEmailAuthenticationPayload {
+    Started(UserEmailAuthentication),
+    InvalidEmailAddress,
+    Denied {
+        violations: Vec<mas_policy::Violation>,
+    },
+    InUse,
+}
+
+#[Object(use_type_description)]
+impl StartEmailAuthenticationPayload {
+    /// Status of the operation
+    async fn status(&self) -> StartEmailAuthenticationStatus {
+        match self {
+            Self::Started(_) => StartEmailAuthenticationStatus::Started,
+            Self::InvalidEmailAddress => StartEmailAuthenticationStatus::InvalidEmailAddress,
+            Self::Denied { .. } => StartEmailAuthenticationStatus::Denied,
+            Self::InUse => StartEmailAuthenticationStatus::InUse,
+        }
+    }
+
+    /// The email authentication session that was started
+    async fn authentication(&self) -> Option<&UserEmailAuthentication> {
+        match self {
+            Self::Started(authentication) => Some(authentication),
+            Self::InvalidEmailAddress | Self::Denied { .. } | Self::InUse => None,
+        }
+    }
+
+    /// The list of policy violations if the email address was denied
+    async fn violations(&self) -> Option<Vec<String>> {
+        let Self::Denied { violations } = self else {
+            return None;
+        };
+
+        let messages = violations.iter().map(|v| v.msg.clone()).collect();
+        Some(messages)
+    }
+}
+
+/// The input for the `completeEmailAuthentication` mutation
+#[derive(InputObject)]
+struct CompleteEmailAuthenticationInput {
+    /// The authentication code to use
+    code: String,
+
+    /// The ID of the authentication session to complete
+    id: ID,
+}
+
+/// The payload of the `completeEmailAuthentication` mutation
+#[derive(Description)]
+enum CompleteEmailAuthenticationPayload {
+    Completed,
+    InvalidCode,
+    CodeExpired,
+}
+
+/// The status of the `completeEmailAuthentication` mutation
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+enum CompleteEmailAuthenticationStatus {
+    /// The authentication was completed
+    Completed,
+    /// The authentication code is invalid
+    InvalidCode,
+    /// The authentication code has expired
+    CodeExpired,
+}
+
+#[Object(use_type_description)]
+impl CompleteEmailAuthenticationPayload {
+    /// Status of the operation
+    async fn status(&self) -> CompleteEmailAuthenticationStatus {
+        match self {
+            Self::Completed => CompleteEmailAuthenticationStatus::Completed,
+            Self::InvalidCode => CompleteEmailAuthenticationStatus::InvalidCode,
+            Self::CodeExpired => CompleteEmailAuthenticationStatus::CodeExpired,
+        }
+    }
+}
+
+/// The input for the `resendEmailAuthenticationCode` mutation
+#[derive(InputObject)]
+struct ResendEmailAuthenticationCodeInput {
+    /// The ID of the authentication session to resend the code for
+    id: ID,
+
+    /// The language to use for the email
+    #[graphql(default = "en")]
+    language: String,
+}
+
+/// The payload of the `resendEmailAuthenticationCode` mutation
+#[derive(Description)]
+enum ResendEmailAuthenticationCodePayload {
+    /// The email was resent
+    Resent,
+    /// The email authentication session is already completed
+    Completed,
+}
+
+/// The status of the `resendEmailAuthenticationCode` mutation
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+enum ResendEmailAuthenticationCodeStatus {
+    /// The email was resent
+    Resent,
+    /// The email authentication session is already completed
+    Completed,
+}
+
+#[Object(use_type_description)]
+impl ResendEmailAuthenticationCodePayload {
+    /// Status of the operation
+    async fn status(&self) -> ResendEmailAuthenticationCodeStatus {
+        match self {
+            Self::Resent => ResendEmailAuthenticationCodeStatus::Resent,
+            Self::Completed => ResendEmailAuthenticationCodeStatus::Completed,
+        }
+    }
+}
+
 #[Object]
 impl UserEmailMutations {
     /// Add an email address to the specified user
+    #[graphql(deprecation = "Use `startEmailAuthentication` instead.")]
     async fn add_email(
         &self,
         ctx: &Context<'_>,
@@ -348,19 +382,8 @@ impl UserEmailMutations {
         let clock = state.clock();
         let mut rng = state.rng();
 
-        if !requester.is_owner_or_admin(&UserId(id)) {
-            return Err(async_graphql::Error::new("Unauthorized"));
-        }
-
-        // Allow non-admins to change their email address if the site config allows it
-        if !requester.is_admin() && !state.site_config().email_change_allowed {
-            return Err(async_graphql::Error::new("Unauthorized"));
-        }
-
-        // Only admins can skip validation
-        if (input.skip_verification.is_some() || input.skip_policy_check.is_some())
-            && !requester.is_admin()
-        {
+        // Only allow admin to call this mutation
+        if !requester.is_admin() {
             return Err(async_graphql::Error::new("Unauthorized"));
         }
 
@@ -374,9 +397,6 @@ impl UserEmailMutations {
             .lookup(id)
             .await?
             .context("Failed to load user")?;
-
-        // XXX: this logic should be extracted somewhere else, since most of it is
-        // duplicated in mas_handlers
 
         // Validate the email address
         if input.email.parse::<lettre::Address>().is_err() {
@@ -406,8 +426,6 @@ impl UserEmailMutations {
             (true, user_email)
         };
 
-        // TODO: Use the new email authentication codes
-
         repo.save().await?;
 
         let payload = if added {
@@ -416,64 +434,6 @@ impl UserEmailMutations {
             AddEmailPayload::Exists(user_email)
         };
         Ok(payload)
-    }
-
-    /// Send a verification code for an email address
-    async fn send_verification_email(
-        &self,
-        ctx: &Context<'_>,
-        input: SendVerificationEmailInput,
-    ) -> Result<SendVerificationEmailPayload, async_graphql::Error> {
-        let state = ctx.state();
-        let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
-        let requester = ctx.requester();
-
-        let mut repo = state.repository().await?;
-
-        let user_email = repo
-            .user_email()
-            .lookup(user_email_id)
-            .await?
-            .context("User email not found")?;
-
-        if !requester.is_owner_or_admin(&user_email) {
-            return Err(async_graphql::Error::new("User email not found"));
-        }
-
-        // Schedule a job to verify the email address if needed
-        // TODO: use the new email authentication codes
-
-        repo.save().await?;
-
-        Ok(SendVerificationEmailPayload::AlreadyVerified(user_email))
-    }
-
-    /// Submit a verification code for an email address
-    async fn verify_email(
-        &self,
-        ctx: &Context<'_>,
-        input: VerifyEmailInput,
-    ) -> Result<VerifyEmailPayload, async_graphql::Error> {
-        let state = ctx.state();
-        let user_email_id = NodeType::UserEmail.extract_ulid(&input.user_email_id)?;
-        let requester = ctx.requester();
-
-        let mut repo = state.repository().await?;
-
-        let user_email = repo
-            .user_email()
-            .lookup(user_email_id)
-            .await?
-            .context("User email not found")?;
-
-        if !requester.is_owner_or_admin(&user_email) {
-            return Err(async_graphql::Error::new("User email not found"));
-        }
-
-        repo.cancel().await?;
-
-        // TODO: Use the new email authentication codes
-        Ok(VerifyEmailPayload::AlreadyVerified(user_email))
     }
 
     /// Remove an email address
@@ -564,5 +524,214 @@ impl UserEmailMutations {
         repo.save().await?;
 
         Ok(SetPrimaryEmailPayload::Set(user))
+    }
+
+    /// Start a new email authentication flow
+    async fn start_email_authentication(
+        &self,
+        ctx: &Context<'_>,
+        input: StartEmailAuthenticationInput,
+    ) -> Result<StartEmailAuthenticationPayload, async_graphql::Error> {
+        let state = ctx.state();
+        let mut rng = state.rng();
+        let clock = state.clock();
+        let requester = ctx.requester();
+
+        // Only allow calling this if the requester is a browser session
+        let Some(browser_session) = requester.browser_session() else {
+            return Err(async_graphql::Error::new("Unauthorized"));
+        };
+
+        // Allow to starting the email authentication flow if the site config allows it
+        if !state.site_config().email_change_allowed {
+            return Err(async_graphql::Error::new(
+                "Email changes are not allowed on this server",
+            ));
+        }
+
+        if !state.site_config().email_change_allowed {
+            return Err(async_graphql::Error::new(
+                "Email authentication is not allowed on this server",
+            ));
+        }
+
+        // Check if the locale is valid
+        let _: DataLocale = input.language.parse()?;
+
+        // Check if the email address is valid
+        if input.email.parse::<lettre::Address>().is_err() {
+            return Ok(StartEmailAuthenticationPayload::InvalidEmailAddress);
+        }
+
+        // TODO: check rate limting
+
+        let mut repo = state.repository().await?;
+
+        // Check if the email address is already in use
+        let count = repo
+            .user_email()
+            .count(UserEmailFilter::new().for_email(&input.email))
+            .await?;
+        if count > 0 {
+            return Ok(StartEmailAuthenticationPayload::InUse);
+        }
+
+        // Check if the email address is allowed by the policy
+        let mut policy = state.policy().await?;
+        let res = policy.evaluate_email(&input.email).await?;
+        if !res.valid() {
+            return Ok(StartEmailAuthenticationPayload::Denied {
+                violations: res.violations,
+            });
+        }
+
+        // Create a new authentication session
+        let authentication = repo
+            .user_email()
+            .add_authentication_for_session(&mut rng, &clock, input.email, browser_session)
+            .await?;
+
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SendEmailAuthenticationCodeJob::new(&authentication, input.language),
+            )
+            .await?;
+
+        repo.save().await?;
+
+        Ok(StartEmailAuthenticationPayload::Started(
+            UserEmailAuthentication(authentication),
+        ))
+    }
+
+    /// Resend the email authentication code
+    async fn resend_email_authentication_code(
+        &self,
+        ctx: &Context<'_>,
+        input: ResendEmailAuthenticationCodeInput,
+    ) -> Result<ResendEmailAuthenticationCodePayload, async_graphql::Error> {
+        let state = ctx.state();
+        let mut rng = state.rng();
+        let clock = state.clock();
+
+        let id = NodeType::UserEmailAuthentication.extract_ulid(&input.id)?;
+        let Some(browser_session) = ctx.requester().browser_session() else {
+            return Err(async_graphql::Error::new("Unauthorized"));
+        };
+
+        // Allow to completing the email authentication flow if the site config allows
+        // it
+        if !state.site_config().email_change_allowed {
+            return Err(async_graphql::Error::new(
+                "Email changes are not allowed on this server",
+            ));
+        }
+
+        // Check if the locale is valid
+        let _: DataLocale = input.language.parse()?;
+
+        let mut repo = state.repository().await?;
+
+        let Some(authentication) = repo.user_email().lookup_authentication(id).await? else {
+            return Ok(ResendEmailAuthenticationCodePayload::Completed);
+        };
+
+        // Make sure this authentication belongs to the requester
+        if authentication.user_session_id != Some(browser_session.id) {
+            return Err(async_graphql::Error::new("Unauthorized"));
+        }
+
+        if authentication.completed_at.is_some() {
+            return Ok(ResendEmailAuthenticationCodePayload::Completed);
+        }
+
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SendEmailAuthenticationCodeJob::new(&authentication, input.language),
+            )
+            .await?;
+
+        repo.save().await?;
+
+        Ok(ResendEmailAuthenticationCodePayload::Resent)
+    }
+
+    /// Complete the email authentication flow
+    async fn complete_email_authentication(
+        &self,
+        ctx: &Context<'_>,
+        input: CompleteEmailAuthenticationInput,
+    ) -> Result<CompleteEmailAuthenticationPayload, async_graphql::Error> {
+        let state = ctx.state();
+        let mut rng = state.rng();
+        let clock = state.clock();
+
+        let id = NodeType::UserEmailAuthentication.extract_ulid(&input.id)?;
+
+        let Some(browser_session) = ctx.requester().browser_session() else {
+            return Err(async_graphql::Error::new("Unauthorized"));
+        };
+
+        // Allow to completing the email authentication flow if the site config allows
+        // it
+        if !state.site_config().email_change_allowed {
+            return Err(async_graphql::Error::new(
+                "Email changes are not allowed on this server",
+            ));
+        }
+
+        let mut repo = state.repository().await?;
+
+        let Some(authentication) = repo.user_email().lookup_authentication(id).await? else {
+            return Ok(CompleteEmailAuthenticationPayload::InvalidCode);
+        };
+
+        // Make sure this authentication belongs to the requester
+        if authentication.user_session_id != Some(browser_session.id) {
+            return Ok(CompleteEmailAuthenticationPayload::InvalidCode);
+        }
+
+        let Some(code) = repo
+            .user_email()
+            .find_authentication_code(&authentication, &input.code)
+            .await?
+        else {
+            return Ok(CompleteEmailAuthenticationPayload::InvalidCode);
+        };
+
+        if code.expires_at < state.clock().now() {
+            return Ok(CompleteEmailAuthenticationPayload::CodeExpired);
+        }
+
+        // Check that we can add the email address to the user
+        let count = repo
+            .user_email()
+            .count(UserEmailFilter::new().for_email(&authentication.email))
+            .await?;
+        if count > 0 {
+            return Ok(CompleteEmailAuthenticationPayload::CodeExpired);
+        }
+
+        let authentication = repo
+            .user_email()
+            .complete_authentication(&clock, authentication, &code)
+            .await?;
+
+        repo.user_email()
+            .add(
+                &mut rng,
+                &clock,
+                &browser_session.user,
+                authentication.email,
+            )
+            .await?;
+
+        repo.save().await?;
+
+        Ok(CompleteEmailAuthenticationPayload::Completed)
     }
 }

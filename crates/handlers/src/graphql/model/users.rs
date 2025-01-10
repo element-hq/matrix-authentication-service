@@ -850,3 +850,30 @@ impl UserRecoveryTicket {
         Ok(user_email.email)
     }
 }
+
+/// A email authentication session
+#[derive(Description)]
+pub struct UserEmailAuthentication(pub mas_data_model::UserEmailAuthentication);
+
+#[Object(use_type_description)]
+impl UserEmailAuthentication {
+    /// ID of the object.
+    pub async fn id(&self) -> ID {
+        NodeType::UserEmailAuthentication.id(self.0.id)
+    }
+
+    /// When the object was created.
+    pub async fn created_at(&self) -> DateTime<Utc> {
+        self.0.created_at
+    }
+
+    /// When the object was last updated.
+    pub async fn completed_at(&self) -> Option<DateTime<Utc>> {
+        self.0.completed_at
+    }
+
+    /// The email address associated with this session
+    pub async fn email(&self) -> &str {
+        &self.0.email
+    }
+}
