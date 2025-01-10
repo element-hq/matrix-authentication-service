@@ -110,7 +110,6 @@ impl Mailer {
         fields(
             email.to = %to,
             email.language = %context.language(),
-            user.id = %context.user().id,
         ),
         err,
     )]

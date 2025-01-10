@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use mas_data_model::{Device, User, UserEmail, UserRecoverySession};
+use mas_data_model::{Device, User, UserEmailAuthentication, UserRecoverySession};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
@@ -17,28 +17,6 @@ pub struct VerifyEmailJob {
 }
 
 impl VerifyEmailJob {
-    /// Create a new job to verify an email address.
-    #[must_use]
-    pub fn new(user_email: &UserEmail) -> Self {
-        Self {
-            user_email_id: user_email.id,
-            language: None,
-        }
-    }
-
-    /// Set the language to use for the email.
-    #[must_use]
-    pub fn with_language(mut self, language: String) -> Self {
-        self.language = Some(language);
-        self
-    }
-
-    /// The language to use for the email.
-    #[must_use]
-    pub fn language(&self) -> Option<&str> {
-        self.language.as_deref()
-    }
-
     /// The ID of the email address to verify.
     #[must_use]
     pub fn user_email_id(&self) -> Ulid {
@@ -48,6 +26,40 @@ impl VerifyEmailJob {
 
 impl InsertableJob for VerifyEmailJob {
     const QUEUE_NAME: &'static str = "verify-email";
+}
+
+/// A job to send an email authentication code to a user.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SendEmailAuthenticationCodeJob {
+    user_email_authentication_id: Ulid,
+    language: String,
+}
+
+impl SendEmailAuthenticationCodeJob {
+    /// Create a new job to send an email authentication code to a user.
+    #[must_use]
+    pub fn new(user_email_authentication: &UserEmailAuthentication, language: String) -> Self {
+        Self {
+            user_email_authentication_id: user_email_authentication.id,
+            language,
+        }
+    }
+
+    /// The language to use for the email.
+    #[must_use]
+    pub fn language(&self) -> &str {
+        &self.language
+    }
+
+    /// The ID of the email authentication to send the code for.
+    #[must_use]
+    pub fn user_email_authentication_id(&self) -> Ulid {
+        self.user_email_authentication_id
+    }
+}
+
+impl InsertableJob for SendEmailAuthenticationCodeJob {
+    const QUEUE_NAME: &'static str = "send-email-authentication-code";
 }
 
 /// A job to provision the user on the homeserver.
