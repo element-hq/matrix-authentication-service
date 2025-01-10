@@ -6141,10 +6141,15 @@ dependencies = [
 name = "syn2mas"
 version = "0.12.0"
 dependencies = [
+ "anyhow",
+ "camino",
  "chrono",
  "compact_str",
+ "figment",
  "futures-util",
+ "mas-config",
  "rand",
+ "serde",
  "sqlx",
  "thiserror 2.0.3",
  "thiserror-ext",
