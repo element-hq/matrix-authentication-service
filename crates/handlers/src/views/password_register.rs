@@ -24,7 +24,7 @@ use mas_matrix::BoxHomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _, VerifyEmailJob},
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     user::{BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
@@ -325,14 +325,6 @@ pub(crate) async fn post(
 
     repo.browser_session()
         .authenticate_with_password(&mut rng, &clock, &session, &user_password)
-        .await?;
-
-    repo.queue_job()
-        .schedule_job(
-            &mut rng,
-            &clock,
-            VerifyEmailJob::new(&user_email).with_language(locale.to_string()),
-        )
         .await?;
 
     repo.queue_job()

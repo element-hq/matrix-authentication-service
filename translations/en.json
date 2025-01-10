@@ -230,7 +230,7 @@
     "emails": {
       "greeting": "Hello %(username)s,",
       "@greeting": {
-        "context": "emails/verification.html:11:3-51, emails/verification.txt:11:3-51",
+        "context": "emails/verification.html:11:3-85, emails/verification.txt:11:3-85",
         "description": "Greeting at the top of emails sent to the user"
       },
       "recovery": {
@@ -262,17 +262,17 @@
       "verify": {
         "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
         "@body_html": {
-          "context": "emails/verification.html:13:3-59",
+          "context": "emails/verification.html:13:3-66",
           "description": "The body of the email sent to verify an email address (HTML)"
         },
         "body_text": "Your verification code to confirm this email address is: %(code)s",
         "@body_text": {
-          "context": "emails/verification.txt:13:3-59",
+          "context": "emails/verification.txt:13:3-66",
           "description": "The body of the email sent to verify an email address (text)"
         },
         "subject": "Your email verification code is: %(code)s",
         "@subject": {
-          "context": "emails/verification.subject:11:3-57",
+          "context": "emails/verification.subject:11:3-64",
           "description": "The subject line of the email sent to verify an email address"
         }
       }

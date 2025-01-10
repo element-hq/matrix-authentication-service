@@ -1,5 +1,5 @@
 {#
-Copyright 2024 New Vector Ltd.
+Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
 SPDX-License-Identifier: AGPL-3.0-only
@@ -8,6 +8,6 @@ Please see LICENSE in the repository root for full details.
 
 {%- set _ = translator(lang) -%}
 
-{{ _("mas.emails.greeting", username=user.username) }}<br />
+{{ _("mas.emails.greeting", username=browser_session.user.username | default("user")) }}<br />
 <br />
-{{ _("mas.emails.verify.body_html", code=verification.code) }}<br />
+{{ _("mas.emails.verify.body_html", code=authentication_code.code) }}<br />
