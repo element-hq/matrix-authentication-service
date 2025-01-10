@@ -17,8 +17,6 @@ const QUERY = graphql(/* GraphQL */ `
     viewer {
       __typename
       ... on User {
-        id
-
         emails(first: 0) {
           totalCount
         }
