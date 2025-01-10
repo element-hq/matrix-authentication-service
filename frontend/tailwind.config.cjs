@@ -14,6 +14,7 @@ module.exports = {
   theme: {
     colors: {
       white: "#FFFFFF",
+      primary: "var(--cpd-color-text-primary)",
       secondary: "var(--cpd-color-text-secondary)",
       critical: "var(--cpd-color-text-critical-primary)",
       alert: "#FF5B55",

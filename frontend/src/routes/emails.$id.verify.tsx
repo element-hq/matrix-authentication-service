@@ -5,14 +5,16 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query VerifyEmail($id: ID!) {
-    userEmail(id: $id) {
-      ...UserEmail_verifyEmail
+    userEmailAuthentication(id: $id) {
+      id
+      email
+      completedAt
     }
   }
 `);
@@ -25,6 +27,14 @@ export const query = (id: string) =>
   });
 
 export const Route = createFileRoute("/emails/$id/verify")({
-  loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(query(params.id)),
+  async loader({ context, params }): Promise<void> {
+    const data = await context.queryClient.ensureQueryData(query(params.id));
+    if (!data.userEmailAuthentication) {
+      throw notFound();
+    }
+
+    if (data.userEmailAuthentication.completedAt) {
+      throw redirect({ to: "/" });
+    }
+  },
 });

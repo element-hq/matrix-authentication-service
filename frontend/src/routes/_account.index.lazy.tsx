@@ -50,9 +50,7 @@ function Index(): React.ReactElement {
           >
             <UserEmailList siteConfig={siteConfig} />
 
-            {siteConfig.emailChangeAllowed && (
-              <AddEmailForm userId={viewer.id} onAdd={onAdd} />
-            )}
+            {siteConfig.emailChangeAllowed && <AddEmailForm onAdd={onAdd} />}
           </Collapsible.Section>
 
           <Separator kind="section" />

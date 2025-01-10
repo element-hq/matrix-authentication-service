@@ -45,7 +45,6 @@ const userProfileHandler = ({
       data: {
         viewer: {
           __typename: "User",
-          id: "user-id",
           emails: {
             totalCount: emailTotalCount,
           },

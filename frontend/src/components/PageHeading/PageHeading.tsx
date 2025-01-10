@@ -12,8 +12,8 @@ type Props = {
   Icon: React.ComponentType<React.SVGAttributes<SVGElement>>;
   invalid?: boolean;
   success?: boolean;
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
 };
 
 const PageHeading: React.FC<Props> = ({

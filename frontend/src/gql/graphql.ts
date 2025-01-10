@@ -326,6 +326,30 @@ export type CompatSsoLoginEdge = {
   node: CompatSsoLogin;
 };
 
+/** The input for the `completeEmailAuthentication` mutation */
+export type CompleteEmailAuthenticationInput = {
+  /** The authentication code to use */
+  code: Scalars['String']['input'];
+  /** The ID of the authentication session to complete */
+  id: Scalars['ID']['input'];
+};
+
+/** The payload of the `completeEmailAuthentication` mutation */
+export type CompleteEmailAuthenticationPayload = {
+  __typename?: 'CompleteEmailAuthenticationPayload';
+  /** Status of the operation */
+  status: CompleteEmailAuthenticationStatus;
+};
+
+/** The status of the `completeEmailAuthentication` mutation */
+export type CompleteEmailAuthenticationStatus =
+  /** The authentication code has expired */
+  | 'CODE_EXPIRED'
+  /** The authentication was completed */
+  | 'COMPLETED'
+  /** The authentication code is invalid */
+  | 'INVALID_CODE';
+
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
   /** Whether the session should issue a never-expiring access token */
@@ -474,12 +498,17 @@ export type MatrixUser = {
 /** The mutations root of the GraphQL interface. */
 export type Mutation = {
   __typename?: 'Mutation';
-  /** Add an email address to the specified user */
+  /**
+   * Add an email address to the specified user
+   * @deprecated Use `startEmailAuthentication` instead.
+   */
   addEmail: AddEmailPayload;
   /** Add a user. This is only available to administrators. */
   addUser: AddUserPayload;
   /** Temporarily allow user to reset their cross-signing keys. */
   allowUserCrossSigningReset: AllowUserCrossSigningResetPayload;
+  /** Complete the email authentication flow */
+  completeEmailAuthentication: CompleteEmailAuthenticationPayload;
   /**
    * Create a new arbitrary OAuth 2.0 Session.
    *
@@ -493,6 +522,8 @@ export type Mutation = {
   lockUser: LockUserPayload;
   /** Remove an email address */
   removeEmail: RemoveEmailPayload;
+  /** Resend the email authentication code */
+  resendEmailAuthenticationCode: ResendEmailAuthenticationCodePayload;
   /**
    * Resend a user recovery email
    *
@@ -501,8 +532,6 @@ export type Mutation = {
    * calls this mutation.
    */
   resendRecoveryEmail: ResendRecoveryEmailPayload;
-  /** Send a verification code for an email address */
-  sendVerificationEmail: SendVerificationEmailPayload;
   /**
    * Set whether a user can request admin. This is only available to
    * administrators.
@@ -526,10 +555,10 @@ export type Mutation = {
    * @deprecated This doesn't do anything anymore, but is kept to avoid breaking existing queries
    */
   setPrimaryEmail: SetPrimaryEmailPayload;
+  /** Start a new email authentication flow */
+  startEmailAuthentication: StartEmailAuthenticationPayload;
   /** Unlock a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
-  /** Submit a verification code for an email address */
-  verifyEmail: VerifyEmailPayload;
 };
 
 
@@ -548,6 +577,12 @@ export type MutationAddUserArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationAllowUserCrossSigningResetArgs = {
   input: AllowUserCrossSigningResetInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationCompleteEmailAuthenticationArgs = {
+  input: CompleteEmailAuthenticationInput;
 };
 
 
@@ -588,14 +623,14 @@ export type MutationRemoveEmailArgs = {
 
 
 /** The mutations root of the GraphQL interface. */
-export type MutationResendRecoveryEmailArgs = {
-  input: ResendRecoveryEmailInput;
+export type MutationResendEmailAuthenticationCodeArgs = {
+  input: ResendEmailAuthenticationCodeInput;
 };
 
 
 /** The mutations root of the GraphQL interface. */
-export type MutationSendVerificationEmailArgs = {
-  input: SendVerificationEmailInput;
+export type MutationResendRecoveryEmailArgs = {
+  input: ResendRecoveryEmailInput;
 };
 
 
@@ -630,14 +665,14 @@ export type MutationSetPrimaryEmailArgs = {
 
 
 /** The mutations root of the GraphQL interface. */
-export type MutationUnlockUserArgs = {
-  input: UnlockUserInput;
+export type MutationStartEmailAuthenticationArgs = {
+  input: StartEmailAuthenticationInput;
 };
 
 
 /** The mutations root of the GraphQL interface. */
-export type MutationVerifyEmailArgs = {
-  input: VerifyEmailInput;
+export type MutationUnlockUserArgs = {
+  input: UnlockUserInput;
 };
 
 /** An object with an ID. */
@@ -779,6 +814,8 @@ export type Query = {
   userByUsername?: Maybe<User>;
   /** Fetch a user email by its ID. */
   userEmail?: Maybe<UserEmail>;
+  /** Fetch a user email authentication session */
+  userEmailAuthentication?: Maybe<UserEmailAuthentication>;
   /** Fetch a user recovery ticket. */
   userRecoveryTicket?: Maybe<UserRecoveryTicket>;
   /**
@@ -871,6 +908,12 @@ export type QueryUserEmailArgs = {
 
 
 /** The query root of the GraphQL interface. */
+export type QueryUserEmailAuthenticationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
 export type QueryUserRecoveryTicketArgs = {
   ticket: Scalars['String']['input'];
 };
@@ -910,6 +953,28 @@ export type RemoveEmailStatus =
   /** The email address was removed */
   | 'REMOVED';
 
+/** The input for the `resendEmailAuthenticationCode` mutation */
+export type ResendEmailAuthenticationCodeInput = {
+  /** The ID of the authentication session to resend the code for */
+  id: Scalars['ID']['input'];
+  /** The language to use for the email */
+  language?: Scalars['String']['input'];
+};
+
+/** The payload of the `resendEmailAuthenticationCode` mutation */
+export type ResendEmailAuthenticationCodePayload = {
+  __typename?: 'ResendEmailAuthenticationCodePayload';
+  /** Status of the operation */
+  status: ResendEmailAuthenticationCodeStatus;
+};
+
+/** The status of the `resendEmailAuthenticationCode` mutation */
+export type ResendEmailAuthenticationCodeStatus =
+  /** The email authentication session is already completed */
+  | 'COMPLETED'
+  /** The email was resent */
+  | 'RESENT';
+
 /** The input for the `resendRecoveryEmail` mutation. */
 export type ResendRecoveryEmailInput = {
   /** The recovery ticket to use. */
@@ -933,28 +998,6 @@ export type ResendRecoveryEmailStatus =
   | 'RATE_LIMITED'
   /** The recovery email was sent. */
   | 'SENT';
-
-/** The input for the `sendVerificationEmail` mutation */
-export type SendVerificationEmailInput = {
-  /** The ID of the email address to verify */
-  userEmailId: Scalars['ID']['input'];
-};
-
-/** The payload of the `sendVerificationEmail` mutation */
-export type SendVerificationEmailPayload = {
-  __typename?: 'SendVerificationEmailPayload';
-  /** The email address to which the verification email was sent */
-  email: UserEmail;
-  /** Status of the operation */
-  status: SendVerificationEmailStatus;
-  /** The user to whom the email address belongs */
-  user: User;
-};
-
-/** The status of the `sendVerificationEmail` mutation */
-export type SendVerificationEmailStatus =
-  /** The email address is already verified */
-  | 'ALREADY_VERIFIED';
 
 /** A client session, either compat or OAuth 2.0 */
 export type Session = CompatSession | Oauth2Session;
@@ -1134,6 +1177,36 @@ export type SiteConfig = Node & {
   /** The URL to the terms of service. */
   tosUri?: Maybe<Scalars['Url']['output']>;
 };
+
+/** The input for the `startEmailAuthentication` mutation */
+export type StartEmailAuthenticationInput = {
+  /** The email address to add to the account */
+  email: Scalars['String']['input'];
+  /** The language to use for the email */
+  language?: Scalars['String']['input'];
+};
+
+/** The payload of the `startEmailAuthentication` mutation */
+export type StartEmailAuthenticationPayload = {
+  __typename?: 'StartEmailAuthenticationPayload';
+  /** The email authentication session that was started */
+  authentication?: Maybe<UserEmailAuthentication>;
+  /** Status of the operation */
+  status: StartEmailAuthenticationStatus;
+  /** The list of policy violations if the email address was denied */
+  violations?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** The status of the `startEmailAuthentication` mutation */
+export type StartEmailAuthenticationStatus =
+  /** The email address isn't allowed by the policy */
+  | 'DENIED'
+  /** The email address is invalid */
+  | 'INVALID_EMAIL_ADDRESS'
+  /** The email address is already in use */
+  | 'IN_USE'
+  /** The email address was started */
+  | 'STARTED';
 
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
@@ -1404,6 +1477,19 @@ export type UserEmail = CreationEvent & Node & {
   id: Scalars['ID']['output'];
 };
 
+/** A email authentication session */
+export type UserEmailAuthentication = CreationEvent & Node & {
+  __typename?: 'UserEmailAuthentication';
+  /** When the object was last updated. */
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The email address associated with this session */
+  email: Scalars['String']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
 export type UserEmailConnection = {
   __typename?: 'UserEmailConnection';
   /** A list of edges. */
@@ -1462,30 +1548,6 @@ export type UserState =
   | 'ACTIVE'
   /** The user is locked. */
   | 'LOCKED';
-
-/** The input for the `verifyEmail` mutation */
-export type VerifyEmailInput = {
-  /** The verification code */
-  code: Scalars['String']['input'];
-  /** The ID of the email address to verify */
-  userEmailId: Scalars['ID']['input'];
-};
-
-/** The payload of the `verifyEmail` mutation */
-export type VerifyEmailPayload = {
-  __typename?: 'VerifyEmailPayload';
-  /** The email address that was verified */
-  email?: Maybe<UserEmail>;
-  /** Status of the operation */
-  status: VerifyEmailStatus;
-  /** The user to whom the email address belongs */
-  user?: Maybe<User>;
-};
-
-/** The status of the `verifyEmail` mutation */
-export type VerifyEmailStatus =
-  /** The email address was already verified before */
-  | 'ALREADY_VERIFIED';
 
 /** Represents the current viewer */
 export type Viewer = Anonymous | User;
@@ -1569,15 +1631,12 @@ export type SetDisplayNameMutationVariables = Exact<{
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
 export type AddEmailMutationVariables = Exact<{
-  userId: Scalars['ID']['input'];
   email: Scalars['String']['input'];
+  language: Scalars['String']['input'];
 }>;
 
 
-export type AddEmailMutation = { __typename?: 'Mutation', addEmail: { __typename?: 'AddEmailPayload', status: AddEmailStatus, violations?: Array<string> | null, email?: (
-      { __typename?: 'UserEmail', id: string }
-      & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-    ) | null } };
+export type AddEmailMutation = { __typename?: 'Mutation', startEmailAuthentication: { __typename?: 'StartEmailAuthenticationPayload', status: StartEmailAuthenticationStatus, violations?: Array<string> | null, authentication?: { __typename?: 'UserEmailAuthentication', id: string } | null } };
 
 export type UserEmailListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1596,27 +1655,10 @@ export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emai
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
-export type UserEmail_VerifyEmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_VerifyEmailFragment' };
-
-export type DoVerifyEmailMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-  code: Scalars['String']['input'];
-}>;
-
-
-export type DoVerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'VerifyEmailPayload', status: VerifyEmailStatus } };
-
-export type ResendVerificationEmailMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type ResendVerificationEmailMutation = { __typename?: 'Mutation', sendVerificationEmail: { __typename?: 'SendVerificationEmailPayload', status: SendVerificationEmailStatus } };
-
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', id: string, emails: { __typename?: 'UserEmailConnection', totalCount: number } }, siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number } }, siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
@@ -1635,7 +1677,7 @@ export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __type
   ) | { __typename: 'CompatSsoLogin', id: string } | { __typename: 'Oauth2Client', id: string } | (
     { __typename: 'Oauth2Session', id: string }
     & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
-  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
+  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserEmailAuthentication', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
 
 export type BrowserSessionListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1710,15 +1752,28 @@ export type DeviceRedirectQueryVariables = Exact<{
 
 export type DeviceRedirectQuery = { __typename?: 'Query', session?: { __typename: 'CompatSession', id: string } | { __typename: 'Oauth2Session', id: string } | null };
 
+export type DoVerifyEmailMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  code: Scalars['String']['input'];
+}>;
+
+
+export type DoVerifyEmailMutation = { __typename?: 'Mutation', completeEmailAuthentication: { __typename?: 'CompleteEmailAuthenticationPayload', status: CompleteEmailAuthenticationStatus } };
+
+export type ResendEmailAuthenticationCodeMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  language: Scalars['String']['input'];
+}>;
+
+
+export type ResendEmailAuthenticationCodeMutation = { __typename?: 'Mutation', resendEmailAuthenticationCode: { __typename?: 'ResendEmailAuthenticationCodePayload', status: ResendEmailAuthenticationCodeStatus } };
+
 export type VerifyEmailQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type VerifyEmailQuery = { __typename?: 'Query', userEmail?: (
-    { __typename?: 'UserEmail' }
-    & { ' $fragmentRefs'?: { 'UserEmail_VerifyEmailFragment': UserEmail_VerifyEmailFragment } }
-  ) | null };
+export type VerifyEmailQuery = { __typename?: 'Query', userEmailAuthentication?: { __typename?: 'UserEmailAuthentication', id: string, email: string, completedAt?: string | null } | null };
 
 export type ChangePasswordMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -1977,12 +2032,6 @@ export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
   }
 }
     `, {"fragmentName":"BrowserSessionsOverview_user"}) as unknown as TypedDocumentString<BrowserSessionsOverview_UserFragment, unknown>;
-export const UserEmail_VerifyEmailFragmentDoc = new TypedDocumentString(`
-    fragment UserEmail_verifyEmail on UserEmail {
-  id
-  email
-}
-    `, {"fragmentName":"UserEmail_verifyEmail"}) as unknown as TypedDocumentString<UserEmail_VerifyEmailFragment, unknown>;
 export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentString(`
     fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
   username
@@ -2082,20 +2131,16 @@ export const SetDisplayNameDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
 export const AddEmailDocument = new TypedDocumentString(`
-    mutation AddEmail($userId: ID!, $email: String!) {
-  addEmail(input: {userId: $userId, email: $email}) {
+    mutation AddEmail($email: String!, $language: String!) {
+  startEmailAuthentication(input: {email: $email, language: $language}) {
     status
     violations
-    email {
+    authentication {
       id
-      ...UserEmail_email
     }
   }
 }
-    fragment UserEmail_email on UserEmail {
-  id
-  email
-}`) as unknown as TypedDocumentString<AddEmailMutation, AddEmailMutationVariables>;
+    `) as unknown as TypedDocumentString<AddEmailMutation, AddEmailMutationVariables>;
 export const UserEmailListDocument = new TypedDocumentString(`
     query UserEmailList($first: Int, $after: String, $last: Int, $before: String) {
   viewer {
@@ -2123,26 +2168,11 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
-export const DoVerifyEmailDocument = new TypedDocumentString(`
-    mutation DoVerifyEmail($id: ID!, $code: String!) {
-  verifyEmail(input: {userEmailId: $id, code: $code}) {
-    status
-  }
-}
-    `) as unknown as TypedDocumentString<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>;
-export const ResendVerificationEmailDocument = new TypedDocumentString(`
-    mutation ResendVerificationEmail($id: ID!) {
-  sendVerificationEmail(input: {userEmailId: $id}) {
-    status
-  }
-}
-    `) as unknown as TypedDocumentString<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewer {
     __typename
     ... on User {
-      id
       emails(first: 0) {
         totalCount
       }
@@ -2434,16 +2464,29 @@ export const DeviceRedirectDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<DeviceRedirectQuery, DeviceRedirectQueryVariables>;
-export const VerifyEmailDocument = new TypedDocumentString(`
-    query VerifyEmail($id: ID!) {
-  userEmail(id: $id) {
-    ...UserEmail_verifyEmail
+export const DoVerifyEmailDocument = new TypedDocumentString(`
+    mutation DoVerifyEmail($id: ID!, $code: String!) {
+  completeEmailAuthentication(input: {id: $id, code: $code}) {
+    status
   }
 }
-    fragment UserEmail_verifyEmail on UserEmail {
-  id
-  email
-}`) as unknown as TypedDocumentString<VerifyEmailQuery, VerifyEmailQueryVariables>;
+    `) as unknown as TypedDocumentString<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>;
+export const ResendEmailAuthenticationCodeDocument = new TypedDocumentString(`
+    mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {
+  resendEmailAuthenticationCode(input: {id: $id, language: $language}) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>;
+export const VerifyEmailDocument = new TypedDocumentString(`
+    query VerifyEmail($id: ID!) {
+  userEmailAuthentication(id: $id) {
+    id
+    email
+    completedAt
+  }
+}
+    `) as unknown as TypedDocumentString<VerifyEmailQuery, VerifyEmailQueryVariables>;
 export const ChangePasswordDocument = new TypedDocumentString(`
     mutation ChangePassword($userId: ID!, $oldPassword: String!, $newPassword: String!) {
   setPassword(
@@ -2653,9 +2696,9 @@ export const mockSetDisplayNameMutation = (resolver: GraphQLResponseResolver<Set
  * @example
  * mockAddEmailMutation(
  *   ({ query, variables }) => {
- *     const { userId, email } = variables;
+ *     const { email, language } = variables;
  *     return HttpResponse.json({
- *       data: { addEmail }
+ *       data: { startEmailAuthentication }
  *     })
  *   },
  *   requestOptions
@@ -2686,50 +2729,6 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
 export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
     'UserEmailList',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockDoVerifyEmailMutation(
- *   ({ query, variables }) => {
- *     const { id, code } = variables;
- *     return HttpResponse.json({
- *       data: { verifyEmail }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockDoVerifyEmailMutation = (resolver: GraphQLResponseResolver<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>, options?: RequestHandlerOptions) =>
-  graphql.mutation<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>(
-    'DoVerifyEmail',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockResendVerificationEmailMutation(
- *   ({ query, variables }) => {
- *     const { id } = variables;
- *     return HttpResponse.json({
- *       data: { sendVerificationEmail }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockResendVerificationEmailMutation = (resolver: GraphQLResponseResolver<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>, options?: RequestHandlerOptions) =>
-  graphql.mutation<ResendVerificationEmailMutation, ResendVerificationEmailMutationVariables>(
-    'ResendVerificationEmail',
     resolver,
     options
   )
@@ -2933,11 +2932,55 @@ export const mockDeviceRedirectQuery = (resolver: GraphQLResponseResolver<Device
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockDoVerifyEmailMutation(
+ *   ({ query, variables }) => {
+ *     const { id, code } = variables;
+ *     return HttpResponse.json({
+ *       data: { completeEmailAuthentication }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockDoVerifyEmailMutation = (resolver: GraphQLResponseResolver<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<DoVerifyEmailMutation, DoVerifyEmailMutationVariables>(
+    'DoVerifyEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockResendEmailAuthenticationCodeMutation(
+ *   ({ query, variables }) => {
+ *     const { id, language } = variables;
+ *     return HttpResponse.json({
+ *       data: { resendEmailAuthenticationCode }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockResendEmailAuthenticationCodeMutation = (resolver: GraphQLResponseResolver<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>(
+    'ResendEmailAuthenticationCode',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockVerifyEmailQuery(
  *   ({ query, variables }) => {
  *     const { id } = variables;
  *     return HttpResponse.json({
- *       data: { userEmail }
+ *       data: { userEmailAuthentication }
  *     })
  *   },
  *   requestOptions

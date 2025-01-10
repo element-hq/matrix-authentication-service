@@ -49,9 +49,9 @@
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",
-      "email_exists_error": "The entered email is already added to this account",
       "email_field_help": "Add an alternative email you can use to access this account.",
       "email_field_label": "Add email",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_error": "The entered email is invalid"
     },
     "browser_session_details": {

@@ -93,7 +93,6 @@ export const handlers = [
       data: {
         viewer: {
           __typename: "User",
-          id: "user-id",
           emails: {
             totalCount: 1,
           },
