@@ -22,6 +22,7 @@ mod viewer;
 use self::{
     session::SessionQuery, upstream_oauth::UpstreamOAuthQuery, user::UserQuery, viewer::ViewerQuery,
 };
+use super::model::UserEmailAuthentication;
 
 /// The query root of the GraphQL interface.
 #[derive(Default, MergedObject)]
@@ -196,6 +197,32 @@ impl BaseQuery {
         Ok(ticket.map(UserRecoveryTicket))
     }
 
+    /// Fetch a user email authentication session
+    async fn user_email_authentication(
+        &self,
+        ctx: &Context<'_>,
+        id: ID,
+    ) -> Result<Option<UserEmailAuthentication>, async_graphql::Error> {
+        let state = ctx.state();
+        let id = NodeType::UserEmailAuthentication.extract_ulid(&id)?;
+        let requester = ctx.requester();
+        let mut repo = state.repository().await?;
+        let authentication = repo.user_email().lookup_authentication(id).await?;
+        let Some(authentication) = authentication else {
+            return Ok(None);
+        };
+
+        let Some(browser_session) = requester.browser_session() else {
+            return Ok(None);
+        };
+
+        if authentication.user_session_id != Some(browser_session.id) {
+            return Ok(None);
+        }
+
+        Ok(Some(UserEmailAuthentication(authentication)))
+    }
+
     /// Fetches an object given its ID.
     async fn node(&self, ctx: &Context<'_>, id: ID) -> Result<Option<Node>, async_graphql::Error> {
         // Special case for the anonymous user
@@ -236,6 +263,11 @@ impl BaseQuery {
                 .user_email(ctx, id)
                 .await?
                 .map(|e| Node::UserEmail(Box::new(e))),
+
+            NodeType::UserEmailAuthentication => self
+                .user_email_authentication(ctx, id)
+                .await?
+                .map(|e| Node::UserEmailAuthentication(Box::new(e))),
 
             NodeType::CompatSession => self
                 .compat_session(ctx, id)

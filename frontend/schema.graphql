@@ -485,6 +485,48 @@ type CompatSsoLoginEdge {
 }
 
 """
+The input for the `completeEmailAuthentication` mutation
+"""
+input CompleteEmailAuthenticationInput {
+  """
+  The authentication code to use
+  """
+  code: String!
+  """
+  The ID of the authentication session to complete
+  """
+  id: ID!
+}
+
+"""
+The payload of the `completeEmailAuthentication` mutation
+"""
+type CompleteEmailAuthenticationPayload {
+  """
+  Status of the operation
+  """
+  status: CompleteEmailAuthenticationStatus!
+}
+
+"""
+The status of the `completeEmailAuthentication` mutation
+"""
+enum CompleteEmailAuthenticationStatus {
+  """
+  The authentication was completed
+  """
+  COMPLETED
+  """
+  The authentication code is invalid
+  """
+  INVALID_CODE
+  """
+  The authentication code has expired
+  """
+  CODE_EXPIRED
+}
+
+"""
 The input of the `createOauth2Session` mutation.
 """
 input CreateOAuth2SessionInput {
@@ -747,16 +789,7 @@ type Mutation {
   Add an email address to the specified user
   """
   addEmail(input: AddEmailInput!): AddEmailPayload!
-  """
-  Send a verification code for an email address
-  """
-  sendVerificationEmail(
-    input: SendVerificationEmailInput!
-  ): SendVerificationEmailPayload!
-  """
-  Submit a verification code for an email address
-  """
-  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
+    @deprecated(reason: "Use `startEmailAuthentication` instead.")
   """
   Remove an email address
   """
@@ -768,6 +801,24 @@ type Mutation {
     @deprecated(
       reason: "This doesn't do anything anymore, but is kept to avoid breaking existing queries"
     )
+  """
+  Start a new email authentication flow
+  """
+  startEmailAuthentication(
+    input: StartEmailAuthenticationInput!
+  ): StartEmailAuthenticationPayload!
+  """
+  Resend the email authentication code
+  """
+  resendEmailAuthenticationCode(
+    input: ResendEmailAuthenticationCodeInput!
+  ): ResendEmailAuthenticationCodePayload!
+  """
+  Complete the email authentication flow
+  """
+  completeEmailAuthentication(
+    input: CompleteEmailAuthenticationInput!
+  ): CompleteEmailAuthenticationPayload!
   """
   Add a user. This is only available to administrators.
   """
@@ -1043,6 +1094,10 @@ type Query {
   """
   userRecoveryTicket(ticket: String!): UserRecoveryTicket
   """
+  Fetch a user email authentication session
+  """
+  userEmailAuthentication(id: ID!): UserEmailAuthentication
+  """
   Fetches an object given its ID.
   """
   node(id: ID!): Node
@@ -1175,6 +1230,44 @@ enum RemoveEmailStatus {
 }
 
 """
+The input for the `resendEmailAuthenticationCode` mutation
+"""
+input ResendEmailAuthenticationCodeInput {
+  """
+  The ID of the authentication session to resend the code for
+  """
+  id: ID!
+  """
+  The language to use for the email
+  """
+  language: String! = "en"
+}
+
+"""
+The payload of the `resendEmailAuthenticationCode` mutation
+"""
+type ResendEmailAuthenticationCodePayload {
+  """
+  Status of the operation
+  """
+  status: ResendEmailAuthenticationCodeStatus!
+}
+
+"""
+The status of the `resendEmailAuthenticationCode` mutation
+"""
+enum ResendEmailAuthenticationCodeStatus {
+  """
+  The email was resent
+  """
+  RESENT
+  """
+  The email authentication session is already completed
+  """
+  COMPLETED
+}
+
+"""
 The input for the `resendRecoveryEmail` mutation.
 """
 input ResendRecoveryEmailInput {
@@ -1214,44 +1307,6 @@ enum ResendRecoveryEmailStatus {
   The recovery email was sent.
   """
   SENT
-}
-
-"""
-The input for the `sendVerificationEmail` mutation
-"""
-input SendVerificationEmailInput {
-  """
-  The ID of the email address to verify
-  """
-  userEmailId: ID!
-}
-
-"""
-The payload of the `sendVerificationEmail` mutation
-"""
-type SendVerificationEmailPayload {
-  """
-  Status of the operation
-  """
-  status: SendVerificationEmailStatus!
-  """
-  The email address to which the verification email was sent
-  """
-  email: UserEmail!
-  """
-  The user to whom the email address belongs
-  """
-  user: User!
-}
-
-"""
-The status of the `sendVerificationEmail` mutation
-"""
-enum SendVerificationEmailStatus {
-  """
-  The email address is already verified
-  """
-  ALREADY_VERIFIED
 }
 
 """
@@ -1532,6 +1587,60 @@ type SiteConfig implements Node {
   The ID of the site configuration.
   """
   id: ID!
+}
+
+"""
+The input for the `startEmailAuthentication` mutation
+"""
+input StartEmailAuthenticationInput {
+  """
+  The email address to add to the account
+  """
+  email: String!
+  """
+  The language to use for the email
+  """
+  language: String! = "en"
+}
+
+"""
+The payload of the `startEmailAuthentication` mutation
+"""
+type StartEmailAuthenticationPayload {
+  """
+  Status of the operation
+  """
+  status: StartEmailAuthenticationStatus!
+  """
+  The email authentication session that was started
+  """
+  authentication: UserEmailAuthentication
+  """
+  The list of policy violations if the email address was denied
+  """
+  violations: [String!]
+}
+
+"""
+The status of the `startEmailAuthentication` mutation
+"""
+enum StartEmailAuthenticationStatus {
+  """
+  The email address was started
+  """
+  STARTED
+  """
+  The email address is invalid
+  """
+  INVALID_EMAIL_ADDRESS
+  """
+  The email address isn't allowed by the policy
+  """
+  DENIED
+  """
+  The email address is already in use
+  """
+  IN_USE
 }
 
 """
@@ -2026,6 +2135,28 @@ type UserEmail implements Node & CreationEvent {
   confirmedAt: DateTime @deprecated(reason: "Emails are always confirmed now.")
 }
 
+"""
+A email authentication session
+"""
+type UserEmailAuthentication implements Node & CreationEvent {
+  """
+  ID of the object.
+  """
+  id: ID!
+  """
+  When the object was created.
+  """
+  createdAt: DateTime!
+  """
+  When the object was last updated.
+  """
+  completedAt: DateTime
+  """
+  The email address associated with this session
+  """
+  email: String!
+}
+
 type UserEmailConnection {
   """
   Information to aid in pagination.
@@ -2129,48 +2260,6 @@ enum UserState {
   The user is locked.
   """
   LOCKED
-}
-
-"""
-The input for the `verifyEmail` mutation
-"""
-input VerifyEmailInput {
-  """
-  The ID of the email address to verify
-  """
-  userEmailId: ID!
-  """
-  The verification code
-  """
-  code: String!
-}
-
-"""
-The payload of the `verifyEmail` mutation
-"""
-type VerifyEmailPayload {
-  """
-  Status of the operation
-  """
-  status: VerifyEmailStatus!
-  """
-  The email address that was verified
-  """
-  email: UserEmail
-  """
-  The user to whom the email address belongs
-  """
-  user: User
-}
-
-"""
-The status of the `verifyEmail` mutation
-"""
-enum VerifyEmailStatus {
-  """
-  The email address was already verified before
-  """
-  ALREADY_VERIFIED
 }
 
 """

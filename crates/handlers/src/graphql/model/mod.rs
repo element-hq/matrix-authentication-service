@@ -26,7 +26,7 @@ pub use self::{
     oauth::{OAuth2Client, OAuth2Session},
     site_config::{SiteConfig, SITE_CONFIG_ID},
     upstream_oauth::{UpstreamOAuth2Link, UpstreamOAuth2Provider},
-    users::{AppSession, User, UserEmail, UserRecoveryTicket},
+    users::{AppSession, User, UserEmail, UserEmailAuthentication, UserRecoveryTicket},
     viewer::{Anonymous, Viewer, ViewerSession},
 };
 
@@ -42,6 +42,7 @@ pub enum CreationEvent {
     CompatSession(Box<CompatSession>),
     BrowserSession(Box<BrowserSession>),
     UserEmail(Box<UserEmail>),
+    UserEmailAuthentication(Box<UserEmailAuthentication>),
     UserRecoveryTicket(Box<UserRecoveryTicket>),
     UpstreamOAuth2Provider(Box<UpstreamOAuth2Provider>),
     UpstreamOAuth2Link(Box<UpstreamOAuth2Link>),
