@@ -61,7 +61,9 @@ jobs:
           version: 0.13.0
 
       - name: Install cargo-zigbuild
-        run: curl -L https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.19.1/cargo-zigbuild-v0.19.1.x86_64-unknown-linux-musl.tar.gz | tar -z -x -C /usr/local/bin
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
 
       - name: Install frontend Node
         uses: actions/setup-node@v4.1.0
