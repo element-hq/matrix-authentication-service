@@ -60,6 +60,10 @@ experimental_features:
 
     # URL to advertise to clients where users can self-manage their account
     account_management_url: "http://localhost:8080/account"
+
+    # Optional URL to access from synapse in order to introspect oauth2 access tokens
+    # Defaults to `http://<public_mas_domain>/oauth2/introspect`
+    # introspection_endpoint: "http://localhost:8080/oauth2/introspect"
 ```
 
 ## Set up the compatibility layer
