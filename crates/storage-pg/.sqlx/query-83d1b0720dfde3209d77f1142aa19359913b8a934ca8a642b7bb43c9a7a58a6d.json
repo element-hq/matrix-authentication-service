@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registrations\n                SET completed_at = $2\n                WHERE user_registration_id = $1 AND completed_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "83d1b0720dfde3209d77f1142aa19359913b8a934ca8a642b7bb43c9a7a58a6d"
+}

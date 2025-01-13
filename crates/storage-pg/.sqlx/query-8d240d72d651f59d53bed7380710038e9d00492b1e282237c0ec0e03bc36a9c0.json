@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_registrations\n                  ( user_registration_id\n                  , ip_address\n                  , user_agent\n                  , post_auth_action\n                  , username\n                  , created_at\n                  )\n                VALUES ($1, $2, $3, $4, $5, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Inet",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8d240d72d651f59d53bed7380710038e9d00492b1e282237c0ec0e03bc36a9c0"
+}

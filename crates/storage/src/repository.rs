@@ -24,7 +24,7 @@ use crate::{
     },
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-        UserRecoveryRepository, UserRepository, UserTermsRepository,
+        UserRecoveryRepository, UserRegistrationRepository, UserRepository, UserTermsRepository,
     },
 };
 
@@ -129,6 +129,11 @@ pub trait RepositoryAccess: Send {
     fn user_recovery<'c>(&'c mut self)
         -> Box<dyn UserRecoveryRepository<Error = Self::Error> + 'c>;
 
+    /// Get an [`UserRegistrationRepository`]
+    fn user_registration<'c>(
+        &'c mut self,
+    ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c>;
+
     /// Get an [`UserTermsRepository`]
     fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c>;
 
@@ -224,8 +229,8 @@ mod impls {
             UpstreamOAuthSessionRepository,
         },
         user::{
-            BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository,
-            UserTermsRepository,
+            BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
+            UserRegistrationRepository, UserRepository, UserTermsRepository,
         },
         MapErr, Repository, RepositoryTransaction,
     };
@@ -314,6 +319,15 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn crate::user::UserRecoveryRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.user_recovery(), &mut self.mapper))
+        }
+
+        fn user_registration<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(
+                self.inner.user_registration(),
+                &mut self.mapper,
+            ))
         }
 
         fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c> {
@@ -466,6 +480,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn crate::user::UserRecoveryRepository<Error = Self::Error> + 'c> {
             (**self).user_recovery()
+        }
+
+        fn user_registration<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
+            (**self).user_registration()
         }
 
         fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c> {

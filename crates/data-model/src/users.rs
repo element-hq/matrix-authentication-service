@@ -10,6 +10,7 @@ use chrono::{DateTime, Utc};
 use rand::Rng;
 use serde::Serialize;
 use ulid::Ulid;
+use url::Url;
 
 use crate::UserAgent;
 
@@ -112,6 +113,7 @@ impl UserRecoveryTicket {
 pub struct UserEmailAuthentication {
     pub id: Ulid,
     pub user_session_id: Option<Ulid>,
+    pub user_registration_id: Option<Ulid>,
     pub email: String,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
@@ -191,4 +193,25 @@ impl UserEmail {
             },
         ]
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserRegistrationPassword {
+    pub hashed_password: String,
+    pub version: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserRegistration {
+    pub id: Ulid,
+    pub username: String,
+    pub display_name: Option<String>,
+    pub terms_url: Option<Url>,
+    pub email_authentication_id: Option<Ulid>,
+    pub password: Option<UserRegistrationPassword>,
+    pub post_auth_action: Option<serde_json::Value>,
+    pub ip_address: Option<IpAddr>,
+    pub user_agent: Option<UserAgent>,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
 }

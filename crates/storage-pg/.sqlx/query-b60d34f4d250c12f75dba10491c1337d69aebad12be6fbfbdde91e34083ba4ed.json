@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registrations\n                SET hashed_password = $2, hashed_password_version = $3\n                WHERE user_registration_id = $1 AND completed_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b60d34f4d250c12f75dba10491c1337d69aebad12be6fbfbdde91e34083ba4ed"
+}

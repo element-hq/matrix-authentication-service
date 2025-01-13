@@ -7,6 +7,7 @@
 use async_trait::async_trait;
 use mas_data_model::{
     BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserRegistration,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -184,6 +185,27 @@ pub trait UserEmailRepository: Send + Sync {
         session: &BrowserSession,
     ) -> Result<UserEmailAuthentication, Self::Error>;
 
+    /// Add a new [`UserEmailAuthentication`] for a [`UserRegistration`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock to use
+    /// * `email`: The email address to add
+    /// * `registration`: The [`UserRegistration`] for which to add the
+    ///   [`UserEmailAuthentication`]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        registration: &UserRegistration,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
     /// Add a new [`UserEmailAuthenticationCode`] for a
     /// [`UserEmailAuthentication`]
     ///
@@ -287,6 +309,14 @@ repository_impl!(UserEmailRepository:
         clock: &dyn Clock,
         email: String,
         session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        registration: &UserRegistration,
     ) -> Result<UserEmailAuthentication, Self::Error>;
 
     async fn add_authentication_code(

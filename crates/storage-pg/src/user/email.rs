@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserRegistration,
 };
 use mas_storage::{
     user::{UserEmailFilter, UserEmailRepository},
@@ -66,6 +67,7 @@ impl From<UserEmailLookup> for UserEmail {
 struct UserEmailAuthenticationLookup {
     user_email_authentication_id: Uuid,
     user_session_id: Option<Uuid>,
+    user_registration_id: Option<Uuid>,
     email: String,
     created_at: DateTime<Utc>,
     completed_at: Option<DateTime<Utc>>,
@@ -76,6 +78,7 @@ impl From<UserEmailAuthenticationLookup> for UserEmailAuthentication {
         UserEmailAuthentication {
             id: value.user_email_authentication_id.into(),
             user_session_id: value.user_session_id.map(Ulid::from),
+            user_registration_id: value.user_registration_id.map(Ulid::from),
             email: value.email,
             created_at: value.created_at,
             completed_at: value.completed_at,
@@ -427,6 +430,59 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         Ok(UserEmailAuthentication {
             id,
             user_session_id: Some(session.id),
+            user_registration_id: None,
+            email,
+            created_at,
+            completed_at: None,
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.add_authentication_for_registration",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_registration.id,
+            user_email_authentication.id,
+            user_email_authentication.email = email,
+        ),
+        err,
+    )]
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        user_registration: &UserRegistration,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        let created_at = clock.now();
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current()
+            .record("user_email_authentication.id", tracing::field::display(id));
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_email_authentications
+                  ( user_email_authentication_id
+                  , user_registration_id
+                  , email
+                  , created_at
+                  )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            Uuid::from(id),
+            Uuid::from(user_registration.id),
+            &email,
+            created_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(UserEmailAuthentication {
+            id,
+            user_session_id: None,
+            user_registration_id: Some(user_registration.id),
             email,
             created_at,
             completed_at: None,
@@ -509,6 +565,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             r#"
                 SELECT user_email_authentication_id
                      , user_session_id
+                     , user_registration_id
                      , email
                      , created_at
                      , completed_at

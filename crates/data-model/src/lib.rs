@@ -48,6 +48,6 @@ pub use self::{
     users::{
         Authentication, AuthenticationMethod, BrowserSession, Password, User, UserEmail,
         UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
-        UserRecoveryTicket,
+        UserRecoveryTicket, UserRegistration, UserRegistrationPassword,
     },
 };
