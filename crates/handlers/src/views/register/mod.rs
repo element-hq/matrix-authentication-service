@@ -17,6 +17,8 @@ use mas_templates::{RegisterContext, TemplateContext, Templates};
 use super::shared::OptionalPostAuthAction;
 use crate::{BoundActivityTracker, PreferredLanguage};
 
+pub(crate) mod password;
+
 #[tracing::instrument(name = "handlers.views.register.get", skip_all, err)]
 pub(crate) async fn get(
     mut rng: BoxRng,

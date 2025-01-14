@@ -326,10 +326,10 @@ register_templates! {
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
 
     /// Render the registration page
-    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register.html" }
+    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }
 
     /// Render the password registration page
-    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/password_register.html" }
+    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/register/password.html" }
 
     /// Render the client consent page
     pub fn render_consent(WithLanguage<WithCsrf<WithSession<ConsentContext>>>) { "pages/consent.html" }

@@ -35,10 +35,10 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use super::shared::OptionalPostAuthAction;
 use crate::{
-    captcha::Form as CaptchaForm, passwords::PasswordManager, BoundActivityTracker, Limiter,
-    PreferredLanguage, RequesterFingerprint, SiteConfig,
+    captcha::Form as CaptchaForm, passwords::PasswordManager,
+    views::shared::OptionalPostAuthAction, BoundActivityTracker, Limiter, PreferredLanguage,
+    RequesterFingerprint, SiteConfig,
 };
 
 #[derive(Debug, Deserialize, Serialize)]

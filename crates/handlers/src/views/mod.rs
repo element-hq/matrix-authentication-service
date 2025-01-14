@@ -9,7 +9,6 @@ pub mod app;
 pub mod index;
 pub mod login;
 pub mod logout;
-pub mod password_register;
 pub mod reauth;
 pub mod recovery;
 pub mod register;
