@@ -444,47 +444,27 @@ impl From<Option<PostAuthAction>> for PasswordRegister {
     }
 }
 
-/// `GET|POST /verify-email/:id`
+/// `GET|POST /register/steps/verify-email/:id`
 #[derive(Debug, Clone)]
-pub struct AccountVerifyEmail {
+pub struct RegisterVerifyEmail {
     id: Ulid,
-    post_auth_action: Option<PostAuthAction>,
 }
 
-impl AccountVerifyEmail {
+impl RegisterVerifyEmail {
     #[must_use]
     pub fn new(id: Ulid) -> Self {
-        Self {
-            id,
-            post_auth_action: None,
-        }
-    }
-
-    #[must_use]
-    pub fn and_maybe(mut self, action: Option<PostAuthAction>) -> Self {
-        self.post_auth_action = action;
-        self
-    }
-
-    #[must_use]
-    pub fn and_then(mut self, action: PostAuthAction) -> Self {
-        self.post_auth_action = Some(action);
-        self
+        Self { id }
     }
 }
 
-impl Route for AccountVerifyEmail {
-    type Query = PostAuthAction;
+impl Route for RegisterVerifyEmail {
+    type Query = ();
     fn route() -> &'static str {
-        "/verify-email/:id"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
+        "/register/steps/verify-email/:id"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
-        format!("/verify-email/{}", self.id).into()
+        format!("/register/steps/verify-email/{}", self.id).into()
     }
 }
 

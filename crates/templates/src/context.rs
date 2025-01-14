@@ -22,8 +22,8 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailAuthenticationCode,
-    UserRecoverySession, UserRegistration,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmailAuthentication,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -942,12 +942,12 @@ impl TemplateContext for EmailVerificationContext {
 /// Fields of the email verification form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum EmailVerificationFormField {
+pub enum RegisterStepsVerifyEmailFormField {
     /// The code field
     Code,
 }
 
-impl FormField for EmailVerificationFormField {
+impl FormField for RegisterStepsVerifyEmailFormField {
     fn keep(&self) -> bool {
         match self {
             Self::Code => true,
@@ -955,45 +955,47 @@ impl FormField for EmailVerificationFormField {
     }
 }
 
-/// Context used by the `pages/account/verify.html` templates
+/// Context used by the `pages/register/steps/verify_email.html` templates
 #[derive(Serialize)]
-pub struct EmailVerificationPageContext {
-    form: FormState<EmailVerificationFormField>,
-    email: UserEmail,
+pub struct RegisterStepsVerifyEmailContext {
+    form: FormState<RegisterStepsVerifyEmailFormField>,
+    authentication: UserEmailAuthentication,
 }
 
-impl EmailVerificationPageContext {
+impl RegisterStepsVerifyEmailContext {
     /// Constructs a context for the email verification page
     #[must_use]
-    pub fn new(email: UserEmail) -> Self {
+    pub fn new(authentication: UserEmailAuthentication) -> Self {
         Self {
             form: FormState::default(),
-            email,
+            authentication,
         }
     }
 
     /// Set the form state
     #[must_use]
-    pub fn with_form_state(self, form: FormState<EmailVerificationFormField>) -> Self {
+    pub fn with_form_state(self, form: FormState<RegisterStepsVerifyEmailFormField>) -> Self {
         Self { form, ..self }
     }
 }
 
-impl TemplateContext for EmailVerificationPageContext {
+impl TemplateContext for RegisterStepsVerifyEmailContext {
     fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
     where
         Self: Sized,
     {
-        let email = UserEmail {
+        let authentication = UserEmailAuthentication {
             id: Ulid::from_datetime_with_source(now.into(), rng),
-            user_id: Ulid::from_datetime_with_source(now.into(), rng),
+            user_session_id: None,
+            user_registration_id: None,
             email: "foobar@example.com".to_owned(),
             created_at: now,
+            completed_at: None,
         };
 
         vec![Self {
             form: FormState::default(),
-            email,
+            authentication,
         }]
     }
 }

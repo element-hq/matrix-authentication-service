@@ -18,6 +18,7 @@ use super::shared::OptionalPostAuthAction;
 use crate::{BoundActivityTracker, PreferredLanguage};
 
 pub(crate) mod password;
+pub(crate) mod steps;
 
 #[tracing::instrument(name = "handlers.views.register.get", skip_all, err)]
 pub(crate) async fn get(

@@ -379,9 +379,9 @@ where
             get(self::views::register::password::get).post(self::views::register::password::post),
         )
         .route(
-            mas_router::AccountVerifyEmail::route(),
-            get(self::views::account::emails::verify::get)
-                .post(self::views::account::emails::verify::post),
+            mas_router::RegisterVerifyEmail::route(),
+            get(self::views::register::steps::verify_email::get)
+                .post(self::views::register::steps::verify_email::post),
         )
         .route(
             mas_router::AccountRecoveryStart::route(),

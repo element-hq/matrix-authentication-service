@@ -354,8 +354,9 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
-    // TODO: redirect to the next step on the registration
-    Ok(format!("{}", registration.id).into_response())
+    Ok(url_builder
+        .redirect(&mas_router::RegisterVerifyEmail::new(registration.id))
+        .into_response())
 }
 
 async fn render(
@@ -468,10 +469,19 @@ mod tests {
         let request = cookies.with_cookies(request);
         let response = state.request(request).await;
         cookies.save_cookies(&response);
-        response.assert_status(StatusCode::OK);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(LOCATION).unwrap();
 
-        // The handler gives us the registration ID in the body for now
-        let id = response.body().parse().unwrap();
+        // The handler redirects with the ID as the last portion of the path
+        let id = location
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+
         // There should be a new registration in the database
         let mut repo = state.repository().await.unwrap();
         let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
