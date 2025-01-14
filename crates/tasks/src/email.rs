@@ -78,6 +78,22 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
                 None
             };
 
+        // Load the registration, if any
+        let registration =
+            if let Some(registration_id) = user_email_authentication.user_registration_id {
+                Some(
+                    repo.user_registration()
+                        .lookup(registration_id)
+                        .await
+                        .map_err(JobError::retry)?
+                        .ok_or(JobError::fail(anyhow::anyhow!(
+                            "Failed to load user registration"
+                        )))?,
+                )
+            } else {
+                None
+            };
+
         // Generate a new 6-digit authentication code
         let range = Uniform::<u32>::from(0..1_000_000);
         let code = rng.sample(range);
@@ -98,14 +114,17 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
             .email
             .parse()
             .map_err(JobError::fail)?;
-        let username = browser_session.as_ref().map(|s| s.user.username.clone());
+        let username_from_session = browser_session.as_ref().map(|s| s.user.username.clone());
+        let username_from_registration = registration.as_ref().map(|r| r.username.clone());
+        let username = username_from_registration.or(username_from_session);
         let mailbox = Mailbox::new(username, address);
 
         info!("Sending email verification code to {}", mailbox);
 
         let language = self.language().parse().map_err(JobError::fail)?;
 
-        let context = EmailVerificationContext::new(code, browser_session).with_language(language);
+        let context = EmailVerificationContext::new(code, browser_session, registration)
+            .with_language(language);
         mailer
             .send_verification_email(mailbox, &context)
             .await

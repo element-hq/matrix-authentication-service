@@ -8,6 +8,12 @@ Please see LICENSE in the repository root for full details.
 
 {%- set _ = translator(lang) -%}
 
-{{ _("mas.emails.greeting", username=browser_session.user.username | default("user")) }}
+{%- if browser_session is defined -%}
+  {%- set username = browser_session.user.username -%}
+{%- elif user_registration is defined -%}
+  {%- set username = user_registration.username -%}
+{%- endif -%}
+
+{{ _("mas.emails.greeting", username=(username|default("user"))) }}
 
 {{ _("mas.emails.verify.body_text", code=authentication_code.code) }}

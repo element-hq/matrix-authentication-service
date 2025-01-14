@@ -219,7 +219,7 @@
     "emails": {
       "greeting": "Hello %(username)s,",
       "@greeting": {
-        "context": "emails/verification.html:11:3-85, emails/verification.txt:11:3-85",
+        "context": "emails/verification.html:17:3-64, emails/verification.txt:17:3-64",
         "description": "Greeting at the top of emails sent to the user"
       },
       "recovery": {
@@ -251,12 +251,12 @@
       "verify": {
         "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
         "@body_html": {
-          "context": "emails/verification.html:13:3-66",
+          "context": "emails/verification.html:19:3-66",
           "description": "The body of the email sent to verify an email address (HTML)"
         },
         "body_text": "Your verification code to confirm this email address is: %(code)s",
         "@body_text": {
-          "context": "emails/verification.txt:13:3-66",
+          "context": "emails/verification.txt:19:3-66",
           "description": "The body of the email sent to verify an email address (text)"
         },
         "subject": "Your email verification code is: %(code)s",
@@ -327,7 +327,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:75:15-67, pages/register/index.html:49:15-67",
+        "context": "pages/login.html:75:15-67, pages/register/index.html:53:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -513,12 +513,12 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:55:35-66, pages/register/password.html:77:33-64",
+        "context": "pages/register/index.html:59:35-66, pages/register/password.html:77:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
       "@continue_with_email": {
-        "context": "pages/register/index.html:40:30-67"
+        "context": "pages/register/index.html:44:30-67"
       },
       "create_account": {
         "description": "Choose a username to continue.",

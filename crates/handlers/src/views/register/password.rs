@@ -24,8 +24,8 @@ use mas_matrix::BoxHomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-    user::{BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository},
+    queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
+    user::{UserEmailRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{
@@ -141,6 +141,8 @@ pub(crate) async fn post(
     Form(form): Form<ProtectedForm<RegisterForm>>,
 ) -> Result<Response, FancyError> {
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+
+    let ip_address = activity_tracker.ip();
     if !site_config.password_registration_enabled {
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
@@ -296,49 +298,64 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    let user = repo.user().add(&mut rng, &clock, form.username).await?;
+    let post_auth_action = query
+        .post_auth_action
+        .map(serde_json::to_value)
+        .transpose()?;
+    let registration = repo
+        .user_registration()
+        .add(
+            &mut rng,
+            &clock,
+            form.username,
+            ip_address,
+            user_agent,
+            post_auth_action,
+        )
+        .await?;
 
-    if let Some(tos_uri) = &site_config.tos_uri {
-        repo.user_terms()
-            .accept_terms(&mut rng, &clock, &user, tos_uri.clone())
-            .await?;
-    }
+    let registration = if let Some(tos_uri) = &site_config.tos_uri {
+        repo.user_registration()
+            .set_terms_url(registration, tos_uri.clone())
+            .await?
+    } else {
+        registration
+    };
 
+    // Create a new user email authentication session
+    let user_email_authentication = repo
+        .user_email()
+        .add_authentication_for_registration(&mut rng, &clock, form.email, &registration)
+        .await?;
+
+    // Schedule a job to verify the email
+    repo.queue_job()
+        .schedule_job(
+            &mut rng,
+            &clock,
+            SendEmailAuthenticationCodeJob::new(&user_email_authentication, locale.to_string()),
+        )
+        .await?;
+
+    let registration = repo
+        .user_registration()
+        .set_email_authentication(registration, &user_email_authentication)
+        .await?;
+
+    // Hash the password
     let password = Zeroizing::new(form.password.into_bytes());
     let (version, hashed_password) = password_manager.hash(&mut rng, password).await?;
-    let user_password = repo
-        .user_password()
-        .add(&mut rng, &clock, &user, version, hashed_password, None)
-        .await?;
 
-    let user_email = repo
-        .user_email()
-        .add(&mut rng, &clock, &user, form.email)
-        .await?;
-
-    let next = mas_router::AccountVerifyEmail::new(user_email.id).and_maybe(query.post_auth_action);
-
-    let session = repo
-        .browser_session()
-        .add(&mut rng, &clock, &user, user_agent)
-        .await?;
-
-    repo.browser_session()
-        .authenticate_with_password(&mut rng, &clock, &session, &user_password)
-        .await?;
-
-    repo.queue_job()
-        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+    // Add the password to the registration
+    let registration = repo
+        .user_registration()
+        .set_password(registration, hashed_password, version)
         .await?;
 
     repo.save().await?;
 
-    activity_tracker
-        .record_browser_session(&clock, &session)
-        .await;
-
-    let cookie_jar = cookie_jar.set_session(&session);
-    Ok((cookie_jar, url_builder.redirect(&next)).into_response())
+    // TODO: redirect to the next step on the registration
+    Ok(format!("{}", registration.id).into_response())
 }
 
 async fn render(
@@ -451,16 +468,23 @@ mod tests {
         let request = cookies.with_cookies(request);
         let response = state.request(request).await;
         cookies.save_cookies(&response);
-        response.assert_status(StatusCode::SEE_OTHER);
-
-        // Now if we get to the home page, we should see the user's username
-        let request = Request::get("/").empty();
-        let request = cookies.with_cookies(request);
-        let response = state.request(request).await;
-        cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        assert!(response.body().contains("john"));
+
+        // The handler gives us the registration ID in the body for now
+        let id = response.body().parse().unwrap();
+        // There should be a new registration in the database
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "john".to_owned());
+        assert!(registration.password.is_some());
+
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(email_authentication.email, "john@example.com");
     }
 
     /// When the two password fields mismatch, it should give an error

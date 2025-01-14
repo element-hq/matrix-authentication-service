@@ -23,7 +23,7 @@ use mas_data_model::{
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailAuthenticationCode,
-    UserRecoverySession,
+    UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -878,7 +878,10 @@ impl TemplateContext for EmailRecoveryContext {
 /// Context used by the `emails/verification.{txt,html,subject}` templates
 #[derive(Serialize)]
 pub struct EmailVerificationContext {
+    #[serde(skip_serializing_if = "Option::is_none")]
     browser_session: Option<BrowserSession>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    user_registration: Option<UserRegistration>,
     authentication_code: UserEmailAuthenticationCode,
 }
 
@@ -888,9 +891,11 @@ impl EmailVerificationContext {
     pub fn new(
         authentication_code: UserEmailAuthenticationCode,
         browser_session: Option<BrowserSession>,
+        user_registration: Option<UserRegistration>,
     ) -> Self {
         Self {
             browser_session,
+            user_registration,
             authentication_code,
         }
     }
@@ -926,6 +931,7 @@ impl TemplateContext for EmailVerificationContext {
 
                 Self {
                     browser_session: Some(browser_session),
+                    user_registration: None,
                     authentication_code,
                 }
             })
