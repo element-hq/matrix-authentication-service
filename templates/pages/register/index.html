@@ -11,7 +11,7 @@ Please see LICENSE in the repository root for full details.
 {% from "components/idp_brand.html" import logo %}
 
 {% block content %}
-  <form method="GET" class="flex flex-col gap-10" action="{{ "/register/password" | prefix_url }}">
+  <form method="GET" class="flex flex-col gap-10" action="{{ '/register/password' | prefix_url }}">
     <header class="page-heading">
       <div class="icon">
         {{ icon.user_profile_solid() }}
@@ -36,6 +36,10 @@ Please see LICENSE in the repository root for full details.
     {% endif %}
 
     <div class="cpd-form-root">
+      {% for key, value in next["params"]|default({})|items %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+      {% endfor %}
+
       {% if features.password_registration %}
         {{ button.button(text=_("mas.register.continue_with_email")) }}
       {% endif %}
