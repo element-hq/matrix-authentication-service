@@ -35,6 +35,7 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
+use super::cookie::UserRegistrationSessions;
 use crate::{
     captcha::Form as CaptchaForm, passwords::PasswordManager,
     views::shared::OptionalPostAuthAction, BoundActivityTracker, Limiter, PreferredLanguage,
@@ -361,8 +362,14 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
-    Ok(url_builder
-        .redirect(&mas_router::RegisterFinish::new(registration.id))
+    let cookie_jar = UserRegistrationSessions::load(&cookie_jar)
+        .add(&registration)
+        .save(cookie_jar, &clock);
+
+    Ok((
+        cookie_jar,
+        url_builder.redirect(&mas_router::RegisterFinish::new(registration.id)),
+    )
         .into_response())
 }
 

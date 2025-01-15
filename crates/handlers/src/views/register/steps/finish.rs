@@ -19,6 +19,7 @@ use mas_storage::{
 };
 use ulid::Ulid;
 
+use super::super::cookie::UserRegistrationSessions;
 use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker};
 
 #[tracing::instrument(
@@ -57,6 +58,14 @@ pub(crate) async fn get(
             cookie_jar,
             OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
         ));
+    }
+
+    // Check that this registration belongs to this browser
+    let registrations = UserRegistrationSessions::load(&cookie_jar);
+    if !registrations.contains(&registration) {
+        return Err(FancyError::from(anyhow::anyhow!(
+            "Could not find the registration in the browser cookies"
+        )));
     }
 
     // Let's perform last minute checks on the registration, especially to avoid
@@ -115,6 +124,11 @@ pub(crate) async fn get(
         .user_registration()
         .complete(&clock, registration)
         .await?;
+
+    // Consume the registration session
+    let cookie_jar = registrations
+        .consume_session(&registration)?
+        .save(cookie_jar, &clock);
 
     // Now we can start the user creation
     let user = repo

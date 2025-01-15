@@ -17,6 +17,7 @@ use mas_templates::{RegisterContext, TemplateContext, Templates};
 use super::shared::OptionalPostAuthAction;
 use crate::{BoundActivityTracker, PreferredLanguage};
 
+mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
 
