@@ -1000,6 +1000,57 @@ impl TemplateContext for RegisterStepsVerifyEmailContext {
     }
 }
 
+/// Fields for the display name form
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RegisterStepsDisplayNameFormField {
+    /// The display name
+    DisplayName,
+}
+
+impl FormField for RegisterStepsDisplayNameFormField {
+    fn keep(&self) -> bool {
+        match self {
+            Self::DisplayName => true,
+        }
+    }
+}
+
+/// Context used by the `display_name.html` template
+#[derive(Serialize, Default)]
+pub struct RegisterStepsDisplayNameContext {
+    form: FormState<RegisterStepsDisplayNameFormField>,
+}
+
+impl RegisterStepsDisplayNameContext {
+    /// Constructs a context for the display name page
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the form state
+    #[must_use]
+    pub fn with_form_state(
+        mut self,
+        form_state: FormState<RegisterStepsDisplayNameFormField>,
+    ) -> Self {
+        self.form = form_state;
+        self
+    }
+}
+
+impl TemplateContext for RegisterStepsDisplayNameContext {
+    fn sample(_now: chrono::DateTime<chrono::Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        vec![Self {
+            form: FormState::default(),
+        }]
+    }
+}
+
 /// Fields of the account recovery start form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

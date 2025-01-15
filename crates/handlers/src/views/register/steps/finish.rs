@@ -102,6 +102,14 @@ pub(crate) async fn get(
         )));
     }
 
+    // Check that the display name is set
+    if registration.display_name.is_none() {
+        return Ok((
+            cookie_jar,
+            url_builder.redirect(&mas_router::RegisterDisplayName::new(registration.id)),
+        ));
+    }
+
     // Everuthing is good, let's complete the registration
     let registration = repo
         .user_registration()

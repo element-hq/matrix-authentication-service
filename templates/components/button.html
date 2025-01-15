@@ -29,6 +29,7 @@ Please see LICENSE in the repository root for full details.
   class="",
   value="",
   disabled=False,
+  kind="primary",
   size="lg",
   autocomplete=False,
   autocorrect=False,
@@ -39,7 +40,7 @@ Please see LICENSE in the repository root for full details.
     type="{{ type }}"
     {% if disabled %}disabled{% endif %}
     class="cpd-button {{ class }}"
-    data-kind="primary"
+    data-kind="{{ kind }}"
     data-size="{{ size }}"
     {% if autocapitalize %}autocapitilize="{{ autocapitilize }}"{% endif %}
     {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}

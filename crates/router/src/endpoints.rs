@@ -444,6 +444,30 @@ impl From<Option<PostAuthAction>> for PasswordRegister {
     }
 }
 
+/// `GET|POST /register/steps/:id/display-name`
+#[derive(Debug, Clone)]
+pub struct RegisterDisplayName {
+    id: Ulid,
+}
+
+impl RegisterDisplayName {
+    #[must_use]
+    pub fn new(id: Ulid) -> Self {
+        Self { id }
+    }
+}
+
+impl Route for RegisterDisplayName {
+    type Query = ();
+    fn route() -> &'static str {
+        "/register/steps/:id/display-name"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/register/steps/{}/display-name", self.id).into()
+    }
+}
+
 /// `GET|POST /register/steps/:id/verify-email`
 #[derive(Debug, Clone)]
 pub struct RegisterVerifyEmail {

@@ -33,7 +33,6 @@ Please see LICENSE in the repository root for full details.
     {% call(f) field.field(label=_("mas.verify_email.6_digit_code"), name="code", form_state=form, class="mb-4 self-center") %}
       <div class="cpd-mfa-container">
         <input {{ field.attributes(f) }}
-          id="mfa-code-input"
           inputmode="numeric"
           type="text"
           minlength="0"
