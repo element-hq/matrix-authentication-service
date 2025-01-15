@@ -130,7 +130,7 @@ pub enum Identifier {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ResponseBody {
     access_token: String,
-    device_id: Device,
+    device_id: Option<Device>,
     user_id: String,
     refresh_token: Option<String>,
     #[serde_as(as = "Option<DurationMilliSeconds<i64>>")]
@@ -601,7 +601,7 @@ mod tests {
 
         let body: ResponseBody = response.json();
         assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id.as_str().len(), 10);
+        assert_eq!(body.device_id.as_ref().unwrap().as_str().len(), 10);
         assert_eq!(body.user_id, "@alice:example.com");
         assert_eq!(body.refresh_token, None);
         assert_eq!(body.expires_in_ms, None);
@@ -622,7 +622,7 @@ mod tests {
 
         let body: ResponseBody = response.json();
         assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id.as_str().len(), 10);
+        assert_eq!(body.device_id.as_ref().unwrap().as_str().len(), 10);
         assert_eq!(body.user_id, "@alice:example.com");
         assert!(body.refresh_token.is_some());
         assert!(body.expires_in_ms.is_some());
@@ -776,7 +776,7 @@ mod tests {
 
         let body: ResponseBody = response.json();
         assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id, device);
+        assert_eq!(body.device_id, Some(device));
         assert_eq!(body.user_id, "@alice:example.com");
         assert_eq!(body.refresh_token, None);
         assert_eq!(body.expires_in_ms, None);

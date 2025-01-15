@@ -83,7 +83,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(session.user_id, user.id);
-        assert_eq!(session.device.as_str(), device_str);
+        assert_eq!(session.device.as_ref().unwrap().as_str(), device_str);
         assert!(session.is_valid());
         assert!(!session.is_finished());
 
@@ -117,7 +117,7 @@ mod tests {
             .expect("compat session not found");
         assert_eq!(session_lookup.id, session.id);
         assert_eq!(session_lookup.user_id, user.id);
-        assert_eq!(session_lookup.device.as_str(), device_str);
+        assert_eq!(session.device.as_ref().unwrap().as_str(), device_str);
         assert!(session_lookup.is_valid());
         assert!(!session_lookup.is_finished());
 
@@ -154,7 +154,7 @@ mod tests {
         let session_lookup = &list.edges[0].0;
         assert_eq!(session_lookup.id, session.id);
         assert_eq!(session_lookup.user_id, user.id);
-        assert_eq!(session_lookup.device.as_str(), device_str);
+        assert_eq!(session.device.as_ref().unwrap().as_str(), device_str);
         assert!(session_lookup.is_valid());
         assert!(!session_lookup.is_finished());
 

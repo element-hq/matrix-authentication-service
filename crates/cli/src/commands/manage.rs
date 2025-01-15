@@ -341,7 +341,7 @@ impl Options {
                 info!(
                     %compat_access_token.id,
                     %compat_session.id,
-                    %compat_session.device,
+                    compat_session.device = compat_session.device.map(tracing::field::display),
                     %user.id,
                     %user.username,
                     "Compatibility token issued: {}", compat_access_token.token
