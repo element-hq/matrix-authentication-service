@@ -384,6 +384,10 @@ where
                 .post(self::views::register::steps::verify_email::post),
         )
         .route(
+            mas_router::RegisterFinish::route(),
+            get(self::views::register::steps::finish::get),
+        )
+        .route(
             mas_router::AccountRecoveryStart::route(),
             get(self::views::recovery::start::get).post(self::views::recovery::start::post),
         )

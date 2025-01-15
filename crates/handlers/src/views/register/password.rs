@@ -362,7 +362,7 @@ pub(crate) async fn post(
     repo.save().await?;
 
     Ok(url_builder
-        .redirect(&mas_router::RegisterVerifyEmail::new(registration.id))
+        .redirect(&mas_router::RegisterFinish::new(registration.id))
         .into_response())
 }
 
@@ -479,12 +479,12 @@ mod tests {
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response.headers().get(LOCATION).unwrap();
 
-        // The handler redirects with the ID as the last portion of the path
+        // The handler redirects with the ID as the second to last portion of the path
         let id = location
             .to_str()
             .unwrap()
             .rsplit('/')
-            .next()
+            .nth(1)
             .unwrap()
             .parse()
             .unwrap();

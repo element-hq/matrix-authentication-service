@@ -8,19 +8,13 @@ use axum::{
     extract::{Form, Path, State},
     response::{Html, IntoResponse, Response},
 };
-use axum_extra::TypedHeader;
 use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
+    FancyError,
 };
-use mas_data_model::UserAgent;
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-    user::UserEmailRepository,
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
-};
+use mas_storage::{user::UserEmailRepository, BoxClock, BoxRepository, BoxRng, RepositoryAccess};
 use mas_templates::{
     FieldError, RegisterStepsVerifyEmailContext, RegisterStepsVerifyEmailFormField,
     TemplateContext, Templates, ToFormState,
@@ -28,7 +22,7 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker, PreferredLanguage};
+use crate::{views::shared::OptionalPostAuthAction, PreferredLanguage};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CodeForm {
@@ -72,8 +66,12 @@ pub(crate) async fn get(
             .map(serde_json::from_value)
             .transpose()?;
 
-        return Ok(OptionalPostAuthAction::from(post_auth_action)
-            .go_next(&url_builder)
+        return Ok((
+            cookie_jar,
+            OptionalPostAuthAction::from(post_auth_action)
+                .go_next(&url_builder)
+                .into_response(),
+        )
             .into_response());
     }
 
@@ -115,13 +113,10 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
-    user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(url_builder): State<UrlBuilder>,
-    activity_tracker: BoundActivityTracker,
     Path(id): Path<Ulid>,
     Form(form): Form<ProtectedForm<CodeForm>>,
 ) -> Result<Response, FancyError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let registration = repo
@@ -139,8 +134,10 @@ pub(crate) async fn post(
             .map(serde_json::from_value)
             .transpose()?;
 
-        return Ok(OptionalPostAuthAction::from(post_auth_action)
-            .go_next(&url_builder)
+        return Ok((
+            cookie_jar,
+            OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
+        )
             .into_response());
     }
 
@@ -180,74 +177,12 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     };
 
-    let email_authentication = repo
-        .user_email()
-        .complete_authentication(&clock, email_authentication, &code)
-        .await?;
-
-    let registration = repo
-        .user_registration()
-        .complete(&clock, registration)
-        .await?;
-
-    // XXX: this should move somewhere else, and it doesn't check for uniqueness
-    let user = repo
-        .user()
-        .add(&mut rng, &clock, registration.username)
-        .await?;
-    let user_session = repo
-        .browser_session()
-        .add(&mut rng, &clock, &user, user_agent)
-        .await?;
-
     repo.user_email()
-        .add(&mut rng, &clock, &user, email_authentication.email)
-        .await?;
-
-    if let Some(password) = registration.password {
-        let user_password = repo
-            .user_password()
-            .add(
-                &mut rng,
-                &clock,
-                &user,
-                password.version,
-                password.hashed_password,
-                None,
-            )
-            .await?;
-
-        repo.browser_session()
-            .authenticate_with_password(&mut rng, &clock, &user_session, &user_password)
-            .await?;
-    }
-
-    if let Some(terms_url) = registration.terms_url {
-        repo.user_terms()
-            .accept_terms(&mut rng, &clock, &user, terms_url)
-            .await?;
-    }
-
-    repo.queue_job()
-        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+        .complete_authentication(&clock, email_authentication, &code)
         .await?;
 
     repo.save().await?;
 
-    activity_tracker
-        .record_browser_session(&clock, &user_session)
-        .await;
-
-    let post_auth_action: Option<PostAuthAction> = registration
-        .post_auth_action
-        .map(serde_json::from_value)
-        .transpose()?;
-
-    let cookie_jar = cookie_jar.set_session(&user_session);
-
-    return Ok((
-        cookie_jar,
-        OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
-    )
-        .into_response());
+    let destination = mas_router::RegisterFinish::new(registration.id);
+    return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
 }
