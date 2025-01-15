@@ -9,6 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::TypedHeader;
+use chrono::Duration;
 use mas_axum_utils::{cookies::CookieJar, FancyError, SessionInfoExt as _};
 use mas_data_model::UserAgent;
 use mas_router::{PostAuthAction, UrlBuilder};
@@ -58,6 +59,14 @@ pub(crate) async fn get(
             cookie_jar,
             OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
         ));
+    }
+
+    // Make sure the registration session hasn't expired
+    // XXX: this duration is hard-coded, could be configurable
+    if clock.now() - registration.created_at > Duration::hours(1) {
+        return Err(FancyError::from(anyhow::anyhow!(
+            "Registration session has expired"
+        )));
     }
 
     // Check that this registration belongs to this browser
