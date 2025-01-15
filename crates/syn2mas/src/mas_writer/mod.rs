@@ -11,7 +11,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{future::BoxFuture, TryStreamExt};
-use sqlx::{query, query_as, Executor, PgConnection};
+use sqlx::{query, query_as, Executor, PgConnection, Row};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -667,5 +667,188 @@ impl<'writer, 'conn> MasUserWriteBuffer<'writer, 'conn> {
 
 #[cfg(test)]
 mod test {
-    // TODO test me
+    use std::{
+        collections::{BTreeMap, BTreeSet},
+        future::Future,
+    };
+
+    use chrono::{DateTime, Utc};
+    use futures_util::{future::BoxFuture, TryStreamExt};
+    use insta::assert_yaml_snapshot;
+    use serde::Serialize;
+    use sqlx::{Acquire, Column, PgConnection, PgPool, Row};
+    use uuid::Uuid;
+
+    use crate::{
+        mas_writer::{MasNewUser, MasNewUserPassword},
+        LockedMasDatabase, MasWriter,
+    };
+
+    /// A snapshot of a whole database
+    #[derive(Default, Serialize)]
+    #[serde(transparent)]
+    struct DatabaseSnapshot {
+        tables: BTreeMap<String, TableSnapshot>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(transparent)]
+    struct TableSnapshot {
+        rows: BTreeSet<RowSnapshot>,
+    }
+
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Serialize)]
+    #[serde(transparent)]
+    struct RowSnapshot {
+        columns_to_values: BTreeMap<String, Option<String>>,
+    }
+
+    const SKIPPED_TABLES: &[&str] = &["_sqlx_migrations"];
+
+    /// Produces a serialisable snapshot of a database, usable for snapshot testing
+    ///
+    /// For brevity, empty tables, as well as [`SKIPPED_TABLES`], will not be included in the snapshot.
+    async fn snapshot_database(conn: &mut PgConnection) -> DatabaseSnapshot {
+        let mut out = DatabaseSnapshot::default();
+        let table_names: Vec<String> = sqlx::query_scalar(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema();",
+        )
+        .fetch_all(&mut *conn)
+        .await
+        .unwrap();
+
+        for table_name in table_names {
+            if SKIPPED_TABLES.contains(&table_name.as_str()) {
+                continue;
+            }
+
+            let column_names: Vec<String> = sqlx::query_scalar(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND table_schema = current_schema();"
+            ).bind(&table_name).fetch_all(&mut *conn).await.expect("failed to get column names for table for snapshotting");
+
+            let column_name_list = column_names
+                .iter()
+                // stringify all the values for simplicity
+                .map(|column_name| format!("{column_name}::TEXT AS \"{column_name}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            let table_rows = sqlx::query(&format!("SELECT {column_name_list} FROM {table_name};"))
+                .fetch(&mut *conn)
+                .map_ok(|row| {
+                    let mut columns_to_values = BTreeMap::new();
+                    for (idx, column) in row.columns().iter().enumerate() {
+                        columns_to_values.insert(column.name().to_owned(), row.get(idx));
+                    }
+                    RowSnapshot { columns_to_values }
+                })
+                .try_collect::<BTreeSet<RowSnapshot>>()
+                .await
+                .expect("failed to fetch rows from table for snapshotting");
+
+            if !table_rows.is_empty() {
+                out.tables
+                    .insert(table_name, TableSnapshot { rows: table_rows });
+            }
+        }
+
+        out
+    }
+
+    /// Make a snapshot assertion against the database.
+    macro_rules! assert_db_snapshot {
+        ($db: expr) => {
+            let db_snapshot = snapshot_database($db).await;
+            ::insta::assert_yaml_snapshot!(db_snapshot);
+        };
+    }
+
+    /// Runs some code with a `MasWriter`.
+    ///
+    /// The callback is responsible for `finish`ing the `MasWriter`.
+    async fn with_mas_writer<F, R>(pool: &PgPool, callback: F) -> R
+    where
+        F: for<'db> FnOnce(MasWriter<'db>) -> BoxFuture<'db, R>,
+        R: 'static,
+    {
+        let mut main_conn = pool
+            .acquire()
+            .await
+            .expect("failed to acquire main MasWriter connection");
+        let mut writer_conns = Vec::new();
+        for _ in 0..2 {
+            writer_conns.push(
+                pool.acquire()
+                    .await
+                    .expect("failed to acquire MasWriter writer connection")
+                    .detach(),
+            );
+        }
+        let locked_main_conn = LockedMasDatabase::try_new(&mut main_conn)
+            .await
+            .expect("failed to lock MAS database")
+            .expect_left("MAS database is already locked");
+        let writer = MasWriter::new(locked_main_conn, writer_conns)
+            .await
+            .expect("failed to construct MasWriter");
+        callback(writer).await
+    }
+
+    /// Tests writing a single user, without a password.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user(pool: PgPool) -> anyhow::Result<()> {
+        let mut conn = pool.acquire().await.unwrap();
+        with_mas_writer(&pool, |mut writer| {
+            Box::pin(async move {
+                writer
+                    .write_users(vec![MasNewUser {
+                        user_id: Uuid::from_u128(1u128),
+                        username: "alice".to_owned(),
+                        created_at: DateTime::default(),
+                        locked_at: None,
+                        can_request_admin: false,
+                    }])
+                    .await
+                    .expect("failed to write user");
+                writer.finish().await.expect("failed to finish MasWriter");
+            })
+        })
+        .await;
+        assert_db_snapshot!(&mut conn);
+        Ok(())
+    }
+
+    /// Tests writing a single user, with a password.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_password(pool: PgPool) -> anyhow::Result<()> {
+        let mut conn = pool.acquire().await.unwrap();
+        with_mas_writer(&pool, |mut writer| {
+            Box::pin(async move {
+                const USER_ID: Uuid = Uuid::from_u128(1u128);
+                writer
+                    .write_users(vec![MasNewUser {
+                        user_id: USER_ID,
+                        username: "alice".to_owned(),
+                        created_at: DateTime::default(),
+                        locked_at: None,
+                        can_request_admin: false,
+                    }])
+                    .await
+                    .expect("failed to write user");
+                writer
+                    .write_passwords(vec![MasNewUserPassword {
+                        user_password_id: Uuid::from_u128(42u128),
+                        user_id: USER_ID,
+                        hashed_password: "$bcrypt$aaaaaaaaaaa".to_owned(),
+                        created_at: DateTime::default(),
+                    }])
+                    .await
+                    .expect("failed to write password");
+                writer.finish().await.expect("failed to finish MasWriter");
+            })
+        })
+        .await;
+        assert_db_snapshot!(&mut conn);
+        Ok(())
+    }
 }
