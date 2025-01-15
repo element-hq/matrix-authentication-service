@@ -12,6 +12,7 @@ use axum_extra::TypedHeader;
 use chrono::Duration;
 use mas_axum_utils::{cookies::CookieJar, FancyError, SessionInfoExt as _};
 use mas_data_model::UserAgent;
+use mas_matrix::BoxHomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
@@ -36,6 +37,7 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(url_builder): State<UrlBuilder>,
+    State(homeserver): State<BoxHomeserverConnection>,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
 ) -> Result<impl IntoResponse, FancyError> {
@@ -72,6 +74,7 @@ pub(crate) async fn get(
     // Check that this registration belongs to this browser
     let registrations = UserRegistrationSessions::load(&cookie_jar);
     if !registrations.contains(&registration) {
+        // XXX: we should have a better error screen here
         return Err(FancyError::from(anyhow::anyhow!(
             "Could not find the registration in the browser cookies"
         )));
@@ -82,12 +85,21 @@ pub(crate) async fn get(
     // address
 
     if repo.user().exists(&registration.username).await? {
+        // XXX: this could have a better error message, but as this is unlikely to
+        // happen, we're fine with a vague message for now
         return Err(FancyError::from(anyhow::anyhow!(
             "Username is already taken"
         )));
     }
 
-    // TODO: query the homeserver
+    if !homeserver
+        .is_localpart_available(&registration.username)
+        .await?
+    {
+        return Err(FancyError::from(anyhow::anyhow!(
+            "Username is not available"
+        )));
+    }
 
     // For now, we require an email address on the registration, but this might
     // change in the future
@@ -115,6 +127,8 @@ pub(crate) async fn get(
         .await?
         > 0
     {
+        // XXX: this could have a better error message, but as this is unlikely to
+        // happen, we're fine with a vague message for now
         return Err(FancyError::from(anyhow::anyhow!(
             "Email address is already used"
         )));
