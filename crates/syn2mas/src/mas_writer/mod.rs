@@ -11,7 +11,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{future::BoxFuture, TryStreamExt};
-use sqlx::{query, query_as, Executor, PgConnection, Row};
+use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -667,16 +667,13 @@ impl<'writer, 'conn> MasUserWriteBuffer<'writer, 'conn> {
 
 #[cfg(test)]
 mod test {
-    use std::{
-        collections::{BTreeMap, BTreeSet},
-        future::Future,
-    };
+    use std::collections::{BTreeMap, BTreeSet};
 
-    use chrono::{DateTime, Utc};
+    use chrono::DateTime;
     use futures_util::{future::BoxFuture, TryStreamExt};
-    use insta::assert_yaml_snapshot;
+
     use serde::Serialize;
-    use sqlx::{Acquire, Column, PgConnection, PgPool, Row};
+    use sqlx::{Column, PgConnection, PgPool, Row};
     use uuid::Uuid;
 
     use crate::{
