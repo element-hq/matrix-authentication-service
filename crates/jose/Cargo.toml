@@ -32,7 +32,6 @@ serde_with = "3.12.0"
 sha2 = { version = "0.10.8", features = ["oid"] }
 signature = "2.2.0"
 thiserror.workspace = true
-tracing.workspace = true
 url.workspace = true
 
 mas-iana.workspace = true
