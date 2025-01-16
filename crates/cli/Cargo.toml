@@ -23,9 +23,6 @@ console = "0.15.10"
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 dotenvy = "0.15.7"
 figment.workspace = true
-httpdate = "1.0.3"
-http.workspace = true
-http-body.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 ipnetwork = "0.20.0"
@@ -69,20 +66,17 @@ mas-email.workspace = true
 mas-handlers.workspace = true
 mas-http.workspace = true
 mas-i18n.workspace = true
-mas-iana.workspace = true
 mas-keystore.workspace = true
 mas-listener.workspace = true
 mas-matrix.workspace = true
 mas-matrix-synapse.workspace = true
 mas-policy.workspace = true
 mas-router.workspace = true
-mas-spa.workspace = true
 mas-storage.workspace = true
 mas-storage-pg.workspace = true
 mas-tasks.workspace = true
 mas-templates.workspace = true
 mas-tower.workspace = true
-oauth2-types.workspace = true
 
 [build-dependencies]
 anyhow.workspace = true

@@ -12,7 +12,6 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 language-tags = { version = "0.3.2", features = ["serde"] }

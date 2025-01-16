@@ -13,8 +13,5 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-serde.workspace = true
 async-trait.workspace = true
-http.workspace = true
 tokio.workspace = true
-url.workspace = true
