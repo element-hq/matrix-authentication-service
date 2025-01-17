@@ -14,8 +14,6 @@ workspace = true
 [dependencies]
 tokio.workspace = true
 tracing.workspace = true
-
-thiserror.workspace = true
 anyhow.workspace = true
 
 camino = { workspace = true, features = ["serde1"] }

@@ -13,25 +13,20 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-async-stream = "0.3.6"
 async-trait.workspace = true
 cron.workspace = true
 chrono.workspace = true
-event-listener = "5.3.1"
-futures-lite = "2.5.0"
 rand.workspace = true
 rand_chacha = "0.3.1"
 sqlx.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
-tower.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true
 opentelemetry.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 ulid.workspace = true
-url.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
@@ -43,4 +38,3 @@ mas-router.workspace = true
 mas-storage.workspace = true
 mas-storage-pg.workspace = true
 mas-templates.workspace = true
-mas-tower.workspace = true

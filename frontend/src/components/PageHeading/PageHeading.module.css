@@ -10,7 +10,7 @@
   flex-direction: column;
   gap: var(--cpd-space-4x);
 
-  /* Layout already has 6x padding, and we need 10x */
+  /* Layout already has 8x/12x padding, and we need 12x/20x */
   margin-block-start: var(--cpd-space-4x);
 
   & .icon {
@@ -72,5 +72,11 @@
         color: var(--cpd-color-text-primary);
       }
     }
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .page-heading {
+    margin-block-start: var(--cpd-space-8x);
   }
 }

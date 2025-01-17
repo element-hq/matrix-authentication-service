@@ -58,7 +58,10 @@ const documents = {
     "\n  mutation ChangePassword(\n    $userId: ID!\n    $oldPassword: String!\n    $newPassword: String!\n  ) {\n    setPassword(\n      input: {\n        userId: $userId\n        currentPassword: $oldPassword\n        newPassword: $newPassword\n      }\n    ) {\n      status\n    }\n  }\n": types.ChangePasswordDocument,
     "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": types.PasswordChangeDocument,
     "\n  mutation RecoverPassword($ticket: String!, $newPassword: String!) {\n    setPasswordByRecovery(\n      input: { ticket: $ticket, newPassword: $newPassword }\n    ) {\n      status\n    }\n  }\n": types.RecoverPasswordDocument,
-    "\n  query PasswordRecovery {\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": types.PasswordRecoveryDocument,
+    "\n  mutation ResendRecoveryEmail($ticket: String!) {\n    resendRecoveryEmail(input: { ticket: $ticket }) {\n      status\n      progressUrl\n    }\n  }\n": types.ResendRecoveryEmailDocument,
+    "\n  fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {\n    username\n    email\n  }\n": types.RecoverPassword_UserRecoveryTicketFragmentDoc,
+    "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    ...PasswordCreationDoubleInput_siteConfig\n  }\n": types.RecoverPassword_SiteConfigFragmentDoc,
+    "\n  query PasswordRecovery($ticket: String!) {\n    siteConfig {\n      ...RecoverPassword_siteConfig\n    }\n\n    userRecoveryTicket(ticket: $ticket) {\n      status\n      ...RecoverPassword_userRecoveryTicket\n    }\n  }\n": types.PasswordRecoveryDocument,
     "\n  mutation AllowCrossSigningReset($userId: ID!) {\n    allowUserCrossSigningReset(input: { userId: $userId }) {\n      user {\n        id\n      }\n    }\n  }\n": types.AllowCrossSigningResetDocument,
 };
 
@@ -237,7 +240,19 @@ export function graphql(source: "\n  mutation RecoverPassword($ticket: String!, 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PasswordRecovery {\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n"): typeof import('./graphql').PasswordRecoveryDocument;
+export function graphql(source: "\n  mutation ResendRecoveryEmail($ticket: String!) {\n    resendRecoveryEmail(input: { ticket: $ticket }) {\n      status\n      progressUrl\n    }\n  }\n"): typeof import('./graphql').ResendRecoveryEmailDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {\n    username\n    email\n  }\n"): typeof import('./graphql').RecoverPassword_UserRecoveryTicketFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    ...PasswordCreationDoubleInput_siteConfig\n  }\n"): typeof import('./graphql').RecoverPassword_SiteConfigFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PasswordRecovery($ticket: String!) {\n    siteConfig {\n      ...RecoverPassword_siteConfig\n    }\n\n    userRecoveryTicket(ticket: $ticket) {\n      status\n      ...RecoverPassword_userRecoveryTicket\n    }\n  }\n"): typeof import('./graphql').PasswordRecoveryDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

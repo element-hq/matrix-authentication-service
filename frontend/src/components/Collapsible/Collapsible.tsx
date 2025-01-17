@@ -6,37 +6,67 @@
 
 import * as Collapsible from "@radix-ui/react-collapsible";
 import IconChevronUp from "@vector-im/compound-design-tokens/assets/web/icons/chevron-up";
+import { H4, IconButton } from "@vector-im/compound-web";
 import classNames from "classnames";
+import { useCallback, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import styles from "./Collapsible.module.css";
 
-export const Trigger: React.FC<
-  React.ComponentProps<typeof Collapsible.Trigger>
-> = ({ children, className, ...props }) => {
+export const Section: React.FC<
+  {
+    title: string;
+    description?: string;
+  } & Omit<
+    React.ComponentProps<typeof Collapsible.Root>,
+    "asChild" | "aria-labelledby" | "aria-describedby" | "open"
+  >
+> = ({ title, description, defaultOpen, className, children, ...props }) => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(defaultOpen || false);
+  const titleId = useId();
+  const descriptionId = useId();
+  const onClick = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault();
+    setOpen((open) => !open);
+  }, []);
+
   return (
-    <Collapsible.Trigger
+    <Collapsible.Root
       {...props}
-      className={classNames(styles.trigger, className)}
+      open={open}
+      onOpenChange={setOpen}
+      asChild
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
+      className={classNames(styles.root, className)}
     >
-      <div className={styles.triggerTitle}>{children}</div>
-      <IconChevronUp
-        className={styles.triggerIcon}
-        height="24px"
-        width="24px"
-      />
-    </Collapsible.Trigger>
+      <section>
+        <header className={styles.heading}>
+          <div className={styles.trigger}>
+            <H4 onClick={onClick} id={titleId} className={styles.triggerTitle}>
+              {title}
+            </H4>
+            <Collapsible.Trigger className={styles.triggerIcon} asChild>
+              <IconButton
+                tooltip={open ? t("action.collapse") : t("action.expand")}
+              >
+                <IconChevronUp />
+              </IconButton>
+            </Collapsible.Trigger>
+          </div>
+
+          {description && (
+            <p className={styles.description} id={descriptionId}>
+              {description}
+            </p>
+          )}
+        </header>
+
+        <Collapsible.Content asChild>
+          <article className={styles.content}>{children}</article>
+        </Collapsible.Content>
+      </section>
+    </Collapsible.Root>
   );
 };
-
-export const Content: React.FC<
-  React.ComponentProps<typeof Collapsible.Content>
-> = ({ className, ...props }) => {
-  return (
-    <Collapsible.Content
-      {...props}
-      className={classNames(styles.content, className)}
-    />
-  );
-};
-
-export const Root = Collapsible.Root;

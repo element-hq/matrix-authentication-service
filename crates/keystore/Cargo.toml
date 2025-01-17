@@ -15,7 +15,6 @@ workspace = true
 aead = { version = "0.5.2", features = ["std"] }
 const-oid = { version = "0.9.6", features = ["std"] }
 der = { version = "0.7.9", features = ["std"] }
-ecdsa = { version = "0.16.9", features = ["std"] }
 elliptic-curve.workspace = true
 k256.workspace = true
 p256.workspace = true

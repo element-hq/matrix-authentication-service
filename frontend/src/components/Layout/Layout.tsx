@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import cx from "classnames";
 import { Suspense } from "react";
 import { graphql } from "../../gql";
@@ -28,7 +28,7 @@ export const query = queryOptions({
 });
 
 const AsyncFooter: React.FC = () => {
-  const result = useQuery(query);
+  const result = useSuspenseQuery(query);
 
   if (result.error || result.isPending) {
     // We probably prefer to render an empty footer in case of an error

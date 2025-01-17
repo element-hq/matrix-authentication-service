@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -26,7 +26,7 @@ pub use self::{
     oauth::{OAuth2Client, OAuth2Session},
     site_config::{SiteConfig, SITE_CONFIG_ID},
     upstream_oauth::{UpstreamOAuth2Link, UpstreamOAuth2Provider},
-    users::{AppSession, User, UserEmail},
+    users::{AppSession, User, UserEmail, UserRecoveryTicket},
     viewer::{Anonymous, Viewer, ViewerSession},
 };
 
@@ -42,6 +42,7 @@ pub enum CreationEvent {
     CompatSession(Box<CompatSession>),
     BrowserSession(Box<BrowserSession>),
     UserEmail(Box<UserEmail>),
+    UserRecoveryTicket(Box<UserRecoveryTicket>),
     UpstreamOAuth2Provider(Box<UpstreamOAuth2Provider>),
     UpstreamOAuth2Link(Box<UpstreamOAuth2Link>),
     OAuth2Session(Box<OAuth2Session>),

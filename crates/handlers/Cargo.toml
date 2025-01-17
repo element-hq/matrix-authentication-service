@@ -68,7 +68,7 @@ pbkdf2 = { version = "0.12.2", features = [
 zeroize = "1.8.1"
 
 # Various data types and utilities
-base64ct = "1.6.0"
+base64ct.workspace = true
 camino.workspace = true
 chrono.workspace = true
 elliptic-curve.workspace = true
@@ -81,7 +81,6 @@ url.workspace = true
 mime = "0.3.17"
 minijinja.workspace = true
 minijinja-contrib.workspace = true
-nonzero_ext.workspace = true
 rand.workspace = true
 rand_chacha = "0.3.1"
 headers.workspace = true
@@ -99,7 +98,6 @@ mas-matrix.workspace = true
 mas-oidc-client.workspace = true
 mas-policy.workspace = true
 mas-router.workspace = true
-mas-spa.workspace = true
 mas-storage.workspace = true
 mas-storage-pg.workspace = true
 mas-templates.workspace = true

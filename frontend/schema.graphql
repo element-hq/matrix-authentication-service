@@ -804,6 +804,16 @@ type Mutation {
   """
   setPasswordByRecovery(input: SetPasswordByRecoveryInput!): SetPasswordPayload!
   """
+  Resend a user recovery email
+
+  This is used when a user opens a recovery link that has expired. In this
+  case, we display a link for them to get a new recovery email, which
+  calls this mutation.
+  """
+  resendRecoveryEmail(
+    input: ResendRecoveryEmailInput!
+  ): ResendRecoveryEmailPayload!
+  """
   Create a new arbitrary OAuth 2.0 Session.
 
   Only available for administrators.
@@ -1026,6 +1036,10 @@ type Query {
   """
   userEmail(id: ID!): UserEmail
   """
+  Fetch a user recovery ticket.
+  """
+  userRecoveryTicket(ticket: String!): UserRecoveryTicket
+  """
   Fetches an object given its ID.
   """
   node(id: ID!): Node
@@ -1159,6 +1173,48 @@ enum RemoveEmailStatus {
   The email address was not found
   """
   NOT_FOUND
+}
+
+"""
+The input for the `resendRecoveryEmail` mutation.
+"""
+input ResendRecoveryEmailInput {
+  """
+  The recovery ticket to use.
+  """
+  ticket: String!
+}
+
+"""
+The return type for the `resendRecoveryEmail` mutation.
+"""
+type ResendRecoveryEmailPayload {
+  """
+  Status of the operation
+  """
+  status: ResendRecoveryEmailStatus!
+  """
+  URL to continue the recovery process
+  """
+  progressUrl: Url
+}
+
+"""
+The status of the `resendRecoveryEmail` mutation.
+"""
+enum ResendRecoveryEmailStatus {
+  """
+  The recovery ticket was not found.
+  """
+  NO_SUCH_RECOVERY_TICKET
+  """
+  The rate limit was exceeded.
+  """
+  RATE_LIMITED
+  """
+  The recovery email was sent.
+  """
+  SENT
 }
 
 """
@@ -2021,6 +2077,50 @@ enum UserEmailState {
   The email address has been confirmed.
   """
   CONFIRMED
+}
+
+"""
+A recovery ticket
+"""
+type UserRecoveryTicket implements Node & CreationEvent {
+  """
+  ID of the object.
+  """
+  id: ID!
+  """
+  When the object was created.
+  """
+  createdAt: DateTime!
+  """
+  The status of the ticket
+  """
+  status: UserRecoveryTicketStatus!
+  """
+  The username associated with this ticket
+  """
+  username: String!
+  """
+  The email address associated with this ticket
+  """
+  email: String!
+}
+
+"""
+The status of a recovery ticket
+"""
+enum UserRecoveryTicketStatus {
+  """
+  The ticket is valid
+  """
+  VALID
+  """
+  The ticket has expired
+  """
+  EXPIRED
+  """
+  The ticket has been consumed
+  """
+  CONSUMED
 }
 
 """

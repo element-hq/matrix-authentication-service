@@ -82,6 +82,10 @@ version = "0.7.9"
 version = "0.9.6"
 features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
+# Constant-time base64
+[workspace.dependencies.base64ct]
+version = "1.6.0"
+
 # Bytes
 [workspace.dependencies.bytes]
 version = "1.9.0"
