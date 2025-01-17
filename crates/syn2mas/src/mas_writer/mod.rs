@@ -670,7 +670,7 @@ mod test {
     use std::collections::{BTreeMap, BTreeSet};
 
     use chrono::DateTime;
-    use futures_util::{future::BoxFuture, TryStreamExt};
+    use futures_util::TryStreamExt;
 
     use serde::Serialize;
     use sqlx::{Column, PgConnection, PgPool, Row};
@@ -763,15 +763,10 @@ mod test {
     /// Runs some code with a `MasWriter`.
     ///
     /// The callback is responsible for `finish`ing the `MasWriter`.
-    async fn with_mas_writer<F, R>(pool: &PgPool, callback: F) -> R
-    where
-        F: for<'db> FnOnce(MasWriter<'db>) -> BoxFuture<'db, R>,
-        R: 'static,
-    {
-        let mut main_conn = pool
-            .acquire()
-            .await
-            .expect("failed to acquire main MasWriter connection");
+    async fn make_mas_writer<'conn>(
+        pool: &PgPool,
+        main_conn: &'conn mut PgConnection,
+    ) -> MasWriter<'conn> {
         let mut writer_conns = Vec::new();
         for _ in 0..2 {
             writer_conns.push(
@@ -781,71 +776,67 @@ mod test {
                     .detach(),
             );
         }
-        let locked_main_conn = LockedMasDatabase::try_new(&mut main_conn)
+        let locked_main_conn = LockedMasDatabase::try_new(main_conn)
             .await
             .expect("failed to lock MAS database")
             .expect_left("MAS database is already locked");
-        let writer = MasWriter::new(locked_main_conn, writer_conns)
+        MasWriter::new(locked_main_conn, writer_conns)
             .await
-            .expect("failed to construct MasWriter");
-        callback(writer).await
+            .expect("failed to construct MasWriter")
     }
 
     /// Tests writing a single user, without a password.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_write_user(pool: PgPool) -> anyhow::Result<()> {
+    async fn test_write_user(pool: PgPool) {
         let mut conn = pool.acquire().await.unwrap();
-        with_mas_writer(&pool, |mut writer| {
-            Box::pin(async move {
-                writer
-                    .write_users(vec![MasNewUser {
-                        user_id: Uuid::from_u128(1u128),
-                        username: "alice".to_owned(),
-                        created_at: DateTime::default(),
-                        locked_at: None,
-                        can_request_admin: false,
-                    }])
-                    .await
-                    .expect("failed to write user");
-                writer.finish().await.expect("failed to finish MasWriter");
-            })
-        })
-        .await;
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
         assert_db_snapshot!(&mut conn);
-        Ok(())
     }
 
     /// Tests writing a single user, with a password.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_write_user_with_password(pool: PgPool) -> anyhow::Result<()> {
+    async fn test_write_user_with_password(pool: PgPool) {
+        const USER_ID: Uuid = Uuid::from_u128(1u128);
+
         let mut conn = pool.acquire().await.unwrap();
-        with_mas_writer(&pool, |mut writer| {
-            Box::pin(async move {
-                const USER_ID: Uuid = Uuid::from_u128(1u128);
-                writer
-                    .write_users(vec![MasNewUser {
-                        user_id: USER_ID,
-                        username: "alice".to_owned(),
-                        created_at: DateTime::default(),
-                        locked_at: None,
-                        can_request_admin: false,
-                    }])
-                    .await
-                    .expect("failed to write user");
-                writer
-                    .write_passwords(vec![MasNewUserPassword {
-                        user_password_id: Uuid::from_u128(42u128),
-                        user_id: USER_ID,
-                        hashed_password: "$bcrypt$aaaaaaaaaaa".to_owned(),
-                        created_at: DateTime::default(),
-                    }])
-                    .await
-                    .expect("failed to write password");
-                writer.finish().await.expect("failed to finish MasWriter");
-            })
-        })
-        .await;
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: USER_ID,
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+        writer
+            .write_passwords(vec![MasNewUserPassword {
+                user_password_id: Uuid::from_u128(42u128),
+                user_id: USER_ID,
+                hashed_password: "$bcrypt$aaaaaaaaaaa".to_owned(),
+                created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write password");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
         assert_db_snapshot!(&mut conn);
-        Ok(())
     }
 }
