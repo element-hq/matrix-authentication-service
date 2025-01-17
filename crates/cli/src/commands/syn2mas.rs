@@ -153,6 +153,8 @@ impl Options {
                     return Ok(ExitCode::from(EXIT_CODE_CHECK_WARNINGS));
                 }
 
+                println!("Check completed successfully with no errors or warnings.");
+
                 Ok(ExitCode::SUCCESS)
             }
             Subcommand::Migrate => {
