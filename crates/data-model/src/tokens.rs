@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use base64ct::{Base64Url, Encoding};
 use chrono::{DateTime, Utc};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use mas_iana::oauth::OAuthTokenTypeHint;
@@ -294,7 +295,7 @@ impl TokenType {
     pub fn check(token: &str) -> Result<TokenType, TokenFormatError> {
         // these are legacy tokens imported from Synapse
         // we don't do any validation on them and continue as is
-        if token.starts_with("syt_") {
+        if token.starts_with("syt_") || is_likely_synapse_macaroon(token) {
             return Ok(TokenType::CompatAccessToken);
         }
         if token.starts_with("syr_") {
@@ -342,6 +343,20 @@ impl PartialEq<OAuthTokenTypeHint> for TokenType {
             )
         )
     }
+}
+
+/// Returns true if and only if a token looks like it may be a macaroon.
+///
+/// Macaroons are a standard for tokens that support attenuation.
+/// Synapse used them for old sessions and for guest sessions.
+///
+/// We won't bother to decode them fully, but we can check to see if the first
+/// constraint is the `location` constraint.
+fn is_likely_synapse_macaroon(token: &str) -> bool {
+    let Ok(decoded) = Base64Url::decode_vec(token) else {
+        return false;
+    };
+    decoded.get(4..13) == Some(b"location ")
 }
 
 const NUM: [u8; 62] = *b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -418,6 +433,25 @@ mod tests {
             TokenType::match_prefix(TokenType::RefreshToken.prefix()),
             Some(TokenType::RefreshToken)
         );
+    }
+
+    #[test]
+    fn test_is_likely_synapse_macaroon() {
+        // This is just the prefix of a Synapse macaroon, but it's enough to make the
+        // sniffing work
+        assert!(is_likely_synapse_macaroon(
+            "MDAxYmxvY2F0aW9uIGxpYnJlcHVzaC5uZXQKMDAx"
+        ));
+
+        // Whilst this is a macaroon, it's not a Synapse macaroon
+        assert!(! is_likely_synapse_macaroon("MDAxY2xvY2F0aW9uIGh0dHA6Ly9teWJhbmsvCjAwMjZpZGVudGlmaWVyIHdlIHVzZWQgb3VyIHNlY3JldCBrZXkKMDAyZnNpZ25hdHVyZSDj2eApCFJsTAA5rhURQRXZf91ovyujebNCqvD2F9BVLwo"));
+
+        // None of these are macaroons
+        assert!(!is_likely_synapse_macaroon(
+            "eyJARTOhearotnaeisahtoarsnhiasra.arsohenaor.oarnsteao"
+        ));
+        assert!(!is_likely_synapse_macaroon("...."));
+        assert!(!is_likely_synapse_macaroon("aaa"));
     }
 
     #[test]
