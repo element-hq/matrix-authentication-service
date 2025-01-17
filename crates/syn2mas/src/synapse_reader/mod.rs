@@ -26,7 +26,7 @@ pub enum Error {
     },
 }
 
-#[derive(Clone, Debug, sqlx::Decode)]
+#[derive(Clone, Debug, sqlx::Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FullUserId(pub String);
 
 impl Type<Postgres> for FullUserId {
@@ -82,7 +82,7 @@ impl FullUserId {
 /// A Synapse boolean.
 /// Synapse stores booleans as 0 or 1, due to compatibility with old SQLite versions
 /// that did not have native boolean support.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseBool(bool);
 
 impl<'r> sqlx::Decode<'r, Postgres> for SynapseBool {
@@ -109,7 +109,7 @@ impl From<SynapseBool> for bool {
 /// A timestamp stored as the number of seconds since the Unix epoch.
 /// Note that Synapse stores MOST timestamps as numbers of **milliseconds** since the Unix epoch.
 /// But some timestamps are still stored in seconds.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SecondsTimestamp(DateTime<Utc>);
 
 impl From<SecondsTimestamp> for DateTime<Utc> {
@@ -136,7 +136,7 @@ impl sqlx::Type<Postgres> for SecondsTimestamp {
     }
 }
 
-#[derive(Clone, Debug, FromRow)]
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseUser {
     /// Full User ID of the user
     pub name: FullUserId,
@@ -264,5 +264,30 @@ impl<'conn> SynapseReader<'conn> {
 
 #[cfg(test)]
 mod test {
+    use std::collections::BTreeSet;
+
+    use futures_util::TryStreamExt;
+    use insta::assert_debug_snapshot;
+    use sqlx::{migrate::Migrator, PgPool};
+
+    use crate::{synapse_reader::SynapseUser, SynapseReader};
+
     // TODO test me
+    static MIGRATOR: Migrator = sqlx::migrate!("./test_synapse_migrations");
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice"))]
+    async fn test_read_users(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let users: BTreeSet<SynapseUser> = reader
+            .read_users()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse users");
+
+        assert_debug_snapshot!(users);
+    }
 }
