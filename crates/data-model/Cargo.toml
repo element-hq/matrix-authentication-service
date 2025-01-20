@@ -12,6 +12,7 @@ publish = false
 workspace = true
 
 [dependencies]
+base64ct.workspace = true
 chrono.workspace = true
 thiserror.workspace = true
 serde.workspace = true
