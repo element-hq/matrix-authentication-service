@@ -1,0 +1,76 @@
+name: Create a new release branch
+on:
+  workflow_dispatch:
+
+jobs:
+  compute-version:
+    name: Compute the next minor RC version
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+
+    steps:
+      - name: Fail the workflow if this is not the main branch
+        if: ${{ github.ref_name != 'main' }}
+        run: exit 1
+
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Extract the current version
+        id: current
+        run: echo "version=$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "mas-cli") | .version')" >> "$GITHUB_OUTPUT"
+
+      - name: Compute the new minor RC
+        id: next
+        run: echo "version=$(npx --yes semver@7.5.4 -i preminor --preid rc "${{ steps.current.outputs.version }}")" >> "$GITHUB_OUTPUT"
+
+  tag:
+    uses: ./.github/workflows/tag.yaml
+    needs: compute-version
+    with:
+      version: ${{ needs.compute-version.outputs.version }}
+    secrets:
+      BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+
+  branch:
+    name: Create a new release branch
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    needs: [tag, compute-version]
+    steps:
+      - name: Create a new release branch
+        uses: actions/github-script@v7.0.1
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+          SHA: ${{ needs.tag.outputs.sha }}
+        with:
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          script: |
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
+            // Only keep the major and minor version
+            const [major, minor, ...rest] = process.env.VERSION.split('.');
+            const branch = `release/${major}.${minor}`;
+
+            const ref = `heads/${branch}`;
+            const sha = process.env.SHA;
+            await github.rest.git.createRef({
+              owner,
+              repo,
+              ref,
+              sha,
+            });
+            console.log(`Created branch ${branch}`);
