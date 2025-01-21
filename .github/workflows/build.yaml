@@ -344,3 +344,82 @@ jobs:
             artifacts/mas-cli-aarch64-linux.tar.gz
             artifacts/mas-cli-x86_64-linux.tar.gz
           draft: true
+
+  nightly:
+    name: Update the nightly release
+    runs-on: ubuntu-24.04
+    needs:
+      - build-binaries
+      - build-image
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the artifacts from the previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: artifacts
+
+      - name: Update nightly git tag
+        uses: actions/github-script@v7.0.1
+        with:
+          script: |
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
+            const sha = process.env.GITHUB_SHA;
+
+            const tag = await github.rest.git.updateRef({
+              owner,
+              repo,
+              force: true
+              ref: 'refs/tags/nightly',
+              sha,
+            });
+            console.log("Updated tag ref:", tag.data.url);
+
+      - name: Update nightly release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 'Nightly build'
+          tag_name: nightly
+          body: |
+            This is an automatically updated nightly release containing the latest builds from the main branch.
+
+            **⚠️ Warning: These are development builds and may be unstable.**
+
+            Last updated: ${{ github.event.head_commit.timestamp }}
+            Commit: ${{ github.sha }}
+
+            ### Docker image
+
+            Regular image:
+
+              - Digest:
+                ```
+                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ```
+              - Tags:
+                ```
+                ${{ join(fromJSON(needs.build-image.outputs.metadata).regular.tags, '
+                ') }}
+                ```
+
+            Debug variant:
+
+              - Digest:
+                ```
+                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ```
+              - Tags:
+                ```
+                ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
+                ') }}
+                ```
+
+          files: |
+            artifacts/mas-cli-aarch64-linux.tar.gz
+            artifacts/mas-cli-x86_64-linux.tar.gz
+          prerelease: true
+          make_latest: false
