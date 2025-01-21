@@ -1,9 +1,6 @@
 name: Download translation files from Localazy
 on:
   workflow_dispatch:
-    secrets:
-      BOT_GITHUB_TOKEN:
-        required: true
 
 jobs:
   download:
@@ -12,14 +9,31 @@ jobs:
       contents: write
 
     steps:
+      - name: Fail the workflow if not on the main branch or a release branch
+        if: ${{ !(startsWith(github.ref_name, 'release/v') || github.ref_name == 'main') }}
+        run: exit 1
+
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Download translation files
-        uses: localazy/download@v1.1.0
+      - name: Install Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
 
-      - name: "Fix the owner of the downloaded files"
-        run: "sudo chown runner:docker translations/*.json frontend/locales/*.json"
+      - name: Install Localazy CLI
+        run: npm install -g @localazy/cli
+
+      - name: Compute the Localazy branch name
+        id: branch
+        # This will strip the "release/" prefix if present, keeping 'main' as-is
+        run: echo "name=${GITHUB_REF_NAME#release/}" >> "$GITHUB_OUTPUT"
+
+      - name: Download translations from Localazy
+        run: localazy download -w "$LOCALAZY_WRITE_KEY" -b "$BRANCH"
+        env:
+          LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
+          BRANCH: ${{ steps.branch.outputs.name }}
 
       - name: Create Pull Request
         id: cpr
@@ -28,9 +42,9 @@ jobs:
           sign-commits: true
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           branch-token: ${{ secrets.GITHUB_TOKEN }}
-          branch: actions/localazy-download
+          branch: actions/localazy-download/${{ steps.branch.outputs.name }}
           delete-branch: true
-          title: Translations updates
+          title: Translations updates for ${{ steps.branch.outputs.name }}
           labels: |
             T-Task
             A-I18n
