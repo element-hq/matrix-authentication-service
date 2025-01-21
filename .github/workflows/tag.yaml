@@ -33,9 +33,11 @@ jobs:
           rustup default stable
 
       - name: Set the crates version
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          sed -i "s/^package.version = .*/package.version = \"${{ inputs.version }}\"/" Cargo.toml
-          sed -i "/path = \".\/crates\//s/version = \".*\"/version = \"=${{ inputs.version }}\"/" Cargo.toml
+          sed -i "s/^package.version = .*/package.version = \"$VERSION\"/" Cargo.toml
+          sed -i "/path = \".\/crates\//s/version = \".*\"/version = \"=$VERSION\"/" Cargo.toml
 
       - name: Run `cargo metadata` to make sure the lockfile is up to date
         run: cargo metadata --format-version 1
