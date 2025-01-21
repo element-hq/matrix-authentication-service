@@ -80,7 +80,7 @@ jobs:
     permissions:
       contents: write
 
-    needs: [tag, compute-version]
+    needs: [tag, compute-version, localazy]
     steps:
       - name: Create a new release branch
         uses: actions/github-script@v7.0.1
