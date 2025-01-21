@@ -4,9 +4,9 @@ use anyhow::Context;
 use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
-use mas_config::{ConfigurationSectionExt, DatabaseConfig};
+use mas_config::{ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig};
 use rand::thread_rng;
-use sqlx::{Connection, Either, PgConnection};
+use sqlx::{postgres::PgConnectOptions, Connection, Either, PgConnection};
 use syn2mas::{synapse_config, LockedMasDatabase, MasWriter, SynapseReader};
 use tracing::{error, warn};
 
@@ -34,6 +34,23 @@ pub(super) struct Options {
     /// May be specified multiple times if multiple Synapse configuration files are in use.
     #[clap(long = "synapse-config")]
     synapse_configuration_files: Vec<Utf8PathBuf>,
+
+    /// Override the Synapse database URI.
+    /// syn2mas normally loads the Synapse database connection details from the Synapse configuration.
+    /// However, it may sometimes be necessary to override the database URI and in that case this flag can be used.
+    ///
+    /// Should be a connection URI of the following general form:
+    /// ```text
+    /// postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&...]
+    /// ```
+    /// To use a UNIX socket at a custom path, the host should be a path to a socket, but in the URI string
+    /// it must be URI-encoded by replacing `/` with `%2F`.
+    ///
+    /// Finally, any missing values will be loaded from the libpq-compatible environment variables
+    /// `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `PGPASSWORD`, etc.
+    /// It is valid to specify the URL `postgresql:` and configure all values through those environment variables.
+    #[clap(long = "synapse-database-uri")]
+    synapse_database_uri: Option<PgConnectOptions>,
 }
 
 #[derive(Parser, Debug)]
@@ -65,8 +82,18 @@ impl Options {
         let synapse_config = synapse_config::Config::load(&self.synapse_configuration_files)
             .context("Failed to load Synapse configuration")?;
 
-        // TODO extract the synapse database location
-        let mut syn_conn = PgConnection::connect("postgres:///fakesyn").await.unwrap();
+        // Establish a connection to Synapse's Postgres database
+        let syn_connection_options = if let Some(db_override) = self.synapse_database_uri {
+            db_override
+        } else {
+            synapse_config
+                .database
+                .to_sqlx_postgres()
+                .context("Synapse configuration does not use Postgres, cannot migrate.")?
+        };
+        let mut syn_conn = PgConnection::connect_with(&syn_connection_options)
+            .await
+            .context("could not connect to Synapse Postgres database")?;
 
         let config = DatabaseConfig::extract_or_default(figment)?;
 
@@ -126,6 +153,8 @@ impl Options {
                     return Ok(ExitCode::from(EXIT_CODE_CHECK_WARNINGS));
                 }
 
+                println!("Check completed successfully with no errors or warnings.");
+
                 Ok(ExitCode::SUCCESS)
             }
             Subcommand::Migrate => {
@@ -143,8 +172,9 @@ impl Options {
                 let mut rng = thread_rng();
 
                 // TODO progress reporting
-                // TODO allow configuring the server name / extract from MAS config
-                syn2mas::migrate(&mut reader, &mut writer, "matrix.org", &mut rng).await?;
+                let mas_matrix = MatrixConfig::extract(figment)?;
+                syn2mas::migrate(&mut reader, &mut writer, &mas_matrix.homeserver, &mut rng)
+                    .await?;
 
                 reader.finish().await?;
                 writer.finish().await?;
