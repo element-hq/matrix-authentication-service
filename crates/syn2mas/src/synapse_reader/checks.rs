@@ -247,7 +247,16 @@ pub async fn synapse_database_check(
         });
     }
 
-    let oauth_provider_user_counts = query_as::<_, UpstreamOAuthProvider>("SELECT auth_provider, COUNT(*) AS num_users FROM user_external_ids GROUP BY auth_provider ORDER BY auth_provider").fetch_all(&mut *synapse_connection).await?;
+    let oauth_provider_user_counts = query_as::<_, UpstreamOAuthProvider>(
+        "
+        SELECT auth_provider, COUNT(*) AS num_users
+        FROM user_external_ids
+        GROUP BY auth_provider
+        ORDER BY auth_provider
+        ",
+    )
+    .fetch_all(&mut *synapse_connection)
+    .await?;
     if !oauth_provider_user_counts.is_empty() {
         let syn_oauth2 = synapse.all_oidc_providers();
         let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(mas)?;
