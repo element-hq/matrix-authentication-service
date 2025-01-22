@@ -374,7 +374,7 @@ jobs:
             const tag = await github.rest.git.updateRef({
               owner,
               repo,
-              force: true
+              force: true,
               ref: 'refs/tags/unstable',
               sha,
             });
