@@ -23,5 +23,12 @@ rand.workspace = true
 uuid = "1.10.0"
 ulid = { workspace = true, features = ["uuid"] }
 
+[dev-dependencies]
+mas-storage-pg.workspace = true
+
+anyhow.workspace = true
+insta.workspace = true
+serde.workspace = true
+
 [lints]
 workspace = true

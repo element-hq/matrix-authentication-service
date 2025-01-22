@@ -6111,10 +6111,14 @@ dependencies = [
 name = "syn2mas"
 version = "0.13.0-rc.1"
 dependencies = [
+ "anyhow",
  "chrono",
  "compact_str",
  "futures-util",
+ "insta",
+ "mas-storage-pg",
  "rand",
+ "serde",
  "sqlx",
  "thiserror 2.0.11",
  "thiserror-ext",
