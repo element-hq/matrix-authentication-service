@@ -277,10 +277,7 @@ pub async fn synapse_database_check(
                 continue;
             };
 
-            // unwrap: we already check the issuer is present before accepting the config dict
-            let issuer = matching_syn.issuer.clone().unwrap();
-
-            // TODO extract this logic and reuse it for the migration
+            // Matching by `synapse_idp_id` is the same as what we'll do for the migration
             let matching_mas = mas_oauth2.providers.iter().find(|mas_provider| {
                 mas_provider.synapse_idp_id.as_ref() == Some(&row.auth_provider)
             });
@@ -288,7 +285,10 @@ pub async fn synapse_database_check(
             if matching_mas.is_none() {
                 errors.push(CheckError::MasMissingOAuthProvider {
                     provider: row.auth_provider,
-                    issuer,
+                    issuer: matching_syn
+                        .issuer
+                        .clone()
+                        .unwrap_or("<unspecified>".to_owned()),
                     num_users: row.num_users,
                 });
             }
