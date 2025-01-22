@@ -111,7 +111,7 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
     }
 
     // TODO check the settings directly against the MAS settings
-    for provider in synapse_config.all_oidc_providers() {
+    for provider in synapse_config.all_oidc_providers().values() {
         if let Some(ref issuer) = provider.issuer {
             warnings.push(CheckWarning::UpstreamOidcProvider {
                 issuer: issuer.clone(),
@@ -252,12 +252,7 @@ pub async fn synapse_database_check(
         let syn_oauth2 = synapse.all_oidc_providers();
         let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(mas)?;
         for row in oauth_provider_user_counts {
-            let matching_syn = syn_oauth2.iter().find(|syn_provider| {
-                let Some(ref idp_id) = syn_provider.idp_id else {
-                    return false;
-                };
-                &row.auth_provider == idp_id
-            });
+            let matching_syn = syn_oauth2.get(&row.auth_provider);
 
             let Some(matching_syn) = matching_syn else {
                 errors.push(CheckError::SynapseMissingOAuthProvider {
@@ -271,10 +266,9 @@ pub async fn synapse_database_check(
             let issuer = matching_syn.issuer.clone().unwrap();
 
             // TODO extract this logic and reuse it for the migration
-            let matching_mas = mas_oauth2
-                .providers
-                .iter()
-                .find(|mas_provider| mas_provider.issuer == issuer);
+            let matching_mas = mas_oauth2.providers.iter().find(|mas_provider| {
+                mas_provider.synapse_idp_id.as_ref() == Some(&row.auth_provider)
+            });
 
             if matching_mas.is_none() {
                 errors.push(CheckError::MasMissingOAuthProvider {

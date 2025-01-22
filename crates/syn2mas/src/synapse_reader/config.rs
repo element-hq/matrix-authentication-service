@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use camino::Utf8PathBuf;
 use figment::providers::{Format, Yaml};
 use serde::Deserialize;
@@ -78,21 +80,28 @@ impl Config {
         figment.extract::<Config>()
     }
 
+    /// Returns a map of all OIDC providers from the Synapse configuration.
+    ///
+    /// The keys are the `auth_provider` IDs as they would have been stored in
+    /// Synapse's database.
+    ///
+    /// These are compatible with the `synapse_idp_id` field of
+    /// [`mas_config::UpstreamOAuth2Provider`].
     #[must_use]
-    pub fn all_oidc_providers(&self) -> Vec<OidcProvider> {
-        let mut out = Vec::new();
+    pub fn all_oidc_providers(&self) -> BTreeMap<String, OidcProvider> {
+        let mut out = BTreeMap::new();
 
-        if let Some(ref provider) = self.oidc_config {
+        if let Some(provider) = &self.oidc_config {
             if provider.issuer.is_some() {
-                let mut provider = provider.clone();
-                provider.idp_id = Some("oidc".to_owned());
-                out.push(provider.clone());
+                // The legacy configuration has an implied IdP ID of `oidc`.
+                out.insert("oidc".to_owned(), provider.clone());
             }
         }
 
         for provider in &self.oidc_providers {
-            if provider.issuer.is_some() {
-                out.push(provider.clone());
+            if let Some(idp_id) = &provider.idp_id {
+                // Synapse internally prefixes the IdP IDs with `oidc-`.
+                out.insert(format!("oidc-{idp_id}"), provider.clone());
             }
         }
 
