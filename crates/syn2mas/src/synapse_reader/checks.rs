@@ -81,7 +81,7 @@ pub enum CheckWarning {
     #[error("Synapse config contains OIDC auth configuration (issuer: {issuer:?}) which will need to be manually mapped to an upstream OpenID Connect Provider during migration.")]
     UpstreamOidcProvider { issuer: String },
 
-    #[error("Synapse config contains {0} auth configuration which will need to be manually mapped as an upstream OpenID Connect Provider during migration.")]
+    #[error("Synapse config contains {0} auth configuration which will need to be manually mapped as an upstream OAuth 2.0 provider during migration.")]
     ExternalAuthSystem(&'static str),
 
     #[error("Synapse config has registration enabled. This must be disabled after migration before bringing Synapse back online.")]
