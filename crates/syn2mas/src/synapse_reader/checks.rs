@@ -171,27 +171,23 @@ pub async fn synapse_config_check_against_mas_config(
 
     // Look for the MAS password hashing scheme that will be used for imported Synapse passwords,
     // then check the configuration matches so that Synapse passwords will be compatible with MAS.
-    let mut found_password_scheme = false;
-    for (scheme_version, scheme_algorithm, _scheme_rounds, scheme_secret) in &mas_password_schemes {
-        if *scheme_version == MIGRATED_PASSWORD_VERSION {
-            if scheme_algorithm != &PasswordAlgorithm::Bcrypt {
-                errors.push(CheckError::PasswordSchemeNotBcrypt);
-            }
-
-            let synapse_pepper = synapse
-                .password_config
-                .pepper
-                .as_ref()
-                .map(String::as_bytes);
-            if scheme_secret.as_deref() != synapse_pepper {
-                errors.push(CheckError::PasswordSchemeWrongPepper);
-            }
-
-            found_password_scheme = true;
+    if let Some((_, algorithm, _, secret)) = mas_password_schemes
+        .iter()
+        .find(|(version, _, _, _)| *version == MIGRATED_PASSWORD_VERSION)
+    {
+        if algorithm != &PasswordAlgorithm::Bcrypt {
+            errors.push(CheckError::PasswordSchemeNotBcrypt);
         }
-    }
 
-    if !found_password_scheme {
+        let synapse_pepper = synapse
+            .password_config
+            .pepper
+            .as_ref()
+            .map(String::as_bytes);
+        if secret.as_deref() != synapse_pepper {
+            errors.push(CheckError::PasswordSchemeWrongPepper);
+        }
+    } else {
         errors.push(CheckError::MissingPasswordScheme);
     }
 
