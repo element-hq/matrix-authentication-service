@@ -375,7 +375,7 @@ jobs:
               owner,
               repo,
               force: true,
-              ref: 'refs/tags/unstable',
+              ref: 'tags/unstable',
               sha,
             });
             console.log("Updated tag ref:", tag.data.url);
