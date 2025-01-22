@@ -347,8 +347,8 @@ jobs:
             artifacts/mas-cli-x86_64-linux.tar.gz
           draft: true
 
-  nightly:
-    name: Update the nightly release
+  unstable:
+    name: Update the unstable release
     runs-on: ubuntu-24.04
     needs:
       - build-binaries
@@ -365,7 +365,7 @@ jobs:
           name: binaries
           path: artifacts
 
-      - name: Update nightly git tag
+      - name: Update unstable git tag
         uses: actions/github-script@v7.0.1
         with:
           script: |
@@ -376,18 +376,18 @@ jobs:
               owner,
               repo,
               force: true
-              ref: 'refs/tags/nightly',
+              ref: 'refs/tags/unstable',
               sha,
             });
             console.log("Updated tag ref:", tag.data.url);
 
-      - name: Update nightly release
+      - name: Update unstable release
         uses: softprops/action-gh-release@v2
         with:
-          name: 'Nightly build'
-          tag_name: nightly
+          name: 'Unstable build'
+          tag_name: unstable
           body: |
-            This is an automatically updated nightly release containing the latest builds from the main branch.
+            This is an automatically updated unstable release containing the latest builds from the main branch.
 
             **⚠️ Warning: These are development builds and may be unstable.**
 
