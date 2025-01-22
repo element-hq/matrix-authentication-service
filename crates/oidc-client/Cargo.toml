@@ -39,7 +39,7 @@ oauth2-types.workspace = true
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-bitflags = "2.6.0"
+bitflags = "2.8.0"
 rand_chacha = "0.3.1"
 tokio.workspace = true
 wiremock.workspace = true
