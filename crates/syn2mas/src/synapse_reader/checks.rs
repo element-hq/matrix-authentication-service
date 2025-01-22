@@ -9,8 +9,8 @@
 
 use figment::Figment;
 use mas_config::{
-    ConfigurationSection, ConfigurationSectionExt, MatrixConfig, PasswordAlgorithm,
-    PasswordsConfig, UpstreamOAuth2Config,
+    BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt, MatrixConfig,
+    PasswordAlgorithm, PasswordsConfig, UpstreamOAuth2Config,
 };
 use sqlx::{prelude::FromRow, query_as, query_scalar, PgConnection};
 use thiserror::Error;
@@ -90,7 +90,10 @@ pub enum CheckWarning {
     #[error("Synapse config has `user_consent` enabled. This should be disabled after migration.")]
     DisableUserConsentAfterMigration,
 
-    #[error("Synapse config has a registration CAPTCHA enabled. An equivalent CAPTCHA should be manually configured in MAS.")]
+    #[error("Synapse config has `user_consent` enabled but MAS has not been configured with terms of service. You may wish to set up a `tos_uri` in your MAS branding configuration to replace the user consent.")]
+    ShouldPortUserConsentAsTerms,
+
+    #[error("Synapse config has a registration CAPTCHA enabled, but no CAPTCHA has been configured in MAS. You may wish to manually configure this.")]
     ShouldPortRegistrationCaptcha,
 }
 
@@ -102,9 +105,6 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
 
     if synapse_config.enable_registration {
         warnings.push(CheckWarning::DisableRegistrationAfterMigration);
-    }
-    if synapse_config.enable_registration_captcha {
-        warnings.push(CheckWarning::ShouldPortRegistrationCaptcha);
     }
     if synapse_config.user_consent {
         warnings.push(CheckWarning::DisableUserConsentAfterMigration);
@@ -159,7 +159,7 @@ pub async fn synapse_config_check_against_mas_config(
     mas: &Figment,
 ) -> Result<(Vec<CheckWarning>, Vec<CheckError>), Error> {
     let mut errors = Vec::new();
-    let warnings = Vec::new();
+    let mut warnings = Vec::new();
 
     let mas_passwords = PasswordsConfig::extract_or_default(mas)?;
     let mas_password_schemes = mas_passwords
@@ -204,6 +204,16 @@ pub async fn synapse_config_check_against_mas_config(
             synapse: synapse.server_name.clone(),
             mas: mas_matrix.homeserver.clone(),
         });
+    }
+
+    let mas_captcha = CaptchaConfig::extract_or_default(mas)?;
+    if synapse.enable_registration_captcha && mas_captcha.service.is_none() {
+        warnings.push(CheckWarning::ShouldPortRegistrationCaptcha);
+    }
+
+    let mas_branding = BrandingConfig::extract_or_default(mas)?;
+    if synapse.user_consent && mas_branding.tos_uri.is_none() {
+        warnings.push(CheckWarning::ShouldPortUserConsentAsTerms);
     }
 
     Ok((warnings, errors))
