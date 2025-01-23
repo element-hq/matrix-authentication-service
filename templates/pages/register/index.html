@@ -36,7 +36,7 @@ Please see LICENSE in the repository root for full details.
     {% endif %}
 
     <div class="cpd-form-root">
-      {% for key, value in next["params"]|default({})|items %}
+      {% for key, value in next["params"] | default({}) | items %}
         <input type="hidden" name="{{ key }}" value="{{ value }}" />
       {% endfor %}
 
