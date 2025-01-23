@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    queue_schedules.schedule_name as \"schedule_name!\",\n                    queue_schedules.last_scheduled_at,\n                    queue_jobs.status IN ('completed', 'failed') as last_scheduled_job_completed\n                FROM queue_schedules\n                LEFT JOIN queue_jobs\n                    ON queue_jobs.queue_job_id = queue_schedules.last_scheduled_job_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schedule_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_scheduled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_scheduled_job_completed",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "fcd8b4b9e003d1540357c6bf1ff9c715560d011d4c01112703a9c046170c84f1"
+}

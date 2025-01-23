@@ -22,10 +22,10 @@ pub fn struct_def(
 ) -> std::fmt::Result {
     write!(
         f,
-        r#"/// {}
+        r"/// {}
 ///
 /// Source: <{}>
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]"#,
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]",
         section.doc,
         section.url.unwrap(),
     )?;
@@ -33,15 +33,15 @@ pub fn struct_def(
     if !is_exhaustive {
         write!(
             f,
-            r#"
-#[non_exhaustive]"#
+            r"
+#[non_exhaustive]"
         )?;
     }
 
     write!(
         f,
-        r#"
-pub enum {} {{"#,
+        r"
+pub enum {} {{",
         section.key,
     )?;
     for member in list {
@@ -72,9 +72,9 @@ pub fn display_impl(
 ) -> std::fmt::Result {
     write!(
         f,
-        r#"impl core::fmt::Display for {} {{
+        r"impl core::fmt::Display for {} {{
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {{
-        match self {{"#,
+        match self {{",
         section.key,
     )?;
 
@@ -97,10 +97,10 @@ pub fn display_impl(
 
     writeln!(
         f,
-        r#"
+        r"
         }}
     }}
-}}"#,
+}}",
     )
 }
 
@@ -117,11 +117,11 @@ pub fn from_str_impl(
     };
     write!(
         f,
-        r#"impl core::str::FromStr for {} {{
+        r"impl core::str::FromStr for {} {{
     type Err = {err_ty};
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {{
-        match s {{"#,
+        match s {{",
         section.key,
     )?;
 
@@ -137,23 +137,23 @@ pub fn from_str_impl(
     if is_exhaustive {
         write!(
             f,
-            r#"
-            _ => Err(crate::ParseError::new()),"#
+            r"
+            _ => Err(crate::ParseError::new()),"
         )?;
     } else {
         write!(
             f,
-            r#"
-            value => Ok(Self::Unknown(value.to_owned())),"#,
+            r"
+            value => Ok(Self::Unknown(value.to_owned())),",
         )?;
     }
 
     writeln!(
         f,
-        r#"
+        r"
         }}
     }}
-}}"#,
+}}",
     )
 }
 
@@ -179,22 +179,22 @@ impl schemars::JsonSchema for {} {{
     for member in list {
         write!(
             f,
-            r#"
+            r"
             // ---
-            schemars::schema::SchemaObject {{"#,
+            schemars::schema::SchemaObject {{",
         )?;
 
         if let Some(description) = &member.description {
             write!(
                 f,
-                r#"
+                r"
                 metadata: Some(Box::new(schemars::schema::Metadata {{
                     description: Some(
                         // ---
                         {}.to_owned(),
                     ),
                     ..Default::default()
-                }})),"#,
+                }})),",
                 raw_string(description),
             )?;
         }
@@ -212,7 +212,7 @@ impl schemars::JsonSchema for {} {{
 
     writeln!(
         f,
-        r#"
+        r"
         ];
 
         let description = {};
@@ -229,7 +229,7 @@ impl schemars::JsonSchema for {} {{
         }}
         .into()
     }}
-}}"#,
+}}",
         raw_string(section.doc),
     )
 }

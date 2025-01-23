@@ -41,9 +41,9 @@ impl<'a> LazyProviderInfos<'a> {
 
     /// Trigger the discovery process and return the metadata if discovery is
     /// enabled.
-    pub async fn maybe_discover<'b>(
-        &'b mut self,
-    ) -> Result<Option<&'b VerifiedProviderMetadata>, DiscoveryError> {
+    pub async fn maybe_discover(
+        &mut self,
+    ) -> Result<Option<&VerifiedProviderMetadata>, DiscoveryError> {
         match self.load().await {
             Ok(metadata) => Ok(Some(metadata)),
             Err(DiscoveryError::Disabled) => Ok(None),
@@ -51,7 +51,7 @@ impl<'a> LazyProviderInfos<'a> {
         }
     }
 
-    async fn load<'b>(&'b mut self) -> Result<&'b VerifiedProviderMetadata, DiscoveryError> {
+    async fn load(&mut self) -> Result<&VerifiedProviderMetadata, DiscoveryError> {
         if self.loaded_metadata.is_none() {
             let verify = match self.provider.discovery_mode {
                 UpstreamOAuthProviderDiscoveryMode::Oidc => true,
