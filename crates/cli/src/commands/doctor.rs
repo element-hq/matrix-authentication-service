@@ -47,8 +47,8 @@ See {DOCS_BASE}/setup/homeserver.html",
 
         if !issuer.starts_with("https://") {
             warn!(
-                r#"⚠️ The issuer in the config (`http.issuer`/`http.public_base`) is not an HTTPS URL.
-This means some clients will refuse to use it."#
+                r"⚠️ The issuer in the config (`http.issuer`/`http.public_base`) is not an HTTPS URL.
+This means some clients will refuse to use it."
             );
         }
 

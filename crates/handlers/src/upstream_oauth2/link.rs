@@ -429,8 +429,8 @@ pub(crate) async fn get(
                             let ctx = ErrorContext::new()
                                 .with_code("User exists")
                                 .with_description(format!(
-                                    r#"Upstream account provider returned {localpart:?} as username,
-                            which is not linked to that upstream account"#
+                                    r"Upstream account provider returned {localpart:?} as username,
+                            which is not linked to that upstream account"
                                 ))
                                 .with_language(&locale);
 
@@ -449,8 +449,8 @@ pub(crate) async fn get(
                             let ctx = ErrorContext::new()
                                 .with_code("Policy error")
                                 .with_description(format!(
-                                    r#"Upstream account provider returned {localpart:?} as username,
-                            which does not pass the policy check: {res}"#
+                                    r"Upstream account provider returned {localpart:?} as username,
+                            which does not pass the policy check: {res}"
                                 ))
                                 .with_language(&locale);
 
@@ -593,7 +593,7 @@ pub(crate) async fn post(
             // Is the email verified according to the upstream provider?
             let provider_email_verified = env
                 .render_str("{{ user.email_verified | string }}", &context)
-                .map_or(false, |v| v == "true");
+                .is_ok_and(|v| v == "true");
 
             // Create a template context in case we need to re-render because of an error
             let ctx = UpstreamRegister::new(link.clone(), provider.clone());

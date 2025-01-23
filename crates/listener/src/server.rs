@@ -217,7 +217,7 @@ where
         let tls = stream.tls_info();
 
         // Figure out if it's HTTP/2 based on the negociated ALPN info
-        let is_h2 = tls.as_ref().map_or(false, TlsStreamInfo::is_alpn_h2);
+        let is_h2 = tls.as_ref().is_some_and(TlsStreamInfo::is_alpn_h2);
 
         let info = ConnectionInfo {
             tls,
