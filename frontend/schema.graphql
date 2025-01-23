@@ -528,6 +528,10 @@ enum CompleteEmailAuthenticationStatus {
   Too many attempts to complete an email authentication
   """
   RATE_LIMITED
+  """
+  The email address is already in use
+  """
+  IN_USE
 }
 
 """
@@ -1650,7 +1654,7 @@ enum StartEmailAuthenticationStatus {
   """
   DENIED
   """
-  The email address is already in use
+  The email address is already in use on this account
   """
   IN_USE
 }

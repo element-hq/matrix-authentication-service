@@ -42,10 +42,10 @@ pub use self::{
         RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
         RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
         RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
-        RegisterStepsVerifyEmailContext, RegisterStepsVerifyEmailFormField, SiteBranding,
-        SiteConfigExt, SiteFeatures, TemplateContext, UpstreamExistingLinkContext,
-        UpstreamRegister, UpstreamRegisterFormField, UpstreamSuggestLink, WithCaptcha, WithCsrf,
-        WithLanguage, WithOptionalSession, WithSession,
+        RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
+        RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
+        TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
+        UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage, WithOptionalSession, WithSession,
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
@@ -336,6 +336,9 @@ register_templates! {
     /// Render the email verification page
     pub fn render_register_steps_verify_email(WithLanguage<WithCsrf<RegisterStepsVerifyEmailContext>>) { "pages/register/steps/verify_email.html" }
 
+    /// Render the email in use page
+    pub fn render_register_steps_email_in_use(WithLanguage<RegisterStepsEmailInUseContext>) { "pages/register/steps/email_in_use.html" }
+
     /// Render the display name page
     pub fn render_register_steps_display_name(WithLanguage<WithCsrf<RegisterStepsDisplayNameContext>>) { "pages/register/steps/display_name.html" }
 
@@ -432,6 +435,7 @@ impl Templates {
         check::render_register(self, now, rng)?;
         check::render_password_register(self, now, rng)?;
         check::render_register_steps_verify_email(self, now, rng)?;
+        check::render_register_steps_email_in_use(self, now, rng)?;
         check::render_register_steps_display_name(self, now, rng)?;
         check::render_consent(self, now, rng)?;
         check::render_policy_violation(self, now, rng)?;

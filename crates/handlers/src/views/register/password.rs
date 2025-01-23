@@ -25,7 +25,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
-    user::{UserEmailFilter, UserEmailRepository, UserRepository},
+    user::{UserEmailRepository, UserRepository},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{
@@ -191,17 +191,13 @@ pub(crate) async fn post(
             homeserver_denied_username = true;
         }
 
+        // Note that we don't check here if the email is already taken here, as
+        // we don't want to leak the information about other users. Instead, we will
+        // show an error message once the user confirmed their email address.
         if form.email.is_empty() {
             state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
         } else if Address::from_str(&form.email).is_err() {
             state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
-        } else if repo
-            .user_email()
-            .count(UserEmailFilter::new().for_email(&form.email))
-            .await?
-            > 0
-        {
-            state.add_error_on_field(RegisterFormField::Email, FieldError::Exists);
         }
 
         if form.password.is_empty() {

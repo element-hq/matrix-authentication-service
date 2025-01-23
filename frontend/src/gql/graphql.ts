@@ -349,6 +349,8 @@ export type CompleteEmailAuthenticationStatus =
   | 'COMPLETED'
   /** The authentication code is invalid */
   | 'INVALID_CODE'
+  /** The email address is already in use */
+  | 'IN_USE'
   /** Too many attempts to complete an email authentication */
   | 'RATE_LIMITED';
 
@@ -1207,7 +1209,7 @@ export type StartEmailAuthenticationStatus =
   | 'DENIED'
   /** The email address is invalid */
   | 'INVALID_EMAIL_ADDRESS'
-  /** The email address is already in use */
+  /** The email address is already in use on this account */
   | 'IN_USE'
   /** Too many attempts to start an email authentication */
   | 'RATE_LIMITED'

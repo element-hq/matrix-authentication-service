@@ -6,7 +6,7 @@
 use anyhow::Context as _;
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
+    response::{Html, IntoResponse, Response},
 };
 use axum_extra::TypedHeader;
 use chrono::Duration;
@@ -19,10 +19,11 @@ use mas_storage::{
     user::UserEmailFilter,
     BoxClock, BoxRepository, BoxRng,
 };
+use mas_templates::{RegisterStepsEmailInUseContext, TemplateContext as _, Templates};
 use ulid::Ulid;
 
 use super::super::cookie::UserRegistrationSessions;
-use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker};
+use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker, PreferredLanguage};
 
 #[tracing::instrument(
     name = "handlers.views.register.steps.finish.get",
@@ -38,9 +39,11 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<BoxHomeserverConnection>,
+    State(templates): State<Templates>,
+    PreferredLanguage(lang): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<Response, FancyError> {
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
     let registration = repo
         .user_registration()
@@ -60,7 +63,8 @@ pub(crate) async fn get(
         return Ok((
             cookie_jar,
             OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
-        ));
+        )
+            .into_response());
     }
 
     // Make sure the registration session hasn't expired
@@ -117,21 +121,33 @@ pub(crate) async fn get(
         return Ok((
             cookie_jar,
             url_builder.redirect(&mas_router::RegisterVerifyEmail::new(id)),
-        ));
+        )
+            .into_response());
     }
 
     // Check that the email address isn't already used
+    // It is important to do that here, as we we're not checking during the
+    // registration, because we don't want to disclose whether an email is
+    // already being used or not before we verified it
     if repo
         .user_email()
         .count(UserEmailFilter::new().for_email(&email_authentication.email))
         .await?
         > 0
     {
-        // XXX: this could have a better error message, but as this is unlikely to
-        // happen, we're fine with a vague message for now
-        return Err(FancyError::from(anyhow::anyhow!(
-            "Email address is already used"
-        )));
+        let action = registration
+            .post_auth_action
+            .map(serde_json::from_value)
+            .transpose()?;
+
+        let ctx = RegisterStepsEmailInUseContext::new(email_authentication.email, action)
+            .with_language(lang);
+
+        return Ok((
+            cookie_jar,
+            Html(templates.render_register_steps_email_in_use(&ctx)?),
+        )
+            .into_response());
     }
 
     // Check that the display name is set
@@ -139,7 +155,8 @@ pub(crate) async fn get(
         return Ok((
             cookie_jar,
             url_builder.redirect(&mas_router::RegisterDisplayName::new(registration.id)),
-        ));
+        )
+            .into_response());
     }
 
     // Everuthing is good, let's complete the registration
@@ -215,5 +232,6 @@ pub(crate) async fn get(
     return Ok((
         cookie_jar,
         OptionalPostAuthAction::from(post_auth_action).go_next(&url_builder),
-    ));
+    )
+        .into_response());
 }

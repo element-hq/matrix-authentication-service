@@ -1000,6 +1000,32 @@ impl TemplateContext for RegisterStepsVerifyEmailContext {
     }
 }
 
+/// Context used by the `pages/register/steps/email_in_use.html` template
+#[derive(Serialize)]
+pub struct RegisterStepsEmailInUseContext {
+    email: String,
+    action: Option<PostAuthAction>,
+}
+
+impl RegisterStepsEmailInUseContext {
+    /// Constructs a context for the email in use page
+    #[must_use]
+    pub fn new(email: String, action: Option<PostAuthAction>) -> Self {
+        Self { email, action }
+    }
+}
+
+impl TemplateContext for RegisterStepsEmailInUseContext {
+    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        let email = "hello@example.com".to_owned();
+        let action = PostAuthAction::continue_grant(Ulid::nil());
+        vec![Self::new(email, Some(action))]
+    }
+}
+
 /// Fields for the display name form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

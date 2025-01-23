@@ -25,6 +25,7 @@ import { Route as PasswordRecoveryIndexImport } from './routes/password.recovery
 import { Route as PasswordChangeIndexImport } from './routes/password.change.index'
 import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.index'
 import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
+import { Route as EmailsIdInUseImport } from './routes/emails.$id.in-use'
 import { Route as AccountSessionsBrowsersImport } from './routes/_account.sessions.browsers'
 import { Route as AccountSessionsIdImport } from './routes/_account.sessions.$id'
 
@@ -127,6 +128,12 @@ const EmailsIdVerifyRoute = EmailsIdVerifyImport.update({
   import('./routes/emails.$id.verify.lazy').then((d) => d.Route),
 )
 
+const EmailsIdInUseRoute = EmailsIdInUseImport.update({
+  id: '/emails/$id/in-use',
+  path: '/emails/$id/in-use',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AccountSessionsBrowsersRoute = AccountSessionsBrowsersImport.update({
   id: '/sessions/browsers',
   path: '/sessions/browsers',
@@ -217,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountSessionsBrowsersImport
       parentRoute: typeof AccountImport
     }
+    '/emails/$id/in-use': {
+      id: '/emails/$id/in-use'
+      path: '/emails/$id/in-use'
+      fullPath: '/emails/$id/in-use'
+      preLoaderRoute: typeof EmailsIdInUseImport
+      parentRoute: typeof rootRoute
+    }
     '/emails/$id/verify': {
       id: '/emails/$id/verify'
       path: '/emails/$id/verify'
@@ -300,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
   '/sessions/$id': typeof AccountSessionsIdRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessLazyRoute
   '/sessions': typeof AccountSessionsIndexRoute
@@ -316,6 +331,7 @@ export interface FileRoutesByTo {
   '/reset-cross-signing': typeof ResetCrossSigningIndexRoute
   '/sessions/$id': typeof AccountSessionsIdRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessLazyRoute
   '/sessions': typeof AccountSessionsIndexRoute
@@ -335,6 +351,7 @@ export interface FileRoutesById {
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
   '/_account/sessions/$id': typeof AccountSessionsIdRoute
   '/_account/sessions/browsers': typeof AccountSessionsBrowsersRoute
+  '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessLazyRoute
   '/_account/sessions/': typeof AccountSessionsIndexRoute
@@ -355,6 +372,7 @@ export interface FileRouteTypes {
     | '/reset-cross-signing/'
     | '/sessions/$id'
     | '/sessions/browsers'
+    | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
     | '/sessions'
@@ -370,6 +388,7 @@ export interface FileRouteTypes {
     | '/reset-cross-signing'
     | '/sessions/$id'
     | '/sessions/browsers'
+    | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
     | '/sessions'
@@ -387,6 +406,7 @@ export interface FileRouteTypes {
     | '/reset-cross-signing/'
     | '/_account/sessions/$id'
     | '/_account/sessions/browsers'
+    | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
     | '/_account/sessions/'
@@ -400,6 +420,7 @@ export interface RootRouteChildren {
   ResetCrossSigningRoute: typeof ResetCrossSigningRouteWithChildren
   ClientsIdRoute: typeof ClientsIdRoute
   DevicesSplatRoute: typeof DevicesSplatRoute
+  EmailsIdInUseRoute: typeof EmailsIdInUseRoute
   EmailsIdVerifyRoute: typeof EmailsIdVerifyRoute
   PasswordChangeSuccessLazyRoute: typeof PasswordChangeSuccessLazyRoute
   PasswordChangeIndexRoute: typeof PasswordChangeIndexRoute
@@ -411,6 +432,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetCrossSigningRoute: ResetCrossSigningRouteWithChildren,
   ClientsIdRoute: ClientsIdRoute,
   DevicesSplatRoute: DevicesSplatRoute,
+  EmailsIdInUseRoute: EmailsIdInUseRoute,
   EmailsIdVerifyRoute: EmailsIdVerifyRoute,
   PasswordChangeSuccessLazyRoute: PasswordChangeSuccessLazyRoute,
   PasswordChangeIndexRoute: PasswordChangeIndexRoute,
@@ -431,6 +453,7 @@ export const routeTree = rootRoute
         "/reset-cross-signing",
         "/clients/$id",
         "/devices/$",
+        "/emails/$id/in-use",
         "/emails/$id/verify",
         "/password/change/success",
         "/password/change/",
@@ -483,6 +506,9 @@ export const routeTree = rootRoute
     "/_account/sessions/browsers": {
       "filePath": "_account.sessions.browsers.tsx",
       "parent": "/_account"
+    },
+    "/emails/$id/in-use": {
+      "filePath": "emails.$id.in-use.tsx"
     },
     "/emails/$id/verify": {
       "filePath": "emails.$id.verify.tsx"

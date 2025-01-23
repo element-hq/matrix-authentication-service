@@ -242,7 +242,7 @@ enum StartEmailAuthenticationStatus {
     RateLimited,
     /// The email address isn't allowed by the policy
     Denied,
-    /// The email address is already in use
+    /// The email address is already in use on this account
     InUse,
 }
 
@@ -308,6 +308,7 @@ enum CompleteEmailAuthenticationPayload {
     Completed,
     InvalidCode,
     CodeExpired,
+    InUse,
     RateLimited,
 }
 
@@ -322,6 +323,8 @@ enum CompleteEmailAuthenticationStatus {
     CodeExpired,
     /// Too many attempts to complete an email authentication
     RateLimited,
+    /// The email address is already in use
+    InUse,
 }
 
 #[Object(use_type_description)]
@@ -332,6 +335,7 @@ impl CompleteEmailAuthenticationPayload {
             Self::Completed => CompleteEmailAuthenticationStatus::Completed,
             Self::InvalidCode => CompleteEmailAuthenticationStatus::InvalidCode,
             Self::CodeExpired => CompleteEmailAuthenticationStatus::CodeExpired,
+            Self::InUse => CompleteEmailAuthenticationStatus::InUse,
             Self::RateLimited => CompleteEmailAuthenticationStatus::RateLimited,
         }
     }
@@ -588,10 +592,17 @@ impl UserEmailMutations {
 
         let mut repo = state.repository().await?;
 
-        // Check if the email address is already in use
+        // Check if the email address is already in use by the same user
+        // We don't report here if the email address is already in use by another user,
+        // because we don't want to leak information about other users. We will do that
+        // only when the user enters the right verification code
         let count = repo
             .user_email()
-            .count(UserEmailFilter::new().for_email(&input.email))
+            .count(
+                UserEmailFilter::new()
+                    .for_email(&input.email)
+                    .for_user(&browser_session.user),
+            )
             .await?;
         if count > 0 {
             return Ok(StartEmailAuthenticationPayload::InUse);
@@ -742,19 +753,23 @@ impl UserEmailMutations {
             return Ok(CompleteEmailAuthenticationPayload::CodeExpired);
         }
 
-        // Check that we can add the email address to the user
-        let count = repo
-            .user_email()
-            .count(UserEmailFilter::new().for_email(&authentication.email))
-            .await?;
-        if count > 0 {
-            return Ok(CompleteEmailAuthenticationPayload::CodeExpired);
-        }
-
         let authentication = repo
             .user_email()
             .complete_authentication(&clock, authentication, &code)
             .await?;
+
+        // Check the email is not already in use by anyone, including the current user
+        let count = repo
+            .user_email()
+            .count(UserEmailFilter::new().for_email(&authentication.email))
+            .await?;
+
+        if count > 0 {
+            // We still want to consume the code so that it can't be reused
+            repo.save().await?;
+
+            return Ok(CompleteEmailAuthenticationPayload::InUse);
+        }
 
         repo.user_email()
             .add(

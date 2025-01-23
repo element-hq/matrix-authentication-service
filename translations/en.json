@@ -30,7 +30,7 @@
     },
     "start_over": "Start over",
     "@start_over": {
-      "context": "pages/recovery/consumed.html:22:32-54, pages/recovery/expired.html:30:32-54"
+      "context": "pages/recovery/consumed.html:22:32-54, pages/recovery/expired.html:30:32-54, pages/register/steps/email_in_use.html:28:32-54"
     }
   },
   "app": {
@@ -230,6 +230,16 @@
         "@heading": {
           "context": "pages/device_consent.html:156:29-68"
         }
+      }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "@description": {
+        "context": "pages/register/steps/email_in_use.html:22:13-46"
+      },
+      "title": "The email address <span>%(email)s</span> is already in use",
+      "@title": {
+        "context": "pages/register/steps/email_in_use.html:19:13-53"
       }
     },
     "emails": {

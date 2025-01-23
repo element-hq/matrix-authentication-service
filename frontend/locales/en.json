@@ -78,6 +78,9 @@
       "tablet": "Tablet",
       "unknown": "Unknown device type"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Are you sure you want to end this session?",
       "text": "Sign out"
@@ -266,6 +269,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Code not recognised",
       "code_field_label": "6-digit code",
       "code_field_wrong_shape": "Code must be 6 digits",

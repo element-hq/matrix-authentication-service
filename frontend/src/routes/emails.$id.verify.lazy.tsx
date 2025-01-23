@@ -59,6 +59,8 @@ function EmailVerify(): React.ReactElement {
 
       if (data.completeEmailAuthentication.status === "COMPLETED") {
         await navigate({ to: "/" });
+      } else if (data.completeEmailAuthentication.status === "IN_USE") {
+        await navigate({ to: "/emails/$id/in-use", params: { id } });
       }
     },
   });
@@ -99,6 +101,8 @@ function EmailVerify(): React.ReactElement {
     "RESENT";
   const invalidCode =
     verifyEmail.data?.completeEmailAuthentication.status === "INVALID_CODE";
+  const codeExpired =
+    verifyEmail.data?.completeEmailAuthentication.status === "CODE_EXPIRED";
   const rateLimited =
     verifyEmail.data?.completeEmailAuthentication.status === "RATE_LIMITED";
 
@@ -132,6 +136,15 @@ function EmailVerify(): React.ReactElement {
             title={t("frontend.verify_email.invalid_code_alert.title")}
           >
             {t("frontend.verify_email.invalid_code_alert.description")}
+          </Alert>
+        )}
+
+        {codeExpired && (
+          <Alert
+            type="critical"
+            title={t("frontend.verify_email.code_expired_alert.title")}
+          >
+            {t("frontend.verify_email.code_expired_alert.description")}
           </Alert>
         )}
 
