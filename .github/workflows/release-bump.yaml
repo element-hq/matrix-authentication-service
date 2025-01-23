@@ -1,0 +1,76 @@
+name: Bump the version on a release branch
+on:
+  workflow_dispatch:
+    inputs:
+      rc:
+        description: "Is it a release candidate?"
+        type: boolean
+        default: false
+      merge-back:
+        description: "Should we merge back the release branch to main?"
+        type: boolean
+        default: true
+
+jobs:
+  compute-version:
+    name: Compute the next version
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+
+    steps:
+      - name: Fail the workflow if not on a release branch
+        if: ${{ !startsWith(github.ref_name, 'release/v') }}
+        run: exit 1
+
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Extract the current version
+        id: current
+        run: echo "version=$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "mas-cli") | .version')" >> "$GITHUB_OUTPUT"
+
+      - name: Compute the new minor RC
+        id: next
+        env:
+          BUMP: ${{ github.event.inputs.rc && 'prerelease' || 'patch' }}
+          VERSION: ${{ steps.current.outputs.version }}
+        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP"" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
+
+  tag:
+    uses: ./.github/workflows/tag.yaml
+    needs: [compute-version]
+    with:
+      version: ${{ needs.compute-version.outputs.version }}
+    secrets:
+      BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+
+  merge-back:
+    name: Open a pull request to merge the release branch back to main
+    runs-on: ubuntu-22.04
+
+    permissions:
+      pull-requests: write
+
+    needs: [tag, compute-version]
+    if: github.event.inputs.merge-back
+    steps:
+      - name: Open a pull request to merge the release branch back to main
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+        run: |
+          gh pr create \
+            --title "Release branch $VERSION" \
+            --body "This pull request was automatically created by the release workflow. It merges the release branch back to main." \
+            --base main \
+            --head "$GITHUB_REF_NAME" \
+            --label "T-Task"

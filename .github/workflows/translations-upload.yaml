@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - release/v**
 
 jobs:
   upload:
@@ -14,7 +15,22 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Upload
-        uses: localazy/upload@v1
+      - name: Install Node
+        uses: actions/setup-node@v4.1.0
         with:
-          write_key: ${{ secrets.LOCALAZY_WRITE_KEY }}
+          node-version: 20
+
+      - name: Install Localazy CLI
+        run: npm install -g @localazy/cli
+
+      - name: Compute the Localazy branch name
+        id: branch
+        run: |
+          # This will strip the "release/" prefix if present, keeping 'main' as-is
+          echo "name=${GITHUB_REF_NAME#release/}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload translations to Localazy
+        run: localazy upload -w "$LOCALAZY_WRITE_KEY" -b "$BRANCH"
+        env:
+          LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
+          BRANCH: ${{ steps.branch.outputs.name }}

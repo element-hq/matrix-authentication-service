@@ -1,0 +1,104 @@
+name: Create a new release branch
+on:
+  workflow_dispatch:
+
+jobs:
+  compute-version:
+    name: Compute the next minor RC version
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+
+    outputs:
+      full: ${{ steps.next.outputs.version }}
+      short: ${{ steps.next.outputs.short }}
+
+    steps:
+      - name: Fail the workflow if this is not the main branch
+        if: ${{ github.ref_name != 'main' }}
+        run: exit 1
+
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Compute the new minor RC
+        id: next
+        run: |
+          CURRENT_VERSION="$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
+          NEXT_VERSION="$(npx --yes semver@7.5.4 -i preminor --preid rc "${CURRENT_VERSION}")"
+          # compute the short minor version, e.g. 0.1.0-rc.1 -> 0.1
+          SHORT_VERSION="$(echo "${NEXT_VERSION}" | cut -d. -f1-2)"
+          echo "full=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "short=${SHORT_VERSION}" >> "$GITHUB_OUTPUT"
+
+  localazy:
+    name: Create a new branch in Localazy
+    runs-on: ubuntu-22.04
+    needs: [compute-version]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+
+      - name: Install Localazy CLI
+        run: npm install -g @localazy/cli
+
+      - name: Create a new branch in Localazy
+        run: localazy branch -w "$LOCALAZY_WRITE_KEY" create main "$BRANCH"
+        env:
+          LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
+          # Localazy doesn't like slashes in branch names, so we just use the short version
+          # For example, a 0.13.0 release will create a localazy branch named "v0.13" and a git branch named "release/v0.13"
+          BRANCH: v${{ needs.compute-version.outputs.short }}
+
+  tag:
+    uses: ./.github/workflows/tag.yaml
+    needs: [compute-version]
+    with:
+      version: ${{ needs.compute-version.outputs.full }}
+    secrets:
+      BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+
+  branch:
+    name: Create a new release branch
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    needs: [tag, compute-version, localazy]
+    steps:
+      - name: Create a new release branch
+        uses: actions/github-script@v7.0.1
+        env:
+          BRANCH: release/v${{ needs.compute-version.outputs.short }}
+          SHA: ${{ needs.tag.outputs.sha }}
+        with:
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          script: |
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const branch = process.env.BRANCH;
+            const sha = process.env.SHA;
+            const ref = `heads/${branch}`;
+
+            await github.rest.git.createRef({
+              owner,
+              repo,
+              ref,
+              sha,
+            });
+            console.log(`Created branch ${branch} from ${sha}`);

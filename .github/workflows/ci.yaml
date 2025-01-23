@@ -225,8 +225,8 @@ jobs:
 
       - name: Install toolchain
         run: |
-          rustup toolchain install 1.83.0
-          rustup default 1.83.0
+          rustup toolchain install 1.84.0
+          rustup default 1.84.0
           rustup component add clippy
 
       - name: Setup OPA
@@ -276,7 +276,7 @@ jobs:
           SQLX_OFFLINE: '1'
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst

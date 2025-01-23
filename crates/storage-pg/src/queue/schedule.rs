@@ -69,7 +69,7 @@ impl QueueScheduleRepository for PgQueueScheduleRepository<'_> {
             ScheduleLookup,
             r#"
                 SELECT
-                    queue_schedules.schedule_name,
+                    queue_schedules.schedule_name as "schedule_name!",
                     queue_schedules.last_scheduled_at,
                     queue_jobs.status IN ('completed', 'failed') as last_scheduled_job_completed
                 FROM queue_schedules

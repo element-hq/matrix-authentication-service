@@ -62,12 +62,12 @@ features = ["axum", "axum-headers", "macros"]
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
-version = "7.0.13"
+version = "7.0.14"
 features = ["chrono", "url", "tracing"]
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
-version = "0.1.84"
+version = "0.1.85"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
@@ -102,7 +102,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.23"
+version = "4.5.27"
 features = ["derive"]
 
 # Cron expressions
@@ -188,12 +188,12 @@ features = [
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.5.0"
+version = "2.6.0"
 features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.5.0"
+version = "2.6.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -242,7 +242,7 @@ features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.20"
+version = "0.23.21"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
@@ -291,7 +291,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.134"
+version = "1.0.137"
 features = ["preserve_order"]
 
 # SQL database support
@@ -310,11 +310,11 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.9"
+version = "2.0.11"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.42.0"
+version = "1.43.0"
 features = ["full"]
 
 # Useful async utilities
@@ -387,7 +387,7 @@ features = ["serde"]
 
 # ULID support
 [workspace.dependencies.ulid]
-version = "1.1.3"
+version = "1.1.4"
 features = ["serde"]
 
 # HTTP mock server
