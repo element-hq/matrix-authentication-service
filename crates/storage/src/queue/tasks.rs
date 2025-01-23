@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
@@ -9,7 +9,9 @@ use ulid::Ulid;
 
 use super::InsertableJob;
 
-/// A job to verify an email address.
+/// This is the previous iteration of the email verification job. It has been
+/// replaced by [`SendEmailAuthenticationCodeJob`]. This struct is kept to be
+/// able to consume jobs that are still in the queue.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct VerifyEmailJob {
     user_email_id: Ulid,
