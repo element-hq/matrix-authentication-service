@@ -238,6 +238,8 @@ enum StartEmailAuthenticationStatus {
     Started,
     /// The email address is invalid
     InvalidEmailAddress,
+    /// Too many attempts to start an email authentication
+    RateLimited,
     /// The email address isn't allowed by the policy
     Denied,
     /// The email address is already in use
@@ -249,6 +251,7 @@ enum StartEmailAuthenticationStatus {
 enum StartEmailAuthenticationPayload {
     Started(UserEmailAuthentication),
     InvalidEmailAddress,
+    RateLimited,
     Denied {
         violations: Vec<mas_policy::Violation>,
     },
@@ -262,6 +265,7 @@ impl StartEmailAuthenticationPayload {
         match self {
             Self::Started(_) => StartEmailAuthenticationStatus::Started,
             Self::InvalidEmailAddress => StartEmailAuthenticationStatus::InvalidEmailAddress,
+            Self::RateLimited => StartEmailAuthenticationStatus::RateLimited,
             Self::Denied { .. } => StartEmailAuthenticationStatus::Denied,
             Self::InUse => StartEmailAuthenticationStatus::InUse,
         }
@@ -271,7 +275,9 @@ impl StartEmailAuthenticationPayload {
     async fn authentication(&self) -> Option<&UserEmailAuthentication> {
         match self {
             Self::Started(authentication) => Some(authentication),
-            Self::InvalidEmailAddress | Self::Denied { .. } | Self::InUse => None,
+            Self::InvalidEmailAddress | Self::RateLimited | Self::Denied { .. } | Self::InUse => {
+                None
+            }
         }
     }
 
@@ -302,6 +308,7 @@ enum CompleteEmailAuthenticationPayload {
     Completed,
     InvalidCode,
     CodeExpired,
+    RateLimited,
 }
 
 /// The status of the `completeEmailAuthentication` mutation
@@ -313,6 +320,8 @@ enum CompleteEmailAuthenticationStatus {
     InvalidCode,
     /// The authentication code has expired
     CodeExpired,
+    /// Too many attempts to complete an email authentication
+    RateLimited,
 }
 
 #[Object(use_type_description)]
@@ -323,6 +332,7 @@ impl CompleteEmailAuthenticationPayload {
             Self::Completed => CompleteEmailAuthenticationStatus::Completed,
             Self::InvalidCode => CompleteEmailAuthenticationStatus::InvalidCode,
             Self::CodeExpired => CompleteEmailAuthenticationStatus::CodeExpired,
+            Self::RateLimited => CompleteEmailAuthenticationStatus::RateLimited,
         }
     }
 }
@@ -345,6 +355,8 @@ enum ResendEmailAuthenticationCodePayload {
     Resent,
     /// The email authentication session is already completed
     Completed,
+    /// Too many attempts to resend an email authentication code
+    RateLimited,
 }
 
 /// The status of the `resendEmailAuthenticationCode` mutation
@@ -354,6 +366,8 @@ enum ResendEmailAuthenticationCodeStatus {
     Resent,
     /// The email authentication session is already completed
     Completed,
+    /// Too many attempts to resend an email authentication code
+    RateLimited,
 }
 
 #[Object(use_type_description)]
@@ -363,6 +377,7 @@ impl ResendEmailAuthenticationCodePayload {
         match self {
             Self::Resent => ResendEmailAuthenticationCodeStatus::Resent,
             Self::Completed => ResendEmailAuthenticationCodeStatus::Completed,
+            Self::RateLimited => ResendEmailAuthenticationCodeStatus::RateLimited,
         }
     }
 }
@@ -536,6 +551,7 @@ impl UserEmailMutations {
         let mut rng = state.rng();
         let clock = state.clock();
         let requester = ctx.requester();
+        let limiter = state.limiter();
 
         // Only allow calling this if the requester is a browser session
         let Some(browser_session) = requester.browser_session() else {
@@ -563,7 +579,12 @@ impl UserEmailMutations {
             return Ok(StartEmailAuthenticationPayload::InvalidEmailAddress);
         }
 
-        // TODO: check rate limting
+        if let Err(e) =
+            limiter.check_email_authentication_email(ctx.requester_fingerprint(), &input.email)
+        {
+            tracing::warn!(error = &e as &dyn std::error::Error);
+            return Ok(StartEmailAuthenticationPayload::RateLimited);
+        }
 
         let mut repo = state.repository().await?;
 
@@ -615,6 +636,7 @@ impl UserEmailMutations {
         let state = ctx.state();
         let mut rng = state.rng();
         let clock = state.clock();
+        let limiter = state.limiter();
 
         let id = NodeType::UserEmailAuthentication.extract_ulid(&input.id)?;
         let Some(browser_session) = ctx.requester().browser_session() else {
@@ -647,6 +669,13 @@ impl UserEmailMutations {
             return Ok(ResendEmailAuthenticationCodePayload::Completed);
         }
 
+        if let Err(e) = limiter
+            .check_email_authentication_send_code(ctx.requester_fingerprint(), &authentication)
+        {
+            tracing::warn!(error = &e as &dyn std::error::Error);
+            return Ok(ResendEmailAuthenticationCodePayload::RateLimited);
+        }
+
         repo.queue_job()
             .schedule_job(
                 &mut rng,
@@ -669,6 +698,7 @@ impl UserEmailMutations {
         let state = ctx.state();
         let mut rng = state.rng();
         let clock = state.clock();
+        let limiter = state.limiter();
 
         let id = NodeType::UserEmailAuthentication.extract_ulid(&input.id)?;
 
@@ -693,6 +723,11 @@ impl UserEmailMutations {
         // Make sure this authentication belongs to the requester
         if authentication.user_session_id != Some(browser_session.id) {
             return Ok(CompleteEmailAuthenticationPayload::InvalidCode);
+        }
+
+        if let Err(e) = limiter.check_email_authentication_attempt(&authentication) {
+            tracing::warn!(error = &e as &dyn std::error::Error);
+            return Ok(CompleteEmailAuthenticationPayload::RateLimited);
         }
 
         let Some(code) = repo

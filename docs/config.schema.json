@@ -1715,6 +1715,32 @@
               "$ref": "#/definitions/RateLimiterConfiguration"
             }
           ]
+        },
+        "email_authentication": {
+          "description": "Email authentication-specific rate limits",
+          "default": {
+            "per_ip": {
+              "burst": 5,
+              "per_second": 0.016666666666666666
+            },
+            "per_address": {
+              "burst": 3,
+              "per_second": 0.0002777777777777778
+            },
+            "emails_per_session": {
+              "burst": 2,
+              "per_second": 0.0033333333333333335
+            },
+            "attempt_per_session": {
+              "burst": 10,
+              "per_second": 0.016666666666666666
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/EmailauthenticationRateLimitingConfig"
+            }
+          ]
         }
       }
     },
@@ -1787,6 +1813,59 @@
           "default": {
             "burst": 1800,
             "per_second": 0.5
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
+        }
+      }
+    },
+    "EmailauthenticationRateLimitingConfig": {
+      "type": "object",
+      "properties": {
+        "per_ip": {
+          "description": "Controls how many email authentication attempts are permitted based on the source IP address. This can protect against causing e-mail spam to many targets.",
+          "default": {
+            "burst": 5,
+            "per_second": 0.016666666666666666
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
+        },
+        "per_address": {
+          "description": "Controls how many email authentication attempts are permitted based on the e-mail address entered into the authentication form. This can protect against causing e-mail spam to one target.\n\nNote: this limit also applies to re-sends.",
+          "default": {
+            "burst": 3,
+            "per_second": 0.0002777777777777778
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
+        },
+        "emails_per_session": {
+          "description": "Controls how many authentication emails are permitted to be sent per authentication session. This ensures not too many authentication codes are created for the same authentication session.",
+          "default": {
+            "burst": 2,
+            "per_second": 0.0033333333333333335
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
+        },
+        "attempt_per_session": {
+          "description": "Controls how many code authentication attempts are permitted per authentication session. This can protect against brute-forcing the code.",
+          "default": {
+            "burst": 10,
+            "per_second": 0.016666666666666666
           },
           "allOf": [
             {

@@ -524,6 +524,10 @@ enum CompleteEmailAuthenticationStatus {
   The authentication code has expired
   """
   CODE_EXPIRED
+  """
+  Too many attempts to complete an email authentication
+  """
+  RATE_LIMITED
 }
 
 """
@@ -1265,6 +1269,10 @@ enum ResendEmailAuthenticationCodeStatus {
   The email authentication session is already completed
   """
   COMPLETED
+  """
+  Too many attempts to resend an email authentication code
+  """
+  RATE_LIMITED
 }
 
 """
@@ -1633,6 +1641,10 @@ enum StartEmailAuthenticationStatus {
   The email address is invalid
   """
   INVALID_EMAIL_ADDRESS
+  """
+  Too many attempts to start an email authentication
+  """
+  RATE_LIMITED
   """
   The email address isn't allowed by the policy
   """

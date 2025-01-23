@@ -99,6 +99,8 @@ function EmailVerify(): React.ReactElement {
     "RESENT";
   const invalidCode =
     verifyEmail.data?.completeEmailAuthentication.status === "INVALID_CODE";
+  const rateLimited =
+    verifyEmail.data?.completeEmailAuthentication.status === "RATE_LIMITED";
 
   return (
     <Layout>
@@ -133,9 +135,16 @@ function EmailVerify(): React.ReactElement {
           </Alert>
         )}
 
+        {rateLimited && (
+          <Alert
+            type="critical"
+            title={t("frontend.errors.rate_limit_exceeded")}
+          />
+        )}
+
         <Form.Field
           name="code"
-          serverInvalid={invalidCode}
+          serverInvalid={invalidCode || rateLimited}
           className="self-center mb-4"
         >
           <Form.Label>{t("frontend.verify_email.code_field_label")}</Form.Label>

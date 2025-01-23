@@ -22,7 +22,7 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::{views::shared::OptionalPostAuthAction, PreferredLanguage};
+use crate::{views::shared::OptionalPostAuthAction, Limiter, PreferredLanguage};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CodeForm {
@@ -111,6 +111,7 @@ pub(crate) async fn post(
     mut rng: BoxRng,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(limiter): State<Limiter>,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
@@ -155,6 +156,22 @@ pub(crate) async fn post(
         return Err(FancyError::from(anyhow::anyhow!(
             "Email authentication already completed"
         )));
+    }
+
+    if let Err(e) = limiter.check_email_authentication_attempt(&email_authentication) {
+        tracing::warn!(error = &e as &dyn std::error::Error);
+        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+        let ctx = RegisterStepsVerifyEmailContext::new(email_authentication)
+            .with_form_state(
+                form.to_form_state()
+                    .with_error_on_form(mas_templates::FormError::RateLimitExceeded),
+            )
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_register_steps_verify_email(&ctx)?;
+
+        return Ok((cookie_jar, Html(content)).into_response());
     }
 
     let Some(code) = repo

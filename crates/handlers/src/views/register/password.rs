@@ -286,6 +286,11 @@ pub(crate) async fn post(
                 tracing::warn!(error = &e as &dyn std::error::Error);
                 state.add_error_on_form(FormError::RateLimitExceeded);
             }
+
+            if let Err(e) = limiter.check_email_authentication_email(requester, &form.email) {
+                tracing::warn!(error = &e as &dyn std::error::Error);
+                state.add_error_on_form(FormError::RateLimitExceeded);
+            }
         }
 
         state

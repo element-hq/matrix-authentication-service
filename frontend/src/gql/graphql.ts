@@ -348,7 +348,9 @@ export type CompleteEmailAuthenticationStatus =
   /** The authentication was completed */
   | 'COMPLETED'
   /** The authentication code is invalid */
-  | 'INVALID_CODE';
+  | 'INVALID_CODE'
+  /** Too many attempts to complete an email authentication */
+  | 'RATE_LIMITED';
 
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
@@ -972,6 +974,8 @@ export type ResendEmailAuthenticationCodePayload = {
 export type ResendEmailAuthenticationCodeStatus =
   /** The email authentication session is already completed */
   | 'COMPLETED'
+  /** Too many attempts to resend an email authentication code */
+  | 'RATE_LIMITED'
   /** The email was resent */
   | 'RESENT';
 
@@ -1205,6 +1209,8 @@ export type StartEmailAuthenticationStatus =
   | 'INVALID_EMAIL_ADDRESS'
   /** The email address is already in use */
   | 'IN_USE'
+  /** Too many attempts to start an email authentication */
+  | 'RATE_LIMITED'
   /** The email address was started */
   | 'STARTED';
 

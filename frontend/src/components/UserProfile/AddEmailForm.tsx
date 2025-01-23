@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -61,7 +61,7 @@ const AddEmailForm: React.FC<{
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("input") as string;
-    addEmail.mutate({ email, language: i18n.languages[0] });
+    await addEmail.mutateAsync({ email, language: i18n.languages[0] });
   };
 
   const status = addEmail.data?.startEmailAuthentication.status ?? null;
@@ -91,6 +91,10 @@ const AddEmailForm: React.FC<{
         <ErrorMessage>
           {t("frontend.add_email_form.email_in_use_error")}
         </ErrorMessage>
+      )}
+
+      {status === "RATE_LIMITED" && (
+        <ErrorMessage>{t("frontend.errors.rate_limit_exceeded")}</ErrorMessage>
       )}
 
       {status === "DENIED" && (
