@@ -27,9 +27,18 @@ export type LocalazyMetadata = {
 };
              
 const localazyMetadata: LocalazyMetadata = {
-  projectUrl: "https://localazy.com/p/matrix-authentication-service",
+  projectUrl: "https://localazy.com/p/matrix-authentication-service!v0.13",
   baseLocale: "en",
   languages: [
+    {
+      language: "cs",
+      region: "",
+      script: "",
+      isRtl: false,
+      name: "Czech",
+      localizedName: "Čeština",
+      pluralType: (n) => { return (n===1) ? "one" : (n>=2 && n<=4) ? "few" : "other"; }
+    },
     {
       language: "de",
       region: "",
@@ -118,15 +127,16 @@ const localazyMetadata: LocalazyMetadata = {
       file: "frontend.json",
       path: "",
       cdnFiles: {
-        "de": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/de/frontend.json",
-        "en": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/en/frontend.json",
-        "et": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/et/frontend.json",
-        "fr": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fr/frontend.json",
-        "nl": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/nl/frontend.json",
-        "pt": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/pt/frontend.json",
-        "sv": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/sv/frontend.json",
-        "uk": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/uk/frontend.json",
-        "zh#Hans": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/zh-Hans/frontend.json"
+        "cs": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/cs/frontend.json",
+        "de": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/de/frontend.json",
+        "en": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/en/frontend.json",
+        "et": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/et/frontend.json",
+        "fr": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fr/frontend.json",
+        "nl": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/nl/frontend.json",
+        "pt": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/pt/frontend.json",
+        "sv": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/sv/frontend.json",
+        "uk": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/uk/frontend.json",
+        "zh#Hans": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/zh-Hans/frontend.json"
       }
     },
     {
@@ -134,15 +144,16 @@ const localazyMetadata: LocalazyMetadata = {
       file: "file.json",
       path: "",
       cdnFiles: {
-        "de": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/de/file.json",
-        "en": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/en/file.json",
-        "et": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/et/file.json",
-        "fr": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fr/file.json",
-        "nl": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/nl/file.json",
-        "pt": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/pt/file.json",
-        "sv": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/sv/file.json",
-        "uk": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/uk/file.json",
-        "zh#Hans": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/zh-Hans/file.json"
+        "cs": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/cs/file.json",
+        "de": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/de/file.json",
+        "en": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/en/file.json",
+        "et": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/et/file.json",
+        "fr": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fr/file.json",
+        "nl": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/nl/file.json",
+        "pt": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/pt/file.json",
+        "sv": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/sv/file.json",
+        "uk": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/uk/file.json",
+        "zh#Hans": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/zh-Hans/file.json"
       }
     }
   ]
