@@ -6,6 +6,7 @@
     "create_account": "Створити обліковий запис",
     "sign_in": "Увійти",
     "sign_out": "Вийти",
+    "skip": "Skip",
     "start_over": "Розпочати знову",
     "submit": "Надіслати"
   },
@@ -53,6 +54,10 @@
       "heading": "Змінити мій пароль",
       "new": "Новий пароль"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> за <span> %(redirect_uri)s </span> хоче звернутися до вашого облікового запису.",
       "heading": "Дозволити доступ до свого облікового запису?",
@@ -80,6 +85,10 @@
         "description": "Ви надали доступ до %(client_name)s. Ви можете закрити це вікно.",
         "heading": "Доступ надано"
       }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
     },
     "emails": {
       "greeting": "Вітаю %(username)s,",

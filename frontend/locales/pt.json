@@ -4,10 +4,13 @@
     "cancel": "Cancelar",
     "clear": "Limpar",
     "close": "Fechar",
+    "collapse": "Collapse",
     "continue": "Continuar",
     "edit": "Editar",
+    "expand": "Expand",
     "save": "Salvar",
-    "save_and_continue": "Guardar e Continuar"
+    "save_and_continue": "Guardar e Continuar",
+    "start_over": "Start over"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
       "edit_profile": {
         "display_name_help": "Isso é o que os outros verão onde quer que você esteja conectado.",
         "display_name_label": "Nome para exibição",
@@ -57,6 +62,7 @@
       "email_exists_error": "O e-mail introduzido já foi adicionado a esta conta",
       "email_field_help": "Adicione um e-mail alternativo que você pode usar para acessar essa conta.",
       "email_field_label": "Adicionar e-mail",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "O e-mail introduzido é inválido",
         "title": "E-mail inválido"
@@ -94,6 +100,9 @@
       "unknown": "Tipo de dispositivo desconhecido",
       "web": "Web"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
       "text": "Sair"
@@ -106,7 +115,8 @@
     },
     "error_boundary_title": "Algo correu mal",
     "errors": {
-      "field_required": "Este campo é obrigatório"
+      "field_required": "Este campo é obrigatório",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
       "active_date": "Ativo {{relativeDate}}",
@@ -164,6 +174,16 @@
       "title": "Alterar a sua palavra-passe"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "title": "The link to reset your password has already been used"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "title": "The link to reset your password has expired"
+      },
+      "subtitle": "Choose a new password for your account.",
       "title": "Repor a sua palavra-passe"
     },
     "password_strength": {
@@ -314,6 +334,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Código não reconhecido",
       "code_field_label": "Código de 6 dígitos",
       "code_field_wrong_shape": "O código deve ter 6 dígitos",

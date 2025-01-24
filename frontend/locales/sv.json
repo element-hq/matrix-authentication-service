@@ -4,10 +4,13 @@
     "cancel": "Avbryt",
     "clear": "Rensa",
     "close": "Stäng",
+    "collapse": "Kollapsa",
     "continue": "Fortsätt",
     "edit": "Redigera",
+    "expand": "Expandera",
     "save": "Spara",
-    "save_and_continue": "Spara och fortsätt"
+    "save_and_continue": "Spara och fortsätt",
+    "start_over": "Börja om"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Kontolösenord",
+      "contact_info": "Kontaktuppgifter",
       "edit_profile": {
         "display_name_help": "Detta är vad andra kommer att se var du än är inloggad.",
         "display_name_label": "Visningsnamn",
@@ -57,6 +62,7 @@
       "email_exists_error": "Den angivna e-postadressen har redan lagts till i det här kontot",
       "email_field_help": "Lägg till en alternativ e-postadress som du kan använda för att komma åt det här kontot.",
       "email_field_label": "Lägg till e-post",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "Den angivna e-postadressen är ogiltig",
         "title": "Ogiltig e-postadress"
@@ -94,6 +100,9 @@
       "unknown": "Okänd enhetstyp",
       "web": "Webb"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Är du säker på att du vill avsluta denna session?",
       "text": "Logga ut"
@@ -106,7 +115,8 @@
     },
     "error_boundary_title": "Något gick fel",
     "errors": {
-      "field_required": "Detta fält är obligatoriskt"
+      "field_required": "Detta fält är obligatoriskt",
+      "rate_limit_exceeded": "Du har gjort för många förfrågningar på kort tid. Vänta några minuter och försök igen."
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -164,6 +174,16 @@
       "title": "Ändra ditt lösenord"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "För att skapa ett nytt lösenord, börja om och välj ”Glömt lösenord”.",
+        "title": "Länken för att återställa ditt lösenord har redan använts"
+      },
+      "expired": {
+        "resend_email": "Skicka e-post på nytt",
+        "subtitle": "Begär ett nytt e-postmeddelande som skickas till: {{email}}",
+        "title": "Länken för att återställa ditt lösenord har gått ut"
+      },
+      "subtitle": "Välj ett nytt lösenord för ditt konto.",
       "title": "Återställ ditt lösenord"
     },
     "password_strength": {
@@ -314,6 +334,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Koden känns inte igen",
       "code_field_label": "6-siffrig kod",
       "code_field_wrong_shape": "Koden måste vara 6 siffror",

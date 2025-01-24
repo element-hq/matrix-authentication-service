@@ -6,6 +6,7 @@
     "create_account": "Loo konto",
     "sign_in": "Logi sisse",
     "sign_out": "Logi välja",
+    "skip": "Skip",
     "start_over": "Alusta uuesti",
     "submit": "Saada"
   },
@@ -53,6 +54,10 @@
       "heading": "Muuda minu salasõna",
       "new": "Uus salasõna"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> aadressil <span>%(redirect_uri)s</span> soovib ligipääsu sinu kasutajakontole.",
       "heading": "Kas lubad ligipääsu sinu kasutajakontole?",
@@ -81,6 +86,10 @@
         "heading": "Ligipääs on lubatud"
       }
     },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
+    },
     "emails": {
       "greeting": "Tere %(username)s,",
       "recovery": {
@@ -100,17 +109,17 @@
     "errors": {
       "captcha": "Robotilõksu tehtud kontroll ei luba jätkata. Palun proovi uuesti.",
       "denied_policy": "See on keelatud serveri kasutusjuhendi alusel: %(policy)s",
-      "email_domain_banned": "Email domain is banned by the server policy",
-      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "email_domain_banned": "E-posti aadressi domeen on serverireeglite alusel keelatud",
+      "email_domain_not_allowed": "E-posti aadressi domeen pole serverireeglite alusel lubatud",
       "field_required": "Selle välja täitmine on kohustuslik",
       "invalid_credentials": "Vigased kasutajatunnused",
       "password_mismatch": "Salasõnad ei klapi omavahel",
       "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti.",
-      "username_all_numeric": "Username cannot consist solely of numbers",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_all_numeric": "Kasutajanimi ei tohi koosneda vaid numbritest",
+      "username_invalid_chars": "Kasutajanimes on keelatud tähemärke. Palun kasuta vaid väiketähti, numbreid, sidekriipsu ja alakriipsu.",
       "username_taken": "Selline kasutajanimi on juba olemas",
-      "username_too_long": "Username is too long",
-      "username_too_short": "Username is too short"
+      "username_too_long": "Kasutajanimi on liiga pikk",
+      "username_too_short": "Kasutajanimi on liiga lühike"
     },
     "login": {
       "call_to_register": "Sul veel pole kasutajakontot?",
@@ -175,7 +184,7 @@
     },
     "register": {
       "call_to_login": "Sul on kasutajakonto juba olemas?",
-      "continue_with_email": "Continue with email address",
+      "continue_with_email": "Jätka e-posti aadressiga",
       "create_account": {
         "description": "Alustamiseks palun loo kasutajakonto:",
         "heading": "Loo kasutajakonto"
@@ -211,11 +220,11 @@
           "heading": "Impordi oma andmed"
         },
         "imported_from_upstream": "Imporditud algsest teenusest",
-        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
+        "imported_from_upstream_with_name": "Importisime andmed sinu kasutajakontolt: %(human_name)s",
         "link_existing": "Seo olemasoleva kasutajakontoga",
-        "provider_name": "%(human_name)s account",
+        "provider_name": "Kasutajakonto: %(human_name)s",
         "signup_with_upstream": {
-          "heading": "Continue signing up with your %(human_name)s account"
+          "heading": "Jätka sisselogimist oma kasutajakontoga: %(human_name)s"
         },
         "suggested_display_name": "Impordi kuvatav nimi",
         "suggested_email": "Impordi e-posti aadress",

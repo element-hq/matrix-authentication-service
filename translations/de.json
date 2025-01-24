@@ -6,6 +6,7 @@
     "create_account": "Konto erstellen",
     "sign_in": "Anmelden",
     "sign_out": "Abmelden",
+    "skip": "Skip",
     "start_over": "Von vorne anfangen",
     "submit": "Absenden"
   },
@@ -53,6 +54,10 @@
       "heading": "Mein Passwort ändern",
       "new": "Neues Passwort"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf Ihr Konto zugreifen.",
       "heading": "Zugriff auf Ihr Konto zulassen?",
@@ -81,6 +86,10 @@
         "heading": "Zugriff gewährt"
       }
     },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
+    },
     "emails": {
       "greeting": "Hallo %(username)s,",
       "recovery": {
@@ -100,17 +109,17 @@
     "errors": {
       "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuchen Sie es erneut",
       "denied_policy": "Abgelehnt durch Richtlinie: %(policy)s",
-      "email_domain_banned": "Email domain is banned by the server policy",
-      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "email_domain_banned": "Die E-Mail-Domain ist durch die Serverrichtlinie gesperrt",
+      "email_domain_not_allowed": "Diese E-Mail-Domain ist gemäß der Serverrichtlinie nicht zulässig",
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "invalid_credentials": "Ungültige Anmeldeinformationen",
       "password_mismatch": "Die Passwortfelder stimmen nicht überein",
       "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
-      "username_all_numeric": "Username cannot consist solely of numbers",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_all_numeric": "Der Benutzername darf nicht nur aus Zahlen bestehen",
+      "username_invalid_chars": "Der Benutzername enthält ungültige Zeichen. Verwenden Sie nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche.",
       "username_taken": "Dieser Benutzername ist bereits vergeben",
-      "username_too_long": "Username is too long",
-      "username_too_short": "Username is too short"
+      "username_too_long": "Der Benutzername ist zu lang",
+      "username_too_short": "Der Benutzername ist zu kurz"
     },
     "login": {
       "call_to_register": "Sie haben noch kein Konto?",
@@ -175,9 +184,9 @@
     },
     "register": {
       "call_to_login": "Sie haben bereits ein Konto?",
-      "continue_with_email": "Continue with email address",
+      "continue_with_email": "Mit E-Mail-Adresse fortfahren",
       "create_account": {
-        "description": "Bitte erstellen Sie ein Konto, um loszulegen:",
+        "description": "Wählen Sie einen Benutzernamen, um fortzufahren.",
         "heading": "Konto erstellen"
       },
       "sign_in_instead": "Stattdessen anmelden",

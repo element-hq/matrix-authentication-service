@@ -6,6 +6,7 @@
     "create_account": "Criar conta",
     "sign_in": "Iniciar sessão",
     "sign_out": "Sair",
+    "skip": "Skip",
     "start_over": "Recomeçar",
     "submit": "Enviar"
   },
@@ -53,6 +54,10 @@
       "heading": "Alterar a minha palavra-passe",
       "new": "Nova palavra-passe"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> em <span>%(redirect_uri)s</span> quer aceder à sua conta.",
       "heading": "Permitir acesso à sua conta?",
@@ -80,6 +85,10 @@
         "description": "Você concedeu acesso a%(client_name)s . Você pode fechar esta janela.",
         "heading": "Acesso concedido"
       }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
     },
     "emails": {
       "greeting": "Olá %(username)s,",

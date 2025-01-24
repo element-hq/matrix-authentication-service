@@ -6,6 +6,7 @@
     "create_account": "Registreren",
     "sign_in": "Inloggen",
     "sign_out": "Uitloggen",
+    "skip": "Skip",
     "start_over": "Opnieuw beginnen",
     "submit": "Bevestigen"
   },
@@ -53,8 +54,12 @@
       "heading": "Change my password",
       "new": "New password"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> at <span>%(redirect_uri)s</span> wants to acccess your account.",
+      "client_wants_access": "<span>%(client_name)s</span> at <span>%(redirect_uri)s</span> wants to access your account.",
       "heading": "Allow access to your account?",
       "make_sure_you_trust": "Make sure that you trust <span>%(client_name)s</span>.",
       "this_will_allow": "This will allow <span>%(client_name)s</span> to:",
@@ -80,6 +85,10 @@
         "description": "You granted access to %(client_name)s. You can close this window.",
         "heading": "Access granted"
       }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
     },
     "emails": {
       "greeting": "Hello %(username)s,",
