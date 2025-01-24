@@ -44,7 +44,7 @@ jobs:
         env:
           BUMP: ${{ github.event.inputs.rc && 'prerelease' || 'patch' }}
           VERSION: ${{ steps.current.outputs.version }}
-        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP"" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
 
   tag:
     uses: ./.github/workflows/tag.yaml
