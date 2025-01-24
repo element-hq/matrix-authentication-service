@@ -258,6 +258,10 @@ jobs:
   syn2mas:
     name: Release syn2mas on NPM
     runs-on: ubuntu-latest
+
+    # Temporarily disabled
+    if: 'false'
+
     permissions:
       contents: read
       id-token: write
