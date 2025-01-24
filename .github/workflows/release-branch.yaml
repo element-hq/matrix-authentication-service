@@ -93,7 +93,7 @@ jobs:
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const branch = process.env.BRANCH;
             const sha = process.env.SHA;
-            const ref = `heads/${branch}`;
+            const ref = `refs/heads/${branch}`;
 
             await github.rest.git.createRef({
               owner,

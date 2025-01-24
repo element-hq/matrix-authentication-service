@@ -134,7 +134,7 @@ jobs:
             const tag = await github.rest.git.createRef({
               owner,
               repo,
-              ref: `tags/v${version}`,
+              ref: `refs/tags/v${version}`,
               sha: tagSha,
             });
             console.log("Created tag ref:", tag.data.url);
