@@ -1,0 +1,374 @@
+{
+  "action": {
+    "back": "Zpět",
+    "cancel": "Zrušit",
+    "clear": "Vymazat",
+    "close": "Zavřít",
+    "collapse": "Sbalit",
+    "continue": "Pokračovat",
+    "edit": "Upravit",
+    "expand": "Rozbalit",
+    "save": "Uložit",
+    "save_and_continue": "Uložit a pokračovat",
+    "start_over": "Začít znovu"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Odkaz na zásady ochrany osobních údajů služby",
+      "link": "Zásady ochrany osobních údajů"
+    },
+    "terms_and_conditions": {
+      "alt": "Odkaz na podmínky služby",
+      "link": "Podmínky"
+    }
+  },
+  "common": {
+    "add": "Přidat",
+    "e2ee": "Koncové šifrování",
+    "error": "Chyba",
+    "loading": "Načítání…",
+    "next": "Další",
+    "previous": "Předchozí",
+    "saved": "Uloženo",
+    "saving": "Ukládání..."
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Heslo účtu",
+      "contact_info": "Kontaktní informace",
+      "edit_profile": {
+        "display_name_help": "Tohle uvidí ostatní, ať už jste přihlášeni kdekoli.",
+        "display_name_label": "Zobrazované jméno",
+        "title": "Upravit profil",
+        "username_label": "Uživatelské jméno"
+      },
+      "password": {
+        "change": "Změnit heslo",
+        "change_disabled": "Změny hesla jsou zakázány správcem.",
+        "label": "Heslo"
+      },
+      "title": "Váš účet"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Zadaný e-mail není povolen zásadami serveru.",
+        "title": "E-mail zamítnut zásadami"
+      },
+      "email_denied_error": "Zadaný e-mail není zásadami serveru povolen.",
+      "email_exists_alert": {
+        "text": "Zadaný e-mail je již přidán do tohoto účtu",
+        "title": "E-mail již existuje"
+      },
+      "email_exists_error": "Zadaný e-mail je již přidán k tomuto účtu",
+      "email_field_help": "Přidejte alternativní e-mail, který můžete použít pro přístup k tomuto účtu.",
+      "email_field_label": "Přidat e-mail",
+      "email_in_use_error": "The entered email is already in use",
+      "email_invalid_alert": {
+        "text": "Zadaný email je neplatný",
+        "title": "Neplatný e-mail"
+      },
+      "email_invalid_error": "Zadaný e-mail je neplatný"
+    },
+    "app_sessions_list": {
+      "error": "Nepodařilo se načíst relace aplikace",
+      "heading": "Aplikace"
+    },
+    "browser_session_details": {
+      "current_badge": "Aktuální",
+      "session_details_title": "Relace"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktivní relace",
+      "body:few": "{{count}} aktivní relace",
+      "body:other": "{{count}} aktivních relací",
+      "heading": "Prohlížeče",
+      "no_active_sessions": {
+        "default": "Nejste přihlášeni do žádného webového prohlížeče.",
+        "inactive_90_days": "Všechny vaše relace byly aktivní v posledních 90 dnech."
+      },
+      "view_all_button": "Zobrazit vše"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Informace o klientovi",
+      "name": "Jméno",
+      "session_details_title": "Relace"
+    },
+    "device_type_icon_label": {
+      "desktop": "Desktop",
+      "mobile": "Mobilní",
+      "pc": "Počítač",
+      "tablet": "Tablet",
+      "unknown": "Neznámý typ zařízení",
+      "web": "Web"
+    },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
+      "text": "Odhlásit se"
+    },
+    "error": {
+      "hideDetails": "Skrýt podrobnosti",
+      "showDetails": "Zobrazit detaily",
+      "subtitle": "Došlo k neočekávané chybě. Zkuste to prosím znovu.",
+      "title": "Něco se pokazilo"
+    },
+    "error_boundary_title": "Něco se pokazilo",
+    "errors": {
+      "field_required": "Toto pole je povinné",
+      "rate_limit_exceeded": "V krátké době jste podali příliš mnoho žádostí. Počkejte prosím několik minut a zkuste to znovu."
+    },
+    "last_active": {
+      "active_date": "Aktivní {{relativeDate}}",
+      "active_now": "Nyní aktivní",
+      "inactive_90_days": "Neaktivní více než 90 dní"
+    },
+    "nav": {
+      "devices": "Zařízení",
+      "profile": "Profil",
+      "sessions": "Relace",
+      "settings": "Nastavení"
+    },
+    "not_found_alert_title": "Nenalezeno.",
+    "not_logged_in_alert": "Nejste přihlášeni.",
+    "oauth2_client_detail": {
+      "details_title": "Informace o klientovi",
+      "id": "ID klienta",
+      "name": "Jméno",
+      "policy": "Zásady",
+      "terms": "Podmínky služby"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Jméno",
+      "client_title": "Informace o klientovi",
+      "session_details_title": "Relace"
+    },
+    "pagination_controls": {
+      "total": "Celkem: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Současné heslo",
+      "failure": {
+        "description": {
+          "account_locked": "Váš účet je uzamčen a v tuto chvíli jej nelze obnovit. Pokud to neočekáváte, obraťte se na správce serveru.",
+          "expired_recovery_ticket": "Platnost odkazu na obnovení vypršela. Spusťte prosím proces obnovy účtu znovu od začátku.",
+          "invalid_new_password": "Nové heslo, které jste si zvolili, je neplatné. Nemusí splňovat nakonfigurované zásady zabezpečení.",
+          "no_current_password": "Nemáte aktuální heslo.",
+          "no_such_recovery_ticket": "Odkaz na obnovení je neplatný. Pokud jste odkaz zkopírovali z e-mailu pro obnovení, zkontrolujte, zda byl zkopírován celý odkaz.",
+          "password_changes_disabled": "Změny hesla jsou zakázány.",
+          "recovery_ticket_already_used": "Odkaz na obnovení již byl použit. Nelze jej použít znovu.",
+          "unspecified": "Může se jednat o dočasný problém, zkuste to prosím znovu později. Pokud problém přetrvává, obraťte se na správce serveru.",
+          "wrong_password": "Heslo, které jste zadali jako aktuální heslo, je nesprávné. Zkuste to prosím znovu."
+        },
+        "title": "Nepodařilo se aktualizovat heslo"
+      },
+      "new_password_again_label": "Zadejte znovu nové heslo",
+      "new_password_label": "Nové heslo",
+      "passwords_match": "Hesla se shodují!",
+      "passwords_no_match": "Hesla se neshodují",
+      "subtitle": "Zvolte nové heslo pro svůj účet.",
+      "success": {
+        "description": "Vaše heslo bylo úspěšně aktualizováno.",
+        "title": "Heslo aktualizováno"
+      },
+      "title": "Změňte své heslo"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "Chcete-li vytvořit nové heslo, začněte znovu a vyberte „Zapomenuté heslo“.",
+        "title": "Odkaz na obnovení hesla již byl použit"
+      },
+      "expired": {
+        "resend_email": "Znovu odeslat e-mail",
+        "subtitle": "Požádejte o nový e-mail, který bude zaslán na adresu: {{email}}",
+        "title": "Platnost odkazu na obnovení hesla vypršela"
+      },
+      "subtitle": "Zvolte nové heslo pro svůj účet.",
+      "title": "Obnovte heslo"
+    },
+    "password_strength": {
+      "placeholder": "Síla hesla",
+      "score": {
+        "0": "Extrémně slabé heslo",
+        "1": "Velmi slabé heslo",
+        "2": "Slabé heslo",
+        "3": "Silné heslo",
+        "4": "Velmi silné heslo"
+      },
+      "suggestion": {
+        "all_uppercase": "Některá písmena pište s velkými písmeny ale ne všechny.",
+        "another_word": "Přidejte další slova, která jsou méně běžná.",
+        "associated_years": "Vyhněte se rokům, které jsou s vámi spojeny.",
+        "capitalization": "Velká písmena pište více než jen první písmeno.",
+        "dates": "Vyhněte se datům a rokům, které jsou s vámi spojeny.",
+        "l33t": "Vyhněte se předvídatelným nahrazením písmen jako „@“ za „a“.",
+        "longer_keyboard_pattern": "Používejte delší vzory kláves a několikrát změňte směr psaní.",
+        "no_need": "Silná hesla můžete vytvářet bez použití symbolů, čísel nebo velkých písmen.",
+        "pwned": "Pokud toto heslo používáte jinde, měli byste ho změnit.",
+        "recent_years": "Vyhněte se posledním letům.",
+        "repeated": "Vyhněte se opakovaným slovům a znakům.",
+        "reverse_words": "Vyhněte se obrácenému hláskování běžných slov.",
+        "sequences": "Vyhněte se běžným sekvencím znaků.",
+        "use_words": "Používejte více slov, ale vyhněte se běžným frázím."
+      },
+      "too_weak": "Toto heslo je příliš slabé",
+      "warning": {
+        "common": "Toto je běžně používané heslo.",
+        "common_names": "Běžná jména a příjmení lze snadno uhodnout.",
+        "dates": "Data lze snadno uhodnout.",
+        "extended_repeat": "Opakované vzory znaků jako „abcabcabc“ lze snadno uhodnout.",
+        "key_pattern": "Krátké vzory klávesnice lze snadno odhadnout.",
+        "names_by_themselves": "Jednotlivá jména nebo příjmení lze snadno uhodnout.",
+        "pwned": "Vaše heslo bylo odhaleno při úniku dat na internetu.",
+        "recent_years": "Poslední roky lze snadno odhadnout.",
+        "sequences": "Běžné sekvence znaků jako „abc“ lze snadno uhodnout.",
+        "similar_to_common": "Je to podobné jako u běžně používaného hesla.",
+        "simple_repeat": "Opakované znaky jako „aaa“ lze snadno uhodnout.",
+        "straight_row": "Rovné řady kláves na klávesnici lze snadno uhodnout.",
+        "top_hundred": "Toto je často používané heslo.",
+        "top_ten": "Toto je silně používané heslo.",
+        "user_inputs": "Neměly by existovat žádné osobní údaje ani údaje související se stránkami.",
+        "word_by_itself": "Jednotlivá slova lze snadno uhodnout."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Obnovit identitu",
+      "cancelled": {
+        "description_1": "Toto okno můžete zavřít a vrátit se do aplikace, abyste mohli pokračovat.",
+        "description_2": "Pokud jste se odhlásili všude a nepamatujete si svůj kód pro obnovení, budete muset obnovit svou identitu.",
+        "heading": "Obnovení identity zrušeno."
+      },
+      "description": "Pokud nejste přihlášeni k žádnému jinému zařízení a ztratili jste klíč pro obnovení, budete muset obnovit svou identitu, abyste mohli aplikaci dále používat.",
+      "effect_list": {
+        "negative_1": "Ztratíte svou historii zpráv",
+        "negative_2": "Bude nutné znovu ověřit všechna stávající zařízení a kontakty.",
+        "neutral_1": "Ztratíte historii zpráv, která je uložena pouze na serveru",
+        "neutral_2": "Budete muset znovu ověřit všechna stávající zařízení a kontakty",
+        "positive_1": "Podrobnosti o vašem účtu, kontakty, předvolby a seznam chatu budou uchovávány"
+      },
+      "failure": {
+        "description": "Může se jednat o dočasný problém, proto to zkuste znovu později. Pokud problém přetrvává, obraťte se na správce serveru.",
+        "heading": "Nepodařilo se povolit obnovení kryptoidentity",
+        "title": "Nepodařilo se povolit krypto identitu"
+      },
+      "finish_reset": "Dokončit obnovení",
+      "heading": "Obnovte svou identitu v případě, že nemůžete potvrdit jiným způsobem",
+      "start_reset": "Spustit obnovení",
+      "success": {
+        "description": "Obnovení identity bylo schváleno na další {{minutes}} minuty. Toto okno můžete zavřít a vrátit se do aplikace a pokračovat.",
+        "heading": "Identita byla úspěšně obnovena. Vraťte se do aplikace a dokončete proces.",
+        "title": "Obnovení krypto identity dočasně povoleno"
+      },
+      "warning": "Identitu obnovujte pouze v případě, že nemáte přístup k jinému přihlášenému zařízení a ztratili jste klíč pro obnovení."
+    },
+    "selectable_session": {
+      "label": "Vybrat relaci"
+    },
+    "session": {
+      "client_id_label": "ID klienta",
+      "current": "Aktuální",
+      "current_badge": "Aktuální",
+      "device_id_label": "ID zařízení",
+      "finished_date": "Dokončeno <datetime/>",
+      "finished_label": "Dokončeno",
+      "id_label": "ID",
+      "ip_label": "IP adresa",
+      "last_active_label": "Naposledy aktivní",
+      "last_auth_label": "Poslední ověření",
+      "name_for_platform": "{{name}}pro {{platform}}",
+      "scopes_label": "Rozsahy",
+      "signed_in_date": "Přihlášen <datetime/>",
+      "signed_in_label": "Přihlášen",
+      "title": "Podrobnosti o zařízení",
+      "unknown_browser": "Neznámý prohlížeč",
+      "unknown_device": "Neznámé zařízení",
+      "uri_label": "Uri",
+      "user_id_label": "ID uživatele",
+      "username_label": "Uživatelské jméno"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Zpět",
+        "text": "Tato relace neexistuje nebo již není aktivní.",
+        "title": "Nelze najít relaci: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Neznámá trasa {{route}}",
+    "unverified_email_alert": {
+      "button": "Zkontrolujte a ověřte",
+      "text:one": "Máte {{count}} neověřenou e-mailovou adresu.",
+      "text:few": "Máte {{count}} neověřené e-mailové adresy.",
+      "text:other": "Máte {{count}} neověřených e-mailových adres.",
+      "title": "Neověřený e-mail"
+    },
+    "user_email": {
+      "cant_delete_primary": "Zvolte jiný primární e-mail a odstraňte tento e-mail.",
+      "delete_button_confirmation_modal": {
+        "action": "Smazat e-mail",
+        "body": "Smazat tento e-mail?"
+      },
+      "delete_button_title": "Odebrat e-mailovou adresu",
+      "email": "E-mail",
+      "make_primary_button": "Nastavit jako primární",
+      "not_verified": "Neověřeno",
+      "primary_email": "Primární e-mail",
+      "retry_button": "Znovu odeslat kód",
+      "unverified": "Neověřeno"
+    },
+    "user_email_list": {
+      "heading": "E-maily",
+      "no_primary_email_alert": "Žádná primární e-mailová adresa"
+    },
+    "user_greeting": {
+      "error": "Nepodařilo se načíst uživatele"
+    },
+    "user_name": {
+      "display_name_field_label": "Zobrazované Jméno"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktivní relace",
+      "active_sessions:few": "{{count}} aktivní relace",
+      "active_sessions:other": "{{count}} aktivních relací",
+      "heading": "Kde jste přihlášeni",
+      "no_active_sessions": {
+        "default": "Nejste přihlášeni do žádné aplikace.",
+        "inactive_90_days": "Všechny vaše relace byly aktivní v posledních 90 dnech."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
+      "code_field_error": "Kód nebyl rozpoznán",
+      "code_field_label": "6místný kód",
+      "code_field_wrong_shape": "Kód musí mít 6 číslic",
+      "email_sent_alert": {
+        "description": "Zadejte nový kód níže.",
+        "title": "Nový kód odeslán"
+      },
+      "enter_code_prompt": "Zadejte šestimístný kód zaslaný na: <email>{{email}}</email>",
+      "heading": "Ověřte svůj e-mail",
+      "invalid_code_alert": {
+        "description": "Zkontrolujte kód zaslaný na váš e-mail a pokračujte aktualizací níže uvedených polí.",
+        "title": "Zadali jste špatný kód"
+      },
+      "resend_code": "Znovu odeslat kód",
+      "resend_email": "Znovu odeslat e-mail",
+      "sent": "Odesláno!",
+      "unknown_email": "Neznámý e-mail"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Upravte svůj profil a kontaktní údaje",
+      "manage_sessions": "Spravujte svá zařízení a relace",
+      "mas_admin": "Spravujte libovolného uživatele ve službě matrix-authentication-service",
+      "send_messages": "Posílejte nové zprávy vaším jménem",
+      "synapse_admin": "Správa domovského serveru Synapse",
+      "view_messages": "Zobrazení stávajících zpráv a dat",
+      "view_profile": "Podívejte se na informace o svém profilu a kontaktní údaje"
+    }
+  }
+}

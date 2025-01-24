@@ -1,0 +1,245 @@
+{
+  "action": {
+    "back": "Zpět",
+    "cancel": "Zrušit",
+    "continue": "Pokračovat",
+    "create_account": "Vytvořit účet",
+    "sign_in": "Přihlásit se",
+    "sign_out": "Odhlásit",
+    "skip": "Skip",
+    "start_over": "Začít znovu",
+    "submit": "Odeslat"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "Dokument o zjišťování služby OpenID Connect: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Odkaz na zásady ochrany osobních údajů služby",
+      "link": "Zásady ochrany osobních údajů"
+    },
+    "terms_and_conditions": {
+      "alt": "Odkaz na smluvní podmínky služby",
+      "link": "Všeobecné obchodní podmínky"
+    }
+  },
+  "common": {
+    "display_name": "Zobrazované jméno",
+    "email_address": "E-mailová adresa",
+    "loading": "Načítání...",
+    "mxid": "Matrix ID",
+    "password": "Heslo",
+    "password_confirm": "Potvrďte heslo",
+    "username": "Uživatelské jméno"
+  },
+  "error": {
+    "unexpected": "Neočekávaná chyba"
+  },
+  "mas": {
+    "add_email": {
+      "description": "Zadejte e-mailovou adresu pro obnovení účtu v případě, že k němu ztratíte přístup.",
+      "heading": "Přidání e-mailové adresy"
+    },
+    "back_to_homepage": "Vraťte se na domovskou stránku",
+    "captcha": {
+      "noscript": "Tento formulář je chráněn CAPTCHA a pro jeho odeslání je nutné mít povolen JavaScript. Povolte prosím JavaScript ve svém prohlížeči a znovu načtěte tuto stránku."
+    },
+    "change_password": {
+      "change": "Změna hesla",
+      "confirm": "Potvrdit heslo",
+      "current": "Současné heslo",
+      "description": "Tím se změní heslo k vašemu účtu.",
+      "heading": "Změnit heslo",
+      "new": "Nové heslo"
+    },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> na adrese <span>%(redirect_uri)s</span> chce získat přístup k vašemu účtu.",
+      "heading": "Povolit přístup ke svému účtu?",
+      "make_sure_you_trust": "Ujistěte se, že důvěřujete <span>%(client_name)s</span>.",
+      "this_will_allow": "To <span> %(client_name)s </span> umožní:",
+      "you_may_be_sharing": "Je možné, že s tímto webem nebo aplikací sdílíte citlivé informace."
+    },
+    "device_card": {
+      "access_requested": "Přístup byl vyžádán",
+      "device_code": "Kód",
+      "generic_device": "Zařízení",
+      "ip_address": "IP adresa"
+    },
+    "device_code_link": {
+      "description": "Propojení zařízení",
+      "headline": "Zadejte kód zobrazený na vašem zařízení"
+    },
+    "device_consent": {
+      "another_device_access": "Jiné zařízení chce získat přístup k vašemu účtu.",
+      "denied": {
+        "description": "Odepřeli jste přístup k %(client_name)s. Toto okno můžete zavřít.",
+        "heading": "Přístup odepřen"
+      },
+      "granted": {
+        "description": "Udělili jste přístup k %(client_name)s. Toto okno můžete zavřít.",
+        "heading": "Přístup udělen"
+      }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
+    },
+    "emails": {
+      "greeting": "Dobrý den, %(username)s,",
+      "recovery": {
+        "click_button": "Kliknutím na tlačítko níže vytvoříte nové heslo:",
+        "copy_link": "Zkopírujte následující odkaz a vložte jej do prohlížeče a vytvořte nové heslo:",
+        "create_new_password": "Vytvořit nové heslo",
+        "headline": "Požádali jste o obnovení hesla pro svůj %(server_name)s účet.",
+        "subject": "Obnovit heslo k účtu (%(mxid)s)",
+        "you_can_ignore": "Pokud jste nepožádali o nové heslo, můžete tento e-mail ignorovat. Vaše aktuální heslo bude i nadále fungovat."
+      },
+      "verify": {
+        "body_html": "Váš ověřovací kód pro potvrzení této e-mailové adresy je: <strong>%(code)s</strong>",
+        "body_text": "Váš ověřovací kód pro potvrzení této e-mailové adresy je: %(code)s",
+        "subject": "Váš e-mailový ověřovací kód je: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "Ověření CAPTCHA se nezdařilo, zkuste to prosím znovu",
+      "denied_policy": "Zamítnuto na základě zásad: %(policy)s",
+      "email_domain_banned": "E-mailová doména je zakázána zásadami serveru",
+      "email_domain_not_allowed": "E-mailová doména není zásadami serveru povolena",
+      "field_required": "Toto pole je povinné",
+      "invalid_credentials": "Neplatné přihlašovací údaje",
+      "password_mismatch": "Pole hesla se neshodují",
+      "rate_limit_exceeded": "V krátké době jste podali příliš mnoho žádostí. Počkejte prosím několik minut a zkuste to znovu.",
+      "username_all_numeric": "Uživatelské jméno se nemůže skládat pouze z čísel",
+      "username_invalid_chars": "Uživatelské jméno obsahuje neplatné znaky. Používejte pouze malá písmena, číslice, pomlčky a podtržítka.",
+      "username_taken": "Toto uživatelské jméno je již obsazeno",
+      "username_too_long": "Uživatelské jméno je příliš dlouhé",
+      "username_too_short": "Uživatelské jméno je příliš krátké"
+    },
+    "login": {
+      "call_to_register": "Ještě nemáte účet?",
+      "continue_with_provider": "Pokračovat s %(provider)s",
+      "description": "Pro pokračování se prosím přihlaste:",
+      "forgot_password": "Zapomněli jste heslo?",
+      "headline": "Přihlásit se",
+      "link": {
+        "description": "Propojení účtu <span class=\"break-keep text-links\">%(provider)s</span> ",
+        "headline": "Přihlaste se k odkazu"
+      },
+      "no_login_methods": "Nejsou k dispozici žádné metody přihlášení.",
+      "separator": "Nebo"
+    },
+    "navbar": {
+      "my_account": "Můj účet",
+      "register": "Vytvořte si účet",
+      "signed_in_as": "Přihlášen jako <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Stránka, kterou jste hledali, neexistuje nebo byla přesunuta",
+      "heading": "Stránka nenalezena"
+    },
+    "not_you": "Nejste %(username)s?",
+    "or_separator": "Nebo",
+    "policy_violation": {
+      "description": "Příčinou může být klient, který požadavek vytvořil, aktuálně přihlášený uživatel nebo samotný požadavek.",
+      "heading": "Žádost o autorizaci byla zamítnuta podle zásad prosazovaných touto službou.",
+      "logged_as": "Přihlášen jako<span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Chcete-li vytvořit nové heslo, začněte znovu a vyberte „Zapomenuté heslo“.",
+        "heading": "Odkaz na obnovení hesla již byl použit"
+      },
+      "disabled": {
+        "description": "Pokud jste ztratili přihlašovací údaje, kontaktujte správce a obnovte svůj účet.",
+        "heading": "Obnovení účtu je zakázáno"
+      },
+      "expired": {
+        "description": "Požádejte o nový e-mail, který bude zaslán na adresu: <span> %(email)s</span>.",
+        "heading": "Platnost odkazu na obnovení hesla vypršela",
+        "resend_email": "Znovu odeslat e-mail"
+      },
+      "finish": {
+        "confirm": "Znovu zadejte nové heslo",
+        "description": "Zvolte nové heslo pro svůj účet.",
+        "heading": "Obnovte své heslo",
+        "new": "Nové heslo",
+        "save_and_continue": "Uložit a pokračovat"
+      },
+      "progress": {
+        "change_email": "Zkuste jiný e-mail",
+        "description": "Poslali jsme e-mail s odkazem na obnovení hesla, pokud používáte účet <span> %(email)s</span>.",
+        "heading": "Zkontrolujte si váš e-mail",
+        "resend_email": "Znovu odeslat e-mail"
+      },
+      "start": {
+        "description": "Bude vám zaslán e-mail s odkazem na obnovení hesla.",
+        "heading": "Pro pokračování zadejte svůj e-mail"
+      }
+    },
+    "register": {
+      "call_to_login": "Máte již účet?",
+      "continue_with_email": "Pokračujte e-mailovou adresou",
+      "create_account": {
+        "description": "Pokračujte výběrem uživatelského jména.",
+        "heading": "Vytvořte si účet"
+      },
+      "sign_in_instead": "Místo toho se přihlaste",
+      "terms_of_service": "Souhlasím s podmínkami <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\"></a>"
+    },
+    "scope": {
+      "edit_profile": "Upravte svůj profil a kontaktní údaje",
+      "manage_sessions": "Spravujte svá zařízení a relace",
+      "mas_admin": "Spravujte libovolného uživatele ve službě matrix-authentication-service",
+      "send_messages": "Odesílejte nové zprávy vaším jménem",
+      "synapse_admin": "Spravujte domovský server Synapse",
+      "view_messages": "Zobrazte své stávající zprávy a data",
+      "view_profile": "Podívejte se na informace o svém profilu a kontaktní údaje"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Tento nadřazený účet je již propojen s jiným účtem."
+      },
+      "register": {
+        "choose_username": {
+          "description": "To nelze později změnit.",
+          "heading": "Vyberte si své uživatelské jméno"
+        },
+        "create_account": "Vytvořte nový účet",
+        "enforced_by_policy": "Vynuceno zásadami serveru",
+        "forced_display_name": "Použije následující zobrazované jméno",
+        "forced_email": "Použije následující e-mailovou adresu",
+        "forced_localpart": "Použije následující uživatelské jméno",
+        "import_data": {
+          "description": "Potvrďte informace, které budou propojeny s vaším novým účtem %(server_name)s.",
+          "heading": "Importujte svá data"
+        },
+        "imported_from_upstream": "Importováno z vašeho upstream účtu",
+        "imported_from_upstream_with_name": "Importováno z účtu %(human_name)s ",
+        "link_existing": "Propojení s existujícím účtem",
+        "provider_name": "Účet %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Pokračujte v registraci pomocí svého účtu %(human_name)s"
+        },
+        "suggested_display_name": "Importovat zobrazované jméno",
+        "suggested_email": "Importovat e-mailovou adresu",
+        "use": "Použít"
+      },
+      "suggest_link": {
+        "action": "Odkaz",
+        "heading": "Propojení s vaším stávajícím účtem"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6místný kód",
+      "code": "Kód",
+      "description": "Zadejte šestimístný kód zaslaný na: <em>%(email)s</em>",
+      "headline": "Ověřte svůj e-mail"
+    }
+  }
+}
