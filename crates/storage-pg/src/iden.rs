@@ -23,7 +23,6 @@ pub enum Users {
     Table,
     UserId,
     Username,
-    PrimaryUserEmailId,
     CreatedAt,
     LockedAt,
     CanRequestAdmin,
@@ -36,7 +35,6 @@ pub enum UserEmails {
     UserId,
     Email,
     CreatedAt,
-    ConfirmedAt,
 }
 
 #[derive(sea_query::Iden)]

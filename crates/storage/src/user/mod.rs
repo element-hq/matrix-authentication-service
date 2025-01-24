@@ -16,6 +16,7 @@ use crate::{repository_impl, Clock, Page, Pagination};
 mod email;
 mod password;
 mod recovery;
+mod registration;
 mod session;
 mod terms;
 
@@ -23,6 +24,7 @@ pub use self::{
     email::{UserEmailFilter, UserEmailRepository},
     password::UserPasswordRepository,
     recovery::UserRecoveryRepository,
+    registration::UserRegistrationRepository,
     session::{BrowserSessionFilter, BrowserSessionRepository},
     terms::UserTermsRepository,
 };

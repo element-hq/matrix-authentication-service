@@ -485,6 +485,56 @@ type CompatSsoLoginEdge {
 }
 
 """
+The input for the `completeEmailAuthentication` mutation
+"""
+input CompleteEmailAuthenticationInput {
+  """
+  The authentication code to use
+  """
+  code: String!
+  """
+  The ID of the authentication session to complete
+  """
+  id: ID!
+}
+
+"""
+The payload of the `completeEmailAuthentication` mutation
+"""
+type CompleteEmailAuthenticationPayload {
+  """
+  Status of the operation
+  """
+  status: CompleteEmailAuthenticationStatus!
+}
+
+"""
+The status of the `completeEmailAuthentication` mutation
+"""
+enum CompleteEmailAuthenticationStatus {
+  """
+  The authentication was completed
+  """
+  COMPLETED
+  """
+  The authentication code is invalid
+  """
+  INVALID_CODE
+  """
+  The authentication code has expired
+  """
+  CODE_EXPIRED
+  """
+  Too many attempts to complete an email authentication
+  """
+  RATE_LIMITED
+  """
+  The email address is already in use
+  """
+  IN_USE
+}
+
+"""
 The input of the `createOauth2Session` mutation.
 """
 input CreateOAuth2SessionInput {
@@ -747,16 +797,7 @@ type Mutation {
   Add an email address to the specified user
   """
   addEmail(input: AddEmailInput!): AddEmailPayload!
-  """
-  Send a verification code for an email address
-  """
-  sendVerificationEmail(
-    input: SendVerificationEmailInput!
-  ): SendVerificationEmailPayload!
-  """
-  Submit a verification code for an email address
-  """
-  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
+    @deprecated(reason: "Use `startEmailAuthentication` instead.")
   """
   Remove an email address
   """
@@ -765,6 +806,27 @@ type Mutation {
   Set an email address as primary
   """
   setPrimaryEmail(input: SetPrimaryEmailInput!): SetPrimaryEmailPayload!
+    @deprecated(
+      reason: "This doesn't do anything anymore, but is kept to avoid breaking existing queries"
+    )
+  """
+  Start a new email authentication flow
+  """
+  startEmailAuthentication(
+    input: StartEmailAuthenticationInput!
+  ): StartEmailAuthenticationPayload!
+  """
+  Resend the email authentication code
+  """
+  resendEmailAuthenticationCode(
+    input: ResendEmailAuthenticationCodeInput!
+  ): ResendEmailAuthenticationCodePayload!
+  """
+  Complete the email authentication flow
+  """
+  completeEmailAuthentication(
+    input: CompleteEmailAuthenticationInput!
+  ): CompleteEmailAuthenticationPayload!
   """
   Add a user. This is only available to administrators.
   """
@@ -1040,6 +1102,10 @@ type Query {
   """
   userRecoveryTicket(ticket: String!): UserRecoveryTicket
   """
+  Fetch a user email authentication session
+  """
+  userEmailAuthentication(id: ID!): UserEmailAuthentication
+  """
   Fetches an object given its ID.
   """
   node(id: ID!): Node
@@ -1166,13 +1232,51 @@ enum RemoveEmailStatus {
   """
   REMOVED
   """
-  Can't remove the primary email address
-  """
-  PRIMARY
-  """
   The email address was not found
   """
   NOT_FOUND
+}
+
+"""
+The input for the `resendEmailAuthenticationCode` mutation
+"""
+input ResendEmailAuthenticationCodeInput {
+  """
+  The ID of the authentication session to resend the code for
+  """
+  id: ID!
+  """
+  The language to use for the email
+  """
+  language: String! = "en"
+}
+
+"""
+The payload of the `resendEmailAuthenticationCode` mutation
+"""
+type ResendEmailAuthenticationCodePayload {
+  """
+  Status of the operation
+  """
+  status: ResendEmailAuthenticationCodeStatus!
+}
+
+"""
+The status of the `resendEmailAuthenticationCode` mutation
+"""
+enum ResendEmailAuthenticationCodeStatus {
+  """
+  The email was resent
+  """
+  RESENT
+  """
+  The email authentication session is already completed
+  """
+  COMPLETED
+  """
+  Too many attempts to resend an email authentication code
+  """
+  RATE_LIMITED
 }
 
 """
@@ -1215,48 +1319,6 @@ enum ResendRecoveryEmailStatus {
   The recovery email was sent.
   """
   SENT
-}
-
-"""
-The input for the `sendVerificationEmail` mutation
-"""
-input SendVerificationEmailInput {
-  """
-  The ID of the email address to verify
-  """
-  userEmailId: ID!
-}
-
-"""
-The payload of the `sendVerificationEmail` mutation
-"""
-type SendVerificationEmailPayload {
-  """
-  Status of the operation
-  """
-  status: SendVerificationEmailStatus!
-  """
-  The email address to which the verification email was sent
-  """
-  email: UserEmail!
-  """
-  The user to whom the email address belongs
-  """
-  user: User!
-}
-
-"""
-The status of the `sendVerificationEmail` mutation
-"""
-enum SendVerificationEmailStatus {
-  """
-  The verification email was sent
-  """
-  SENT
-  """
-  The email address is already verified
-  """
-  ALREADY_VERIFIED
 }
 
 """
@@ -1540,6 +1602,64 @@ type SiteConfig implements Node {
 }
 
 """
+The input for the `startEmailAuthentication` mutation
+"""
+input StartEmailAuthenticationInput {
+  """
+  The email address to add to the account
+  """
+  email: String!
+  """
+  The language to use for the email
+  """
+  language: String! = "en"
+}
+
+"""
+The payload of the `startEmailAuthentication` mutation
+"""
+type StartEmailAuthenticationPayload {
+  """
+  Status of the operation
+  """
+  status: StartEmailAuthenticationStatus!
+  """
+  The email authentication session that was started
+  """
+  authentication: UserEmailAuthentication
+  """
+  The list of policy violations if the email address was denied
+  """
+  violations: [String!]
+}
+
+"""
+The status of the `startEmailAuthentication` mutation
+"""
+enum StartEmailAuthenticationStatus {
+  """
+  The email address was started
+  """
+  STARTED
+  """
+  The email address is invalid
+  """
+  INVALID_EMAIL_ADDRESS
+  """
+  Too many attempts to start an email authentication
+  """
+  RATE_LIMITED
+  """
+  The email address isn't allowed by the policy
+  """
+  DENIED
+  """
+  The email address is already in use on this account
+  """
+  IN_USE
+}
+
+"""
 The input for the `unlockUser` mutation.
 """
 input UnlockUserInput {
@@ -1737,10 +1857,6 @@ type User implements Node {
   """
   matrix: MatrixUser!
   """
-  Primary email address of the user.
-  """
-  primaryEmail: UserEmail
-  """
   Get the list of compatibility SSO logins, chronologically sorted
   """
   compatSsoLogins(
@@ -1831,6 +1947,9 @@ type User implements Node {
     List only emails in the given state.
     """
     state: UserEmailState
+      @deprecated(
+        reason: "Emails are always confirmed, and have only one state"
+      )
     """
     Returns the elements in the list that come after the cursor.
     """
@@ -2029,7 +2148,29 @@ type UserEmail implements Node & CreationEvent {
   When the email address was confirmed. Is `null` if the email was never
   verified by the user.
   """
-  confirmedAt: DateTime
+  confirmedAt: DateTime @deprecated(reason: "Emails are always confirmed now.")
+}
+
+"""
+A email authentication session
+"""
+type UserEmailAuthentication implements Node & CreationEvent {
+  """
+  ID of the object.
+  """
+  id: ID!
+  """
+  When the object was created.
+  """
+  createdAt: DateTime!
+  """
+  When the object was last updated.
+  """
+  completedAt: DateTime
+  """
+  The email address associated with this session
+  """
+  email: String!
 }
 
 type UserEmailConnection {
@@ -2135,56 +2276,6 @@ enum UserState {
   The user is locked.
   """
   LOCKED
-}
-
-"""
-The input for the `verifyEmail` mutation
-"""
-input VerifyEmailInput {
-  """
-  The ID of the email address to verify
-  """
-  userEmailId: ID!
-  """
-  The verification code
-  """
-  code: String!
-}
-
-"""
-The payload of the `verifyEmail` mutation
-"""
-type VerifyEmailPayload {
-  """
-  Status of the operation
-  """
-  status: VerifyEmailStatus!
-  """
-  The email address that was verified
-  """
-  email: UserEmail
-  """
-  The user to whom the email address belongs
-  """
-  user: User
-}
-
-"""
-The status of the `verifyEmail` mutation
-"""
-enum VerifyEmailStatus {
-  """
-  The email address was just verified
-  """
-  VERIFIED
-  """
-  The email address was already verified before
-  """
-  ALREADY_VERIFIED
-  """
-  The verification code is invalid
-  """
-  INVALID_CODE
 }
 
 """

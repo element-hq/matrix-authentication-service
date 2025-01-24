@@ -67,12 +67,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
         loop {
             let page = repo
                 .user_email()
-                .list(
-                    UserEmailFilter::new()
-                        .for_email(&session.email)
-                        .verified_only(),
-                    cursor,
-                )
+                .list(UserEmailFilter::new().for_email(&session.email), cursor)
                 .await
                 .map_err(JobError::retry)?;
 

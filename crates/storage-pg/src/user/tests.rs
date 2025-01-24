@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -11,7 +11,7 @@ use mas_storage::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
     },
-    Pagination, RepositoryAccess,
+    Clock, Pagination, RepositoryAccess,
 };
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
@@ -185,8 +185,6 @@ async fn test_user_repo(pool: PgPool) {
 #[sqlx::test(migrator = "crate::MIGRATOR")]
 async fn test_user_email_repo(pool: PgPool) {
     const USERNAME: &str = "john";
-    const CODE: &str = "012345";
-    const CODE2: &str = "543210";
     const EMAIL: &str = "john@example.com";
 
     let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
@@ -208,13 +206,9 @@ async fn test_user_email_repo(pool: PgPool) {
         .is_none());
 
     let all = UserEmailFilter::new().for_user(&user);
-    let pending = all.pending_only();
-    let verified = all.verified_only();
 
     // Check the counts
     assert_eq!(repo.user_email().count(all).await.unwrap(), 0);
-    assert_eq!(repo.user_email().count(pending).await.unwrap(), 0);
-    assert_eq!(repo.user_email().count(verified).await.unwrap(), 0);
 
     let user_email = repo
         .user_email()
@@ -224,12 +218,9 @@ async fn test_user_email_repo(pool: PgPool) {
 
     assert_eq!(user_email.user_id, user.id);
     assert_eq!(user_email.email, EMAIL);
-    assert!(user_email.confirmed_at.is_none());
 
     // Check the counts
     assert_eq!(repo.user_email().count(all).await.unwrap(), 1);
-    assert_eq!(repo.user_email().count(pending).await.unwrap(), 1);
-    assert_eq!(repo.user_email().count(verified).await.unwrap(), 0);
 
     assert!(repo
         .user_email()
@@ -248,115 +239,6 @@ async fn test_user_email_repo(pool: PgPool) {
     assert_eq!(user_email.user_id, user.id);
     assert_eq!(user_email.email, EMAIL);
 
-    let verification = repo
-        .user_email()
-        .add_verification_code(
-            &mut rng,
-            &clock,
-            &user_email,
-            Duration::try_hours(8).unwrap(),
-            CODE.to_owned(),
-        )
-        .await
-        .unwrap();
-
-    let verification_id = verification.id;
-    assert_eq!(verification.user_email_id, user_email.id);
-    assert_eq!(verification.code, CODE);
-
-    // A single user email can have multiple verification at the same time
-    let _verification2 = repo
-        .user_email()
-        .add_verification_code(
-            &mut rng,
-            &clock,
-            &user_email,
-            Duration::try_hours(8).unwrap(),
-            CODE2.to_owned(),
-        )
-        .await
-        .unwrap();
-
-    let verification = repo
-        .user_email()
-        .find_verification_code(&clock, &user_email, CODE)
-        .await
-        .unwrap()
-        .expect("user email verification was not found");
-
-    assert_eq!(verification.id, verification_id);
-    assert_eq!(verification.user_email_id, user_email.id);
-    assert_eq!(verification.code, CODE);
-
-    // Consuming the verification code
-    repo.user_email()
-        .consume_verification_code(&clock, verification)
-        .await
-        .unwrap();
-
-    // Mark the email as verified
-    repo.user_email()
-        .mark_as_verified(&clock, user_email)
-        .await
-        .unwrap();
-
-    // Check the counts
-    assert_eq!(repo.user_email().count(all).await.unwrap(), 1);
-    assert_eq!(repo.user_email().count(pending).await.unwrap(), 0);
-    assert_eq!(repo.user_email().count(verified).await.unwrap(), 1);
-
-    // Reload the user_email
-    let user_email = repo
-        .user_email()
-        .find(&user, EMAIL)
-        .await
-        .unwrap()
-        .expect("user email was not found");
-
-    // The email should be marked as verified now
-    assert!(user_email.confirmed_at.is_some());
-
-    // Reload the verification
-    let verification = repo
-        .user_email()
-        .find_verification_code(&clock, &user_email, CODE)
-        .await
-        .unwrap()
-        .expect("user email verification was not found");
-
-    // Consuming a second time should not work
-    assert!(repo
-        .user_email()
-        .consume_verification_code(&clock, verification)
-        .await
-        .is_err());
-
-    // The user shouldn't have a primary email yet
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_none());
-
-    repo.user_email().set_as_primary(&user_email).await.unwrap();
-
-    // Reload the user
-    let user = repo
-        .user()
-        .lookup(user.id)
-        .await
-        .unwrap()
-        .expect("user was not found");
-
-    // Now it should have one
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_some());
-
     // Listing the user emails should work
     let emails = repo
         .user_email()
@@ -366,23 +248,6 @@ async fn test_user_email_repo(pool: PgPool) {
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
     assert_eq!(emails.edges[0], user_email);
-
-    let emails = repo
-        .user_email()
-        .list(verified, Pagination::first(10))
-        .await
-        .unwrap();
-    assert!(!emails.has_next_page);
-    assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
-
-    let emails = repo
-        .user_email()
-        .list(pending, Pagination::first(10))
-        .await
-        .unwrap();
-    assert!(!emails.has_next_page);
-    assert!(emails.edges.is_empty());
 
     // Listing emails from the email address should work
     let emails = repo
@@ -419,26 +284,123 @@ async fn test_user_email_repo(pool: PgPool) {
     // Deleting the user email should work
     repo.user_email().remove(user_email).await.unwrap();
     assert_eq!(repo.user_email().count(all).await.unwrap(), 0);
-    assert_eq!(repo.user_email().count(pending).await.unwrap(), 0);
-    assert_eq!(repo.user_email().count(verified).await.unwrap(), 0);
-
-    // Reload the user
-    let user = repo
-        .user()
-        .lookup(user.id)
-        .await
-        .unwrap()
-        .expect("user was not found");
-
-    // The primary user email should be gone
-    assert!(repo
-        .user_email()
-        .get_primary(&user)
-        .await
-        .unwrap()
-        .is_none());
 
     repo.save().await.unwrap();
+}
+
+/// Test the authentication codes methods in the user email repository
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_email_repo_authentications(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    // Create a user and a user session so that we can create an authentication
+    let user = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+
+    // Create an authentication session
+    let authentication = repo
+        .user_email()
+        .add_authentication_for_session(
+            &mut rng,
+            &clock,
+            "alice@example.com".to_owned(),
+            &browser_session,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(authentication.email, "alice@example.com");
+    assert_eq!(authentication.user_session_id, Some(browser_session.id));
+    assert_eq!(authentication.created_at, clock.now());
+    assert_eq!(authentication.completed_at, None);
+
+    // Check that we can find the authentication by its ID
+    let lookup = repo
+        .user_email()
+        .lookup_authentication(authentication.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(lookup.id, authentication.id);
+    assert_eq!(lookup.email, "alice@example.com");
+    assert_eq!(lookup.user_session_id, Some(browser_session.id));
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.completed_at, None);
+
+    // Add a code to the session
+    let code = repo
+        .user_email()
+        .add_authentication_code(
+            &mut rng,
+            &clock,
+            Duration::minutes(5),
+            &authentication,
+            "123456".to_owned(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(code.code, "123456");
+    assert_eq!(code.created_at, clock.now());
+    assert_eq!(code.expires_at, clock.now() + Duration::minutes(5));
+
+    // Check that we can find the code by its ID
+    let id = code.id;
+    let lookup = repo
+        .user_email()
+        .find_authentication_code(&authentication, "123456")
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(lookup.id, id);
+    assert_eq!(lookup.code, "123456");
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.expires_at, clock.now() + Duration::minutes(5));
+
+    // Complete the authentication
+    let authentication = repo
+        .user_email()
+        .complete_authentication(&clock, authentication, &code)
+        .await
+        .unwrap();
+
+    assert_eq!(authentication.id, authentication.id);
+    assert_eq!(authentication.email, "alice@example.com");
+    assert_eq!(authentication.user_session_id, Some(browser_session.id));
+    assert_eq!(authentication.created_at, clock.now());
+    assert_eq!(authentication.completed_at, Some(clock.now()));
+
+    // Check that we can find the completed authentication by its ID
+    let lookup = repo
+        .user_email()
+        .lookup_authentication(authentication.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(lookup.id, authentication.id);
+    assert_eq!(lookup.email, "alice@example.com");
+    assert_eq!(lookup.user_session_id, Some(browser_session.id));
+    assert_eq!(lookup.created_at, clock.now());
+    assert_eq!(lookup.completed_at, Some(clock.now()));
+
+    // Completing a second time should fail
+    let res = repo
+        .user_email()
+        .complete_authentication(&clock, authentication, &code)
+        .await;
+    assert!(res.is_err());
 }
 
 /// Test the user password repository implementation.

@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -18,13 +18,19 @@ pub struct RateLimitingConfig {
     /// Account Recovery-specific rate limits
     #[serde(default)]
     pub account_recovery: AccountRecoveryRateLimitingConfig,
+
     /// Login-specific rate limits
     #[serde(default)]
     pub login: LoginRateLimitingConfig,
+
     /// Controls how many registrations attempts are permitted
     /// based on source address.
     #[serde(default = "default_registration")]
     pub registration: RateLimiterConfiguration,
+
+    /// Email authentication-specific rate limits
+    #[serde(default)]
+    pub email_authentication: EmailauthenticationRateLimitingConfig,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
@@ -37,6 +43,7 @@ pub struct LoginRateLimitingConfig {
     /// change their own password.
     #[serde(default = "default_login_per_ip")]
     pub per_ip: RateLimiterConfiguration,
+
     /// Controls how many login attempts are permitted
     /// based on the account that is being attempted to be logged into.
     /// This can protect against a distributed brute force attack
@@ -58,6 +65,7 @@ pub struct AccountRecoveryRateLimitingConfig {
     /// Note: this limit also applies to re-sends.
     #[serde(default = "default_account_recovery_per_ip")]
     pub per_ip: RateLimiterConfiguration,
+
     /// Controls how many account recovery attempts are permitted
     /// based on the e-mail address entered into the recovery form.
     /// This can protect against causing e-mail spam to one target.
@@ -65,6 +73,35 @@ pub struct AccountRecoveryRateLimitingConfig {
     /// Note: this limit also applies to re-sends.
     #[serde(default = "default_account_recovery_per_address")]
     pub per_address: RateLimiterConfiguration,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct EmailauthenticationRateLimitingConfig {
+    /// Controls how many email authentication attempts are permitted
+    /// based on the source IP address.
+    /// This can protect against causing e-mail spam to many targets.
+    #[serde(default = "default_email_authentication_per_ip")]
+    pub per_ip: RateLimiterConfiguration,
+
+    /// Controls how many email authentication attempts are permitted
+    /// based on the e-mail address entered into the authentication form.
+    /// This can protect against causing e-mail spam to one target.
+    ///
+    /// Note: this limit also applies to re-sends.
+    #[serde(default = "default_email_authentication_per_address")]
+    pub per_address: RateLimiterConfiguration,
+
+    /// Controls how many authentication emails are permitted to be sent per
+    /// authentication session. This ensures not too many authentication codes
+    /// are created for the same authentication session.
+    #[serde(default = "default_email_authentication_emails_per_session")]
+    pub emails_per_session: RateLimiterConfiguration,
+
+    /// Controls how many code authentication attempts are permitted per
+    /// authentication session. This can protect against brute-forcing the
+    /// code.
+    #[serde(default = "default_email_authentication_attempt_per_session")]
+    pub attempt_per_session: RateLimiterConfiguration,
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
@@ -193,12 +230,41 @@ fn default_account_recovery_per_address() -> RateLimiterConfiguration {
     }
 }
 
+fn default_email_authentication_per_ip() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(5).unwrap(),
+        per_second: 1.0 / 60.0,
+    }
+}
+
+fn default_email_authentication_per_address() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(3).unwrap(),
+        per_second: 1.0 / 3600.0,
+    }
+}
+
+fn default_email_authentication_emails_per_session() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(2).unwrap(),
+        per_second: 1.0 / 300.0,
+    }
+}
+
+fn default_email_authentication_attempt_per_session() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(10).unwrap(),
+        per_second: 1.0 / 60.0,
+    }
+}
+
 impl Default for RateLimitingConfig {
     fn default() -> Self {
         RateLimitingConfig {
             login: LoginRateLimitingConfig::default(),
             registration: default_registration(),
             account_recovery: AccountRecoveryRateLimitingConfig::default(),
+            email_authentication: EmailauthenticationRateLimitingConfig::default(),
         }
     }
 }
@@ -217,6 +283,17 @@ impl Default for AccountRecoveryRateLimitingConfig {
         AccountRecoveryRateLimitingConfig {
             per_ip: default_account_recovery_per_ip(),
             per_address: default_account_recovery_per_address(),
+        }
+    }
+}
+
+impl Default for EmailauthenticationRateLimitingConfig {
+    fn default() -> Self {
+        EmailauthenticationRateLimitingConfig {
+            per_ip: default_email_authentication_per_ip(),
+            per_address: default_email_authentication_per_address(),
+            emails_per_session: default_email_authentication_emails_per_session(),
+            attempt_per_session: default_email_authentication_attempt_per_session(),
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -6,7 +6,10 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{User, UserEmail, UserEmailVerification, UserEmailVerificationState};
+use mas_data_model::{
+    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserRegistration,
+};
 use mas_storage::{
     user::{UserEmailFilter, UserEmailRepository},
     Clock, Page, Pagination,
@@ -25,7 +28,7 @@ use crate::{
     iden::UserEmails,
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
+    DatabaseError,
 };
 
 /// An implementation of [`UserEmailRepository`] for a PostgreSQL connection
@@ -48,7 +51,6 @@ struct UserEmailLookup {
     user_id: Uuid,
     email: String,
     created_at: DateTime<Utc>,
-    confirmed_at: Option<DateTime<Utc>>,
 }
 
 impl From<UserEmailLookup> for UserEmail {
@@ -58,39 +60,48 @@ impl From<UserEmailLookup> for UserEmail {
             user_id: e.user_id.into(),
             email: e.email,
             created_at: e.created_at,
-            confirmed_at: e.confirmed_at,
         }
     }
 }
 
-struct UserEmailConfirmationCodeLookup {
-    user_email_confirmation_code_id: Uuid,
-    user_email_id: Uuid,
+struct UserEmailAuthenticationLookup {
+    user_email_authentication_id: Uuid,
+    user_session_id: Option<Uuid>,
+    user_registration_id: Option<Uuid>,
+    email: String,
+    created_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>,
+}
+
+impl From<UserEmailAuthenticationLookup> for UserEmailAuthentication {
+    fn from(value: UserEmailAuthenticationLookup) -> Self {
+        UserEmailAuthentication {
+            id: value.user_email_authentication_id.into(),
+            user_session_id: value.user_session_id.map(Ulid::from),
+            user_registration_id: value.user_registration_id.map(Ulid::from),
+            email: value.email,
+            created_at: value.created_at,
+            completed_at: value.completed_at,
+        }
+    }
+}
+
+struct UserEmailAuthenticationCodeLookup {
+    user_email_authentication_code_id: Uuid,
+    user_email_authentication_id: Uuid,
     code: String,
     created_at: DateTime<Utc>,
     expires_at: DateTime<Utc>,
-    consumed_at: Option<DateTime<Utc>>,
 }
 
-impl UserEmailConfirmationCodeLookup {
-    fn into_verification(self, clock: &dyn Clock) -> UserEmailVerification {
-        let now = clock.now();
-        let state = if let Some(when) = self.consumed_at {
-            UserEmailVerificationState::AlreadyUsed { when }
-        } else if self.expires_at < now {
-            UserEmailVerificationState::Expired {
-                when: self.expires_at,
-            }
-        } else {
-            UserEmailVerificationState::Valid
-        };
-
-        UserEmailVerification {
-            id: self.user_email_confirmation_code_id.into(),
-            user_email_id: self.user_email_id.into(),
-            code: self.code,
-            state,
-            created_at: self.created_at,
+impl From<UserEmailAuthenticationCodeLookup> for UserEmailAuthenticationCode {
+    fn from(value: UserEmailAuthenticationCodeLookup) -> Self {
+        UserEmailAuthenticationCode {
+            id: value.user_email_authentication_code_id.into(),
+            user_email_authentication_id: value.user_email_authentication_id.into(),
+            code: value.code,
+            created_at: value.created_at,
+            expires_at: value.expires_at,
         }
     }
 }
@@ -105,13 +116,6 @@ impl Filter for UserEmailFilter<'_> {
                 self.email()
                     .map(|email| Expr::col((UserEmails::Table, UserEmails::Email)).eq(email)),
             )
-            .add_option(self.state().map(|state| {
-                if state.is_verified() {
-                    Expr::col((UserEmails::Table, UserEmails::ConfirmedAt)).is_not_null()
-                } else {
-                    Expr::col((UserEmails::Table, UserEmails::ConfirmedAt)).is_null()
-                }
-            }))
     }
 }
 
@@ -136,7 +140,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , user_id
                      , email
                      , created_at
-                     , confirmed_at
                 FROM user_emails
 
                 WHERE user_email_id = $1
@@ -172,7 +175,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , user_id
                      , email
                      , created_at
-                     , confirmed_at
                 FROM user_emails
 
                 WHERE user_id = $1 AND email = $2
@@ -192,29 +194,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.user_email.get_primary",
-        skip_all,
-        fields(
-            db.query.text,
-            %user.id,
-        ),
-        err,
-    )]
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error> {
-        let Some(id) = user.primary_user_email_id else {
-            return Ok(None);
-        };
-
-        let user_email = self.lookup(id).await?.ok_or_else(|| {
-            DatabaseInconsistencyError::on("users")
-                .column("primary_user_email_id")
-                .row(user.id)
-        })?;
-
-        Ok(Some(user_email))
-    }
-
-    #[tracing::instrument(
         name = "db.user_email.all",
         skip_all,
         fields(
@@ -231,7 +210,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , user_id
                      , email
                      , created_at
-                     , confirmed_at
                 FROM user_emails
 
                 WHERE user_id = $1
@@ -276,10 +254,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             .expr_as(
                 Expr::col((UserEmails::Table, UserEmails::CreatedAt)),
                 UserEmailLookupIden::CreatedAt,
-            )
-            .expr_as(
-                Expr::col((UserEmails::Table, UserEmails::ConfirmedAt)),
-                UserEmailLookupIden::ConfirmedAt,
             )
             .from(UserEmails::Table)
             .apply_filter(filter)
@@ -343,10 +317,12 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
         tracing::Span::current().record("user_email.id", tracing::field::display(id));
 
+        // We now always set the 'confirmed_at' field, so that older app version
+        // consider those emails as verified.
         sqlx::query!(
             r#"
-                INSERT INTO user_emails (user_email_id, user_id, email, created_at)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO user_emails (user_email_id, user_id, email, created_at, confirmed_at)
+                VALUES ($1, $2, $3, $4, $4)
             "#,
             Uuid::from(id),
             Uuid::from(user.id),
@@ -362,7 +338,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             user_id: user.id,
             email,
             created_at,
-            confirmed_at: None,
         })
     }
 
@@ -410,79 +385,152 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         Ok(())
     }
 
-    async fn mark_as_verified(
-        &mut self,
-        clock: &dyn Clock,
-        mut user_email: UserEmail,
-    ) -> Result<UserEmail, Self::Error> {
-        let confirmed_at = clock.now();
-        sqlx::query!(
-            r#"
-                UPDATE user_emails
-                SET confirmed_at = $2
-                WHERE user_email_id = $1
-            "#,
-            Uuid::from(user_email.id),
-            confirmed_at,
-        )
-        .execute(&mut *self.conn)
-        .await?;
-
-        user_email.confirmed_at = Some(confirmed_at);
-        Ok(user_email)
-    }
-
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error> {
-        sqlx::query!(
-            r#"
-                UPDATE users
-                SET primary_user_email_id = user_emails.user_email_id
-                FROM user_emails
-                WHERE user_emails.user_email_id = $1
-                  AND users.user_id = user_emails.user_id
-            "#,
-            Uuid::from(user_email.id),
-        )
-        .execute(&mut *self.conn)
-        .await?;
-
-        Ok(())
-    }
-
     #[tracing::instrument(
-        name = "db.user_email.add_verification_code",
+        name = "db.user_email.add_authentication_for_session",
         skip_all,
         fields(
             db.query.text,
-            %user_email.id,
-            %user_email.email,
-            user_email_verification.id,
-            user_email_verification.code = code,
+            %session.id,
+            user_email_authentication.id,
+            user_email_authentication.email = email,
         ),
         err,
     )]
-    async fn add_verification_code(
+    async fn add_authentication_for_session(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        user_email: &UserEmail,
-        max_age: chrono::Duration,
-        code: String,
-    ) -> Result<UserEmailVerification, Self::Error> {
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
-        tracing::Span::current().record("user_email_confirmation.id", tracing::field::display(id));
-        let expires_at = created_at + max_age;
+        tracing::Span::current()
+            .record("user_email_authentication.id", tracing::field::display(id));
 
         sqlx::query!(
             r#"
-                INSERT INTO user_email_confirmation_codes
-                  (user_email_confirmation_code_id, user_email_id, code, created_at, expires_at)
+                INSERT INTO user_email_authentications
+                  ( user_email_authentication_id
+                  , user_session_id
+                  , email
+                  , created_at
+                  )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            Uuid::from(id),
+            Uuid::from(session.id),
+            &email,
+            created_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(UserEmailAuthentication {
+            id,
+            user_session_id: Some(session.id),
+            user_registration_id: None,
+            email,
+            created_at,
+            completed_at: None,
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.add_authentication_for_registration",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_registration.id,
+            user_email_authentication.id,
+            user_email_authentication.email = email,
+        ),
+        err,
+    )]
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        user_registration: &UserRegistration,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        let created_at = clock.now();
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current()
+            .record("user_email_authentication.id", tracing::field::display(id));
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_email_authentications
+                  ( user_email_authentication_id
+                  , user_registration_id
+                  , email
+                  , created_at
+                  )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            Uuid::from(id),
+            Uuid::from(user_registration.id),
+            &email,
+            created_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(UserEmailAuthentication {
+            id,
+            user_session_id: None,
+            user_registration_id: Some(user_registration.id),
+            email,
+            created_at,
+            completed_at: None,
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.add_authentication_code",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            user_email_authentication_code.id,
+            user_email_authentication_code.code = code,
+        ),
+        err,
+    )]
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        user_email_authentication: &UserEmailAuthentication,
+        code: String,
+    ) -> Result<UserEmailAuthenticationCode, Self::Error> {
+        let created_at = clock.now();
+        let expires_at = created_at + duration;
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current().record(
+            "user_email_authentication_code.id",
+            tracing::field::display(id),
+        );
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_email_authentication_codes
+                  ( user_email_authentication_code_id
+                  , user_email_authentication_id
+                  , code
+                  , created_at
+                  , expires_at
+                  )
                 VALUES ($1, $2, $3, $4, $5)
             "#,
             Uuid::from(id),
-            Uuid::from(user_email.id),
-            code,
+            Uuid::from(user_email_authentication.id),
+            &code,
             created_at,
             expires_at,
         )
@@ -490,98 +538,129 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         .execute(&mut *self.conn)
         .await?;
 
-        let verification = UserEmailVerification {
+        Ok(UserEmailAuthenticationCode {
             id,
-            user_email_id: user_email.id,
+            user_email_authentication_id: user_email_authentication.id,
             code,
             created_at,
-            state: UserEmailVerificationState::Valid,
-        };
-
-        Ok(verification)
+            expires_at,
+        })
     }
 
     #[tracing::instrument(
-        name = "db.user_email.find_verification_code",
+        name = "db.user_email.lookup_authentication",
         skip_all,
         fields(
             db.query.text,
-            %user_email.id,
-            user.id = %user_email.user_id,
+            user_email_authentication.id = %id,
         ),
         err,
     )]
-    async fn find_verification_code(
+    async fn lookup_authentication(
         &mut self,
-        clock: &dyn Clock,
-        user_email: &UserEmail,
-        code: &str,
-    ) -> Result<Option<UserEmailVerification>, Self::Error> {
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error> {
         let res = sqlx::query_as!(
-            UserEmailConfirmationCodeLookup,
+            UserEmailAuthenticationLookup,
             r#"
-                SELECT user_email_confirmation_code_id
-                     , user_email_id
-                     , code
+                SELECT user_email_authentication_id
+                     , user_session_id
+                     , user_registration_id
+                     , email
                      , created_at
-                     , expires_at
-                     , consumed_at
-                FROM user_email_confirmation_codes
-                WHERE code = $1
-                  AND user_email_id = $2
+                     , completed_at
+                FROM user_email_authentications
+                WHERE user_email_authentication_id = $1
             "#,
-            code,
-            Uuid::from(user_email.id),
+            Uuid::from(id),
         )
         .traced()
         .fetch_optional(&mut *self.conn)
         .await?;
 
-        let Some(res) = res else { return Ok(None) };
-
-        Ok(Some(res.into_verification(clock)))
+        Ok(res.map(UserEmailAuthentication::from))
     }
 
     #[tracing::instrument(
-        name = "db.user_email.consume_verification_code",
+        name = "db.user_email.find_authentication_by_code",
         skip_all,
         fields(
             db.query.text,
-            %user_email_verification.id,
-            user_email.id = %user_email_verification.user_email_id,
+            %authentication.id,
+            user_email_authentication_code.code = code,
         ),
         err,
     )]
-    async fn consume_verification_code(
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
+        code: &str,
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error> {
+        let res = sqlx::query_as!(
+            UserEmailAuthenticationCodeLookup,
+            r#"
+                SELECT user_email_authentication_code_id
+                     , user_email_authentication_id
+                     , code
+                     , created_at
+                     , expires_at
+                FROM user_email_authentication_codes
+                WHERE user_email_authentication_id = $1
+                  AND code = $2
+            "#,
+            Uuid::from(authentication.id),
+            code,
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        Ok(res.map(UserEmailAuthenticationCode::from))
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.complete_email_authentication",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            %user_email_authentication_code.id,
+            %user_email_authentication_code.code,
+        ),
+        err,
+    )]
+    async fn complete_authentication(
         &mut self,
         clock: &dyn Clock,
-        mut user_email_verification: UserEmailVerification,
-    ) -> Result<UserEmailVerification, Self::Error> {
-        if !matches!(
-            user_email_verification.state,
-            UserEmailVerificationState::Valid
-        ) {
-            return Err(DatabaseError::invalid_operation());
-        }
+        mut user_email_authentication: UserEmailAuthentication,
+        user_email_authentication_code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        // We technically don't use the authentication code here (other than
+        // recording it in the span), but this is to make sure the caller has
+        // fetched one before calling this
+        let completed_at = clock.now();
 
-        let consumed_at = clock.now();
-
-        sqlx::query!(
+        // We'll assume the caller has checked that completed_at is None, so in case
+        // they haven't, the update will not affect any rows, which will raise
+        // an error
+        let res = sqlx::query!(
             r#"
-                UPDATE user_email_confirmation_codes
-                SET consumed_at = $2
-                WHERE user_email_confirmation_code_id = $1
+                UPDATE user_email_authentications
+                SET completed_at = $2
+                WHERE user_email_authentication_id = $1
+                  AND completed_at IS NULL
             "#,
-            Uuid::from(user_email_verification.id),
-            consumed_at
+            Uuid::from(user_email_authentication.id),
+            completed_at,
         )
         .traced()
         .execute(&mut *self.conn)
         .await?;
 
-        user_email_verification.state =
-            UserEmailVerificationState::AlreadyUsed { when: consumed_at };
+        DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        Ok(user_email_verification)
+        user_email_authentication.completed_at = Some(completed_at);
+        Ok(user_email_authentication)
     }
 }

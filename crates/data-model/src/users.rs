@@ -4,12 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{net::IpAddr, ops::Deref};
+use std::net::IpAddr;
 
-use chrono::{DateTime, Duration, Utc};
-use rand::{Rng, SeedableRng};
+use chrono::{DateTime, Utc};
+use rand::Rng;
 use serde::Serialize;
 use ulid::Ulid;
+use url::Url;
 
 use crate::UserAgent;
 
@@ -18,7 +19,6 @@ pub struct User {
     pub id: Ulid,
     pub username: String,
     pub sub: String,
-    pub primary_user_email_id: Option<Ulid>,
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
@@ -40,7 +40,6 @@ impl User {
             id: Ulid::from_datetime_with_source(now.into(), rng),
             username: "john".to_owned(),
             sub: "123-456".to_owned(),
-            primary_user_email_id: None,
             created_at: now,
             locked_at: None,
             can_request_admin: false,
@@ -109,6 +108,27 @@ impl UserRecoveryTicket {
     }
 }
 
+/// A user email authentication session
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserEmailAuthentication {
+    pub id: Ulid,
+    pub user_session_id: Option<Ulid>,
+    pub user_registration_id: Option<Ulid>,
+    pub email: String,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+/// A user email authentication code
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserEmailAuthenticationCode {
+    pub id: Ulid,
+    pub user_email_authentication_id: Ulid,
+    pub code: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct BrowserSession {
     pub id: Ulid,
@@ -153,7 +173,6 @@ pub struct UserEmail {
     pub user_id: Ulid,
     pub email: String,
     pub created_at: DateTime<Utc>,
-    pub confirmed_at: Option<DateTime<Utc>>,
 }
 
 impl UserEmail {
@@ -165,79 +184,34 @@ impl UserEmail {
                 user_id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "alice@example.com".to_owned(),
                 created_at: now,
-                confirmed_at: Some(now),
             },
             Self {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 user_id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "bob@example.com".to_owned(),
                 created_at: now,
-                confirmed_at: None,
             },
         ]
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub enum UserEmailVerificationState {
-    AlreadyUsed { when: DateTime<Utc> },
-    Expired { when: DateTime<Utc> },
-    Valid,
-}
-
-impl UserEmailVerificationState {
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        matches!(self, Self::Valid)
-    }
+pub struct UserRegistrationPassword {
+    pub hashed_password: String,
+    pub version: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct UserEmailVerification {
+pub struct UserRegistration {
     pub id: Ulid,
-    pub user_email_id: Ulid,
-    pub code: String,
+    pub username: String,
+    pub display_name: Option<String>,
+    pub terms_url: Option<Url>,
+    pub email_authentication_id: Option<Ulid>,
+    pub password: Option<UserRegistrationPassword>,
+    pub post_auth_action: Option<serde_json::Value>,
+    pub ip_address: Option<IpAddr>,
+    pub user_agent: Option<UserAgent>,
     pub created_at: DateTime<Utc>,
-    pub state: UserEmailVerificationState,
-}
-
-impl Deref for UserEmailVerification {
-    type Target = UserEmailVerificationState;
-
-    fn deref(&self) -> &Self::Target {
-        &self.state
-    }
-}
-
-impl UserEmailVerification {
-    #[doc(hidden)]
-    #[must_use]
-    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
-        let states = [
-            UserEmailVerificationState::AlreadyUsed {
-                when: now - Duration::microseconds(5 * 60 * 1000 * 1000),
-            },
-            UserEmailVerificationState::Expired {
-                when: now - Duration::microseconds(5 * 60 * 1000 * 1000),
-            },
-            UserEmailVerificationState::Valid,
-        ];
-
-        states
-            .into_iter()
-            .flat_map(move |state| {
-                let mut rng =
-                    rand_chacha::ChaChaRng::from_rng(&mut *rng).expect("could not seed rng");
-                UserEmail::samples(now, &mut rng)
-                    .into_iter()
-                    .map(move |email| Self {
-                        id: Ulid::from_datetime_with_source(now.into(), &mut rng),
-                        user_email_id: email.id,
-                        code: "123456".to_owned(),
-                        created_at: now - Duration::microseconds(10 * 60 * 1000 * 1000),
-                        state: state.clone(),
-                    })
-            })
-            .collect()
-    }
+    pub completed_at: Option<DateTime<Utc>>,
 }

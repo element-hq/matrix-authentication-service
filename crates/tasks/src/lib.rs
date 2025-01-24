@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -125,6 +125,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ProvisionUserJob>()
         .register_handler::<mas_storage::queue::ReactivateUserJob>()
         .register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>()
+        .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
         .add_schedule(

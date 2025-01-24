@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -13,7 +13,6 @@ import { Translation, useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import { Close, Description, Dialog, Title } from "../Dialog";
-import { Link } from "../Link";
 import styles from "./UserEmail.module.css";
 
 // This component shows a single user email address, with controls to verify it,
@@ -23,7 +22,6 @@ export const FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmail_email on UserEmail {
     id
     email
-    confirmedAt
   }
 `);
 
@@ -40,20 +38,6 @@ const REMOVE_EMAIL_MUTATION = graphql(/* GraphQL */ `
 
       user {
         id
-      }
-    }
-  }
-`);
-
-const SET_PRIMARY_EMAIL_MUTATION = graphql(/* GraphQL */ `
-  mutation SetPrimaryEmail($id: ID!) {
-    setPrimaryEmail(input: { userEmailId: $id }) {
-      status
-      user {
-        id
-        primaryEmail {
-          id
-        }
       }
     }
   }
@@ -123,23 +107,12 @@ const DeleteButtonWithConfirmation: React.FC<
 
 const UserEmail: React.FC<{
   email: FragmentType<typeof FRAGMENT>;
-  siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
+  canRemove?: boolean;
   onRemove?: () => void;
-  isPrimary?: boolean;
-}> = ({ email, siteConfig, isPrimary, onRemove }) => {
+}> = ({ email, canRemove, onRemove }) => {
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, email);
-  const { emailChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);
   const queryClient = useQueryClient();
-
-  const setPrimary = useMutation({
-    mutationFn: (id: string) =>
-      graphqlRequest({ query: SET_PRIMARY_EMAIL_MUTATION, variables: { id } }),
-    onSuccess: (_data) => {
-      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
-      queryClient.invalidateQueries({ queryKey: ["userEmails"] });
-    },
-  });
 
   const removeEmail = useMutation({
     mutationFn: (id: string) =>
@@ -155,18 +128,10 @@ const UserEmail: React.FC<{
     removeEmail.mutate(data.id);
   };
 
-  const onSetPrimaryClick = (): void => {
-    setPrimary.mutate(data.id);
-  };
-
   return (
     <Form.Root>
       <Form.Field name="email">
-        <Form.Label>
-          {isPrimary
-            ? t("frontend.user_email.primary_email")
-            : t("frontend.user_email.email")}
-        </Form.Label>
+        <Form.Label>{t("frontend.user_email.email")}</Form.Label>
 
         <div className="flex items-center gap-2">
           <Form.TextControl
@@ -175,7 +140,7 @@ const UserEmail: React.FC<{
             value={data.email}
             className={styles.userEmailField}
           />
-          {!isPrimary && emailChangeAllowed && (
+          {canRemove && (
             <DeleteButtonWithConfirmation
               email={data.email}
               disabled={removeEmail.isPending}
@@ -183,34 +148,6 @@ const UserEmail: React.FC<{
             />
           )}
         </div>
-
-        {isPrimary && emailChangeAllowed && (
-          <Form.HelpMessage>
-            {t("frontend.user_email.cant_delete_primary")}
-          </Form.HelpMessage>
-        )}
-
-        {data.confirmedAt && !isPrimary && emailChangeAllowed && (
-          <Form.HelpMessage>
-            <button
-              type="button"
-              className={styles.link}
-              disabled={setPrimary.isPending}
-              onClick={onSetPrimaryClick}
-            >
-              {t("frontend.user_email.make_primary_button")}
-            </button>
-          </Form.HelpMessage>
-        )}
-
-        {!data.confirmedAt && (
-          <Form.ErrorMessage>
-            {t("frontend.user_email.not_verified")} |{" "}
-            <Link to="/emails/$id/verify" params={{ id: data.id }}>
-              {t("frontend.user_email.retry_button")}
-            </Link>
-          </Form.ErrorMessage>
-        )}
       </Form.Field>
     </Form.Root>
   );

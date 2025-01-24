@@ -138,6 +138,13 @@ impl CookieJar {
         self
     }
 
+    /// Remove a cookie from the jar
+    #[must_use]
+    pub fn remove(mut self, key: &str) -> Self {
+        self.inner = self.inner.remove(key.to_owned());
+        self
+    }
+
     /// Load and deserialize a cookie from the jar
     ///
     /// Returns `None` if the cookie is not present

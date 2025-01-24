@@ -778,8 +778,6 @@ impl UserMutations {
             .user_email()
             .lookup(ticket.user_email_id)
             .await?
-            // Only allow confirmed email addresses
-            .filter(|email| email.confirmed_at.is_some())
             .context("Unknown email address")?;
 
         let user = repo

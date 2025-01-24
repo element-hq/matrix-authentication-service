@@ -78,19 +78,6 @@ impl User {
         Ok(MatrixUser::load(conn, &self.0.username).await?)
     }
 
-    /// Primary email address of the user.
-    async fn primary_email(
-        &self,
-        ctx: &Context<'_>,
-    ) -> Result<Option<UserEmail>, async_graphql::Error> {
-        let state = ctx.state();
-        let mut repo = state.repository().await?;
-
-        let user_email = repo.user_email().get_primary(&self.0).await?.map(UserEmail);
-        repo.cancel().await?;
-        Ok(user_email)
-    }
-
     /// Get the list of compatibility SSO logins, chronologically sorted
     async fn compat_sso_logins(
         &self,
@@ -336,7 +323,11 @@ impl User {
         &self,
         ctx: &Context<'_>,
 
-        #[graphql(name = "state", desc = "List only emails in the given state.")]
+        #[graphql(
+            deprecation = "Emails are always confirmed, and have only one state",
+            name = "state",
+            desc = "List only emails in the given state."
+        )]
         state_param: Option<UserEmailState>,
 
         #[graphql(desc = "Returns the elements in the list that come after the cursor.")]
@@ -348,6 +339,7 @@ impl User {
     ) -> Result<Connection<Cursor, UserEmail, PreloadedTotalCount>, async_graphql::Error> {
         let state = ctx.state();
         let mut repo = state.repository().await?;
+        let _ = state_param;
 
         query(
             after,
@@ -364,12 +356,6 @@ impl User {
                 let pagination = Pagination::try_new(before_id, after_id, first, last)?;
 
                 let filter = UserEmailFilter::new().for_user(&self.0);
-
-                let filter = match state_param {
-                    Some(UserEmailState::Pending) => filter.pending_only(),
-                    Some(UserEmailState::Confirmed) => filter.verified_only(),
-                    None => filter,
-                };
 
                 let page = repo.user_email().list(filter, pagination).await?;
 
@@ -751,8 +737,9 @@ impl UserEmail {
 
     /// When the email address was confirmed. Is `null` if the email was never
     /// verified by the user.
+    #[graphql(deprecation = "Emails are always confirmed now.")]
     async fn confirmed_at(&self) -> Option<DateTime<Utc>> {
-        self.0.confirmed_at
+        Some(self.0.created_at)
     }
 }
 
@@ -861,5 +848,32 @@ impl UserRecoveryTicket {
         repo.cancel().await?;
 
         Ok(user_email.email)
+    }
+}
+
+/// A email authentication session
+#[derive(Description)]
+pub struct UserEmailAuthentication(pub mas_data_model::UserEmailAuthentication);
+
+#[Object(use_type_description)]
+impl UserEmailAuthentication {
+    /// ID of the object.
+    pub async fn id(&self) -> ID {
+        NodeType::UserEmailAuthentication.id(self.0.id)
+    }
+
+    /// When the object was created.
+    pub async fn created_at(&self) -> DateTime<Utc> {
+        self.0.created_at
+    }
+
+    /// When the object was last updated.
+    pub async fn completed_at(&self) -> Option<DateTime<Utc>> {
+        self.0.completed_at
+    }
+
+    /// The email address associated with this session
+    pub async fn email(&self) -> &str {
+        &self.0.email
     }
 }

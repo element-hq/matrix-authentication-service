@@ -8,7 +8,7 @@ use std::{net::IpAddr, sync::Arc, time::Duration};
 
 use governor::{clock::QuantaClock, state::keyed::DashMapStateStore, RateLimiter};
 use mas_config::RateLimitingConfig;
-use mas_data_model::User;
+use mas_data_model::{User, UserEmailAuthentication};
 use ulid::Ulid;
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -33,6 +33,18 @@ pub enum PasswordCheckLimitedError {
 pub enum RegistrationLimitedError {
     #[error("Too many account registration requests for requester {0}")]
     Requester(RequesterFingerprint),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum EmailAuthenticationLimitedError {
+    #[error("Too many email authentication requests for requester {0}")]
+    Requester(RequesterFingerprint),
+
+    #[error("Too many email authentication requests for authentication session {0}")]
+    Authentication(Ulid),
+
+    #[error("Too many email authentication requests for email {0}")]
+    Email(String),
 }
 
 /// Key used to rate limit requests per requester
@@ -78,6 +90,10 @@ struct LimiterInner {
     password_check_for_requester: KeyedRateLimiter<RequesterFingerprint>,
     password_check_for_user: KeyedRateLimiter<Ulid>,
     registration_per_requester: KeyedRateLimiter<RequesterFingerprint>,
+    email_authentication_per_requester: KeyedRateLimiter<RequesterFingerprint>,
+    email_authentication_per_email: KeyedRateLimiter<String>,
+    email_authentication_emails_per_session: KeyedRateLimiter<Ulid>,
+    email_authentication_attempt_per_session: KeyedRateLimiter<Ulid>,
 }
 
 impl LimiterInner {
@@ -92,6 +108,18 @@ impl LimiterInner {
             password_check_for_requester: RateLimiter::keyed(config.login.per_ip.to_quota()?),
             password_check_for_user: RateLimiter::keyed(config.login.per_account.to_quota()?),
             registration_per_requester: RateLimiter::keyed(config.registration.to_quota()?),
+            email_authentication_per_email: RateLimiter::keyed(
+                config.email_authentication.per_address.to_quota()?,
+            ),
+            email_authentication_per_requester: RateLimiter::keyed(
+                config.email_authentication.per_ip.to_quota()?,
+            ),
+            email_authentication_emails_per_session: RateLimiter::keyed(
+                config.email_authentication.emails_per_session.to_quota()?,
+            ),
+            email_authentication_attempt_per_session: RateLimiter::keyed(
+                config.email_authentication.attempt_per_session.to_quota()?,
+            ),
         })
     }
 }
@@ -127,6 +155,16 @@ impl Limiter {
                 this.inner.password_check_for_requester.retain_recent();
                 this.inner.password_check_for_user.retain_recent();
                 this.inner.registration_per_requester.retain_recent();
+                this.inner.email_authentication_per_email.retain_recent();
+                this.inner
+                    .email_authentication_per_requester
+                    .retain_recent();
+                this.inner
+                    .email_authentication_emails_per_session
+                    .retain_recent();
+                this.inner
+                    .email_authentication_attempt_per_session
+                    .retain_recent();
 
                 interval.tick().await;
             }
@@ -199,6 +237,66 @@ impl Limiter {
 
         Ok(())
     }
+
+    /// Check if an email can be sent to the address for an email
+    /// authentication session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_email_authentication_email(
+        &self,
+        requester: RequesterFingerprint,
+        email: &str,
+    ) -> Result<(), EmailAuthenticationLimitedError> {
+        self.inner
+            .email_authentication_per_requester
+            .check_key(&requester)
+            .map_err(|_| EmailAuthenticationLimitedError::Requester(requester))?;
+
+        // Convert to lowercase to prevent bypassing the limit by enumerating different
+        // case variations.
+        // A case-folding transformation may be more proper.
+        let canonical_email = email.to_lowercase();
+        self.inner
+            .email_authentication_per_email
+            .check_key(&canonical_email)
+            .map_err(|_| EmailAuthenticationLimitedError::Email(email.to_owned()))?;
+        Ok(())
+    }
+
+    /// Check if an attempt can be done on an email authentication session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_email_authentication_attempt(
+        &self,
+        authentication: &UserEmailAuthentication,
+    ) -> Result<(), EmailAuthenticationLimitedError> {
+        self.inner
+            .email_authentication_attempt_per_session
+            .check_key(&authentication.id)
+            .map_err(|_| EmailAuthenticationLimitedError::Authentication(authentication.id))
+    }
+
+    /// Check if a new authentication code can be sent for an email
+    /// authentication session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_email_authentication_send_code(
+        &self,
+        requester: RequesterFingerprint,
+        authentication: &UserEmailAuthentication,
+    ) -> Result<(), EmailAuthenticationLimitedError> {
+        self.check_email_authentication_email(requester, &authentication.email)?;
+        self.inner
+            .email_authentication_emails_per_session
+            .check_key(&authentication.id)
+            .map_err(|_| EmailAuthenticationLimitedError::Authentication(authentication.id))
+    }
 }
 
 #[cfg(test)]
@@ -227,7 +325,6 @@ mod tests {
             id: Ulid::from_datetime_with_source(now.into(), &mut rng),
             username: "alice".to_owned(),
             sub: "123-456".to_owned(),
-            primary_user_email_id: None,
             created_at: now,
             locked_at: None,
             can_request_admin: false,
@@ -237,7 +334,6 @@ mod tests {
             id: Ulid::from_datetime_with_source(now.into(), &mut rng),
             username: "bob".to_owned(),
             sub: "123-456".to_owned(),
-            primary_user_email_id: None,
             created_at: now,
             locked_at: None,
             can_request_admin: false,

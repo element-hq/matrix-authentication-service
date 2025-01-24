@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -22,8 +22,8 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmail, UserEmailVerification,
-    UserRecoverySession,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmailAuthentication,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -878,27 +878,38 @@ impl TemplateContext for EmailRecoveryContext {
 /// Context used by the `emails/verification.{txt,html,subject}` templates
 #[derive(Serialize)]
 pub struct EmailVerificationContext {
-    user: User,
-    verification: UserEmailVerification,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    browser_session: Option<BrowserSession>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    user_registration: Option<UserRegistration>,
+    authentication_code: UserEmailAuthenticationCode,
 }
 
 impl EmailVerificationContext {
     /// Constructs a context for the verification email
     #[must_use]
-    pub fn new(user: User, verification: UserEmailVerification) -> Self {
-        Self { user, verification }
+    pub fn new(
+        authentication_code: UserEmailAuthenticationCode,
+        browser_session: Option<BrowserSession>,
+        user_registration: Option<UserRegistration>,
+    ) -> Self {
+        Self {
+            browser_session,
+            user_registration,
+            authentication_code,
+        }
     }
 
     /// Get the user to which this email is being sent
     #[must_use]
-    pub fn user(&self) -> &User {
-        &self.user
+    pub fn user(&self) -> Option<&User> {
+        self.browser_session.as_ref().map(|s| &s.user)
     }
 
     /// Get the verification code being sent
     #[must_use]
-    pub fn verification(&self) -> &UserEmailVerification {
-        &self.verification
+    pub fn code(&self) -> &str {
+        &self.authentication_code.code
     }
 }
 
@@ -907,26 +918,22 @@ impl TemplateContext for EmailVerificationContext {
     where
         Self: Sized,
     {
-        User::samples(now, rng)
+        BrowserSession::samples(now, rng)
             .into_iter()
-            .map(|user| {
-                let email = UserEmail {
+            .map(|browser_session| {
+                let authentication_code = UserEmailAuthenticationCode {
                     id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_id: user.id,
-                    email: "foobar@example.com".to_owned(),
-                    created_at: now,
-                    confirmed_at: None,
-                };
-
-                let verification = UserEmailVerification {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_email_id: email.id,
+                    user_email_authentication_id: Ulid::from_datetime_with_source(now.into(), rng),
                     code: "123456".to_owned(),
-                    created_at: now,
-                    state: mas_data_model::UserEmailVerificationState::Valid,
+                    created_at: now - Duration::try_minutes(5).unwrap(),
+                    expires_at: now + Duration::try_minutes(25).unwrap(),
                 };
 
-                Self { user, verification }
+                Self {
+                    browser_session: Some(browser_session),
+                    user_registration: None,
+                    authentication_code,
+                }
             })
             .collect()
     }
@@ -935,12 +942,12 @@ impl TemplateContext for EmailVerificationContext {
 /// Fields of the email verification form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum EmailVerificationFormField {
+pub enum RegisterStepsVerifyEmailFormField {
     /// The code field
     Code,
 }
 
-impl FormField for EmailVerificationFormField {
+impl FormField for RegisterStepsVerifyEmailFormField {
     fn keep(&self) -> bool {
         match self {
             Self::Code => true,
@@ -948,74 +955,101 @@ impl FormField for EmailVerificationFormField {
     }
 }
 
-/// Context used by the `pages/account/verify.html` templates
+/// Context used by the `pages/register/steps/verify_email.html` templates
 #[derive(Serialize)]
-pub struct EmailVerificationPageContext {
-    form: FormState<EmailVerificationFormField>,
-    email: UserEmail,
+pub struct RegisterStepsVerifyEmailContext {
+    form: FormState<RegisterStepsVerifyEmailFormField>,
+    authentication: UserEmailAuthentication,
 }
 
-impl EmailVerificationPageContext {
+impl RegisterStepsVerifyEmailContext {
     /// Constructs a context for the email verification page
     #[must_use]
-    pub fn new(email: UserEmail) -> Self {
+    pub fn new(authentication: UserEmailAuthentication) -> Self {
         Self {
             form: FormState::default(),
-            email,
+            authentication,
         }
     }
 
     /// Set the form state
     #[must_use]
-    pub fn with_form_state(self, form: FormState<EmailVerificationFormField>) -> Self {
+    pub fn with_form_state(self, form: FormState<RegisterStepsVerifyEmailFormField>) -> Self {
         Self { form, ..self }
     }
 }
 
-impl TemplateContext for EmailVerificationPageContext {
+impl TemplateContext for RegisterStepsVerifyEmailContext {
     fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
     where
         Self: Sized,
     {
-        let email = UserEmail {
+        let authentication = UserEmailAuthentication {
             id: Ulid::from_datetime_with_source(now.into(), rng),
-            user_id: Ulid::from_datetime_with_source(now.into(), rng),
+            user_session_id: None,
+            user_registration_id: None,
             email: "foobar@example.com".to_owned(),
             created_at: now,
-            confirmed_at: None,
+            completed_at: None,
         };
 
         vec![Self {
             form: FormState::default(),
-            email,
+            authentication,
         }]
     }
 }
 
-/// Fields of the account email add form
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum EmailAddFormField {
-    /// The email
-    Email,
+/// Context used by the `pages/register/steps/email_in_use.html` template
+#[derive(Serialize)]
+pub struct RegisterStepsEmailInUseContext {
+    email: String,
+    action: Option<PostAuthAction>,
 }
 
-impl FormField for EmailAddFormField {
+impl RegisterStepsEmailInUseContext {
+    /// Constructs a context for the email in use page
+    #[must_use]
+    pub fn new(email: String, action: Option<PostAuthAction>) -> Self {
+        Self { email, action }
+    }
+}
+
+impl TemplateContext for RegisterStepsEmailInUseContext {
+    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        let email = "hello@example.com".to_owned();
+        let action = PostAuthAction::continue_grant(Ulid::nil());
+        vec![Self::new(email, Some(action))]
+    }
+}
+
+/// Fields for the display name form
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RegisterStepsDisplayNameFormField {
+    /// The display name
+    DisplayName,
+}
+
+impl FormField for RegisterStepsDisplayNameFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Email => true,
+            Self::DisplayName => true,
         }
     }
 }
 
-/// Context used by the `pages/account/verify.html` templates
+/// Context used by the `display_name.html` template
 #[derive(Serialize, Default)]
-pub struct EmailAddContext {
-    form: FormState<EmailAddFormField>,
+pub struct RegisterStepsDisplayNameContext {
+    form: FormState<RegisterStepsDisplayNameFormField>,
 }
 
-impl EmailAddContext {
-    /// Constructs a context for the email add page
+impl RegisterStepsDisplayNameContext {
+    /// Constructs a context for the display name page
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -1023,17 +1057,23 @@ impl EmailAddContext {
 
     /// Set the form state
     #[must_use]
-    pub fn with_form_state(form: FormState<EmailAddFormField>) -> Self {
-        Self { form }
+    pub fn with_form_state(
+        mut self,
+        form_state: FormState<RegisterStepsDisplayNameFormField>,
+    ) -> Self {
+        self.form = form_state;
+        self
     }
 }
 
-impl TemplateContext for EmailAddContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+impl TemplateContext for RegisterStepsDisplayNameContext {
+    fn sample(_now: chrono::DateTime<chrono::Utc>, _rng: &mut impl Rng) -> Vec<Self>
     where
         Self: Sized,
     {
-        vec![Self::default()]
+        vec![Self {
+            form: FormState::default(),
+        }]
     }
 }
 

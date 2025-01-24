@@ -1,40 +1,24 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{User, UserEmail, UserEmailVerification};
+use mas_data_model::{
+    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    UserRegistration,
+};
 use rand_core::RngCore;
 use ulid::Ulid;
 
 use crate::{pagination::Page, repository_impl, Clock, Pagination};
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum UserEmailState {
-    Pending,
-    Verified,
-}
-
-impl UserEmailState {
-    /// Returns true if the filter should only return non-verified emails
-    pub fn is_pending(self) -> bool {
-        matches!(self, Self::Pending)
-    }
-
-    /// Returns true if the filter should only return verified emails
-    pub fn is_verified(self) -> bool {
-        matches!(self, Self::Verified)
-    }
-}
 
 /// Filter parameters for listing user emails
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct UserEmailFilter<'a> {
     user: Option<&'a User>,
     email: Option<&'a str>,
-    state: Option<UserEmailState>,
 }
 
 impl<'a> UserEmailFilter<'a> {
@@ -73,28 +57,6 @@ impl<'a> UserEmailFilter<'a> {
     pub fn email(&self) -> Option<&str> {
         self.email
     }
-
-    /// Filter for emails that are verified
-    #[must_use]
-    pub fn verified_only(mut self) -> Self {
-        self.state = Some(UserEmailState::Verified);
-        self
-    }
-
-    /// Filter for emails that are not verified
-    #[must_use]
-    pub fn pending_only(mut self) -> Self {
-        self.state = Some(UserEmailState::Pending);
-        self
-    }
-
-    /// Get the state filter
-    ///
-    /// Returns [`None`] if no state filter is set
-    #[must_use]
-    pub fn state(&self) -> Option<UserEmailState> {
-        self.state
-    }
 }
 
 /// A [`UserEmailRepository`] helps interacting with [`UserEmail`] saved in the
@@ -130,19 +92,6 @@ pub trait UserEmailRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
-
-    /// Get the primary [`UserEmail`] of a [`User`]
-    ///
-    /// Returns `None` if no the user has no primary [`UserEmail`]
-    ///
-    /// # Parameters
-    ///
-    /// * `user`: The [`User`] for whom to lookup the primary [`UserEmail`]
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error>;
 
     /// Get all [`UserEmail`] of a [`User`]
     ///
@@ -215,102 +164,127 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
 
-    /// Mark a [`UserEmail`] as verified
-    ///
-    /// Returns the updated [`UserEmail`]
-    ///
-    /// # Parameters
-    ///
-    /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] to mark as verified
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn mark_as_verified(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: UserEmail,
-    ) -> Result<UserEmail, Self::Error>;
-
-    /// Mark a [`UserEmail`] as primary
-    ///
-    /// # Parameters
-    ///
-    /// * `user_email`: The [`UserEmail`] to mark as primary
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error>;
-
-    /// Add a [`UserEmailVerification`] for a [`UserEmail`]
+    /// Add a new [`UserEmailAuthentication`] for a [`BrowserSession`]
     ///
     /// # Parameters
     ///
     /// * `rng`: The random number generator to use
     /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] for which to add the
-    ///   [`UserEmailVerification`]
-    /// * `max_age`: The duration for which the [`UserEmailVerification`] is
-    ///   valid
+    /// * `email`: The email address to add
+    /// * `session`: The [`BrowserSession`] for which to add the
+    ///   [`UserEmailAuthentication`]
     ///
     /// # Errors
     ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn add_verification_code(
+    /// Returns an error if the underlying repository fails
+    async fn add_authentication_for_session(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        user_email: &UserEmail,
-        max_age: chrono::Duration,
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    /// Add a new [`UserEmailAuthentication`] for a [`UserRegistration`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock to use
+    /// * `email`: The email address to add
+    /// * `registration`: The [`UserRegistration`] for which to add the
+    ///   [`UserEmailAuthentication`]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        registration: &UserRegistration,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    /// Add a new [`UserEmailAuthenticationCode`] for a
+    /// [`UserEmailAuthentication`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock to use
+    /// * `duration`: The duration for which the code is valid
+    /// * `authentication`: The [`UserEmailAuthentication`] for which to add the
+    ///   [`UserEmailAuthenticationCode`]
+    /// * `code`: The code to add
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails or if the code
+    /// already exists for this session
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        authentication: &UserEmailAuthentication,
         code: String,
-    ) -> Result<UserEmailVerification, Self::Error>;
+    ) -> Result<UserEmailAuthenticationCode, Self::Error>;
 
-    /// Find a [`UserEmailVerification`] for a [`UserEmail`] by its code
-    ///
-    /// Returns `None` if no matching [`UserEmailVerification`] was found
+    /// Lookup a [`UserEmailAuthentication`]
     ///
     /// # Parameters
     ///
-    /// * `clock`: The clock to use
-    /// * `user_email`: The [`UserEmail`] for which to lookup the
-    ///   [`UserEmailVerification`]
-    /// * `code`: The code used to lookup
+    /// * `id`: The ID of the [`UserEmailAuthentication`] to lookup
     ///
     /// # Errors
     ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn find_verification_code(
+    /// Returns an error if the underlying repository fails
+    async fn lookup_authentication(
         &mut self,
-        clock: &dyn Clock,
-        user_email: &UserEmail,
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error>;
+
+    /// Find a [`UserEmailAuthenticationCode`] by its code and session
+    ///
+    /// # Parameters
+    ///
+    /// * `authentication`: The [`UserEmailAuthentication`] to find the code for
+    /// * `code`: The code of the [`UserEmailAuthentication`] to lookup
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
         code: &str,
-    ) -> Result<Option<UserEmailVerification>, Self::Error>;
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error>;
 
-    /// Consume a [`UserEmailVerification`]
+    /// Complete a [`UserEmailAuthentication`] by using the given code
     ///
-    /// Returns the consumed [`UserEmailVerification`]
+    /// Returns the completed [`UserEmailAuthentication`]
     ///
     /// # Parameters
     ///
-    /// * `clock`: The clock to use
-    /// * `verification`: The [`UserEmailVerification`] to consume
+    /// * `clock`: The clock to use to generate timestamps
+    /// * `authentication`: The [`UserEmailAuthentication`] to complete
+    /// * `code`: The [`UserEmailAuthenticationCode`] to use
     ///
     /// # Errors
     ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn consume_verification_code(
+    /// Returns an error if the underlying repository fails
+    async fn complete_authentication(
         &mut self,
         clock: &dyn Clock,
-        verification: UserEmailVerification,
-    ) -> Result<UserEmailVerification, Self::Error>;
+        authentication: UserEmailAuthentication,
+        code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
 }
 
 repository_impl!(UserEmailRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserEmail>, Self::Error>;
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
-    async fn get_primary(&mut self, user: &User) -> Result<Option<UserEmail>, Self::Error>;
 
     async fn all(&mut self, user: &User) -> Result<Vec<UserEmail>, Self::Error>;
     async fn list(
@@ -329,33 +303,46 @@ repository_impl!(UserEmailRepository:
     ) -> Result<UserEmail, Self::Error>;
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
 
-    async fn mark_as_verified(
-        &mut self,
-        clock: &dyn Clock,
-        user_email: UserEmail,
-    ) -> Result<UserEmail, Self::Error>;
-
-    async fn set_as_primary(&mut self, user_email: &UserEmail) -> Result<(), Self::Error>;
-
-    async fn add_verification_code(
+    async fn add_authentication_for_session(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        user_email: &UserEmail,
-        max_age: chrono::Duration,
+        email: String,
+        session: &BrowserSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn add_authentication_for_registration(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        email: String,
+        registration: &UserRegistration,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn add_authentication_code(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        duration: chrono::Duration,
+        authentication: &UserEmailAuthentication,
         code: String,
-    ) -> Result<UserEmailVerification, Self::Error>;
+    ) -> Result<UserEmailAuthenticationCode, Self::Error>;
 
-    async fn find_verification_code(
+    async fn lookup_authentication(
         &mut self,
-        clock: &dyn Clock,
-        user_email: &UserEmail,
+        id: Ulid,
+    ) -> Result<Option<UserEmailAuthentication>, Self::Error>;
+
+    async fn find_authentication_code(
+        &mut self,
+        authentication: &UserEmailAuthentication,
         code: &str,
-    ) -> Result<Option<UserEmailVerification>, Self::Error>;
+    ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error>;
 
-    async fn consume_verification_code(
+    async fn complete_authentication(
         &mut self,
         clock: &dyn Clock,
-        verification: UserEmailVerification,
-    ) -> Result<UserEmailVerification, Self::Error>;
+        authentication: UserEmailAuthentication,
+        code: &UserEmailAuthenticationCode,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
 );

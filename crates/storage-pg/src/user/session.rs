@@ -57,7 +57,6 @@ struct SessionLookup {
     user_session_last_active_ip: Option<IpAddr>,
     user_id: Uuid,
     user_username: String,
-    user_primary_user_email_id: Option<Uuid>,
     user_created_at: DateTime<Utc>,
     user_locked_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
@@ -72,7 +71,6 @@ impl TryFrom<SessionLookup> for BrowserSession {
             id,
             username: value.user_username,
             sub: id.to_string(),
-            primary_user_email_id: value.user_primary_user_email_id.map(Into::into),
             created_at: value.user_created_at,
             locked_at: value.user_locked_at,
             can_request_admin: value.user_can_request_admin,
@@ -173,7 +171,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , s.last_active_ip        AS "user_session_last_active_ip: IpAddr"
                      , u.user_id
                      , u.username              AS "user_username"
-                     , u.primary_user_email_id AS "user_primary_user_email_id"
                      , u.created_at            AS "user_created_at"
                      , u.locked_at             AS "user_locked_at"
                      , u.can_request_admin     AS "user_can_request_admin"
@@ -350,10 +347,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::Username)),
                 SessionLookupIden::UserUsername,
-            )
-            .expr_as(
-                Expr::col((Users::Table, Users::PrimaryUserEmailId)),
-                SessionLookupIden::UserPrimaryUserEmailId,
             )
             .expr_as(
                 Expr::col((Users::Table, Users::CreatedAt)),

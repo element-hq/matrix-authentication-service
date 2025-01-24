@@ -1,0 +1,53 @@
+{#
+Copyright 2024 New Vector Ltd.
+Copyright 2022-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="icon">
+      {{ icon.send_solid() }}
+    </div>
+    <div class="header">
+      <h1 class="title">{{ _("mas.verify_email.headline") }}</h1>
+      <p class="text">{{ _("mas.verify_email.description", email=authentication.email) }}</p>
+    </div>
+  </header>
+
+  <form method="POST" class="cpd-form-root">
+    {% if form.errors is not empty %}
+      {% for error in form.errors %}
+        <div class="text-critical font-medium">
+          {{ errors.form_error_message(error=error) }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+
+    {% call(f) field.field(label=_("mas.verify_email.6_digit_code"), name="code", form_state=form, class="mb-4 self-center") %}
+      <div class="cpd-mfa-container">
+        <input {{ field.attributes(f) }}
+          inputmode="numeric"
+          type="text"
+          minlength="0"
+          maxlength="6"
+          class="cpd-mfa-control"
+          pattern="\d{6}"
+          required
+          autocomplete="one-time-code">
+
+        {% for _ in range(6) %}
+        <div class="cpd-mfa-digit" aria-hidden="true"></div>
+        {% endfor %}
+      </div>
+    {% endcall %}
+
+    {{ button.button(text=_("action.continue")) }}
+  </form>
+{% endblock content %}

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_email_authentications\n                  ( user_email_authentication_id\n                  , user_registration_id\n                  , email\n                  , created_at\n                  )\n                VALUES ($1, $2, $3, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0e1bce56e15751d82a622d532b279bfc50e22cb12ddf7495c7b0fedca61f9421"
+}

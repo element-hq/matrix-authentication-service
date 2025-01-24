@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -8,6 +8,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import * as z from "zod";
+import { query as userEmailListQuery } from "../components/UserProfile/UserEmailList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -16,13 +17,9 @@ const QUERY = graphql(/* GraphQL */ `
     viewer {
       __typename
       ... on User {
-        id
-        primaryEmail {
-          id
-          ...UserEmail_email
+        emails(first: 0) {
+          totalCount
         }
-
-        ...UserEmailList_user
       }
     }
 
@@ -105,5 +102,9 @@ export const Route = createFileRoute("/_account/")({
     }
   },
 
-  loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(userEmailListQuery()),
+      context.queryClient.ensureQueryData(query),
+    ]),
 });

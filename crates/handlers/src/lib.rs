@@ -24,7 +24,6 @@ use axum::{
     routing::{get, post},
     Extension, Router,
 };
-use graphql::ExtraRouterParameters;
 use headers::HeaderName;
 use hyper::{
     header::{
@@ -42,10 +41,11 @@ use mas_router::{Route, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
-use passwords::PasswordManager;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
 use tower_http::cors::{Any, CorsLayer};
+
+use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
 
 mod admin;
 mod compat;
@@ -376,17 +376,21 @@ where
         )
         .route(
             mas_router::PasswordRegister::route(),
-            get(self::views::password_register::get).post(self::views::password_register::post),
+            get(self::views::register::password::get).post(self::views::register::password::post),
         )
         .route(
-            mas_router::AccountVerifyEmail::route(),
-            get(self::views::account::emails::verify::get)
-                .post(self::views::account::emails::verify::post),
+            mas_router::RegisterVerifyEmail::route(),
+            get(self::views::register::steps::verify_email::get)
+                .post(self::views::register::steps::verify_email::post),
         )
         .route(
-            mas_router::AccountAddEmail::route(),
-            get(self::views::account::emails::add::get)
-                .post(self::views::account::emails::add::post),
+            mas_router::RegisterDisplayName::route(),
+            get(self::views::register::steps::display_name::get)
+                .post(self::views::register::steps::display_name::post),
+        )
+        .route(
+            mas_router::RegisterFinish::route(),
+            get(self::views::register::steps::finish::get),
         )
         .route(
             mas_router::AccountRecoveryStart::route(),

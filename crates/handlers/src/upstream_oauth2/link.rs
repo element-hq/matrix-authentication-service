@@ -590,11 +590,6 @@ pub(crate) async fn post(
             }
             let context = context.build();
 
-            // Is the email verified according to the upstream provider?
-            let provider_email_verified = env
-                .render_str("{{ user.email_verified | string }}", &context)
-                .is_ok_and(|v| v == "true");
-
             // Create a template context in case we need to re-render because of an error
             let ctx = UpstreamRegister::new(link.clone(), provider.clone());
 
@@ -802,24 +797,9 @@ pub(crate) async fn post(
 
             // If we have an email, add it to the user
             if let Some(email) = email {
-                let user_email = repo
-                    .user_email()
+                repo.user_email()
                     .add(&mut rng, &clock, &user, email)
                     .await?;
-                // Mark the email as verified according to the policy and whether the provider
-                // claims it is, and make it the primary email.
-                if provider
-                    .claims_imports
-                    .verify_email
-                    .should_mark_as_verified(provider_email_verified)
-                {
-                    let user_email = repo
-                        .user_email()
-                        .mark_as_verified(&clock, user_email)
-                        .await?;
-
-                    repo.user_email().set_as_primary(&user_email).await?;
-                }
             }
 
             repo.upstream_oauth_link()
@@ -863,7 +843,9 @@ mod tests {
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
     use mas_router::Route;
-    use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
+    use mas_storage::{
+        upstream_oauth2::UpstreamOAuthProviderParams, user::UserEmailFilter, Pagination,
+    };
     use oauth2_types::scope::{Scope, OPENID};
     use sqlx::PgPool;
 
@@ -1039,14 +1021,13 @@ mod tests {
 
         assert_eq!(link.user_id, Some(user.id));
 
-        let email = repo
+        let page = repo
             .user_email()
-            .get_primary(&user)
+            .list(UserEmailFilter::new().for_user(&user), Pagination::first(1))
             .await
-            .unwrap()
-            .expect("email exists");
+            .unwrap();
+        let email = page.edges.first().expect("email exists");
 
         assert_eq!(email.email, "john@example.com");
-        assert!(email.confirmed_at.is_some());
     }
 }

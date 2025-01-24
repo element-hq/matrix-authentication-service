@@ -444,72 +444,75 @@ impl From<Option<PostAuthAction>> for PasswordRegister {
     }
 }
 
-/// `GET|POST /verify-email/:id`
+/// `GET|POST /register/steps/:id/display-name`
 #[derive(Debug, Clone)]
-pub struct AccountVerifyEmail {
+pub struct RegisterDisplayName {
     id: Ulid,
-    post_auth_action: Option<PostAuthAction>,
 }
 
-impl AccountVerifyEmail {
+impl RegisterDisplayName {
     #[must_use]
     pub fn new(id: Ulid) -> Self {
-        Self {
-            id,
-            post_auth_action: None,
-        }
-    }
-
-    #[must_use]
-    pub fn and_maybe(mut self, action: Option<PostAuthAction>) -> Self {
-        self.post_auth_action = action;
-        self
-    }
-
-    #[must_use]
-    pub fn and_then(mut self, action: PostAuthAction) -> Self {
-        self.post_auth_action = Some(action);
-        self
+        Self { id }
     }
 }
 
-impl Route for AccountVerifyEmail {
-    type Query = PostAuthAction;
+impl Route for RegisterDisplayName {
+    type Query = ();
     fn route() -> &'static str {
-        "/verify-email/:id"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
+        "/register/steps/:id/display-name"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
-        format!("/verify-email/{}", self.id).into()
+        format!("/register/steps/{}/display-name", self.id).into()
     }
 }
 
-/// `GET /add-email`
-#[derive(Default, Debug, Clone)]
-pub struct AccountAddEmail {
-    post_auth_action: Option<PostAuthAction>,
+/// `GET|POST /register/steps/:id/verify-email`
+#[derive(Debug, Clone)]
+pub struct RegisterVerifyEmail {
+    id: Ulid,
 }
 
-impl Route for AccountAddEmail {
-    type Query = PostAuthAction;
-    fn route() -> &'static str {
-        "/add-email"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
-    }
-}
-
-impl AccountAddEmail {
+impl RegisterVerifyEmail {
     #[must_use]
-    pub fn and_then(mut self, action: PostAuthAction) -> Self {
-        self.post_auth_action = Some(action);
-        self
+    pub fn new(id: Ulid) -> Self {
+        Self { id }
+    }
+}
+
+impl Route for RegisterVerifyEmail {
+    type Query = ();
+    fn route() -> &'static str {
+        "/register/steps/:id/verify-email"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/register/steps/{}/verify-email", self.id).into()
+    }
+}
+
+/// `GET /register/steps/:id/finish`
+#[derive(Debug, Clone)]
+pub struct RegisterFinish {
+    id: Ulid,
+}
+
+impl RegisterFinish {
+    #[must_use]
+    pub const fn new(id: Ulid) -> Self {
+        Self { id }
+    }
+}
+
+impl Route for RegisterFinish {
+    type Query = ();
+    fn route() -> &'static str {
+        "/register/steps/:id/finish"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/register/steps/{}/finish", self.id).into()
     }
 }
 

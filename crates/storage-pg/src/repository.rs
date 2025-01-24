@@ -49,7 +49,8 @@ use crate::{
     },
     user::{
         PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasswordRepository,
-        PgUserRecoveryRepository, PgUserRepository, PgUserTermsRepository,
+        PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRepository,
+        PgUserTermsRepository,
     },
     DatabaseError,
 };
@@ -189,6 +190,12 @@ where
         &'c mut self,
     ) -> Box<dyn mas_storage::user::UserTermsRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserTermsRepository::new(self.conn.as_mut()))
+    }
+
+    fn user_registration<'c>(
+        &'c mut self,
+    ) -> Box<dyn mas_storage::user::UserRegistrationRepository<Error = Self::Error> + 'c> {
+        Box::new(PgUserRegistrationRepository::new(self.conn.as_mut()))
     }
 
     fn browser_session<'c>(

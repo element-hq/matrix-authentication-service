@@ -21,10 +21,7 @@ use mas_jose::{
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{
-    oauth2::OAuth2ClientRepository, user::UserEmailRepository, BoxClock, BoxRepository, BoxRng,
-};
-use oauth2_types::scope;
+use mas_storage::{oauth2::OAuth2ClientRepository, BoxClock, BoxRepository, BoxRng};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use thiserror::Error;
@@ -36,8 +33,6 @@ use crate::{impl_from_error_for_route, BoundActivityTracker};
 struct UserInfo {
     sub: String,
     username: String,
-    email: Option<String>,
-    email_verified: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -123,17 +118,9 @@ pub async fn get(
         .await?
         .ok_or(RouteError::NoSuchUser)?;
 
-    let user_email = if session.scope.contains(&scope::EMAIL) {
-        repo.user_email().get_primary(&user).await?
-    } else {
-        None
-    };
-
     let user_info = UserInfo {
         sub: user.sub.clone(),
         username: user.username.clone(),
-        email_verified: user_email.as_ref().map(|u| u.confirmed_at.is_some()),
-        email: user_email.map(|u| u.email),
     };
 
     let client = repo

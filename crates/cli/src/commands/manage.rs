@@ -65,7 +65,7 @@ enum Subcommand {
     /// Add an email address to the specified user
     AddEmail { username: String, email: String },
 
-    /// Mark email address as verified
+    /// [DEPRECATED] Mark email address as verified
     VerifyEmail { username: String, email: String },
 
     /// Set a user password
@@ -252,15 +252,8 @@ impl Options {
                         .await?
                 };
 
-                let email = repo.user_email().mark_as_verified(&clock, email).await?;
-
-                // If the user has no primary email, set this one as primary.
-                if user.primary_user_email_id.is_none() {
-                    repo.user_email().set_as_primary(&email).await?;
-                }
-
                 repo.into_inner().commit().await?;
-                info!(?email, "Email added and marked as verified");
+                info!(?email, "Email added");
 
                 Ok(ExitCode::SUCCESS)
             }
@@ -273,31 +266,7 @@ impl Options {
                 )
                 .entered();
 
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
-                let mut conn = database_connection_from_config(&database_config).await?;
-                let txn = conn.begin().await?;
-                let mut repo = PgRepository::from_conn(txn);
-
-                let user = repo
-                    .user()
-                    .find_by_username(&username)
-                    .await?
-                    .context("User not found")?;
-
-                let email = repo
-                    .user_email()
-                    .find(&user, &email)
-                    .await?
-                    .context("Email not found")?;
-                let email = repo.user_email().mark_as_verified(&clock, email).await?;
-
-                // If the user has no primary email, set this one as primary.
-                if user.primary_user_email_id.is_none() {
-                    repo.user_email().set_as_primary(&email).await?;
-                }
-
-                repo.into_inner().commit().await?;
-                info!(?email, "Email marked as verified");
+                tracing::warn!("The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead.");
 
                 Ok(ExitCode::SUCCESS)
             }
@@ -943,20 +912,9 @@ impl UserCreationRequest<'_> {
         }
 
         for email in emails {
-            let user_email = repo
-                .user_email()
+            repo.user_email()
                 .add(rng, clock, &user, email.to_string())
                 .await?;
-
-            let user_email = repo
-                .user_email()
-                .mark_as_verified(clock, user_email)
-                .await?;
-
-            if user.primary_user_email_id.is_none() {
-                repo.user_email().set_as_primary(&user_email).await?;
-                user.primary_user_email_id = Some(user_email.id);
-            }
         }
 
         for (provider, subject) in upstream_provider_mappings {

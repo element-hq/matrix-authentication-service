@@ -35,16 +35,17 @@ mod macros;
 pub use self::{
     context::{
         ApiDocContext, AppContext, CompatSsoContext, ConsentContext, DeviceConsentContext,
-        DeviceLinkContext, DeviceLinkFormField, EmailAddContext, EmailRecoveryContext,
-        EmailVerificationContext, EmailVerificationPageContext, EmptyContext, ErrorContext,
-        FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        ReauthContext, ReauthFormField, RecoveryExpiredContext, RecoveryFinishContext,
-        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
-        RecoveryStartFormField, RegisterContext, RegisterFormField, SiteBranding, SiteConfigExt,
-        SiteFeatures, TemplateContext, UpstreamExistingLinkContext, UpstreamRegister,
-        UpstreamRegisterFormField, UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage,
-        WithOptionalSession, WithSession,
+        DeviceLinkContext, DeviceLinkFormField, EmailRecoveryContext, EmailVerificationContext,
+        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
+        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
+        PostAuthContextInner, ReauthContext, ReauthFormField, RecoveryExpiredContext,
+        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
+        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
+        RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
+        TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
+        UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage, WithOptionalSession, WithSession,
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
@@ -327,10 +328,19 @@ register_templates! {
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
 
     /// Render the registration page
-    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register.html" }
+    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }
 
     /// Render the password registration page
-    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/password_register.html" }
+    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/register/password.html" }
+
+    /// Render the email verification page
+    pub fn render_register_steps_verify_email(WithLanguage<WithCsrf<RegisterStepsVerifyEmailContext>>) { "pages/register/steps/verify_email.html" }
+
+    /// Render the email in use page
+    pub fn render_register_steps_email_in_use(WithLanguage<RegisterStepsEmailInUseContext>) { "pages/register/steps/email_in_use.html" }
+
+    /// Render the display name page
+    pub fn render_register_steps_display_name(WithLanguage<WithCsrf<RegisterStepsDisplayNameContext>>) { "pages/register/steps/display_name.html" }
 
     /// Render the client consent page
     pub fn render_consent(WithLanguage<WithCsrf<WithSession<ConsentContext>>>) { "pages/consent.html" }
@@ -343,12 +353,6 @@ register_templates! {
 
     /// Render the home page
     pub fn render_index(WithLanguage<WithCsrf<WithOptionalSession<IndexContext>>>) { "pages/index.html" }
-
-    /// Render the email verification page
-    pub fn render_account_verify_email(WithLanguage<WithCsrf<WithSession<EmailVerificationPageContext>>>) { "pages/account/emails/verify.html" }
-
-    /// Render the email verification page
-    pub fn render_account_add_email(WithLanguage<WithCsrf<WithSession<EmailAddContext>>>) { "pages/account/emails/add.html" }
 
     /// Render the account recovery start page
     pub fn render_recovery_start(WithLanguage<WithCsrf<RecoveryStartContext>>) { "pages/recovery/start.html" }
@@ -429,12 +433,14 @@ impl Templates {
         check::render_swagger_callback(self, now, rng)?;
         check::render_login(self, now, rng)?;
         check::render_register(self, now, rng)?;
+        check::render_password_register(self, now, rng)?;
+        check::render_register_steps_verify_email(self, now, rng)?;
+        check::render_register_steps_email_in_use(self, now, rng)?;
+        check::render_register_steps_display_name(self, now, rng)?;
         check::render_consent(self, now, rng)?;
         check::render_policy_violation(self, now, rng)?;
         check::render_sso_login(self, now, rng)?;
         check::render_index(self, now, rng)?;
-        check::render_account_add_email(self, now, rng)?;
-        check::render_account_verify_email(self, now, rng)?;
         check::render_recovery_start(self, now, rng)?;
         check::render_recovery_progress(self, now, rng)?;
         check::render_recovery_finish(self, now, rng)?;

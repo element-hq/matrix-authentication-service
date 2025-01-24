@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_email_authentications\n                SET completed_at = $2\n                WHERE user_email_authentication_id = $1\n                  AND completed_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dd02cc4a48123c28b34da8501060096c33df9e30611ef89d01bf0502119cbbe1"
+}

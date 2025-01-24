@@ -49,9 +49,9 @@
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",
-      "email_exists_error": "The entered email is already added to this account",
       "email_field_help": "Add an alternative email you can use to access this account.",
       "email_field_label": "Add email",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_error": "The entered email is invalid"
     },
     "browser_session_details": {
@@ -77,6 +77,9 @@
       "pc": "Computer",
       "tablet": "Tablet",
       "unknown": "Unknown device type"
+    },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
     },
     "end_session_button": {
       "confirmation_modal_title": "Are you sure you want to end this session?",
@@ -247,24 +250,13 @@
         "title": "Cannot find session: {{deviceId}}"
       }
     },
-    "unverified_email_alert": {
-      "button": "Review and verify",
-      "text:one": "You have {{count}} unverified email address.",
-      "text:other": "You have {{count}} unverified email addresses.",
-      "title": "Unverified email"
-    },
     "user_email": {
-      "cant_delete_primary": "Choose a different primary email to delete this one.",
       "delete_button_confirmation_modal": {
         "action": "Delete email",
         "body": "Delete this email?"
       },
       "delete_button_title": "Remove email address",
-      "email": "Email",
-      "make_primary_button": "Make primary",
-      "not_verified": "Not verified",
-      "primary_email": "Primary email",
-      "retry_button": "Resend code"
+      "email": "Email"
     },
     "user_email_list": {
       "no_primary_email_alert": "No primary email address"
@@ -277,6 +269,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Code not recognised",
       "code_field_label": "6-digit code",
       "code_field_wrong_shape": "Code must be 6 digits",
