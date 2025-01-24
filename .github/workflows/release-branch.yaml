@@ -104,6 +104,11 @@ jobs:
             });
             console.log(`Created branch ${branch} from ${sha}`);
 
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: "release/v${{ needs.compute-version.outputs.short }}"
+
       - name: Open a pull request to merge the branch into main
         env:
           VERSION: ${{ needs.compute-version.outputs.short }}

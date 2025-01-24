@@ -44,7 +44,7 @@ jobs:
         env:
           BUMP: ${{ github.event.inputs.rc && 'prerelease' || 'patch' }}
           VERSION: ${{ steps.current.outputs.version }}
-        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP"" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
 
   tag:
     uses: ./.github/workflows/tag.yaml
@@ -74,7 +74,7 @@ jobs:
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const branch = process.env.BRANCH;
             const sha = process.env.SHA;
-            const ref = `refs/heads/${branch}`;
+            const ref = `heads/${branch}`;
 
             await github.rest.git.updateRef({
               owner,
@@ -83,6 +83,11 @@ jobs:
               sha,
             });
             console.log(`Updated branch ${branch} to ${sha}`);
+
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: "${{ github.ref_name }}"
 
       - name: Open a pull request to merge the release branch back to main
         if: github.event.inputs.merge-back

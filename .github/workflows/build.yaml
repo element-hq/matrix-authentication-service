@@ -2,7 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'release/**'
     tags:
       - "v*"
 
@@ -258,9 +260,6 @@ jobs:
   syn2mas:
     name: Release syn2mas on NPM
     runs-on: ubuntu-latest
-
-    # Temporarily disabled
-    if: 'false'
 
     permissions:
       contents: read
