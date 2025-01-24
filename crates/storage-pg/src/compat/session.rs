@@ -100,7 +100,7 @@ impl TryFrom<CompatSessionLookup> for CompatSession {
 #[enum_def]
 struct CompatSessionAndSsoLoginLookup {
     compat_session_id: Uuid,
-    device_id: String,
+    device_id: Option<String>,
     user_id: Uuid,
     user_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
@@ -122,12 +122,16 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
 
     fn try_from(value: CompatSessionAndSsoLoginLookup) -> Result<Self, Self::Error> {
         let id = value.compat_session_id.into();
-        let device = Some(Device::try_from(value.device_id).map_err(|e| {
-            DatabaseInconsistencyError::on("compat_sessions")
-                .column("device_id")
-                .row(id)
-                .source(e)
-        })?);
+        let device = value
+            .device_id
+            .map(Device::try_from)
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("compat_sessions")
+                    .column("device_id")
+                    .row(id)
+                    .source(e)
+            })?;
 
         let state = match value.finished_at {
             None => CompatSessionState::Valid,
