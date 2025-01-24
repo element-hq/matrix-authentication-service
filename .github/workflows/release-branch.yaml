@@ -11,7 +11,7 @@ jobs:
       contents: read
 
     outputs:
-      full: ${{ steps.next.outputs.version }}
+      full: ${{ steps.next.outputs.full }}
       short: ${{ steps.next.outputs.short }}
 
     steps:
