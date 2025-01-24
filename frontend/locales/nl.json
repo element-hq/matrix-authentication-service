@@ -4,10 +4,13 @@
     "cancel": "Annuleren",
     "clear": "Wissen",
     "close": "Sluiten",
+    "collapse": "Collapse",
     "continue": "Doorgaan",
     "edit": "Bewerken",
+    "expand": "Expand",
     "save": "Opslaan",
-    "save_and_continue": "Opslaan en doorgaan"
+    "save_and_continue": "Opslaan en doorgaan",
+    "start_over": "Start over"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
       "edit_profile": {
         "display_name_help": "Dit is wat anderen zien wanneer je bent ingelogd.",
         "display_name_label": "Weergavenaam",
@@ -57,6 +62,7 @@
       "email_exists_error": "The entered email is already added to this account",
       "email_field_help": "Voeg een alternatief e-mailadres toe dat u kunt gebruiken om toegang tot dit account te krijgen.",
       "email_field_label": "E-mailadres toevoegen",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "Het ingevoerde e-mailadres is ongeldig",
         "title": "Ongeldig e-mailadres"
@@ -94,6 +100,9 @@
       "unknown": "Onbekend apparaattype",
       "web": "Web"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Weet u zeker dat u deze sessie wilt beëindigen?",
       "text": "Uitloggen"
@@ -106,7 +115,8 @@
     },
     "error_boundary_title": "Er is iets misgegaan",
     "errors": {
-      "field_required": "Dit veld is verplicht"
+      "field_required": "Dit veld is verplicht",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
       "active_date": "Actief {{relativeDate}}",
@@ -164,6 +174,16 @@
       "title": "Change your password"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "title": "The link to reset your password has already been used"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "title": "The link to reset your password has expired"
+      },
+      "subtitle": "Choose a new password for your account.",
       "title": "Reset your password"
     },
     "password_strength": {
@@ -314,6 +334,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Code not recognised",
       "code_field_label": "6-cijferige code",
       "code_field_wrong_shape": "Code must be 6 digits",

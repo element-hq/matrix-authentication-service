@@ -4,10 +4,13 @@
     "cancel": "Tühista",
     "clear": "Tühjenda",
     "close": "Sulge",
+    "collapse": "Ahenda",
     "continue": "Jätka",
     "edit": "Muuda",
+    "expand": "Laienda",
     "save": "Salvesta",
-    "save_and_continue": "Salvesta ja jätka"
+    "save_and_continue": "Salvesta ja jätka",
+    "start_over": "Alusta uuesti"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Kasutajakonto salasõna",
+      "contact_info": "Kontaktinfo",
       "edit_profile": {
         "display_name_help": "Kui sa oled sisse loginud, siis muud osapooled näevad alljärgnevat teavet",
         "display_name_label": "Kuvatav nimi",
@@ -57,6 +62,7 @@
       "email_exists_error": "Sisestatud e-posti aadress on juba selle kasutajakontoga seotud",
       "email_field_help": "Ligipääsuks sellele kasutajakontole lisa täiendav e-posti aadress.",
       "email_field_label": "Lisa e-posti aadress",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "Lisatud e-posti aadress on vigane",
         "title": "Vigane e-posti aadress"
@@ -94,6 +100,9 @@
       "unknown": "Tundmatu seadme tüüp",
       "web": "Veebirakendus"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Kas sa oled kindel, et soovid selle sessiooni lõpetada?",
       "text": "Logi välja"
@@ -106,7 +115,8 @@
     },
     "error_boundary_title": "Midagi läks viltu",
     "errors": {
-      "field_required": "Selle välja täitmine on kohustuslik"
+      "field_required": "Selle välja täitmine on kohustuslik",
+      "rate_limit_exceeded": "Oled teinud lühikeses ajavahemikus liiga palju päringuid. Palun oota mõned minutid ja proovi siis uuesti."
     },
     "last_active": {
       "active_date": "Viimati kasutusel {{relativeDate}}",
@@ -164,6 +174,16 @@
       "title": "Muuda oma salasõna"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "Salasõna muutmiseks alusta uuesti ja vali „Unustasin salasõna“.",
+        "title": "Sinu salasõna muutmiseks mõeldud link on juba kasutatud"
+      },
+      "expired": {
+        "resend_email": "Saada e-kiri uuesti",
+        "subtitle": "Palu uut e-kirja aadressile {{email}}",
+        "title": "Salasõna loomiseks mõeldud link on aegunud"
+      },
+      "subtitle": "Vali oma kasutajakontole uus salasõna.",
       "title": "Lähtesta oma salasõna"
     },
     "password_strength": {
@@ -314,6 +334,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Kood pole õige",
       "code_field_label": "6-numbriline kood",
       "code_field_wrong_shape": "Kood peab olema 6-numbriline",

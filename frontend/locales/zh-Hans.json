@@ -4,10 +4,13 @@
     "cancel": "取消",
     "clear": "清除",
     "close": "关闭",
+    "collapse": "Collapse",
     "continue": "继续",
     "edit": "编辑",
+    "expand": "Expand",
     "save": "保存",
-    "save_and_continue": "保存并继续"
+    "save_and_continue": "保存并继续",
+    "start_over": "Start over"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
       "edit_profile": {
         "display_name_help": "无论您在哪里登录，其他人都会看到此内容。",
         "display_name_label": "显示名称",
@@ -57,6 +62,7 @@
       "email_exists_error": "输入的电子邮件地址已添加到此账户",
       "email_field_help": "添加可用于访问此账户的备用电子邮件地址。",
       "email_field_label": "添加电子邮件地址",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "输入的电子邮件地址无效",
         "title": "无效的电子邮件地址"
@@ -93,6 +99,9 @@
       "unknown": "未知设备类型",
       "web": "网页"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "你确定要结束这个会话吗？",
       "text": "登出"
@@ -105,7 +114,8 @@
     },
     "error_boundary_title": "出了点问题",
     "errors": {
-      "field_required": "此字段为必填项"
+      "field_required": "此字段为必填项",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
       "active_date": "活跃 {{relativeDate}}",
@@ -163,6 +173,16 @@
       "title": "更改密码"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "title": "The link to reset your password has already been used"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "title": "The link to reset your password has expired"
+      },
+      "subtitle": "Choose a new password for your account.",
       "title": "重置密码"
     },
     "password_strength": {
@@ -311,6 +331,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "无法识别代码",
       "code_field_label": "6位数代码",
       "code_field_wrong_shape": "代码必须是6位数字",

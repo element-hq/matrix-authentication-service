@@ -4,10 +4,13 @@
     "cancel": "Скасувати",
     "clear": "Очистити",
     "close": "Закрити",
+    "collapse": "Згорнути",
     "continue": "Продовжити",
     "edit": "Редагувати",
+    "expand": "Розгорнути",
     "save": "Зберегти",
-    "save_and_continue": "Зберегти і продовжити"
+    "save_and_continue": "Зберегти і продовжити",
+    "start_over": "Почати спочатку"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Пароль облікового запису",
+      "contact_info": "Контактна інформація",
       "edit_profile": {
         "display_name_help": "Це те, що бачитимуть інші, коли ви авторизовані.",
         "display_name_label": "Псевдонім",
@@ -57,6 +62,7 @@
       "email_exists_error": "Введена електронна пошта вже додана до цього облікового запису",
       "email_field_help": "Додайте альтернативну електронну пошту, яку ви можете використовувати для доступу до цього облікового запису.",
       "email_field_label": "Додати електронну пошту",
+      "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
         "text": "Введена електронна пошта недійсна",
         "title": "Невірна електронна пошта"
@@ -95,6 +101,9 @@
       "unknown": "Невідомий тип пристрою",
       "web": "Web"
     },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Ви впевнені, що хочете закінчити цю сесію?",
       "text": "Вийти"
@@ -107,7 +116,8 @@
     },
     "error_boundary_title": "Щось пішло не так",
     "errors": {
-      "field_required": "Це поле є обов&#39;язковим"
+      "field_required": "Це поле є обов&#39;язковим",
+      "rate_limit_exceeded": "Ви зробили забагато запитів за короткий проміжок часу. Будь ласка, зачекайте кілька хвилин і повторіть спробу."
     },
     "last_active": {
       "active_date": "Активний {{relativeDate}}",
@@ -165,6 +175,16 @@
       "title": "Змініть свій пароль"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "Щоб створити новий пароль, почніть спочатку і виберіть «Забули пароль».",
+        "title": "Посилання для скидання пароля вже було використано"
+      },
+      "expired": {
+        "resend_email": "Повторно надіслати електронний лист",
+        "subtitle": "Запит на новий електронний лист, який буде надіслано на адресу: {{email}}",
+        "title": "Термін дії посилання для скидання пароля закінчився"
+      },
+      "subtitle": "Виберіть новий пароль для свого облікового запису.",
       "title": "Скинути пароль"
     },
     "password_strength": {
@@ -317,6 +337,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
       "code_field_error": "Код не розпізнано",
       "code_field_label": "6-значний код",
       "code_field_wrong_shape": "Код повинен складатися з 6 цифр",

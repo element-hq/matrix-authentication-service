@@ -6,6 +6,7 @@
     "create_account": "创建账户",
     "sign_in": "登录",
     "sign_out": "注销",
+    "skip": "Skip",
     "start_over": "重新开始",
     "submit": "提交"
   },
@@ -53,6 +54,10 @@
       "heading": "更改我的密码",
       "new": "新密码"
     },
+    "choose_display_name": {
+      "description": "This is the name other people will see. You can change this at any time.",
+      "headline": "Choose your display name"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> 在 <span>%(redirect_uri)s</span> 希望访问您的账户。",
       "heading": "允许访问您的账户？",
@@ -80,6 +85,10 @@
         "description": "您已授权 %(client_name)s 访问。您可以关闭此窗口。",
         "heading": "已授予访问权限"
       }
+    },
+    "email_in_use": {
+      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "title": "The email address <span>%(email)s</span> is already in use"
     },
     "emails": {
       "greeting": "%(username)s 你好，",

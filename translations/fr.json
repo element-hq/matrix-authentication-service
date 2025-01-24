@@ -6,6 +6,7 @@
     "create_account": "Créer un compte",
     "sign_in": "Se connecter",
     "sign_out": "Se déconnecter",
+    "skip": "Passer",
     "start_over": "Recommencer",
     "submit": "Soumettre"
   },
@@ -53,6 +54,10 @@
       "heading": "Modifier mon mot de passe",
       "new": "Nouveau mot de passe"
     },
+    "choose_display_name": {
+      "description": "C'est le nom que les autres personnes verront. Vous pouvez le modifier à tout moment.",
+      "headline": "Choisissez votre pseudonyme"
+    },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> à l'adresse <span>%(redirect_uri)s</span> souhaite accéder à votre compte.",
       "heading": "Autoriser l'accès à votre compte ?",
@@ -80,6 +85,10 @@
         "description": "Vous avez accordé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès accordé"
       }
+    },
+    "email_in_use": {
+      "description": "Si vous avez oublié vos identifiants de compte, vous pouvez récupérer votre compte. Vous pouvez également recommencer l'enregistrement et utiliser une adresse e-mail différente.",
+      "title": "L’adresse e-mail <span>%(email)s</span> est déjà utilisée"
     },
     "emails": {
       "greeting": "Bonjour %(username)s,",

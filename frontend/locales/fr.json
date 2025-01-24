@@ -4,10 +4,13 @@
     "cancel": "Annuler",
     "clear": "Effacer",
     "close": "Fermer",
+    "collapse": "Réduire",
     "continue": "Continuer",
     "edit": "Éditer",
+    "expand": "Développer",
     "save": "Enregistrer",
-    "save_and_continue": "Enregistrer et continuer"
+    "save_and_continue": "Enregistrer et continuer",
+    "start_over": "Recommencer"
   },
   "branding": {
     "privacy_policy": {
@@ -31,6 +34,8 @@
   },
   "frontend": {
     "account": {
+      "account_password": "Mot de passe du compte",
+      "contact_info": "Coordonnées",
       "edit_profile": {
         "display_name_help": "C'est ce que les autres personnes verront là où vous êtes connecté.",
         "display_name_label": "Pseudonyme",
@@ -57,6 +62,7 @@
       "email_exists_error": "L’adresse e-mail saisie est déjà ajoutée à ce compte",
       "email_field_help": "Ajouter une autre adresse e-mail à utiliser pour ce compte.",
       "email_field_label": "Ajouter une adresse e-mail",
+      "email_in_use_error": "L’adresse e-mail saisie est déjà utilisée",
       "email_invalid_alert": {
         "text": "L’adresse e-mail saisie est invalide",
         "title": "Adresse e-mail invalide"
@@ -94,6 +100,9 @@
       "unknown": "Type d’appareil inconnu",
       "web": "Web"
     },
+    "email_in_use": {
+      "heading": "L’adresse e-mail {{email}} est déjà utilisée."
+    },
     "end_session_button": {
       "confirmation_modal_title": "Êtes-vous sûr de vouloir terminer cette session ?",
       "text": "Se déconnecter"
@@ -106,7 +115,8 @@
     },
     "error_boundary_title": "Un problème est survenu",
     "errors": {
-      "field_required": "Ce champ est requis"
+      "field_required": "Ce champ est requis",
+      "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer."
     },
     "last_active": {
       "active_date": "Actif {{relativeDate}}",
@@ -164,6 +174,16 @@
       "title": "Modifier votre mot de passe"
     },
     "password_reset": {
+      "consumed": {
+        "subtitle": "Pour créer un nouveau mot de passe, recommencez et sélectionnez « Mot de passe oublié ».",
+        "title": "Le lien pour réinitialiser votre mot de passe a déjà été utilisé"
+      },
+      "expired": {
+        "resend_email": "Renvoyer un e-mail",
+        "subtitle": "Demander un nouvel e-mail qui sera envoyé à : {{email}}",
+        "title": "Le lien pour réinitialiser votre mot de passe a expiré"
+      },
+      "subtitle": "Choisissez un nouveau mot de passe pour votre compte.",
       "title": "Reinitialisez votre mot de passe"
     },
     "password_strength": {
@@ -314,6 +334,10 @@
       }
     },
     "verify_email": {
+      "code_expired_alert": {
+        "description": "Le code a expiré. Veuillez demander un nouveau code.",
+        "title": "Code expiré"
+      },
       "code_field_error": "Code non reconnu",
       "code_field_label": "Code à 6 chiffres",
       "code_field_wrong_shape": "Le code doit être composé de 6 chiffres",
