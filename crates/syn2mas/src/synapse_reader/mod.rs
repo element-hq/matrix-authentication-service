@@ -122,15 +122,44 @@ impl<'r> sqlx::Decode<'r, Postgres> for SecondsTimestamp {
     fn decode(
         value: <Postgres as sqlx::Database>::ValueRef<'r>,
     ) -> Result<Self, sqlx::error::BoxDynError> {
-        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|milliseconds_since_epoch| {
+        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|seconds_since_epoch| {
             SecondsTimestamp(DateTime::from_timestamp_nanos(
-                milliseconds_since_epoch * 1_000_000_000,
+                seconds_since_epoch * 1_000_000_000,
             ))
         })
     }
 }
 
 impl sqlx::Type<Postgres> for SecondsTimestamp {
+    fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
+        <i64 as sqlx::Type<Postgres>>::type_info()
+    }
+}
+
+/// A timestamp stored as the number of milliseconds since the Unix epoch.
+/// Note that Synapse stores some timestamps in seconds.
+#[derive(Copy, Clone, Debug)]
+pub struct MillisecondsTimestamp(DateTime<Utc>);
+
+impl From<MillisecondsTimestamp> for DateTime<Utc> {
+    fn from(MillisecondsTimestamp(value): MillisecondsTimestamp) -> Self {
+        value
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MillisecondsTimestamp {
+    fn decode(
+        value: <Postgres as sqlx::Database>::ValueRef<'r>,
+    ) -> Result<Self, sqlx::error::BoxDynError> {
+        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|milliseconds_since_epoch| {
+            MillisecondsTimestamp(DateTime::from_timestamp_nanos(
+                milliseconds_since_epoch * 1_000_000,
+            ))
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MillisecondsTimestamp {
     fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
         <i64 as sqlx::Type<Postgres>>::type_info()
     }
@@ -151,6 +180,15 @@ pub struct SynapseUser {
     // TODO ...
     // TODO is_guest
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
+}
+
+/// Row of the `user_threepids` table in Synapse.
+#[derive(Clone, Debug, FromRow)]
+pub struct SynapseThreepid {
+    pub user_id: FullUserId,
+    pub medium: String,
+    pub address: String,
+    pub added_at: MillisecondsTimestamp,
 }
 
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
@@ -259,6 +297,19 @@ impl<'conn> SynapseReader<'conn> {
         )
         .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse users"))
+    }
+
+    /// Reads threepids (such as e-mail and phone number associations) from Synapse.
+    pub fn read_threepids(&mut self) -> impl Stream<Item = Result<SynapseThreepid, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              user_id, medium, address, added_at
+            FROM user_threepids
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse threepids"))
     }
 }
 

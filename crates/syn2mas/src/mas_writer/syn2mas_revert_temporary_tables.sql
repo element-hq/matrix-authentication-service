@@ -10,3 +10,5 @@ DROP TABLE syn2mas_restore_indices;
 
 ALTER TABLE syn2mas__users RENAME TO users;
 ALTER TABLE syn2mas__user_passwords RENAME TO user_passwords;
+ALTER TABLE syn2mas__user_emails RENAME TO user_emails;
+ALTER TABLE syn2mas__user_unsupported_third_party_ids RENAME TO user_unsupported_third_party_ids;

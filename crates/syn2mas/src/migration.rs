@@ -17,12 +17,16 @@ use futures_util::StreamExt as _;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
+use tracing::Level;
 use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
-    mas_writer::{self, MasNewUser, MasNewUserPassword, MasUserWriteBuffer, MasWriter},
-    synapse_reader::{self, ExtractLocalpartError, FullUserId, SynapseUser},
+    mas_writer::{
+        self, MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUser, MasNewUserPassword,
+        MasThreepidWriteBuffer, MasUserWriteBuffer, MasWriter,
+    },
+    synapse_reader::{self, ExtractLocalpartError, FullUserId, SynapseThreepid, SynapseUser},
     SynapseReader,
 };
 
@@ -70,7 +74,7 @@ pub async fn migrate(
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
-    migrate_users(
+    let migrated_users = migrate_users(
         synapse,
         mas,
         counts
@@ -82,9 +86,19 @@ pub async fn migrate(
     )
     .await?;
 
+    migrate_threepids(
+        synapse,
+        mas,
+        server_name,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+    )
+    .await?;
+
     Ok(())
 }
 
+#[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_users(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
@@ -124,6 +138,65 @@ async fn migrate_users(
     Ok(UsersMigrated {
         user_localparts_to_uuid,
     })
+}
+
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_threepids(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+) -> Result<(), Error> {
+    let mut write_buffer = MasThreepidWriteBuffer::new(mas);
+    let mut users_stream = pin!(synapse.read_threepids());
+
+    while let Some(threepid_res) = users_stream.next().await {
+        let SynapseThreepid {
+            user_id: synapse_user_id,
+            medium,
+            address,
+            added_at,
+        } = threepid_res.into_synapse("reading threepid")?;
+        let created_at: DateTime<Utc> = added_at.into();
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            todo!()
+        };
+
+        if medium == "email" {
+            write_buffer
+                .write_email(MasNewEmailThreepid {
+                    user_id,
+                    user_email_id: Uuid::from(Ulid::from_datetime_with_source(
+                        created_at.into(),
+                        rng,
+                    )),
+                    email: address,
+                    created_at,
+                })
+                .await
+                .into_mas("writing email")?;
+        } else {
+            write_buffer
+                .write_password(MasNewUnsupportedThreepid {
+                    user_id,
+                    medium,
+                    address,
+                    created_at,
+                })
+                .await
+                .into_mas("writing unsupported threepid")?;
+        }
+    }
+
+    write_buffer.finish().await.into_mas("writing threepids")?;
+
+    Ok(())
 }
 
 fn transform_user(
