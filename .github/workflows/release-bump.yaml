@@ -54,17 +54,38 @@ jobs:
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
 
-  merge-back:
-    name: Open a pull request to merge the release branch back to main
+  update-branch:
+    name: Update the release branch
     runs-on: ubuntu-22.04
 
     permissions:
       pull-requests: write
 
     needs: [tag, compute-version]
-    if: github.event.inputs.merge-back
     steps:
+      - name: Update the release branch
+        uses: actions/github-script@v7.0.1
+        env:
+          BRANCH: "${{ github.ref_name }}"
+          SHA: ${{ needs.tag.outputs.sha }}
+        with:
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          script: |
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const branch = process.env.BRANCH;
+            const sha = process.env.SHA;
+            const ref = `refs/heads/${branch}`;
+
+            await github.rest.git.updateRef({
+              owner,
+              repo,
+              ref,
+              sha,
+            });
+            console.log(`Updated branch ${branch} to ${sha}`);
+
       - name: Open a pull request to merge the release branch back to main
+        if: github.event.inputs.merge-back
         env:
           VERSION: ${{ needs.compute-version.outputs.version }}
         run: |
