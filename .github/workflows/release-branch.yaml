@@ -79,6 +79,7 @@ jobs:
 
     permissions:
       contents: write
+      pull-requests: write
 
     needs: [tag, compute-version, localazy]
     steps:
@@ -102,3 +103,14 @@ jobs:
               sha,
             });
             console.log(`Created branch ${branch} from ${sha}`);
+
+      - name: Open a pull request to merge the branch into main
+        env:
+          VERSION: ${{ needs.compute-version.outputs.short }}
+        run: |
+          gh pr create \
+            --title "Release branch $VERSION" \
+            --body "This pull request was automatically created by the release workflow. It merges the release branch back to main." \
+            --base main \
+            --head "release/v$VERSION" \
+            --label "T-Task"
