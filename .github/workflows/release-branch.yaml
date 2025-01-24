@@ -107,6 +107,7 @@ jobs:
       - name: Open a pull request to merge the branch into main
         env:
           VERSION: ${{ needs.compute-version.outputs.short }}
+          GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
         run: |
           gh pr create \
             --title "Release branch $VERSION" \
