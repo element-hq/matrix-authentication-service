@@ -208,11 +208,9 @@ impl RunnableJob for SyncDevicesJob {
                 .map_err(JobError::retry)?;
 
             for (compat_session, _) in page.edges {
-                let Some(ref device) = compat_session.device else {
-                    // Do not sync compat sessions without devices
-                    continue;
+                if let Some(ref device) = compat_session.device {
+                    devices.insert(device.as_str().to_owned());
                 };
-                devices.insert(device.as_str().to_owned());
                 cursor = cursor.after(compat_session.id);
             }
 
