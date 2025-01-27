@@ -75,6 +75,10 @@ impl Config {
     pub fn load(files: &[Utf8PathBuf]) -> Result<Config, figment::Error> {
         let mut figment = figment::Figment::new();
         for file in files {
+            // TODO this is not exactly correct behaviour — Synapse does not merge anything
+            // other than the top level dict.
+            // https://github.com/element-hq/matrix-authentication-service/pull/3805#discussion_r1922680825
+            // https://github.com/element-hq/synapse/blob/develop/synapse/config/_base.py?rgh-link-date=2025-01-20T17%3A02%3A56Z#L870
             figment = figment.merge(Yaml::file(file));
         }
         figment.extract::<Config>()
