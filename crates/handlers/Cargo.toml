@@ -82,7 +82,7 @@ mime = "0.3.17"
 minijinja.workspace = true
 minijinja-contrib.workspace = true
 rand.workspace = true
-rand_chacha = "0.3.1"
+rand_chacha = "0.9.0"
 headers.workspace = true
 ulid.workspace = true
 
