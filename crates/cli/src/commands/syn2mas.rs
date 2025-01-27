@@ -12,10 +12,12 @@ use tracing::{error, warn};
 
 use crate::util::database_connection_from_config;
 
-/// The exit code used by `syn2mas check` and `syn2mas migrate` when there are errors preventing migration.
+/// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
+/// errors preventing migration.
 const EXIT_CODE_CHECK_ERRORS: u8 = 10;
 
-/// The exit code used by `syn2mas check` when there are warnings which should be considered prior to migration.
+/// The exit code used by `syn2mas check` when there are warnings which should
+/// be considered prior to migration.
 const EXIT_CODE_CHECK_WARNINGS: u8 = 11;
 
 #[derive(Parser, Debug)]
@@ -23,32 +25,38 @@ pub(super) struct Options {
     #[command(subcommand)]
     subcommand: Subcommand,
 
-    /// This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. It is only suitable for TESTING.
-    /// If you want to use this tool anyway, please pass this argument.
+    /// This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. It is
+    /// only suitable for TESTING. If you want to use this tool anyway,
+    /// please pass this argument.
     ///
-    /// If you want to migrate from Synapse to MAS today, please use the Node.js-based tool in the MAS repository.
+    /// If you want to migrate from Synapse to MAS today, please use the
+    /// Node.js-based tool in the MAS repository.
     #[clap(long = "i-swear-i-am-just-testing-in-a-staging-environment")]
     experimental_accepted: bool,
 
     /// Path to the Synapse configuration (in YAML format).
-    /// May be specified multiple times if multiple Synapse configuration files are in use.
+    /// May be specified multiple times if multiple Synapse configuration files
+    /// are in use.
     #[clap(long = "synapse-config")]
     synapse_configuration_files: Vec<Utf8PathBuf>,
 
     /// Override the Synapse database URI.
-    /// syn2mas normally loads the Synapse database connection details from the Synapse configuration.
-    /// However, it may sometimes be necessary to override the database URI and in that case this flag can be used.
+    /// syn2mas normally loads the Synapse database connection details from the
+    /// Synapse configuration. However, it may sometimes be necessary to
+    /// override the database URI and in that case this flag can be used.
     ///
     /// Should be a connection URI of the following general form:
     /// ```text
     /// postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&...]
     /// ```
-    /// To use a UNIX socket at a custom path, the host should be a path to a socket, but in the URI string
-    /// it must be URI-encoded by replacing `/` with `%2F`.
+    /// To use a UNIX socket at a custom path, the host should be a path to a
+    /// socket, but in the URI string it must be URI-encoded by replacing
+    /// `/` with `%2F`.
     ///
-    /// Finally, any missing values will be loaded from the libpq-compatible environment variables
-    /// `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `PGPASSWORD`, etc.
-    /// It is valid to specify the URL `postgresql:` and configure all values through those environment variables.
+    /// Finally, any missing values will be loaded from the libpq-compatible
+    /// environment variables `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`,
+    /// `PGPASSWORD`, etc. It is valid to specify the URL `postgresql:` and
+    /// configure all values through those environment variables.
     #[clap(long = "synapse-database-uri")]
     synapse_database_uri: Option<PgConnectOptions>,
 }

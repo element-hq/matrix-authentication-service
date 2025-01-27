@@ -5,7 +5,8 @@
 
 //! # Synapse Checks
 //!
-//! This module provides safety checks to run against a Synapse database before running the Synapse-to-MAS migration.
+//! This module provides safety checks to run against a Synapse database before
+//! running the Synapse-to-MAS migration.
 
 use figment::Figment;
 use mas_config::{
@@ -15,9 +16,8 @@ use mas_config::{
 use sqlx::{prelude::FromRow, query_as, query_scalar, PgConnection};
 use thiserror::Error;
 
-use crate::mas_writer::MIGRATED_PASSWORD_VERSION;
-
 use super::config::Config;
+use crate::mas_writer::MIGRATED_PASSWORD_VERSION;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -31,7 +31,8 @@ pub enum Error {
     MasPasswordConfig(#[source] anyhow::Error),
 }
 
-/// An error found whilst checking the Synapse database, that should block a migration.
+/// An error found whilst checking the Synapse database, that should block a
+/// migration.
 #[derive(Debug, Error)]
 pub enum CheckError {
     #[error("MAS config is missing a password hashing scheme with version '1'")]
@@ -74,8 +75,9 @@ pub enum CheckError {
     },
 }
 
-/// A potential hazard found whilst checking the Synapse database, that should be presented
-/// to the operator to check they are aware of a caveat before proceeding with the migration.
+/// A potential hazard found whilst checking the Synapse database, that should
+/// be presented to the operator to check they are aware of a caveat before
+/// proceeding with the migration.
 #[derive(Debug, Error)]
 pub enum CheckWarning {
     #[error("Synapse config contains OIDC auth configuration (issuer: {issuer:?}) which will need to be manually mapped to an upstream OpenID Connect Provider during migration.")]
@@ -148,12 +150,14 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
     (warnings, errors)
 }
 
-/// Check that the given Synapse configuration is sane for migration to a MAS with the given MAS configuration.
+/// Check that the given Synapse configuration is sane for migration to a MAS
+/// with the given MAS configuration.
 ///
 /// # Errors
 ///
 /// - If any necessary section of MAS config cannot be parsed.
-/// - If the MAS password configuration (including any necessary secrets) can't be loaded.
+/// - If the MAS password configuration (including any necessary secrets) can't
+///   be loaded.
 pub async fn synapse_config_check_against_mas_config(
     synapse: &Config,
     mas: &Figment,
@@ -169,8 +173,9 @@ pub async fn synapse_config_check_against_mas_config(
 
     let mas_matrix = MatrixConfig::extract(mas)?;
 
-    // Look for the MAS password hashing scheme that will be used for imported Synapse passwords,
-    // then check the configuration matches so that Synapse passwords will be compatible with MAS.
+    // Look for the MAS password hashing scheme that will be used for imported
+    // Synapse passwords, then check the configuration matches so that Synapse
+    // passwords will be compatible with MAS.
     if let Some((_, algorithm, _, secret)) = mas_password_schemes
         .iter()
         .find(|(version, _, _, _)| *version == MIGRATED_PASSWORD_VERSION)
@@ -215,11 +220,13 @@ pub async fn synapse_config_check_against_mas_config(
     Ok((warnings, errors))
 }
 
-/// Check that the Synapse database is sane for migration. Returns a list of warnings and errors.
+/// Check that the Synapse database is sane for migration. Returns a list of
+/// warnings and errors.
 ///
 /// # Errors
 ///
-/// - If there is some database connection error, or the given database is not a Synapse database.
+/// - If there is some database connection error, or the given database is not a
+///   Synapse database.
 /// - If the OAuth2 section of the MAS configuration could not be parsed.
 #[tracing::instrument(skip_all)]
 pub async fn synapse_database_check(

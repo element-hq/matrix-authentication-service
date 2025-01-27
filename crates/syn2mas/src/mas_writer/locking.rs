@@ -13,17 +13,19 @@ use sqlx::{
 static SYN2MAS_ADVISORY_LOCK: LazyLock<PgAdvisoryLock> =
     LazyLock::new(|| PgAdvisoryLock::new("syn2mas-maswriter"));
 
-/// A wrapper around a Postgres connection which holds a session-wide advisory lock
-/// preventing concurrent access by other syn2mas instances.
+/// A wrapper around a Postgres connection which holds a session-wide advisory
+/// lock preventing concurrent access by other syn2mas instances.
 pub struct LockedMasDatabase<'conn> {
     inner: PgAdvisoryLockGuard<'static, &'conn mut PgConnection>,
 }
 
 impl<'conn> LockedMasDatabase<'conn> {
-    /// Attempts to lock the MAS database against concurrent access by other syn2mas instances.
+    /// Attempts to lock the MAS database against concurrent access by other
+    /// syn2mas instances.
     ///
     /// If the lock can be acquired, returns a `LockedMasDatabase`.
-    /// If the lock cannot be acquired, returns the connection back to the caller wrapped in `Either::Right`.
+    /// If the lock cannot be acquired, returns the connection back to the
+    /// caller wrapped in `Either::Right`.
     ///
     /// # Errors
     ///

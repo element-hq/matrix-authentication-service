@@ -11,7 +11,8 @@ use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
 
 /// The root of a Synapse configuration.
-/// This struct only includes fields which the Synapse-to-MAS migration is interested in.
+/// This struct only includes fields which the Synapse-to-MAS migration is
+/// interested in.
 ///
 /// See: <https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html>
 #[derive(Deserialize)]
@@ -29,7 +30,8 @@ pub struct Config {
     #[serde(default)]
     pub enable_registration_captcha: bool,
 
-    /// Normally this defaults to true, but when MAS integration is enabled in Synapse it defaults to false.
+    /// Normally this defaults to true, but when MAS integration is enabled in
+    /// Synapse it defaults to false.
     #[serde(default)]
     pub enable_3pid_changes: bool,
 
@@ -118,8 +120,9 @@ impl Config {
 /// See: <https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html#database>
 #[derive(Deserialize)]
 pub struct DatabaseSection {
-    /// Expecting `psycopg2` for Postgres or `sqlite3` for `SQLite3`, but may be an arbitrary string and future versions
-    /// of Synapse may support other database drivers, e.g. psycopg3.
+    /// Expecting `psycopg2` for Postgres or `sqlite3` for `SQLite3`, but may be
+    /// an arbitrary string and future versions of Synapse may support other
+    /// database drivers, e.g. psycopg3.
     pub name: String,
     #[serde(default)]
     pub args: DatabaseArgsSuboption,
@@ -133,12 +136,14 @@ pub const SYNAPSE_DATABASE_DRIVER_NAME_SQLITE3: &str = "sqlite3";
 impl DatabaseSection {
     /// Process the configuration into Postgres connection options.
     ///
-    /// Environment variables and libpq defaults will be used as fallback for any missing values;
-    /// this should match what Synapse does.
-    /// But note that if syn2mas is not run in the same context (host, user, environment variables)
-    /// as Synapse normally runs, then the connection options may not be valid.
+    /// Environment variables and libpq defaults will be used as fallback for
+    /// any missing values; this should match what Synapse does.
+    /// But note that if syn2mas is not run in the same context (host, user,
+    /// environment variables) as Synapse normally runs, then the connection
+    /// options may not be valid.
     ///
-    /// Returns `None` if this database configuration is not configured for Postgres.
+    /// Returns `None` if this database configuration is not configured for
+    /// Postgres.
     #[must_use]
     pub fn to_sqlx_postgres(&self) -> Option<PgConnectOptions> {
         if self.name != SYNAPSE_DATABASE_DRIVER_NAME_PSYCOPG2 {
@@ -167,7 +172,8 @@ impl DatabaseSection {
 }
 
 /// The `args` suboption of the `database` section of the Synapse configuration.
-/// This struct assumes Postgres is in use and does not represent fields used by SQLite.
+/// This struct assumes Postgres is in use and does not represent fields used by
+/// SQLite.
 #[derive(Deserialize, Default)]
 pub struct DatabaseArgsSuboption {
     pub user: Option<String>,
@@ -199,7 +205,8 @@ impl Default for PasswordSection {
     }
 }
 
-/// A section that we only care about whether it's enabled or not, but is not enabled by default.
+/// A section that we only care about whether it's enabled or not, but is not
+/// enabled by default.
 #[derive(Default, Deserialize)]
 pub struct EnableableSection {
     #[serde(default)]
@@ -208,11 +215,12 @@ pub struct EnableableSection {
 
 #[derive(Clone, Deserialize)]
 pub struct OidcProvider {
-    /// At least for `oidc_config`, if the dict is present but left empty then the config should be ignored,
-    /// so this field must be optional.
+    /// At least for `oidc_config`, if the dict is present but left empty then
+    /// the config should be ignored, so this field must be optional.
     pub issuer: Option<String>,
 
-    /// Required, except for the old `oidc_config` where this is implied to be "oidc".
+    /// Required, except for the old `oidc_config` where this is implied to be
+    /// "oidc".
     pub idp_id: Option<String>,
 }
 
