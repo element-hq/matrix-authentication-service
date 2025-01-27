@@ -1813,6 +1813,7 @@
       }
     },
     "Provider": {
+      "description": "Configuration for one upstream OAuth 2 provider.",
       "type": "object",
       "required": [
         "client_id",
@@ -1942,6 +1943,10 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "synapse_idp_id": {
+          "description": "The ID of the provider that was used by Synapse. In order to perform a Synapse-to-MAS migration, this must be specified.\n\n## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n### For `oidc_providers`: This should be specified as `oidc-` followed by the ID that was configured as `idp_id` in one of the `oidc_providers` in the Synapse configuration. For example, if Synapse's configuration contained `idp_id: wombat` for this provider, then specify `oidc-wombat` here.\n\n### For `oidc_config` (legacy): Specify `oidc` here.",
+          "type": "string"
         }
       }
     },

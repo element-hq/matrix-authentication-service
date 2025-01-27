@@ -207,6 +207,12 @@ pub struct MasNewUserPassword {
     pub created_at: DateTime<Utc>,
 }
 
+/// The 'version' of the password hashing scheme used for passwords when they are
+/// migrated from Synapse to MAS.
+/// This is version 1, as in the previous syn2mas script.
+// TODO hardcoding version to `1` may not be correct long-term?
+pub const MIGRATED_PASSWORD_VERSION: u16 = 1;
+
 /// List of all MAS tables that are written to by syn2mas.
 pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &["users", "user_passwords"];
 
@@ -578,8 +584,7 @@ impl<'conn> MasWriter<'conn> {
                 user_ids.push(user_id);
                 hashed_passwords.push(hashed_password);
                 created_ats.push(created_at);
-            // TODO hardcoding version to `1` may not be correct long-term?
-                versions.push(1);
+                versions.push(MIGRATED_PASSWORD_VERSION.into());
             }
 
             sqlx::query!(
