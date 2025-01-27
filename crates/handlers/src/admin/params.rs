@@ -10,7 +10,6 @@
 use std::num::NonZeroUsize;
 
 use aide::OperationIo;
-use async_trait::async_trait;
 use axum::{
     extract::{
         rejection::{PathRejection, QueryRejection},
@@ -110,7 +109,6 @@ impl IntoResponse for PaginationRejection {
 #[aide(input_with = "Query<PaginationParams>")]
 pub struct Pagination(pub mas_storage::Pagination);
 
-#[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Pagination {
     type Rejection = PaginationRejection;
 

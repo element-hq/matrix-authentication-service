@@ -21,14 +21,13 @@ pub async fn get(
     State(templates): State<Templates>,
     activity_tracker: BoundActivityTracker,
     State(url_builder): State<UrlBuilder>,
-    action: Option<Query<mas_router::AccountAction>>,
+    Query(action): Query<Option<mas_router::AccountAction>>,
     mut repo: BoxRepository,
     clock: BoxClock,
     cookie_jar: CookieJar,
 ) -> Result<impl IntoResponse, FancyError> {
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let session = session_info.load_session(&mut repo).await?;
-    let action = action.map(|Query(a)| a);
 
     // TODO: keep the full path, not just the action
     let Some(session) = session else {

@@ -32,7 +32,7 @@ where
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),
         )
         .api_route(
-            "/oauth2-sessions/:id",
+            "/oauth2-sessions/{id}",
             get_with(self::oauth2_sessions::get, self::oauth2_sessions::get_doc),
         )
         .api_route(
@@ -41,31 +41,31 @@ where
                 .post_with(self::users::add, self::users::add_doc),
         )
         .api_route(
-            "/users/:id",
+            "/users/{id}",
             get_with(self::users::get, self::users::get_doc),
         )
         .api_route(
-            "/users/:id/set-password",
+            "/users/{id}/set-password",
             post_with(self::users::set_password, self::users::set_password_doc),
         )
         .api_route(
-            "/users/by-username/:username",
+            "/users/by-username/{username}",
             get_with(self::users::by_username, self::users::by_username_doc),
         )
         .api_route(
-            "/users/:id/set-admin",
+            "/users/{id}/set-admin",
             post_with(self::users::set_admin, self::users::set_admin_doc),
         )
         .api_route(
-            "/users/:id/deactivate",
+            "/users/{id}/deactivate",
             post_with(self::users::deactivate, self::users::deactivate_doc),
         )
         .api_route(
-            "/users/:id/lock",
+            "/users/{id}/lock",
             post_with(self::users::lock, self::users::lock_doc),
         )
         .api_route(
-            "/users/:id/unlock",
+            "/users/{id}/unlock",
             post_with(self::users::unlock, self::users::unlock_doc),
         )
 }

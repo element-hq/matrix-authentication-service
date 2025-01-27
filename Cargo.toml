@@ -57,8 +57,8 @@ oauth2-types = { path = "./crates/oauth2-types/", version = "=0.13.0-rc.1" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.13.5"
-features = ["axum", "axum-headers", "macros"]
+version = "0.14.0"
+features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
@@ -75,11 +75,11 @@ version = "1.0.95"
 
 # HTTP router
 [workspace.dependencies.axum]
-version = "0.7.9"
+version = "0.8.1"
 
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
-version = "0.9.6"
+version = "0.10.0"
 features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Constant-time base64
@@ -271,18 +271,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.34.0"
+version = "0.36.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.34.0"
+version = "0.36.0"
 features = ["http"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.34.0"
+version = "0.36.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]

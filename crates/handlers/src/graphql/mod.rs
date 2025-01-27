@@ -14,7 +14,6 @@ use async_graphql::{
     EmptySubscription, InputObject,
 };
 use axum::{
-    async_trait,
     body::Body,
     extract::{RawQuery, State as AxumState},
     http::StatusCode,
@@ -78,7 +77,7 @@ struct GraphQLState {
     limiter: Limiter,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl state::State for GraphQLState {
     async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
         let repo = PgRepository::from_pool(&self.pool)

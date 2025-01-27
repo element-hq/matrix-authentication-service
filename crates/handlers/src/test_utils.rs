@@ -11,7 +11,6 @@ use std::{
 };
 
 use axum::{
-    async_trait,
     body::{Bytes, HttpBody},
     extract::{FromRef, FromRequestParts},
     response::{IntoResponse, IntoResponseParts},
@@ -383,7 +382,7 @@ struct TestGraphQLState {
     limiter: Limiter,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl graphql::State for TestGraphQLState {
     async fn repository(&self) -> Result<BoxRepository, mas_storage::RepositoryError> {
         let repo = PgRepository::from_pool(&self.pool)
@@ -512,7 +511,6 @@ impl FromRef<TestState> for reqwest::Client {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for ActivityTracker {
     type Rejection = Infallible;
 
@@ -524,7 +522,6 @@ impl FromRequestParts<TestState> for ActivityTracker {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for BoundActivityTracker {
     type Rejection = Infallible;
 
@@ -537,7 +534,6 @@ impl FromRequestParts<TestState> for BoundActivityTracker {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for RequesterFingerprint {
     type Rejection = Infallible;
 
@@ -549,7 +545,6 @@ impl FromRequestParts<TestState> for RequesterFingerprint {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for BoxClock {
     type Rejection = Infallible;
 
@@ -561,7 +556,6 @@ impl FromRequestParts<TestState> for BoxClock {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for BoxRng {
     type Rejection = Infallible;
 
@@ -575,7 +569,6 @@ impl FromRequestParts<TestState> for BoxRng {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for BoxRepository {
     type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
 
@@ -588,7 +581,6 @@ impl FromRequestParts<TestState> for BoxRepository {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<TestState> for Policy {
     type Rejection = ErrorWrapper<mas_policy::InstantiateError>;
 

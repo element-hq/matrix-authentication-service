@@ -5,9 +5,8 @@
 
 use axum::{
     extract::{Query, State},
-    response::{IntoResponse, Response},
+    response::{Html, IntoResponse, Response},
 };
-use axum_extra::response::Html;
 use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt as _, FancyError, SessionInfoExt};
 use mas_data_model::SiteConfig;
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
