@@ -68,7 +68,7 @@ jobs:
           tool: cargo-zigbuild
 
       - name: Install frontend Node
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4.2.0
         with:
           node-version: 20
 
@@ -270,7 +270,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Node
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4.2.0
         with:
           node-version-file: ./tools/syn2mas/.nvmrc
 
