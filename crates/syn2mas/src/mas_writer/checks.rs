@@ -5,7 +5,8 @@
 
 //! # MAS Database Checks
 //!
-//! This module provides safety checks to run against a MAS database before running the Synapse-to-MAS migration.
+//! This module provides safety checks to run against a MAS database before
+//! running the Synapse-to-MAS migration.
 
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -43,7 +44,8 @@ pub enum Error {
 ///
 /// - If any database access error occurs.
 /// - If any MAS tables involved in the migration are not empty.
-/// - If we can't check whether syn2mas is already in progress on this database or not.
+/// - If we can't check whether syn2mas is already in progress on this database
+///   or not.
 #[tracing::instrument(skip_all)]
 pub async fn mas_pre_migration_checks<'a>(
     mas_connection: &mut LockedMasDatabase<'a>,
@@ -56,7 +58,8 @@ pub async fn mas_pre_migration_checks<'a>(
         return Ok(());
     }
 
-    // Check that the database looks like a MAS database and that it is also an empty database.
+    // Check that the database looks like a MAS database and that it is also an
+    // empty database.
 
     for &table in MAS_TABLES_AFFECTED_BY_MIGRATION {
         let row_present = sqlx::query(&format!("SELECT 1 AS dummy FROM {table} LIMIT 1"))

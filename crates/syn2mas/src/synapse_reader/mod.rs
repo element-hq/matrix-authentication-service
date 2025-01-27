@@ -5,7 +5,8 @@
 
 //! # Synapse Database Reader
 //!
-//! This module provides facilities for streaming relevant types of database records from a Synapse database.
+//! This module provides facilities for streaming relevant types of database
+//! records from a Synapse database.
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
@@ -46,13 +47,13 @@ pub enum ExtractLocalpartError {
 }
 
 impl FullUserId {
-    /// Extract the localpart from the User ID, asserting that the User ID has the correct
-    /// server name.
+    /// Extract the localpart from the User ID, asserting that the User ID has
+    /// the correct server name.
     ///
     /// # Errors
     ///
-    /// A handful of basic validity checks are performed and an error may be returned
-    /// if the User ID is not valid.
+    /// A handful of basic validity checks are performed and an error may be
+    /// returned if the User ID is not valid.
     /// However, the User ID grammar is not checked fully.
     ///
     /// If the wrong server name is asserted, returns an error.
@@ -80,8 +81,8 @@ impl FullUserId {
 }
 
 /// A Synapse boolean.
-/// Synapse stores booleans as 0 or 1, due to compatibility with old SQLite versions
-/// that did not have native boolean support.
+/// Synapse stores booleans as 0 or 1, due to compatibility with old SQLite
+/// versions that did not have native boolean support.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseBool(bool);
 
@@ -107,8 +108,8 @@ impl From<SynapseBool> for bool {
 }
 
 /// A timestamp stored as the number of seconds since the Unix epoch.
-/// Note that Synapse stores MOST timestamps as numbers of **milliseconds** since the Unix epoch.
-/// But some timestamps are still stored in seconds.
+/// Note that Synapse stores MOST timestamps as numbers of **milliseconds**
+/// since the Unix epoch. But some timestamps are still stored in seconds.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SecondsTimestamp(DateTime<Utc>);
 
@@ -122,9 +123,9 @@ impl<'r> sqlx::Decode<'r, Postgres> for SecondsTimestamp {
     fn decode(
         value: <Postgres as sqlx::Database>::ValueRef<'r>,
     ) -> Result<Self, sqlx::error::BoxDynError> {
-        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|milliseconds_since_epoch| {
+        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|seconds_since_epoch| {
             SecondsTimestamp(DateTime::from_timestamp_nanos(
-                milliseconds_since_epoch * 1_000_000_000,
+                seconds_since_epoch * 1_000_000_000,
             ))
         })
     }
@@ -136,11 +137,41 @@ impl sqlx::Type<Postgres> for SecondsTimestamp {
     }
 }
 
+/// A timestamp stored as the number of milliseconds since the Unix epoch.
+/// Note that Synapse stores some timestamps in seconds.
+#[derive(Copy, Clone, Debug)]
+pub struct MillisecondsTimestamp(DateTime<Utc>);
+
+impl From<MillisecondsTimestamp> for DateTime<Utc> {
+    fn from(MillisecondsTimestamp(value): MillisecondsTimestamp) -> Self {
+        value
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MillisecondsTimestamp {
+    fn decode(
+        value: <Postgres as sqlx::Database>::ValueRef<'r>,
+    ) -> Result<Self, sqlx::error::BoxDynError> {
+        <i64 as sqlx::Decode<Postgres>>::decode(value).map(|milliseconds_since_epoch| {
+            MillisecondsTimestamp(DateTime::from_timestamp_nanos(
+                milliseconds_since_epoch * 1_000_000,
+            ))
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MillisecondsTimestamp {
+    fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
+        <i64 as sqlx::Type<Postgres>>::type_info()
+    }
+}
+
 #[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseUser {
     /// Full User ID of the user
     pub name: FullUserId,
-    /// Password hash string for the user. Optional (null if no password is set).
+    /// Password hash string for the user. Optional (null if no password is
+    /// set).
     pub password_hash: Option<String>,
     /// Whether the user is a Synapse Admin
     pub admin: SynapseBool,
@@ -153,10 +184,20 @@ pub struct SynapseUser {
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
 }
 
+/// Row of the `user_threepids` table in Synapse.
+#[derive(Clone, Debug, FromRow)]
+pub struct SynapseThreepid {
+    pub user_id: FullUserId,
+    pub medium: String,
+    pub address: String,
+    pub added_at: MillisecondsTimestamp,
+}
+
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
 ///
-/// This is a safety measure against other processes changing the data underneath our feet.
-/// It's still not a good idea to run Synapse at the same time as the migration.
+/// This is a safety measure against other processes changing the data
+/// underneath our feet. It's still not a good idea to run Synapse at the same
+/// time as the migration.
 // TODO not complete!
 const TABLES_TO_LOCK: &[&str] = &["users"];
 
@@ -172,14 +213,16 @@ pub struct SynapseReader<'c> {
 }
 
 impl<'conn> SynapseReader<'conn> {
-    /// Create a new Synapse reader, which entails creating a transaction and locking Synapse tables.
+    /// Create a new Synapse reader, which entails creating a transaction and
+    /// locking Synapse tables.
     ///
     /// # Errors
     ///
     /// Errors are returned under the following circumstances:
     ///
     /// - An underlying database error
-    /// - If we can't lock the Synapse tables (pointing to the fact that Synapse may still be running)
+    /// - If we can't lock the Synapse tables (pointing to the fact that Synapse
+    ///   may still be running)
     pub async fn new(
         synapse_connection: &'conn mut PgConnection,
         dry_run: bool,
@@ -224,7 +267,8 @@ impl<'conn> SynapseReader<'conn> {
         Ok(())
     }
 
-    /// Counts the rows in the Synapse database to get an estimate of how large the migration is going to be.
+    /// Counts the rows in the Synapse database to get an estimate of how large
+    /// the migration is going to be.
     ///
     /// # Errors
     ///
@@ -247,7 +291,8 @@ impl<'conn> SynapseReader<'conn> {
         Ok(SynapseRowCounts { users })
     }
 
-    /// Reads Synapse users, excluding application service users (which do not need to be migrated), from the database.
+    /// Reads Synapse users, excluding application service users (which do not
+    /// need to be migrated), from the database.
     pub fn read_users(&mut self) -> impl Stream<Item = Result<SynapseUser, Error>> + '_ {
         sqlx::query_as(
             "
@@ -259,6 +304,20 @@ impl<'conn> SynapseReader<'conn> {
         )
         .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse users"))
+    }
+
+    /// Reads threepids (such as e-mail and phone number associations) from
+    /// Synapse.
+    pub fn read_threepids(&mut self) -> impl Stream<Item = Result<SynapseThreepid, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              user_id, medium, address, added_at
+            FROM user_threepids
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse threepids"))
     }
 }
 

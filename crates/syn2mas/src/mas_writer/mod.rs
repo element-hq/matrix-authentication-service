@@ -146,7 +146,8 @@ impl WriterConnectionPool {
     ///
     /// # Panics
     ///
-    /// - If connections were not returned to the pool. (This indicates a serious bug.)
+    /// - If connections were not returned to the pool. (This indicates a
+    ///   serious bug.)
     pub async fn finish(self) -> Result<(), Vec<Error>> {
         let mut errors = Vec::new();
 
@@ -207,14 +208,33 @@ pub struct MasNewUserPassword {
     pub created_at: DateTime<Utc>,
 }
 
-/// The 'version' of the password hashing scheme used for passwords when they are
-/// migrated from Synapse to MAS.
+pub struct MasNewEmailThreepid {
+    pub user_email_id: Uuid,
+    pub user_id: Uuid,
+    pub email: String,
+    pub created_at: DateTime<Utc>,
+}
+
+pub struct MasNewUnsupportedThreepid {
+    pub user_id: Uuid,
+    pub medium: String,
+    pub address: String,
+    pub created_at: DateTime<Utc>,
+}
+
+/// The 'version' of the password hashing scheme used for passwords when they
+/// are migrated from Synapse to MAS.
 /// This is version 1, as in the previous syn2mas script.
 // TODO hardcoding version to `1` may not be correct long-term?
 pub const MIGRATED_PASSWORD_VERSION: u16 = 1;
 
 /// List of all MAS tables that are written to by syn2mas.
-pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &["users", "user_passwords"];
+pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &[
+    "users",
+    "user_passwords",
+    "user_emails",
+    "user_unsupported_third_party_ids",
+];
 
 /// Detect whether a syn2mas migration has started on the given database.
 ///
@@ -227,8 +247,8 @@ pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &["users", "user_passwords
 /// Errors are returned under the following circumstances:
 ///
 /// - If any database error occurs whilst querying the database.
-/// - If some, but not all, syn2mas restoration tables are present.
-///   (This shouldn't be possible without syn2mas having been sabotaged!)
+/// - If some, but not all, syn2mas restoration tables are present. (This
+///   shouldn't be possible without syn2mas having been sabotaged!)
 pub async fn is_syn2mas_in_progress(conn: &mut PgConnection) -> Result<bool, Error> {
     // Names of tables used for syn2mas resumption
     // Must be `String`s, not just `&str`, for the query.
@@ -457,7 +477,8 @@ impl<'conn> MasWriter<'conn> {
             .await
             .map_err(|errors| Error::Multiple(MultipleErrors::from(errors)))?;
 
-        // Now all the data has been migrated, finish off by restoring indices and constraints!
+        // Now all the data has been migrated, finish off by restoring indices and
+        // constraints!
 
         query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
             .execute(self.conn.as_mut())
@@ -563,11 +584,11 @@ impl<'conn> MasWriter<'conn> {
         &mut self,
         passwords: Vec<MasNewUserPassword>,
     ) -> Result<(), Error> {
-        self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
-            if passwords.is_empty() {
-                return Ok(());
-            }
+        if passwords.is_empty() {
+            return Ok(());
+        }
 
+        self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
             let mut user_password_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
             let mut user_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
             let mut hashed_passwords: Vec<String> = Vec::with_capacity(passwords.len());
@@ -603,12 +624,107 @@ impl<'conn> MasWriter<'conn> {
             Ok(())
         })).await
     }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub async fn write_email_threepids(
+        &mut self,
+        threepids: Vec<MasNewEmailThreepid>,
+    ) -> Result<(), Error> {
+        if threepids.is_empty() {
+            return Ok(());
+        }
+        self.writer_pool.spawn_with_connection(move |conn| {
+            Box::pin(async move {
+                let mut user_email_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
+                let mut user_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
+                let mut emails: Vec<String> = Vec::with_capacity(threepids.len());
+                let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(threepids.len());
+
+                for MasNewEmailThreepid {
+                    user_email_id,
+                    user_id,
+                    email,
+                    created_at,
+                } in threepids
+                {
+                    user_email_ids.push(user_email_id);
+                    user_ids.push(user_id);
+                    emails.push(email);
+                    created_ats.push(created_at);
+                }
+
+                // `confirmed_at` is going to get removed in a future MAS release,
+                // so just populate with `created_at`
+                sqlx::query!(
+                    r#"
+                    INSERT INTO syn2mas__user_emails
+                    (user_email_id, user_id, email, created_at, confirmed_at)
+                    SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[])
+                    "#,
+                    &user_email_ids[..],
+                    &user_ids[..],
+                    &emails[..],
+                    &created_ats[..],
+                ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
+
+                Ok(())
+            })
+        }).await
+    }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub async fn write_unsupported_threepids(
+        &mut self,
+        threepids: Vec<MasNewUnsupportedThreepid>,
+    ) -> Result<(), Error> {
+        if threepids.is_empty() {
+            return Ok(());
+        }
+        self.writer_pool.spawn_with_connection(move |conn| {
+            Box::pin(async move {
+                let mut user_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
+                let mut mediums: Vec<String> = Vec::with_capacity(threepids.len());
+                let mut addresses: Vec<String> = Vec::with_capacity(threepids.len());
+                let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(threepids.len());
+
+                for MasNewUnsupportedThreepid {
+                    user_id,
+                    medium,
+                    address,
+                    created_at,
+                } in threepids
+                {
+                    user_ids.push(user_id);
+                    mediums.push(medium);
+                    addresses.push(address);
+                    created_ats.push(created_at);
+                }
+
+                // `confirmed_at` is going to get removed in a future MAS release,
+                // so just populate with `created_at`
+                sqlx::query!(
+                    r#"
+                    INSERT INTO syn2mas__user_unsupported_third_party_ids
+                    (user_id, medium, address, created_at)
+                    SELECT * FROM UNNEST($1::UUID[], $2::TEXT[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[])
+                    "#,
+                    &user_ids[..],
+                    &mediums[..],
+                    &addresses[..],
+                    &created_ats[..],
+                ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                Ok(())
+            })
+        }).await
+    }
 }
 
-// How many entries to buffer at once, before writing a batch of rows to the database.
-// TODO tune: didn't see that much difference between 4k and 64k
-// (4k: 13.5~14, 64k: 12.5~13s — streaming the whole way would be better, especially for DB latency, but probably fiiine
-// and also we won't be able to stream to two tables at once...)
+// How many entries to buffer at once, before writing a batch of rows to the
+// database. TODO tune: didn't see that much difference between 4k and 64k
+// (4k: 13.5~14, 64k: 12.5~13s — streaming the whole way would be better,
+// especially for DB latency, but probably fiiine and also we won't be able to
+// stream to two tables at once...)
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
 pub struct MasUserWriteBuffer<'writer, 'conn> {
@@ -670,13 +786,69 @@ impl<'writer, 'conn> MasUserWriteBuffer<'writer, 'conn> {
     }
 }
 
+pub struct MasThreepidWriteBuffer<'writer, 'conn> {
+    email: Vec<MasNewEmailThreepid>,
+    unsupported: Vec<MasNewUnsupportedThreepid>,
+    writer: &'writer mut MasWriter<'conn>,
+}
+
+impl<'writer, 'conn> MasThreepidWriteBuffer<'writer, 'conn> {
+    pub fn new(writer: &'writer mut MasWriter<'conn>) -> Self {
+        MasThreepidWriteBuffer {
+            email: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
+            unsupported: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
+            writer,
+        }
+    }
+
+    pub async fn finish(mut self) -> Result<(), Error> {
+        self.flush_emails().await?;
+        self.flush_unsupported().await?;
+        Ok(())
+    }
+
+    pub async fn flush_emails(&mut self) -> Result<(), Error> {
+        self.writer
+            .write_email_threepids(std::mem::take(&mut self.email))
+            .await?;
+        self.email.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
+        Ok(())
+    }
+
+    pub async fn flush_unsupported(&mut self) -> Result<(), Error> {
+        self.writer
+            .write_unsupported_threepids(std::mem::take(&mut self.unsupported))
+            .await?;
+        self.unsupported.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
+        Ok(())
+    }
+
+    pub async fn write_email(&mut self, user: MasNewEmailThreepid) -> Result<(), Error> {
+        self.email.push(user);
+        if self.email.len() >= WRITE_BUFFER_BATCH_SIZE {
+            self.flush_emails().await?;
+        }
+        Ok(())
+    }
+
+    pub async fn write_password(
+        &mut self,
+        unsupported: MasNewUnsupportedThreepid,
+    ) -> Result<(), Error> {
+        self.unsupported.push(unsupported);
+        if self.unsupported.len() >= WRITE_BUFFER_BATCH_SIZE {
+            self.flush_unsupported().await?;
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::collections::{BTreeMap, BTreeSet};
 
     use chrono::DateTime;
     use futures_util::TryStreamExt;
-
     use serde::Serialize;
     use sqlx::{Column, PgConnection, PgPool, Row};
     use uuid::Uuid;
@@ -707,9 +879,11 @@ mod test {
 
     const SKIPPED_TABLES: &[&str] = &["_sqlx_migrations"];
 
-    /// Produces a serialisable snapshot of a database, usable for snapshot testing
+    /// Produces a serialisable snapshot of a database, usable for snapshot
+    /// testing
     ///
-    /// For brevity, empty tables, as well as [`SKIPPED_TABLES`], will not be included in the snapshot.
+    /// For brevity, empty tables, as well as [`SKIPPED_TABLES`], will not be
+    /// included in the snapshot.
     async fn snapshot_database(conn: &mut PgConnection) -> DatabaseSnapshot {
         let mut out = DatabaseSnapshot::default();
         let table_names: Vec<String> = sqlx::query_scalar(
