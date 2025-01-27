@@ -52,7 +52,8 @@ enum Subcommand {
 
     /// Migrate from Synapse's built-in auth system to MAS.
     #[clap(name = "syn2mas")]
-    Syn2Mas(self::syn2mas::Options),
+    // Box<> is to work around a 'large size difference between variants' lint
+    Syn2Mas(Box<self::syn2mas::Options>),
 }
 
 #[derive(Parser, Debug)]

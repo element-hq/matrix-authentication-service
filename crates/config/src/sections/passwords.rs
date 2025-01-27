@@ -179,7 +179,7 @@ fn default_bcrypt_cost() -> Option<u32> {
 }
 
 /// A hashing algorithm
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Algorithm {
     /// bcrypt
