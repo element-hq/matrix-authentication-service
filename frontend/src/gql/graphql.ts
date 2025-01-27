@@ -235,7 +235,7 @@ export type CompatSession = CreationEvent & Node & {
   /** When the object was created. */
   createdAt: Scalars['DateTime']['output'];
   /** The Matrix Device ID of this session. */
-  deviceId: Scalars['String']['output'];
+  deviceId?: Maybe<Scalars['String']['output']>;
   /** When the session ended. */
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
   /** ID of the object. */
@@ -1579,7 +1579,7 @@ export type EndBrowserSessionMutation = { __typename?: 'Mutation', endBrowserSes
 
 export type OAuth2Client_DetailFragment = { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null, tosUri?: string | null, policyUri?: string | null, redirectUris: Array<string> } & { ' $fragmentName'?: 'OAuth2Client_DetailFragment' };
 
-export type CompatSession_SessionFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
+export type CompatSession_SessionFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
 
 export type EndCompatSessionMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1611,7 +1611,7 @@ export type PasswordCreationDoubleInput_SiteConfigFragment = { __typename?: 'Sit
 
 export type BrowserSession_DetailFragment = { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, lastAuthentication?: { __typename?: 'Authentication', id: string, createdAt: string } | null, user: { __typename?: 'User', id: string, username: string } } & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
 
-export type CompatSession_DetailFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
+export type CompatSession_DetailFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
 
 export type OAuth2Session_DetailFragment = { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } } & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 

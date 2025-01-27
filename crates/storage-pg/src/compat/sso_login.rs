@@ -293,7 +293,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             db.query.text,
             %compat_sso_login.id,
             %compat_session.id,
-            compat_session.device.id = compat_session.device.as_str(),
+            compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
             user.id = %compat_session.user_id,
         ),
         err,

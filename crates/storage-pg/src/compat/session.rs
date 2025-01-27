@@ -47,7 +47,7 @@ impl<'c> PgCompatSessionRepository<'c> {
 
 struct CompatSessionLookup {
     compat_session_id: Uuid,
-    device_id: String,
+    device_id: Option<String>,
     user_id: Uuid,
     user_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
@@ -63,12 +63,16 @@ impl TryFrom<CompatSessionLookup> for CompatSession {
 
     fn try_from(value: CompatSessionLookup) -> Result<Self, Self::Error> {
         let id = value.compat_session_id.into();
-        let device = Device::try_from(value.device_id).map_err(|e| {
-            DatabaseInconsistencyError::on("compat_sessions")
-                .column("device_id")
-                .row(id)
-                .source(e)
-        })?;
+        let device = value
+            .device_id
+            .map(Device::try_from)
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("compat_sessions")
+                    .column("device_id")
+                    .row(id)
+                    .source(e)
+            })?;
 
         let state = match value.finished_at {
             None => CompatSessionState::Valid,
@@ -96,7 +100,7 @@ impl TryFrom<CompatSessionLookup> for CompatSession {
 #[enum_def]
 struct CompatSessionAndSsoLoginLookup {
     compat_session_id: Uuid,
-    device_id: String,
+    device_id: Option<String>,
     user_id: Uuid,
     user_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
@@ -118,12 +122,16 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
 
     fn try_from(value: CompatSessionAndSsoLoginLookup) -> Result<Self, Self::Error> {
         let id = value.compat_session_id.into();
-        let device = Device::try_from(value.device_id).map_err(|e| {
-            DatabaseInconsistencyError::on("compat_sessions")
-                .column("device_id")
-                .row(id)
-                .source(e)
-        })?;
+        let device = value
+            .device_id
+            .map(Device::try_from)
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("compat_sessions")
+                    .column("device_id")
+                    .row(id)
+                    .source(e)
+            })?;
 
         let state = match value.finished_at {
             None => CompatSessionState::Valid,
@@ -347,7 +355,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             id,
             state: CompatSessionState::default(),
             user_id: user.id,
-            device,
+            device: Some(device),
             user_session_id: browser_session.map(|s| s.id),
             created_at,
             is_synapse_admin,
@@ -364,7 +372,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             db.query.text,
             %compat_session.id,
             user.id = %compat_session.user_id,
-            compat_session.device.id = compat_session.device.as_str(),
+            compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
         ),
         err,
     )]

@@ -26,7 +26,7 @@ type Props = {
   title: string | ReactNode;
   lastActive?: Date;
   signedIn?: Date;
-  deviceId?: string;
+  deviceId?: string | null;
   ipAddress?: string;
   scopes?: string[];
   details?: Detail[];
