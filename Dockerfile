@@ -142,6 +142,10 @@ RUN --network=default \
 # Build the rest
 COPY ./ /app
 ENV SQLX_OFFLINE=true
+
+ARG VERGEN_GIT_DESCRIBE
+ENV VERGEN_GIT_DESCRIBE=${VERGEN_GIT_DESCRIBE}
+
 # Network access: cargo auditable needs it
 RUN --network=default \
   cargo auditable build \
