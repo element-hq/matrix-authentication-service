@@ -13,6 +13,9 @@ use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Row, Transaction, Ty
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
+pub mod checks;
+pub mod config;
+
 #[derive(Debug, Error, ContextInto)]
 pub enum Error {
     #[error("database error whilst {context}")]

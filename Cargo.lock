@@ -6112,10 +6112,13 @@ name = "syn2mas"
 version = "0.13.0-rc.1"
 dependencies = [
  "anyhow",
+ "camino",
  "chrono",
  "compact_str",
+ "figment",
  "futures-util",
  "insta",
+ "mas-config",
  "mas-storage-pg",
  "rand",
  "serde",
