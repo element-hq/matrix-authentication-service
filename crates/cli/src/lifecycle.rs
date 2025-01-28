@@ -168,12 +168,14 @@ impl LifecycleManager {
                             .expect("Failed to read monotonic clock")
                     ]);
 
-                    // XXX: if the handler takes a long time, it will block the
+                    // XXX: if one handler takes a long time, it will block the
                     // rest of the shutdown process, which is not ideal. We
                     // should probably have a timeout here
-                    for handler in &self.reload_handlers {
-                        handler().await;
-                    }
+                    futures_util::future::join_all(
+                        self.reload_handlers
+                            .iter()
+                            .map(|handler| handler())
+                    ).await;
 
                     notify(&[sd_notify::NotifyState::Ready]);
 
