@@ -329,7 +329,7 @@ version = "1.43.0"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]
-version = "0.1.16"
+version = "0.1.17"
 
 # Useful async utilities
 [workspace.dependencies.tokio-util]
