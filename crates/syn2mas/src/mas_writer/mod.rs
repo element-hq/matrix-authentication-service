@@ -531,7 +531,7 @@ impl<'conn> MasWriter<'conn> {
     /// - If the database writer connection pool had an error.
     #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
-    pub async fn write_users(&mut self, users: Vec<MasNewUser>) -> Result<(), Error> {
+    pub fn write_users(&mut self, users: Vec<MasNewUser>) -> BoxFuture<'_, Result<(), Error>> {
         self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
             // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows in one statement
             // without having to change the statement SQL thus altering the query plan.
@@ -577,7 +577,7 @@ impl<'conn> MasWriter<'conn> {
             ).execute(&mut *conn).await.into_database("writing users to MAS")?;
 
             Ok(())
-        })).await
+        })).boxed()
     }
 
     /// Write a batch of user passwords to the database.
@@ -589,14 +589,10 @@ impl<'conn> MasWriter<'conn> {
     /// - If the database writer connection pool had an error.
     #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
-    pub async fn write_passwords(
+    pub fn write_passwords(
         &mut self,
         passwords: Vec<MasNewUserPassword>,
-    ) -> Result<(), Error> {
-        if passwords.is_empty() {
-            return Ok(());
-        }
-
+    ) -> BoxFuture<'_, Result<(), Error>> {
         self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
             let mut user_password_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
             let mut user_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
@@ -631,17 +627,14 @@ impl<'conn> MasWriter<'conn> {
             ).execute(&mut *conn).await.into_database("writing users to MAS")?;
 
             Ok(())
-        })).await
+        })).boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
-    pub async fn write_email_threepids(
+    pub fn write_email_threepids(
         &mut self,
         threepids: Vec<MasNewEmailThreepid>,
-    ) -> Result<(), Error> {
-        if threepids.is_empty() {
-            return Ok(());
-        }
+    ) -> BoxFuture<'_, Result<(), Error>> {
         self.writer_pool.spawn_with_connection(move |conn| {
             Box::pin(async move {
                 let mut user_email_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
@@ -678,17 +671,14 @@ impl<'conn> MasWriter<'conn> {
 
                 Ok(())
             })
-        }).await
+        }).boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
-    pub async fn write_unsupported_threepids(
+    pub fn write_unsupported_threepids(
         &mut self,
         threepids: Vec<MasNewUnsupportedThreepid>,
-    ) -> Result<(), Error> {
-        if threepids.is_empty() {
-            return Ok(());
-        }
+    ) -> BoxFuture<'_, Result<(), Error>> {
         self.writer_pool.spawn_with_connection(move |conn| {
             Box::pin(async move {
                 let mut user_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
@@ -723,7 +713,7 @@ impl<'conn> MasWriter<'conn> {
 
                 Ok(())
             })
-        }).await
+        }).boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
@@ -731,9 +721,6 @@ impl<'conn> MasWriter<'conn> {
         &mut self,
         links: Vec<MasNewUpstreamOauthLink>,
     ) -> BoxFuture<'_, Result<(), Error>> {
-        if links.is_empty() {
-            return async { Ok(()) }.boxed();
-        }
         self.writer_pool.spawn_with_connection(move |conn| {
             Box::pin(async move {
                 let mut link_ids: Vec<Uuid> = Vec::with_capacity(links.len());
@@ -783,124 +770,6 @@ impl<'conn> MasWriter<'conn> {
 // stream to two tables at once...)
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
-// TODO replace with just `MasWriteBuffer`
-pub struct MasUserWriteBuffer<'writer, 'conn> {
-    users: Vec<MasNewUser>,
-    passwords: Vec<MasNewUserPassword>,
-    writer: &'writer mut MasWriter<'conn>,
-}
-
-impl<'writer, 'conn> MasUserWriteBuffer<'writer, 'conn> {
-    pub fn new(writer: &'writer mut MasWriter<'conn>) -> Self {
-        MasUserWriteBuffer {
-            users: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
-            passwords: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
-            writer,
-        }
-    }
-
-    pub async fn finish(mut self) -> Result<(), Error> {
-        self.flush_users().await?;
-        self.flush_passwords().await?;
-        Ok(())
-    }
-
-    pub async fn flush_users(&mut self) -> Result<(), Error> {
-        // via copy: 13s
-        // not via copy: 14s
-        // difference probably gets worse with latency
-        self.writer
-            .write_users(std::mem::take(&mut self.users))
-            .await?;
-
-        self.users.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
-        Ok(())
-    }
-
-    pub async fn flush_passwords(&mut self) -> Result<(), Error> {
-        self.writer
-            .write_passwords(std::mem::take(&mut self.passwords))
-            .await?;
-        self.passwords.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
-
-        Ok(())
-    }
-
-    pub async fn write_user(&mut self, user: MasNewUser) -> Result<(), Error> {
-        self.users.push(user);
-        if self.users.len() >= WRITE_BUFFER_BATCH_SIZE {
-            self.flush_users().await?;
-        }
-        Ok(())
-    }
-
-    pub async fn write_password(&mut self, password: MasNewUserPassword) -> Result<(), Error> {
-        self.passwords.push(password);
-        if self.passwords.len() >= WRITE_BUFFER_BATCH_SIZE {
-            self.flush_passwords().await?;
-        }
-        Ok(())
-    }
-}
-
-// TODO replace with just `MasWriteBuffer`
-pub struct MasThreepidWriteBuffer<'writer, 'conn> {
-    email: Vec<MasNewEmailThreepid>,
-    unsupported: Vec<MasNewUnsupportedThreepid>,
-    writer: &'writer mut MasWriter<'conn>,
-}
-
-impl<'writer, 'conn> MasThreepidWriteBuffer<'writer, 'conn> {
-    pub fn new(writer: &'writer mut MasWriter<'conn>) -> Self {
-        MasThreepidWriteBuffer {
-            email: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
-            unsupported: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
-            writer,
-        }
-    }
-
-    pub async fn finish(mut self) -> Result<(), Error> {
-        self.flush_emails().await?;
-        self.flush_unsupported().await?;
-        Ok(())
-    }
-
-    pub async fn flush_emails(&mut self) -> Result<(), Error> {
-        self.writer
-            .write_email_threepids(std::mem::take(&mut self.email))
-            .await?;
-        self.email.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
-        Ok(())
-    }
-
-    pub async fn flush_unsupported(&mut self) -> Result<(), Error> {
-        self.writer
-            .write_unsupported_threepids(std::mem::take(&mut self.unsupported))
-            .await?;
-        self.unsupported.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
-        Ok(())
-    }
-
-    pub async fn write_email(&mut self, user: MasNewEmailThreepid) -> Result<(), Error> {
-        self.email.push(user);
-        if self.email.len() >= WRITE_BUFFER_BATCH_SIZE {
-            self.flush_emails().await?;
-        }
-        Ok(())
-    }
-
-    pub async fn write_password(
-        &mut self,
-        unsupported: MasNewUnsupportedThreepid,
-    ) -> Result<(), Error> {
-        self.unsupported.push(unsupported);
-        if self.unsupported.len() >= WRITE_BUFFER_BATCH_SIZE {
-            self.flush_unsupported().await?;
-        }
-        Ok(())
-    }
-}
-
 /// A function that can accept and flush buffers from a `MasWriteBuffer`.
 /// Intended uses are the methods on `MasWriter` such as `write_users`.
 type WriteBufferFlusher<'conn, T> =
@@ -934,6 +803,9 @@ impl<'conn, T> MasWriteBuffer<'conn, T> {
     }
 
     pub async fn flush(&mut self, writer: &mut MasWriter<'conn>) -> Result<(), Error> {
+        if self.rows.is_empty() {
+            return Ok(());
+        }
         let rows = std::mem::take(&mut self.rows);
         self.rows.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
         (self.flusher)(writer, rows).await?;

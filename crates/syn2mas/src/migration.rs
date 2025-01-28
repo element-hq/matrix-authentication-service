@@ -26,7 +26,7 @@ use uuid::Uuid;
 use crate::{
     mas_writer::{
         self, MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
-        MasNewUserPassword, MasThreepidWriteBuffer, MasUserWriteBuffer, MasWriteBuffer, MasWriter,
+        MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseExternalId, SynapseThreepid, SynapseUser,
@@ -132,7 +132,8 @@ async fn migrate_users(
     server_name: &str,
     rng: &mut impl RngCore,
 ) -> Result<UsersMigrated, Error> {
-    let mut write_buffer = MasUserWriteBuffer::new(mas);
+    let mut user_buffer = MasWriteBuffer::new(MasWriter::write_users);
+    let mut password_buffer = MasWriteBuffer::new(MasWriter::write_passwords);
     let mut users_stream = pin!(synapse.read_users());
     // TODO is 1:1 capacity enough for a hashmap?
     let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint);
@@ -143,23 +144,24 @@ async fn migrate_users(
 
         user_localparts_to_uuid.insert(CompactString::new(&mas_user.username), mas_user.user_id);
 
-        write_buffer
-            .write_user(mas_user)
+        user_buffer
+            .write(mas, mas_user)
             .await
             .into_mas("writing user")?;
 
         if let Some(mas_password) = mas_password_opt {
-            write_buffer
-                .write_password(mas_password)
+            password_buffer
+                .write(mas, mas_password)
                 .await
                 .into_mas("writing password")?;
         }
     }
 
-    write_buffer
-        .finish()
+    user_buffer.finish(mas).await.into_mas("writing users")?;
+    password_buffer
+        .finish(mas)
         .await
-        .into_mas("writing users & passwords")?;
+        .into_mas("writing passwords")?;
 
     Ok(UsersMigrated {
         user_localparts_to_uuid,
@@ -174,7 +176,8 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
 ) -> Result<(), Error> {
-    let mut write_buffer = MasThreepidWriteBuffer::new(mas);
+    let mut email_buffer = MasWriteBuffer::new(MasWriter::write_email_threepids);
+    let mut unsupported_buffer = MasWriteBuffer::new(MasWriter::write_unsupported_threepids);
     let mut users_stream = pin!(synapse.read_threepids());
 
     while let Some(threepid_res) = users_stream.next().await {
@@ -198,32 +201,45 @@ async fn migrate_threepids(
         };
 
         if medium == "email" {
-            write_buffer
-                .write_email(MasNewEmailThreepid {
-                    user_id,
-                    user_email_id: Uuid::from(Ulid::from_datetime_with_source(
-                        created_at.into(),
-                        rng,
-                    )),
-                    email: address,
-                    created_at,
-                })
+            email_buffer
+                .write(
+                    mas,
+                    MasNewEmailThreepid {
+                        user_id,
+                        user_email_id: Uuid::from(Ulid::from_datetime_with_source(
+                            created_at.into(),
+                            rng,
+                        )),
+                        email: address,
+                        created_at,
+                    },
+                )
                 .await
                 .into_mas("writing email")?;
         } else {
-            write_buffer
-                .write_password(MasNewUnsupportedThreepid {
-                    user_id,
-                    medium,
-                    address,
-                    created_at,
-                })
+            unsupported_buffer
+                .write(
+                    mas,
+                    MasNewUnsupportedThreepid {
+                        user_id,
+                        medium,
+                        address,
+                        created_at,
+                    },
+                )
                 .await
                 .into_mas("writing unsupported threepid")?;
         }
     }
 
-    write_buffer.finish().await.into_mas("writing threepids")?;
+    email_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing email threepids")?;
+    unsupported_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing unsupported threepids")?;
 
     Ok(())
 }
