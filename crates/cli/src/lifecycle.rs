@@ -86,6 +86,8 @@ impl LifecycleManager {
         let timeout = Duration::from_secs(60);
         let task_tracker = TaskTracker::new();
 
+        notify(&[sd_notify::NotifyState::MainPid(std::process::id())]);
+
         Ok(Self {
             hard_shutdown_token,
             soft_shutdown_token,
