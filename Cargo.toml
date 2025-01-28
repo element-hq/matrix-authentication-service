@@ -321,7 +321,7 @@ features = [
 version = "2.0.11"
 
 [workspace.dependencies.thiserror-ext]
-version = "0.2.0"
+version = "0.2.1"
 
 # Async runtime
 [workspace.dependencies.tokio]
