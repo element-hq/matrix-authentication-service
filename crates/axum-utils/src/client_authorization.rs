@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -6,7 +6,6 @@
 
 use std::collections::HashMap;
 
-use async_trait::async_trait;
 use axum::{
     extract::{
         rejection::{FailedToDeserializeForm, FormRejection},
@@ -321,7 +320,6 @@ impl IntoResponse for ClientAuthorizationError {
     }
 }
 
-#[async_trait]
 impl<S, F> FromRequest<S> for ClientAuthorization<F>
 where
     F: DeserializeOwned,

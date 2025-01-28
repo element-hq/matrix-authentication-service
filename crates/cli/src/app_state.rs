@@ -6,10 +6,7 @@
 
 use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Instant};
 
-use axum::{
-    async_trait,
-    extract::{FromRef, FromRequestParts},
-};
+use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
@@ -198,7 +195,6 @@ impl FromRef<AppState> for BoxHomeserverConnection {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxClock {
     type Rejection = Infallible;
 
@@ -211,7 +207,6 @@ impl FromRequestParts<AppState> for BoxClock {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxRng {
     type Rejection = Infallible;
 
@@ -228,7 +223,6 @@ impl FromRequestParts<AppState> for BoxRng {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for Policy {
     type Rejection = ErrorWrapper<mas_policy::InstantiateError>;
 
@@ -241,7 +235,6 @@ impl FromRequestParts<AppState> for Policy {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for ActivityTracker {
     type Rejection = Infallible;
 
@@ -300,7 +293,6 @@ fn infer_client_ip(
     client_ip.or(fallback)
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoundActivityTracker {
     type Rejection = Infallible;
 
@@ -315,7 +307,6 @@ impl FromRequestParts<AppState> for BoundActivityTracker {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for RequesterFingerprint {
     type Rejection = Infallible;
 
@@ -337,7 +328,6 @@ impl FromRequestParts<AppState> for RequesterFingerprint {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxRepository {
     type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
 

@@ -7,10 +7,9 @@
 use axum::{
     extract::{Path, State},
     http::Method,
-    response::{IntoResponse, Response},
+    response::{Html, IntoResponse, Response},
     Form,
 };
-use axum_extra::response::Html;
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
@@ -162,7 +161,7 @@ pub(crate) async fn handler(
     PreferredLanguage(locale): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
-    params: Option<Form<Params>>,
+    Form(params): Form<Option<Params>>,
 ) -> Result<Response, RouteError> {
     let provider = repo
         .upstream_oauth_provider()
@@ -173,7 +172,7 @@ pub(crate) async fn handler(
 
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
 
-    let Some(Form(params)) = params else {
+    let Some(params) = params else {
         if let Method::GET = method {
             return Err(RouteError::MissingQueryParams);
         }

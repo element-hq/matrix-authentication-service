@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -26,7 +26,6 @@ struct DummyState;
 
 macro_rules! impl_from_request_parts {
     ($type:ty) => {
-        #[axum::async_trait]
         impl axum::extract::FromRequestParts<DummyState> for $type {
             type Rejection = std::convert::Infallible;
 

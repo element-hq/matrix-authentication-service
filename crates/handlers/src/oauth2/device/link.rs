@@ -6,9 +6,8 @@
 
 use axum::{
     extract::{Query, State},
-    response::IntoResponse,
+    response::{Html, IntoResponse},
 };
-use axum_extra::response::Html;
 use mas_axum_utils::{cookies::CookieJar, FancyError};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository};
@@ -32,12 +31,12 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     cookie_jar: CookieJar,
-    query: Option<Query<Params>>,
+    Query(query): Query<Option<Params>>,
 ) -> Result<impl IntoResponse, FancyError> {
     let mut form_state = FormState::default();
 
     // If we have a code in query, find it in the database
-    if let Some(Query(params)) = query {
+    if let Some(params) = query {
         // Save the form state so that we echo back the code
         form_state = FormState::from_form(&params);
 
