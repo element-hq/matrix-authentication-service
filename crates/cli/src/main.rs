@@ -18,8 +18,8 @@ use tracing_subscriber::{
 
 mod app_state;
 mod commands;
+mod lifecycle;
 mod server;
-mod shutdown;
 mod sync;
 mod telemetry;
 mod util;

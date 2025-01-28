@@ -24,7 +24,7 @@ use tracing::{info, info_span, warn, Instrument};
 
 use crate::{
     app_state::AppState,
-    shutdown::ShutdownManager,
+    lifecycle::LifecycleManager,
     util::{
         database_pool_from_config, mailer_from_config, password_manager_from_config,
         policy_factory_from_config, site_config_from_config, templates_from_config,
@@ -56,7 +56,7 @@ impl Options {
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
-        let mut shutdown = ShutdownManager::new()?;
+        let mut shutdown = LifecycleManager::new()?;
         let config = AppConfig::extract(figment)?;
 
         info!(version = crate::VERSION, "Starting up");

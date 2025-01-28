@@ -11,8 +11,8 @@ use mas_templates::Templates;
 use tokio::signal::unix::{Signal, SignalKind};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 
-/// A helper to manage graceful shutdowns and track tasks that gracefully
-/// shutdown.
+/// A helper to manage the lifecycle of the service, inclusing handling graceful
+/// shutdowns and configuration reloads.
 ///
 /// It will listen for SIGTERM and SIGINT signals, and will trigger a soft
 /// shutdown on the first signal, and a hard shutdown on the second signal or
@@ -25,7 +25,10 @@ use tokio_util::{sync::CancellationToken, task::TaskTracker};
 ///
 /// They should also use the `task_tracker` to make it track things running, so
 /// that it knows when the soft shutdown is over and worked.
-pub struct ShutdownManager {
+///
+/// It also integrates with [`sd_notify`] to notify the service manager of the
+/// state of the service.
+pub struct LifecycleManager {
     hard_shutdown_token: CancellationToken,
     soft_shutdown_token: CancellationToken,
     task_tracker: TaskTracker,
@@ -68,7 +71,7 @@ fn notify(states: &[sd_notify::NotifyState]) {
     }
 }
 
-impl ShutdownManager {
+impl LifecycleManager {
     /// Create a new shutdown manager, installing the signal handlers
     ///
     /// # Errors
