@@ -1,0 +1,26 @@
+---
+source: crates/syn2mas/src/synapse_reader/mod.rs
+expression: threepids
+---
+{
+    SynapseThreepid {
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        medium: "email",
+        address: "alice@example.com",
+        added_at: MillisecondsTimestamp(
+            2019-04-02T18:09:09.014Z,
+        ),
+    },
+    SynapseThreepid {
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        medium: "msisdn",
+        address: "441189998819991197253",
+        added_at: MillisecondsTimestamp(
+            2019-04-14T07:55:49.014Z,
+        ),
+    },
+}

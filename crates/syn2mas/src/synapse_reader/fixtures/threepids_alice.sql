@@ -1,0 +1,23 @@
+INSERT INTO user_threepids
+  (
+    user_id,
+    medium,
+    address,
+    validated_at,
+    added_at
+  )
+  VALUES
+  (
+    '@alice:example.com',
+    'email',
+    'alice@example.com',
+    1554228492026,
+    1554228549014
+  ),
+  (
+    '@alice:example.com',
+    'msisdn',
+    '441189998819991197253',
+    1555228492026,
+    1555228549014
+  );
