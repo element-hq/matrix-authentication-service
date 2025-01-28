@@ -23,6 +23,7 @@ console = "0.15.10"
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 dotenvy = "0.15.7"
 figment.workspace = true
+futures-util.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 ipnetwork = "0.20.0"

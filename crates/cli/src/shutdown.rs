@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{process::ExitCode, time::Duration};
+use std::{future::Future, pin::Pin, process::ExitCode, time::Duration};
 
+use futures_util::future::BoxFuture;
+use mas_handlers::ActivityTracker;
+use mas_templates::Templates;
 use tokio::signal::unix::{Signal, SignalKind};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 
@@ -28,7 +31,30 @@ pub struct ShutdownManager {
     task_tracker: TaskTracker,
     sigterm: Signal,
     sigint: Signal,
+    sighup: Signal,
     timeout: Duration,
+    reload_handlers: Vec<Box<dyn Fn() -> BoxFuture<'static, ()>>>,
+}
+
+pub trait Reloadable: Clone + Send {
+    fn reload(&self) -> impl Future<Output = ()> + Send;
+}
+
+impl Reloadable for ActivityTracker {
+    async fn reload(&self) {
+        self.flush().await;
+    }
+}
+
+impl Reloadable for Templates {
+    async fn reload(&self) {
+        if let Err(err) = self.reload().await {
+            tracing::error!(
+                error = &err as &dyn std::error::Error,
+                "Failed to reload templates"
+            );
+        }
+    }
 }
 
 impl ShutdownManager {
@@ -42,6 +68,7 @@ impl ShutdownManager {
         let soft_shutdown_token = hard_shutdown_token.child_token();
         let sigterm = tokio::signal::unix::signal(SignalKind::terminate())?;
         let sigint = tokio::signal::unix::signal(SignalKind::interrupt())?;
+        let sighup = tokio::signal::unix::signal(SignalKind::hangup())?;
         let timeout = Duration::from_secs(60);
         let task_tracker = TaskTracker::new();
 
@@ -51,8 +78,19 @@ impl ShutdownManager {
             task_tracker,
             sigterm,
             sigint,
+            sighup,
             timeout,
+            reload_handlers: Vec::new(),
         })
+    }
+
+    /// Add a handler to be called when the server gets a SIGHUP
+    pub fn register_reloadable(&mut self, reloadable: &(impl Reloadable + 'static)) {
+        let reloadable = reloadable.clone();
+        self.reload_handlers.push(Box::new(move || {
+            let reloadable = reloadable.clone();
+            Box::pin(async move { reloadable.reload().await })
+        }));
     }
 
     /// Get a reference to the task tracker
@@ -76,21 +114,36 @@ impl ShutdownManager {
     /// Run until we finish completely shutting down.
     pub async fn run(mut self) -> ExitCode {
         // Wait for a first signal and trigger the soft shutdown
-        let likely_crashed = tokio::select! {
-            () = self.soft_shutdown_token.cancelled() => {
-                tracing::warn!("Another task triggered a shutdown, it likely crashed! Shutting down");
-                true
-            },
+        let likely_crashed = loop {
+            tokio::select! {
+                () = self.soft_shutdown_token.cancelled() => {
+                    tracing::warn!("Another task triggered a shutdown, it likely crashed! Shutting down");
+                    break true;
+                },
 
-            _ = self.sigterm.recv() => {
-                tracing::info!("Shutdown signal received (SIGTERM), shutting down");
-                false
-            },
+                _ = self.sigterm.recv() => {
+                    tracing::info!("Shutdown signal received (SIGTERM), shutting down");
+                    break false;
+                },
 
-            _ = self.sigint.recv() => {
-                tracing::info!("Shutdown signal received (SIGINT), shutting down");
-                false
-            },
+                _ = self.sigint.recv() => {
+                    tracing::info!("Shutdown signal received (SIGINT), shutting down");
+                    break false;
+                },
+
+                _ = self.sighup.recv() => {
+                    tracing::info!("Reload signal received (SIGHUP), reloading");
+
+                    // XXX: if the handler takes a long time, it will block the
+                    // rest of the shutdown process, which is not ideal. We
+                    // should probably have a timeout here
+                    for handler in &self.reload_handlers {
+                        handler().await;
+                    }
+
+                    tracing::info!("Reloading done");
+                },
+            }
         };
 
         self.soft_shutdown_token.cancel();

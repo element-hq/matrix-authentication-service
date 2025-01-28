@@ -3162,6 +3162,7 @@ dependencies = [
  "dialoguer",
  "dotenvy",
  "figment",
+ "futures-util",
  "http-body-util",
  "hyper",
  "ipnetwork",
