@@ -854,7 +854,9 @@ mod test {
     use uuid::Uuid;
 
     use crate::{
-        mas_writer::{MasNewUser, MasNewUserPassword},
+        mas_writer::{
+            MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUser, MasNewUserPassword,
+        },
         LockedMasDatabase, MasWriter,
     };
 
@@ -1013,6 +1015,70 @@ mod test {
             }])
             .await
             .expect("failed to write password");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with an e-mail address associated.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_email(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_email_threepids(vec![MasNewEmailThreepid {
+                user_email_id: Uuid::from_u128(2u128),
+                user_id: Uuid::from_u128(1u128),
+                email: "alice@example.org".to_owned(),
+                created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write e-mail");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a unsupported third-party ID associated.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_unsupported_threepid(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_unsupported_threepids(vec![MasNewUnsupportedThreepid {
+                user_id: Uuid::from_u128(1u128),
+                medium: "msisdn".to_owned(),
+                address: "441189998819991197253".to_owned(),
+                created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write phone number (unsupported threepid)");
 
         writer.finish().await.expect("failed to finish MasWriter");
 
