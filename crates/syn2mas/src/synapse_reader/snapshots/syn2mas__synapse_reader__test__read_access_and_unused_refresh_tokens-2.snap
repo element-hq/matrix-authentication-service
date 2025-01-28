@@ -1,0 +1,22 @@
+---
+source: crates/syn2mas/src/synapse_reader/mod.rs
+expression: refresh_tokens
+---
+{
+    SynapseRefreshToken {
+        id: 7,
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        device_id: "ADEVICE",
+        token: "syr_bbbbbbbbbbbbb_bbbb",
+    },
+    SynapseRefreshToken {
+        id: 8,
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        device_id: "ADEVICE",
+        token: "syr_cccccccccccc_cccc",
+    },
+}
