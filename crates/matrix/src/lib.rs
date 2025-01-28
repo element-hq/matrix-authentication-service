@@ -8,6 +8,8 @@ mod mock;
 
 use std::{collections::HashSet, sync::Arc};
 
+use ruma_common::UserId;
+
 pub use self::mock::HomeserverConnection as MockHomeserverConnection;
 
 // TODO: this should probably be another error type by default
@@ -191,6 +193,22 @@ pub trait HomeserverConnection: Send + Sync {
     /// * `localpart` - The localpart of the user.
     fn mxid(&self, localpart: &str) -> String {
         format!("@{}:{}", localpart, self.homeserver())
+    }
+
+    /// Get the localpart of a Matrix ID if it has the right server name
+    ///
+    /// Returns [`None`] if the input isn't a valid MXID, or if the server name
+    /// doesn't match
+    ///
+    /// # Parameters
+    ///
+    /// * `mxid` - The MXID of the user
+    fn localpart<'a>(&self, mxid: &'a str) -> Option<&'a str> {
+        let mxid = <&UserId>::try_from(mxid).ok()?;
+        if mxid.server_name() != self.homeserver() {
+            return None;
+        }
+        Some(mxid.localpart())
     }
 
     /// Query the state of a user on the homeserver.
