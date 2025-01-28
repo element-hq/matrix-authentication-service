@@ -59,11 +59,14 @@ experimental_features:
     admin_token: "AnotherRandomSecret"
 
     # URL to advertise to clients where users can self-manage their account
-    account_management_url: "http://localhost:8080/account"
+    # Defaults to the URL advertised by MAS, e.g. `https://{public_mas_domain}/account/`
+    #account_management_url: "http://localhost:8080/account/"
 
-    # Optional URL to access from synapse in order to introspect oauth2 access tokens
-    # Defaults to `http://<public_mas_domain>/oauth2/introspect`
-    # introspection_endpoint: "http://localhost:8080/oauth2/introspect"
+    # URL which Synapse will use to introspect access tokens
+    # Defaults to the URL advertised by MAS, e.g. `https://{public_mas_domain}/oauth2/introspect`
+    # This is useful to override if Synapse has a way to call the auth service's
+    # introspection endpoint directly, skipping intermediate reverse proxies
+    #introspection_endpoint: "http://localhost:8080/oauth2/introspect"
 ```
 
 ## Set up the compatibility layer
