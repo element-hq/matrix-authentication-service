@@ -193,13 +193,21 @@ pub struct SynapseThreepid {
     pub added_at: MillisecondsTimestamp,
 }
 
+/// Row of the `user_external_ids` table in Synapse.
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SynapseExternalId {
+    pub user_id: FullUserId,
+    pub auth_provider: String,
+    pub external_id: String,
+}
+
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
 ///
 /// This is a safety measure against other processes changing the data
 /// underneath our feet. It's still not a good idea to run Synapse at the same
 /// time as the migration.
 // TODO not complete!
-const TABLES_TO_LOCK: &[&str] = &["users"];
+const TABLES_TO_LOCK: &[&str] = &["users", "user_threepids", "user_external_ids"];
 
 /// Number of migratable rows in various Synapse tables.
 /// Used to estimate progress.
@@ -319,6 +327,21 @@ impl<'conn> SynapseReader<'conn> {
         .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse threepids"))
     }
+
+    /// Read associations between Synapse users and external identity providers
+    pub fn read_user_external_ids(
+        &mut self,
+    ) -> impl Stream<Item = Result<SynapseExternalId, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              user_id, auth_provider, external_id
+            FROM user_external_ids
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse user external IDs"))
+    }
 }
 
 #[cfg(test)]
@@ -330,7 +353,7 @@ mod test {
     use sqlx::{migrate::Migrator, PgPool};
 
     use crate::{
-        synapse_reader::{SynapseThreepid, SynapseUser},
+        synapse_reader::{SynapseExternalId, SynapseThreepid, SynapseUser},
         SynapseReader,
     };
 
@@ -367,5 +390,21 @@ mod test {
             .expect("failed to read Synapse threepids");
 
         assert_debug_snapshot!(threepids);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "external_ids_alice"))]
+    async fn test_read_external_ids(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let external_ids: BTreeSet<SynapseExternalId> = reader
+            .read_user_external_ids()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse external user IDs");
+
+        assert_debug_snapshot!(external_ids);
     }
 }
