@@ -10,7 +10,7 @@
 use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
-use futures_util::{future::BoxFuture, TryStreamExt};
+use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
 use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
@@ -222,6 +222,14 @@ pub struct MasNewUnsupportedThreepid {
     pub created_at: DateTime<Utc>,
 }
 
+pub struct MasNewUpstreamOauthLink {
+    pub link_id: Uuid,
+    pub user_id: Uuid,
+    pub upstream_provider_id: Uuid,
+    pub subject: String,
+    pub created_at: DateTime<Utc>,
+}
+
 /// The 'version' of the password hashing scheme used for passwords when they
 /// are migrated from Synapse to MAS.
 /// This is version 1, as in the previous syn2mas script.
@@ -234,6 +242,7 @@ pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &[
     "user_passwords",
     "user_emails",
     "user_unsupported_third_party_ids",
+    "upstream_oauth_links",
 ];
 
 /// Detect whether a syn2mas migration has started on the given database.
@@ -700,8 +709,6 @@ impl<'conn> MasWriter<'conn> {
                     created_ats.push(created_at);
                 }
 
-                // `confirmed_at` is going to get removed in a future MAS release,
-                // so just populate with `created_at`
                 sqlx::query!(
                     r#"
                     INSERT INTO syn2mas__user_unsupported_third_party_ids
@@ -718,6 +725,55 @@ impl<'conn> MasWriter<'conn> {
             })
         }).await
     }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_upstream_oauth_links(
+        &mut self,
+        links: Vec<MasNewUpstreamOauthLink>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        if links.is_empty() {
+            return async { Ok(()) }.boxed();
+        }
+        self.writer_pool.spawn_with_connection(move |conn| {
+            Box::pin(async move {
+                let mut link_ids: Vec<Uuid> = Vec::with_capacity(links.len());
+                let mut user_ids: Vec<Uuid> = Vec::with_capacity(links.len());
+                let mut upstream_provider_ids: Vec<Uuid> = Vec::with_capacity(links.len());
+                let mut subjects: Vec<String> = Vec::with_capacity(links.len());
+                let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(links.len());
+
+                for MasNewUpstreamOauthLink {
+                    link_id,
+                    user_id,
+                    upstream_provider_id,
+                    subject,
+                    created_at,
+                } in links
+                {
+                    link_ids.push(link_id);
+                    user_ids.push(user_id);
+                    upstream_provider_ids.push(upstream_provider_id);
+                    subjects.push(subject);
+                    created_ats.push(created_at);
+                }
+
+                sqlx::query!(
+                    r#"
+                    INSERT INTO syn2mas__upstream_oauth_links
+                    (upstream_oauth_link_id, user_id, upstream_oauth_provider_id, subject, created_at)
+                    SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::UUID[], $4::TEXT[], $5::TIMESTAMP WITH TIME ZONE[])
+                    "#,
+                    &link_ids[..],
+                    &user_ids[..],
+                    &upstream_provider_ids[..],
+                    &subjects[..],
+                    &created_ats[..],
+                ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                Ok(())
+            })
+        }).boxed()
+    }
 }
 
 // How many entries to buffer at once, before writing a batch of rows to the
@@ -727,6 +783,7 @@ impl<'conn> MasWriter<'conn> {
 // stream to two tables at once...)
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
+// TODO replace with just `MasWriteBuffer`
 pub struct MasUserWriteBuffer<'writer, 'conn> {
     users: Vec<MasNewUser>,
     passwords: Vec<MasNewUserPassword>,
@@ -786,6 +843,7 @@ impl<'writer, 'conn> MasUserWriteBuffer<'writer, 'conn> {
     }
 }
 
+// TODO replace with just `MasWriteBuffer`
 pub struct MasThreepidWriteBuffer<'writer, 'conn> {
     email: Vec<MasNewEmailThreepid>,
     unsupported: Vec<MasNewUnsupportedThreepid>,
@@ -843,6 +901,60 @@ impl<'writer, 'conn> MasThreepidWriteBuffer<'writer, 'conn> {
     }
 }
 
+/// A function that can accept and flush buffers from a `MasWriteBuffer`.
+/// Intended uses are the methods on `MasWriter` such as `write_users`.
+type WriteBufferFlusher<'conn, T> =
+    for<'a> fn(&'a mut MasWriter<'conn>, Vec<T>) -> BoxFuture<'a, Result<(), Error>>;
+
+/// A buffer for writing rows to the MAS database.
+/// Generic over the type of rows.
+///
+/// # Panics
+///
+/// Panics if dropped before `finish()` has been called.
+pub struct MasWriteBuffer<'conn, T> {
+    rows: Vec<T>,
+    flusher: WriteBufferFlusher<'conn, T>,
+    finished: bool,
+}
+
+impl<'conn, T> MasWriteBuffer<'conn, T> {
+    pub fn new(flusher: WriteBufferFlusher<'conn, T>) -> Self {
+        MasWriteBuffer {
+            rows: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
+            flusher,
+            finished: false,
+        }
+    }
+
+    pub async fn finish(mut self, writer: &mut MasWriter<'conn>) -> Result<(), Error> {
+        self.finished = true;
+        self.flush(writer).await?;
+        Ok(())
+    }
+
+    pub async fn flush(&mut self, writer: &mut MasWriter<'conn>) -> Result<(), Error> {
+        let rows = std::mem::take(&mut self.rows);
+        self.rows.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
+        (self.flusher)(writer, rows).await?;
+        Ok(())
+    }
+
+    pub async fn write(&mut self, writer: &mut MasWriter<'conn>, row: T) -> Result<(), Error> {
+        self.rows.push(row);
+        if self.rows.len() >= WRITE_BUFFER_BATCH_SIZE {
+            self.flush(writer).await?;
+        }
+        Ok(())
+    }
+}
+
+impl<T> Drop for MasWriteBuffer<'_, T> {
+    fn drop(&mut self) {
+        assert!(self.finished, "MasWriteBuffer dropped but not finished!");
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::collections::{BTreeMap, BTreeSet};
@@ -855,7 +967,8 @@ mod test {
 
     use crate::{
         mas_writer::{
-            MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUser, MasNewUserPassword,
+            MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
+            MasNewUserPassword,
         },
         LockedMasDatabase, MasWriter,
     };
@@ -1080,6 +1193,41 @@ mod test {
             }])
             .await
             .expect("failed to write phone number (unsupported threepid)");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a link to an upstream provider.
+    /// There needs to be an upstream provider in the database already — in the
+    /// real migration, this is done by running a provider sync first.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR", fixtures("upstream_provider"))]
+    async fn test_write_user_with_upstream_provider_link(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_upstream_oauth_links(vec![MasNewUpstreamOauthLink {
+                user_id: Uuid::from_u128(1u128),
+                link_id: Uuid::from_u128(3u128),
+                upstream_provider_id: Uuid::from_u128(4u128),
+                subject: "12345.67890".to_owned(),
+                created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write link");
 
         writer.finish().await.expect("failed to finish MasWriter");
 
