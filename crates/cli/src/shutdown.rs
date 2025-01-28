@@ -1,9 +1,9 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{future::Future, pin::Pin, process::ExitCode, time::Duration};
+use std::{future::Future, process::ExitCode, time::Duration};
 
 use futures_util::future::BoxFuture;
 use mas_handlers::ActivityTracker;
@@ -36,6 +36,7 @@ pub struct ShutdownManager {
     reload_handlers: Vec<Box<dyn Fn() -> BoxFuture<'static, ()>>>,
 }
 
+/// Represents a thing that can be reloaded with a SIGHUP
 pub trait Reloadable: Clone + Send {
     fn reload(&self) -> impl Future<Output = ()> + Send;
 }
@@ -54,6 +55,16 @@ impl Reloadable for Templates {
                 "Failed to reload templates"
             );
         }
+    }
+}
+
+/// A wrapper around [`sd_notify::notify`] that logs any errors
+fn notify(states: &[sd_notify::NotifyState]) {
+    if let Err(e) = sd_notify::notify(false, states) {
+        tracing::error!(
+            error = &e as &dyn std::error::Error,
+            "Failed to notify service manager"
+        );
     }
 }
 
@@ -113,7 +124,13 @@ impl ShutdownManager {
 
     /// Run until we finish completely shutting down.
     pub async fn run(mut self) -> ExitCode {
-        // Wait for a first signal and trigger the soft shutdown
+        notify(&[sd_notify::NotifyState::Ready]);
+
+        let mut watchdog_usec = 0;
+        let watchdog_enabled = sd_notify::watchdog_enabled(false, &mut watchdog_usec);
+        let mut watchdog_interval = tokio::time::interval(Duration::from_micros(watchdog_usec / 2));
+
+        // Wait for a first shutdown signal and trigger the soft shutdown
         let likely_crashed = loop {
             tokio::select! {
                 () = self.soft_shutdown_token.cancelled() => {
@@ -131,8 +148,20 @@ impl ShutdownManager {
                     break false;
                 },
 
+                _ = watchdog_interval.tick(), if watchdog_enabled => {
+                    notify(&[
+                        sd_notify::NotifyState::Watchdog,
+                    ]);
+                },
+
                 _ = self.sighup.recv() => {
                     tracing::info!("Reload signal received (SIGHUP), reloading");
+
+                    notify(&[
+                        sd_notify::NotifyState::Reloading,
+                        sd_notify::NotifyState::monotonic_usec_now()
+                            .expect("Failed to read monotonic clock")
+                    ]);
 
                     // XXX: if the handler takes a long time, it will block the
                     // rest of the shutdown process, which is not ideal. We
@@ -141,10 +170,14 @@ impl ShutdownManager {
                         handler().await;
                     }
 
+                    notify(&[sd_notify::NotifyState::Ready]);
+
                     tracing::info!("Reloading done");
                 },
             }
         };
+
+        notify(&[sd_notify::NotifyState::Stopping]);
 
         self.soft_shutdown_token.cancel();
         self.task_tracker.close();

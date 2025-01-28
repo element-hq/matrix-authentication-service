@@ -33,6 +33,7 @@ rand.workspace = true
 rand_chacha = "0.3.1"
 reqwest.workspace = true
 rustls.workspace = true
+sd-notify = "0.4.5"
 serde_json.workspace = true
 serde_yaml = "0.9.34"
 sqlx.workspace = true
