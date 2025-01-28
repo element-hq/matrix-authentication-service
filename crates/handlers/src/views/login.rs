@@ -168,6 +168,11 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
+    // Extract the localpart of the MXID, fallback to the bare username
+    let username = homeserver
+        .localpart(&form.username)
+        .unwrap_or(&form.username);
+
     match login(
         password_manager,
         &mut repo,
@@ -175,7 +180,7 @@ pub(crate) async fn post(
         &clock,
         limiter,
         requester,
-        &form.username,
+        username,
         &form.password,
         user_agent,
     )
@@ -479,23 +484,17 @@ mod test {
             .contains(&escape_html(&second_provider_login.path_and_query())));
     }
 
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_password_login(pool: PgPool) {
-        setup();
-        let state = TestState::from_pool(pool).await.unwrap();
+    async fn user_with_password(state: &TestState, username: &str, password: &str) {
         let mut rng = state.rng();
-        let cookies = CookieHelper::new();
-
-        // Provision a user with a password
         let mut repo = state.repository().await.unwrap();
         let user = repo
             .user()
-            .add(&mut rng, &state.clock, "john".to_owned())
+            .add(&mut rng, &state.clock, username.to_owned())
             .await
             .unwrap();
         let (version, hash) = state
             .password_manager
-            .hash(&mut rng, Zeroizing::new("hunter2".as_bytes().to_vec()))
+            .hash(&mut rng, Zeroizing::new(password.as_bytes().to_vec()))
             .await
             .unwrap();
         repo.user_password()
@@ -503,6 +502,16 @@ mod test {
             .await
             .unwrap();
         repo.save().await.unwrap();
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_password_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        // Provision a user with a password
+        user_with_password(&state, "john", "hunter2").await;
 
         // Render the login page to get a CSRF token
         let request = Request::get("/login").empty();
@@ -540,6 +549,93 @@ mod test {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(response.body().contains("john"));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_password_login_with_mxid(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        // Provision a user with a password
+        user_with_password(&state, "john", "hunter2").await;
+
+        // Render the login page to get a CSRF token
+        let request = Request::get("/login").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the login form
+        let request = Request::post("/login").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "@john:example.com",
+            "password": "hunter2",
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Now if we get to the home page, we should see the user's username
+        let request = Request::get("/").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        assert!(response.body().contains("john"));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_password_login_with_mxid_wrong_server(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        // Provision a user with a password
+        user_with_password(&state, "john", "hunter2").await;
+
+        // Render the login page to get a CSRF token
+        let request = Request::get("/login").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the login form
+        let request = Request::post("/login").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "@john:something.corp",
+            "password": "hunter2",
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+
+        // This shouldn't have worked, we're back on the login page
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Invalid credentials"));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
