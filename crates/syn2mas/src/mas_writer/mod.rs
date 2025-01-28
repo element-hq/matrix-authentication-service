@@ -1053,7 +1053,8 @@ mod test {
         assert_db_snapshot!(&mut conn);
     }
 
-    /// Tests writing a single user, with a unsupported third-party ID associated.
+    /// Tests writing a single user, with a unsupported third-party ID
+    /// associated.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_write_user_with_unsupported_threepid(pool: PgPool) {
         let mut conn = pool.acquire().await.unwrap();
