@@ -8,6 +8,8 @@
 //! This module provides facilities for streaming relevant types of database
 //! records from a Synapse database.
 
+use std::fmt::Display;
+
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
 use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Row, Transaction, Type};
@@ -29,6 +31,12 @@ pub enum Error {
 
 #[derive(Clone, Debug, sqlx::Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FullUserId(pub String);
+
+impl Display for FullUserId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl Type<Postgres> for FullUserId {
     fn type_info() -> <sqlx::Postgres as sqlx::Database>::TypeInfo {

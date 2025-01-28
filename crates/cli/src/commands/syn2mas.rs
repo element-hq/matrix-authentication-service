@@ -200,6 +200,7 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
             Subcommand::Migrate => {
+                let provider_id_mappings: HashMap<String, Uuid> = HashMap::new();
                 // TODO how should we handle warnings at this stage?
 
                 let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
@@ -215,8 +216,14 @@ impl Options {
 
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
-                syn2mas::migrate(&mut reader, &mut writer, &mas_matrix.homeserver, &mut rng)
-                    .await?;
+                syn2mas::migrate(
+                    &mut reader,
+                    &mut writer,
+                    &mas_matrix.homeserver,
+                    &mut rng,
+                    &provider_id_mappings,
+                )
+                .await?;
 
                 reader.finish().await?;
                 writer.finish().await?;
