@@ -235,13 +235,21 @@ pub struct SynapseRefreshToken {
 /// underneath our feet. It's still not a good idea to run Synapse at the same
 /// time as the migration.
 // TODO not complete!
-const TABLES_TO_LOCK: &[&str] = &["users", "user_threepids", "user_external_ids"];
+const TABLES_TO_LOCK: &[&str] = &[
+    "users",
+    "user_threepids",
+    "user_external_ids",
+    "devices",
+    "access_tokens",
+    "refresh_tokens",
+];
 
 /// Number of migratable rows in various Synapse tables.
 /// Used to estimate progress.
 #[derive(Clone, Debug)]
 pub struct SynapseRowCounts {
     pub users: i64,
+    pub devices: i64,
 }
 
 pub struct SynapseReader<'c> {
@@ -312,7 +320,7 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
-        let users = sqlx::query(
+        let users: i64 = sqlx::query_scalar(
             "
             SELECT COUNT(1) FROM users
             WHERE appservice_id IS NULL AND is_guest = 0
@@ -320,11 +328,19 @@ impl<'conn> SynapseReader<'conn> {
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse users")?
-        .try_get::<i64, _>(0)
-        .into_database("couldn't decode count of Synapse users table")?;
+        .into_database("counting Synapse users")?;
 
-        Ok(SynapseRowCounts { users })
+        let devices = sqlx::query_scalar(
+            "
+            SELECT COUNT(1) FROM devices
+            WHERE NOT hidden
+            ",
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("counting Synapse devices")?;
+
+        Ok(SynapseRowCounts { users, devices })
     }
 
     /// Reads Synapse users, excluding application service users (which do not
