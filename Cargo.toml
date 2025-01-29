@@ -153,7 +153,7 @@ version = "0.1.2"
 
 # HTTP client and server
 [workspace.dependencies.hyper]
-version = "1.5.2"
+version = "1.6.0"
 features = ["client", "http1", "http2"]
 
 # Additional Hyper utilties
