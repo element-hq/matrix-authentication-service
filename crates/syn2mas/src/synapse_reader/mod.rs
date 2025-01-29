@@ -139,7 +139,7 @@ impl sqlx::Type<Postgres> for SecondsTimestamp {
 
 /// A timestamp stored as the number of milliseconds since the Unix epoch.
 /// Note that Synapse stores some timestamps in seconds.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MillisecondsTimestamp(DateTime<Utc>);
 
 impl From<MillisecondsTimestamp> for DateTime<Utc> {
@@ -185,7 +185,7 @@ pub struct SynapseUser {
 }
 
 /// Row of the `user_threepids` table in Synapse.
-#[derive(Clone, Debug, FromRow)]
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseThreepid {
     pub user_id: FullUserId,
     pub medium: String,
@@ -329,7 +329,10 @@ mod test {
     use insta::assert_debug_snapshot;
     use sqlx::{migrate::Migrator, PgPool};
 
-    use crate::{synapse_reader::SynapseUser, SynapseReader};
+    use crate::{
+        synapse_reader::{SynapseThreepid, SynapseUser},
+        SynapseReader,
+    };
 
     // TODO test me
     static MIGRATOR: Migrator = sqlx::migrate!("./test_synapse_migrations");
@@ -348,5 +351,21 @@ mod test {
             .expect("failed to read Synapse users");
 
         assert_debug_snapshot!(users);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "threepids_alice"))]
+    async fn test_read_threepids(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let threepids: BTreeSet<SynapseThreepid> = reader
+            .read_threepids()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse threepids");
+
+        assert_debug_snapshot!(threepids);
     }
 }

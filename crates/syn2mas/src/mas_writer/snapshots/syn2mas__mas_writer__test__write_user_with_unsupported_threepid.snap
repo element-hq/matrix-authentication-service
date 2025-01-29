@@ -1,0 +1,16 @@
+---
+source: crates/syn2mas/src/mas_writer/mod.rs
+expression: db_snapshot
+---
+user_unsupported_third_party_ids:
+  - address: "441189998819991197253"
+    created_at: "1970-01-01 00:00:00+00"
+    medium: msisdn
+    user_id: 00000000-0000-0000-0000-000000000001
+users:
+  - can_request_admin: "false"
+    created_at: "1970-01-01 00:00:00+00"
+    locked_at: ~
+    primary_user_email_id: ~
+    user_id: 00000000-0000-0000-0000-000000000001
+    username: alice
