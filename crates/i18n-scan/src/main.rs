@@ -8,7 +8,7 @@
 // which is annoying with this clippy lint
 #![allow(clippy::default_constructed_unit_structs)]
 
-use std::fs::File;
+use std::{fs::File, io::BufReader};
 
 use ::minijinja::{machinery::WhitespaceConfig, syntax::SyntaxConfig};
 use camino::Utf8PathBuf;
@@ -50,8 +50,9 @@ fn main() {
 
     // Open the existing translation file if one was provided
     let mut tree = if let Some(path) = &options.existing {
-        let mut file = File::open(path).expect("Failed to open existing translation file");
-        serde_json::from_reader(&mut file).expect("Failed to parse existing translation file")
+        let file = File::open(path).expect("Failed to open existing translation file");
+        let mut reader = BufReader::new(file);
+        serde_json::from_reader(&mut reader).expect("Failed to parse existing translation file")
     } else {
         TranslationTree::default()
     };
