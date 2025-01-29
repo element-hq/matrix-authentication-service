@@ -11,7 +11,10 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{collections::HashMap, pin::pin};
+use std::{
+    collections::{HashMap, HashSet},
+    pin::pin,
+};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -25,11 +28,12 @@ use uuid::Uuid;
 
 use crate::{
     mas_writer::{
-        self, MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
-        MasNewUserPassword, MasWriteBuffer, MasWriter,
+        self, MasNewCompatSession, MasNewEmailThreepid, MasNewUnsupportedThreepid,
+        MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
     synapse_reader::{
-        self, ExtractLocalpartError, FullUserId, SynapseExternalId, SynapseThreepid, SynapseUser,
+        self, ExtractLocalpartError, FullUserId, SynapseDevice, SynapseExternalId, SynapseThreepid,
+        SynapseUser,
     },
     SynapseReader,
 };
@@ -66,12 +70,9 @@ pub enum Error {
 struct UsersMigrated {
     /// Lookup table from user localpart to that user's UUID in MAS.
     user_localparts_to_uuid: HashMap<CompactString, Uuid>,
-}
 
-struct DevicesMigrated {
-    /// Lookup table from `(user_id, device_id)` pairs to the
-    /// UUID of the `compat_session` in MAS
-    devices_to_uuid: HashMap<(CompactString, CompactString), Uuid>,
+    /// Set of user UUIDs that correspond to Synapse admins
+    synapse_admins: HashSet<Uuid>,
 }
 
 /// Performs a migration from Synapse's database to MAS' database.
@@ -127,18 +128,14 @@ pub async fn migrate(
     )
     .await?;
 
-    let migrated_devices = migrate_devices(
-        synapse,
-        mas,
-        counts
-            .devices
-            .try_into()
-            .expect("More than usize::MAX devices — unable to handle this many!"),
-        server_name,
-        rng,
-        &migrated_users.user_localparts_to_uuid,
-    )
-    .await?;
+    // `(MAS user_id, device_id)` mapped to `compat_session` ULID
+    let mut devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid> =
+        HashMap::with_capacity(
+            counts
+                .devices
+                .try_into()
+                .expect("More than usize::MAX devices — unable to handle this many!"),
+        );
 
     migrate_access_and_refresh_tokens(
         synapse,
@@ -146,7 +143,18 @@ pub async fn migrate(
         server_name,
         rng,
         &migrated_users.user_localparts_to_uuid,
-        &migrated_devices.devices_to_uuid,
+        &mut devices_to_compat_sessions,
+    )
+    .await?;
+
+    migrate_devices(
+        synapse,
+        mas,
+        server_name,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &mut devices_to_compat_sessions,
+        &migrated_users.synapse_admins,
     )
     .await?;
 
@@ -166,10 +174,18 @@ async fn migrate_users(
     let mut users_stream = pin!(synapse.read_users());
     // TODO is 1:1 capacity enough for a hashmap?
     let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint);
+    let mut synapse_admins = HashSet::new();
 
     while let Some(user_res) = users_stream.next().await {
         let user = user_res.into_synapse("reading user")?;
         let (mas_user, mas_password_opt) = transform_user(&user, server_name, rng)?;
+
+        if bool::from(user.admin) {
+            // Note down the fact that this user is a Synapse admin,
+            // because we will grant their existing devices the Synapse admin
+            // flag
+            synapse_admins.insert(mas_user.user_id);
+        }
 
         user_localparts_to_uuid.insert(CompactString::new(&mas_user.username), mas_user.user_id);
 
@@ -194,6 +210,7 @@ async fn migrate_users(
 
     Ok(UsersMigrated {
         user_localparts_to_uuid,
+        synapse_admins,
     })
 }
 
@@ -341,21 +358,100 @@ async fn migrate_external_ids(
 
     Ok(())
 }
+
+/// Migrate devices from Synapse to MAS (as compat sessions).
+///
+/// In order to get the right session creation timestamps, the access tokens
+/// must counterintuitively be migrated first, with the ULIDs passed in as
+/// `devices`.
+///
+/// This is because only access tokens store a timestamp that in any way
+/// resembles a creation timestamp.
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_devices(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
-    device_count_hint: usize,
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
-) -> Result<DevicesMigrated, Error> {
-    // TODO is 1:1 enough capacity for a HashMap?
-    let mut devices_to_uuid = HashMap::with_capacity(device_count_hint);
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
+    synapse_admins: &HashSet<Uuid>,
+) -> Result<(), Error> {
+    let mut devices_stream = pin!(synapse.read_devices());
+    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
 
-    todo!();
+    while let Some(device_res) = devices_stream.next().await {
+        let SynapseDevice {
+            user_id: synapse_user_id,
+            device_id,
+            display_name,
+            last_seen,
+            ip,
+            user_agent,
+        } = device_res.into_synapse("reading Synapse device")?;
 
-    Ok(DevicesMigrated { devices_to_uuid })
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            return Err(Error::MissingUserFromDependentTable {
+                table: "devices".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        let session_id = *devices
+            .entry((user_id, CompactString::new(&device_id)))
+            .or_insert_with(||
+                // We don't have a creation time for this device (as it has no access token),
+                // so use now as a least-evil fallback.
+                Ulid::with_source(rng).into());
+        let created_at = Ulid::from(session_id).datetime().into();
+
+        // As we're using a real IP type in the MAS database, it is possible
+        // that we encounter invalid IP addresses in the Synapse database.
+        // In that case, we should ignore them, but still log a warning.
+        let last_active_ip = ip.and_then(|ip| {
+            ip.parse()
+                .map_err(|e| {
+                    tracing::warn!(
+                        error = &e as &dyn std::error::Error,
+                        mxid = %synapse_user_id,
+                        %device_id,
+                        %ip,
+                        "Failed to parse device IP, ignoring"
+                    );
+                })
+                .ok()
+        });
+
+        // TODO skip access tokens for deactivated users
+        write_buffer
+            .write(
+                mas,
+                MasNewCompatSession {
+                    session_id,
+                    user_id,
+                    device_id,
+                    human_name: display_name,
+                    created_at,
+                    is_synapse_admin: synapse_admins.contains(&user_id),
+                    last_active_at: last_seen.map(DateTime::from),
+                    last_active_ip,
+                    user_agent,
+                },
+            )
+            .await
+            .into_mas("writing compat sessions")?;
+    }
+
+    write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat sessions")?;
+
+    Ok(())
 }
 
 #[tracing::instrument(skip_all, level = Level::INFO)]
@@ -365,8 +461,11 @@ async fn migrate_access_and_refresh_tokens(
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
-    devices: &HashMap<(CompactString, CompactString), Uuid>,
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
+    let mut access_token_stream = pin!(synapse.read_access_tokens());
+    // let mut write_buffer =
+    // MasWriteBuffer::new(MasWriter::write_compat_access_token);
     todo!();
 
     Ok(())
