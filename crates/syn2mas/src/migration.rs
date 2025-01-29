@@ -68,6 +68,12 @@ struct UsersMigrated {
     user_localparts_to_uuid: HashMap<CompactString, Uuid>,
 }
 
+struct DevicesMigrated {
+    /// Lookup table from `(user_id, device_id)` pairs to the
+    /// UUID of the `compat_session` in MAS
+    devices_to_uuid: HashMap<(CompactString, CompactString), Uuid>,
+}
+
 /// Performs a migration from Synapse's database to MAS' database.
 ///
 /// # Panics
@@ -96,7 +102,7 @@ pub async fn migrate(
         counts
             .users
             .try_into()
-            .expect("More than usize::MAX users — wow!"),
+            .expect("More than usize::MAX users — unable to handle this many!"),
         server_name,
         rng,
     )
@@ -118,6 +124,29 @@ pub async fn migrate(
         rng,
         &migrated_users.user_localparts_to_uuid,
         provider_id_mapping,
+    )
+    .await?;
+
+    let migrated_devices = migrate_devices(
+        synapse,
+        mas,
+        counts
+            .devices
+            .try_into()
+            .expect("More than usize::MAX devices — unable to handle this many!"),
+        server_name,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+    )
+    .await?;
+
+    migrate_access_and_refresh_tokens(
+        synapse,
+        mas,
+        server_name,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &migrated_devices.devices_to_uuid,
     )
     .await?;
 
@@ -309,6 +338,36 @@ async fn migrate_external_ids(
         .finish(mas)
         .await
         .into_mas("writing threepids")?;
+
+    Ok(())
+}
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_devices(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    device_count_hint: usize,
+    server_name: &str,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+) -> Result<DevicesMigrated, Error> {
+    // TODO is 1:1 enough capacity for a HashMap?
+    let mut devices_to_uuid = HashMap::with_capacity(device_count_hint);
+
+    todo!();
+
+    Ok(DevicesMigrated { devices_to_uuid })
+}
+
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_access_and_refresh_tokens(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+    devices: &HashMap<(CompactString, CompactString), Uuid>,
+) -> Result<(), Error> {
+    todo!();
 
     Ok(())
 }
