@@ -7,7 +7,7 @@
 //!
 //! This module is responsible for writing new records to MAS' database.
 
-use std::fmt::Display;
+use std::{fmt::Display, net::IpAddr};
 
 use chrono::{DateTime, Utc};
 use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
@@ -228,6 +228,18 @@ pub struct MasNewUpstreamOauthLink {
     pub upstream_provider_id: Uuid,
     pub subject: String,
     pub created_at: DateTime<Utc>,
+}
+
+pub struct MasNewCompatSession {
+    pub session_id: Uuid,
+    pub user_id: Uuid,
+    pub device_id: String,
+    pub human_name: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub is_synapse_admin: bool,
+    pub last_active_at: Option<DateTime<Utc>>,
+    pub last_active_ip: Option<IpAddr>,
+    pub user_agent: Option<String>,
 }
 
 /// The 'version' of the password hashing scheme used for passwords when they
@@ -761,6 +773,85 @@ impl<'conn> MasWriter<'conn> {
             })
         }).boxed()
     }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_compat_sessions(
+        &mut self,
+        sessions: Vec<MasNewCompatSession>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(sessions.len());
+                    let mut user_ids: Vec<Uuid> = Vec::with_capacity(sessions.len());
+                    let mut device_ids: Vec<String> = Vec::with_capacity(sessions.len());
+                    let mut human_names: Vec<Option<String>> = Vec::with_capacity(sessions.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(sessions.len());
+                    let mut is_synapse_admins: Vec<bool> = Vec::with_capacity(sessions.len());
+                    let mut last_active_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(sessions.len());
+                    let mut last_active_ips: Vec<Option<IpAddr>> =
+                        Vec::with_capacity(sessions.len());
+                    let mut user_agents: Vec<Option<String>> = Vec::with_capacity(sessions.len());
+
+                    for MasNewCompatSession {
+                        session_id,
+                        user_id,
+                        device_id,
+                        human_name,
+                        created_at,
+                        is_synapse_admin,
+                        last_active_at,
+                        last_active_ip,
+                        user_agent,
+                    } in sessions
+                    {
+                        session_ids.push(session_id);
+                        user_ids.push(user_id);
+                        device_ids.push(device_id);
+                        human_names.push(human_name);
+                        created_ats.push(created_at);
+                        is_synapse_admins.push(is_synapse_admin);
+                        last_active_ats.push(last_active_at);
+                        last_active_ips.push(last_active_ip);
+                        user_agents.push(user_agent);
+                    }
+
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__compat_sessions (
+                          compat_session_id, user_id,
+                          device_id, human_name,
+                          created_at, is_synapse_admin,
+                          last_active_at, last_active_ip,
+                          user_agent)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[], $2::UUID[],
+                          $3::TEXT[], $4::TEXT[],
+                          $5::TIMESTAMP WITH TIME ZONE[], $6::BOOLEAN[],
+                          $7::TIMESTAMP WITH TIME ZONE[], $8::INET[],
+                          $9::TEXT[])
+                        "#,
+                        &session_ids[..],
+                        &user_ids[..],
+                        &device_ids[..],
+                        &human_names[..] as &[Option<String>],
+                        &created_ats[..],
+                        &is_synapse_admins[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &last_active_ats[..] as &[Option<DateTime<Utc>>],
+                        &last_active_ips[..] as &[Option<IpAddr>],
+                        &user_agents[..] as &[Option<String>],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing compat sessions to MAS")?;
+
+                    Ok(())
+                })
+            })
+            .boxed()
+    }
 }
 
 // How many entries to buffer at once, before writing a batch of rows to the
@@ -839,8 +930,8 @@ mod test {
 
     use crate::{
         mas_writer::{
-            MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
-            MasNewUserPassword,
+            MasNewCompatSession, MasNewEmailThreepid, MasNewUnsupportedThreepid,
+            MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword,
         },
         LockedMasDatabase, MasWriter,
     };
@@ -1097,6 +1188,43 @@ mod test {
                 upstream_provider_id: Uuid::from_u128(4u128),
                 subject: "12345.67890".to_owned(),
                 created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write link");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a device (compat session).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_device(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_compat_sessions(vec![MasNewCompatSession {
+                user_id: Uuid::from_u128(1u128),
+                session_id: Uuid::from_u128(5u128),
+                created_at: DateTime::default(),
+                device_id: "ADEVICE".to_owned(),
+                human_name: Some("alice's pinephone".to_owned()),
+                is_synapse_admin: true,
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some("203.0.113.1".parse().unwrap()),
+                user_agent: Some("Browser/5.0".to_owned()),
             }])
             .await
             .expect("failed to write link");
