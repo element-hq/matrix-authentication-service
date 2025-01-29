@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{collections::HashMap, fs::File, str::FromStr};
+use std::{collections::HashMap, fs::File, io::BufReader, str::FromStr};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use icu_list::{ListError, ListFormatter, ListLength};
@@ -135,12 +135,14 @@ impl Translator {
                 Err(source) => return Err(LoadError::InvalidLocale { path, source }),
             };
 
-            let mut file = match File::open(&path) {
+            let file = match File::open(&path) {
                 Ok(file) => file,
                 Err(source) => return Err(LoadError::ReadFile { path, source }),
             };
 
-            let content = match serde_json::from_reader(&mut file) {
+            let mut reader = BufReader::new(file);
+
+            let content = match serde_json::from_reader(&mut reader) {
                 Ok(content) => content,
                 Err(source) => return Err(LoadError::Deserialize { path, source }),
             };
