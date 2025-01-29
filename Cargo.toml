@@ -248,6 +248,10 @@ version = "0.12.12"
 default-features = false
 features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
+# Matrix-related types
+[workspace.dependencies.ruma-common]
+version = "0.15.0"
+
 # TLS stack
 [workspace.dependencies.rustls]
 version = "0.23.21"
