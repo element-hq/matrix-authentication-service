@@ -5,7 +5,7 @@
 
 use std::{future::Future, process::ExitCode, time::Duration};
 
-use futures_util::future::BoxFuture;
+use futures_util::future::{BoxFuture, Either};
 use mas_handlers::ActivityTracker;
 use mas_templates::Templates;
 use tokio::signal::unix::{Signal, SignalKind};
@@ -131,12 +131,28 @@ impl LifecycleManager {
     pub async fn run(mut self) -> ExitCode {
         notify(&[sd_notify::NotifyState::Ready]);
 
-        let mut watchdog_usec = 0;
-        let watchdog_enabled = sd_notify::watchdog_enabled(false, &mut watchdog_usec);
-        let mut watchdog_interval = tokio::time::interval(Duration::from_micros(watchdog_usec / 2));
+        // This will be `Some` if we have the watchdog enabled, and `None` if not
+        let mut watchdog_interval = {
+            let mut watchdog_usec = 0;
+            if sd_notify::watchdog_enabled(false, &mut watchdog_usec) {
+                Some(tokio::time::interval(Duration::from_micros(
+                    watchdog_usec / 2,
+                )))
+            } else {
+                None
+            }
+        };
 
         // Wait for a first shutdown signal and trigger the soft shutdown
         let likely_crashed = loop {
+            // This makes a Future that will either yield the watchdog tick if enabled, or a
+            // pending Future if not
+            let watchdog_tick = if let Some(watchdog_interval) = &mut watchdog_interval {
+                Either::Left(watchdog_interval.tick())
+            } else {
+                Either::Right(futures_util::future::pending())
+            };
+
             tokio::select! {
                 () = self.soft_shutdown_token.cancelled() => {
                     tracing::warn!("Another task triggered a shutdown, it likely crashed! Shutting down");
@@ -153,7 +169,7 @@ impl LifecycleManager {
                     break false;
                 },
 
-                _ = watchdog_interval.tick(), if watchdog_enabled => {
+                _ = watchdog_tick => {
                     notify(&[
                         sd_notify::NotifyState::Watchdog,
                     ]);
