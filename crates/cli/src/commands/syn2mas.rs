@@ -6,6 +6,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, SyncConfig,
+    UpstreamOAuth2Config,
 };
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
@@ -200,7 +201,19 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
             Subcommand::Migrate => {
-                let provider_id_mappings: HashMap<String, Uuid> = HashMap::new();
+                let provider_id_mappings: HashMap<String, Uuid> = {
+                    let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)?;
+
+                    mas_oauth2
+                        .providers
+                        .iter()
+                        .filter_map(|provider| {
+                            let synapse_idp_id = provider.synapse_idp_id.clone()?;
+                            Some((synapse_idp_id, Uuid::from(provider.id)))
+                        })
+                        .collect()
+                };
+
                 // TODO how should we handle warnings at this stage?
 
                 let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
