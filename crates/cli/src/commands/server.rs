@@ -28,6 +28,7 @@ use crate::{
     util::{
         database_pool_from_config, mailer_from_config, password_manager_from_config,
         policy_factory_from_config, site_config_from_config, templates_from_config,
+        test_mailer_in_background,
     },
 };
 
@@ -157,7 +158,7 @@ impl Options {
 
         if !self.no_worker {
             let mailer = mailer_from_config(&config.email, &templates)?;
-            mailer.test_connection().await?;
+            test_mailer_in_background(&mailer, Duration::from_secs(30));
 
             info!("Starting task worker");
             mas_tasks::init(

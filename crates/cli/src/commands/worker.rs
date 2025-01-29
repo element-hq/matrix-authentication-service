@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::process::ExitCode;
+use std::{process::ExitCode, time::Duration};
 
 use clap::Parser;
 use figment::Figment;
@@ -17,7 +17,7 @@ use crate::{
     lifecycle::LifecycleManager,
     util::{
         database_pool_from_config, mailer_from_config, site_config_from_config,
-        templates_from_config,
+        templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -55,7 +55,7 @@ impl Options {
             templates_from_config(&config.templates, &site_config, &url_builder).await?;
 
         let mailer = mailer_from_config(&config.email, &templates)?;
-        mailer.test_connection().await?;
+        test_mailer_in_background(&mailer, Duration::from_secs(30));
 
         let http_client = mas_http::reqwest_client();
         let conn = SynapseConnection::new(

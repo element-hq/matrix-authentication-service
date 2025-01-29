@@ -22,7 +22,7 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions, PgConnection, PgPool,
 };
-use tracing::log::LevelFilter;
+use tracing::{log::LevelFilter, Instrument};
 
 pub async fn password_manager_from_config(
     config: &PasswordsConfig,
@@ -97,6 +97,27 @@ pub fn mailer_from_config(
     };
 
     Ok(Mailer::new(templates.clone(), transport, from, reply_to))
+}
+
+/// Test the connection to the mailer in a background task
+pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
+    let mailer = mailer.clone();
+
+    let span = tracing::info_span!("cli.test_mailer");
+    tokio::spawn(async move {
+        match tokio::time::timeout(timeout, mailer.test_connection()).await {
+            Ok(Ok(())) => {}
+            Ok(Err(err)) => {
+                tracing::warn!(
+                    error = &err as &dyn std::error::Error,
+                    "Could not connect to the mail backend, tasks sending mails may fail!"
+                );
+            }
+            Err(_) => {
+                tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
+            }
+        }
+    }.instrument(span));
 }
 
 pub async fn policy_factory_from_config(
