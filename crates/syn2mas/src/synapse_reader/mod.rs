@@ -209,6 +209,17 @@ pub struct SynapseExternalId {
     pub external_id: String,
 }
 
+/// Row of the `devices` table in Synapse.
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SynapseDevice {
+    pub user_id: FullUserId,
+    pub device_id: String,
+    pub display_name: Option<String>,
+    pub last_seen: Option<MillisecondsTimestamp>,
+    pub ip: Option<String>,
+    pub user_agent: Option<String>,
+}
+
 /// Row of the `access_tokens` table in Synapse.
 #[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SynapseAccessToken {
@@ -387,6 +398,22 @@ impl<'conn> SynapseReader<'conn> {
         .map_err(|err| err.into_database("reading Synapse user external IDs"))
     }
 
+    /// Reads devices from the Synapse database.
+    /// Does not include so-called 'hidden' devices, which are just a mechanism
+    /// for storing various signing keys shared between the real devices.
+    pub fn read_devices(&mut self) -> impl Stream<Item = Result<SynapseDevice, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              user_id, device_id, display_name, last_seen, ip, user_agent
+            FROM devices
+            WHERE NOT hidden
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse devices"))
+    }
+
     /// Reads access tokens from the Synapse database.
     /// This does not include access tokens used for puppetting users, as those
     /// are not supported by MAS. This also does not include access tokens
@@ -446,8 +473,8 @@ mod test {
 
     use crate::{
         synapse_reader::{
-            SynapseAccessToken, SynapseExternalId, SynapseRefreshToken, SynapseThreepid,
-            SynapseUser,
+            SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshToken,
+            SynapseThreepid, SynapseUser,
         },
         SynapseReader,
     };
@@ -501,6 +528,22 @@ mod test {
             .expect("failed to read Synapse external user IDs");
 
         assert_debug_snapshot!(external_ids);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "devices_alice"))]
+    async fn test_read_devices(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let devices: BTreeSet<SynapseDevice> = reader
+            .read_devices()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse devices");
+
+        assert_debug_snapshot!(devices);
     }
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "access_token_alice"))]
