@@ -14,7 +14,7 @@ use mas_config::{
 };
 use mas_data_model::SiteConfig;
 use mas_email::{MailTransport, Mailer};
-use mas_handlers::{passwords::PasswordManager, ActivityTracker};
+use mas_handlers::passwords::PasswordManager;
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
@@ -22,7 +22,7 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions, PgConnection, PgPool,
 };
-use tracing::{error, info, log::LevelFilter};
+use tracing::log::LevelFilter;
 
 pub async fn password_manager_from_config(
     config: &PasswordsConfig,
@@ -311,37 +311,6 @@ pub async fn database_connection_from_config(
         .connect()
         .await
         .context("could not connect to the database")
-}
-
-/// Reload templates on SIGHUP
-pub fn register_sighup(
-    templates: &Templates,
-    activity_tracker: &ActivityTracker,
-) -> anyhow::Result<()> {
-    #[cfg(unix)]
-    {
-        let mut signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())?;
-        let templates = templates.clone();
-        let activity_tracker = activity_tracker.clone();
-
-        tokio::spawn(async move {
-            loop {
-                if signal.recv().await.is_none() {
-                    // No more signals will be received, breaking
-                    break;
-                };
-
-                info!("SIGHUP received, reloading templates & flushing activity tracker");
-
-                activity_tracker.flush().await;
-                templates.clone().reload().await.unwrap_or_else(|err| {
-                    error!(?err, "Error while reloading templates");
-                });
-            }
-        });
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
