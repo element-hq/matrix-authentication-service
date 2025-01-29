@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT compat_session_id\n                     , device_id\n                     , user_id\n                     , user_session_id\n                     , created_at\n                     , finished_at\n                     , is_synapse_admin\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip as \"last_active_ip: IpAddr\"\n                FROM compat_sessions\n                WHERE compat_session_id = $1\n            ",
+  "query": "\n                SELECT compat_session_id\n                     , device_id\n                     , human_name\n                     , user_id\n                     , user_session_id\n                     , created_at\n                     , finished_at\n                     , is_synapse_admin\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip as \"last_active_ip: IpAddr\"\n                FROM compat_sessions\n                WHERE compat_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -15,41 +15,46 @@
       },
       {
         "ordinal": 2,
+        "name": "human_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
         "name": "user_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "user_session_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "finished_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "is_synapse_admin",
         "type_info": "Bool"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "user_agent",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "last_active_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "last_active_ip: IpAddr",
         "type_info": "Inet"
       }
@@ -62,6 +67,7 @@
     "nullable": [
       false,
       true,
+      true,
       false,
       true,
       false,
@@ -72,5 +78,5 @@
       true
     ]
   },
-  "hash": "bb6f55a4cc10bec8ec0fc138485f6b4d308302bb1fa3accb12932d1e5ce457e9"
+  "hash": "9b7363000017fa3dee46441bc0679cb16f9f8df08fa258cc907007fb9bcd0bc7"
 }
