@@ -51,6 +51,7 @@ tracing.workspace = true
 tracing-appender = "0.2.3"
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 tracing-opentelemetry.workspace = true
+tracing-indicatif.workspace = true
 opentelemetry.workspace = true
 opentelemetry-http.workspace = true
 opentelemetry-jaeger-propagator.workspace = true
