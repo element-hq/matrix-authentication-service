@@ -11,10 +11,10 @@ on:
   # Only run for pull requests if relevant files were changed
   pull_request:
     branches: [main]
-    paths:
-      - Dockerfile
-      - docker-bake.hcl
-      - .github/workflows/build.yaml
+    # paths: HACK
+    #   - Dockerfile
+    #   - docker-bake.hcl
+    #   - .github/workflows/build.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
