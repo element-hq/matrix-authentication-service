@@ -22,6 +22,7 @@ sqlx.workspace = true
 chrono.workspace = true
 compact_str.workspace = true
 tracing.workspace = true
+tracing-indicatif.workspace = true
 futures-util = "0.3.30"
 
 rand.workspace = true

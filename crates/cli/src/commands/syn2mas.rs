@@ -228,7 +228,6 @@ impl Options {
                 #[allow(clippy::disallowed_methods)]
                 let mut rng = thread_rng();
 
-                // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
                 syn2mas::migrate(
                     reader,

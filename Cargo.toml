@@ -361,6 +361,10 @@ version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
 version = "0.3.19"
 
+# Progress bars
+[workspace.dependencies.tracing-indicatif]
+version = "0.3.9"
+
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
 version = "0.27.1"
