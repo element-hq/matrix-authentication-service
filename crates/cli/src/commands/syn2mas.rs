@@ -223,6 +223,7 @@ impl Options {
                 }
                 let mut writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
+                let clock = SystemClock::default();
                 // TODO is this rng ok?
                 #[allow(clippy::disallowed_methods)]
                 let mut rng = thread_rng();
@@ -233,6 +234,7 @@ impl Options {
                     &mut reader,
                     &mut writer,
                     &mas_matrix.homeserver,
+                    &clock,
                     &mut rng,
                     &provider_id_mappings,
                 )

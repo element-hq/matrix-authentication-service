@@ -6113,6 +6113,7 @@ dependencies = [
  "futures-util",
  "insta",
  "mas-config",
+ "mas-storage",
  "mas-storage-pg",
  "rand",
  "serde",

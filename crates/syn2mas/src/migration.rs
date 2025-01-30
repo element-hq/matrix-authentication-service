@@ -19,6 +19,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::StreamExt as _;
+use mas_storage::Clock;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -28,12 +29,13 @@ use uuid::Uuid;
 
 use crate::{
     mas_writer::{
-        self, MasNewCompatSession, MasNewEmailThreepid, MasNewUnsupportedThreepid,
-        MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword, MasWriteBuffer, MasWriter,
+        self, MasNewCompatAccessToken, MasNewCompatSession, MasNewEmailThreepid,
+        MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword,
+        MasWriteBuffer, MasWriter,
     },
     synapse_reader::{
-        self, ExtractLocalpartError, FullUserId, SynapseDevice, SynapseExternalId, SynapseThreepid,
-        SynapseUser,
+        self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
+        SynapseExternalId, SynapseRefreshToken, SynapseThreepid, SynapseUser,
     },
     SynapseReader,
 };
@@ -92,6 +94,7 @@ pub async fn migrate(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
+    clock: &dyn Clock,
     rng: &mut impl RngCore,
     provider_id_mapping: &HashMap<String, Uuid>,
 ) -> Result<(), Error> {
@@ -137,7 +140,18 @@ pub async fn migrate(
                 .expect("More than usize::MAX devices — unable to handle this many!"),
         );
 
-    migrate_access_and_refresh_tokens(
+    migrate_access_tokens(
+        synapse,
+        mas,
+        server_name,
+        clock,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &mut devices_to_compat_sessions,
+    )
+    .await?;
+
+    migrate_refresh_tokens(
         synapse,
         mas,
         server_name,
@@ -433,7 +447,7 @@ async fn migrate_devices(
                 MasNewCompatSession {
                     session_id,
                     user_id,
-                    device_id,
+                    device_id: Some(device_id),
                     human_name: display_name,
                     created_at,
                     is_synapse_admin: synapse_admins.contains(&user_id),
@@ -455,7 +469,110 @@ async fn migrate_devices(
 }
 
 #[tracing::instrument(skip_all, level = Level::INFO)]
-async fn migrate_access_and_refresh_tokens(
+async fn migrate_access_tokens(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    clock: &dyn Clock,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
+) -> Result<(), Error> {
+    let mut token_stream = pin!(synapse.read_access_tokens());
+    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
+    let mut deviceless_session_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
+
+    while let Some(token_res) = token_stream.next().await {
+        let SynapseAccessToken {
+            user_id: synapse_user_id,
+            device_id,
+            token,
+            valid_until_ms,
+            last_validated,
+        } = token_res.into_synapse("reading Synapse access token")?;
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            return Err(Error::MissingUserFromDependentTable {
+                table: "devices".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        // It's not always accurate, but last_validated is *often* the creation time of
+        // the device If we don't have one, then use the current time as a
+        // fallback.
+        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
+
+        let session_id = if let Some(device_id) = device_id {
+            // Use the existing device_id if this is the second token for a device
+            *devices
+                .entry((user_id, CompactString::new(&device_id)))
+                .or_insert_with(|| {
+                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng))
+                })
+        } else {
+            // If this is a deviceless access token, create a deviceless compat session
+            // for it (since otherwise we won't create one whilst migrating devices)
+            let deviceless_session_id =
+                Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+            deviceless_session_write_buffer
+                .write(
+                    mas,
+                    MasNewCompatSession {
+                        session_id: deviceless_session_id,
+                        user_id,
+                        device_id: None,
+                        human_name: None,
+                        created_at,
+                        is_synapse_admin: false,
+                        last_active_at: None,
+                        last_active_ip: None,
+                        user_agent: None,
+                    },
+                )
+                .await
+                .into_mas("failed to write deviceless compat sessions")?;
+
+            deviceless_session_id
+        };
+
+        let token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+        // TODO skip access tokens for deactivated users
+        write_buffer
+            .write(
+                mas,
+                MasNewCompatAccessToken {
+                    token_id,
+                    session_id,
+                    access_token: token,
+                    created_at,
+                    expires_at: valid_until_ms.map(DateTime::from),
+                },
+            )
+            .await
+            .into_mas("writing compat access tokens")?;
+    }
+
+    write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat access tokens")?;
+    deviceless_session_write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing deviceless compat sessions")?;
+
+    Ok(())
+}
+
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_refresh_tokens(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
@@ -463,10 +580,35 @@ async fn migrate_access_and_refresh_tokens(
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
-    let mut access_token_stream = pin!(synapse.read_access_tokens());
-    // let mut write_buffer =
-    // MasWriteBuffer::new(MasWriter::write_compat_access_token);
-    todo!();
+    let mut token_stream = pin!(synapse.read_refresh_tokens());
+    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_refresh_tokens);
+
+    while let Some(token_res) = token_stream.next().await {
+        let SynapseRefreshToken {
+            user_id: synapse_user_id,
+            device_id,
+            token,
+            id,
+        } = token_res.into_synapse("reading Synapse refresh token")?;
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            return Err(Error::MissingUserFromDependentTable {
+                table: "devices".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        todo!()
+    }
+
+    write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat refresh tokens")?;
 
     Ok(())
 }

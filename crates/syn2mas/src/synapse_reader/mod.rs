@@ -12,7 +12,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Row, Transaction, Type};
+use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Transaction, Type};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -228,7 +228,6 @@ pub struct SynapseAccessToken {
     pub token: String,
     pub valid_until_ms: Option<MillisecondsTimestamp>,
     pub last_validated: Option<MillisecondsTimestamp>,
-    pub refresh_token_id: Option<i64>,
 }
 
 /// Row of the `refresh_tokens` table in Synapse.
@@ -426,7 +425,7 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated, at0.refresh_token_id
+              at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
             FROM access_tokens at0
             LEFT JOIN refresh_tokens rt0 ON at0.refresh_token_id = rt0.id
             LEFT JOIN access_tokens at1 ON rt0.next_token_id = at1.refresh_token_id
