@@ -44,14 +44,8 @@ pub enum CheckError {
     #[error("Password scheme version '1' in the MAS config must have the same secret as the `pepper` value from Synapse, so that Synapse passwords can be imported and will be compatible.")]
     PasswordSchemeWrongPepper,
 
-    #[error("Synapse database contains {num_guests} guests which aren't supported by MAS. See https://github.com/element-hq/matrix-authentication-service/issues/1445")]
-    GuestsInDatabase { num_guests: i64 },
-
     #[error("Guest support is enabled in the Synapse configuration. Guests aren't supported by MAS, but if you don't have any then you could disable the option. See https://github.com/element-hq/matrix-authentication-service/issues/1445")]
     GuestsEnabled,
-
-    #[error("Synapse database contains {num_non_email_3pids} non-email 3PIDs (probably phone numbers), which are not supported by MAS.")]
-    NonEmailThreepidsInDatabase { num_non_email_3pids: i64 },
 
     #[error(
         "Synapse config has `enable_3pid_changes` explicitly enabled, which must be disabled or removed."
@@ -94,6 +88,12 @@ pub enum CheckWarning {
 
     #[error("Synapse config has a registration CAPTCHA enabled, but no CAPTCHA has been configured in MAS. You may wish to manually configure this.")]
     ShouldPortRegistrationCaptcha,
+
+    #[error("Synapse database contains {num_guests} guests which will be migrated are not supported by MAS. See https://github.com/element-hq/matrix-authentication-service/issues/1445")]
+    GuestsInDatabase { num_guests: i64 },
+
+    #[error("Synapse database contains {num_non_email_3pids} non-email 3PIDs (probably phone numbers), which will be migrated but are not supported by MAS.")]
+    NonEmailThreepidsInDatabase { num_non_email_3pids: i64 },
 }
 
 /// Check that the Synapse configuration is sane for migration.
@@ -229,13 +229,13 @@ pub async fn synapse_database_check(
     }
 
     let mut errors = Vec::new();
-    let warnings = Vec::new();
+    let mut warnings = Vec::new();
 
     let num_guests: i64 = query_scalar("SELECT COUNT(1) FROM users WHERE is_guest <> 0")
         .fetch_one(&mut *synapse_connection)
         .await?;
     if num_guests > 0 {
-        errors.push(CheckError::GuestsInDatabase { num_guests });
+        warnings.push(CheckWarning::GuestsInDatabase { num_guests });
     }
 
     let num_non_email_3pids: i64 =
@@ -243,7 +243,7 @@ pub async fn synapse_database_check(
             .fetch_one(&mut *synapse_connection)
             .await?;
     if num_non_email_3pids > 0 {
-        errors.push(CheckError::NonEmailThreepidsInDatabase {
+        warnings.push(CheckWarning::NonEmailThreepidsInDatabase {
             num_non_email_3pids,
         });
     }
