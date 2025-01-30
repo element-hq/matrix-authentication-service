@@ -199,6 +199,10 @@ pub struct MasNewUser {
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    /// Whether the user was a Synapse guest.
+    /// Although MAS doesn't support guest access, it's still useful to track
+    /// for the future.
+    pub is_guest: bool,
 }
 
 pub struct MasNewUserPassword {
@@ -563,52 +567,66 @@ impl<'conn> MasWriter<'conn> {
     #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub fn write_users(&mut self, users: Vec<MasNewUser>) -> BoxFuture<'_, Result<(), Error>> {
-        self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
-            // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows in one statement
-            // without having to change the statement SQL thus altering the query plan.
-            // See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
-            // In the future we could consider using sqlx's support for `PgCopyIn` / the `COPY FROM STDIN` statement,
-            // which is allegedly the best for insert performance, but is less simple to encode.
-            if users.is_empty() {
-                return Ok(());
-            }
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows
+                    // in one statement without having to change the statement
+                    // SQL thus altering the query plan. See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
+                    // In the future we could consider using sqlx's support for `PgCopyIn` / the
+                    // `COPY FROM STDIN` statement, which is allegedly the best
+                    // for insert performance, but is less simple to encode.
+                    let mut user_ids: Vec<Uuid> = Vec::with_capacity(users.len());
+                    let mut usernames: Vec<String> = Vec::with_capacity(users.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
+                    let mut locked_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(users.len());
+                    let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
+                    let mut is_guests: Vec<bool> = Vec::with_capacity(users.len());
+                    for MasNewUser {
+                        user_id,
+                        username,
+                        created_at,
+                        locked_at,
+                        can_request_admin,
+                        is_guest,
+                    } in users
+                    {
+                        user_ids.push(user_id);
+                        usernames.push(username);
+                        created_ats.push(created_at);
+                        locked_ats.push(locked_at);
+                        can_request_admins.push(can_request_admin);
+                        is_guests.push(is_guest);
+                    }
 
-            let mut user_ids: Vec<Uuid> = Vec::with_capacity(users.len());
-            let mut usernames: Vec<String> = Vec::with_capacity(users.len());
-            let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
-            let mut locked_ats: Vec<Option<DateTime<Utc>>> = Vec::with_capacity(users.len());
-            let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
-            for MasNewUser {
-                user_id,
-                username,
-                created_at,
-                locked_at,
-                can_request_admin,
-            } in users
-            {
-                user_ids.push(user_id);
-                usernames.push(username);
-                created_ats.push(created_at);
-                locked_ats.push(locked_at);
-                can_request_admins.push(can_request_admin);
-            }
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__users (
+                          user_id, username,
+                          created_at, locked_at,
+                          can_request_admin, is_guest)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[], $2::TEXT[],
+                          $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
+                          $5::BOOL[], $6::BOOL[])
+                        "#,
+                        &user_ids[..],
+                        &usernames[..],
+                        &created_ats[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &locked_ats[..] as &[Option<DateTime<Utc>>],
+                        &can_request_admins[..],
+                        &is_guests[..],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing users to MAS")?;
 
-            sqlx::query!(
-                r#"
-                INSERT INTO syn2mas__users
-                (user_id, username, created_at, locked_at, can_request_admin)
-                SELECT * FROM UNNEST($1::UUID[], $2::TEXT[], $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[], $5::BOOL[])
-                "#,
-                &user_ids[..],
-                &usernames[..],
-                &created_ats[..],
-                // We need to override the typing for arrays of optionals (sqlx limitation)
-                &locked_ats[..] as &[Option<DateTime<Utc>>],
-                &can_request_admins[..],
-            ).execute(&mut *conn).await.into_database("writing users to MAS")?;
-
-            Ok(())
-        })).boxed()
+                    Ok(())
+                })
+            })
+            .boxed()
     }
 
     /// Write a batch of user passwords to the database.
@@ -1197,6 +1215,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1221,6 +1240,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1252,6 +1272,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1285,6 +1306,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1319,6 +1341,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1352,6 +1375,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1389,6 +1413,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1438,6 +1463,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
