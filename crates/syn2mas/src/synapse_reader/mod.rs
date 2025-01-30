@@ -187,8 +187,10 @@ pub struct SynapseUser {
     pub deactivated: SynapseBool,
     /// When the user was created
     pub creation_ts: SecondsTimestamp,
-    // TODO ...
-    // TODO is_guest
+    /// Whether the user is a guest.
+    /// Note that not all numeric user IDs are guests; guests can upgrade their
+    /// account!
+    pub is_guest: SynapseBool,
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
 }
 
@@ -335,7 +337,7 @@ impl<'conn> SynapseReader<'conn> {
         let users: i64 = sqlx::query_scalar(
             "
             SELECT COUNT(1) FROM users
-            WHERE appservice_id IS NULL AND is_guest = 0
+            WHERE appservice_id IS NULL
             ",
         )
         .fetch_one(&mut *self.txn)
@@ -361,9 +363,9 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              name, password_hash, admin, deactivated, creation_ts
+              name, password_hash, admin, deactivated, creation_ts, is_guest
             FROM users
-            WHERE appservice_id IS NULL AND is_guest = 0
+            WHERE appservice_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)

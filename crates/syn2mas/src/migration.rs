@@ -687,6 +687,7 @@ fn transform_user(
         created_at: user.creation_ts.into(),
         locked_at: bool::from(user.deactivated).then_some(user.creation_ts.into()),
         can_request_admin: bool::from(user.admin),
+        is_guest: bool::from(user.is_guest),
     };
 
     let mas_password = user
