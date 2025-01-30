@@ -232,11 +232,13 @@ pub struct SynapseAccessToken {
 
 /// Row of the `refresh_tokens` table in Synapse.
 #[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
-pub struct SynapseRefreshToken {
-    pub id: i64,
+pub struct SynapseRefreshableTokenPair {
     pub user_id: FullUserId,
     pub device_id: String,
-    pub token: String,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub valid_until_ms: Option<MillisecondsTimestamp>,
+    pub last_validated: Option<MillisecondsTimestamp>,
 }
 
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
@@ -413,13 +415,10 @@ impl<'conn> SynapseReader<'conn> {
         .map_err(|err| err.into_database("reading Synapse devices"))
     }
 
-    /// Reads access tokens from the Synapse database.
+    /// Reads unrefreshable access tokens from the Synapse database.
     /// This does not include access tokens used for puppetting users, as those
-    /// are not supported by MAS. This also does not include access tokens
-    /// which have been made obsolete by using the associated refresh token
-    /// and then acknowledging the successor access token by using it to
-    /// authenticate a request.
-    pub fn read_access_tokens(
+    /// are not supported by MAS.
+    pub fn read_unrefreshable_access_tokens(
         &mut self,
     ) -> impl Stream<Item = Result<SynapseAccessToken, Error>> + '_ {
         sqlx::query_as(
@@ -427,17 +426,15 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
             FROM access_tokens at0
-            LEFT JOIN refresh_tokens rt0 ON at0.refresh_token_id = rt0.id
-            LEFT JOIN access_tokens at1 ON rt0.next_token_id = at1.refresh_token_id
-            WHERE at0.puppets_user_id IS NULL AND (NOT at1.used OR at1.used IS NULL)
+            WHERE at0.puppets_user_id IS NULL AND at0.refresh_token_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse access tokens"))
     }
 
-    /// Reads refresh tokens from the Synapse database.
-    /// This also does not include refresh tokens which have been made obsolete
+    /// Reads (access token, refresh token) pairs from the Synapse database.
+    /// This does not include token pairs which have been made obsolete
     /// by using the refresh token and then acknowledging the
     /// successor access token by using it to authenticate a request.
     ///
@@ -445,14 +442,15 @@ impl<'conn> SynapseReader<'conn> {
     /// they are not implemented in MAS.
     /// Further, they are unused by any real-world deployment to the best of
     /// our knowledge.
-    pub fn read_refresh_tokens(
+    pub fn read_refreshable_token_pairs(
         &mut self,
-    ) -> impl Stream<Item = Result<SynapseRefreshToken, Error>> + '_ {
+    ) -> impl Stream<Item = Result<SynapseRefreshableTokenPair, Error>> + '_ {
         sqlx::query_as(
             "
             SELECT
-              rt0.id, rt0.user_id, rt0.device_id, rt0.token, rt0.next_token_id
+              rt0.user_id, rt0.device_id, at0.token AS access_token, rt0.token AS refresh_token, at0.valid_until_ms, at0.last_validated
             FROM refresh_tokens rt0
+            LEFT JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
             LEFT JOIN access_tokens at1 ON at1.refresh_token_id = rt0.next_token_id
             WHERE NOT at1.used OR at1.used IS NULL
             ",
@@ -472,7 +470,7 @@ mod test {
 
     use crate::{
         synapse_reader::{
-            SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshToken,
+            SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshableTokenPair,
             SynapseThreepid, SynapseUser,
         },
         SynapseReader,
@@ -553,7 +551,7 @@ mod test {
             .expect("failed to make SynapseReader");
 
         let access_tokens: BTreeSet<SynapseAccessToken> = reader
-            .read_access_tokens()
+            .read_unrefreshable_access_tokens()
             .try_collect()
             .await
             .expect("failed to read Synapse access tokens");
@@ -573,7 +571,7 @@ mod test {
             .expect("failed to make SynapseReader");
 
         let access_tokens: BTreeSet<SynapseAccessToken> = reader
-            .read_access_tokens()
+            .read_unrefreshable_access_tokens()
             .try_collect()
             .await
             .expect("failed to read Synapse access tokens");
@@ -592,18 +590,21 @@ mod test {
             .expect("failed to make SynapseReader");
 
         let access_tokens: BTreeSet<SynapseAccessToken> = reader
-            .read_access_tokens()
+            .read_unrefreshable_access_tokens()
             .try_collect()
             .await
             .expect("failed to read Synapse access tokens");
 
-        let refresh_tokens: BTreeSet<SynapseRefreshToken> = reader
-            .read_refresh_tokens()
+        let refresh_tokens: BTreeSet<SynapseRefreshableTokenPair> = reader
+            .read_refreshable_token_pairs()
             .try_collect()
             .await
             .expect("failed to read Synapse refresh tokens");
 
-        assert_debug_snapshot!(access_tokens);
+        assert!(
+            access_tokens.is_empty(),
+            "there are no unrefreshable access tokens"
+        );
         assert_debug_snapshot!(refresh_tokens);
     }
 
@@ -618,18 +619,21 @@ mod test {
             .expect("failed to make SynapseReader");
 
         let access_tokens: BTreeSet<SynapseAccessToken> = reader
-            .read_access_tokens()
+            .read_unrefreshable_access_tokens()
             .try_collect()
             .await
             .expect("failed to read Synapse access tokens");
 
-        let refresh_tokens: BTreeSet<SynapseRefreshToken> = reader
-            .read_refresh_tokens()
+        let refresh_tokens: BTreeSet<SynapseRefreshableTokenPair> = reader
+            .read_refreshable_token_pairs()
             .try_collect()
             .await
             .expect("failed to read Synapse refresh tokens");
 
-        assert_debug_snapshot!(access_tokens);
+        assert!(
+            access_tokens.is_empty(),
+            "there are no unrefreshable access tokens"
+        );
         assert_debug_snapshot!(refresh_tokens);
     }
 }

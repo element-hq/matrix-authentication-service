@@ -29,13 +29,13 @@ use uuid::Uuid;
 
 use crate::{
     mas_writer::{
-        self, MasNewCompatAccessToken, MasNewCompatSession, MasNewEmailThreepid,
-        MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword,
-        MasWriteBuffer, MasWriter,
+        self, MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
+        MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
+        MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
-        SynapseExternalId, SynapseRefreshToken, SynapseThreepid, SynapseUser,
+        SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
     SynapseReader,
 };
@@ -140,7 +140,7 @@ pub async fn migrate(
                 .expect("More than usize::MAX devices — unable to handle this many!"),
         );
 
-    migrate_access_tokens(
+    migrate_unrefreshable_access_tokens(
         synapse,
         mas,
         server_name,
@@ -151,10 +151,11 @@ pub async fn migrate(
     )
     .await?;
 
-    migrate_refresh_tokens(
+    migrate_refreshable_token_pairs(
         synapse,
         mas,
         server_name,
+        clock,
         rng,
         &migrated_users.user_localparts_to_uuid,
         &mut devices_to_compat_sessions,
@@ -468,8 +469,10 @@ async fn migrate_devices(
     Ok(())
 }
 
+/// Migrates unrefreshable access tokens (those without an associated refresh
+/// token). Some of these may be deviceless.
 #[tracing::instrument(skip_all, level = Level::INFO)]
-async fn migrate_access_tokens(
+async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
@@ -478,7 +481,7 @@ async fn migrate_access_tokens(
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
-    let mut token_stream = pin!(synapse.read_access_tokens());
+    let mut token_stream = pin!(synapse.read_unrefreshable_access_tokens());
     let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
     let mut deviceless_session_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
 
@@ -497,7 +500,7 @@ async fn migrate_access_tokens(
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
             return Err(Error::MissingUserFromDependentTable {
-                table: "devices".to_owned(),
+                table: "access_tokens".to_owned(),
                 user: synapse_user_id,
             });
         };
@@ -571,24 +574,31 @@ async fn migrate_access_tokens(
     Ok(())
 }
 
+/// Migrates (access token, refresh token) pairs.
+/// Does not migrate non-refreshable access tokens.
 #[tracing::instrument(skip_all, level = Level::INFO)]
-async fn migrate_refresh_tokens(
+async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
+    clock: &dyn Clock,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
-    let mut token_stream = pin!(synapse.read_refresh_tokens());
-    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_refresh_tokens);
+    let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
+    let mut access_token_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
+    let mut refresh_token_write_buffer =
+        MasWriteBuffer::new(MasWriter::write_compat_refresh_tokens);
 
     while let Some(token_res) = token_stream.next().await {
-        let SynapseRefreshToken {
+        let SynapseRefreshableTokenPair {
             user_id: synapse_user_id,
             device_id,
-            token,
-            id,
+            access_token,
+            refresh_token,
+            valid_until_ms,
+            last_validated,
         } = token_res.into_synapse("reading Synapse refresh token")?;
 
         let username = synapse_user_id
@@ -597,15 +607,59 @@ async fn migrate_refresh_tokens(
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
             return Err(Error::MissingUserFromDependentTable {
-                table: "devices".to_owned(),
+                table: "refresh_tokens".to_owned(),
                 user: synapse_user_id,
             });
         };
 
-        todo!()
+        // It's not always accurate, but last_validated is *often* the creation time of
+        // the device If we don't have one, then use the current time as a
+        // fallback.
+        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
+
+        // Use the existing device_id if this is the second token for a device
+        let session_id = *devices
+            .entry((user_id, CompactString::new(&device_id)))
+            .or_insert_with(|| Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng)));
+
+        let access_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+        let refresh_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+        // TODO skip access tokens for deactivated users
+        access_token_write_buffer
+            .write(
+                mas,
+                MasNewCompatAccessToken {
+                    token_id: access_token_id,
+                    session_id,
+                    access_token,
+                    created_at,
+                    expires_at: valid_until_ms.map(DateTime::from),
+                },
+            )
+            .await
+            .into_mas("writing compat access tokens")?;
+        refresh_token_write_buffer
+            .write(
+                mas,
+                MasNewCompatRefreshToken {
+                    refresh_token_id,
+                    session_id,
+                    access_token_id,
+                    refresh_token,
+                    created_at,
+                },
+            )
+            .await
+            .into_mas("writing compat refresh tokens")?;
     }
 
-    write_buffer
+    access_token_write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat access tokens")?;
+
+    refresh_token_write_buffer
         .finish(mas)
         .await
         .into_mas("writing compat refresh tokens")?;
