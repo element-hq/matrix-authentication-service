@@ -329,7 +329,8 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
+            if true || is_likely_appservice(&username) {
+                // HACK can we do anything better
                 continue;
             }
             return Err(Error::MissingUserFromDependentTable {
@@ -416,7 +417,8 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
+            if true || is_likely_appservice(&username) {
+                // HACK can we do anything better
                 continue;
             }
             return Err(Error::MissingUserFromDependentTable {
@@ -505,7 +507,8 @@ async fn migrate_devices(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
+            if true || is_likely_appservice(&username) {
+                // HACK can we do anything better
                 continue;
             }
             return Err(Error::MissingUserFromDependentTable {
@@ -589,7 +592,8 @@ async fn migrate_unrefreshable_access_tokens(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
+            if true || is_likely_appservice(&username) {
+                // HACK can we do anything better
                 continue;
             }
             return Err(Error::MissingUserFromDependentTable {
@@ -708,7 +712,8 @@ async fn migrate_refreshable_token_pairs(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
+            if true || is_likely_appservice(&username) {
+                // HACK can we do anything better
                 continue;
             }
             return Err(Error::MissingUserFromDependentTable {
