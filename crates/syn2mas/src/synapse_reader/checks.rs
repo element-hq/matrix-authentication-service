@@ -80,9 +80,6 @@ pub enum CheckError {
 /// proceeding with the migration.
 #[derive(Debug, Error)]
 pub enum CheckWarning {
-    #[error("Synapse config contains OIDC auth configuration (issuer: {issuer:?}) which will need to be manually mapped to an upstream OpenID Connect Provider during migration.")]
-    UpstreamOidcProvider { issuer: String },
-
     #[error("Synapse config contains {0} auth configuration which will need to be manually mapped as an upstream OAuth 2.0 provider during migration.")]
     ExternalAuthSystem(&'static str),
 
@@ -110,15 +107,6 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
     }
     if synapse_config.user_consent {
         warnings.push(CheckWarning::DisableUserConsentAfterMigration);
-    }
-
-    // TODO check the settings directly against the MAS settings
-    for provider in synapse_config.all_oidc_providers().values() {
-        if let Some(ref issuer) = provider.issuer {
-            warnings.push(CheckWarning::UpstreamOidcProvider {
-                issuer: issuer.clone(),
-            });
-        }
     }
 
     // TODO provide guidance on migrating these
