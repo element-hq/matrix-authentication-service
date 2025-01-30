@@ -7,7 +7,14 @@
 //!
 //! This module is responsible for writing new records to MAS' database.
 
-use std::{fmt::Display, net::IpAddr};
+use std::{
+    fmt::Display,
+    net::IpAddr,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
+};
 
 use chrono::{DateTime, Utc};
 use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
@@ -43,6 +50,9 @@ pub enum Error {
 
     #[error("inconsistent database: {0}")]
     Inconsistent(String),
+
+    #[error("bug in syn2mas: write buffers not finished")]
+    WriteBuffersNotFinished,
 
     #[error("{0}")]
     Multiple(MultipleErrors),
@@ -185,12 +195,52 @@ impl WriterConnectionPool {
     }
 }
 
+/// Small utility to make sure `finish()` is called on all write buffers
+/// before committing to the database.
+#[derive(Default)]
+struct FinishChecker {
+    counter: Arc<AtomicU32>,
+}
+
+struct FinishCheckerHandle {
+    counter: Arc<AtomicU32>,
+}
+
+impl FinishChecker {
+    /// Acquire a new handle, for a task that should declare when it has
+    /// finished.
+    pub fn handle(&self) -> FinishCheckerHandle {
+        self.counter.fetch_add(1, Ordering::SeqCst);
+        FinishCheckerHandle {
+            counter: Arc::clone(&self.counter),
+        }
+    }
+
+    /// Check that all handles have been declared as finished.
+    pub fn check_all_finished(self) -> Result<(), Error> {
+        if self.counter.load(Ordering::SeqCst) == 0 {
+            Ok(())
+        } else {
+            Err(Error::WriteBuffersNotFinished)
+        }
+    }
+}
+
+impl FinishCheckerHandle {
+    /// Declare that the task this handle represents has been finished.
+    pub fn declare_finished(self) {
+        self.counter.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
 pub struct MasWriter<'c> {
     conn: LockedMasDatabase<'c>,
     writer_pool: WriterConnectionPool,
 
     indices_to_restore: Vec<IndexDescription>,
     constraints_to_restore: Vec<ConstraintDescription>,
+
+    write_buffer_finish_checker: FinishChecker,
 }
 
 pub struct MasNewUser {
@@ -449,6 +499,7 @@ impl<'conn> MasWriter<'conn> {
             writer_pool: WriterConnectionPool::new(writer_connections),
             indices_to_restore,
             constraints_to_restore,
+            write_buffer_finish_checker: FinishChecker::default(),
         })
     }
 
@@ -515,6 +566,8 @@ impl<'conn> MasWriter<'conn> {
     /// - If the database connection experiences an error.
     #[tracing::instrument(skip_all)]
     pub async fn finish(mut self) -> Result<(), Error> {
+        self.write_buffer_finish_checker.check_all_finished()?;
+
         // Commit all writer transactions to the database.
         self.writer_pool
             .finish()
@@ -1027,28 +1080,24 @@ type WriteBufferFlusher<'conn, T> =
 
 /// A buffer for writing rows to the MAS database.
 /// Generic over the type of rows.
-///
-/// # Panics
-///
-/// Panics if dropped before `finish()` has been called.
 pub struct MasWriteBuffer<'conn, T> {
     rows: Vec<T>,
     flusher: WriteBufferFlusher<'conn, T>,
-    finished: bool,
+    finish_checker_handle: FinishCheckerHandle,
 }
 
 impl<'conn, T> MasWriteBuffer<'conn, T> {
-    pub fn new(flusher: WriteBufferFlusher<'conn, T>) -> Self {
+    pub fn new(writer: &MasWriter, flusher: WriteBufferFlusher<'conn, T>) -> Self {
         MasWriteBuffer {
             rows: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
             flusher,
-            finished: false,
+            finish_checker_handle: writer.write_buffer_finish_checker.handle(),
         }
     }
 
     pub async fn finish(mut self, writer: &mut MasWriter<'conn>) -> Result<(), Error> {
-        self.finished = true;
         self.flush(writer).await?;
+        self.finish_checker_handle.declare_finished();
         Ok(())
     }
 
@@ -1068,12 +1117,6 @@ impl<'conn, T> MasWriteBuffer<'conn, T> {
             self.flush(writer).await?;
         }
         Ok(())
-    }
-}
-
-impl<T> Drop for MasWriteBuffer<'_, T> {
-    fn drop(&mut self) {
-        assert!(self.finished, "MasWriteBuffer dropped but not finished!");
     }
 }
 
