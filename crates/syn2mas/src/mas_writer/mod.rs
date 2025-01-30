@@ -242,6 +242,14 @@ pub struct MasNewCompatSession {
     pub user_agent: Option<String>,
 }
 
+pub struct MasNewCompatAccessToken {
+    pub token_id: Uuid,
+    pub session_id: Uuid,
+    pub access_token: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
 /// The 'version' of the password hashing scheme used for passwords when they
 /// are migrated from Synapse to MAS.
 /// This is version 1, as in the previous syn2mas script.
@@ -255,6 +263,9 @@ pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &[
     "user_emails",
     "user_unsupported_third_party_ids",
     "upstream_oauth_links",
+    "compat_sessions",
+    "compat_access_tokens",
+    "compat_refresh_tokens",
 ];
 
 /// Detect whether a syn2mas migration has started on the given database.
@@ -852,6 +863,68 @@ impl<'conn> MasWriter<'conn> {
             })
             .boxed()
     }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_compat_access_tokens(
+        &mut self,
+        tokens: Vec<MasNewCompatAccessToken>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    let mut token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut access_tokens: Vec<String> = Vec::with_capacity(tokens.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(tokens.len());
+                    let mut expires_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(tokens.len());
+
+                    for MasNewCompatAccessToken {
+                        token_id,
+                        session_id,
+                        access_token,
+                        created_at,
+                        expires_at,
+                    } in tokens
+                    {
+                        token_ids.push(token_id);
+                        session_ids.push(session_id);
+                        access_tokens.push(access_token);
+                        created_ats.push(created_at);
+                        expires_ats.push(expires_at);
+                    }
+
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__compat_access_tokens (
+                          compat_access_token_id,
+                          compat_session_id,
+                          access_token,
+                          created_at,
+                          expires_at)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[],
+                          $2::UUID[],
+                          $3::TEXT[],
+                          $4::TIMESTAMP WITH TIME ZONE[],
+                          $5::TIMESTAMP WITH TIME ZONE[])
+                        "#,
+                        &token_ids[..],
+                        &session_ids[..],
+                        &access_tokens[..],
+                        &created_ats[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &expires_ats[..] as &[Option<DateTime<Utc>>],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing compat access tokens to MAS")?;
+
+                    Ok(())
+                })
+            })
+            .boxed()
+    }
 }
 
 // How many entries to buffer at once, before writing a batch of rows to the
@@ -930,8 +1003,8 @@ mod test {
 
     use crate::{
         mas_writer::{
-            MasNewCompatSession, MasNewEmailThreepid, MasNewUnsupportedThreepid,
-            MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword,
+            MasNewCompatAccessToken, MasNewCompatSession, MasNewEmailThreepid,
+            MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser, MasNewUserPassword,
         },
         LockedMasDatabase, MasWriter,
     };
@@ -1227,7 +1300,55 @@ mod test {
                 user_agent: Some("Browser/5.0".to_owned()),
             }])
             .await
-            .expect("failed to write link");
+            .expect("failed to write compat session");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a device and an access token.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_access_token(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_compat_sessions(vec![MasNewCompatSession {
+                user_id: Uuid::from_u128(1u128),
+                session_id: Uuid::from_u128(5u128),
+                created_at: DateTime::default(),
+                device_id: "ADEVICE".to_owned(),
+                human_name: None,
+                is_synapse_admin: false,
+                last_active_at: None,
+                last_active_ip: None,
+                user_agent: None,
+            }])
+            .await
+            .expect("failed to write compat session");
+
+        writer
+            .write_compat_access_tokens(vec![MasNewCompatAccessToken {
+                token_id: Uuid::from_u128(6u128),
+                session_id: Uuid::from_u128(5u128),
+                access_token: "syt_zxcvzxcvzxcvzxcv_zxcv".to_owned(),
+                created_at: DateTime::default(),
+                expires_at: None,
+            }])
+            .await
+            .expect("failed to write access token");
 
         writer.finish().await.expect("failed to finish MasWriter");
 
