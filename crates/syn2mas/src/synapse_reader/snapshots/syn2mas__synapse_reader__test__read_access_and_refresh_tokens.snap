@@ -13,8 +13,5 @@ expression: access_tokens
         token: "syt_AAAAAAAAAAAAAA_AAAA",
         valid_until_ms: None,
         last_validated: None,
-        refresh_token_id: Some(
-            8,
-        ),
     },
 }

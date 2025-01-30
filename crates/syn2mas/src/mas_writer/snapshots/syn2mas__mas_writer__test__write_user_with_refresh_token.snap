@@ -1,0 +1,36 @@
+---
+source: crates/syn2mas/src/mas_writer/mod.rs
+expression: db_snapshot
+---
+compat_access_tokens:
+  - access_token: syt_zxcvzxcvzxcvzxcv_zxcv
+    compat_access_token_id: 00000000-0000-0000-0000-000000000006
+    compat_session_id: 00000000-0000-0000-0000-000000000005
+    created_at: "1970-01-01 00:00:00+00"
+    expires_at: ~
+compat_refresh_tokens:
+  - compat_access_token_id: 00000000-0000-0000-0000-000000000006
+    compat_refresh_token_id: 00000000-0000-0000-0000-000000000007
+    compat_session_id: 00000000-0000-0000-0000-000000000005
+    consumed_at: ~
+    created_at: "1970-01-01 00:00:00+00"
+    refresh_token: syr_zxcvzxcvzxcvzxcv_zxcv
+compat_sessions:
+  - compat_session_id: 00000000-0000-0000-0000-000000000005
+    created_at: "1970-01-01 00:00:00+00"
+    device_id: ADEVICE
+    finished_at: ~
+    human_name: ~
+    is_synapse_admin: "false"
+    last_active_at: ~
+    last_active_ip: ~
+    user_agent: ~
+    user_id: 00000000-0000-0000-0000-000000000001
+    user_session_id: ~
+users:
+  - can_request_admin: "false"
+    created_at: "1970-01-01 00:00:00+00"
+    locked_at: ~
+    primary_user_email_id: ~
+    user_id: 00000000-0000-0000-0000-000000000001
+    username: alice
