@@ -1,14 +1,19 @@
-use std::process::ExitCode;
+use std::{collections::HashMap, process::ExitCode};
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
-use mas_config::{ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig};
+use mas_config::{
+    ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, SyncConfig,
+    UpstreamOAuth2Config,
+};
+use mas_storage::SystemClock;
+use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
-use sqlx::{postgres::PgConnectOptions, Connection, Either, PgConnection};
+use sqlx::{postgres::PgConnectOptions, types::Uuid, Connection, Either, PgConnection};
 use syn2mas::{synapse_config, LockedMasDatabase, MasWriter, SynapseReader};
-use tracing::{error, warn};
+use tracing::{error, info_span, warn, Instrument};
 
 use crate::util::database_connection_from_config;
 
@@ -75,6 +80,7 @@ enum Subcommand {
 const NUM_WRITER_CONNECTIONS: usize = 8;
 
 impl Options {
+    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         warn!("This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING.");
         if !self.experimental_accepted {
@@ -106,6 +112,35 @@ impl Options {
         let config = DatabaseConfig::extract_or_default(figment)?;
 
         let mut mas_connection = database_connection_from_config(&config).await?;
+
+        MIGRATOR
+            .run(&mut mas_connection)
+            .instrument(info_span!("db.migrate"))
+            .await
+            .context("could not run migrations")?;
+
+        if matches!(&self.subcommand, Subcommand::Migrate { .. }) {
+            // First perform a config sync
+            // This is crucial to ensure we register upstream OAuth providers
+            // in the MAS database
+            //
+            let config = SyncConfig::extract(figment)?;
+            let clock = SystemClock::default();
+            let encrypter = config.secrets.encrypter();
+
+            crate::sync::config_sync(
+                config.upstream_oauth2,
+                config.clients,
+                &mut mas_connection,
+                &encrypter,
+                &clock,
+                // Don't prune — we don't want to be unnecessarily destructive
+                false,
+                // Not a dry run — we do want to create the providers in the database
+                false,
+            )
+            .await?;
+        }
 
         let Either::Left(mut mas_connection) = LockedMasDatabase::try_new(&mut mas_connection)
             .await
@@ -166,6 +201,19 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
             Subcommand::Migrate => {
+                let provider_id_mappings: HashMap<String, Uuid> = {
+                    let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)?;
+
+                    mas_oauth2
+                        .providers
+                        .iter()
+                        .filter_map(|provider| {
+                            let synapse_idp_id = provider.synapse_idp_id.clone()?;
+                            Some((synapse_idp_id, Uuid::from(provider.id)))
+                        })
+                        .collect()
+                };
+
                 // TODO how should we handle warnings at this stage?
 
                 let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
@@ -181,8 +229,14 @@ impl Options {
 
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
-                syn2mas::migrate(&mut reader, &mut writer, &mas_matrix.homeserver, &mut rng)
-                    .await?;
+                syn2mas::migrate(
+                    &mut reader,
+                    &mut writer,
+                    &mas_matrix.homeserver,
+                    &mut rng,
+                    &provider_id_mappings,
+                )
+                .await?;
 
                 reader.finish().await?;
                 writer.finish().await?;

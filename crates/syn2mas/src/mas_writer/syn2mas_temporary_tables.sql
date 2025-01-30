@@ -41,3 +41,4 @@ ALTER TABLE users RENAME TO syn2mas__users;
 ALTER TABLE user_passwords RENAME TO syn2mas__user_passwords;
 ALTER TABLE user_emails RENAME TO syn2mas__user_emails;
 ALTER TABLE user_unsupported_third_party_ids RENAME TO syn2mas__user_unsupported_third_party_ids;
+ALTER TABLE upstream_oauth_links RENAME TO syn2mas__upstream_oauth_links;

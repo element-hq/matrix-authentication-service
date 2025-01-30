@@ -1,0 +1,42 @@
+---
+source: crates/syn2mas/src/mas_writer/mod.rs
+expression: db_snapshot
+---
+upstream_oauth_links:
+  - created_at: "1970-01-01 00:00:00+00"
+    human_account_name: ~
+    subject: "12345.67890"
+    upstream_oauth_link_id: 00000000-0000-0000-0000-000000000003
+    upstream_oauth_provider_id: 00000000-0000-0000-0000-000000000004
+    user_id: 00000000-0000-0000-0000-000000000001
+upstream_oauth_providers:
+  - additional_parameters: ~
+    authorization_endpoint_override: ~
+    brand_name: ~
+    claims_imports: "{}"
+    client_id: someClientId
+    created_at: "2011-12-13 14:15:16+00"
+    disabled_at: ~
+    discovery_mode: oidc
+    encrypted_client_secret: ~
+    fetch_userinfo: "false"
+    human_name: ~
+    id_token_signed_response_alg: RS256
+    issuer: ~
+    jwks_uri_override: ~
+    pkce_mode: auto
+    response_mode: query
+    scope: openid
+    token_endpoint_auth_method: client_secret_basic
+    token_endpoint_override: ~
+    token_endpoint_signing_alg: ~
+    upstream_oauth_provider_id: 00000000-0000-0000-0000-000000000004
+    userinfo_endpoint_override: ~
+    userinfo_signed_response_alg: ~
+users:
+  - can_request_admin: "false"
+    created_at: "1970-01-01 00:00:00+00"
+    locked_at: ~
+    primary_user_email_id: ~
+    user_id: 00000000-0000-0000-0000-000000000001
+    username: alice
