@@ -1,16 +1,15 @@
 ---
 source: crates/syn2mas/src/synapse_reader/mod.rs
-expression: access_tokens
+expression: refresh_tokens
 ---
 {
-    SynapseAccessToken {
+    SynapseRefreshableTokenPair {
         user_id: FullUserId(
             "@alice:example.com",
         ),
-        device_id: Some(
-            "ADEVICE",
-        ),
-        token: "syt_AAAAAAAAAAAAAA_AAAA",
+        device_id: "ADEVICE",
+        access_token: "syt_AAAAAAAAAAAAAA_AAAA",
+        refresh_token: "syr_cccccccccccc_cccc",
         valid_until_ms: None,
         last_validated: None,
     },
