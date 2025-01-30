@@ -221,6 +221,7 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
+                // TODO this dry-run flag should be set to false in real circumstances !!!
                 let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
