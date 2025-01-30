@@ -140,15 +140,6 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
         warnings.push(CheckWarning::DisableUserConsentAfterMigration);
     }
 
-    // TODO check the settings directly against the MAS settings
-    for provider in synapse_config.all_oidc_providers().values() {
-        if let Some(ref issuer) = provider.issuer {
-            warnings.push(CheckWarning::UpstreamOidcProvider {
-                issuer: issuer.clone(),
-            });
-        }
-    }
-
     // TODO provide guidance on migrating these
     if synapse_config.cas_config.enabled {
         warnings.push(CheckWarning::ExternalAuthSystem("CAS"));
