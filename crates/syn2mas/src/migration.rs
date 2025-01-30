@@ -255,6 +255,9 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_threepids".to_owned(),
                 user: synapse_user_id,
@@ -332,6 +335,9 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_external_ids".to_owned(),
                 user: synapse_user_id,
@@ -410,6 +416,9 @@ async fn migrate_devices(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "devices".to_owned(),
                 user: synapse_user_id,
@@ -499,6 +508,9 @@ async fn migrate_unrefreshable_access_tokens(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "access_tokens".to_owned(),
                 user: synapse_user_id,
@@ -606,6 +618,9 @@ async fn migrate_refreshable_token_pairs(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "refresh_tokens".to_owned(),
                 user: synapse_user_id,
@@ -704,4 +719,16 @@ fn transform_user(
         });
 
     Ok((new_user, mas_password))
+}
+
+/// Returns true if and only if the given localpart looks like it would belong
+/// to an application service user.
+/// The rule here is that it must start with an underscore.
+/// Synapse reserves these by default, but there is no hard rule prohibiting
+/// other namespaces from being reserved, so this is not a robust check.
+// TODO replace with a more robust mechanism, if we even care about this sanity check
+// e.g. read application service registration files.
+#[inline]
+fn is_likely_appservice(localpart: &str) -> bool {
+    localpart.starts_with('_')
 }
