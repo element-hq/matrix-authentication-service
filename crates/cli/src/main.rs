@@ -12,8 +12,13 @@ use anyhow::Context;
 use clap::Parser;
 use mas_config::{ConfigurationSection, TelemetryConfig};
 use sentry_tracing::EventFilter;
+use tracing_indicatif::{
+    filter::{hide_indicatif_span_fields, IndicatifFilter},
+    IndicatifLayer,
+};
 use tracing_subscriber::{
-    filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer, Registry,
+    filter::LevelFilter, fmt::format::DefaultFields, layer::SubscriberExt, util::SubscriberInitExt,
+    EnvFilter, Layer, Registry,
 };
 
 mod app_state;
@@ -131,11 +136,17 @@ async fn try_main() -> anyhow::Result<ExitCode> {
             .with_filter(LevelFilter::INFO)
     });
 
+    // Set up progress bars, used in syn2mas for example
+    let progress_layer = IndicatifLayer::new()
+        .with_span_field_formatter(hide_indicatif_span_fields(DefaultFields::new()))
+        .with_filter(IndicatifFilter::new(false));
+
     let subscriber = Registry::default()
         .with(sentry_layer)
         .with(telemetry_layer)
         .with(filter_layer)
-        .with(fmt_layer);
+        .with(fmt_layer)
+        .with(progress_layer);
     subscriber
         .try_init()
         .context("could not initialize logging")?;
