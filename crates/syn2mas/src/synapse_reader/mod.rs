@@ -462,7 +462,7 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               rt0.user_id, rt0.device_id, at0.token AS access_token, rt0.token AS refresh_token, at0.valid_until_ms, at0.last_validated
             FROM refresh_tokens rt0
-            LEFT JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
+            INNER JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
             LEFT JOIN access_tokens at1 ON at1.refresh_token_id = rt0.next_token_id
             WHERE NOT at1.used OR at1.used IS NULL
             ",
