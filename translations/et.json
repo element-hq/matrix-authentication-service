@@ -6,7 +6,7 @@
     "create_account": "Loo konto",
     "sign_in": "Logi sisse",
     "sign_out": "Logi välja",
-    "skip": "Skip",
+    "skip": "Jäta vahele",
     "start_over": "Alusta uuesti",
     "submit": "Saada"
   },
@@ -55,8 +55,8 @@
       "new": "Uus salasõna"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "Sellise nimena näevad sind kõik teised kasutajad. Seda saad hiljem alati muuta.",
+      "headline": "Vali oma kuvatav nimi"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> aadressil <span>%(redirect_uri)s</span> soovib ligipääsu sinu kasutajakontole.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Kui sa oled unustanud oma konto kasutajanime ja/või salasõna, siis on sul võimalik taastada ligipääs oma kasutajakontole. Lisaks saad uue e-posti aadressi abil alustada nullist.",
+      "title": "E-posti aadress <span>%(email)s</span> on juba kasutusel"
     },
     "emails": {
       "greeting": "Tere %(username)s,",
@@ -186,7 +186,7 @@
       "call_to_login": "Sul on kasutajakonto juba olemas?",
       "continue_with_email": "Jätka e-posti aadressiga",
       "create_account": {
-        "description": "Alustamiseks palun loo kasutajakonto:",
+        "description": "Jätkamiseks palun vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
       },
       "sign_in_instead": "Siis logi sisse",
