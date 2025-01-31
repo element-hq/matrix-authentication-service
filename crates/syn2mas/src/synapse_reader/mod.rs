@@ -338,24 +338,28 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
+        // We don't get to filter out application service users by using this estimate,
+        // which is a shame, but on a large database this is way faster.
+        // On matrix.org, counting users and devices properly takes around 1m10s,
+        // which is unnecessary extra downtime during the migration, just to
+        // show a more accurate progress bar and size a hash map accurately.
         let users: i64 = sqlx::query_scalar(
             "
-            SELECT COUNT(1) FROM users
-            WHERE appservice_id IS NULL
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'users'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse users")?;
+        .into_database("estimating count of users")?;
 
         let devices = sqlx::query_scalar(
             "
-            SELECT COUNT(1) FROM devices
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'devices'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse devices")?;
+        .into_database("estimating count of devices")?;
 
         // For other rows, we don't particularly care about the number except for
         // progress bars, so retrieve a fast estimate from the statistics system

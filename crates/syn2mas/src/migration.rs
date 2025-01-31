@@ -161,10 +161,11 @@ pub async fn migrate(
     // `(MAS user_id, device_id)` mapped to `compat_session` ULID
     let mut devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid> =
         HashMap::with_capacity(
-            counts
-                .devices
-                .try_into()
-                .expect("More than usize::MAX devices — unable to handle this many!"),
+            usize::try_from(counts.devices)
+                .expect("More than usize::MAX devices — unable to handle this many!")
+            // Oversize the capacity, because the count is only an estimate and
+            // we would like to avoid a reallocation
+            * 9 / 8,
         );
 
     span.pb_set_message("migrating access tokens");
@@ -252,8 +253,9 @@ async fn migrate_users(
     let mut user_buffer = MasWriteBuffer::new(mas, MasWriter::write_users);
     let mut password_buffer = MasWriteBuffer::new(mas, MasWriter::write_passwords);
     let mut users_stream = pin!(synapse.read_users());
-    // TODO is 1:1 capacity enough for a hashmap?
-    let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint);
+    // Oversize the capacity, because the count is only an estimate and
+    // we would like to avoid a reallocation
+    let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint * 9 / 8);
     let mut synapse_admins = HashSet::new();
 
     while let Some(user_res) = users_stream.next().await {
