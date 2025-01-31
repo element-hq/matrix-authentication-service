@@ -234,8 +234,7 @@ impl Options {
                 conn_acquisition_histogram: None,
             };
             s.init_metrics();
-            // XXX: this might panic
-            s.init_metadata_cache().await;
+            s.init_metadata_cache();
             s
         };
 
