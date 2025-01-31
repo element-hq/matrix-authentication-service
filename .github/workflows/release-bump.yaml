@@ -42,7 +42,7 @@ jobs:
       - name: Compute the new minor RC
         id: next
         env:
-          BUMP: ${{ github.event.inputs.rc && 'prerelease' || 'patch' }}
+          BUMP: ${{ inputs.rc && 'prerelease' || 'patch' }}
           VERSION: ${{ steps.current.outputs.version }}
         run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
 
@@ -51,6 +51,15 @@ jobs:
     needs: [compute-version]
     with:
       version: ${{ needs.compute-version.outputs.version }}
+    secrets:
+      BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+
+  merge-back:
+    uses: ./.github/workflows/merge-back.yaml
+    needs: [tag]
+    if: inputs.merge-back
+    with:
+      sha: ${{ needs.tag.outputs.sha }}
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
 
@@ -83,21 +92,3 @@ jobs:
               sha,
             });
             console.log(`Updated branch ${branch} to ${sha}`);
-
-      - name: Checkout the code
-        uses: actions/checkout@v4.2.2
-        with:
-          ref: "${{ github.ref_name }}"
-
-      - name: Open a pull request to merge the release branch back to main
-        if: github.event.inputs.merge-back
-        env:
-          VERSION: ${{ needs.compute-version.outputs.version }}
-          GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --title "Release branch $VERSION" \
-            --body "This pull request was automatically created by the release workflow. It merges the release branch back to main." \
-            --base main \
-            --head "$GITHUB_REF_NAME" \
-            --label "T-Task"
