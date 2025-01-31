@@ -13,6 +13,7 @@ import { routeTree } from "./routeTree.gen";
 // Create a new router instance
 export const router = createRouter({
   routeTree,
+  scrollRestoration: true,
   basepath: config.root,
   defaultPendingComponent: LoadingScreen,
   defaultPreload: "intent",

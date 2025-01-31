@@ -48,6 +48,9 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
       </p>
     </div>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
 
@@ -234,6 +237,9 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
       </p>
     </footer>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
 
@@ -322,6 +328,9 @@ exports[`Reset cross signing > renders the errored page 1`] = `
       </p>
     </footer>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
 
@@ -508,6 +517,9 @@ exports[`Reset cross signing > renders the page 1`] = `
       </p>
     </footer>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
 
@@ -554,6 +566,9 @@ exports[`Reset cross signing > renders the success page 1`] = `
       </p>
     </div>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
 
@@ -600,5 +615,8 @@ exports[`Reset cross signing > renders the success page 2`] = `
       </p>
     </div>
   </div>
+  <script>
+    
+  </script>
 </DocumentFragment>
 `;
