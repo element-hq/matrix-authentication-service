@@ -62,7 +62,7 @@
       "email_exists_error": "Sisestatud e-posti aadress on juba selle kasutajakontoga seotud",
       "email_field_help": "Ligipääsuks sellele kasutajakontole lisa täiendav e-posti aadress.",
       "email_field_label": "Lisa e-posti aadress",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Sisestatud e-posti aadress on juba kasutusel",
       "email_invalid_alert": {
         "text": "Lisatud e-posti aadress on vigane",
         "title": "Vigane e-posti aadress"
@@ -101,7 +101,7 @@
       "web": "Veebirakendus"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "E-posti aadress {{email}} on juba kasutusel."
     },
     "end_session_button": {
       "confirmation_modal_title": "Kas sa oled kindel, et soovid selle sessiooni lõpetada?",
@@ -335,8 +335,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Kood on aegunud. Palun tee päring uue koodi saamiseks.",
+        "title": "Kood on aegunud"
       },
       "code_field_error": "Kood pole õige",
       "code_field_label": "6-numbriline kood",

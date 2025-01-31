@@ -62,7 +62,7 @@
       "email_exists_error": "Введена електронна пошта вже додана до цього облікового запису",
       "email_field_help": "Додайте альтернативну електронну пошту, яку ви можете використовувати для доступу до цього облікового запису.",
       "email_field_label": "Додати електронну пошту",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Введена електронна пошта вже використовується",
       "email_invalid_alert": {
         "text": "Введена електронна пошта недійсна",
         "title": "Невірна електронна пошта"
@@ -102,7 +102,7 @@
       "web": "Web"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "Адреса електронної пошти {{email}} вже використовується."
     },
     "end_session_button": {
       "confirmation_modal_title": "Ви впевнені, що хочете закінчити цю сесію?",
@@ -338,8 +338,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Термін дії коду закінчився. Будь ласка, запитайте новий код.",
+        "title": "Термін дії коду закінчився"
       },
       "code_field_error": "Код не розпізнано",
       "code_field_label": "6-значний код",

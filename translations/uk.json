@@ -6,7 +6,7 @@
     "create_account": "Створити обліковий запис",
     "sign_in": "Увійти",
     "sign_out": "Вийти",
-    "skip": "Skip",
+    "skip": "Пропустити",
     "start_over": "Розпочати знову",
     "submit": "Надіслати"
   },
@@ -55,8 +55,8 @@
       "new": "Новий пароль"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "Це ім'я, яке побачать інші люди. Ви можете змінити його в будь-який час.",
+      "headline": "Виберіть своє ім'я для відображення"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> за <span> %(redirect_uri)s </span> хоче звернутися до вашого облікового запису.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Якщо ви забули свої облікові дані, ви можете відновити обліковий запис. Ви також можете почати спочатку та використати іншу електронну адресу.",
+      "title": "Адреса електронної пошти <span>%(email)s</span> вже використовується"
     },
     "emails": {
       "greeting": "Вітаю %(username)s,",
