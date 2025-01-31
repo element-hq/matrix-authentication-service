@@ -64,6 +64,7 @@ mod priv_ {
         pub(super) user_id: Option<Uuid>,
         pub(super) scope_list: Option<Vec<String>>,
         pub(super) device_id: Option<String>,
+        pub(super) human_name: Option<String>,
         pub(super) created_at: DateTime<Utc>,
         pub(super) finished_at: Option<DateTime<Utc>>,
         pub(super) is_synapse_admin: Option<bool>,
@@ -91,6 +92,7 @@ impl TryFrom<AppSessionLookup> for AppSession {
             user_id,
             scope_list,
             device_id,
+            human_name,
             created_at,
             finished_at,
             is_synapse_admin,
@@ -141,6 +143,7 @@ impl TryFrom<AppSessionLookup> for AppSession {
                     state,
                     user_id: user_id.into(),
                     device,
+                    human_name,
                     user_session_id,
                     created_at,
                     is_synapse_admin,
@@ -294,6 +297,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 AppSessionLookupIden::ScopeList,
             )
             .expr_as(Expr::cust("NULL"), AppSessionLookupIden::DeviceId)
+            .expr_as(Expr::cust("NULL"), AppSessionLookupIden::HumanName)
             .expr_as(
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::CreatedAt)),
                 AppSessionLookupIden::CreatedAt,
@@ -342,6 +346,10 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             .expr_as(
                 Expr::col((CompatSessions::Table, CompatSessions::DeviceId)),
                 AppSessionLookupIden::DeviceId,
+            )
+            .expr_as(
+                Expr::col((CompatSessions::Table, CompatSessions::HumanName)),
+                AppSessionLookupIden::HumanName,
             )
             .expr_as(
                 Expr::col((CompatSessions::Table, CompatSessions::CreatedAt)),

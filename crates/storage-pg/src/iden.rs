@@ -43,6 +43,7 @@ pub enum CompatSessions {
     CompatSessionId,
     UserId,
     DeviceId,
+    HumanName,
     UserSessionId,
     CreatedAt,
     FinishedAt,

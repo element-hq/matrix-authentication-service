@@ -28,6 +28,7 @@ uuid = "1.10.0"
 ulid = { workspace = true, features = ["uuid"] }
 
 mas-config.workspace = true
+mas-storage.workspace = true
 
 [dev-dependencies]
 mas-storage-pg.workspace = true

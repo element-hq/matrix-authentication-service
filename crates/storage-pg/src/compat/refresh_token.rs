@@ -204,9 +204,9 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
             r#"
                 UPDATE compat_refresh_tokens
                 SET consumed_at = $2
-                WHERE compat_refresh_token_id = $1
+                WHERE compat_session_id = $1
             "#,
-            Uuid::from(compat_refresh_token.id),
+            Uuid::from(compat_refresh_token.session_id),
             consumed_at,
         )
         .traced()
