@@ -142,8 +142,10 @@ pub async fn migrate(
 
     let state = MigrationState {
         server_name,
-        users: HashMap::with_capacity(counts.users),
-        devices_to_compat_sessions: HashMap::with_capacity(counts.devices),
+        // We oversize the hashmaps, as the estimates are innaccurate, and we would like to avoid
+        // reallocations.
+        users: HashMap::with_capacity(counts.users * 9 / 8),
+        devices_to_compat_sessions: HashMap::with_capacity(counts.devices * 9 / 8),
         provider_id_mapping,
     };
 
