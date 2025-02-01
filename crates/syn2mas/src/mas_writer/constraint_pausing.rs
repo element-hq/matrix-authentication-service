@@ -109,6 +109,7 @@ pub async fn drop_index(conn: &mut PgConnection, index: &IndexDescription) -> Re
 /// Restores (recreates) a constraint.
 ///
 /// The constraint must not exist prior to this call.
+#[tracing::instrument(name = "syn2mas.restore_constraint", skip_all, fields(constraint.name = constraint.name))]
 pub async fn restore_constraint(
     conn: &mut PgConnection,
     constraint: &ConstraintDescription,
@@ -133,6 +134,7 @@ pub async fn restore_constraint(
 /// Restores (recreates) a index.
 ///
 /// The index must not exist prior to this call.
+#[tracing::instrument(name = "syn2mas.restore_index", skip_all, fields(index.name = index.name))]
 pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) -> Result<(), Error> {
     let IndexDescription {
         name,
