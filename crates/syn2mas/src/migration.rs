@@ -11,7 +11,7 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{collections::HashMap, pin::pin};
+use std::{collections::HashMap, pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -20,7 +20,7 @@ use mas_storage::Clock;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tracing::Level;
+use tracing::{Level, info};
 use ulid::Ulid;
 use uuid::{NonNilUuid, Uuid};
 
@@ -177,6 +177,8 @@ async fn migrate_users(
     mut state: MigrationState,
     rng: &mut impl RngCore,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
     let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
     let mut users_stream = pin!(synapse.read_users());
@@ -254,6 +256,11 @@ async fn migrate_users(
         .await
         .into_mas("writing passwords")?;
 
+    info!(
+        "users migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -264,6 +271,8 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut email_buffer = MasWriteBuffer::new(&mas, MasWriter::write_email_threepids);
     let mut unsupported_buffer = MasWriteBuffer::new(&mas, MasWriter::write_unsupported_threepids);
     let mut users_stream = pin!(synapse.read_threepids());
@@ -333,6 +342,11 @@ async fn migrate_threepids(
         .await
         .into_mas("writing unsupported threepids")?;
 
+    info!(
+        "third-party IDs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -347,6 +361,8 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_upstream_oauth_links);
     let mut extids_stream = pin!(synapse.read_user_external_ids());
 
@@ -402,7 +418,12 @@ async fn migrate_external_ids(
     write_buffer
         .finish(&mut mas)
         .await
-        .into_mas("writing threepids")?;
+        .into_mas("writing upstream links")?;
+
+    info!(
+        "upstream links (external IDs) migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok((mas, state))
 }
@@ -422,6 +443,8 @@ async fn migrate_devices(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut devices_stream = pin!(synapse.read_devices());
     let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
@@ -509,6 +532,11 @@ async fn migrate_devices(
         .await
         .into_mas("writing compat sessions")?;
 
+    info!(
+        "devices migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -522,6 +550,8 @@ async fn migrate_unrefreshable_access_tokens(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut token_stream = pin!(synapse.read_unrefreshable_access_tokens());
     let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
     let mut deviceless_session_write_buffer =
@@ -624,6 +654,11 @@ async fn migrate_unrefreshable_access_tokens(
         .await
         .into_mas("writing deviceless compat sessions")?;
 
+    info!(
+        "non-refreshable access tokens migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -637,6 +672,8 @@ async fn migrate_refreshable_token_pairs(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
     let mut access_token_write_buffer =
         MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
@@ -726,6 +763,11 @@ async fn migrate_refreshable_token_pairs(
         .finish(&mut mas)
         .await
         .into_mas("writing compat refresh tokens")?;
+
+    info!(
+        "refreshable token pairs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok((mas, state))
 }
