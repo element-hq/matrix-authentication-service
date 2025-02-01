@@ -338,33 +338,35 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
+        // For speed, retrieve a fast estimate from the statistics system
+        // of Postgres instead. https://wiki.postgresql.org/wiki/Count_estimate
+        // If the estimates are not up to date, the result might be `-1`, so clamp to 0.
+
         // We don't get to filter out application service users by using this estimate,
-        // which is a shame, but on a large database this is way faster.
+        // which is a shame, but on a large database this is way faster than counting
+        // exactly.
         // On matrix.org, counting users and devices properly takes around 1m10s,
         // which is unnecessary extra downtime during the migration, just to
         // show a more accurate progress bar and size a hash map accurately.
-        let users: i64 = sqlx::query_scalar(
+        let users: i64 = sqlx::query_scalar::<_, i64>(
             "
             SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'users'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("estimating count of users")?;
+        .into_database("estimating count of users")?
+        .max(0);
 
-        let devices = sqlx::query_scalar(
+        let devices = sqlx::query_scalar::<_, i64>(
             "
             SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'devices'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("estimating count of devices")?;
-
-        // For other rows, we don't particularly care about the number except for
-        // progress bars, so retrieve a fast estimate from the statistics system
-        // of Postgres instead. https://wiki.postgresql.org/wiki/Count_estimate
-        // If the estimates are not up to date, the result might be `-1`, so clamp to 0.
+        .into_database("estimating count of devices")?
+        .max(0);
 
         let threepids = sqlx::query_scalar::<_, i64>(
             "
