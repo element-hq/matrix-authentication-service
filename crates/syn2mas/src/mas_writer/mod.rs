@@ -22,7 +22,8 @@ use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{error, info, warn, Level};
+use tracing::{error, info, warn, Level, Span};
+use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
 use uuid::Uuid;
 
 use self::{
@@ -539,21 +540,37 @@ impl MasWriter {
         Ok((indices_to_restore, constraints_to_restore))
     }
 
+    #[tracing::instrument(skip_all, fields(indicatif.pb_show))]
     async fn restore_indices(
         conn: &mut LockedMasDatabase,
         indices_to_restore: &[IndexDescription],
         constraints_to_restore: &[ConstraintDescription],
     ) -> Result<(), Error> {
+        let span = Span::current();
+        // TODO this style is a quick workaround for showing the message, but
+        // might not be optimal for other purposes
+        span.pb_set_style(
+            &ProgressStyle::with_template(
+                "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}",
+            )
+            .unwrap(),
+        );
+        span.pb_set_length((indices_to_restore.len() + constraints_to_restore.len()) as u64);
+
         // First restore all indices. The order is not important as far as I know.
         // However the indices are needed before constraints.
         for index in indices_to_restore.iter().rev() {
+            span.pb_set_message(&format!("building index: {}", &index.name));
             constraint_pausing::restore_index(conn.as_mut(), index).await?;
+            span.pb_inc(1);
         }
         // Then restore all constraints.
         // The order here is the reverse of drop order, since some constraints may rely
         // on other constraints to work.
         for constraint in constraints_to_restore.iter().rev() {
+            span.pb_set_message(&format!("building constraint: {}", &constraint.name));
             constraint_pausing::restore_constraint(conn.as_mut(), constraint).await?;
+            span.pb_inc(1);
         }
         Ok(())
     }
