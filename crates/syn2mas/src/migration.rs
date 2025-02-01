@@ -14,6 +14,7 @@
 use std::{
     collections::{HashMap, HashSet},
     pin::pin,
+    time::Instant,
 };
 
 use chrono::{DateTime, Utc};
@@ -23,7 +24,7 @@ use mas_storage::Clock;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tracing::{Level, Span};
+use tracing::{info, Level, Span};
 use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
 use ulid::Ulid;
 use uuid::Uuid;
@@ -246,6 +247,8 @@ async fn migrate_users(
     server_name: &str,
     rng: &mut impl RngCore,
 ) -> Result<UsersMigrated, Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(user_count_hint as u64);
@@ -292,6 +295,11 @@ async fn migrate_users(
         .await
         .into_mas("writing passwords")?;
 
+    info!(
+        "users migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok(UsersMigrated {
         user_localparts_to_uuid,
         synapse_admins,
@@ -307,6 +315,8 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint);
@@ -386,6 +396,11 @@ async fn migrate_threepids(
         .await
         .into_mas("writing unsupported threepids")?;
 
+    info!(
+        "third-party IDs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok(())
 }
 
@@ -403,6 +418,8 @@ async fn migrate_external_ids(
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     provider_id_mapping: &HashMap<String, Uuid>,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint);
@@ -464,7 +481,12 @@ async fn migrate_external_ids(
     write_buffer
         .finish(mas)
         .await
-        .into_mas("writing threepids")?;
+        .into_mas("writing upstream links")?;
+
+    info!(
+        "upstream links (external IDs) migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok(())
 }
@@ -489,6 +511,8 @@ async fn migrate_devices(
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
     synapse_admins: &HashSet<Uuid>,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint);
@@ -556,6 +580,11 @@ async fn migrate_devices(
         .await
         .into_mas("writing compat sessions")?;
 
+    info!(
+        "devices migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok(())
 }
 
@@ -573,6 +602,8 @@ async fn migrate_unrefreshable_access_tokens(
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint);
@@ -674,6 +705,11 @@ async fn migrate_unrefreshable_access_tokens(
         .await
         .into_mas("writing deviceless compat sessions")?;
 
+    info!(
+        "non-refreshable access tokens migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok(())
 }
 
@@ -691,6 +727,8 @@ async fn migrate_refreshable_token_pairs(
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
     devices: &mut HashMap<(Uuid, CompactString), Uuid>,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint);
@@ -779,6 +817,11 @@ async fn migrate_refreshable_token_pairs(
         .finish(mas)
         .await
         .into_mas("writing compat refresh tokens")?;
+
+    info!(
+        "refreshable token pairs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok(())
 }
