@@ -11,7 +11,7 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{collections::HashMap, pin::pin};
+use std::{collections::HashMap, pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -20,7 +20,7 @@ use mas_storage::Clock;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tracing::{Level, Span};
+use tracing::{info, Level, Span};
 use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
 use ulid::Ulid;
 use uuid::Uuid;
@@ -223,6 +223,8 @@ async fn migrate_users(
     mut state: MigrationState,
     rng: &mut impl RngCore,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -278,6 +280,11 @@ async fn migrate_users(
         .await
         .into_mas("writing passwords")?;
 
+    info!(
+        "users migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -289,6 +296,8 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -367,6 +376,11 @@ async fn migrate_threepids(
         .await
         .into_mas("writing unsupported threepids")?;
 
+    info!(
+        "third-party IDs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -382,6 +396,7 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -442,7 +457,12 @@ async fn migrate_external_ids(
     write_buffer
         .finish(&mut mas)
         .await
-        .into_mas("writing threepids")?;
+        .into_mas("writing upstream links")?;
+
+    info!(
+        "upstream links (external IDs) migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok((mas, state))
 }
@@ -464,6 +484,8 @@ async fn migrate_devices(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -551,6 +573,11 @@ async fn migrate_devices(
         .await
         .into_mas("writing compat sessions")?;
 
+    info!(
+        "devices migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -566,6 +593,8 @@ async fn migrate_unrefreshable_access_tokens(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -670,6 +699,11 @@ async fn migrate_unrefreshable_access_tokens(
         .await
         .into_mas("writing deviceless compat sessions")?;
 
+    info!(
+        "non-refreshable access tokens migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok((mas, state))
 }
 
@@ -685,6 +719,8 @@ async fn migrate_refreshable_token_pairs(
     rng: &mut impl RngCore,
     mut state: MigrationState,
 ) -> Result<(MasWriter, MigrationState), Error> {
+    let start = Instant::now();
+
     let span = Span::current();
     span.pb_set_style(&ProgressStyle::default_bar());
     span.pb_set_length(count_hint as u64);
@@ -776,6 +812,11 @@ async fn migrate_refreshable_token_pairs(
         .finish(&mut mas)
         .await
         .into_mas("writing compat refresh tokens")?;
+
+    info!(
+        "refreshable token pairs migrated in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok((mas, state))
 }
