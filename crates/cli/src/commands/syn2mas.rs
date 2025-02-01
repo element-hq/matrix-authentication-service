@@ -173,14 +173,14 @@ impl Options {
 
         // Display errors and warnings
         if !check_errors.is_empty() {
-            eprintln!("===== Errors =====");
+            eprintln!("\n\n===== Errors =====");
             eprintln!("These issues prevent migrating from Synapse to MAS right now:\n");
             for error in &check_errors {
                 eprintln!("• {error}\n");
             }
         }
         if !check_warnings.is_empty() {
-            eprintln!("===== Warnings =====");
+            eprintln!("\n\n===== Warnings =====");
             eprintln!(
                 "These potential issues should be considered before migrating from Synapse to MAS right now:\n"
             );
@@ -234,6 +234,7 @@ impl Options {
 
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
+                eprintln!("\n\n"); // padding above progress bar
                 syn2mas::migrate(
                     reader,
                     writer,
