@@ -15,7 +15,7 @@ use sqlx::{postgres::PgConnectOptions, types::Uuid, Connection, Either, PgConnec
 use syn2mas::{synapse_config, LockedMasDatabase, MasWriter, SynapseReader};
 use tracing::{error, info_span, warn, Instrument};
 
-use crate::util::database_connection_from_config;
+use crate::util::{database_connection_from_config_with_options, DatabaseConnectOptions};
 
 /// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
 /// errors preventing migration.
@@ -111,7 +111,13 @@ impl Options {
 
         let config = DatabaseConfig::extract_or_default(figment)?;
 
-        let mut mas_connection = database_connection_from_config(&config).await?;
+        let mut mas_connection = database_connection_from_config_with_options(
+            &config,
+            &DatabaseConnectOptions {
+                log_slow_statements: false,
+            },
+        )
+        .await?;
 
         MIGRATOR
             .run(&mut mas_connection)
@@ -220,7 +226,15 @@ impl Options {
                 let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
-                    writer_mas_connections.push(database_connection_from_config(&config).await?);
+                    writer_mas_connections.push(
+                        database_connection_from_config_with_options(
+                            &config,
+                            &DatabaseConnectOptions {
+                                log_slow_statements: false,
+                            },
+                        )
+                        .await?,
+                    );
                 }
                 let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
