@@ -14,6 +14,7 @@ use mas_config::{ConfigurationSection, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_indicatif::{
     filter::{hide_indicatif_span_fields, IndicatifFilter},
+    style::ProgressStyle,
     IndicatifLayer,
 };
 use tracing_subscriber::{
@@ -72,10 +73,23 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         // Display the error if it is something other than the .env file not existing
         .or_else(|e| if e.not_found() { Ok(None) } else { Err(e) });
 
+    // Set up progress bars, used in syn2mas for example
+    let progress_layer = IndicatifLayer::new()
+        .with_span_field_formatter(hide_indicatif_span_fields(DefaultFields::new()))
+        // TODO this progress style would likely benefit from being tweaked,
+        // but we want to use a custom one to show both a bar and the message at the same time.
+        .with_progress_style(
+            ProgressStyle::with_template(
+                "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>10}/{len:10} {msg}",
+            )
+            .unwrap(),
+        );
+
     // Setup logging
     // This writes logs to stderr
-    let output = std::io::stderr();
-    let with_ansi = output.is_terminal();
+    let with_ansi = std::io::stderr().is_terminal(); // TODO not sure this is the best way
+    let output = progress_layer.get_stderr_writer();
+
     let (log_writer, _guard) = tracing_appender::non_blocking(output);
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_writer(log_writer)
@@ -136,17 +150,12 @@ async fn try_main() -> anyhow::Result<ExitCode> {
             .with_filter(LevelFilter::INFO)
     });
 
-    // Set up progress bars, used in syn2mas for example
-    let progress_layer = IndicatifLayer::new()
-        .with_span_field_formatter(hide_indicatif_span_fields(DefaultFields::new()))
-        .with_filter(IndicatifFilter::new(false));
-
     let subscriber = Registry::default()
         .with(sentry_layer)
         .with(telemetry_layer)
         .with(filter_layer)
         .with(fmt_layer)
-        .with(progress_layer);
+        .with(progress_layer.with_filter(IndicatifFilter::new(false)));
     subscriber
         .try_init()
         .context("could not initialize logging")?;
