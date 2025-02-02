@@ -449,7 +449,7 @@ impl<'conn> SynapseReader<'conn> {
             INNER JOIN devices USING (user_id, device_id)
             WHERE at0.puppets_user_id IS NULL AND at0.refresh_token_id IS NULL
 
-            UNION
+            UNION ALL
 
             SELECT
               at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
@@ -478,7 +478,7 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               rt0.user_id, rt0.device_id, at0.token AS access_token, rt0.token AS refresh_token, at0.valid_until_ms, at0.last_validated
             FROM refresh_tokens rt0
-            INNER JOIN devices USING (device_id)
+            INNER JOIN devices USING (user_id, device_id)
             INNER JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
             LEFT JOIN access_tokens at1 ON at1.refresh_token_id = rt0.next_token_id
             WHERE NOT at1.used OR at1.used IS NULL
