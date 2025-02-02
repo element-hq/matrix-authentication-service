@@ -566,7 +566,6 @@ mod test {
         SynapseReader,
     };
 
-    // TODO test me
     static MIGRATOR: Migrator = sqlx::migrate!("./test_synapse_migrations");
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice"))]
