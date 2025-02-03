@@ -23,6 +23,7 @@ chrono.workspace = true
 compact_str.workspace = true
 tracing.workspace = true
 futures-util = "0.3.31"
+rustc-hash = "2.1.1"
 
 rand.workspace = true
 uuid = "1.15.1"

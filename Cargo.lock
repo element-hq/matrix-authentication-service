@@ -6108,6 +6108,7 @@ dependencies = [
  "mas-storage",
  "mas-storage-pg",
  "rand",
+ "rustc-hash 2.1.1",
  "serde",
  "sqlx",
  "thiserror 2.0.11",
