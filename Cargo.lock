@@ -6128,6 +6128,7 @@ dependencies = [
  "mas-config",
  "mas-storage",
  "mas-storage-pg",
+ "pin-project-lite",
  "rand",
  "serde",
  "sqlx",

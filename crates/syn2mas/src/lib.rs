@@ -7,6 +7,7 @@ mod mas_writer;
 mod synapse_reader;
 
 mod migration;
+mod progress_stream;
 
 pub use self::{
     mas_writer::{MasWriter, checks::mas_pre_migration_checks, locking::LockedMasDatabase},
