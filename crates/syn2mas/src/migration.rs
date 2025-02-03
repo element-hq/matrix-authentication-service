@@ -11,7 +11,7 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{collections::HashMap, pin::pin, time::Instant};
+use std::{pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -36,7 +36,7 @@ use crate::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
-    SynapseReader,
+    HashMap, RandomState, SynapseReader,
 };
 
 #[derive(Debug, Error, ContextInto)]
@@ -109,7 +109,7 @@ struct MigrationState {
 
     /// A mapping of Synapse external ID providers to MAS upstream OAuth 2.0
     /// provider ID
-    provider_id_mapping: HashMap<String, Uuid>,
+    provider_id_mapping: std::collections::HashMap<String, Uuid>,
 }
 
 /// Performs a migration from Synapse's database to MAS' database.
@@ -132,7 +132,7 @@ pub async fn migrate(
     server_name: String,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
-    provider_id_mapping: HashMap<String, Uuid>,
+    provider_id_mapping: std::collections::HashMap<String, Uuid>,
 ) -> Result<(), Error> {
     let span = Span::current();
     span.pb_set_message("counting work");
@@ -143,8 +143,11 @@ pub async fn migrate(
         server_name,
         // We oversize the hashmaps, as the estimates are innaccurate, and we would like to avoid
         // reallocations.
-        users: HashMap::with_capacity(counts.users * 9 / 8),
-        devices_to_compat_sessions: HashMap::with_capacity(counts.devices * 9 / 8),
+        users: HashMap::with_capacity_and_hasher(counts.users * 9 / 8, RandomState::default()),
+        devices_to_compat_sessions: HashMap::with_capacity_and_hasher(
+            counts.devices * 9 / 8,
+            RandomState::default(),
+        ),
         provider_id_mapping,
     };
 

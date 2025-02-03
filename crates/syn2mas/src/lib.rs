@@ -9,6 +9,9 @@ mod synapse_reader;
 mod migration;
 mod progress_stream;
 
+type RandomState = rustc_hash::FxBuildHasher;
+type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
+
 pub use self::{
     mas_writer::{checks::mas_pre_migration_checks, locking::LockedMasDatabase, MasWriter},
     migration::migrate,

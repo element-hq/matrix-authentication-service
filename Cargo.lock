@@ -6077,6 +6077,7 @@ dependencies = [
  "mas-storage-pg",
  "pin-project-lite",
  "rand",
+ "rustc-hash 2.1.1",
  "serde",
  "sqlx",
  "thiserror 2.0.11",
