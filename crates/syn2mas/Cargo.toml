@@ -13,6 +13,7 @@ repository.workspace = true
 anyhow.workspace = true
 camino.workspace = true
 figment.workspace = true
+pin-project-lite = "0.2.16"
 serde.workspace = true
 thiserror.workspace = true
 thiserror-ext.workspace = true
