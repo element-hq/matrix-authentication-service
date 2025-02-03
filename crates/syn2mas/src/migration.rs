@@ -246,7 +246,7 @@ async fn migrate_users(
     let mut password_buffer = MasWriteBuffer::new(mas, MasWriter::write_passwords);
     let mut users_stream = pin!(synapse
         .read_users()
-        .with_progress_bar(user_count_hint as u64, 100));
+        .with_progress_bar(user_count_hint as u64, 10_000));
     // Oversize the capacity, because the count is only an estimate and
     // we would like to avoid a reallocation
     let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint * 9 / 8);
@@ -308,7 +308,9 @@ async fn migrate_threepids(
 
     let mut email_buffer = MasWriteBuffer::new(mas, MasWriter::write_email_threepids);
     let mut unsupported_buffer = MasWriteBuffer::new(mas, MasWriter::write_unsupported_threepids);
-    let mut users_stream = pin!(synapse.read_threepids().with_progress_bar(count_hint, 100));
+    let mut users_stream = pin!(synapse
+        .read_threepids()
+        .with_progress_bar(count_hint, 10_000));
 
     while let Some(threepid_res) = users_stream.next().await {
         let SynapseThreepid {
@@ -406,7 +408,7 @@ async fn migrate_external_ids(
     let mut write_buffer = MasWriteBuffer::new(mas, MasWriter::write_upstream_oauth_links);
     let mut extids_stream = pin!(synapse
         .read_user_external_ids()
-        .with_progress_bar(count_hint, 100));
+        .with_progress_bar(count_hint, 10_000));
 
     while let Some(extid_res) = extids_stream.next().await {
         let SynapseExternalId {
@@ -492,7 +494,7 @@ async fn migrate_devices(
 ) -> Result<(), Error> {
     let start = Instant::now();
 
-    let mut devices_stream = pin!(synapse.read_devices().with_progress_bar(count_hint, 100));
+    let mut devices_stream = pin!(synapse.read_devices().with_progress_bar(count_hint, 10_000));
     let mut write_buffer = MasWriteBuffer::new(mas, MasWriter::write_compat_sessions);
 
     while let Some(device_res) = devices_stream.next().await {
@@ -579,7 +581,7 @@ async fn migrate_unrefreshable_access_tokens(
 
     let mut token_stream = pin!(synapse
         .read_unrefreshable_access_tokens()
-        .with_progress_bar(count_hint, 100));
+        .with_progress_bar(count_hint, 10_000));
     let mut write_buffer = MasWriteBuffer::new(mas, MasWriter::write_compat_access_tokens);
     let mut deviceless_session_write_buffer =
         MasWriteBuffer::new(mas, MasWriter::write_compat_sessions);
@@ -700,7 +702,7 @@ async fn migrate_refreshable_token_pairs(
 
     let mut token_stream = pin!(synapse
         .read_refreshable_token_pairs()
-        .with_progress_bar(count_hint, 100));
+        .with_progress_bar(count_hint, 10_000));
     let mut access_token_write_buffer =
         MasWriteBuffer::new(mas, MasWriter::write_compat_access_tokens);
     let mut refresh_token_write_buffer =
