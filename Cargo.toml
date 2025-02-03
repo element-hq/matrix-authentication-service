@@ -416,6 +416,11 @@ features = ["serde"]
 [workspace.dependencies.wiremock]
 version = "0.6.2"
 
+# Slower compilation times for better performance
+[profile.release]
+lto = true
+codegen-units = 1
+
 # A few profile opt-level tweaks to make the test suite run faster
 [profile.dev.package]
 argon2.opt-level = 3
