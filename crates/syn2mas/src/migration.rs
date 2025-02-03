@@ -11,11 +11,7 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{
-    collections::{HashMap, HashSet},
-    pin::pin,
-    time::Instant,
-};
+use std::{pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -40,7 +36,7 @@ use crate::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
-    SynapseReader,
+    HashMap, HashSet, RandomState, SynapseReader,
 };
 
 #[derive(Debug, Error, ContextInto)]
@@ -100,7 +96,7 @@ pub async fn migrate(
     server_name: &str,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
-    provider_id_mapping: &HashMap<String, Uuid>,
+    provider_id_mapping: &std::collections::HashMap<String, Uuid>,
 ) -> Result<(), Error> {
     let span = Span::current();
     span.pb_set_message("counting work");
@@ -154,12 +150,13 @@ pub async fn migrate(
 
     // `(MAS user_id, device_id)` mapped to `compat_session` ULID
     let mut devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid> =
-        HashMap::with_capacity(
+        HashMap::with_capacity_and_hasher(
             usize::try_from(counts.devices)
                 .expect("More than usize::MAX devices — unable to handle this many!")
             // Oversize the capacity, because the count is only an estimate and
             // we would like to avoid a reallocation
             * 9 / 8,
+            RandomState::default(),
         );
 
     span.pb_set_message("migrating access tokens");
@@ -249,8 +246,9 @@ async fn migrate_users(
         .with_progress_bar(user_count_hint as u64, 10_000));
     // Oversize the capacity, because the count is only an estimate and
     // we would like to avoid a reallocation
-    let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint * 9 / 8);
-    let mut synapse_admins = HashSet::new();
+    let mut user_localparts_to_uuid =
+        HashMap::with_capacity_and_hasher(user_count_hint * 9 / 8, RandomState::default());
+    let mut synapse_admins = HashSet::with_hasher(RandomState::default());
 
     while let Some(user_res) = users_stream.next().await {
         let user = user_res.into_synapse("reading user")?;
@@ -401,7 +399,7 @@ async fn migrate_external_ids(
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
-    provider_id_mapping: &HashMap<String, Uuid>,
+    provider_id_mapping: &std::collections::HashMap<String, Uuid>,
 ) -> Result<(), Error> {
     let start = Instant::now();
 
