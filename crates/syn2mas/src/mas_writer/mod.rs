@@ -22,7 +22,7 @@ use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{error, info, warn, Level, Span};
+use tracing::{error, info, warn, Instrument, Level, Span};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use uuid::Uuid;
 
@@ -120,18 +120,21 @@ impl WriterConnectionPool {
         match self.connection_rx.recv().await {
             Some(Ok(mut connection)) => {
                 let connection_tx = self.connection_tx.clone();
-                tokio::task::spawn(async move {
-                    let to_return = match task(&mut connection).await {
-                        Ok(()) => Ok(connection),
-                        Err(error) => {
-                            error!("error in writer: {error}");
-                            Err(error)
-                        }
-                    };
-                    // This should always succeed in sending unless we're already shutting
-                    // down for some other reason.
-                    let _: Result<_, _> = connection_tx.send(to_return).await;
-                });
+                tokio::task::spawn(
+                    async move {
+                        let to_return = match task(&mut connection).await {
+                            Ok(()) => Ok(connection),
+                            Err(error) => {
+                                error!("error in writer: {error}");
+                                Err(error)
+                            }
+                        };
+                        // This should always succeed in sending unless we're already shutting
+                        // down for some other reason.
+                        let _: Result<_, _> = connection_tx.send(to_return).await;
+                    }
+                    .instrument(tracing::debug_span!("spawn_with_connection")),
+                );
 
                 Ok(())
             }
