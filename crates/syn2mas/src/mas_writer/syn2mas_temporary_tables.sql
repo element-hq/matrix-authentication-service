@@ -23,7 +23,8 @@ CREATE TABLE syn2mas_restore_constraints (
 
     table_name TEXT NOT NULL,
     name TEXT NOT NULL,
-    definition TEXT NOT NULL
+    definition TEXT NOT NULL,
+    is_fk BOOLEAN NOT NULL
 );
 
 -- corresponds to `IndexDescription`
@@ -42,3 +43,6 @@ ALTER TABLE user_passwords RENAME TO syn2mas__user_passwords;
 ALTER TABLE user_emails RENAME TO syn2mas__user_emails;
 ALTER TABLE user_unsupported_third_party_ids RENAME TO syn2mas__user_unsupported_third_party_ids;
 ALTER TABLE upstream_oauth_links RENAME TO syn2mas__upstream_oauth_links;
+ALTER TABLE compat_sessions RENAME TO syn2mas__compat_sessions;
+ALTER TABLE compat_access_tokens RENAME TO syn2mas__compat_access_tokens;
+ALTER TABLE compat_refresh_tokens RENAME TO syn2mas__compat_refresh_tokens;

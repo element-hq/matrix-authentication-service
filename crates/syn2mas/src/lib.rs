@@ -3,10 +3,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+#![expect(
+    clippy::overly_complex_bool_expr,
+    reason = "TODO: remove when we've removed the hacks"
+)]
+
 mod mas_writer;
 mod synapse_reader;
 
 mod migration;
+mod progress_stream;
+
+type RandomState = rustc_hash::FxBuildHasher;
+type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
+type HashSet<T> = rustc_hash::FxHashSet<T>;
 
 pub use self::{
     mas_writer::{checks::mas_pre_migration_checks, locking::LockedMasDatabase, MasWriter},

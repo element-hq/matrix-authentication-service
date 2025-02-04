@@ -356,6 +356,10 @@ version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
 version = "0.3.19"
 
+# Progress bars
+[workspace.dependencies.tracing-indicatif]
+version = "0.3.9"
+
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
 version = "0.27.1"
@@ -411,6 +415,11 @@ features = ["serde"]
 # HTTP mock server
 [workspace.dependencies.wiremock]
 version = "0.6.2"
+
+# Slower compilation times for better performance
+[profile.release]
+lto = true
+codegen-units = 1
 
 # A few profile opt-level tweaks to make the test suite run faster
 [profile.dev.package]

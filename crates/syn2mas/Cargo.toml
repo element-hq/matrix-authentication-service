@@ -13,6 +13,7 @@ repository.workspace = true
 anyhow.workspace = true
 camino.workspace = true
 figment.workspace = true
+pin-project-lite = "0.2.16"
 serde.workspace = true
 thiserror.workspace = true
 thiserror-ext.workspace = true
@@ -21,13 +22,16 @@ sqlx.workspace = true
 chrono.workspace = true
 compact_str.workspace = true
 tracing.workspace = true
+tracing-indicatif.workspace = true
 futures-util = "0.3.30"
+rustc-hash = "2.1.0"
 
 rand.workspace = true
 uuid = "1.10.0"
 ulid = { workspace = true, features = ["uuid"] }
 
 mas-config.workspace = true
+mas-storage.workspace = true
 
 [dev-dependencies]
 mas-storage-pg.workspace = true

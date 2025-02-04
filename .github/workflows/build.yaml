@@ -11,10 +11,10 @@ on:
   # Only run for pull requests if relevant files were changed
   pull_request:
     branches: [main]
-    paths:
-      - Dockerfile
-      - docker-bake.hcl
-      - .github/workflows/build.yaml
+    # paths: HACK
+    #   - Dockerfile
+    #   - docker-bake.hcl
+    #   - .github/workflows/build.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,7 +52,8 @@ jobs:
         with:
           targets: |
             x86_64-unknown-linux-gnu
-            aarch64-unknown-linux-gnu
+          # HACK
+          #  aarch64-unknown-linux-gnu
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.7
@@ -89,14 +90,16 @@ jobs:
           cargo zigbuild \
             --release \
             --target x86_64-unknown-linux-gnu.2.17 \
-            --target aarch64-unknown-linux-gnu.2.17 \
             --no-default-features \
             --features dist \
             -p mas-cli
+        # HACK
+        # --target aarch64-unknown-linux-gnu.2.17 \
 
       - name: Create one archive per architecture
         run: |
-          for arch in x86_64 aarch64; do
+          # HACK for arch in x86_64 aarch64; do
+          for arch in x86_64; do
             # Create one directory per architecture
             mkdir -p dist/${arch}/share/
             # Copy the artifacts to the right place
@@ -121,8 +124,9 @@ jobs:
         with:
           name: binaries
           path: |
-            mas-cli-aarch64-linux.tar.gz
             mas-cli-x86_64-linux.tar.gz
+          # HACK
+          # mas-cli-aarch64-linux.tar.gz
 
   build-image:
     name: Build and push Docker image

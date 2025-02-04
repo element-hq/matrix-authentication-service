@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT table_name, name, definition FROM syn2mas_restore_constraints ORDER BY order_key",
+  "query": "SELECT table_name, name, definition, is_fk FROM syn2mas_restore_constraints ORDER BY order_key",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "definition",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_fk",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -25,8 +30,9 @@
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "78ed3bf1032cd678b42230d68fb2b8e3d74161c8b6c5fe1a746b6958ccd2fd84"
+  "hash": "51b7f77e2f8d4a03cfceac46e1c22e47932d427950cd416eb7c46e0451582d8b"
 }

@@ -7,15 +7,26 @@
 //!
 //! This module is responsible for writing new records to MAS' database.
 
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    net::IpAddr,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc,
+    },
+};
 
 use chrono::{DateTime, Utc};
 use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
 use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
-use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{error, info, warn, Level};
+use tokio::{
+    sync::mpsc::{self, Receiver, Sender},
+    task::JoinHandle,
+};
+use tracing::{error, info, warn, Instrument, Level, Span};
+use tracing_indicatif::span_ext::IndicatifSpanExt;
 use uuid::Uuid;
 
 use self::{
@@ -37,12 +48,18 @@ pub enum Error {
         context: String,
     },
 
+    #[error("failed to restore index or constraint, channel closed")]
+    CantRestoreIndexOrConstraint,
+
     #[error("writer connection pool shut down due to error")]
     #[allow(clippy::enum_variant_names)]
     WriterConnectionPoolError,
 
     #[error("inconsistent database: {0}")]
     Inconsistent(String),
+
+    #[error("bug in syn2mas: write buffers not finished")]
+    WriteBuffersNotFinished,
 
     #[error("{0}")]
     Multiple(MultipleErrors),
@@ -109,18 +126,21 @@ impl WriterConnectionPool {
         match self.connection_rx.recv().await {
             Some(Ok(mut connection)) => {
                 let connection_tx = self.connection_tx.clone();
-                tokio::task::spawn(async move {
-                    let to_return = match task(&mut connection).await {
-                        Ok(()) => Ok(connection),
-                        Err(error) => {
-                            error!("error in writer: {error}");
-                            Err(error)
-                        }
-                    };
-                    // This should always succeed in sending unless we're already shutting
-                    // down for some other reason.
-                    let _: Result<_, _> = connection_tx.send(to_return).await;
-                });
+                tokio::task::spawn(
+                    async move {
+                        let to_return = match task(&mut connection).await {
+                            Ok(()) => Ok(connection),
+                            Err(error) => {
+                                error!("error in writer: {error}");
+                                Err(error)
+                            }
+                        };
+                        // This should always succeed in sending unless we're already shutting
+                        // down for some other reason.
+                        let _: Result<_, _> = connection_tx.send(to_return).await;
+                    }
+                    .instrument(tracing::debug_span!("spawn_with_connection")),
+                );
 
                 Ok(())
             }
@@ -135,6 +155,36 @@ impl WriterConnectionPool {
                 unreachable!("we still hold a reference to the sender, so this shouldn't happen")
             }
         }
+    }
+
+    pub async fn commit(&mut self) -> Result<(), Error> {
+        let mut connections = Vec::with_capacity(self.num_connections);
+        while let Some(connection_or_error) = self.connection_rx.recv().await {
+            let mut connection = connection_or_error?;
+            query("COMMIT;")
+                .execute(&mut connection)
+                .await
+                .into_database("commit writer transaction")?;
+            query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+                .execute(&mut connection)
+                .await
+                .into_database("begin writer transaction")?;
+
+            connections.push(connection);
+
+            if connections.len() == self.num_connections {
+                break;
+            }
+        }
+
+        // Put all the connections back in the pool
+        for connection in connections {
+            self.connection_tx
+                .try_send(Ok(connection))
+                .expect("channel closed");
+        }
+
+        Ok(())
     }
 
     /// Finishes writing to the database, committing all changes.
@@ -185,12 +235,56 @@ impl WriterConnectionPool {
     }
 }
 
+/// Small utility to make sure `finish()` is called on all write buffers
+/// before committing to the database.
+#[derive(Default)]
+struct FinishChecker {
+    counter: Arc<AtomicU32>,
+}
+
+struct FinishCheckerHandle {
+    counter: Arc<AtomicU32>,
+}
+
+impl FinishChecker {
+    /// Acquire a new handle, for a task that should declare when it has
+    /// finished.
+    pub fn handle(&self) -> FinishCheckerHandle {
+        self.counter.fetch_add(1, Ordering::SeqCst);
+        FinishCheckerHandle {
+            counter: Arc::clone(&self.counter),
+        }
+    }
+
+    /// Check that all handles have been declared as finished.
+    pub fn check_all_finished(self) -> Result<(), Error> {
+        if self.counter.load(Ordering::SeqCst) == 0 {
+            Ok(())
+        } else {
+            Err(Error::WriteBuffersNotFinished)
+        }
+    }
+}
+
+impl FinishCheckerHandle {
+    /// Declare that the task this handle represents has been finished.
+    pub fn declare_finished(self) {
+        self.counter.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
 pub struct MasWriter<'c> {
     conn: LockedMasDatabase<'c>,
     writer_pool: WriterConnectionPool,
 
     indices_to_restore: Vec<IndexDescription>,
     constraints_to_restore: Vec<ConstraintDescription>,
+
+    constraint_restore_tx: mpsc::Sender<ConstraintDescription>,
+    index_restore_tx: mpsc::Sender<IndexDescription>,
+    restorer_task: JoinHandle<Result<(), Error>>,
+
+    write_buffer_finish_checker: FinishChecker,
 }
 
 pub struct MasNewUser {
@@ -199,6 +293,10 @@ pub struct MasNewUser {
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    /// Whether the user was a Synapse guest.
+    /// Although MAS doesn't support guest access, it's still useful to track
+    /// for the future.
+    pub is_guest: bool,
 }
 
 pub struct MasNewUserPassword {
@@ -230,6 +328,34 @@ pub struct MasNewUpstreamOauthLink {
     pub created_at: DateTime<Utc>,
 }
 
+pub struct MasNewCompatSession {
+    pub session_id: Uuid,
+    pub user_id: Uuid,
+    pub device_id: Option<String>,
+    pub human_name: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub is_synapse_admin: bool,
+    pub last_active_at: Option<DateTime<Utc>>,
+    pub last_active_ip: Option<IpAddr>,
+    pub user_agent: Option<String>,
+}
+
+pub struct MasNewCompatAccessToken {
+    pub token_id: Uuid,
+    pub session_id: Uuid,
+    pub access_token: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+pub struct MasNewCompatRefreshToken {
+    pub refresh_token_id: Uuid,
+    pub session_id: Uuid,
+    pub access_token_id: Uuid,
+    pub refresh_token: String,
+    pub created_at: DateTime<Utc>,
+}
+
 /// The 'version' of the password hashing scheme used for passwords when they
 /// are migrated from Synapse to MAS.
 /// This is version 1, as in the previous syn2mas script.
@@ -243,6 +369,9 @@ pub const MAS_TABLES_AFFECTED_BY_MIGRATION: &[&str] = &[
     "user_emails",
     "user_unsupported_third_party_ids",
     "upstream_oauth_links",
+    "compat_sessions",
+    "compat_access_tokens",
+    "compat_refresh_tokens",
 ];
 
 /// Detect whether a syn2mas migration has started on the given database.
@@ -298,9 +427,10 @@ impl<'conn> MasWriter<'conn> {
     ///
     /// - If the database connection experiences an error.
     #[allow(clippy::missing_panics_doc)] // not real
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase<'conn>,
+        mut index_restore_conn: PgConnection,
         mut writer_connections: Vec<PgConnection>,
     ) -> Result<Self, Error> {
         // Given that we don't have any concurrent transactions here,
@@ -335,7 +465,7 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("failed to get syn2mas restore data (index descriptions)")?;
             constraints_to_restore = query_as!(
                 ConstraintDescription,
-                "SELECT table_name, name, definition FROM syn2mas_restore_constraints ORDER BY order_key"
+                "SELECT table_name, name, definition, is_fk FROM syn2mas_restore_constraints ORDER BY order_key"
             )
                 .fetch_all(conn.as_mut())
                 .await
@@ -379,16 +509,18 @@ impl<'conn> MasWriter<'conn> {
                 name,
                 table_name,
                 definition,
+                is_fk,
             } in &constraints_to_restore
             {
                 query!(
                     r#"
-                    INSERT INTO syn2mas_restore_constraints (name, table_name, definition)
-                    VALUES ($1, $2, $3)
+                    INSERT INTO syn2mas_restore_constraints (name, table_name, definition, is_fk)
+                    VALUES ($1, $2, $3, $4)
                     "#,
                     name,
                     table_name,
-                    definition
+                    definition,
+                    is_fk
                 )
                 .execute(conn.as_mut())
                 .await
@@ -409,12 +541,53 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("begin MAS writer transaction")?;
         }
 
+        let (constraint_restore_tx, index_restore_tx, restorer_task) =
+            Self::restore_task(index_restore_conn);
+
         Ok(Self {
             conn,
             writer_pool: WriterConnectionPool::new(writer_connections),
             indices_to_restore,
             constraints_to_restore,
+            constraint_restore_tx,
+            index_restore_tx,
+            restorer_task,
+            write_buffer_finish_checker: FinishChecker::default(),
         })
+    }
+
+    #[tracing::instrument(name = "syn2mas.mas_writer.restore_task", skip_all)]
+    fn restore_task(
+        mut conn: PgConnection,
+    ) -> (
+        mpsc::Sender<ConstraintDescription>,
+        mpsc::Sender<IndexDescription>,
+        JoinHandle<Result<(), Error>>,
+    ) {
+        let (constraint_restore_tx, mut constraint_restore_rx) = mpsc::channel(10);
+        let (index_restore_tx, mut index_restore_rx) = mpsc::channel(10);
+        let restorer_task = tokio::spawn(
+            async move {
+                loop {
+                    tokio::select! {
+                        constraint = constraint_restore_rx.recv() => {
+                            let Some(constraint) = constraint else { break; };
+                            constraint_pausing::restore_constraint(conn.as_mut(), &constraint).await?;
+                        }
+                        index = index_restore_rx.recv() => {
+                            let Some(index) = index else { break; };
+                            constraint_pausing::restore_index(conn.as_mut(), &index).await?;
+                        }
+                    }
+                }
+
+                tracing::info!("Restoring task done");
+                Ok(())
+            }
+            .instrument(tracing::info_span!("syn2mas.mas_writer.restore_loop")),
+        );
+
+        (constraint_restore_tx, index_restore_tx, restorer_task)
     }
 
     #[tracing::instrument(skip_all)]
@@ -452,23 +625,68 @@ impl<'conn> MasWriter<'conn> {
         Ok((indices_to_restore, constraints_to_restore))
     }
 
+    #[tracing::instrument(skip_all, fields(indicatif.pb_show))]
     async fn restore_indices(
         conn: &mut LockedMasDatabase<'_>,
         indices_to_restore: &[IndexDescription],
         constraints_to_restore: &[ConstraintDescription],
     ) -> Result<(), Error> {
+        let span = Span::current();
+        span.pb_set_length((indices_to_restore.len() + constraints_to_restore.len()) as u64);
+
         // First restore all indices. The order is not important as far as I know.
         // However the indices are needed before constraints.
         for index in indices_to_restore.iter().rev() {
+            span.pb_set_message(&format!("building index: {}", &index.name));
             constraint_pausing::restore_index(conn.as_mut(), index).await?;
+            span.pb_inc(1);
         }
         // Then restore all constraints.
         // The order here is the reverse of drop order, since some constraints may rely
         // on other constraints to work.
         for constraint in constraints_to_restore.iter().rev() {
+            span.pb_set_message(&format!("building constraint: {}", &constraint.name));
             constraint_pausing::restore_constraint(conn.as_mut(), constraint).await?;
+            span.pb_inc(1);
         }
         Ok(())
+    }
+
+    /// Liberate a table, so that the indexes can start to be restored
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the task to restore indexes and constraints is
+    /// borked
+    pub async fn liberate_table(&mut self, table: &str) -> Result<(), Error> {
+        // Extract all the constraints and indexes from the table
+        let constraints_to_restore = std::mem::take(&mut self.constraints_to_restore);
+        for constraint in constraints_to_restore {
+            if constraint.table_name == table && !constraint.is_fk {
+                self.constraint_restore_tx
+                    .send(constraint)
+                    .await
+                    .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+            } else {
+                self.constraints_to_restore.push(constraint);
+            }
+        }
+        let indices_to_restore = std::mem::take(&mut self.indices_to_restore);
+        for index in indices_to_restore {
+            if index.table_name == table {
+                self.index_restore_tx
+                    .send(index)
+                    .await
+                    .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+            } else {
+                self.indices_to_restore.push(index);
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn commit(&mut self) -> Result<(), Error> {
+        self.writer_pool.commit().await
     }
 
     /// Finish writing to the MAS database, flushing and committing all changes.
@@ -480,26 +698,38 @@ impl<'conn> MasWriter<'conn> {
     /// - If the database connection experiences an error.
     #[tracing::instrument(skip_all)]
     pub async fn finish(mut self) -> Result<(), Error> {
+        self.write_buffer_finish_checker.check_all_finished()?;
+
+        // Send all the remaining constraints and indices to the restorer task
+        for constraint in self.constraints_to_restore {
+            self.constraint_restore_tx
+                .send(constraint)
+                .await
+                .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+        }
+        for index in self.indices_to_restore {
+            self.index_restore_tx
+                .send(index)
+                .await
+                .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+        }
+
         // Commit all writer transactions to the database.
         self.writer_pool
             .finish()
             .await
             .map_err(|errors| Error::Multiple(MultipleErrors::from(errors)))?;
 
-        // Now all the data has been migrated, finish off by restoring indices and
-        // constraints!
+        // Wait for the restorer task to finish
+        self.restorer_task
+            .await
+            .expect("restorer task panicked")
+            .expect("restorer task failed");
 
         query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
             .execute(self.conn.as_mut())
             .await
             .into_database("begin MAS transaction")?;
-
-        Self::restore_indices(
-            &mut self.conn,
-            &self.indices_to_restore,
-            &self.constraints_to_restore,
-        )
-        .await?;
 
         self.conn
             .as_mut()
@@ -532,52 +762,66 @@ impl<'conn> MasWriter<'conn> {
     #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub fn write_users(&mut self, users: Vec<MasNewUser>) -> BoxFuture<'_, Result<(), Error>> {
-        self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
-            // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows in one statement
-            // without having to change the statement SQL thus altering the query plan.
-            // See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
-            // In the future we could consider using sqlx's support for `PgCopyIn` / the `COPY FROM STDIN` statement,
-            // which is allegedly the best for insert performance, but is less simple to encode.
-            if users.is_empty() {
-                return Ok(());
-            }
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows
+                    // in one statement without having to change the statement
+                    // SQL thus altering the query plan. See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
+                    // In the future we could consider using sqlx's support for `PgCopyIn` / the
+                    // `COPY FROM STDIN` statement, which is allegedly the best
+                    // for insert performance, but is less simple to encode.
+                    let mut user_ids: Vec<Uuid> = Vec::with_capacity(users.len());
+                    let mut usernames: Vec<String> = Vec::with_capacity(users.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
+                    let mut locked_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(users.len());
+                    let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
+                    let mut is_guests: Vec<bool> = Vec::with_capacity(users.len());
+                    for MasNewUser {
+                        user_id,
+                        username,
+                        created_at,
+                        locked_at,
+                        can_request_admin,
+                        is_guest,
+                    } in users
+                    {
+                        user_ids.push(user_id);
+                        usernames.push(username);
+                        created_ats.push(created_at);
+                        locked_ats.push(locked_at);
+                        can_request_admins.push(can_request_admin);
+                        is_guests.push(is_guest);
+                    }
 
-            let mut user_ids: Vec<Uuid> = Vec::with_capacity(users.len());
-            let mut usernames: Vec<String> = Vec::with_capacity(users.len());
-            let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
-            let mut locked_ats: Vec<Option<DateTime<Utc>>> = Vec::with_capacity(users.len());
-            let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
-            for MasNewUser {
-                user_id,
-                username,
-                created_at,
-                locked_at,
-                can_request_admin,
-            } in users
-            {
-                user_ids.push(user_id);
-                usernames.push(username);
-                created_ats.push(created_at);
-                locked_ats.push(locked_at);
-                can_request_admins.push(can_request_admin);
-            }
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__users (
+                          user_id, username,
+                          created_at, locked_at,
+                          can_request_admin, is_guest)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[], $2::TEXT[],
+                          $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
+                          $5::BOOL[], $6::BOOL[])
+                        "#,
+                        &user_ids[..],
+                        &usernames[..],
+                        &created_ats[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &locked_ats[..] as &[Option<DateTime<Utc>>],
+                        &can_request_admins[..],
+                        &is_guests[..],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing users to MAS")?;
 
-            sqlx::query!(
-                r#"
-                INSERT INTO syn2mas__users
-                (user_id, username, created_at, locked_at, can_request_admin)
-                SELECT * FROM UNNEST($1::UUID[], $2::TEXT[], $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[], $5::BOOL[])
-                "#,
-                &user_ids[..],
-                &usernames[..],
-                &created_ats[..],
-                // We need to override the typing for arrays of optionals (sqlx limitation)
-                &locked_ats[..] as &[Option<DateTime<Utc>>],
-                &can_request_admins[..],
-            ).execute(&mut *conn).await.into_database("writing users to MAS")?;
-
-            Ok(())
-        })).boxed()
+                    Ok(())
+                })
+            })
+            .boxed()
     }
 
     /// Write a batch of user passwords to the database.
@@ -761,6 +1005,207 @@ impl<'conn> MasWriter<'conn> {
             })
         }).boxed()
     }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_compat_sessions(
+        &mut self,
+        sessions: Vec<MasNewCompatSession>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(sessions.len());
+                    let mut user_ids: Vec<Uuid> = Vec::with_capacity(sessions.len());
+                    let mut device_ids: Vec<Option<String>> = Vec::with_capacity(sessions.len());
+                    let mut human_names: Vec<Option<String>> = Vec::with_capacity(sessions.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(sessions.len());
+                    let mut is_synapse_admins: Vec<bool> = Vec::with_capacity(sessions.len());
+                    let mut last_active_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(sessions.len());
+                    let mut last_active_ips: Vec<Option<IpAddr>> =
+                        Vec::with_capacity(sessions.len());
+                    let mut user_agents: Vec<Option<String>> = Vec::with_capacity(sessions.len());
+
+                    for MasNewCompatSession {
+                        session_id,
+                        user_id,
+                        device_id,
+                        human_name,
+                        created_at,
+                        is_synapse_admin,
+                        last_active_at,
+                        last_active_ip,
+                        user_agent,
+                    } in sessions
+                    {
+                        session_ids.push(session_id);
+                        user_ids.push(user_id);
+                        device_ids.push(device_id);
+                        human_names.push(human_name);
+                        created_ats.push(created_at);
+                        is_synapse_admins.push(is_synapse_admin);
+                        last_active_ats.push(last_active_at);
+                        last_active_ips.push(last_active_ip);
+                        user_agents.push(user_agent);
+                    }
+
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__compat_sessions (
+                          compat_session_id, user_id,
+                          device_id, human_name,
+                          created_at, is_synapse_admin,
+                          last_active_at, last_active_ip,
+                          user_agent)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[], $2::UUID[],
+                          $3::TEXT[], $4::TEXT[],
+                          $5::TIMESTAMP WITH TIME ZONE[], $6::BOOLEAN[],
+                          $7::TIMESTAMP WITH TIME ZONE[], $8::INET[],
+                          $9::TEXT[])
+                        "#,
+                        &session_ids[..],
+                        &user_ids[..],
+                        &device_ids[..] as &[Option<String>],
+                        &human_names[..] as &[Option<String>],
+                        &created_ats[..],
+                        &is_synapse_admins[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &last_active_ats[..] as &[Option<DateTime<Utc>>],
+                        &last_active_ips[..] as &[Option<IpAddr>],
+                        &user_agents[..] as &[Option<String>],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing compat sessions to MAS")?;
+
+                    Ok(())
+                })
+            })
+            .boxed()
+    }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_compat_access_tokens(
+        &mut self,
+        tokens: Vec<MasNewCompatAccessToken>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    let mut token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut access_tokens: Vec<String> = Vec::with_capacity(tokens.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(tokens.len());
+                    let mut expires_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(tokens.len());
+
+                    for MasNewCompatAccessToken {
+                        token_id,
+                        session_id,
+                        access_token,
+                        created_at,
+                        expires_at,
+                    } in tokens
+                    {
+                        token_ids.push(token_id);
+                        session_ids.push(session_id);
+                        access_tokens.push(access_token);
+                        created_ats.push(created_at);
+                        expires_ats.push(expires_at);
+                    }
+
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__compat_access_tokens (
+                          compat_access_token_id,
+                          compat_session_id,
+                          access_token,
+                          created_at,
+                          expires_at)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[],
+                          $2::UUID[],
+                          $3::TEXT[],
+                          $4::TIMESTAMP WITH TIME ZONE[],
+                          $5::TIMESTAMP WITH TIME ZONE[])
+                        "#,
+                        &token_ids[..],
+                        &session_ids[..],
+                        &access_tokens[..],
+                        &created_ats[..],
+                        // We need to override the typing for arrays of optionals (sqlx limitation)
+                        &expires_ats[..] as &[Option<DateTime<Utc>>],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing compat access tokens to MAS")?;
+
+                    Ok(())
+                })
+            })
+            .boxed()
+    }
+
+    #[tracing::instrument(skip_all, level = Level::DEBUG)]
+    pub fn write_compat_refresh_tokens(
+        &mut self,
+        tokens: Vec<MasNewCompatRefreshToken>,
+    ) -> BoxFuture<'_, Result<(), Error>> {
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    let mut refresh_token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut access_token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
+                    let mut refresh_tokens: Vec<String> = Vec::with_capacity(tokens.len());
+                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(tokens.len());
+
+                    for MasNewCompatRefreshToken {
+                        refresh_token_id,
+                        session_id,
+                        access_token_id,
+                        refresh_token,
+                        created_at,
+                    } in tokens
+                    {
+                        refresh_token_ids.push(refresh_token_id);
+                        session_ids.push(session_id);
+                        access_token_ids.push(access_token_id);
+                        refresh_tokens.push(refresh_token);
+                        created_ats.push(created_at);
+                    }
+
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO syn2mas__compat_refresh_tokens (
+                          compat_refresh_token_id,
+                          compat_session_id,
+                          compat_access_token_id,
+                          refresh_token,
+                          created_at)
+                        SELECT * FROM UNNEST(
+                          $1::UUID[],
+                          $2::UUID[],
+                          $3::UUID[],
+                          $4::TEXT[],
+                          $5::TIMESTAMP WITH TIME ZONE[])
+                        "#,
+                        &refresh_token_ids[..],
+                        &session_ids[..],
+                        &access_token_ids[..],
+                        &refresh_tokens[..],
+                        &created_ats[..],
+                    )
+                    .execute(&mut *conn)
+                    .await
+                    .into_database("writing compat refresh tokens to MAS")?;
+
+                    Ok(())
+                })
+            })
+            .boxed()
+    }
 }
 
 // How many entries to buffer at once, before writing a batch of rows to the
@@ -777,28 +1222,24 @@ type WriteBufferFlusher<'conn, T> =
 
 /// A buffer for writing rows to the MAS database.
 /// Generic over the type of rows.
-///
-/// # Panics
-///
-/// Panics if dropped before `finish()` has been called.
 pub struct MasWriteBuffer<'conn, T> {
     rows: Vec<T>,
     flusher: WriteBufferFlusher<'conn, T>,
-    finished: bool,
+    finish_checker_handle: FinishCheckerHandle,
 }
 
 impl<'conn, T> MasWriteBuffer<'conn, T> {
-    pub fn new(flusher: WriteBufferFlusher<'conn, T>) -> Self {
+    pub fn new(writer: &MasWriter, flusher: WriteBufferFlusher<'conn, T>) -> Self {
         MasWriteBuffer {
             rows: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
             flusher,
-            finished: false,
+            finish_checker_handle: writer.write_buffer_finish_checker.handle(),
         }
     }
 
     pub async fn finish(mut self, writer: &mut MasWriter<'conn>) -> Result<(), Error> {
-        self.finished = true;
         self.flush(writer).await?;
+        self.finish_checker_handle.declare_finished();
         Ok(())
     }
 
@@ -821,12 +1262,6 @@ impl<'conn, T> MasWriteBuffer<'conn, T> {
     }
 }
 
-impl<T> Drop for MasWriteBuffer<'_, T> {
-    fn drop(&mut self) {
-        assert!(self.finished, "MasWriteBuffer dropped but not finished!");
-    }
-}
-
 #[cfg(test)]
 mod test {
     use std::collections::{BTreeMap, BTreeSet};
@@ -839,6 +1274,7 @@ mod test {
 
     use crate::{
         mas_writer::{
+            MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
             MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
             MasNewUserPassword,
         },
@@ -942,11 +1378,16 @@ mod test {
                     .detach(),
             );
         }
+        let index_restore_conn = pool
+            .acquire()
+            .await
+            .expect("failed to acquire index restore connection")
+            .detach();
         let locked_main_conn = LockedMasDatabase::try_new(main_conn)
             .await
             .expect("failed to lock MAS database")
             .expect_left("MAS database is already locked");
-        MasWriter::new(locked_main_conn, writer_conns)
+        MasWriter::new(locked_main_conn, index_restore_conn, writer_conns)
             .await
             .expect("failed to construct MasWriter")
     }
@@ -964,6 +1405,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -988,6 +1430,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1019,6 +1462,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1052,6 +1496,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1086,6 +1531,7 @@ mod test {
                 created_at: DateTime::default(),
                 locked_at: None,
                 can_request_admin: false,
+                is_guest: false,
             }])
             .await
             .expect("failed to write user");
@@ -1100,6 +1546,154 @@ mod test {
             }])
             .await
             .expect("failed to write link");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a device (compat session).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_device(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+                is_guest: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_compat_sessions(vec![MasNewCompatSession {
+                user_id: Uuid::from_u128(1u128),
+                session_id: Uuid::from_u128(5u128),
+                created_at: DateTime::default(),
+                device_id: Some("ADEVICE".to_owned()),
+                human_name: Some("alice's pinephone".to_owned()),
+                is_synapse_admin: true,
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some("203.0.113.1".parse().unwrap()),
+                user_agent: Some("Browser/5.0".to_owned()),
+            }])
+            .await
+            .expect("failed to write compat session");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a device and an access token.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_access_token(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+                is_guest: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_compat_sessions(vec![MasNewCompatSession {
+                user_id: Uuid::from_u128(1u128),
+                session_id: Uuid::from_u128(5u128),
+                created_at: DateTime::default(),
+                device_id: Some("ADEVICE".to_owned()),
+                human_name: None,
+                is_synapse_admin: false,
+                last_active_at: None,
+                last_active_ip: None,
+                user_agent: None,
+            }])
+            .await
+            .expect("failed to write compat session");
+
+        writer
+            .write_compat_access_tokens(vec![MasNewCompatAccessToken {
+                token_id: Uuid::from_u128(6u128),
+                session_id: Uuid::from_u128(5u128),
+                access_token: "syt_zxcvzxcvzxcvzxcv_zxcv".to_owned(),
+                created_at: DateTime::default(),
+                expires_at: None,
+            }])
+            .await
+            .expect("failed to write access token");
+
+        writer.finish().await.expect("failed to finish MasWriter");
+
+        assert_db_snapshot!(&mut conn);
+    }
+
+    /// Tests writing a single user, with a device, an access token and a
+    /// refresh token.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_write_user_with_refresh_token(pool: PgPool) {
+        let mut conn = pool.acquire().await.unwrap();
+        let mut writer = make_mas_writer(&pool, &mut conn).await;
+
+        writer
+            .write_users(vec![MasNewUser {
+                user_id: Uuid::from_u128(1u128),
+                username: "alice".to_owned(),
+                created_at: DateTime::default(),
+                locked_at: None,
+                can_request_admin: false,
+                is_guest: false,
+            }])
+            .await
+            .expect("failed to write user");
+
+        writer
+            .write_compat_sessions(vec![MasNewCompatSession {
+                user_id: Uuid::from_u128(1u128),
+                session_id: Uuid::from_u128(5u128),
+                created_at: DateTime::default(),
+                device_id: Some("ADEVICE".to_owned()),
+                human_name: None,
+                is_synapse_admin: false,
+                last_active_at: None,
+                last_active_ip: None,
+                user_agent: None,
+            }])
+            .await
+            .expect("failed to write compat session");
+
+        writer
+            .write_compat_access_tokens(vec![MasNewCompatAccessToken {
+                token_id: Uuid::from_u128(6u128),
+                session_id: Uuid::from_u128(5u128),
+                access_token: "syt_zxcvzxcvzxcvzxcv_zxcv".to_owned(),
+                created_at: DateTime::default(),
+                expires_at: None,
+            }])
+            .await
+            .expect("failed to write access token");
+
+        writer
+            .write_compat_refresh_tokens(vec![MasNewCompatRefreshToken {
+                refresh_token_id: Uuid::from_u128(7u128),
+                session_id: Uuid::from_u128(5u128),
+                access_token_id: Uuid::from_u128(6u128),
+                refresh_token: "syr_zxcvzxcvzxcvzxcv_zxcv".to_owned(),
+                created_at: DateTime::default(),
+            }])
+            .await
+            .expect("failed to write refresh token");
 
         writer.finish().await.expect("failed to finish MasWriter");
 

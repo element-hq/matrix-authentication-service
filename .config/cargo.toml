@@ -1,0 +1,4 @@
+[target.x86_64-unknown-linux-gnu]
+# Assume the x86_64-v2 psABI, and add the required CPU features
+# This is a good balance between enabling modern CPU features and compatibility
+rustflags = ["-C", "target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt"]

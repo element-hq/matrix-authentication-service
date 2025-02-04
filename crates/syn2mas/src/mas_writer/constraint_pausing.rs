@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::time::Instant;
+
 use sqlx::PgConnection;
-use tracing::debug;
+use tracing::{debug, info};
 
 use super::{Error, IntoDatabase};
 
@@ -13,6 +15,7 @@ pub struct ConstraintDescription {
     pub name: String,
     pub table_name: String,
     pub definition: String,
+    pub is_fk: bool,
 }
 
 pub struct IndexDescription {
@@ -29,14 +32,21 @@ pub async fn describe_constraints_on_table(
     sqlx::query_as!(
         ConstraintDescription,
         r#"
-            SELECT conrelid::regclass::text AS "table_name!", conname AS "name!", pg_get_constraintdef(c.oid) AS "definition!"
+            SELECT
+                conrelid::regclass::text AS "table_name!",
+                conname AS "name!",
+                pg_get_constraintdef(c.oid) AS "definition!",
+                CASE WHEN contype = 'f' THEN true ELSE false END AS "is_fk!"
             FROM pg_constraint c
             JOIN pg_namespace n ON n.oid = c.connamespace
             WHERE contype IN ('f', 'p', 'u') AND conrelid::regclass::text = $1
             AND n.nspname = current_schema;
         "#,
         table_name
-    ).fetch_all(&mut *conn).await.into_database_with(|| format!("could not read constraint definitions of {table_name}"))
+    )
+    .fetch_all(&mut *conn)
+    .await
+    .into_database_with(|| format!("could not read constraint definitions of {table_name}"))
 }
 
 /// Look up and return the definitions of foreign-key constraints whose
@@ -48,14 +58,23 @@ pub async fn describe_foreign_key_constraints_to_table(
     sqlx::query_as!(
         ConstraintDescription,
         r#"
-            SELECT conrelid::regclass::text AS "table_name!", conname AS "name!", pg_get_constraintdef(c.oid) AS "definition!"
+            SELECT
+                conrelid::regclass::text AS "table_name!",
+                conname AS "name!",
+                pg_get_constraintdef(c.oid) AS "definition!",
+                true AS "is_fk!"
             FROM pg_constraint c
             JOIN pg_namespace n ON n.oid = c.connamespace
             WHERE contype = 'f' AND confrelid::regclass::text = $1
             AND n.nspname = current_schema;
         "#,
         target_table_name
-    ).fetch_all(&mut *conn).await.into_database_with(|| format!("could not read FK constraint definitions targetting {target_table_name}"))
+    )
+    .fetch_all(&mut *conn)
+    .await
+    .into_database_with(|| {
+        format!("could not read FK constraint definitions targetting {target_table_name}")
+    })
 }
 
 /// Look up and return the definitions of all indices on a given table.
@@ -109,15 +128,21 @@ pub async fn drop_index(conn: &mut PgConnection, index: &IndexDescription) -> Re
 /// Restores (recreates) a constraint.
 ///
 /// The constraint must not exist prior to this call.
+#[tracing::instrument(name = "syn2mas.restore_constraint", skip_all, fields(constraint.name = constraint.name))]
 pub async fn restore_constraint(
     conn: &mut PgConnection,
     constraint: &ConstraintDescription,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+
     let ConstraintDescription {
         name,
         table_name,
         definition,
+        is_fk: _,
     } = &constraint;
+    info!("rebuilding constraint {name}");
+
     sqlx::query(&format!(
         "ALTER TABLE {table_name} ADD CONSTRAINT {name} {definition};"
     ))
@@ -127,13 +152,21 @@ pub async fn restore_constraint(
         format!("failed to recreate constraint {name} on {table_name} with {definition}")
     })?;
 
+    info!(
+        "constraint {name} rebuilt in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
+
     Ok(())
 }
 
 /// Restores (recreates) a index.
 ///
 /// The index must not exist prior to this call.
+#[tracing::instrument(name = "syn2mas.restore_index", skip_all, fields(index.name = index.name))]
 pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) -> Result<(), Error> {
+    let start = Instant::now();
+
     let IndexDescription {
         name,
         table_name,
@@ -146,6 +179,11 @@ pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) ->
         .into_database_with(|| {
             format!("failed to recreate index {name} on {table_name} with {definition}")
         })?;
+
+    info!(
+        "index {name} rebuilt in {:.1}s",
+        Instant::now().duration_since(start).as_secs_f64()
+    );
 
     Ok(())
 }
