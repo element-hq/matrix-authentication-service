@@ -537,10 +537,6 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("begin MAS writer transaction")?;
         }
 
-        query("SET AUTOCOMMIT ON;")
-            .execute(index_restore_conn.as_mut())
-            .await
-            .into_database("set conn autocommit")?;
         let (constraint_restore_tx, index_restore_tx, restorer_task) =
             Self::restore_task(index_restore_conn);
 
