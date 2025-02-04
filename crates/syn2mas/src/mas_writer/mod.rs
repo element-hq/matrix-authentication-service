@@ -171,6 +171,10 @@ impl WriterConnectionPool {
                 .into_database("begin writer transaction")?;
 
             connections.push(connection);
+
+            if connections.len() == self.num_connections {
+                break;
+            }
         }
 
         // Put all the connections back in the pool
