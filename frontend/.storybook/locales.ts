@@ -67,6 +67,15 @@ const localazyMetadata: LocalazyMetadata = {
       pluralType: (n) => { return (n===1) ? "one" : "other"; }
     },
     {
+      language: "fi",
+      region: "",
+      script: "",
+      isRtl: false,
+      name: "Finnish",
+      localizedName: "Suomi",
+      pluralType: (n) => { return (n===1) ? "one" : "other"; }
+    },
+    {
       language: "fr",
       region: "",
       script: "",
@@ -131,6 +140,7 @@ const localazyMetadata: LocalazyMetadata = {
         "de": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/de/frontend.json",
         "en": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/en/frontend.json",
         "et": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/et/frontend.json",
+        "fi": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fi/frontend.json",
         "fr": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fr/frontend.json",
         "nl": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/nl/frontend.json",
         "pt": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/pt/frontend.json",
@@ -148,6 +158,7 @@ const localazyMetadata: LocalazyMetadata = {
         "de": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/de/file.json",
         "en": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/en/file.json",
         "et": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/et/file.json",
+        "fi": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fi/file.json",
         "fr": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fr/file.json",
         "nl": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/nl/file.json",
         "pt": "https://delivery.localazy.com/_a7077282040550503700322ddb6e/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/pt/file.json",

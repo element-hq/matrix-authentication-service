@@ -1,0 +1,245 @@
+{
+  "action": {
+    "back": "Takaisin",
+    "cancel": "Peruuta",
+    "continue": "Jatka",
+    "create_account": "Luo tili",
+    "sign_in": "Kirjaudu sisään",
+    "sign_out": "Kirjaudu ulos",
+    "skip": "Ohita",
+    "start_over": "Aloita alusta",
+    "submit": "Lähetä"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "OpenID Connect -metatietoasiakirja: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Linkki palvelun tietosuojakäytäntöön",
+      "link": "Tietosuojakäytäntö"
+    },
+    "terms_and_conditions": {
+      "alt": "Linkki palvelun käyttöehtoihin",
+      "link": "Käyttöehdot"
+    }
+  },
+  "common": {
+    "display_name": "Näyttönimi",
+    "email_address": "Sähköpostiosoite",
+    "loading": "Ladataan…",
+    "mxid": "Matrix tunnus",
+    "password": "Salasana",
+    "password_confirm": "Vahvista salasana",
+    "username": "Käyttäjänimi"
+  },
+  "error": {
+    "unexpected": "Odottamaton virhe"
+  },
+  "mas": {
+    "add_email": {
+      "description": "Kirjoita sähköpostiosoite, jotta voit palauttaa tilisi, jos menetät pääsysi siihen.",
+      "heading": "Lisää sähköpostiosoite"
+    },
+    "back_to_homepage": "Palaa etusivulle",
+    "captcha": {
+      "noscript": "Tämä lomake on suojattu CAPTCHA:lla, ja sen lähettäminen edellyttää JavaScriptin käyttöönottoa. Ota JavaScript käyttöön selaimessasi ja lataa tämä sivu uudelleen."
+    },
+    "change_password": {
+      "change": "Vaihda salasana",
+      "confirm": "Vahvista salasana",
+      "current": "Nykyinen salasana",
+      "description": "Tämä vaihtaa tilisi salasanan.",
+      "heading": "Vaihda salasanani",
+      "new": "Uusi salasana"
+    },
+    "choose_display_name": {
+      "description": "Tämä on nimi, jonka muut ihmiset näkevät. Voit muuttaa tätä milloin tahansa.",
+      "headline": "Valitse näyttönimesi"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> osoitteessa <span>%(redirect_uri)s</span> haluaa päästä tilillesi.",
+      "heading": "Sallitaanko pääsy tilillesi?",
+      "make_sure_you_trust": "Varmista, että luotat <span>%(client_name)s</span> -sovellukseen.",
+      "this_will_allow": "Tämä antaa <span>%(client_name)s</span> -sovellukselle luvan:",
+      "you_may_be_sharing": "Saatat jakaa arkaluonteisia tietoja tämän sivuston tai sovelluksen kanssa."
+    },
+    "device_card": {
+      "access_requested": "Pääsyä pyydetty",
+      "device_code": "Koodi",
+      "generic_device": "Laite",
+      "ip_address": "IP-osoite"
+    },
+    "device_code_link": {
+      "description": "Yhdistä laite",
+      "headline": "Syötä laitteessasi näkyvä koodi"
+    },
+    "device_consent": {
+      "another_device_access": "Toinen laite haluaa päästä tilillesi.",
+      "denied": {
+        "description": "Kielsit pääsyn %(client_name)s -sovellukselta. Voit sulkea tämän ikkunan.",
+        "heading": "Pääsy kielletty"
+      },
+      "granted": {
+        "description": "Annoit pääsyn %(client_name)s -sovellukselle. Voit sulkea tämän ikkunan.",
+        "heading": "Pääsy myönnetty"
+      }
+    },
+    "email_in_use": {
+      "description": "Jos olet unohtanut tilisi tunnistetiedot, voit palauttaa tilisi. Voit myös aloittaa alusta ja käyttää toista sähköpostiosoitetta.",
+      "title": "Sähköpostiosoite <span>%(email)s</span> on jo käytössä"
+    },
+    "emails": {
+      "greeting": "Hei %(username)s,",
+      "recovery": {
+        "click_button": "Luo uusi salasana napsauttamalla alla olevaa painiketta:",
+        "copy_link": "Luo uusi salasana kopioimalla seuraava linkki ja liittämällä se selaimeen:",
+        "create_new_password": "Luo uusi salasana",
+        "headline": "Pyysit salasanan palautusta %(server_name)s -tilillesi.",
+        "subject": "Palauta tilisi salasana (%(mxid)s)",
+        "you_can_ignore": "Jos et pyytänyt uutta salasanaa, voit jättää tämän sähköpostiviestin huomiotta. Nykyinen salasanasi toimii edelleen."
+      },
+      "verify": {
+        "body_html": "Tämän sähköpostiosoitteen vahvistuskoodi on: <strong>%(code)s</strong>",
+        "body_text": "Vahvistuskoodisi tämän sähköpostiosoitteen vahvistamiseksi on: %(code)s",
+        "subject": "Sähköpostisi vahvistuskoodi on: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "CAPTCHA-vahvistus epäonnistui, yritä uudelleen",
+      "denied_policy": "Käytäntö hylkäsi pyynnön: %(policy)s",
+      "email_domain_banned": "Sähköpostin verkkotunnus on kielletty palvelinkäytännössä",
+      "email_domain_not_allowed": "Palvelinkäytäntö ei salli sähköpostin verkkotunnusta",
+      "field_required": "Tämä kenttä on pakollinen",
+      "invalid_credentials": "Virheelliset kirjautumistiedot",
+      "password_mismatch": "Salasanakentät eivät täsmää",
+      "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen.",
+      "username_all_numeric": "Käyttäjänimi ei voi koostua pelkästään numeroista",
+      "username_invalid_chars": "Käyttäjänimi sisältää virheellisiä merkkejä. Käytä vain pieniä kirjaimia, numeroita, viivoja ja alaviivoja.",
+      "username_taken": "Tämä käyttäjänimi on jo käytössä.",
+      "username_too_long": "Käyttäjänimi on liian pitkä",
+      "username_too_short": "Käyttäjänimi on liian lyhyt"
+    },
+    "login": {
+      "call_to_register": "Eikö sinulla ole vielä tiliä?",
+      "continue_with_provider": "Jatka %(provider)s -tilillä",
+      "description": "Kirjaudu sisään jatkaaksesi:",
+      "forgot_password": "Unohditko salasanasi?",
+      "headline": "Kirjaudu sisään",
+      "link": {
+        "description": "Yhdistetään <span class=\"break-keep text-links\">%(provider)s</span> -tiliäsi",
+        "headline": "Kirjaudu sisään yhdistääksesi tilit"
+      },
+      "no_login_methods": "Kirjautumistapoja ei ole käytettävissä.",
+      "separator": "Tai"
+    },
+    "navbar": {
+      "my_account": "Oma tili",
+      "register": "Luo tili",
+      "signed_in_as": "Kirjautunut sisään käyttäjällä <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Etsimääsi sivua ei ole olemassa tai se on siirretty.",
+      "heading": "Sivua ei löydy"
+    },
+    "not_you": "Etkö ole %(username)s?",
+    "or_separator": "Tai",
+    "policy_violation": {
+      "description": "Tämä voi johtua pyynnön laatineesta sovelluksesta, kirjautuneesta käyttäjästä tai itse pyynnöstä.",
+      "heading": "Valtuutuspyyntö hylättiin tämän palvelun noudattaman käytännön mukaisesti",
+      "logged_as": "Kirjautuneena käyttäjälle <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Jos haluat luoda uuden salasanan, aloita alusta ja valitse \"Unohditko salasanasi?\".",
+        "heading": "Linkki salasanasi palauttamiseen on jo käytetty"
+      },
+      "disabled": {
+        "description": "Jos olet kadottanut tunnuksesi, ota yhteyttä ylläpitäjään tilisi palauttamiseksi.",
+        "heading": "Tilin palautus on poistettu käytöstä"
+      },
+      "expired": {
+        "description": "Pyydä uutta sähköpostia, joka lähetetään osoitteeseen: <span>%(email)s</span>.",
+        "heading": "Linkki salasanasi palauttamiseen on vanhentunut",
+        "resend_email": "Lähetä sähköposti uudelleen"
+      },
+      "finish": {
+        "confirm": "Syötä uusi salasana uudelleen",
+        "description": "Valitse tilillesi uusi salasana.",
+        "heading": "Palauta salasanasi",
+        "new": "Uusi salasana",
+        "save_and_continue": "Tallenna ja jatka"
+      },
+      "progress": {
+        "change_email": "Kokeile toista sähköpostia",
+        "description": "Lähetimme sähköpostia, jossa on linkki salasanasi palauttamiseen, jos jokin tili käyttää osoittetta <span>%(email)s</span>.",
+        "heading": "Tarkista sähköpostisi",
+        "resend_email": "Lähetä sähköposti uudelleen"
+      },
+      "start": {
+        "description": "Saat sähköpostiviestin, jossa on linkki salasanasi palauttamiseen.",
+        "heading": "Syötä sähköpostiosoitteesi jatkaaksesi"
+      }
+    },
+    "register": {
+      "call_to_login": "Onko sinulla jo tili?",
+      "continue_with_email": "Jatka sähköpostiosoitteella",
+      "create_account": {
+        "description": "Valitse käyttäjänimi jatkaaksesi.",
+        "heading": "Luo tili"
+      },
+      "sign_in_instead": "Kirjaudu sisään sen sijaan",
+      "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
+    },
+    "scope": {
+      "edit_profile": "Muokata profiiliasi ja yhteystietojasi",
+      "manage_sessions": "Hallinnoida laitteitasi ja istuntojasi",
+      "mas_admin": "Hallinnoida mitä tahansa käyttäjää matrix-authentication-servicessä",
+      "send_messages": "Lähettää uusia viestejä puolestasi",
+      "synapse_admin": "Hallinnoida Synapse-kotipalvelinta",
+      "view_messages": "Tarkastella olemassa olevia viestejäsi ja tietojasi",
+      "view_profile": "Tarkastella profiilitietojasi ja yhteystietojasi"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Tämä tili on jo yhdistetty toiseen tiliin."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Tätä ei voi muuttaa myöhemmin.",
+          "heading": "Valitse käyttäjänimesi"
+        },
+        "create_account": "Luo uusi tili",
+        "enforced_by_policy": "Palvelinkäytännön pakottama",
+        "forced_display_name": "Käytetään seuraavaa näyttönimeä",
+        "forced_email": "Käytetään seuraavaa sähköpostiosoitetta",
+        "forced_localpart": "Käytetään seuraavaa käyttäjänimeä",
+        "import_data": {
+          "description": "Vahvista tiedot, jotka liitetään uuteen %(server_name)s -tiliisi.",
+          "heading": "Tuo tietosi"
+        },
+        "imported_from_upstream": "Tuotu toiselta tililtäsi",
+        "imported_from_upstream_with_name": "Tuotu %(human_name)s -tililtäsi",
+        "link_existing": "Yhdistä olemassa olevaan tiliin",
+        "provider_name": "%(human_name)s -tili",
+        "signup_with_upstream": {
+          "heading": "Jatka rekisteröitymistä %(human_name)s -tililläsi"
+        },
+        "suggested_display_name": "Tuo näyttönimi",
+        "suggested_email": "Tuo sähköpostiosoite",
+        "use": "Käytä"
+      },
+      "suggest_link": {
+        "action": "Yhdistä",
+        "heading": "Yhdistä olemassa olevaan tiliisi"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6-numeroinen koodi",
+      "code": "Koodi",
+      "description": "Syötä 6-numeroinen koodi, joka lähetettiin osoitteeseen: <em>%(email)s</em>",
+      "headline": "Vahvista sähköpostiosoitteesi"
+    }
+  }
+}

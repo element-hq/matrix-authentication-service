@@ -1,0 +1,371 @@
+{
+  "action": {
+    "back": "Takaisin",
+    "cancel": "Peruuta",
+    "clear": "Tyhjennä",
+    "close": "Sulje",
+    "collapse": "Supista",
+    "continue": "Jatka",
+    "edit": "Muokkaa",
+    "expand": "Laajenna",
+    "save": "Tallenna",
+    "save_and_continue": "Tallenna ja jatka",
+    "start_over": "Aloita alusta"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Linkki palvelun tietosuojakäytäntöön",
+      "link": "Tietosuojakäytäntö"
+    },
+    "terms_and_conditions": {
+      "alt": "Linkki palvelun käyttöehtoihin",
+      "link": "Käyttöehdot"
+    }
+  },
+  "common": {
+    "add": "Lisää",
+    "e2ee": "Päästä päähän -salaus",
+    "error": "Virhe",
+    "loading": "Ladataan…",
+    "next": "Seuraava",
+    "previous": "Edellinen",
+    "saved": "Tallennettu",
+    "saving": "Tallennetaan…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Tilin salasana",
+      "contact_info": "Yhteystiedot",
+      "edit_profile": {
+        "display_name_help": "Muut näkevät tämän kaikkialla, missä olet kirjautuneena sisään.",
+        "display_name_label": "Näyttönimi",
+        "title": "Muokkaa profiilia",
+        "username_label": "Käyttäjänimi"
+      },
+      "password": {
+        "change": "Vaihda salasana",
+        "change_disabled": "Ylläpitäjä on poistanut salasanan vaihdon käytöstä.",
+        "label": "Salasana"
+      },
+      "title": "Tilisi"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Palvelimen käytäntö ei salli syötettyä sähköpostia.",
+        "title": "Käytännön kieltämä sähköposti"
+      },
+      "email_denied_error": "Palvelimen käytäntö ei salli syötettyä sähköpostia",
+      "email_exists_alert": {
+        "text": "Syötetty sähköpostiosoite on jo lisätty tähän tiliin",
+        "title": "Sähköposti on jo olemassa"
+      },
+      "email_exists_error": "Syötetty sähköpostiosoite on jo lisätty tähän tiliin",
+      "email_field_help": "Lisää vaihtoehtoinen sähköpostiosoite, jolla voit käyttää tätä tiliä.",
+      "email_field_label": "Lisää sähköpostiosoite",
+      "email_in_use_error": "Annettu sähköpostiosoite on jo käytössä",
+      "email_invalid_alert": {
+        "text": "Syötetty sähköpostiosoite on virheellinen",
+        "title": "Virheellinen sähköpostiosoite"
+      },
+      "email_invalid_error": "Syötetty sähköpostiosoite on virheellinen"
+    },
+    "app_sessions_list": {
+      "error": "Sovellusten istuntojen lataaminen epäonnistui",
+      "heading": "Sovellukset"
+    },
+    "browser_session_details": {
+      "current_badge": "Nykyinen",
+      "session_details_title": "Istunto"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktiivinen istunto",
+      "body:other": "{{count}} aktiivista istuntoa",
+      "heading": "Selaimet",
+      "no_active_sessions": {
+        "default": "Et ole kirjautunut mihinkään verkkoselaimeen.",
+        "inactive_90_days": "Kaikki istuntosi ovat olleet aktiivisia viimeisten 90 päivän aikana."
+      },
+      "view_all_button": "Näytä kaikki"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Sovelluksen tiedot",
+      "name": "Nimi",
+      "session_details_title": "Istunto"
+    },
+    "device_type_icon_label": {
+      "desktop": "Pöytätietokone",
+      "mobile": "Puhelin",
+      "pc": "Tietokone",
+      "tablet": "Tabletti",
+      "unknown": "Tuntematon laitetyyppi",
+      "web": "Verkko"
+    },
+    "email_in_use": {
+      "heading": "Sähköpostiosoite {{email}} on jo käytössä."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Haluatko varmasti lopettaa tämän istunnon?",
+      "text": "Kirjaudu ulos"
+    },
+    "error": {
+      "hideDetails": "Piilota tiedot",
+      "showDetails": "Näytä tiedot",
+      "subtitle": "Tapahtui odottamaton virhe. Yritä uudelleen.",
+      "title": "Jokin meni pieleen"
+    },
+    "error_boundary_title": "Jokin meni pieleen",
+    "errors": {
+      "field_required": "Tämä kenttä on pakollinen",
+      "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen."
+    },
+    "last_active": {
+      "active_date": "Aktiivinen {{relativeDate}}",
+      "active_now": "Aktiivinen nyt",
+      "inactive_90_days": "Ei aktiivinen yli 90 päivää"
+    },
+    "nav": {
+      "devices": "Laitteet",
+      "profile": "Profiili",
+      "sessions": "Istunnot",
+      "settings": "Asetukset"
+    },
+    "not_found_alert_title": "Ei löytynyt.",
+    "not_logged_in_alert": "Et ole kirjautunut sisään.",
+    "oauth2_client_detail": {
+      "details_title": "Sovelluksen tiedot",
+      "id": "Sovelluksen tunnus",
+      "name": "Nimi",
+      "policy": "Käytäntö",
+      "terms": "Käyttöehdot"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Nimi",
+      "client_title": "Sovelluksen tiedot",
+      "session_details_title": "Istunto"
+    },
+    "pagination_controls": {
+      "total": "Yhteensä: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Nykyinen salasana",
+      "failure": {
+        "description": {
+          "account_locked": "Tilisi on lukittu eikä sitä voi palauttaa tällä hetkellä. Jos et odottanut tätä, ota yhteyttä palvelimen ylläpitäjään.",
+          "expired_recovery_ticket": "Palautuslinkki on vanhentunut. Aloita tilin palautusprosessi uudelleen alusta.",
+          "invalid_new_password": "Valitsemasi uusi salasana on virheellinen; se ei ehkä vastaa määritettyä suojauskäytäntöä.",
+          "no_current_password": "Sinulla ei ole nykyistä salasanaa.",
+          "no_such_recovery_ticket": "Palautuslinkki on virheellinen. Jos kopioit linkin palautussähköpostista, tarkista, että kopioit koko linkin.",
+          "password_changes_disabled": "Salasanan vaihtaminen on poistettu käytöstä.",
+          "recovery_ticket_already_used": "Palautuslinkki on jo käytetty. Sitä ei voi käyttää uudelleen.",
+          "unspecified": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+          "wrong_password": "Nykyiseksi salasanaksi antamasi salasana on virheellinen. Yritä uudelleen."
+        },
+        "title": "Salasanan vaihtaminen epäonnistui"
+      },
+      "new_password_again_label": "Syötä uusi salasana uudelleen",
+      "new_password_label": "Uusi salasana",
+      "passwords_match": "Salasanat täsmäävät!",
+      "passwords_no_match": "Salasanat eivät täsmää",
+      "subtitle": "Valitse tilillesi uusi salasana.",
+      "success": {
+        "description": "Salasanasi on vaihdettu onnistuneesti.",
+        "title": "Salasana vaihdettu"
+      },
+      "title": "Vaihda salasanasi"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "Jos haluat luoda uuden salasanan, aloita alusta ja valitse \"Unohditko salasanasi?\".",
+        "title": "Salasanan palautuslinkki on jo käytetty"
+      },
+      "expired": {
+        "resend_email": "Lähetä sähköposti uudelleen",
+        "subtitle": "Pyydä uusi sähköpostiviesti, joka lähetetään osoitteeseen: {{email}}",
+        "title": "Linkki salasanasi palauttamiseen on vanhentunut"
+      },
+      "subtitle": "Valitse tilillesi uusi salasana.",
+      "title": "Palauta salasanasi"
+    },
+    "password_strength": {
+      "placeholder": "Salasanan vahvuus",
+      "score": {
+        "0": "Erittäin heikko salasana",
+        "1": "Todella heikko salasana",
+        "2": "Heikko salasana",
+        "3": "Vahva salasana",
+        "4": "Todella vahva salasana"
+      },
+      "suggestion": {
+        "all_uppercase": "Kirjoita jotkut kirjaimet isolla, mutta älä kaikkia.",
+        "another_word": "Lisää harvinaisempia sanoja.",
+        "associated_years": "Vältä vuosilukuja, jotka liittyvät sinuun.",
+        "capitalization": "Kirjoita isoilla kirjaimilla enemmän kuin vain ensimmäinen kirjain.",
+        "dates": "Vältä päivämääriä ja vuosia, jotka liittyvät sinuun.",
+        "l33t": "Vältä ennakoitavissa olevia kirjainten korvauksia, kuten 'a' korvaamista '@' symbolilla.",
+        "longer_keyboard_pattern": "Käytä pidempiä näppäinkuvioita ja vaihda kirjoitussuuntaa useita kertoja.",
+        "no_need": "Voit luoda vahvoja salasanoja ilman symboleja, numeroita tai isoja kirjaimia.",
+        "pwned": "Jos käytät tätä salasanaa muualla, vaihda se.",
+        "recent_years": "Vältä lähivuosia.",
+        "repeated": "Vältä toistuvia sanoja ja merkkejä.",
+        "reverse_words": "Vältä yleisien sanojen takaperin kirjoitusta.",
+        "sequences": "Vältä yleisiä merkkijonoja.",
+        "use_words": "Käytä useita sanoja, mutta vältä yleisiä lauseita."
+      },
+      "too_weak": "Tämä salasana on liian heikko",
+      "warning": {
+        "common": "Tämä on yleisesti käytetty salasana.",
+        "common_names": "Yleiset nimet ja sukunimet on helppo arvata.",
+        "dates": "Päivämäärät on helppo arvata.",
+        "extended_repeat": "Toistuvat merkkikuviot, kuten \"abcabcabcabc\", on helppo arvata.",
+        "key_pattern": "Lyhyet näppäinkuviot on helppo arvata.",
+        "names_by_themselves": "Yksittäiset nimet tai sukunimet on helppo arvata.",
+        "pwned": "Salasanasi paljastui internetissä tapahtuneen tietomurron yhteydessä.",
+        "recent_years": "Lähivuodet on helppo arvata.",
+        "sequences": "Yleiset merkkijonot, kuten \"abc\", on helppo arvata.",
+        "similar_to_common": "Tämä on samanlainen kuin yleisesti käytetty salasana.",
+        "simple_repeat": "Toistuvat merkit, kuten \"aaa\", on helppo arvata.",
+        "straight_row": "Näppäimistön suorat näppäinrivit on helppo arvata.",
+        "top_hundred": "Tämä on usein käytetty salasana.",
+        "top_ten": "Tämä on paljon käytetty salasana.",
+        "user_inputs": "Henkilökohtaisia tai sivuun liittyviä tietoja ei pitäisi olla.",
+        "word_by_itself": "Yksittäiset sanat on helppo arvata."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Nollaa identiteetti",
+      "cancelled": {
+        "description_1": "Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
+        "description_2": "Jos olet kirjautunut ulos kaikkialta etkä muista palautuskoodiasi, sinun on silti nollattava identiteettisi.",
+        "heading": "Identiteetin nollaus peruutettu."
+      },
+      "description": "Jos et ole kirjautunut muihin laitteisiin ja olet kadottanut palautusavaimesi, sinun on nollattava identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
+      "effect_list": {
+        "negative_1": "Menetät nykyisen viestihistoriasi",
+        "negative_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
+        "neutral_1": "Menetät kaiken viestihistorian, joka on tallella vain palvelimella",
+        "neutral_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
+        "positive_1": "Tilitietosi, yhteystiedot, asetukset ja keskustelulista säilytetään"
+      },
+      "failure": {
+        "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+        "heading": "Kryptografisen identiteetin nollauksen salliminen epäonnistui",
+        "title": "Kryptografisen identiteetin nollauksen salliminen epäonnistui"
+      },
+      "finish_reset": "Viimeistele nollaus",
+      "heading": "Nollaa identiteettisi, jos et voi vahvistaa muulla tavalla",
+      "start_reset": "Aloita nollaus",
+      "success": {
+        "description": "Identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
+        "heading": "Identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
+        "title": "Kryptografisen identiteetin nollaus tilapäisesti sallittu"
+      },
+      "warning": "Nollaa identiteettisi vain, jos et voi käyttää toista laitetta, johon olet kirjautunut, ja olet kadottanut palautusavaimesi."
+    },
+    "selectable_session": {
+      "label": "Valitse istunto"
+    },
+    "session": {
+      "client_id_label": "Sovelluksen tunnus",
+      "current": "Nykyinen",
+      "current_badge": "Nykyinen",
+      "device_id_label": "Laitteen tunnus",
+      "finished_date": "Päättyi <datetime/>",
+      "finished_label": "Päättyi",
+      "id_label": "ID",
+      "ip_label": "IP-osoite",
+      "last_active_label": "Viimeksi aktiivinen",
+      "last_auth_label": "Viimeisin todennus",
+      "name_for_platform": "{{name}} {{platform}}:lle",
+      "scopes_label": "Vaikutusalue",
+      "signed_in_date": "Kirjautunut sisään <datetime/>",
+      "signed_in_label": "Kirjautunut sisään",
+      "title": "Laitteen tiedot",
+      "unknown_browser": "Tuntematon selain",
+      "unknown_device": "Tuntematon laite",
+      "uri_label": "Osoite",
+      "user_id_label": "Käyttäjätunnus",
+      "username_label": "Käyttäjänimi"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Palaa takaisin",
+        "text": "Tätä istuntoa ei ole olemassa tai se ei ole enää aktiivinen.",
+        "title": "Istuntoa ei löydy: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Tuntematon reitti {{route}}",
+    "unverified_email_alert": {
+      "button": "Tarkista ja vahvista",
+      "text:one": "Sinulla on {{count}} vahvistamaton sähköpostiosoite.",
+      "text:other": "Sinulla on {{count}} vahvistamatonta sähköpostiosoitetta.",
+      "title": "Vahvistamaton sähköpostiosoite"
+    },
+    "user_email": {
+      "cant_delete_primary": "Valitse toinen ensisijainen sähköpostiosoite poistaaksesi tämän.",
+      "delete_button_confirmation_modal": {
+        "action": "Poista sähköposti",
+        "body": "Poistetaanko tämä sähköposti?"
+      },
+      "delete_button_title": "Poista sähköpostiosoite",
+      "email": "Sähköposti",
+      "make_primary_button": "Tee ensisijaiseksi",
+      "not_verified": "Ei vahvistettu",
+      "primary_email": "Ensisijainen sähköposti",
+      "retry_button": "Lähetä koodi uudelleen",
+      "unverified": "Vahvistamaton"
+    },
+    "user_email_list": {
+      "heading": "Sähköpostit",
+      "no_primary_email_alert": "Ei ensisijaista sähköpostiosoitetta"
+    },
+    "user_greeting": {
+      "error": "Käyttäjän lataaminen epäonnistui"
+    },
+    "user_name": {
+      "display_name_field_label": "Näyttönimi"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktiivinen istunto",
+      "active_sessions:other": "{{count}} aktiivista istuntoa",
+      "heading": "Missä olet kirjautuneena",
+      "no_active_sessions": {
+        "default": "Et ole kirjautunut mihinkään sovellukseen.",
+        "inactive_90_days": "Kaikki istuntosi ovat olleet aktiivisia viimeisten 90 päivän aikana."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "Koodi on vanhentunut. Pyydä uusi koodi.",
+        "title": "Koodi vanhentunut"
+      },
+      "code_field_error": "Koodia ei tunnistettu",
+      "code_field_label": "6-numeroinen koodi",
+      "code_field_wrong_shape": "Koodin on oltava 6-numeroinen",
+      "email_sent_alert": {
+        "description": "Kirjoita uusi koodi alle.",
+        "title": "Uusi koodi lähetetty"
+      },
+      "enter_code_prompt": "Syötä 6-numeroinen koodi, joka lähetettiin osoitteeseen: <email>{{email}}</email>",
+      "heading": "Vahvista sähköpostiosoitteesi",
+      "invalid_code_alert": {
+        "description": "Tarkista sähköpostiisi lähetetty koodi ja päivitä alla olevat kentät jatkaaksesi.",
+        "title": "Syötit väärän koodin"
+      },
+      "resend_code": "Lähetä koodi uudelleen",
+      "resend_email": "Lähetä sähköposti uudelleen",
+      "sent": "Lähetetty!",
+      "unknown_email": "Tuntematon sähköpostiosoite"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Muokata profiiliasi ja yhteystietojasi",
+      "manage_sessions": "Hallinnoida laitteitasi ja istuntojasi",
+      "mas_admin": "Hallinnoida mitä tahansa käyttäjää matrix-authentication-servicessä",
+      "send_messages": "Lähettää uusia viestejä puolestasi",
+      "synapse_admin": "Hallinnoida Synapse-kotipalvelinta",
+      "view_messages": "Tarkastella olemassa olevia viestejäsi ja tietojasi",
+      "view_profile": "Tarkastella profiilitietojasi ja yhteystietojasi"
+    }
+  }
+}
