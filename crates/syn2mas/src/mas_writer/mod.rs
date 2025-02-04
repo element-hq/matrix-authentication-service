@@ -424,7 +424,7 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("failed to get syn2mas restore data (index descriptions)")?;
             constraints_to_restore = query_as!(
                 ConstraintDescription,
-                "SELECT table_name, name, definition FROM syn2mas_restore_constraints ORDER BY order_key"
+                "SELECT table_name, name, definition, is_fk FROM syn2mas_restore_constraints ORDER BY order_key"
             )
                 .fetch_all(conn.as_mut())
                 .await
@@ -468,16 +468,18 @@ impl<'conn> MasWriter<'conn> {
                 name,
                 table_name,
                 definition,
+                is_fk,
             } in &constraints_to_restore
             {
                 query!(
                     r#"
-                    INSERT INTO syn2mas_restore_constraints (name, table_name, definition)
-                    VALUES ($1, $2, $3)
+                    INSERT INTO syn2mas_restore_constraints (name, table_name, definition, is_fk)
+                    VALUES ($1, $2, $3, $4)
                     "#,
                     name,
                     table_name,
-                    definition
+                    definition,
+                    is_fk
                 )
                 .execute(conn.as_mut())
                 .await

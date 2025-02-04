@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO syn2mas_restore_constraints (name, table_name, definition, is_fk)\n                    VALUES ($1, $2, $3, $4)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "889a61646030943ef661f24491c9724a8a9c904ca43355bf9d0d3d59b3009f11"
+}

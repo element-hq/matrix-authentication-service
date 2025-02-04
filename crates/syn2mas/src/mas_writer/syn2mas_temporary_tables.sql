@@ -23,7 +23,8 @@ CREATE TABLE syn2mas_restore_constraints (
 
     table_name TEXT NOT NULL,
     name TEXT NOT NULL,
-    definition TEXT NOT NULL
+    definition TEXT NOT NULL,
+    is_fk BOOLEAN NOT NULL
 );
 
 -- corresponds to `IndexDescription`
