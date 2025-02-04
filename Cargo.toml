@@ -92,7 +92,7 @@ version = "1.6.0"
 
 # Bytes
 [workspace.dependencies.bytes]
-version = "1.9.0"
+version = "1.10.0"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
