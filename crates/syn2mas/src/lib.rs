@@ -3,6 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+#![expect(
+    clippy::overly_complex_bool_expr,
+    reason = "TODO: remove when we've removed the hacks"
+)]
+
 mod mas_writer;
 mod synapse_reader;
 

@@ -117,6 +117,13 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.liberate_table("syn2mas__users")
+        .await
+        .into_mas("liberating users table")?;
+    mas.liberate_table("syn2mas__user_passwords")
+        .await
+        .into_mas("liberating user_passwords table")?;
+
     span.pb_set_message("migrating threepids");
     span.pb_inc(1);
     migrate_threepids(
@@ -131,6 +138,13 @@ pub async fn migrate(
         &migrated_users.user_localparts_to_uuid,
     )
     .await?;
+
+    mas.liberate_table("syn2mas__user_emails")
+        .await
+        .into_mas("liberating user_emails table")?;
+    mas.liberate_table("syn2mas__user_unsupported_third_party_ids")
+        .await
+        .into_mas("liberating user_unsupported_third_party_ids table")?;
 
     span.pb_set_message("migrating user external IDs");
     span.pb_inc(1);
@@ -147,6 +161,10 @@ pub async fn migrate(
         provider_id_mapping,
     )
     .await?;
+
+    mas.liberate_table("syn2mas__upstream_oauth_links")
+        .await
+        .into_mas("liberating upstream_oauth_links table")?;
 
     // `(MAS user_id, device_id)` mapped to `compat_session` ULID
     let mut devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid> =
@@ -193,6 +211,13 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.liberate_table("syn2mas__compat_access_tokens")
+        .await
+        .into_mas("liberating compat_access_tokens table")?;
+    mas.liberate_table("syn2mas__compat_refresh_tokens")
+        .await
+        .into_mas("liberating compat_refresh_tokens table")?;
+
     span.pb_set_message("migrating devices");
     span.pb_inc(1);
     migrate_devices(
@@ -209,6 +234,10 @@ pub async fn migrate(
         &migrated_users.synapse_admins,
     )
     .await?;
+
+    mas.liberate_table("syn2mas__compat_sessions")
+        .await
+        .into_mas("liberating compat_sessions table")?;
 
     span.pb_set_message("closing Synapse database");
     span.pb_inc(1);
@@ -277,6 +306,7 @@ async fn migrate_users(
     }
 
     user_buffer.finish(mas).await.into_mas("writing users")?;
+
     password_buffer
         .finish(mas)
         .await

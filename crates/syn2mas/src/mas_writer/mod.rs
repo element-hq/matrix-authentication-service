@@ -21,7 +21,10 @@ use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
 use sqlx::{query, query_as, Executor, PgConnection};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
-use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::{
+    sync::mpsc::{self, Receiver, Sender},
+    task::JoinHandle,
+};
 use tracing::{error, info, warn, Instrument, Level, Span};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 use uuid::Uuid;
@@ -44,6 +47,9 @@ pub enum Error {
         source: sqlx::Error,
         context: String,
     },
+
+    #[error("failed to restore index or constraint, channel closed")]
+    CantRestoreIndexOrConstraint,
 
     #[error("writer connection pool shut down due to error")]
     #[allow(clippy::enum_variant_names)]
@@ -244,6 +250,10 @@ pub struct MasWriter<'c> {
     indices_to_restore: Vec<IndexDescription>,
     constraints_to_restore: Vec<ConstraintDescription>,
 
+    constraint_restore_tx: mpsc::Sender<ConstraintDescription>,
+    index_restore_tx: mpsc::Sender<IndexDescription>,
+    restorer_task: JoinHandle<Result<(), Error>>,
+
     write_buffer_finish_checker: FinishChecker,
 }
 
@@ -390,6 +400,7 @@ impl<'conn> MasWriter<'conn> {
     #[tracing::instrument(skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase<'conn>,
+        index_restore_conn: PgConnection,
         mut writer_connections: Vec<PgConnection>,
     ) -> Result<Self, Error> {
         // Given that we don't have any concurrent transactions here,
@@ -500,13 +511,52 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("begin MAS writer transaction")?;
         }
 
+        let (constraint_restore_tx, index_restore_tx, restorer_task) =
+            Self::restore_task(index_restore_conn);
+
         Ok(Self {
             conn,
             writer_pool: WriterConnectionPool::new(writer_connections),
             indices_to_restore,
             constraints_to_restore,
+            constraint_restore_tx,
+            index_restore_tx,
+            restorer_task,
             write_buffer_finish_checker: FinishChecker::default(),
         })
+    }
+
+    #[tracing::instrument(skip_all)]
+    fn restore_task(
+        mut conn: PgConnection,
+    ) -> (
+        mpsc::Sender<ConstraintDescription>,
+        mpsc::Sender<IndexDescription>,
+        JoinHandle<Result<(), Error>>,
+    ) {
+        let (constraint_restore_tx, mut constraint_restore_rx) = mpsc::channel(10);
+        let (index_restore_tx, mut index_restore_rx) = mpsc::channel(10);
+        let restorer_task = tokio::spawn(
+            async move {
+                loop {
+                    tokio::select! {
+                        constraint = constraint_restore_rx.recv() => {
+                            let Some(constraint) = constraint else { break; };
+                            constraint_pausing::restore_constraint(conn.as_mut(), &constraint).await?;
+                        }
+                        index = index_restore_rx.recv() => {
+                            let Some(index) = index else { break; };
+                            constraint_pausing::restore_index(conn.as_mut(), &index).await?;
+                        }
+                    }
+                }
+
+                Ok(())
+            }
+            .instrument(tracing::info_span!("restore")),
+        );
+
+        (constraint_restore_tx, index_restore_tx, restorer_task)
     }
 
     #[tracing::instrument(skip_all)]
@@ -571,6 +621,39 @@ impl<'conn> MasWriter<'conn> {
         Ok(())
     }
 
+    /// Liberate a table, so that the indexes can start to be restored
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the task to restore indexes and constraints is
+    /// borked
+    pub async fn liberate_table(&mut self, table: &str) -> Result<(), Error> {
+        // Extract all the constraints and indexes from the table
+        let constraints_to_restore = std::mem::take(&mut self.constraints_to_restore);
+        for constraint in constraints_to_restore {
+            if constraint.table_name == table && !constraint.is_fk {
+                self.constraint_restore_tx
+                    .send(constraint)
+                    .await
+                    .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+            } else {
+                self.constraints_to_restore.push(constraint);
+            }
+        }
+        let indices_to_restore = std::mem::take(&mut self.indices_to_restore);
+        for index in indices_to_restore {
+            if index.table_name == table {
+                self.index_restore_tx
+                    .send(index)
+                    .await
+                    .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+            } else {
+                self.indices_to_restore.push(index);
+            }
+        }
+        Ok(())
+    }
+
     /// Finish writing to the MAS database, flushing and committing all changes.
     ///
     /// # Errors
@@ -582,26 +665,36 @@ impl<'conn> MasWriter<'conn> {
     pub async fn finish(mut self) -> Result<(), Error> {
         self.write_buffer_finish_checker.check_all_finished()?;
 
+        // Send all the remaining constraints and indices to the restorer task
+        for constraint in self.constraints_to_restore {
+            self.constraint_restore_tx
+                .send(constraint)
+                .await
+                .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+        }
+        for index in self.indices_to_restore {
+            self.index_restore_tx
+                .send(index)
+                .await
+                .map_err(|_| Error::CantRestoreIndexOrConstraint)?;
+        }
+
         // Commit all writer transactions to the database.
         self.writer_pool
             .finish()
             .await
             .map_err(|errors| Error::Multiple(MultipleErrors::from(errors)))?;
 
-        // Now all the data has been migrated, finish off by restoring indices and
-        // constraints!
+        // Wait for the restorer task to finish
+        self.restorer_task
+            .await
+            .expect("restorer task panicked")
+            .expect("restorer task failed");
 
         query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
             .execute(self.conn.as_mut())
             .await
             .into_database("begin MAS transaction")?;
-
-        Self::restore_indices(
-            &mut self.conn,
-            &self.indices_to_restore,
-            &self.constraints_to_restore,
-        )
-        .await?;
 
         self.conn
             .as_mut()
@@ -1250,11 +1343,16 @@ mod test {
                     .detach(),
             );
         }
+        let index_restore_conn = pool
+            .acquire()
+            .await
+            .expect("failed to acquire index restore connection")
+            .detach();
         let locked_main_conn = LockedMasDatabase::try_new(main_conn)
             .await
             .expect("failed to lock MAS database")
             .expect_left("MAS database is already locked");
-        MasWriter::new(locked_main_conn, writer_conns)
+        MasWriter::new(locked_main_conn, index_restore_conn, writer_conns)
             .await
             .expect("failed to construct MasWriter")
     }

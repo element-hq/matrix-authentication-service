@@ -236,7 +236,16 @@ impl Options {
                         .await?,
                     );
                 }
-                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                let index_restore_conn = database_connection_from_config_with_options(
+                    &config,
+                    &DatabaseConnectOptions {
+                        log_slow_statements: false,
+                    },
+                )
+                .await?;
+                let writer =
+                    MasWriter::new(mas_connection, index_restore_conn, writer_mas_connections)
+                        .await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
