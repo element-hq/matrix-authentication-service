@@ -157,6 +157,32 @@ impl WriterConnectionPool {
         }
     }
 
+    pub async fn commit(&mut self) -> Result<(), Error> {
+        let mut connections = Vec::with_capacity(self.num_connections);
+        while let Some(connection_or_error) = self.connection_rx.recv().await {
+            let mut connection = connection_or_error?;
+            query("COMMIT;")
+                .execute(&mut connection)
+                .await
+                .into_database("commit writer transaction")?;
+            query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+                .execute(&mut connection)
+                .await
+                .into_database("begin writer transaction")?;
+
+            connections.push(connection);
+        }
+
+        // Put all the connections back in the pool
+        for connection in connections {
+            self.connection_tx
+                .try_send(Ok(connection))
+                .expect("channel closed");
+        }
+
+        Ok(())
+    }
+
     /// Finishes writing to the database, committing all changes.
     ///
     /// # Errors
@@ -400,7 +426,7 @@ impl<'conn> MasWriter<'conn> {
     #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase<'conn>,
-        index_restore_conn: PgConnection,
+        mut index_restore_conn: PgConnection,
         mut writer_connections: Vec<PgConnection>,
     ) -> Result<Self, Error> {
         // Given that we don't have any concurrent transactions here,
@@ -511,6 +537,10 @@ impl<'conn> MasWriter<'conn> {
                 .into_database("begin MAS writer transaction")?;
         }
 
+        query("SET AUTOCOMMIT ON;")
+            .execute(index_restore_conn.as_mut())
+            .await
+            .into_database("set conn autocommit")?;
         let (constraint_restore_tx, index_restore_tx, restorer_task) =
             Self::restore_task(index_restore_conn);
 
@@ -653,6 +683,10 @@ impl<'conn> MasWriter<'conn> {
             }
         }
         Ok(())
+    }
+
+    pub async fn commit(&mut self) -> Result<(), Error> {
+        self.writer_pool.commit().await
     }
 
     /// Finish writing to the MAS database, flushing and committing all changes.

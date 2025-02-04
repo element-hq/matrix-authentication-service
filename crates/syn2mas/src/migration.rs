@@ -117,6 +117,7 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.commit().await.into_mas("committing users")?;
     mas.liberate_table("syn2mas__users")
         .await
         .into_mas("liberating users table")?;
@@ -139,6 +140,7 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.commit().await.into_mas("committing threepids")?;
     mas.liberate_table("syn2mas__user_emails")
         .await
         .into_mas("liberating user_emails table")?;
@@ -162,6 +164,7 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.commit().await.into_mas("committing external IDs")?;
     mas.liberate_table("syn2mas__upstream_oauth_links")
         .await
         .into_mas("liberating upstream_oauth_links table")?;
@@ -211,6 +214,7 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.commit().await.into_mas("committing tokens")?;
     mas.liberate_table("syn2mas__compat_access_tokens")
         .await
         .into_mas("liberating compat_access_tokens table")?;
@@ -235,6 +239,7 @@ pub async fn migrate(
     )
     .await?;
 
+    mas.commit().await.into_mas("committing devices")?;
     mas.liberate_table("syn2mas__compat_sessions")
         .await
         .into_mas("liberating compat_sessions table")?;
