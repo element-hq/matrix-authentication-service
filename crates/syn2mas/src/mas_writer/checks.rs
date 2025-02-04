@@ -8,7 +8,6 @@
 //! This module provides safety checks to run against a MAS database before
 //! running the Synapse-to-MAS migration.
 
-use mas_storage_pg::ExecuteExt;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 use tracing::Instrument as _;
