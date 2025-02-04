@@ -97,7 +97,7 @@ jobs:
           tool: cargo-zigbuild
 
       - name: Install frontend Node
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4.2.0
         with:
           node-version: 20
 
@@ -240,7 +240,7 @@ jobs:
       # For pull-requests, only read from the cache, do not try to push to the
       # cache or the image itself
       - name: Build
-        uses: docker/bake-action@v6.2.0
+        uses: docker/bake-action@v6.3.0
         if: github.event_name == 'pull_request'
         with:
           files: |
@@ -253,7 +253,7 @@ jobs:
 
       - name: Build and push
         id: bake
-        uses: docker/bake-action@v6.2.0
+        uses: docker/bake-action@v6.3.0
         if: github.event_name != 'pull_request'
         with:
           files: |
@@ -306,7 +306,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Node
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4.2.0
         with:
           node-version-file: ./tools/syn2mas/.nvmrc
 

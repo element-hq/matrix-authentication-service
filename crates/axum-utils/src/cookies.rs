@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -8,7 +8,6 @@
 
 use std::convert::Infallible;
 
-use async_trait::async_trait;
 use axum::{
     extract::{FromRef, FromRequestParts},
     response::{IntoResponseParts, ResponseParts},
@@ -65,7 +64,6 @@ impl CookieManager {
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for CookieJar
 where
     CookieManager: FromRef<S>,

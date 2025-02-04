@@ -391,6 +391,7 @@ pub struct SignInWithApple {
     pub key_id: String,
 }
 
+/// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Provider {
@@ -537,4 +538,21 @@ pub struct Provider {
     /// Orders of the keys are not preserved.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub additional_authorization_parameters: BTreeMap<String, String>,
+
+    /// The ID of the provider that was used by Synapse.
+    /// In order to perform a Synapse-to-MAS migration, this must be specified.
+    ///
+    /// ## For providers that used OAuth 2.0 or OpenID Connect in Synapse
+    ///
+    /// ### For `oidc_providers`:
+    /// This should be specified as `oidc-` followed by the ID that was
+    /// configured as `idp_id` in one of the `oidc_providers` in the Synapse
+    /// configuration.
+    /// For example, if Synapse's configuration contained `idp_id: wombat` for
+    /// this provider, then specify `oidc-wombat` here.
+    ///
+    /// ### For `oidc_config` (legacy):
+    /// Specify `oidc` here.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub synapse_idp_id: Option<String>,
 }

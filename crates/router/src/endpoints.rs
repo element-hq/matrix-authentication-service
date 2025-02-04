@@ -444,7 +444,7 @@ impl From<Option<PostAuthAction>> for PasswordRegister {
     }
 }
 
-/// `GET|POST /register/steps/:id/display-name`
+/// `GET|POST /register/steps/{id}/display-name`
 #[derive(Debug, Clone)]
 pub struct RegisterDisplayName {
     id: Ulid,
@@ -460,7 +460,7 @@ impl RegisterDisplayName {
 impl Route for RegisterDisplayName {
     type Query = ();
     fn route() -> &'static str {
-        "/register/steps/:id/display-name"
+        "/register/steps/{id}/display-name"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -468,7 +468,7 @@ impl Route for RegisterDisplayName {
     }
 }
 
-/// `GET|POST /register/steps/:id/verify-email`
+/// `GET|POST /register/steps/{id}/verify-email`
 #[derive(Debug, Clone)]
 pub struct RegisterVerifyEmail {
     id: Ulid,
@@ -484,7 +484,7 @@ impl RegisterVerifyEmail {
 impl Route for RegisterVerifyEmail {
     type Query = ();
     fn route() -> &'static str {
-        "/register/steps/:id/verify-email"
+        "/register/steps/{id}/verify-email"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -492,7 +492,7 @@ impl Route for RegisterVerifyEmail {
     }
 }
 
-/// `GET /register/steps/:id/finish`
+/// `GET /register/steps/{id}/finish`
 #[derive(Debug, Clone)]
 pub struct RegisterFinish {
     id: Ulid,
@@ -508,7 +508,7 @@ impl RegisterFinish {
 impl Route for RegisterFinish {
     type Query = ();
     fn route() -> &'static str {
-        "/register/steps/:id/finish"
+        "/register/steps/{id}/finish"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -567,7 +567,7 @@ impl Route for Account {
 pub struct AccountWildcard;
 
 impl SimpleRoute for AccountWildcard {
-    const PATH: &'static str = "/account/*rest";
+    const PATH: &'static str = "/account/{*rest}";
 }
 
 /// `GET /account/password/change`
@@ -581,14 +581,14 @@ impl SimpleRoute for AccountPasswordChange {
     const PATH: &'static str = "/account/password/change";
 }
 
-/// `GET /authorize/:grant_id`
+/// `GET /authorize/{grant_id}`
 #[derive(Debug, Clone)]
 pub struct ContinueAuthorizationGrant(pub Ulid);
 
 impl Route for ContinueAuthorizationGrant {
     type Query = ();
     fn route() -> &'static str {
-        "/authorize/:grant_id"
+        "/authorize/{grant_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -596,14 +596,14 @@ impl Route for ContinueAuthorizationGrant {
     }
 }
 
-/// `GET /consent/:grant_id`
+/// `GET /consent/{grant_id}`
 #[derive(Debug, Clone)]
 pub struct Consent(pub Ulid);
 
 impl Route for Consent {
     type Query = ();
     fn route() -> &'static str {
-        "/consent/:grant_id"
+        "/consent/{grant_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -615,28 +615,28 @@ impl Route for Consent {
 pub struct CompatLogin;
 
 impl SimpleRoute for CompatLogin {
-    const PATH: &'static str = "/_matrix/client/:version/login";
+    const PATH: &'static str = "/_matrix/client/{version}/login";
 }
 
 /// `POST /_matrix/client/v3/logout`
 pub struct CompatLogout;
 
 impl SimpleRoute for CompatLogout {
-    const PATH: &'static str = "/_matrix/client/:version/logout";
+    const PATH: &'static str = "/_matrix/client/{version}/logout";
 }
 
 /// `POST /_matrix/client/v3/refresh`
 pub struct CompatRefresh;
 
 impl SimpleRoute for CompatRefresh {
-    const PATH: &'static str = "/_matrix/client/:version/refresh";
+    const PATH: &'static str = "/_matrix/client/{version}/refresh";
 }
 
 /// `GET /_matrix/client/v3/login/sso/redirect`
 pub struct CompatLoginSsoRedirect;
 
 impl SimpleRoute for CompatLoginSsoRedirect {
-    const PATH: &'static str = "/_matrix/client/:version/login/sso/redirect";
+    const PATH: &'static str = "/_matrix/client/{version}/login/sso/redirect";
 }
 
 /// `GET /_matrix/client/v3/login/sso/redirect/`
@@ -646,14 +646,14 @@ impl SimpleRoute for CompatLoginSsoRedirect {
 pub struct CompatLoginSsoRedirectSlash;
 
 impl SimpleRoute for CompatLoginSsoRedirectSlash {
-    const PATH: &'static str = "/_matrix/client/:version/login/sso/redirect/";
+    const PATH: &'static str = "/_matrix/client/{version}/login/sso/redirect/";
 }
 
-/// `GET /_matrix/client/v3/login/sso/redirect/:idp`
+/// `GET /_matrix/client/v3/login/sso/redirect/{idp}`
 pub struct CompatLoginSsoRedirectIdp;
 
 impl SimpleRoute for CompatLoginSsoRedirectIdp {
-    const PATH: &'static str = "/_matrix/client/:version/login/sso/redirect/:idp";
+    const PATH: &'static str = "/_matrix/client/{version}/login/sso/redirect/{idp}";
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -669,7 +669,7 @@ pub struct CompatLoginSsoActionParams {
     action: CompatLoginSsoAction,
 }
 
-/// `GET|POST /complete-compat-sso/:id`
+/// `GET|POST /complete-compat-sso/{id}`
 pub struct CompatLoginSsoComplete {
     id: Ulid,
     query: Option<CompatLoginSsoActionParams>,
@@ -693,7 +693,7 @@ impl Route for CompatLoginSsoComplete {
     }
 
     fn route() -> &'static str {
-        "/complete-compat-sso/:grant_id"
+        "/complete-compat-sso/{grant_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -701,7 +701,7 @@ impl Route for CompatLoginSsoComplete {
     }
 }
 
-/// `GET /upstream/authorize/:id`
+/// `GET /upstream/authorize/{id}`
 pub struct UpstreamOAuth2Authorize {
     id: Ulid,
     post_auth_action: Option<PostAuthAction>,
@@ -726,7 +726,7 @@ impl UpstreamOAuth2Authorize {
 impl Route for UpstreamOAuth2Authorize {
     type Query = PostAuthAction;
     fn route() -> &'static str {
-        "/upstream/authorize/:provider_id"
+        "/upstream/authorize/{provider_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -738,7 +738,7 @@ impl Route for UpstreamOAuth2Authorize {
     }
 }
 
-/// `GET /upstream/callback/:id`
+/// `GET /upstream/callback/{id}`
 pub struct UpstreamOAuth2Callback {
     id: Ulid,
 }
@@ -753,7 +753,7 @@ impl UpstreamOAuth2Callback {
 impl Route for UpstreamOAuth2Callback {
     type Query = ();
     fn route() -> &'static str {
-        "/upstream/callback/:provider_id"
+        "/upstream/callback/{provider_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -761,7 +761,7 @@ impl Route for UpstreamOAuth2Callback {
     }
 }
 
-/// `GET /upstream/link/:id`
+/// `GET /upstream/link/{id}`
 pub struct UpstreamOAuth2Link {
     id: Ulid,
 }
@@ -776,7 +776,7 @@ impl UpstreamOAuth2Link {
 impl Route for UpstreamOAuth2Link {
     type Query = ();
     fn route() -> &'static str {
-        "/upstream/link/:link_id"
+        "/upstream/link/{link_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -808,7 +808,7 @@ impl Route for DeviceCodeLink {
     }
 }
 
-/// `GET|POST /device/:device_code_id`
+/// `GET|POST /device/{device_code_id}`
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct DeviceCodeConsent {
     id: Ulid,
@@ -817,7 +817,7 @@ pub struct DeviceCodeConsent {
 impl Route for DeviceCodeConsent {
     type Query = ();
     fn route() -> &'static str {
-        "/device/:device_code_id"
+        "/device/{device_code_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
@@ -848,7 +848,7 @@ impl SimpleRoute for AccountRecoveryStart {
     const PATH: &'static str = "/recover";
 }
 
-/// `GET|POST /recover/progress/:session_id`
+/// `GET|POST /recover/progress/{session_id}`
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct AccountRecoveryProgress {
     session_id: Ulid,
@@ -864,7 +864,7 @@ impl AccountRecoveryProgress {
 impl Route for AccountRecoveryProgress {
     type Query = ();
     fn route() -> &'static str {
-        "/recover/progress/:session_id"
+        "/recover/progress/{session_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {

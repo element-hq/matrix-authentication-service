@@ -17,7 +17,7 @@ use rand::{
     distributions::{Alphanumeric, DistString},
     RngCore,
 };
-use ruma_common::{OwnedUserId, UserId};
+use ruma_common::UserId;
 use serde::Serialize;
 use ulid::Ulid;
 use url::Url;
@@ -142,8 +142,8 @@ impl AuthorizationGrantStage {
     }
 }
 
-pub enum LoginHint {
-    MXID(OwnedUserId),
+pub enum LoginHint<'a> {
+    MXID(&'a UserId),
     None,
 }
 
@@ -200,7 +200,7 @@ impl AuthorizationGrant {
         match prefix {
             "mxid" => {
                 // Instead of erroring just return none
-                let Ok(mxid) = UserId::parse(value) else {
+                let Ok(mxid) = <&UserId>::try_from(value) else {
                     return LoginHint::None;
                 };
 

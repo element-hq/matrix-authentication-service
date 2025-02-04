@@ -9,7 +9,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   type ErrorRouteComponent,
   Outlet,
-  ScrollRestoration,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
@@ -28,7 +27,6 @@ export const Route = createRootRouteWithContext<{
 }>()({
   component: () => (
     <>
-      <ScrollRestoration />
       <Outlet />
 
       {import.meta.env.DEV &&

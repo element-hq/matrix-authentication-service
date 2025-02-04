@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::process::ExitCode;
+use std::{process::ExitCode, time::Duration};
 
 use clap::Parser;
 use figment::Figment;
@@ -14,10 +14,10 @@ use mas_router::UrlBuilder;
 use tracing::{info, info_span};
 
 use crate::{
-    shutdown::ShutdownManager,
+    lifecycle::LifecycleManager,
     util::{
         database_pool_from_config, mailer_from_config, site_config_from_config,
-        templates_from_config,
+        templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -26,7 +26,7 @@ pub(super) struct Options {}
 
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
-        let shutdown = ShutdownManager::new()?;
+        let shutdown = LifecycleManager::new()?;
         let span = info_span!("cli.worker.init").entered();
         let config = AppConfig::extract(figment)?;
 
@@ -55,7 +55,7 @@ impl Options {
             templates_from_config(&config.templates, &site_config, &url_builder).await?;
 
         let mailer = mailer_from_config(&config.email, &templates)?;
-        mailer.test_connection().await?;
+        test_mailer_in_background(&mailer, Duration::from_secs(30));
 
         let http_client = mas_http::reqwest_client();
         let conn = SynapseConnection::new(

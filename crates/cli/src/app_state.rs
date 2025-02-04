@@ -6,10 +6,7 @@
 
 use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Instant};
 
-use axum::{
-    async_trait,
-    extract::{FromRef, FromRequestParts},
-};
+use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
@@ -28,6 +25,7 @@ use mas_templates::Templates;
 use opentelemetry::{metrics::Histogram, KeyValue};
 use rand::SeedableRng;
 use sqlx::PgPool;
+use tracing::Instrument;
 
 use crate::telemetry::METER;
 
@@ -88,29 +86,43 @@ impl AppState {
         self.conn_acquisition_histogram = Some(histogram);
     }
 
-    /// Init the metadata cache.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the metadata cache could not be initialized.
-    pub async fn init_metadata_cache(&self) {
-        // XXX: this panics because the error is annoying to propagate
-        let conn = self
-            .pool
-            .acquire()
-            .await
-            .expect("Failed to acquire a database connection");
+    /// Init the metadata cache in the background
+    pub fn init_metadata_cache(&self) {
+        let pool = self.pool.clone();
+        let metadata_cache = self.metadata_cache.clone();
+        let http_client = self.http_client.clone();
 
-        let mut repo = PgRepository::from_conn(conn);
+        tokio::spawn(
+            async move {
+                let conn = match pool.acquire().await {
+                    Ok(conn) => conn,
+                    Err(e) => {
+                        tracing::error!(
+                            error = &e as &dyn std::error::Error,
+                            "Failed to acquire a database connection"
+                        );
+                        return;
+                    }
+                };
 
-        self.metadata_cache
-            .warm_up_and_run(
-                &self.http_client,
-                std::time::Duration::from_secs(60 * 15),
-                &mut repo,
-            )
-            .await
-            .expect("Failed to warm up the metadata cache");
+                let mut repo = PgRepository::from_conn(conn);
+
+                if let Err(e) = metadata_cache
+                    .warm_up_and_run(
+                        &http_client,
+                        std::time::Duration::from_secs(60 * 15),
+                        &mut repo,
+                    )
+                    .await
+                {
+                    tracing::error!(
+                        error = &e as &dyn std::error::Error,
+                        "Failed to warm up the metadata cache"
+                    );
+                }
+            }
+            .instrument(tracing::info_span!("metadata_cache.background_warmup")),
+        );
     }
 }
 
@@ -198,7 +210,6 @@ impl FromRef<AppState> for BoxHomeserverConnection {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxClock {
     type Rejection = Infallible;
 
@@ -211,7 +222,6 @@ impl FromRequestParts<AppState> for BoxClock {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxRng {
     type Rejection = Infallible;
 
@@ -228,7 +238,6 @@ impl FromRequestParts<AppState> for BoxRng {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for Policy {
     type Rejection = ErrorWrapper<mas_policy::InstantiateError>;
 
@@ -241,7 +250,6 @@ impl FromRequestParts<AppState> for Policy {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for ActivityTracker {
     type Rejection = Infallible;
 
@@ -300,7 +308,6 @@ fn infer_client_ip(
     client_ip.or(fallback)
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoundActivityTracker {
     type Rejection = Infallible;
 
@@ -315,7 +322,6 @@ impl FromRequestParts<AppState> for BoundActivityTracker {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for RequesterFingerprint {
     type Rejection = Infallible;
 
@@ -337,7 +343,6 @@ impl FromRequestParts<AppState> for RequesterFingerprint {
     }
 }
 
-#[async_trait]
 impl FromRequestParts<AppState> for BoxRepository {
     type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
 

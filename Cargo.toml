@@ -54,16 +54,20 @@ mas-tasks = { path = "./crates/tasks/", version = "=0.13.0" }
 mas-templates = { path = "./crates/templates/", version = "=0.13.0" }
 mas-tower = { path = "./crates/tower/", version = "=0.13.0" }
 oauth2-types = { path = "./crates/oauth2-types/", version = "=0.13.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=0.13.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.13.5"
-features = ["axum", "axum-headers", "macros"]
+version = "0.14.0"
+features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
 version = "7.0.14"
 features = ["chrono", "url", "tracing"]
+
+[workspace.dependencies.async-stream]
+version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
@@ -75,11 +79,11 @@ version = "1.0.95"
 
 # HTTP router
 [workspace.dependencies.axum]
-version = "0.7.9"
+version = "0.8.1"
 
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
-version = "0.9.6"
+version = "0.10.0"
 features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Constant-time base64
@@ -93,6 +97,10 @@ version = "1.9.0"
 # UTF-8 paths
 [workspace.dependencies.camino]
 version = "1.1.9"
+
+# Memory optimisation for short strings
+[workspace.dependencies.compact_str]
+version = "0.8.1"
 
 # Time utilities
 [workspace.dependencies.chrono]
@@ -145,7 +153,7 @@ version = "0.1.2"
 
 # HTTP client and server
 [workspace.dependencies.hyper]
-version = "1.5.2"
+version = "1.6.0"
 features = ["client", "http1", "http2"]
 
 # Additional Hyper utilties
@@ -169,7 +177,7 @@ default-features = false
 
 # Snapshot testing
 [workspace.dependencies.insta]
-version = "1.42.0"
+version = "1.42.1"
 features = ["yaml", "json"]
 
 # Email sending
@@ -188,12 +196,12 @@ features = [
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.6.0"
+version = "2.7.0"
 features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.6.0"
+version = "2.7.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -240,9 +248,13 @@ version = "0.12.12"
 default-features = false
 features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
+# Matrix-related types
+[workspace.dependencies.ruma-common]
+version = "0.15.0"
+
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.21"
+version = "0.23.22"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
@@ -271,18 +283,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.34.0"
+version = "0.36.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.34.0"
+version = "0.36.0"
 features = ["http"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.34.0"
+version = "0.36.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
@@ -291,7 +303,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.137"
+version = "1.0.138"
 features = ["preserve_order"]
 
 # SQL database support
@@ -312,10 +324,16 @@ features = [
 [workspace.dependencies.thiserror]
 version = "2.0.11"
 
+[workspace.dependencies.thiserror-ext]
+version = "0.2.1"
+
 # Async runtime
 [workspace.dependencies.tokio]
 version = "1.43.0"
 features = ["full"]
+
+[workspace.dependencies.tokio-stream]
+version = "0.1.17"
 
 # Useful async utilities
 [workspace.dependencies.tokio-util]

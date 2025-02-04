@@ -1,0 +1,13 @@
+---
+source: crates/syn2mas/src/synapse_reader/mod.rs
+expression: external_ids
+---
+{
+    SynapseExternalId {
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        auth_provider: "oidc-raasu",
+        external_id: "871.syn30",
+    },
+}

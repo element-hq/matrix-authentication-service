@@ -337,7 +337,7 @@ type CompatSession implements Node & CreationEvent {
   """
   The Matrix Device ID of this session.
   """
-  deviceId: String!
+  deviceId: String
   """
   When the object was created.
   """

@@ -24,11 +24,11 @@ use tracing::{info, info_span, warn, Instrument};
 
 use crate::{
     app_state::AppState,
-    shutdown::ShutdownManager,
+    lifecycle::LifecycleManager,
     util::{
         database_pool_from_config, mailer_from_config, password_manager_from_config,
-        policy_factory_from_config, register_sighup, site_config_from_config,
-        templates_from_config,
+        policy_factory_from_config, site_config_from_config, templates_from_config,
+        test_mailer_in_background,
     },
 };
 
@@ -57,7 +57,7 @@ impl Options {
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
-        let shutdown = ShutdownManager::new()?;
+        let mut shutdown = LifecycleManager::new()?;
         let config = AppConfig::extract(figment)?;
 
         info!(version = crate::VERSION, "Starting up");
@@ -145,6 +145,7 @@ impl Options {
         // Load and compile the templates
         let templates =
             templates_from_config(&config.templates, &site_config, &url_builder).await?;
+        shutdown.register_reloadable(&templates);
 
         let http_client = mas_http::reqwest_client();
 
@@ -157,7 +158,7 @@ impl Options {
 
         if !self.no_worker {
             let mailer = mailer_from_config(&config.email, &templates)?;
-            mailer.test_connection().await?;
+            test_mailer_in_background(&mailer, Duration::from_secs(30));
 
             info!("Starting task worker");
             mas_tasks::init(
@@ -186,6 +187,9 @@ impl Options {
             shutdown.task_tracker(),
             shutdown.soft_shutdown_token(),
         );
+
+        shutdown.register_reloadable(&activity_tracker);
+
         let trusted_proxies = config.http.trusted_proxies.clone();
 
         // Build a rate limiter.
@@ -196,9 +200,6 @@ impl Options {
 
         // Explicitly the config to properly zeroize secret keys
         drop(config);
-
-        // Listen for SIGHUP
-        register_sighup(&templates, &activity_tracker)?;
 
         limiter.start();
 
@@ -233,8 +234,7 @@ impl Options {
                 conn_acquisition_histogram: None,
             };
             s.init_metrics();
-            // XXX: this might panic
-            s.init_metadata_cache().await;
+            s.init_metadata_cache();
             s
         };
 

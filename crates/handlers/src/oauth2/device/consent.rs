@@ -7,10 +7,9 @@
 use anyhow::Context;
 use axum::{
     extract::{Path, State},
-    response::{IntoResponse, Response},
+    response::{Html, IntoResponse, Response},
     Form,
 };
-use axum_extra::response::Html;
 use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},

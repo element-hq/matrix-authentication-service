@@ -47,7 +47,7 @@ where
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
 {
-    aide::gen::in_context(|ctx| {
+    aide::generate::in_context(|ctx| {
         ctx.schema = schemars::gen::SchemaGenerator::new(schemars::gen::SchemaSettings::openapi3());
     });
 

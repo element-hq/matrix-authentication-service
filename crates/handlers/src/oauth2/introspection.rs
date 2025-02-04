@@ -10,7 +10,7 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     sentry::SentryEventID,
 };
-use mas_data_model::{TokenFormatError, TokenType};
+use mas_data_model::{Device, TokenFormatError, TokenType};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
 use mas_keystore::Encrypter;
 use mas_storage::{
@@ -364,11 +364,12 @@ pub(crate) async fn post(
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.
-            let synapse_admin = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
-            let device_scope = session.device.to_scope_token();
-            let scope = [API_SCOPE, device_scope]
+            let synapse_admin_scope_opt = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
+            let device_scope_opt = session.device.as_ref().map(Device::to_scope_token);
+            let scope = [API_SCOPE]
                 .into_iter()
-                .chain(synapse_admin)
+                .chain(device_scope_opt)
+                .chain(synapse_admin_scope_opt)
                 .collect();
 
             activity_tracker
@@ -423,11 +424,12 @@ pub(crate) async fn post(
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.
-            let synapse_admin = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
-            let device_scope = session.device.to_scope_token();
-            let scope = [API_SCOPE, device_scope]
+            let synapse_admin_scope_opt = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
+            let device_scope_opt = session.device.as_ref().map(Device::to_scope_token);
+            let scope = [API_SCOPE]
                 .into_iter()
-                .chain(synapse_admin)
+                .chain(device_scope_opt)
+                .chain(synapse_admin_scope_opt)
                 .collect();
 
             activity_tracker

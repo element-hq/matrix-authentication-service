@@ -14,7 +14,7 @@ use mas_config::{
 };
 use mas_data_model::SiteConfig;
 use mas_email::{MailTransport, Mailer};
-use mas_handlers::{passwords::PasswordManager, ActivityTracker};
+use mas_handlers::passwords::PasswordManager;
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
@@ -22,7 +22,7 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions, PgConnection, PgPool,
 };
-use tracing::{error, info, log::LevelFilter};
+use tracing::{log::LevelFilter, Instrument};
 
 pub async fn password_manager_from_config(
     config: &PasswordsConfig,
@@ -97,6 +97,27 @@ pub fn mailer_from_config(
     };
 
     Ok(Mailer::new(templates.clone(), transport, from, reply_to))
+}
+
+/// Test the connection to the mailer in a background task
+pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
+    let mailer = mailer.clone();
+
+    let span = tracing::info_span!("cli.test_mailer");
+    tokio::spawn(async move {
+        match tokio::time::timeout(timeout, mailer.test_connection()).await {
+            Ok(Ok(())) => {}
+            Ok(Err(err)) => {
+                tracing::warn!(
+                    error = &err as &dyn std::error::Error,
+                    "Could not connect to the mail backend, tasks sending mails may fail!"
+                );
+            }
+            Err(_) => {
+                tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
+            }
+        }
+    }.instrument(span));
 }
 
 pub async fn policy_factory_from_config(
@@ -311,37 +332,6 @@ pub async fn database_connection_from_config(
         .connect()
         .await
         .context("could not connect to the database")
-}
-
-/// Reload templates on SIGHUP
-pub fn register_sighup(
-    templates: &Templates,
-    activity_tracker: &ActivityTracker,
-) -> anyhow::Result<()> {
-    #[cfg(unix)]
-    {
-        let mut signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())?;
-        let templates = templates.clone();
-        let activity_tracker = activity_tracker.clone();
-
-        tokio::spawn(async move {
-            loop {
-                if signal.recv().await.is_none() {
-                    // No more signals will be received, breaking
-                    break;
-                };
-
-                info!("SIGHUP received, reloading templates & flushing activity tracker");
-
-                activity_tracker.flush().await;
-                templates.clone().reload().await.unwrap_or_else(|err| {
-                    error!(?err, "Error while reloading templates");
-                });
-            }
-        });
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -7,6 +7,7 @@
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, Object, ID};
 use chrono::{DateTime, Utc};
+use mas_data_model::Device;
 use mas_storage::{compat::CompatSessionRepository, user::UserRepository};
 use url::Url;
 
@@ -81,8 +82,8 @@ impl CompatSession {
     }
 
     /// The Matrix Device ID of this session.
-    async fn device_id(&self) -> &str {
-        self.session.device.as_str()
+    async fn device_id(&self) -> Option<&str> {
+        self.session.device.as_ref().map(Device::as_str)
     }
 
     /// When the object was created.

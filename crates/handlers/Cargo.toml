@@ -33,7 +33,7 @@ hyper.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 axum.workspace = true
-axum-macros = "0.4.2"
+axum-macros = "0.5.0"
 axum-extra.workspace = true
 rustls.workspace = true
 
@@ -75,7 +75,7 @@ elliptic-curve.workspace = true
 governor.workspace = true
 indexmap = "2.7.1"
 pkcs8.workspace = true
-psl = "2.1.80"
+psl = "2.1.81"
 time = "0.3.37"
 url.workspace = true
 mime = "0.3.17"

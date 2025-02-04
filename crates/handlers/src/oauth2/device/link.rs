@@ -6,9 +6,8 @@
 
 use axum::{
     extract::{Query, State},
-    response::IntoResponse,
+    response::{Html, IntoResponse},
 };
-use axum_extra::response::Html;
 use mas_axum_utils::{cookies::CookieJar, FancyError};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository};
@@ -21,7 +20,8 @@ use crate::PreferredLanguage;
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
-    code: String,
+    #[serde(default)]
+    code: Option<String>,
 }
 
 #[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all, err)]
@@ -32,17 +32,14 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     cookie_jar: CookieJar,
-    query: Option<Query<Params>>,
+    Query(query): Query<Params>,
 ) -> Result<impl IntoResponse, FancyError> {
-    let mut form_state = FormState::default();
+    let mut form_state = FormState::from_form(&query);
 
     // If we have a code in query, find it in the database
-    if let Some(Query(params)) = query {
-        // Save the form state so that we echo back the code
-        form_state = FormState::from_form(&params);
-
+    if let Some(code) = &query.code {
         // Find the code in the database
-        let code = params.code.to_uppercase();
+        let code = code.to_uppercase();
         let grant = repo
             .oauth2_device_code_grant()
             .find_by_user_code(&code)

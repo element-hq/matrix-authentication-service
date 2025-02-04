@@ -19,6 +19,7 @@ mod debug;
 mod doctor;
 mod manage;
 mod server;
+mod syn2mas;
 mod templates;
 mod worker;
 
@@ -48,6 +49,11 @@ enum Subcommand {
 
     /// Run diagnostics on the deployment
     Doctor(self::doctor::Options),
+
+    /// Migrate from Synapse's built-in auth system to MAS.
+    #[clap(name = "syn2mas")]
+    // Box<> is to work around a 'large size difference between variants' lint
+    Syn2Mas(Box<self::syn2mas::Options>),
 }
 
 #[derive(Parser, Debug)]
@@ -75,6 +81,7 @@ impl Options {
             Some(S::Templates(c)) => Box::pin(c.run(figment)).await,
             Some(S::Debug(c)) => Box::pin(c.run(figment)).await,
             Some(S::Doctor(c)) => Box::pin(c.run(figment)).await,
+            Some(S::Syn2Mas(c)) => Box::pin(c.run(figment)).await,
             None => Box::pin(self::server::Options::default().run(figment)).await,
         }
     }
