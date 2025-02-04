@@ -141,6 +141,8 @@ pub async fn restore_constraint(
         definition,
         is_fk: _,
     } = &constraint;
+    info!("rebuilding constraint {name}");
+
     sqlx::query(&format!(
         "ALTER TABLE {table_name} ADD CONSTRAINT {name} {definition};"
     ))

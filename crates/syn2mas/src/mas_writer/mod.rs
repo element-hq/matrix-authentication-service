@@ -397,7 +397,7 @@ impl<'conn> MasWriter<'conn> {
     ///
     /// - If the database connection experiences an error.
     #[allow(clippy::missing_panics_doc)] // not real
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase<'conn>,
         index_restore_conn: PgConnection,
@@ -526,7 +526,7 @@ impl<'conn> MasWriter<'conn> {
         })
     }
 
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(name = "syn2mas.mas_writer.restore_task", skip_all)]
     fn restore_task(
         mut conn: PgConnection,
     ) -> (
@@ -551,9 +551,10 @@ impl<'conn> MasWriter<'conn> {
                     }
                 }
 
+                tracing::info!("Restoring task done");
                 Ok(())
             }
-            .instrument(tracing::info_span!("restore")),
+            .instrument(tracing::info_span!("syn2mas.mas_writer.restore_loop")),
         );
 
         (constraint_restore_tx, index_restore_tx, restorer_task)

@@ -8,8 +8,10 @@
 //! This module provides safety checks to run against a MAS database before
 //! running the Synapse-to-MAS migration.
 
+use mas_storage_pg::ExecuteExt;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
+use tracing::Instrument as _;
 
 use super::{is_syn2mas_in_progress, locking::LockedMasDatabase, MAS_TABLES_AFFECTED_BY_MIGRATION};
 
@@ -46,7 +48,7 @@ pub enum Error {
 /// - If any MAS tables involved in the migration are not empty.
 /// - If we can't check whether syn2mas is already in progress on this database
 ///   or not.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(name = "syn2mas.mas_pre_migration_checks", skip_all)]
 pub async fn mas_pre_migration_checks<'a>(
     mas_connection: &mut LockedMasDatabase<'a>,
 ) -> Result<(), Error> {
@@ -62,8 +64,11 @@ pub async fn mas_pre_migration_checks<'a>(
     // empty database.
 
     for &table in MAS_TABLES_AFFECTED_BY_MIGRATION {
-        let row_present = sqlx::query(&format!("SELECT 1 AS dummy FROM {table} LIMIT 1"))
+        let query = format!("SELECT 1 AS dummy FROM {table} LIMIT 1");
+        let span = tracing::info_span!("db.query", db.query.text = query);
+        let row_present = sqlx::query(&query)
             .fetch_optional(mas_connection.as_mut())
+            .instrument(span)
             .await
             .into_maybe_not_mas(table)?
             .is_some();
