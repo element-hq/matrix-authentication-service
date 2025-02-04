@@ -62,7 +62,7 @@
       "email_exists_error": "Die eingegebene E-Mail-Adresse ist diesem Konto bereits zugeordnet",
       "email_field_help": "Fügen Sie eine alternative E-Mail-Adresse hinzu, mit der Sie auf dieses Konto zugreifen können.",
       "email_field_label": "E-Mail-Adresse hinzufügen",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Die eingegebene E-Mail-Adresse wird bereits verwendet",
       "email_invalid_alert": {
         "text": "Die eingegebene E-Mail-Adresse ist ungültig",
         "title": "Ungültige Email-Adresse"
@@ -101,7 +101,7 @@
       "web": "Web"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet."
     },
     "end_session_button": {
       "confirmation_modal_title": "Sind Sie sicher, dass Sie diese Sitzung abmelden möchten?",
@@ -116,7 +116,7 @@
     "error_boundary_title": "Etwas ist schief gelaufen",
     "errors": {
       "field_required": "Dieses Feld ist erforderlich",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie ein paar Minuten und versuchen Sie es erneut."
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -175,15 +175,15 @@
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "To create a new password, start over and select ”Forgot password“.",
-        "title": "The link to reset your password has already been used"
+        "subtitle": "Um ein neues Passwort zu erstellen, beginnen Sie von vorne und wählen Sie „Passwort vergessen“.",
+        "title": "Der Link zum Zurücksetzen Ihres Passworts wurde bereits verwendet"
       },
       "expired": {
-        "resend_email": "Resend email",
-        "subtitle": "Request a new email that will be sent to: {{email}}",
-        "title": "The link to reset your password has expired"
+        "resend_email": "E-Mail erneut senden",
+        "subtitle": "Fordern Sie eine neue E-Mail an, die gesendet wird an: {{email}}",
+        "title": "Der Link zum Zurücksetzen Ihres Passworts ist abgelaufen"
       },
-      "subtitle": "Choose a new password for your account.",
+      "subtitle": "Wählen Sie ein neues Passwort für Ihr Konto.",
       "title": "Passwort zurücksetzen"
     },
     "password_strength": {
@@ -335,8 +335,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Der Code ist abgelaufen. Bitte fordern Sie einen neuen Code an.",
+        "title": "Code abgelaufen"
       },
       "code_field_error": "Code nicht erkannt",
       "code_field_label": "6-stelliger Code",

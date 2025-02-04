@@ -6,7 +6,7 @@
     "create_account": "Skapa konto",
     "sign_in": "Logga in",
     "sign_out": "Logga ut",
-    "skip": "Skip",
+    "skip": "Hoppa över",
     "start_over": "Börja om",
     "submit": "Skicka in"
   },
@@ -55,8 +55,8 @@
       "new": "Nytt lösenord"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "Detta är namnet andra människor kommer att se. Du kan ändra detta när som helst.",
+      "headline": "Välj ditt visningsnamn"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> vill få tillgång till ditt konto.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Om du har glömt dina kontouppgifter kan du återställa ditt konto. Du kan också börja om och använda en annan e-postadress.",
+      "title": "E-postadressen <span>%(email)s</span> är redan i bruk"
     },
     "emails": {
       "greeting": "Hej %(username)s,",

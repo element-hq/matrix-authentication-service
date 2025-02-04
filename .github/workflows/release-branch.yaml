@@ -73,6 +73,14 @@ jobs:
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
 
+  merge-back:
+    uses: ./.github/workflows/merge-back.yaml
+    needs: [tag]
+    with:
+      sha: ${{ needs.tag.outputs.sha }}
+    secrets:
+      BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+
   branch:
     name: Create a new release branch
     runs-on: ubuntu-22.04
@@ -103,20 +111,3 @@ jobs:
               sha,
             });
             console.log(`Created branch ${branch} from ${sha}`);
-
-      - name: Checkout the code
-        uses: actions/checkout@v4.2.2
-        with:
-          ref: "release/v${{ needs.compute-version.outputs.short }}"
-
-      - name: Open a pull request to merge the branch into main
-        env:
-          VERSION: ${{ needs.compute-version.outputs.short }}
-          GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --title "Release branch $VERSION" \
-            --body "This pull request was automatically created by the release workflow. It merges the release branch back to main." \
-            --base main \
-            --head "release/v$VERSION" \
-            --label "T-Task"

@@ -62,7 +62,7 @@
       "email_exists_error": "Den angivna e-postadressen har redan lagts till i det här kontot",
       "email_field_help": "Lägg till en alternativ e-postadress som du kan använda för att komma åt det här kontot.",
       "email_field_label": "Lägg till e-post",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Det angivna e-postmeddelandet används redan",
       "email_invalid_alert": {
         "text": "Den angivna e-postadressen är ogiltig",
         "title": "Ogiltig e-postadress"
@@ -101,7 +101,7 @@
       "web": "Webb"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "E-postadressen {{email}} är redan i bruk."
     },
     "end_session_button": {
       "confirmation_modal_title": "Är du säker på att du vill avsluta denna session?",
@@ -335,8 +335,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Koden har upphört att gälla. Begär en ny kod.",
+        "title": "Koden har löpt ut"
       },
       "code_field_error": "Koden känns inte igen",
       "code_field_label": "6-siffrig kod",

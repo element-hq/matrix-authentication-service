@@ -6,7 +6,7 @@
     "create_account": "Konto erstellen",
     "sign_in": "Anmelden",
     "sign_out": "Abmelden",
-    "skip": "Skip",
+    "skip": "Überspringen",
     "start_over": "Von vorne anfangen",
     "submit": "Absenden"
   },
@@ -55,8 +55,8 @@
       "new": "Neues Passwort"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "Dies ist der Name, den andere Leute sehen werden. Sie können dies jederzeit ändern.",
+      "headline": "Wähle deinen Anzeigenamen"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf Ihr Konto zugreifen.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Wenn Sie Ihre Kontoinformationen vergessen haben, können Sie Ihr Konto wiederherstellen. Sie können auch von vorne beginnen und eine andere E-Mail-Adresse verwenden.",
+      "title": "Die E-Mail-Adresse <span> %(email)s </span> wird bereits verwendet"
     },
     "emails": {
       "greeting": "Hallo %(username)s,",

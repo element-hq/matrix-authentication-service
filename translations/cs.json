@@ -6,7 +6,7 @@
     "create_account": "Vytvořit účet",
     "sign_in": "Přihlásit se",
     "sign_out": "Odhlásit",
-    "skip": "Skip",
+    "skip": "Přeskočit",
     "start_over": "Začít znovu",
     "submit": "Odeslat"
   },
@@ -55,8 +55,8 @@
       "new": "Nové heslo"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "To je jméno, které uvidí ostatní lidé. Můžete to kdykoli změnit.",
+      "headline": "Zvolte zobrazované jméno"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> na adrese <span>%(redirect_uri)s</span> chce získat přístup k vašemu účtu.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Pokud jste zapomněli přihlašovací údaje k účtu, můžete účet obnovit. Můžete také začít znovu a použít jinou e-mailovou adresu.",
+      "title": "E-mailová adresa <span>%(email)s</span> je již používána"
     },
     "emails": {
       "greeting": "Dobrý den, %(username)s,",

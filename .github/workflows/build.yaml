@@ -10,7 +10,9 @@ on:
 
   # Only run for pull requests if relevant files were changed
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - 'release/**'
     paths:
       - Dockerfile
       - docker-bake.hcl
@@ -31,9 +33,36 @@ env:
   DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
 jobs:
+  compute-version:
+    name: Compute version using git describe
+    runs-on: ubuntu-24.04
+    outputs:
+      describe: ${{ steps.git.outputs.describe }}
+      timestamp: ${{ steps.git.outputs.timestamp }}
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          # Need a full clone so that `git describe` reports the right version
+          fetch-depth: 0
+
+      - name: Compute version and timestamp out of git history
+        id: git
+        run: |
+          echo "describe=$(git describe --tags --match 'v*.*.*' --always)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(git log -1 --format=%ct)" >> $GITHUB_OUTPUT
+
+
   build-binaries:
     name: Build binaries
     runs-on: ubuntu-22.04
+
+    needs:
+      - compute-version
+
+    env:
+      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
 
     permissions:
       contents: read
@@ -135,6 +164,13 @@ jobs:
       contents: read
       packages: write
       id-token: write
+
+    needs:
+      - compute-version
+
+    env:
+      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
 
     steps:
       - name: Docker meta

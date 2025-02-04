@@ -62,7 +62,7 @@
       "email_exists_error": "Zadaný e-mail je již přidán k tomuto účtu",
       "email_field_help": "Přidejte alternativní e-mail, který můžete použít pro přístup k tomuto účtu.",
       "email_field_label": "Přidat e-mail",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Zadaný e-mail se již používá",
       "email_invalid_alert": {
         "text": "Zadaný email je neplatný",
         "title": "Neplatný e-mail"
@@ -102,7 +102,7 @@
       "web": "Web"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "E-mailová adresa {{email}} se již používá."
     },
     "end_session_button": {
       "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
@@ -338,8 +338,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Platnost kódu vypršela. Vyžádejte si prosím nový kód.",
+        "title": "Kód vypršel"
       },
       "code_field_error": "Kód nebyl rozpoznán",
       "code_field_label": "6místný kód",
