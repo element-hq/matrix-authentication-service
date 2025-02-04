@@ -389,7 +389,7 @@ impl MasWriter {
     ///
     /// - If the database connection experiences an error.
     #[allow(clippy::missing_panics_doc)] // not real
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase,
         mut writer_connections: Vec<PgConnection>,

@@ -80,6 +80,7 @@ enum Subcommand {
 const NUM_WRITER_CONNECTIONS: usize = 8;
 
 impl Options {
+    #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         warn!(
