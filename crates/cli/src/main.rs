@@ -12,7 +12,6 @@ use anyhow::Context;
 use clap::Parser;
 use mas_config::{ConfigurationSection, TelemetryConfig};
 use sentry_tracing::EventFilter;
-use tikv_jemallocator::Jemalloc;
 use tracing_indicatif::{
     filter::{hide_indicatif_span_fields, IndicatifFilter},
     style::ProgressStyle,
@@ -22,9 +21,6 @@ use tracing_subscriber::{
     filter::LevelFilter, fmt::format::DefaultFields, layer::SubscriberExt, util::SubscriberInitExt,
     EnvFilter, Layer, Registry,
 };
-
-#[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
 
 mod app_state;
 mod commands;
