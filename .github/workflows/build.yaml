@@ -48,17 +48,9 @@ jobs:
           echo "describe=$(git describe --tags --match 'v*.*.*' --always)" >> $GITHUB_OUTPUT
           echo "timestamp=$(git log -1 --format=%ct)" >> $GITHUB_OUTPUT
 
-
-  build-binaries:
-    name: Build binaries
+  build-assets:
+    name: Build assets
     runs-on: ubuntu-22.04
-
-    needs:
-      - compute-version
-
-    env:
-      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
-      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
 
     permissions:
       contents: read
@@ -71,26 +63,6 @@ jobs:
         uses: open-policy-agent/setup-opa@v2.2.0
         with:
           version: 0.64.1
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: |
-            x86_64-unknown-linux-gnu
-            aarch64-unknown-linux-gnu
-
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.7
-
-      - name: Install zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.13.0
-
-      - name: Install cargo-zigbuild
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-zigbuild
 
       - name: Install frontend Node
         uses: actions/setup-node@v4.2.0
@@ -109,45 +81,134 @@ jobs:
         working-directory: ./policies
         run: make
 
+      - name: Prepare assets artifact
+        run: |
+          mkdir -p assets-dist/share
+          cp policies/policy.wasm assets-dist/share/policy.wasm
+          cp frontend/dist/manifest.json assets-dist/share/manifest.json
+          cp -r frontend/dist/ assets-dist/share/assets
+          cp -r templates/ assets-dist/share/templates
+          cp -r translations/ assets-dist/share/translations
+          cp LICENSE assets-dist/LICENSE
+          chmod -R u=rwX,go=rX assets-dist/
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: assets
+          path: assets-dist
+
+  build-binaries:
+    name: Build binaries
+    runs-on: ubuntu-22.04
+
+    needs:
+      - compute-version
+
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-gnu
+
+    env:
+      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: |
+            ${{ matrix.target }}
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.7
+
+      - name: Install zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.13.0
+
+      - name: Install cargo-zigbuild
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+
       - name: Build the binary
         run: |
           cargo zigbuild \
             --release \
-            --target x86_64-unknown-linux-gnu.2.17 \
-            --target aarch64-unknown-linux-gnu.2.17 \
+            --target ${{ matrix.target }}.2.17 \
             --no-default-features \
             --features dist \
             -p mas-cli
 
-      - name: Create one archive per architecture
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: binary-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/mas-cli
+
+  assemble-archives:
+    name: Assemble release archives
+    runs-on: ubuntu-22.04
+
+    needs:
+      - build-assets
+      - build-binaries
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download assets
+        uses: actions/download-artifact@v4
+        with:
+          name: assets
+          path: assets-dist
+
+      - name: Download binary x86_64
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-x86_64-unknown-linux-gnu
+          path: binary-x86_64
+
+      - name: Download binary aarch64
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-aarch64-unknown-linux-gnu
+          path: binary-aarch64
+
+      - name: Create final archives
         run: |
           for arch in x86_64 aarch64; do
-            # Create one directory per architecture
-            mkdir -p dist/${arch}/share/
-            # Copy the artifacts to the right place
-            cp policies/policy.wasm dist/${arch}/share/policy.wasm
-            cp frontend/dist/manifest.json dist/${arch}/share/manifest.json
-            cp -r frontend/dist/ dist/${arch}/share/assets
-            cp -r templates/ dist/${arch}/share/templates
-            cp -r translations/ dist/${arch}/share/translations
-            cp LICENSE dist/${arch}/LICENSE
+            mkdir -p dist/${arch}/share
+            cp -r assets-dist/share/* dist/${arch}/share/
+            cp assets-dist/LICENSE dist/${arch}/LICENSE
+            cp binary-$arch/mas-cli dist/${arch}/mas-cli
             chmod -R u=rwX,go=rX dist/${arch}/
-
-            # Copy the binary to the right place
-            cp target/${arch}-unknown-linux-gnu/release/mas-cli dist/${arch}/
             chmod u=rwx,go=rx dist/${arch}/mas-cli
-
-            # Create the archive
             tar -czvf mas-cli-${arch}-linux.tar.gz --owner=0 --group=0 -C dist/${arch}/ .
           done
 
-      - name: Upload the artifacts
+      - name: Upload aarch64 archive
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: binaries
-          path: |
-            mas-cli-aarch64-linux.tar.gz
-            mas-cli-x86_64-linux.tar.gz
+          name: mas-cli-aarch64-linux
+          path: mas-cli-aarch64-linux.tar.gz
+
+      - name: Upload x86_64 archive
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: mas-cli-x86_64-linux
+          path: mas-cli-x86_64-linux.tar.gz
 
   build-image:
     name: Build and push Docker image
@@ -325,15 +386,16 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs:
-      - build-binaries
+      - assemble-archives
       - build-image
       - syn2mas
     steps:
       - name: Download the artifacts from the previous job
         uses: actions/download-artifact@v4
         with:
-          name: binaries
+          pattern: mas-cli-*
           path: artifacts
+          merge-multiple: true
 
       - name: Prepare a release
         uses: softprops/action-gh-release@v2
@@ -387,19 +449,19 @@ jobs:
     name: Update the unstable release
     runs-on: ubuntu-24.04
     needs:
-      - build-binaries
+      - assemble-archives
       - build-image
     if: github.ref == 'refs/heads/main'
 
     permissions:
       contents: write
-
     steps:
       - name: Download the artifacts from the previous job
         uses: actions/download-artifact@v4
         with:
-          name: binaries
+          pattern: mas-cli-*
           path: artifacts
+          merge-multiple: true
 
       - name: Update unstable git tag
         uses: actions/github-script@v7.0.1
