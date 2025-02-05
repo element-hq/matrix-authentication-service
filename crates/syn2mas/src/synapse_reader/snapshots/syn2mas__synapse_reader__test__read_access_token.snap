@@ -1,0 +1,17 @@
+---
+source: crates/syn2mas/src/synapse_reader/mod.rs
+expression: access_tokens
+---
+{
+    SynapseAccessToken {
+        user_id: FullUserId(
+            "@alice:example.com",
+        ),
+        device_id: Some(
+            "ADEVICE",
+        ),
+        token: "syt_aaaaaaaaaaaaaa_aaaa",
+        valid_until_ms: None,
+        last_validated: None,
+    },
+}

@@ -12,7 +12,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Row, Transaction, Type};
+use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Transaction, Type};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -187,8 +187,10 @@ pub struct SynapseUser {
     pub deactivated: SynapseBool,
     /// When the user was created
     pub creation_ts: SecondsTimestamp,
-    // TODO ...
-    // TODO is_guest
+    /// Whether the user is a guest.
+    /// Note that not all numeric user IDs are guests; guests can upgrade their
+    /// account!
+    pub is_guest: SynapseBool,
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
 }
 
@@ -209,19 +211,59 @@ pub struct SynapseExternalId {
     pub external_id: String,
 }
 
+/// Row of the `devices` table in Synapse.
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SynapseDevice {
+    pub user_id: FullUserId,
+    pub device_id: String,
+    pub display_name: Option<String>,
+    pub last_seen: Option<MillisecondsTimestamp>,
+    pub ip: Option<String>,
+    pub user_agent: Option<String>,
+}
+
+/// Row of the `access_tokens` table in Synapse.
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SynapseAccessToken {
+    pub user_id: FullUserId,
+    pub device_id: Option<String>,
+    pub token: String,
+    pub valid_until_ms: Option<MillisecondsTimestamp>,
+    pub last_validated: Option<MillisecondsTimestamp>,
+}
+
+/// Row of the `refresh_tokens` table in Synapse.
+#[derive(Clone, Debug, FromRow, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SynapseRefreshableTokenPair {
+    pub user_id: FullUserId,
+    pub device_id: String,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub valid_until_ms: Option<MillisecondsTimestamp>,
+    pub last_validated: Option<MillisecondsTimestamp>,
+}
+
 /// List of Synapse tables that we should acquire an `EXCLUSIVE` lock on.
 ///
 /// This is a safety measure against other processes changing the data
 /// underneath our feet. It's still not a good idea to run Synapse at the same
 /// time as the migration.
 // TODO not complete!
-const TABLES_TO_LOCK: &[&str] = &["users", "user_threepids", "user_external_ids"];
+const TABLES_TO_LOCK: &[&str] = &[
+    "users",
+    "user_threepids",
+    "user_external_ids",
+    "devices",
+    "access_tokens",
+    "refresh_tokens",
+];
 
 /// Number of migratable rows in various Synapse tables.
 /// Used to estimate progress.
 #[derive(Clone, Debug)]
 pub struct SynapseRowCounts {
     pub users: i64,
+    pub devices: i64,
 }
 
 pub struct SynapseReader<'c> {
@@ -292,19 +334,27 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
-        let users = sqlx::query(
+        let users: i64 = sqlx::query_scalar(
             "
             SELECT COUNT(1) FROM users
-            WHERE appservice_id IS NULL AND is_guest = 0
+            WHERE appservice_id IS NULL
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse users")?
-        .try_get::<i64, _>(0)
-        .into_database("couldn't decode count of Synapse users table")?;
+        .into_database("counting Synapse users")?;
 
-        Ok(SynapseRowCounts { users })
+        let devices = sqlx::query_scalar(
+            "
+            SELECT COUNT(1) FROM devices
+            WHERE NOT hidden
+            ",
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("counting Synapse devices")?;
+
+        Ok(SynapseRowCounts { users, devices })
     }
 
     /// Reads Synapse users, excluding application service users (which do not
@@ -313,9 +363,9 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              name, password_hash, admin, deactivated, creation_ts
+              name, password_hash, admin, deactivated, creation_ts, is_guest
             FROM users
-            WHERE appservice_id IS NULL AND is_guest = 0
+            WHERE appservice_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)
@@ -350,6 +400,66 @@ impl<'conn> SynapseReader<'conn> {
         .fetch(&mut *self.txn)
         .map_err(|err| err.into_database("reading Synapse user external IDs"))
     }
+
+    /// Reads devices from the Synapse database.
+    /// Does not include so-called 'hidden' devices, which are just a mechanism
+    /// for storing various signing keys shared between the real devices.
+    pub fn read_devices(&mut self) -> impl Stream<Item = Result<SynapseDevice, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              user_id, device_id, display_name, last_seen, ip, user_agent
+            FROM devices
+            WHERE NOT hidden
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse devices"))
+    }
+
+    /// Reads unrefreshable access tokens from the Synapse database.
+    /// This does not include access tokens used for puppetting users, as those
+    /// are not supported by MAS.
+    pub fn read_unrefreshable_access_tokens(
+        &mut self,
+    ) -> impl Stream<Item = Result<SynapseAccessToken, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
+            FROM access_tokens at0
+            WHERE at0.puppets_user_id IS NULL AND at0.refresh_token_id IS NULL
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse access tokens"))
+    }
+
+    /// Reads (access token, refresh token) pairs from the Synapse database.
+    /// This does not include token pairs which have been made obsolete
+    /// by using the refresh token and then acknowledging the
+    /// successor access token by using it to authenticate a request.
+    ///
+    /// The `expiry_ts` and `ultimate_session_expiry_ts` columns are ignored as
+    /// they are not implemented in MAS.
+    /// Further, they are unused by any real-world deployment to the best of
+    /// our knowledge.
+    pub fn read_refreshable_token_pairs(
+        &mut self,
+    ) -> impl Stream<Item = Result<SynapseRefreshableTokenPair, Error>> + '_ {
+        sqlx::query_as(
+            "
+            SELECT
+              rt0.user_id, rt0.device_id, at0.token AS access_token, rt0.token AS refresh_token, at0.valid_until_ms, at0.last_validated
+            FROM refresh_tokens rt0
+            LEFT JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
+            LEFT JOIN access_tokens at1 ON at1.refresh_token_id = rt0.next_token_id
+            WHERE NOT at1.used OR at1.used IS NULL
+            ",
+        )
+        .fetch(&mut *self.txn)
+        .map_err(|err| err.into_database("reading Synapse refresh tokens"))
+    }
 }
 
 #[cfg(test)]
@@ -361,7 +471,10 @@ mod test {
     use sqlx::{migrate::Migrator, PgPool};
 
     use crate::{
-        synapse_reader::{SynapseExternalId, SynapseThreepid, SynapseUser},
+        synapse_reader::{
+            SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshableTokenPair,
+            SynapseThreepid, SynapseUser,
+        },
         SynapseReader,
     };
 
@@ -414,5 +527,115 @@ mod test {
             .expect("failed to read Synapse external user IDs");
 
         assert_debug_snapshot!(external_ids);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "devices_alice"))]
+    async fn test_read_devices(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let devices: BTreeSet<SynapseDevice> = reader
+            .read_devices()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse devices");
+
+        assert_debug_snapshot!(devices);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "access_token_alice"))]
+    async fn test_read_access_token(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let access_tokens: BTreeSet<SynapseAccessToken> = reader
+            .read_unrefreshable_access_tokens()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse access tokens");
+
+        assert_debug_snapshot!(access_tokens);
+    }
+
+    /// Tests that puppetting access tokens are ignored.
+    #[sqlx::test(
+        migrator = "MIGRATOR",
+        fixtures("user_alice", "access_token_alice_with_puppet")
+    )]
+    async fn test_read_access_token_puppet(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let access_tokens: BTreeSet<SynapseAccessToken> = reader
+            .read_unrefreshable_access_tokens()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse access tokens");
+
+        assert!(access_tokens.is_empty());
+    }
+
+    #[sqlx::test(
+        migrator = "MIGRATOR",
+        fixtures("user_alice", "access_token_alice_with_refresh_token")
+    )]
+    async fn test_read_access_and_refresh_tokens(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let access_tokens: BTreeSet<SynapseAccessToken> = reader
+            .read_unrefreshable_access_tokens()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse access tokens");
+
+        let refresh_tokens: BTreeSet<SynapseRefreshableTokenPair> = reader
+            .read_refreshable_token_pairs()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse refresh tokens");
+
+        assert!(
+            access_tokens.is_empty(),
+            "there are no unrefreshable access tokens"
+        );
+        assert_debug_snapshot!(refresh_tokens);
+    }
+
+    #[sqlx::test(
+        migrator = "MIGRATOR",
+        fixtures("user_alice", "access_token_alice_with_unused_refresh_token")
+    )]
+    async fn test_read_access_and_unused_refresh_tokens(pool: PgPool) {
+        let mut conn = pool.acquire().await.expect("failed to get connection");
+        let mut reader = SynapseReader::new(&mut conn, false)
+            .await
+            .expect("failed to make SynapseReader");
+
+        let access_tokens: BTreeSet<SynapseAccessToken> = reader
+            .read_unrefreshable_access_tokens()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse access tokens");
+
+        let refresh_tokens: BTreeSet<SynapseRefreshableTokenPair> = reader
+            .read_refreshable_token_pairs()
+            .try_collect()
+            .await
+            .expect("failed to read Synapse refresh tokens");
+
+        assert!(
+            access_tokens.is_empty(),
+            "there are no unrefreshable access tokens"
+        );
+        assert_debug_snapshot!(refresh_tokens);
     }
 }

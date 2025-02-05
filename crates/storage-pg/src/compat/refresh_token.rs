@@ -204,16 +204,25 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
             r#"
                 UPDATE compat_refresh_tokens
                 SET consumed_at = $2
-                WHERE compat_refresh_token_id = $1
+                WHERE compat_session_id = $1
+                  AND consumed_at IS NULL
             "#,
-            Uuid::from(compat_refresh_token.id),
+            Uuid::from(compat_refresh_token.session_id),
             consumed_at,
         )
         .traced()
         .execute(&mut *self.conn)
         .await?;
 
-        DatabaseError::ensure_affected_rows(&res, 1)?;
+        // This can affect multiple rows in case we've imported refresh tokens
+        // from Synapse. What we care about is that it at least affected one,
+        // which is what we're checking here
+        if res.rows_affected() == 0 {
+            return Err(DatabaseError::RowsAffected {
+                expected: 1,
+                actual: 0,
+            });
+        }
 
         let compat_refresh_token = compat_refresh_token
             .consume(consumed_at)

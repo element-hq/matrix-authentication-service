@@ -48,6 +48,7 @@ impl<'c> PgCompatSessionRepository<'c> {
 struct CompatSessionLookup {
     compat_session_id: Uuid,
     device_id: Option<String>,
+    human_name: Option<String>,
     user_id: Uuid,
     user_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
@@ -85,6 +86,7 @@ impl TryFrom<CompatSessionLookup> for CompatSession {
             user_id: value.user_id.into(),
             user_session_id: value.user_session_id.map(Ulid::from),
             device,
+            human_name: value.human_name,
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
             user_agent: value.user_agent.map(UserAgent::parse),
@@ -101,6 +103,7 @@ impl TryFrom<CompatSessionLookup> for CompatSession {
 struct CompatSessionAndSsoLoginLookup {
     compat_session_id: Uuid,
     device_id: Option<String>,
+    human_name: Option<String>,
     user_id: Uuid,
     user_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
@@ -143,6 +146,7 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
             state,
             user_id: value.user_id.into(),
             device,
+            human_name: value.human_name,
             user_session_id: value.user_session_id.map(Ulid::from),
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
@@ -286,6 +290,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             r#"
                 SELECT compat_session_id
                      , device_id
+                     , human_name
                      , user_id
                      , user_session_id
                      , created_at
@@ -356,6 +361,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             state: CompatSessionState::default(),
             user_id: user.id,
             device: Some(device),
+            human_name: None,
             user_session_id: browser_session.map(|s| s.id),
             created_at,
             is_synapse_admin,
@@ -452,6 +458,10 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             .expr_as(
                 Expr::col((CompatSessions::Table, CompatSessions::DeviceId)),
                 CompatSessionAndSsoLoginLookupIden::DeviceId,
+            )
+            .expr_as(
+                Expr::col((CompatSessions::Table, CompatSessions::HumanName)),
+                CompatSessionAndSsoLoginLookupIden::HumanName,
             )
             .expr_as(
                 Expr::col((CompatSessions::Table, CompatSessions::UserId)),

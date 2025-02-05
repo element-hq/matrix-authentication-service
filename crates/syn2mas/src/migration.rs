@@ -11,11 +11,15 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{collections::HashMap, pin::pin};
+use std::{
+    collections::{HashMap, HashSet},
+    pin::pin,
+};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::StreamExt as _;
+use mas_storage::Clock;
 use rand::RngCore;
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -25,11 +29,13 @@ use uuid::Uuid;
 
 use crate::{
     mas_writer::{
-        self, MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
+        self, MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
+        MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
         MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
     synapse_reader::{
-        self, ExtractLocalpartError, FullUserId, SynapseExternalId, SynapseThreepid, SynapseUser,
+        self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
+        SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
     SynapseReader,
 };
@@ -66,6 +72,9 @@ pub enum Error {
 struct UsersMigrated {
     /// Lookup table from user localpart to that user's UUID in MAS.
     user_localparts_to_uuid: HashMap<CompactString, Uuid>,
+
+    /// Set of user UUIDs that correspond to Synapse admins
+    synapse_admins: HashSet<Uuid>,
 }
 
 /// Performs a migration from Synapse's database to MAS' database.
@@ -85,6 +94,7 @@ pub async fn migrate(
     synapse: &mut SynapseReader<'_>,
     mas: &mut MasWriter<'_>,
     server_name: &str,
+    clock: &dyn Clock,
     rng: &mut impl RngCore,
     provider_id_mapping: &HashMap<String, Uuid>,
 ) -> Result<(), Error> {
@@ -96,7 +106,7 @@ pub async fn migrate(
         counts
             .users
             .try_into()
-            .expect("More than usize::MAX users — wow!"),
+            .expect("More than usize::MAX users — unable to handle this many!"),
         server_name,
         rng,
     )
@@ -121,6 +131,48 @@ pub async fn migrate(
     )
     .await?;
 
+    // `(MAS user_id, device_id)` mapped to `compat_session` ULID
+    let mut devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid> =
+        HashMap::with_capacity(
+            counts
+                .devices
+                .try_into()
+                .expect("More than usize::MAX devices — unable to handle this many!"),
+        );
+
+    migrate_unrefreshable_access_tokens(
+        synapse,
+        mas,
+        server_name,
+        clock,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &mut devices_to_compat_sessions,
+    )
+    .await?;
+
+    migrate_refreshable_token_pairs(
+        synapse,
+        mas,
+        server_name,
+        clock,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &mut devices_to_compat_sessions,
+    )
+    .await?;
+
+    migrate_devices(
+        synapse,
+        mas,
+        server_name,
+        rng,
+        &migrated_users.user_localparts_to_uuid,
+        &mut devices_to_compat_sessions,
+        &migrated_users.synapse_admins,
+    )
+    .await?;
+
     Ok(())
 }
 
@@ -137,10 +189,18 @@ async fn migrate_users(
     let mut users_stream = pin!(synapse.read_users());
     // TODO is 1:1 capacity enough for a hashmap?
     let mut user_localparts_to_uuid = HashMap::with_capacity(user_count_hint);
+    let mut synapse_admins = HashSet::new();
 
     while let Some(user_res) = users_stream.next().await {
         let user = user_res.into_synapse("reading user")?;
         let (mas_user, mas_password_opt) = transform_user(&user, server_name, rng)?;
+
+        if bool::from(user.admin) {
+            // Note down the fact that this user is a Synapse admin,
+            // because we will grant their existing devices the Synapse admin
+            // flag
+            synapse_admins.insert(mas_user.user_id);
+        }
 
         user_localparts_to_uuid.insert(CompactString::new(&mas_user.username), mas_user.user_id);
 
@@ -165,6 +225,7 @@ async fn migrate_users(
 
     Ok(UsersMigrated {
         user_localparts_to_uuid,
+        synapse_admins,
     })
 }
 
@@ -194,6 +255,9 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_threepids".to_owned(),
                 user: synapse_user_id,
@@ -271,6 +335,9 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_external_ids".to_owned(),
                 user: synapse_user_id,
@@ -313,6 +380,308 @@ async fn migrate_external_ids(
     Ok(())
 }
 
+/// Migrate devices from Synapse to MAS (as compat sessions).
+///
+/// In order to get the right session creation timestamps, the access tokens
+/// must counterintuitively be migrated first, with the ULIDs passed in as
+/// `devices`.
+///
+/// This is because only access tokens store a timestamp that in any way
+/// resembles a creation timestamp.
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_devices(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
+    synapse_admins: &HashSet<Uuid>,
+) -> Result<(), Error> {
+    let mut devices_stream = pin!(synapse.read_devices());
+    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
+
+    while let Some(device_res) = devices_stream.next().await {
+        let SynapseDevice {
+            user_id: synapse_user_id,
+            device_id,
+            display_name,
+            last_seen,
+            ip,
+            user_agent,
+        } = device_res.into_synapse("reading Synapse device")?;
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
+            return Err(Error::MissingUserFromDependentTable {
+                table: "devices".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        let session_id = *devices
+            .entry((user_id, CompactString::new(&device_id)))
+            .or_insert_with(||
+                // We don't have a creation time for this device (as it has no access token),
+                // so use now as a least-evil fallback.
+                Ulid::with_source(rng).into());
+        let created_at = Ulid::from(session_id).datetime().into();
+
+        // As we're using a real IP type in the MAS database, it is possible
+        // that we encounter invalid IP addresses in the Synapse database.
+        // In that case, we should ignore them, but still log a warning.
+        let last_active_ip = ip.and_then(|ip| {
+            ip.parse()
+                .map_err(|e| {
+                    tracing::warn!(
+                        error = &e as &dyn std::error::Error,
+                        mxid = %synapse_user_id,
+                        %device_id,
+                        %ip,
+                        "Failed to parse device IP, ignoring"
+                    );
+                })
+                .ok()
+        });
+
+        // TODO skip access tokens for deactivated users
+        write_buffer
+            .write(
+                mas,
+                MasNewCompatSession {
+                    session_id,
+                    user_id,
+                    device_id: Some(device_id),
+                    human_name: display_name,
+                    created_at,
+                    is_synapse_admin: synapse_admins.contains(&user_id),
+                    last_active_at: last_seen.map(DateTime::from),
+                    last_active_ip,
+                    user_agent,
+                },
+            )
+            .await
+            .into_mas("writing compat sessions")?;
+    }
+
+    write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat sessions")?;
+
+    Ok(())
+}
+
+/// Migrates unrefreshable access tokens (those without an associated refresh
+/// token). Some of these may be deviceless.
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_unrefreshable_access_tokens(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    clock: &dyn Clock,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
+) -> Result<(), Error> {
+    let mut token_stream = pin!(synapse.read_unrefreshable_access_tokens());
+    let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
+    let mut deviceless_session_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
+
+    while let Some(token_res) = token_stream.next().await {
+        let SynapseAccessToken {
+            user_id: synapse_user_id,
+            device_id,
+            token,
+            valid_until_ms,
+            last_validated,
+        } = token_res.into_synapse("reading Synapse access token")?;
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
+            return Err(Error::MissingUserFromDependentTable {
+                table: "access_tokens".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        // It's not always accurate, but last_validated is *often* the creation time of
+        // the device If we don't have one, then use the current time as a
+        // fallback.
+        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
+
+        let session_id = if let Some(device_id) = device_id {
+            // Use the existing device_id if this is the second token for a device
+            *devices
+                .entry((user_id, CompactString::new(&device_id)))
+                .or_insert_with(|| {
+                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng))
+                })
+        } else {
+            // If this is a deviceless access token, create a deviceless compat session
+            // for it (since otherwise we won't create one whilst migrating devices)
+            let deviceless_session_id =
+                Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+            deviceless_session_write_buffer
+                .write(
+                    mas,
+                    MasNewCompatSession {
+                        session_id: deviceless_session_id,
+                        user_id,
+                        device_id: None,
+                        human_name: None,
+                        created_at,
+                        is_synapse_admin: false,
+                        last_active_at: None,
+                        last_active_ip: None,
+                        user_agent: None,
+                    },
+                )
+                .await
+                .into_mas("failed to write deviceless compat sessions")?;
+
+            deviceless_session_id
+        };
+
+        let token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+        // TODO skip access tokens for deactivated users
+        write_buffer
+            .write(
+                mas,
+                MasNewCompatAccessToken {
+                    token_id,
+                    session_id,
+                    access_token: token,
+                    created_at,
+                    expires_at: valid_until_ms.map(DateTime::from),
+                },
+            )
+            .await
+            .into_mas("writing compat access tokens")?;
+    }
+
+    write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat access tokens")?;
+    deviceless_session_write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing deviceless compat sessions")?;
+
+    Ok(())
+}
+
+/// Migrates (access token, refresh token) pairs.
+/// Does not migrate non-refreshable access tokens.
+#[tracing::instrument(skip_all, level = Level::INFO)]
+async fn migrate_refreshable_token_pairs(
+    synapse: &mut SynapseReader<'_>,
+    mas: &mut MasWriter<'_>,
+    server_name: &str,
+    clock: &dyn Clock,
+    rng: &mut impl RngCore,
+    user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
+    devices: &mut HashMap<(Uuid, CompactString), Uuid>,
+) -> Result<(), Error> {
+    let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
+    let mut access_token_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
+    let mut refresh_token_write_buffer =
+        MasWriteBuffer::new(MasWriter::write_compat_refresh_tokens);
+
+    while let Some(token_res) = token_stream.next().await {
+        let SynapseRefreshableTokenPair {
+            user_id: synapse_user_id,
+            device_id,
+            access_token,
+            refresh_token,
+            valid_until_ms,
+            last_validated,
+        } = token_res.into_synapse("reading Synapse refresh token")?;
+
+        let username = synapse_user_id
+            .extract_localpart(server_name)
+            .into_extract_localpart(synapse_user_id.clone())?
+            .to_owned();
+        let Some(user_id) = user_localparts_to_uuid.get(username.as_str()).copied() else {
+            if is_likely_appservice(&username) {
+                continue;
+            }
+            return Err(Error::MissingUserFromDependentTable {
+                table: "refresh_tokens".to_owned(),
+                user: synapse_user_id,
+            });
+        };
+
+        // It's not always accurate, but last_validated is *often* the creation time of
+        // the device If we don't have one, then use the current time as a
+        // fallback.
+        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
+
+        // Use the existing device_id if this is the second token for a device
+        let session_id = *devices
+            .entry((user_id, CompactString::new(&device_id)))
+            .or_insert_with(|| Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng)));
+
+        let access_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+        let refresh_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+
+        // TODO skip access tokens for deactivated users
+        access_token_write_buffer
+            .write(
+                mas,
+                MasNewCompatAccessToken {
+                    token_id: access_token_id,
+                    session_id,
+                    access_token,
+                    created_at,
+                    expires_at: valid_until_ms.map(DateTime::from),
+                },
+            )
+            .await
+            .into_mas("writing compat access tokens")?;
+        refresh_token_write_buffer
+            .write(
+                mas,
+                MasNewCompatRefreshToken {
+                    refresh_token_id,
+                    session_id,
+                    access_token_id,
+                    refresh_token,
+                    created_at,
+                },
+            )
+            .await
+            .into_mas("writing compat refresh tokens")?;
+    }
+
+    access_token_write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat access tokens")?;
+
+    refresh_token_write_buffer
+        .finish(mas)
+        .await
+        .into_mas("writing compat refresh tokens")?;
+
+    Ok(())
+}
+
 fn transform_user(
     user: &SynapseUser,
     server_name: &str,
@@ -333,6 +702,7 @@ fn transform_user(
         created_at: user.creation_ts.into(),
         locked_at: bool::from(user.deactivated).then_some(user.creation_ts.into()),
         can_request_admin: bool::from(user.admin),
+        is_guest: bool::from(user.is_guest),
     };
 
     let mas_password = user
@@ -349,4 +719,16 @@ fn transform_user(
         });
 
     Ok((new_user, mas_password))
+}
+
+/// Returns true if and only if the given localpart looks like it would belong
+/// to an application service user.
+/// The rule here is that it must start with an underscore.
+/// Synapse reserves these by default, but there is no hard rule prohibiting
+/// other namespaces from being reserved, so this is not a robust check.
+// TODO replace with a more robust mechanism, if we even care about this sanity check
+// e.g. read application service registration files.
+#[inline]
+fn is_likely_appservice(localpart: &str) -> bool {
+    localpart.starts_with('_')
 }

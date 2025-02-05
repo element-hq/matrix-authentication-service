@@ -69,7 +69,13 @@ pub trait CompatRefreshTokenRepository: Send + Sync {
         token: String,
     ) -> Result<CompatRefreshToken, Self::Error>;
 
-    /// Consume a compat refresh token
+    /// Consume a compat refresh token.
+    ///
+    /// This also marks other refresh tokens in the same session as consumed.
+    /// This is desirable because the syn2mas migration process can import
+    /// multiple refresh tokens for one device (compat session).
+    /// But once the user uses one of those, the others should no longer
+    /// be valid.
     ///
     /// Returns the consumed compat refresh token
     ///
