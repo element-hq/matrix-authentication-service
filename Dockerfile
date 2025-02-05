@@ -12,7 +12,6 @@ ARG RUSTC_VERSION=1.84.0
 ARG NODEJS_VERSION=20.15.0
 ARG OPA_VERSION=0.64.1
 ARG CARGO_AUDITABLE_VERSION=0.6.6
-ARG CARGO_CHEF_VERSION=0.1.68
 
 ##########################################
 ## Build stage that builds the frontend ##
@@ -56,23 +55,18 @@ RUN --network=none  \
   make -B && \
   chmod a+r ./policy.wasm
 
-##########################################################################
-## Base image with cargo-chef and the right cross-compilation toolchain ##
-##########################################################################
-FROM --platform=${BUILDPLATFORM} docker.io/library/rust:${RUSTC_VERSION}-${DEBIAN_VERSION_NAME} AS toolchain
+########################################
+## Build stage that builds the binary ##
+########################################
+FROM --platform=${BUILDPLATFORM} docker.io/library/rust:${RUSTC_VERSION}-${DEBIAN_VERSION_NAME} AS builder
 
 ARG CARGO_AUDITABLE_VERSION
-ARG CARGO_CHEF_VERSION
 ARG RUSTC_VERSION
 
-# Make cargo use the git cli for fetching dependencies
-ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-
-# Install pinned versions of cargo-chef and cargo-auditable
+# Install pinned versions of cargo-auditable
 # Network access: to fetch dependencies
 RUN --network=default \
   cargo install --locked \
-  cargo-chef@=${CARGO_CHEF_VERSION} \
   cargo-auditable@=${CARGO_AUDITABLE_VERSION}
 
 # Install all cross-compilation targets
@@ -111,35 +105,7 @@ ENV \
 # Set the working directory
 WORKDIR /app
 
-#####################################
-## Run the planner from cargo-chef ##
-#####################################
-FROM --platform=${BUILDPLATFORM} toolchain AS planner
-COPY ./Cargo.toml ./Cargo.lock /app/
-COPY ./crates /app/crates
-RUN --network=none \
-  cargo chef prepare --recipe-path recipe.json --bin crates/cli
-
-########################
-## Actual build stage ##
-########################
-FROM --platform=${BUILDPLATFORM} toolchain AS builder
-
-# Build dependencies
-COPY --from=planner /app/recipe.json recipe.json
-# Network access: cargo-chef cook fetches the dependencies
-RUN --network=default \
-  cargo chef cook \
-  --bin mas-cli \
-  --release \
-  --recipe-path recipe.json \
-  --no-default-features \
-  --features docker \
-  --target x86_64-unknown-linux-gnu \
-  --target aarch64-unknown-linux-gnu \
-  --package mas-cli
-
-# Build the rest
+# Copy the code
 COPY ./ /app
 ENV SQLX_OFFLINE=true
 
