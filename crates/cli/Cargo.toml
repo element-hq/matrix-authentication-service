@@ -20,7 +20,7 @@ bytes.workspace = true
 camino.workspace = true
 clap.workspace = true
 console = "0.15.10"
-dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
+dialoguer = { version = "0.11.0", default-features = false, features = ["fuzzy-select", "password"] }
 dotenvy = "0.15.7"
 figment.workspace = true
 futures-util.workspace = true
@@ -39,7 +39,6 @@ serde_yaml = "0.9.34"
 sqlx.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
-tokio-stream.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 url.workspace = true
@@ -81,7 +80,6 @@ mas-tasks.workspace = true
 mas-templates.workspace = true
 mas-tower.workspace = true
 
-oauth2-types.workspace = true
 syn2mas.workspace = true
 
 [build-dependencies]
