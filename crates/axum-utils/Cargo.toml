@@ -12,7 +12,6 @@ publish = false
 workspace = true
 
 [dependencies]
-async-trait.workspace = true
 axum.workspace = true
 axum-extra.workspace = true
 chrono.workspace = true

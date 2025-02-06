@@ -30,6 +30,7 @@ use opentelemetry_semantic_conventions::{
         NETWORK_TYPE, SERVER_ADDRESS, SERVER_PORT, URL_FULL, URL_SCHEME, USER_AGENT_ORIGINAL,
     },
 };
+use rustls_platform_verifier::ConfigVerifierExt;
 use tokio::time::Instant;
 use tower::{BoxError, Service as _};
 use tracing::Instrument;
@@ -91,9 +92,10 @@ impl reqwest::dns::Resolve for TracingResolver {
 #[must_use]
 pub fn client() -> reqwest::Client {
     // TODO: can/should we limit in-flight requests?
+    let tls_config = rustls::ClientConfig::with_platform_verifier();
     reqwest::Client::builder()
         .dns_resolver(Arc::new(TracingResolver::new()))
-        .use_preconfigured_tls(rustls_platform_verifier::tls_config())
+        .use_preconfigured_tls(tls_config)
         .user_agent(USER_AGENT)
         .timeout(Duration::from_secs(60))
         .connect_timeout(Duration::from_secs(30))

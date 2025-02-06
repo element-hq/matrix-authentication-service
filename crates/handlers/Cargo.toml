@@ -58,7 +58,7 @@ serde_urlencoded = "0.7.1"
 
 # Password hashing
 argon2 = { version = "0.5.3", features = ["password-hash", "std"] }
-bcrypt = "0.16.0"
+bcrypt = { version = "0.16.0", default-features = true }
 pbkdf2 = { version = "0.12.2", features = [
     "password-hash",
     "std",
@@ -107,6 +107,8 @@ zxcvbn = "3.1.0"
 [dev-dependencies]
 insta.workspace = true
 tracing-subscriber.workspace = true
-cookie_store = { version = "0.21.1", default-features = false, features = ["serde_json"] }
+cookie_store = { version = "0.21.1", default-features = false, features = [
+    "serde_json",
+] }
 sqlx.workspace = true
 wiremock.workspace = true
