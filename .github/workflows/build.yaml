@@ -59,27 +59,8 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.64.1
-
-      - name: Install frontend Node
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: 20
-
-      - name: Install frontend Node dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Build policies
-        working-directory: ./policies
-        run: make
+      - uses: ./.github/actions/build-frontend
+      - uses: ./.github/actions/build-policies
 
       - name: Prepare assets artifact
         run: |

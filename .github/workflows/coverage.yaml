@@ -54,18 +54,7 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Install Node
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: 20
-
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build the frontend
-        working-directory: ./frontend
-        run: npm run build
+      - uses: ./.github/actions/build-frontend
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -110,33 +99,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Install toolchain
-        run: |
-          rustup toolchain install stable
-          rustup default stable
-          rustup component add llvm-tools-preview
-
-      - name: Install Node
-        uses: actions/setup-node@v4.2.0
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          node-version: 20
-
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build the frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.64.1
-
-      - name: Compile OPA policies
-        working-directory: ./policies
-        run: make
+          components: llvm-tools-preview
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.7
@@ -145,6 +111,9 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: grcov
+
+      - uses: ./.github/actions/build-frontend
+      - uses: ./.github/actions/build-policies
 
       - name: Run test suite with profiling enabled
         run: |
