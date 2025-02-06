@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@actions/github-script": "github:actions/github-script",
+    "typescript": "^5.7.3"
+  }
+}

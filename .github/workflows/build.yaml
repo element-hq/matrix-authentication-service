@@ -59,27 +59,8 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.64.1
-
-      - name: Install frontend Node
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: 20
-
-      - name: Install frontend Node dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Build policies
-        working-directory: ./policies
-        run: make
+      - uses: ./.github/actions/build-frontend
+      - uses: ./.github/actions/build-policies
 
       - name: Prepare assets artifact
         run: |
@@ -463,21 +444,18 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          sparse-checkout: |
+            .github/scripts
+
       - name: Update unstable git tag
         uses: actions/github-script@v7.0.1
         with:
           script: |
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
-            const sha = process.env.GITHUB_SHA;
-
-            const tag = await github.rest.git.updateRef({
-              owner,
-              repo,
-              force: true,
-              ref: 'tags/unstable',
-              sha,
-            });
-            console.log("Updated tag ref:", tag.data.url);
+            const script = require('./.github/scripts/update-unstable-tag.cjs');
+            await script({ core, github, context });
 
       - name: Update unstable release
         uses: softprops/action-gh-release@v2

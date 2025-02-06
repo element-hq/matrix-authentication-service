@@ -23,9 +23,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install stable
-          rustup default stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.7
@@ -38,7 +36,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4.2.0
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build the documentation
         run: sh misc/build-docs.sh
