@@ -70,6 +70,12 @@ jobs:
 
     needs: [tag, compute-version]
     steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          sparse-checkout: |
+            .github/scripts
+
       - name: Update the release branch
         uses: actions/github-script@v7.0.1
         env:
@@ -78,15 +84,5 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-            const branch = process.env.BRANCH;
-            const sha = process.env.SHA;
-            const ref = `heads/${branch}`;
-
-            await github.rest.git.updateRef({
-              owner,
-              repo,
-              ref,
-              sha,
-            });
-            console.log(`Updated branch ${branch} to ${sha}`);
+            const script = require('./.github/scripts/update-release-branch.cjs');
+            await script({ core, github, context });

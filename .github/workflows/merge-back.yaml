@@ -14,7 +14,16 @@ jobs:
     name: Merge back the reference to main
     runs-on: ubuntu-24.04
 
+    permissions:
+      contents: read
+
     steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+
       - name: Push branch and open a PR
         uses: actions/github-script@v7.0.1
         env:
@@ -22,51 +31,5 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-            const sha = process.env.SHA;
-            const branch = `ref-merge/${sha}`;
-            const ref = `heads/${branch}`;
-
-            await github.rest.git.createRef({
-              owner,
-              repo,
-              ref,
-              sha,
-            });
-            console.log(`Created branch ${branch} to ${sha}`);
-
-            // Create a PR to merge the branch back to main
-            const pr = await github.rest.pulls.create({
-              owner,
-              repo,
-              head: branch,
-              base: 'main',
-              title: `Automatic merge back to main`,
-              body: `This pull request was automatically created by the release workflow. It merges the release branch back to main.`,
-              maintainer_can_modify: true,
-            });
-            console.log(`Created pull request #${pr.data.number} to merge the release branch back to main`);
-            console.log(`PR URL: ${pr.data.html_url}`);
-
-            // Add the `T-Task` label to the PR
-            await github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: pr.data.number,
-              labels: ['T-Task'],
-            });
-
-            // Enable auto-merge on the PR
-            await github.graphql(
-              `
-                mutation AutoMerge($id: ID!) {
-                  enablePullRequestAutoMerge(input: {
-                    pullRequestId: $id,
-                    mergeMethod: MERGE,
-                  }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              { id: pr.data.node_id },
-            );
+            const script = require('./.github/scripts/merge-back.js');
+            await script({ core, github, context });
