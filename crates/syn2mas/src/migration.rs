@@ -414,7 +414,9 @@ async fn migrate_devices(
         // As we're using a real IP type in the MAS database, it is possible
         // that we encounter invalid IP addresses in the Synapse database.
         // In that case, we should ignore them, but still log a warning.
-        let last_active_ip = ip.and_then(|ip| {
+        // One special case: Synapse will record '-' as IP in some cases, we don't want
+        // to log about those
+        let last_active_ip = ip.filter(|ip| ip != "-").and_then(|ip| {
             ip.parse()
                 .map_err(|e| {
                     tracing::warn!(
