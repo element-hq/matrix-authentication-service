@@ -22,7 +22,7 @@ env:
 jobs:
   opa-lint:
     name: Lint and test OPA policies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -51,7 +51,7 @@ jobs:
 
   frontend-lint:
     name: Check frontend style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -76,7 +76,7 @@ jobs:
 
   frontend-test:
     name: Run the frontend test suite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -101,7 +101,7 @@ jobs:
 
   frontend-knip:
     name: Check the frontend for unused dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -126,7 +126,7 @@ jobs:
 
   rustfmt:
     name: Check Rust style
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -147,7 +147,7 @@ jobs:
 
   cargo-deny:
     name: Run `cargo deny` checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       # We need to remove the sccache wrapper because we don't install it in this job
@@ -166,7 +166,7 @@ jobs:
 
   check-schema:
     name: Check schema
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -215,7 +215,7 @@ jobs:
   clippy:
     name: Run Clippy
     needs: [rustfmt, opa-lint]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -249,7 +249,7 @@ jobs:
 
   compile-test-artifacts:
     name: Compile test artifacts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -286,7 +286,7 @@ jobs:
   test:
     name: Run test suite with Rust stable
     needs: [rustfmt, opa-lint, compile-test-artifacts]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -357,7 +357,7 @@ jobs:
 
   syn2mas:
     name: Check syn2mas
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -397,7 +397,7 @@ jobs:
       - check-schema
       - test
       - syn2mas
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: matrix-org/done-action@v3

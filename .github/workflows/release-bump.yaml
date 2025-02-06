@@ -14,7 +14,7 @@ on:
 jobs:
   compute-version:
     name: Compute the next version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -65,7 +65,7 @@ jobs:
 
   update-branch:
     name: Update the release branch
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       pull-requests: write

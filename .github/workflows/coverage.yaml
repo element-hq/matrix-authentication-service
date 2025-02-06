@@ -17,7 +17,7 @@ env:
 jobs:
   opa:
     name: Run OPA test suite with coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -44,7 +44,7 @@ jobs:
 
   frontend:
     name: Run frontend test suite with coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       id-token: write
@@ -82,7 +82,7 @@ jobs:
 
   rust:
     name: Run Rust test suite with coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read

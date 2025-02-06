@@ -5,7 +5,7 @@ on:
 jobs:
   compute-version:
     name: Compute the next minor RC version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -39,7 +39,7 @@ jobs:
 
   localazy:
     name: Create a new branch in Localazy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [compute-version]
 
     permissions:
@@ -83,7 +83,7 @@ jobs:
 
   branch:
     name: Create a new release branch
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: write
