@@ -416,7 +416,7 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               user_id, device_id, display_name, last_seen, ip, user_agent
             FROM devices
-            WHERE NOT hidden
+            WHERE NOT hidden AND device_id != 'guest_device'
             ",
         )
         .fetch(&mut *self.txn)
