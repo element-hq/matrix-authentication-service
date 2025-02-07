@@ -47,9 +47,7 @@ pub enum Error {
 /// - If we can't check whether syn2mas is already in progress on this database
 ///   or not.
 #[tracing::instrument(skip_all)]
-pub async fn mas_pre_migration_checks<'a>(
-    mas_connection: &mut LockedMasDatabase<'a>,
-) -> Result<(), Error> {
+pub async fn mas_pre_migration_checks(mas_connection: &mut LockedMasDatabase) -> Result<(), Error> {
     if is_syn2mas_in_progress(mas_connection.as_mut())
         .await
         .map_err(Error::UnableToCheckInProgress)?

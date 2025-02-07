@@ -92,7 +92,7 @@ struct UsersMigrated {
 #[allow(clippy::implicit_hasher)]
 pub async fn migrate(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
@@ -179,7 +179,7 @@ pub async fn migrate(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_users(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     user_count_hint: usize,
     server_name: &str,
     rng: &mut impl RngCore,
@@ -232,7 +232,7 @@ async fn migrate_users(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_threepids(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
@@ -315,7 +315,7 @@ async fn migrate_threepids(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_external_ids(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
@@ -391,7 +391,7 @@ async fn migrate_external_ids(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_devices(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     rng: &mut impl RngCore,
     user_localparts_to_uuid: &HashMap<CompactString, Uuid>,
@@ -483,7 +483,7 @@ async fn migrate_devices(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
@@ -591,7 +591,7 @@ async fn migrate_unrefreshable_access_tokens(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter<'_>,
+    mas: &mut MasWriter,
     server_name: &str,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
