@@ -30,6 +30,42 @@ pub trait Resource {
     }
 }
 
+/// A user's email address
+#[derive(Serialize, JsonSchema)]
+pub struct UserEmail {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The email address
+    email: String,
+
+    /// When the email address was created/verified
+    created_at: DateTime<Utc>,
+}
+
+impl UserEmail {
+    /// Samples of user emails
+    pub fn samples() -> [Vec<Self>; 1] {
+        [
+            Vec::from(Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                created_at: DateTime::default(),
+                email: "alice@example.com".to_owned(),
+            }),
+        ]
+    }
+}
+
+impl From<mas_data_model::UserEmail> for UserEmail {
+    fn from(email: mas_data_model::UserEmail) -> Self {
+        Self {
+            id: email.id,
+            email: email.email,
+            created_at: email.created_at,
+        }
+    }
+}
+
 /// A user
 #[derive(Serialize, JsonSchema)]
 pub struct User {

@@ -8,8 +8,8 @@ use aide::{transform::TransformOperation, OperationIo};
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
 use ulid::Ulid;
-use mas_storage::{RepositoryAccess};
-use mas_storage::user::{UserEmailRepository};
+use mas_storage::{Pagination, RepositoryAccess};
+use mas_storage::user::{UserEmailFilter, UserEmailRepository};
 use crate::{
     admin::{
         call_context::CallContext,
@@ -19,6 +19,7 @@ use crate::{
     },
     impl_from_error_for_route,
 };
+use crate::admin::model::UserEmail;
 
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
@@ -45,11 +46,11 @@ impl IntoResponse for RouteError {
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
-        .id("getUser")
-        .summary("Get a user")
+        .id("getUserEmails")
+        .summary("Get a user's emails")
         .tag("user")
-        .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
-            let [sample, ..] = User::samples();
+        .response_with::<200, Json<SingleResponse<Vec<UserEmail>>>, _>(|t| {
+            let [sample, ..] = UserEmail::samples();
             let response = SingleResponse::new_canonical(sample);
             t.description("User was found").example(response)
         })
@@ -59,16 +60,24 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.users.get", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.users.get_emails", skip_all, err)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     id: UlidPathParam,
-) -> Result<Json<SingleResponse<User>>, RouteError> {
+) -> Result<Json<SingleResponse<Vec<UserEmail>>>, RouteError> {
     let user = repo
         .user()
         .lookup(*id)
         .await?
         .ok_or(RouteError::NotFound(*id))?;
 
-    Ok(Json(SingleResponse::new_canonical(User::from(user))))
+    let emails: Vec<UserEmail> = repo
+        .user_email()
+        .all(&user)
+        .await?
+        .iter()
+        .map(|e| UserEmail::from(e))
+        .into();
+
+    Ok(Json(SingleResponse::new_canonical(emails)))
 }

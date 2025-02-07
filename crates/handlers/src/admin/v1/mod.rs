@@ -45,6 +45,10 @@ where
             get_with(self::users::get, self::users::get_doc),
         )
         .api_route(
+            "/users/{id}/emails",
+            get_with(self::users::get_emails, self::users::get_emails_doc),
+        )
+        .api_route(
             "/users/{id}/set-password",
             post_with(self::users::set_password, self::users::set_password_doc),
         )

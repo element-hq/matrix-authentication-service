@@ -7,6 +7,7 @@
 mod add;
 mod by_username;
 mod deactivate;
+mod emails;
 mod get;
 mod list;
 mod lock;
@@ -18,6 +19,7 @@ pub use self::{
     add::{doc as add_doc, handler as add},
     by_username::{doc as by_username_doc, handler as by_username},
     deactivate::{doc as deactivate_doc, handler as deactivate},
+    emails::{doc as get_emails_doc, handler as get_emails},
     get::{doc as get_doc, handler as get},
     list::{doc as list_doc, handler as list},
     lock::{doc as lock_doc, handler as lock},
