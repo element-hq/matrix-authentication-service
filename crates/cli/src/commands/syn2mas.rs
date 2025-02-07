@@ -142,7 +142,7 @@ impl Options {
             .await?;
         }
 
-        let Either::Left(mut mas_connection) = LockedMasDatabase::try_new(&mut mas_connection)
+        let Either::Left(mut mas_connection) = LockedMasDatabase::try_new(mas_connection)
             .await
             .context("failed to issue query to lock database")?
         else {

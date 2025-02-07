@@ -15,11 +15,11 @@ static SYN2MAS_ADVISORY_LOCK: LazyLock<PgAdvisoryLock> =
 
 /// A wrapper around a Postgres connection which holds a session-wide advisory
 /// lock preventing concurrent access by other syn2mas instances.
-pub struct LockedMasDatabase<'conn> {
-    inner: PgAdvisoryLockGuard<'static, &'conn mut PgConnection>,
+pub struct LockedMasDatabase {
+    inner: PgAdvisoryLockGuard<'static, PgConnection>,
 }
 
-impl<'conn> LockedMasDatabase<'conn> {
+impl LockedMasDatabase {
     /// Attempts to lock the MAS database against concurrent access by other
     /// syn2mas instances.
     ///
@@ -31,8 +31,8 @@ impl<'conn> LockedMasDatabase<'conn> {
     ///
     /// Errors are returned for underlying database errors.
     pub async fn try_new(
-        mas_connection: &'conn mut PgConnection,
-    ) -> Result<Either<Self, &'conn mut PgConnection>, sqlx::Error> {
+        mas_connection: PgConnection,
+    ) -> Result<Either<Self, PgConnection>, sqlx::Error> {
         SYN2MAS_ADVISORY_LOCK
             .try_acquire(mas_connection)
             .await
@@ -48,12 +48,12 @@ impl<'conn> LockedMasDatabase<'conn> {
     /// # Errors
     ///
     /// Errors are returned for underlying database errors.
-    pub async fn unlock(self) -> Result<&'conn mut PgConnection, sqlx::Error> {
+    pub async fn unlock(self) -> Result<PgConnection, sqlx::Error> {
         self.inner.release_now().await
     }
 }
 
-impl AsMut<PgConnection> for LockedMasDatabase<'_> {
+impl AsMut<PgConnection> for LockedMasDatabase {
     fn as_mut(&mut self) -> &mut PgConnection {
         self.inner.as_mut()
     }
