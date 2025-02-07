@@ -2,6 +2,10 @@
 
 Helps to deal with the configuration
 
+Global options:
+- `--config <config>`: Path to the configuration file.
+- `--help`: Print help.
+
 ## `config check`
 
 Check the validity of configuration files.

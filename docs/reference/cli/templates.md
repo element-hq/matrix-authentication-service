@@ -1,5 +1,9 @@
 # `templates`
 
+Global options:
+- `--config <config>`: Path to the configuration file.
+- `--help`: Print help.
+
 ## `templates check`
 
 Check the validity of the templates loaded by the config.
