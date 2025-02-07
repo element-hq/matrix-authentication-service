@@ -6044,6 +6044,7 @@ name = "syn2mas"
 version = "0.13.0"
 dependencies = [
  "anyhow",
+ "bitflags",
  "camino",
  "chrono",
  "compact_str",

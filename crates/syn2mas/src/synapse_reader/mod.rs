@@ -262,8 +262,8 @@ const TABLES_TO_LOCK: &[&str] = &[
 /// Used to estimate progress.
 #[derive(Clone, Debug)]
 pub struct SynapseRowCounts {
-    pub users: i64,
-    pub devices: i64,
+    pub users: usize,
+    pub devices: usize,
 }
 
 pub struct SynapseReader<'c> {
@@ -334,7 +334,7 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
-        let users: i64 = sqlx::query_scalar(
+        let users: usize = sqlx::query_scalar::<_, i64>(
             "
             SELECT COUNT(1) FROM users
             WHERE appservice_id IS NULL
@@ -342,9 +342,12 @@ impl<'conn> SynapseReader<'conn> {
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse users")?;
+        .into_database("counting Synapse users")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
 
-        let devices = sqlx::query_scalar(
+        let devices = sqlx::query_scalar::<_, i64>(
             "
             SELECT COUNT(1) FROM devices
             WHERE NOT hidden
@@ -352,7 +355,10 @@ impl<'conn> SynapseReader<'conn> {
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse devices")?;
+        .into_database("counting Synapse devices")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
 
         Ok(SynapseRowCounts { users, devices })
     }

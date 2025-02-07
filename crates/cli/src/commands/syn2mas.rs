@@ -233,10 +233,10 @@ impl Options {
                 syn2mas::migrate(
                     &mut reader,
                     &mut writer,
-                    &mas_matrix.homeserver,
+                    mas_matrix.homeserver,
                     &clock,
                     &mut rng,
-                    &provider_id_mappings,
+                    provider_id_mappings,
                 )
                 .await?;
 
