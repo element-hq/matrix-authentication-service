@@ -36,7 +36,7 @@ An example setup could look like this:
     }
     ```
     
-  - Calling `https://example.com/.well-known/openid-configuration` returns a JSON document similar to the following:
+  - Calling `https://auth.example.com/.well-known/openid-configuration` returns a JSON document similar to the following:
 
     ```json
     {
