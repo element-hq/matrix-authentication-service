@@ -58,7 +58,7 @@ syn2mas = { path = "./crates/syn2mas", version = "=0.13.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.14.0"
+version = "0.14.1"
 features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
 # GraphQL server
