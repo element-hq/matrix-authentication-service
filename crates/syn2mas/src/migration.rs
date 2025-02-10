@@ -932,4 +932,12 @@ fn is_likely_appservice(localpart: &str) -> bool {
         || localpart.starts_with("freenode_")
         || localpart.starts_with("slack_")
         || localpart.starts_with("torn_")
+        // HACK(matrix.org): Sender localparts of those appservices
+        || localpart == "bifrost"
+        || localpart == "appservice-irc"
+        || localpart == "oftc-irc"
+        || localpart == "slackbot"
+        || localpart == "snoonet-irc"
+        || localpart == "torn-irc"
+        || localpart == "scalar"
 }
