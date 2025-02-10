@@ -225,7 +225,7 @@ features = ["std"]
 
 # P384 elliptic curve
 [workspace.dependencies.p384]
-version = "0.13.0"
+version = "0.13.1"
 features = ["std"]
 
 # PEM file decoding
