@@ -456,6 +456,12 @@ async fn migrate_threepids(
         } = threepid_res.into_synapse("reading threepid")?;
         let created_at: DateTime<Utc> = added_at.into();
 
+        // HACK(matrix.org): for some reason, m.org has threepids for the :vector.im
+        // server. We skip just skip them.
+        if synapse_user_id.0.ends_with(":vector.im") {
+            continue;
+        }
+
         let username = synapse_user_id
             .extract_localpart(&state.server_name)
             .into_extract_localpart(synapse_user_id.clone())?
