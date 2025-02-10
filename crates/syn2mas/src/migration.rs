@@ -336,7 +336,11 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())
             .map(str::to_owned)
         else {
-            // HACK matrix.org
+            // HACK(matrix.org): for some reason, m.org has threepids for the :vector.im
+            // server. We skip them, and log for potential other servers.
+            if !synapse_user_id.0.ends_with(":vector.im") {
+                tracing::warn!("Unexpected MXID for threepid: {}", synapse_user_id);
+            }
             continue;
         };
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
