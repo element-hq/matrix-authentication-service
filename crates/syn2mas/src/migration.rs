@@ -124,8 +124,8 @@ struct MigrationState {
 /// - Invalid data in the Synapse database.
 #[allow(clippy::implicit_hasher)]
 pub async fn migrate(
-    synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut synapse: SynapseReader<'_>,
+    mas: MasWriter,
     server_name: String,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
@@ -140,12 +140,23 @@ pub async fn migrate(
         provider_id_mapping,
     };
 
-    let state = migrate_users(synapse, mas, state, rng).await?;
-    let state = migrate_threepids(synapse, mas, rng, state).await?;
-    let state = migrate_external_ids(synapse, mas, rng, state).await?;
-    let state = migrate_unrefreshable_access_tokens(synapse, mas, clock, rng, state).await?;
-    let state = migrate_refreshable_token_pairs(synapse, mas, clock, rng, state).await?;
-    let _state = migrate_devices(synapse, mas, rng, state).await?;
+    let (mas, state) = migrate_users(&mut synapse, mas, state, rng).await?;
+    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state).await?;
+    let (mas, state) = migrate_external_ids(&mut synapse, mas, rng, state).await?;
+    let (mas, state) =
+        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state).await?;
+    let (mas, state) =
+        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state).await?;
+    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state).await?;
+
+    synapse
+        .finish()
+        .await
+        .into_synapse("failed to close Synapse reader")?;
+
+    mas.finish()
+        .await
+        .into_mas("failed to finalise MAS database")?;
 
     Ok(())
 }
@@ -153,10 +164,10 @@ pub async fn migrate(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_users(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     mut state: MigrationState,
     rng: &mut impl RngCore,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut user_buffer = MasWriteBuffer::new(MasWriter::write_users);
     let mut password_buffer = MasWriteBuffer::new(MasWriter::write_passwords);
     let mut users_stream = pin!(synapse.read_users());
@@ -185,34 +196,37 @@ async fn migrate_users(
         );
 
         user_buffer
-            .write(mas, mas_user)
+            .write(&mut mas, mas_user)
             .await
             .into_mas("writing user")?;
 
         if let Some(mas_password) = mas_password_opt {
             password_buffer
-                .write(mas, mas_password)
+                .write(&mut mas, mas_password)
                 .await
                 .into_mas("writing password")?;
         }
     }
 
-    user_buffer.finish(mas).await.into_mas("writing users")?;
+    user_buffer
+        .finish(&mut mas)
+        .await
+        .into_mas("writing users")?;
     password_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing passwords")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_threepids(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut email_buffer = MasWriteBuffer::new(MasWriter::write_email_threepids);
     let mut unsupported_buffer = MasWriteBuffer::new(MasWriter::write_unsupported_threepids);
     let mut users_stream = pin!(synapse.read_threepids());
@@ -243,7 +257,7 @@ async fn migrate_threepids(
         if medium == "email" {
             email_buffer
                 .write(
-                    mas,
+                    &mut mas,
                     MasNewEmailThreepid {
                         user_id: user_infos.mas_user_id,
                         user_email_id: Uuid::from(Ulid::from_datetime_with_source(
@@ -259,7 +273,7 @@ async fn migrate_threepids(
         } else {
             unsupported_buffer
                 .write(
-                    mas,
+                    &mut mas,
                     MasNewUnsupportedThreepid {
                         user_id: user_infos.mas_user_id,
                         medium,
@@ -273,15 +287,15 @@ async fn migrate_threepids(
     }
 
     email_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing email threepids")?;
     unsupported_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing unsupported threepids")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 /// # Parameters
@@ -291,10 +305,10 @@ async fn migrate_threepids(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_external_ids(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut write_buffer = MasWriteBuffer::new(MasWriter::write_upstream_oauth_links);
     let mut extids_stream = pin!(synapse.read_user_external_ids());
 
@@ -333,7 +347,7 @@ async fn migrate_external_ids(
 
         write_buffer
             .write(
-                mas,
+                &mut mas,
                 MasNewUpstreamOauthLink {
                     link_id,
                     user_id: user_infos.mas_user_id,
@@ -347,11 +361,11 @@ async fn migrate_external_ids(
     }
 
     write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing threepids")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 /// Migrate devices from Synapse to MAS (as compat sessions).
@@ -365,10 +379,10 @@ async fn migrate_external_ids(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_devices(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut devices_stream = pin!(synapse.read_devices());
     let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
 
@@ -428,7 +442,7 @@ async fn migrate_devices(
 
         write_buffer
             .write(
-                mas,
+                &mut mas,
                 MasNewCompatSession {
                     session_id,
                     user_id: user_infos.mas_user_id,
@@ -446,11 +460,11 @@ async fn migrate_devices(
     }
 
     write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing compat sessions")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 /// Migrates unrefreshable access tokens (those without an associated refresh
@@ -458,11 +472,11 @@ async fn migrate_devices(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut token_stream = pin!(synapse.read_unrefreshable_access_tokens());
     let mut write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
     let mut deviceless_session_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_sessions);
@@ -515,7 +529,7 @@ async fn migrate_unrefreshable_access_tokens(
 
             deviceless_session_write_buffer
                 .write(
-                    mas,
+                    &mut mas,
                     MasNewCompatSession {
                         session_id: deviceless_session_id,
                         user_id: user_infos.mas_user_id,
@@ -538,7 +552,7 @@ async fn migrate_unrefreshable_access_tokens(
 
         write_buffer
             .write(
-                mas,
+                &mut mas,
                 MasNewCompatAccessToken {
                     token_id,
                     session_id,
@@ -552,15 +566,15 @@ async fn migrate_unrefreshable_access_tokens(
     }
 
     write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing compat access tokens")?;
     deviceless_session_write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing deviceless compat sessions")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 /// Migrates (access token, refresh token) pairs.
@@ -568,11 +582,11 @@ async fn migrate_unrefreshable_access_tokens(
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
-    mas: &mut MasWriter,
+    mut mas: MasWriter,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-) -> Result<MigrationState, Error> {
+) -> Result<(MasWriter, MigrationState), Error> {
     let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
     let mut access_token_write_buffer = MasWriteBuffer::new(MasWriter::write_compat_access_tokens);
     let mut refresh_token_write_buffer =
@@ -622,7 +636,7 @@ async fn migrate_refreshable_token_pairs(
 
         access_token_write_buffer
             .write(
-                mas,
+                &mut mas,
                 MasNewCompatAccessToken {
                     token_id: access_token_id,
                     session_id,
@@ -635,7 +649,7 @@ async fn migrate_refreshable_token_pairs(
             .into_mas("writing compat access tokens")?;
         refresh_token_write_buffer
             .write(
-                mas,
+                &mut mas,
                 MasNewCompatRefreshToken {
                     refresh_token_id,
                     session_id,
@@ -649,16 +663,16 @@ async fn migrate_refreshable_token_pairs(
     }
 
     access_token_write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing compat access tokens")?;
 
     refresh_token_write_buffer
-        .finish(mas)
+        .finish(&mut mas)
         .await
         .into_mas("writing compat refresh tokens")?;
 
-    Ok(state)
+    Ok((mas, state))
 }
 
 fn transform_user(
