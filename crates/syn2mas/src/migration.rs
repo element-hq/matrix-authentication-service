@@ -933,6 +933,7 @@ fn is_likely_appservice(localpart: &str) -> bool {
         || localpart.starts_with("slack_")
         || localpart.starts_with("torn_")
         || localpart.starts_with("gitter_")
+        || localpart.starts_with("mozilla_")
         // HACK(matrix.org): Sender localparts of those appservices
         || localpart == "bifrost"
         || localpart == "appservice-irc"
@@ -942,4 +943,5 @@ fn is_likely_appservice(localpart: &str) -> bool {
         || localpart == "torn-irc"
         || localpart == "scalar"
         || localpart == "gitterbot"
+        || localpart == "mozilla-irc"
 }
