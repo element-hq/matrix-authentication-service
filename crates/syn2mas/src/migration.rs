@@ -483,6 +483,12 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have many threepids for unknown users
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_threepids".to_owned(),
                 user: synapse_user_id,
