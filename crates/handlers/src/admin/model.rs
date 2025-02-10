@@ -99,6 +99,54 @@ impl Resource for User {
     }
 }
 
+/// An email address for a user
+#[derive(Serialize, JsonSchema)]
+pub struct UserEmail {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the object was created
+    created_at: DateTime<Utc>,
+
+    /// The ID of the user who owns this email address
+    #[schemars(with = "super::schema::Ulid")]
+    user_id: Ulid,
+
+    /// The email address
+    email: String,
+}
+
+impl Resource for UserEmail {
+    const KIND: &'static str = "user-email";
+    const PATH: &'static str = "/api/admin/v1/user-emails";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl From<mas_data_model::UserEmail> for UserEmail {
+    fn from(value: mas_data_model::UserEmail) -> Self {
+        Self {
+            id: value.id,
+            created_at: value.created_at,
+            user_id: value.user_id,
+            email: value.email,
+        }
+    }
+}
+
+impl UserEmail {
+    pub fn samples() -> [Self; 1] {
+        [Self {
+            id: Ulid::from_bytes([0x01; 16]),
+            created_at: DateTime::default(),
+            user_id: Ulid::from_bytes([0x02; 16]),
+            email: "alice@example.com".to_owned(),
+        }]
+    }
+}
+
 /// A OAuth 2.0 session
 #[derive(Serialize, JsonSchema)]
 pub struct OAuth2Session {

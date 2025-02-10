@@ -16,6 +16,7 @@ use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
 mod oauth2_sessions;
+mod user_emails;
 mod users;
 
 pub fn router<S>() -> ApiRouter<S>
@@ -67,5 +68,13 @@ where
         .api_route(
             "/users/{id}/unlock",
             post_with(self::users::unlock, self::users::unlock_doc),
+        )
+        .api_route(
+            "/user-emails",
+            get_with(self::user_emails::list, self::user_emails::list_doc),
+        )
+        .api_route(
+            "/user-emails/{id}",
+            get_with(self::user_emails::get, self::user_emails::get_doc),
         )
 }
