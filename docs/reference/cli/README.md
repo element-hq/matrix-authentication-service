@@ -15,6 +15,14 @@ Valid levels from least to most verbose are `error`, `warn`, `info`, `debug` and
 Sets the configuration file to load.
 It can be repeated multiple times to merge multiple files together.
 
+### `--help`
+
+Print out help instructions.
+
+### `--version` 
+
+Print the mas cli version.
+
 ---
 
 ```
@@ -33,4 +41,5 @@ Commands:
 Options:
   -c, --config <CONFIG>  Path to the configuration file
   -h, --help             Print help
+  -V, --version          Print version
 ```
