@@ -15,7 +15,7 @@ use std::{pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
-use futures_util::{SinkExt, StreamExt as _, TryStreamExt as _};
+use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_storage::Clock;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
@@ -277,13 +277,18 @@ async fn migrate_users(
         .instrument(tracing::info_span!("ingest_task")),
     );
 
-    synapse
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
         .read_users()
         .map_err(|e| e.into_synapse("reading users"))
         .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
-        .await?;
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
 
     let (mas, state) = task.await.into_join("user write task")??;
+
+    res?;
 
     info!(
         "users migrated in {:.1}s",
@@ -570,13 +575,18 @@ async fn migrate_devices(
         .instrument(tracing::info_span!("ingest_task")),
     );
 
-    synapse
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
         .read_devices()
         .map_err(|e| e.into_synapse("reading devices"))
         .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
-        .await?;
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
 
     let (mas, state) = task.await.into_join("device write task")??;
+
+    res?;
 
     info!(
         "devices migrated in {:.1}s",
@@ -709,13 +719,18 @@ async fn migrate_unrefreshable_access_tokens(
         .instrument(tracing::info_span!("ingest_task")),
     );
 
-    synapse
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
         .read_unrefreshable_access_tokens()
         .map_err(|e| e.into_synapse("reading tokens"))
         .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
-        .await?;
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
 
     let (mas, state) = task.await.into_join("token write task")??;
+
+    res?;
 
     info!(
         "non-refreshable access tokens migrated in {:.1}s",
