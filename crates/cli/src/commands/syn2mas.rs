@@ -220,12 +220,12 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
-                let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
+                let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
                     writer_mas_connections.push(database_connection_from_config(&config).await?);
                 }
-                let mut writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
@@ -235,17 +235,14 @@ impl Options {
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
                 syn2mas::migrate(
-                    &mut reader,
-                    &mut writer,
+                    reader,
+                    writer,
                     mas_matrix.homeserver,
                     &clock,
                     &mut rng,
                     provider_id_mappings,
                 )
                 .await?;
-
-                reader.finish().await?;
-                writer.finish().await?;
 
                 Ok(ExitCode::SUCCESS)
             }
