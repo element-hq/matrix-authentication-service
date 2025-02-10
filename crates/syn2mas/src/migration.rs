@@ -347,6 +347,13 @@ async fn migrate_threepids(
             if is_likely_appservice(&username) {
                 continue;
             }
+
+            // HACK(matrix.org): we seem to have many threepids for unknown users
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_threepids".to_owned(),
                 user: synapse_user_id,
