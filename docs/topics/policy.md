@@ -69,8 +69,8 @@ This is especially important as in the future it will make it possible to implem
 To understand the authorization process and how sessions are created, refer to the [authorization and sessions](./authorization.md) section.
 
 
-[`register.rego`]: https://github.com/matrix-org/matrix-authentication-service/blob/main/policies/register.rego 
-[`email.rego`]: https://github.com/matrix-org/matrix-authentication-service/blob/main/policies/email.rego 
-[`password.rego`]: https://github.com/matrix-org/matrix-authentication-service/blob/main/policies/password.rego 
-[`client_registration.rego`]: https://github.com/matrix-org/matrix-authentication-service/blob/main/policies/client_registration.rego 
-[`authorization_grant.rego`]: https://github.com/matrix-org/matrix-authentication-service/blob/main/policies/authorization_grant.rego
+[`register.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/register.rego 
+[`email.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/email.rego 
+[`password.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/password.rego 
+[`client_registration.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/client_registration.rego 
+[`authorization_grant.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/authorization_grant.rego
