@@ -18,6 +18,7 @@ use crate::passwords::PasswordManager;
 mod compat_sessions;
 mod oauth2_sessions;
 mod user_emails;
+mod user_sessions;
 mod users;
 
 pub fn router<S>() -> ApiRouter<S>
@@ -85,5 +86,13 @@ where
         .api_route(
             "/user-emails/{id}",
             get_with(self::user_emails::get, self::user_emails::get_doc),
+        )
+        .api_route(
+            "/user-sessions",
+            get_with(self::user_sessions::list, self::user_sessions::list_doc),
+        )
+        .api_route(
+            "/user-sessions/{id}",
+            get_with(self::user_sessions::get, self::user_sessions::get_doc),
         )
 }
