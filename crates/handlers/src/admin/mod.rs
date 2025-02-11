@@ -47,6 +47,10 @@ where
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
 {
+    // We *always* want to explicitly set the possible responses, beacuse the
+    // infered ones are not necessarily correct
+    aide::generate::infer_responses(false);
+
     aide::generate::in_context(|ctx| {
         ctx.schema = schemars::gen::SchemaGenerator::new(schemars::gen::SchemaSettings::openapi3());
     });
