@@ -456,3 +456,81 @@ impl Resource for UserSession {
         self.id
     }
 }
+
+/// An upstream OAuth 2.0 link
+#[derive(Serialize, JsonSchema)]
+pub struct UpstreamOAuthLink {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the object was created
+    created_at: DateTime<Utc>,
+
+    /// The ID of the provider
+    #[schemars(with = "super::schema::Ulid")]
+    provider_id: Ulid,
+
+    /// The subject of the upstream account, unique per provider
+    subject: String,
+
+    /// The ID of the user who owns this link, if any
+    #[schemars(with = "Option<super::schema::Ulid>")]
+    user_id: Option<Ulid>,
+
+    /// A human-readable name of the upstream account
+    human_account_name: Option<String>,
+}
+
+impl Resource for UpstreamOAuthLink {
+    const KIND: &'static str = "upstream-oauth-link";
+    const PATH: &'static str = "/api/admin/v1/upstream-oauth-links";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl From<mas_data_model::UpstreamOAuthLink> for UpstreamOAuthLink {
+    fn from(value: mas_data_model::UpstreamOAuthLink) -> Self {
+        Self {
+            id: value.id,
+            created_at: value.created_at,
+            provider_id: value.provider_id,
+            subject: value.subject,
+            user_id: value.user_id,
+            human_account_name: value.human_account_name,
+        }
+    }
+}
+
+impl UpstreamOAuthLink {
+    /// Samples of upstream OAuth 2.0 links
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                created_at: DateTime::default(),
+                provider_id: Ulid::from_bytes([0x02; 16]),
+                subject: "john-42".to_owned(),
+                user_id: Some(Ulid::from_bytes([0x03; 16])),
+                human_account_name: Some("john.doe@example.com".to_owned()),
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                created_at: DateTime::default(),
+                provider_id: Ulid::from_bytes([0x03; 16]),
+                subject: "jane-123".to_owned(),
+                user_id: None,
+                human_account_name: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                created_at: DateTime::default(),
+                provider_id: Ulid::from_bytes([0x04; 16]),
+                subject: "bob@social.example.com".to_owned(),
+                user_id: Some(Ulid::from_bytes([0x05; 16])),
+                human_account_name: Some("bob".to_owned()),
+            },
+        ]
+    }
+}
