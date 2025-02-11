@@ -83,7 +83,7 @@ where
                     ..Tag::default()
                 })
                 .tag(Tag {
-                    name: "user-sessions".to_owned(),
+                    name: "user-session".to_owned(),
                     description: Some("Manage browser sessions of users".to_owned()),
                     ..Tag::default()
                 })
