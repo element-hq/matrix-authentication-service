@@ -906,15 +906,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+          "204": {
+            "description": "Password was set"
           },
           "400": {
             "description": "Password is too weak",

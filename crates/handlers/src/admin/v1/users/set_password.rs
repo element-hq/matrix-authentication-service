@@ -74,7 +74,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .id("setUserPassword")
         .summary("Set the password for a user")
         .tag("user")
-        .response_with::<200, StatusCode, _>(|t| t.description("Password was set"))
+        .response_with::<204, (), _>(|t| t.description("Password was set"))
         .response_with::<400, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::PasswordTooWeak);
             t.description("Password is too weak").example(response)
