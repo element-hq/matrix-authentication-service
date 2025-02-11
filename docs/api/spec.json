@@ -2711,7 +2711,7 @@
       "description": "Manage emails associated with users"
     },
     {
-      "name": "user-sessions",
+      "name": "user-session",
       "description": "Manage browser sessions of users"
     }
   ]
