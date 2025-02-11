@@ -23,5 +23,9 @@ if (!config) {
 }
 
 createRoot(document.getElementById("root") as HTMLElement).render(
-  <SwaggerUI url={config.openapiUrl} oauth2RedirectUrl={config.callbackUrl} />,
+  <SwaggerUI
+    url={config.openapiUrl}
+    deepLinking={true}
+    oauth2RedirectUrl={config.callbackUrl}
+  />,
 );
