@@ -410,7 +410,7 @@ features = ["serde"]
 
 # ULID support
 [workspace.dependencies.ulid]
-version = "1.1.4"
+version = "1.2.0"
 features = ["serde"]
 
 # HTTP mock server
