@@ -16,6 +16,268 @@
     }
   ],
   "paths": {
+    "/api/admin/v1/compat-sessions": {
+      "get": {
+        "tags": [
+          "compat-session"
+        ],
+        "summary": "List compatibility sessions",
+        "description": "Retrieve a list of compatibility sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "operationId": "listCompatSessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[user]",
+            "description": "Retrieve the items for the given user",
+            "schema": {
+              "description": "Retrieve the items for the given user",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[user-session]",
+            "description": "Retrieve the items started from the given browser session",
+            "schema": {
+              "description": "Retrieve the items started from the given browser session",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[status]",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "schema": {
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+              "$ref": "#/components/schemas/CompatSessionStatus",
+              "nullable": true
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of compatibility sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_CompatSession"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "compat-session",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "user_id": "01040G2081040G2081040G2081",
+                        "device_id": "AABBCCDDEE",
+                        "user_session_id": "0H248H248H248H248H248H248H",
+                        "redirect_uri": "https://example.com/redirect",
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "user_agent": "Mozilla/5.0",
+                        "last_active_at": "1970-01-01T00:00:00Z",
+                        "last_active_ip": "1.2.3.4",
+                        "finished_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
+                      }
+                    },
+                    {
+                      "type": "compat-session",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "user_id": "01040G2081040G2081040G2081",
+                        "device_id": "FFGGHHIIJJ",
+                        "user_session_id": "0J289144GJ289144GJ289144GJ",
+                        "redirect_uri": null,
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "user_agent": "Mozilla/5.0",
+                        "last_active_at": "1970-01-01T00:00:00Z",
+                        "last_active_ip": "1.2.3.4",
+                        "finished_at": "1970-01-01T00:00:00Z"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
+                      }
+                    },
+                    {
+                      "type": "compat-session",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "user_id": "01040G2081040G2081040G2081",
+                        "device_id": null,
+                        "user_session_id": null,
+                        "redirect_uri": null,
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "user_agent": null,
+                        "last_active_at": null,
+                        "last_active_ip": null,
+                        "finished_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/compat-sessions/030C1G60R30C1G60R30C1G60R3"
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/compat-sessions?page[first]=3",
+                    "first": "/api/admin/v1/compat-sessions?page[first]=3",
+                    "last": "/api/admin/v1/compat-sessions?page[last]=3",
+                    "next": "/api/admin/v1/compat-sessions?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/compat-sessions/{id}": {
+      "get": {
+        "tags": [
+          "compat-session"
+        ],
+        "summary": "Get a compatibility session",
+        "operationId": "getCompatSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compatibility session was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_CompatSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "compat-session",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "user_id": "01040G2081040G2081040G2081",
+                      "device_id": "AABBCCDDEE",
+                      "user_session_id": "0H248H248H248H248H248H248H",
+                      "redirect_uri": "https://example.com/redirect",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "1.2.3.4",
+                      "finished_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Compatibility session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Compatibility session ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/oauth2-sessions": {
       "get": {
         "tags": [
@@ -1329,16 +1591,11 @@
         "type": "string",
         "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
       },
-      "OAuth2SessionFilter": {
+      "CompatSessionFilter": {
         "type": "object",
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
-          },
-          "filter[client]": {
-            "description": "Retrieve the items for the given client",
             "$ref": "#/components/schemas/ULID",
             "nullable": true
           },
@@ -1347,29 +1604,21 @@
             "$ref": "#/components/schemas/ULID",
             "nullable": true
           },
-          "filter[scope]": {
-            "description": "Retrieve the items with the given scope",
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "filter[status]": {
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-            "$ref": "#/components/schemas/OAuth2SessionStatus",
+            "$ref": "#/components/schemas/CompatSessionStatus",
             "nullable": true
           }
         }
       },
-      "OAuth2SessionStatus": {
+      "CompatSessionStatus": {
         "type": "string",
         "enum": [
           "active",
           "finished"
         ]
       },
-      "PaginatedResponse_for_OAuth2Session": {
+      "PaginatedResponse_for_CompatSession": {
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
@@ -1386,7 +1635,7 @@
             "description": "The list of resources",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
+              "$ref": "#/components/schemas/SingleResource_for_CompatSession"
             }
           },
           "links": {
@@ -1409,7 +1658,7 @@
           }
         }
       },
-      "SingleResource_for_OAuth2Session": {
+      "SingleResource_for_CompatSession": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
         "required": [
@@ -1429,7 +1678,7 @@
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/OAuth2Session"
+            "$ref": "#/components/schemas/CompatSession"
           },
           "links": {
             "description": "Related links",
@@ -1437,62 +1686,72 @@
           }
         }
       },
-      "OAuth2Session": {
-        "description": "A OAuth 2.0 session",
+      "CompatSession": {
+        "description": "A compatibility session for legacy clients",
         "type": "object",
         "required": [
-          "client_id",
           "created_at",
-          "scope"
+          "device_id",
+          "user_id",
+          "user_session_id"
         ],
         "properties": {
+          "user_id": {
+            "description": "The ID of the user that owns this session",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "device_id": {
+            "description": "The Matrix device ID of this session",
+            "$ref": "#/components/schemas/DeviceID"
+          },
+          "user_session_id": {
+            "description": "The ID of the user session that started this session, if any",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "redirect_uri": {
+            "description": "The redirect URI used to login in the client, if it was an SSO login",
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
           "created_at": {
-            "description": "When the object was created",
+            "description": "The time this session was created",
             "type": "string",
             "format": "date-time"
           },
-          "finished_at": {
-            "description": "When the session was finished",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "user_id": {
-            "description": "The ID of the user who owns the session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
-          },
-          "user_session_id": {
-            "description": "The ID of the browser session which started this session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
-          },
-          "client_id": {
-            "description": "The ID of the client which requested this session",
-            "$ref": "#/components/schemas/ULID"
-          },
-          "scope": {
-            "description": "The scope granted for this session",
-            "type": "string"
-          },
           "user_agent": {
-            "description": "The user agent string of the client which started this session",
+            "description": "The user agent string that started this session, if any",
             "type": "string",
             "nullable": true
           },
           "last_active_at": {
-            "description": "The last time the session was active",
+            "description": "The time this session was last active",
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "last_active_ip": {
-            "description": "The last IP address used by the session",
+            "description": "The last IP address recorded for this session",
             "type": "string",
             "format": "ip",
             "nullable": true
+          },
+          "finished_at": {
+            "description": "The time this session was finished",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
+      },
+      "DeviceID": {
+        "title": "Device ID",
+        "examples": [
+          "AABBCCDDEE",
+          "FFGGHHIIJJ"
+        ],
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._~!$&'()*+,;=:&/-]+$"
       },
       "SelfLinks": {
         "description": "Related links",
@@ -1578,6 +1837,173 @@
           "id": {
             "title": "The ID of the resource",
             "$ref": "#/components/schemas/ULID"
+          }
+        }
+      },
+      "SingleResponse_for_CompatSession": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_CompatSession"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "OAuth2SessionFilter": {
+        "type": "object",
+        "properties": {
+          "filter[user]": {
+            "description": "Retrieve the items for the given user",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[client]": {
+            "description": "Retrieve the items for the given client",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[user-session]": {
+            "description": "Retrieve the items started from the given browser session",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[scope]": {
+            "description": "Retrieve the items with the given scope",
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filter[status]": {
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "$ref": "#/components/schemas/OAuth2SessionStatus",
+            "nullable": true
+          }
+        }
+      },
+      "OAuth2SessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "finished"
+        ]
+      },
+      "PaginatedResponse_for_OAuth2Session": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "required": [
+          "data",
+          "links",
+          "meta"
+        ],
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/PaginationLinks"
+          }
+        }
+      },
+      "SingleResource_for_OAuth2Session": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/OAuth2Session"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "OAuth2Session": {
+        "description": "A OAuth 2.0 session",
+        "type": "object",
+        "required": [
+          "client_id",
+          "created_at",
+          "scope"
+        ],
+        "properties": {
+          "created_at": {
+            "description": "When the object was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "finished_at": {
+            "description": "When the session was finished",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "user_id": {
+            "description": "The ID of the user who owns the session",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "user_session_id": {
+            "description": "The ID of the browser session which started this session",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "client_id": {
+            "description": "The ID of the client which requested this session",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "scope": {
+            "description": "The scope granted for this session",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "The user agent string of the client which started this session",
+            "type": "string",
+            "nullable": true
+          },
+          "last_active_at": {
+            "description": "The last time the session was active",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_active_ip": {
+            "description": "The last IP address used by the session",
+            "type": "string",
+            "format": "ip",
+            "nullable": true
           }
         }
       },
@@ -1902,6 +2328,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "compat-session",
+      "description": "Manage compatibility sessions from legacy clients"
+    },
     {
       "name": "oauth2-session",
       "description": "Manage OAuth2 sessions"

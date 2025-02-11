@@ -15,6 +15,7 @@ use mas_storage::BoxRng;
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
+mod compat_sessions;
 mod oauth2_sessions;
 mod user_emails;
 mod users;
@@ -28,6 +29,14 @@ where
     CallContext: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
+        .api_route(
+            "/compat-sessions",
+            get_with(self::compat_sessions::list, self::compat_sessions::list_doc),
+        )
+        .api_route(
+            "/compat-sessions/{id}",
+            get_with(self::compat_sessions::get, self::compat_sessions::get_doc),
+        )
         .api_route(
             "/oauth2-sessions",
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),

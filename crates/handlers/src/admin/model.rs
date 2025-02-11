@@ -7,9 +7,11 @@
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
+use mas_data_model::Device;
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
+use url::Url;
 
 /// A resource, with a type and an ID
 pub trait Resource {
@@ -144,6 +146,123 @@ impl UserEmail {
             user_id: Ulid::from_bytes([0x02; 16]),
             email: "alice@example.com".to_owned(),
         }]
+    }
+}
+
+/// A compatibility session for legacy clients
+#[derive(Serialize, JsonSchema)]
+pub struct CompatSession {
+    #[serde(skip)]
+    pub id: Ulid,
+
+    /// The ID of the user that owns this session
+    #[schemars(with = "super::schema::Ulid")]
+    pub user_id: Ulid,
+
+    /// The Matrix device ID of this session
+    #[schemars(with = "super::schema::Device")]
+    pub device_id: Option<Device>,
+
+    /// The ID of the user session that started this session, if any
+    #[schemars(with = "super::schema::Ulid")]
+    pub user_session_id: Option<Ulid>,
+
+    /// The redirect URI used to login in the client, if it was an SSO login
+    pub redirect_uri: Option<Url>,
+
+    /// The time this session was created
+    pub created_at: DateTime<Utc>,
+
+    /// The user agent string that started this session, if any
+    pub user_agent: Option<String>,
+
+    /// The time this session was last active
+    pub last_active_at: Option<DateTime<Utc>>,
+
+    /// The last IP address recorded for this session
+    pub last_active_ip: Option<std::net::IpAddr>,
+
+    /// The time this session was finished
+    pub finished_at: Option<DateTime<Utc>>,
+}
+
+impl
+    From<(
+        mas_data_model::CompatSession,
+        Option<mas_data_model::CompatSsoLogin>,
+    )> for CompatSession
+{
+    fn from(
+        (session, sso_login): (
+            mas_data_model::CompatSession,
+            Option<mas_data_model::CompatSsoLogin>,
+        ),
+    ) -> Self {
+        let finished_at = session.finished_at();
+        Self {
+            id: session.id,
+            user_id: session.user_id,
+            device_id: session.device,
+            user_session_id: session.user_session_id,
+            redirect_uri: sso_login.map(|sso| sso.redirect_uri),
+            created_at: session.created_at,
+            user_agent: session.user_agent.map(|ua| ua.raw),
+            last_active_at: session.last_active_at,
+            last_active_ip: session.last_active_ip,
+            finished_at,
+        }
+    }
+}
+
+impl Resource for CompatSession {
+    const KIND: &'static str = "compat-session";
+    const PATH: &'static str = "/api/admin/v1/compat-sessions";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl CompatSession {
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                user_id: Ulid::from_bytes([0x01; 16]),
+                device_id: Some("AABBCCDDEE".to_owned().try_into().unwrap()),
+                user_session_id: Some(Ulid::from_bytes([0x11; 16])),
+                redirect_uri: Some("https://example.com/redirect".parse().unwrap()),
+                created_at: DateTime::default(),
+                user_agent: Some("Mozilla/5.0".to_owned()),
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some([1, 2, 3, 4].into()),
+                finished_at: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                user_id: Ulid::from_bytes([0x01; 16]),
+                device_id: Some("FFGGHHIIJJ".to_owned().try_into().unwrap()),
+                user_session_id: Some(Ulid::from_bytes([0x12; 16])),
+                redirect_uri: None,
+                created_at: DateTime::default(),
+                user_agent: Some("Mozilla/5.0".to_owned()),
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some([1, 2, 3, 4].into()),
+                finished_at: Some(DateTime::default()),
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                user_id: Ulid::from_bytes([0x01; 16]),
+                device_id: None,
+                user_session_id: None,
+                redirect_uri: None,
+                created_at: DateTime::default(),
+                user_agent: None,
+                last_active_at: None,
+                last_active_ip: None,
+                finished_at: None,
+            },
+        ]
     }
 }
 
