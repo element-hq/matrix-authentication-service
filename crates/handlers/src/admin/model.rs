@@ -372,3 +372,87 @@ impl Resource for OAuth2Session {
         self.id
     }
 }
+
+/// The browser (cookie) session for a user
+#[derive(Serialize, JsonSchema)]
+pub struct UserSession {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the object was created
+    created_at: DateTime<Utc>,
+
+    /// When the session was finished
+    finished_at: Option<DateTime<Utc>>,
+
+    /// The ID of the user who owns the session
+    #[schemars(with = "super::schema::Ulid")]
+    user_id: Ulid,
+
+    /// The user agent string of the client which started this session
+    user_agent: Option<String>,
+
+    /// The last time the session was active
+    last_active_at: Option<DateTime<Utc>>,
+
+    /// The last IP address used by the session
+    last_active_ip: Option<IpAddr>,
+}
+
+impl From<mas_data_model::BrowserSession> for UserSession {
+    fn from(value: mas_data_model::BrowserSession) -> Self {
+        Self {
+            id: value.id,
+            created_at: value.created_at,
+            finished_at: value.finished_at,
+            user_id: value.user.id,
+            user_agent: value.user_agent.map(|ua| ua.raw),
+            last_active_at: value.last_active_at,
+            last_active_ip: value.last_active_ip,
+        }
+    }
+}
+
+impl UserSession {
+    /// Samples of user sessions
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                created_at: DateTime::default(),
+                finished_at: None,
+                user_id: Ulid::from_bytes([0x02; 16]),
+                user_agent: Some("Mozilla/5.0".to_owned()),
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some("127.0.0.1".parse().unwrap()),
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                created_at: DateTime::default(),
+                finished_at: None,
+                user_id: Ulid::from_bytes([0x03; 16]),
+                user_agent: None,
+                last_active_at: None,
+                last_active_ip: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                created_at: DateTime::default(),
+                finished_at: Some(DateTime::default()),
+                user_id: Ulid::from_bytes([0x04; 16]),
+                user_agent: Some("Mozilla/5.0".to_owned()),
+                last_active_at: Some(DateTime::default()),
+                last_active_ip: Some("127.0.0.1".parse().unwrap()),
+            },
+        ]
+    }
+}
+
+impl Resource for UserSession {
+    const KIND: &'static str = "user-session";
+    const PATH: &'static str = "/api/admin/v1/user-sessions";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}

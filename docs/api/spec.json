@@ -1526,6 +1526,245 @@
           }
         }
       }
+    },
+    "/api/admin/v1/user-sessions": {
+      "get": {
+        "tags": [
+          "user-session"
+        ],
+        "summary": "List user sessions",
+        "description": "Retrieve a list of user sessions (browser sessions).\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "operationId": "listUserSessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[user]",
+            "description": "Retrieve the items for the given user",
+            "schema": {
+              "description": "Retrieve the items for the given user",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[status]",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "schema": {
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+              "$ref": "#/components/schemas/UserSessionStatus",
+              "nullable": true
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of user sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_UserSession"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "user-session",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "finished_at": null,
+                        "user_id": "02081040G2081040G2081040G2",
+                        "user_agent": "Mozilla/5.0",
+                        "last_active_at": "1970-01-01T00:00:00Z",
+                        "last_active_ip": "127.0.0.1"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/user-sessions/01040G2081040G2081040G2081"
+                      }
+                    },
+                    {
+                      "type": "user-session",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "finished_at": null,
+                        "user_id": "030C1G60R30C1G60R30C1G60R3",
+                        "user_agent": null,
+                        "last_active_at": null,
+                        "last_active_ip": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/user-sessions/02081040G2081040G2081040G2"
+                      }
+                    },
+                    {
+                      "type": "user-session",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "finished_at": "1970-01-01T00:00:00Z",
+                        "user_id": "040G2081040G2081040G208104",
+                        "user_agent": "Mozilla/5.0",
+                        "last_active_at": "1970-01-01T00:00:00Z",
+                        "last_active_ip": "127.0.0.1"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/user-sessions?page[first]=3",
+                    "first": "/api/admin/v1/user-sessions?page[first]=3",
+                    "last": "/api/admin/v1/user-sessions?page[last]=3",
+                    "next": "/api/admin/v1/user-sessions?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/user-sessions/{id}": {
+      "get": {
+        "tags": [
+          "user-session"
+        ],
+        "summary": "Get a user session",
+        "operationId": "getUserSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User session was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": null,
+                      "user_id": "02081040G2081040G2081040G2",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-sessions/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-sessions/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2317,6 +2556,140 @@
             "$ref": "#/components/schemas/SelfLinks"
           }
         }
+      },
+      "UserSessionFilter": {
+        "type": "object",
+        "properties": {
+          "filter[user]": {
+            "description": "Retrieve the items for the given user",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[status]": {
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "$ref": "#/components/schemas/UserSessionStatus",
+            "nullable": true
+          }
+        }
+      },
+      "UserSessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "finished"
+        ]
+      },
+      "PaginatedResponse_for_UserSession": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "required": [
+          "data",
+          "links",
+          "meta"
+        ],
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_UserSession"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/PaginationLinks"
+          }
+        }
+      },
+      "SingleResource_for_UserSession": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/UserSession"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "UserSession": {
+        "description": "The browser (cookie) session for a user",
+        "type": "object",
+        "required": [
+          "created_at",
+          "user_id"
+        ],
+        "properties": {
+          "created_at": {
+            "description": "When the object was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "finished_at": {
+            "description": "When the session was finished",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "user_id": {
+            "description": "The ID of the user who owns the session",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "user_agent": {
+            "description": "The user agent string of the client which started this session",
+            "type": "string",
+            "nullable": true
+          },
+          "last_active_at": {
+            "description": "The last time the session was active",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_active_ip": {
+            "description": "The last IP address used by the session",
+            "type": "string",
+            "format": "ip",
+            "nullable": true
+          }
+        }
+      },
+      "SingleResponse_for_UserSession": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UserSession"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
       }
     }
   },
@@ -2343,6 +2716,10 @@
     {
       "name": "user-email",
       "description": "Manage emails associated with users"
+    },
+    {
+      "name": "user-sessions",
+      "description": "Manage browser sessions of users"
     }
   ]
 }

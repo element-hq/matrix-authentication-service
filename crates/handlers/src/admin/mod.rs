@@ -78,6 +78,11 @@ where
                     description: Some("Manage emails associated with users".to_owned()),
                     ..Tag::default()
                 })
+                .tag(Tag {
+                    name: "user-sessions".to_owned(),
+                    description: Some("Manage browser sessions of users".to_owned()),
+                    ..Tag::default()
+                })
                 .security_scheme(
                     "oauth2",
                     SecurityScheme::OAuth2 {
