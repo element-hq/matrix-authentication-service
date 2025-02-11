@@ -46,3 +46,34 @@ impl JsonSchema for Ulid {
         .into()
     }
 }
+
+/// A type to use for schema definitions of device IDs
+///
+/// Use with `#[schemars(with = "crate::admin::schema::Device")]`
+pub struct Device;
+
+impl JsonSchema for Device {
+    fn schema_name() -> String {
+        "DeviceID".to_owned()
+    }
+
+    fn json_schema(_gen: &mut SchemaGenerator) -> Schema {
+        SchemaObject {
+            instance_type: Some(InstanceType::String.into()),
+
+            metadata: Some(Box::new(Metadata {
+                title: Some("Device ID".into()),
+                examples: vec!["AABBCCDDEE".into(), "FFGGHHIIJJ".into()],
+                ..Metadata::default()
+            })),
+
+            string: Some(Box::new(StringValidation {
+                pattern: Some(r"^[A-Za-z0-9._~!$&'()*+,;=:&/-]+$".into()),
+                ..StringValidation::default()
+            })),
+
+            ..SchemaObject::default()
+        }
+        .into()
+    }
+}
