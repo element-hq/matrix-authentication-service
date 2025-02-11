@@ -934,6 +934,7 @@ fn is_likely_appservice(localpart: &str) -> bool {
         || localpart.starts_with("torn_") // Torn IRC bridge
         || localpart.starts_with("gitter_") // Gitter bridge
         || localpart.starts_with("mozilla_") // Mozilla IRC bridge
+        || localpart.starts_with("w3c_") // W3C IRC bridge
         || localpart.starts_with("fs_") // VoIP conference AS
         // HACK(matrix.org): Sender localparts of those appservices
         || localpart == "bifrost"
