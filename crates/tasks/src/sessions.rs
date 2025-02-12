@@ -90,6 +90,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
         let filter = OAuth2SessionFilter::new()
             .with_last_active_before(self.threshold())
             .for_any_user()
+            .only_dynamic_clients()
             .active_only();
 
         let pagination = self.pagination(100);
