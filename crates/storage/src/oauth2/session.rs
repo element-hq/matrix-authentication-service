@@ -31,6 +31,18 @@ impl OAuth2SessionState {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ClientKind {
+    Static,
+    Dynamic,
+}
+
+impl ClientKind {
+    pub fn is_static(self) -> bool {
+        matches!(self, Self::Static)
+    }
+}
+
 /// Filter parameters for listing OAuth 2.0 sessions
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2SessionFilter<'a> {
@@ -39,6 +51,7 @@ pub struct OAuth2SessionFilter<'a> {
     browser_session: Option<&'a BrowserSession>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
+    client_kind: Option<ClientKind>,
     state: Option<OAuth2SessionState>,
     scope: Option<&'a Scope>,
     last_active_before: Option<DateTime<Utc>>,
@@ -117,6 +130,28 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn client(&self) -> Option<&'a Client> {
         self.client
+    }
+
+    /// List only static clients
+    #[must_use]
+    pub fn only_static_clients(mut self) -> Self {
+        self.client_kind = Some(ClientKind::Static);
+        self
+    }
+
+    /// List only dynamic clients
+    #[must_use]
+    pub fn only_dynamic_clients(mut self) -> Self {
+        self.client_kind = Some(ClientKind::Dynamic);
+        self
+    }
+
+    /// Get the client kind filter
+    ///
+    /// Returns [`None`] if no client kind filter was set
+    #[must_use]
+    pub fn client_kind(&self) -> Option<ClientKind> {
+        self.client_kind
     }
 
     /// Only return sessions with a last active time before the given time

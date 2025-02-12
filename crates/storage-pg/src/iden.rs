@@ -84,6 +84,15 @@ pub enum OAuth2Sessions {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "oauth2_clients"]
+pub enum OAuth2Clients {
+    Table,
+    #[iden = "oauth2_client_id"]
+    OAuth2ClientId,
+    IsStatic,
+}
+
+#[derive(sea_query::Iden)]
 #[iden = "upstream_oauth_providers"]
 pub enum UpstreamOAuthProviders {
     Table,

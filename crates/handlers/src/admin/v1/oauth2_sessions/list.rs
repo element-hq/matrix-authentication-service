@@ -46,6 +46,22 @@ impl std::fmt::Display for OAuth2SessionStatus {
     }
 }
 
+#[derive(Deserialize, JsonSchema, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum OAuth2ClientKind {
+    Dynamic,
+    Static,
+}
+
+impl std::fmt::Display for OAuth2ClientKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Dynamic => write!(f, "dynamic"),
+            Self::Static => write!(f, "static"),
+        }
+    }
+}
+
 #[derive(FromRequestParts, Deserialize, JsonSchema, OperationIo)]
 #[serde(rename = "OAuth2SessionFilter")]
 #[aide(input_with = "Query<FilterParams>")]
@@ -60,6 +76,10 @@ pub struct FilterParams {
     #[serde(rename = "filter[client]")]
     #[schemars(with = "Option<crate::admin::schema::Ulid>")]
     client: Option<Ulid>,
+
+    /// Retrieve the items only for a specific client kind
+    #[serde(rename = "filter[client-kind]")]
+    client_kind: Option<OAuth2ClientKind>,
 
     /// Retrieve the items started from the given browser session
     #[serde(rename = "filter[user-session]")]
@@ -92,6 +112,11 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(client) = self.client {
             write!(f, "{sep}filter[client]={client}")?;
+            sep = '&';
+        }
+
+        if let Some(client_kind) = self.client_kind {
+            write!(f, "{sep}filter[client-kind]={client_kind}")?;
             sep = '&';
         }
 
@@ -229,6 +254,12 @@ pub async fn handler(
 
     let filter = match &client {
         Some(client) => filter.for_client(client),
+        None => filter,
+    };
+
+    let filter = match params.client_kind {
+        Some(OAuth2ClientKind::Dynamic) => filter.only_dynamic_clients(),
+        Some(OAuth2ClientKind::Static) => filter.only_static_clients(),
         None => filter,
     };
 

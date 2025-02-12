@@ -359,6 +359,17 @@
           },
           {
             "in": "query",
+            "name": "filter[client-kind]",
+            "description": "Retrieve the items only for a specific client kind",
+            "schema": {
+              "description": "Retrieve the items only for a specific client kind",
+              "$ref": "#/components/schemas/OAuth2ClientKind",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user-session]",
             "description": "Retrieve the items started from the given browser session",
             "schema": {
@@ -2347,6 +2358,11 @@
             "$ref": "#/components/schemas/ULID",
             "nullable": true
           },
+          "filter[client-kind]": {
+            "description": "Retrieve the items only for a specific client kind",
+            "$ref": "#/components/schemas/OAuth2ClientKind",
+            "nullable": true
+          },
           "filter[user-session]": {
             "description": "Retrieve the items started from the given browser session",
             "$ref": "#/components/schemas/ULID",
@@ -2366,6 +2382,13 @@
             "nullable": true
           }
         }
+      },
+      "OAuth2ClientKind": {
+        "type": "string",
+        "enum": [
+          "dynamic",
+          "static"
+        ]
       },
       "OAuth2SessionStatus": {
         "type": "string",

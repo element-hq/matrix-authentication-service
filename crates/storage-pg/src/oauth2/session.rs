@@ -23,7 +23,7 @@ use uuid::Uuid;
 
 use crate::{
     filter::{Filter, StatementExt},
-    iden::OAuth2Sessions,
+    iden::{OAuth2Clients, OAuth2Sessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
     DatabaseError, DatabaseInconsistencyError,
@@ -103,6 +103,26 @@ impl Filter for OAuth2SessionFilter<'_> {
             .add_option(self.client().map(|client| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
                     .eq(Uuid::from(client.id))
+            }))
+            .add_option(self.client_kind().map(|client_kind| {
+                // This builds either a:
+                // `WHERE oauth2_client_id = ANY(...)`
+                // or a `WHERE oauth2_client_id <> ALL(...)`
+                let static_clients = Query::select()
+                    .expr(Expr::col((
+                        OAuth2Clients::Table,
+                        OAuth2Clients::OAuth2ClientId,
+                    )))
+                    .and_where(Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).into())
+                    .from(OAuth2Clients::Table)
+                    .take();
+                if client_kind.is_static() {
+                    Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                        .eq(Expr::any(static_clients))
+                } else {
+                    Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                        .ne(Expr::all(static_clients))
+                }
             }))
             .add_option(self.device().map(|device| {
                 Expr::val(device.to_scope_token().to_string()).eq(PgFunc::any(Expr::col((
