@@ -40,6 +40,10 @@ pub struct FilterParams {
     #[serde(rename = "filter[provider]")]
     #[schemars(with = "Option<crate::admin::schema::Ulid>")]
     provider: Option<Ulid>,
+
+    /// Retrieve the items with the given subject
+    #[serde(rename = "filter[subject]")]
+    subject: Option<String>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -53,6 +57,11 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(provider) = self.provider {
             write!(f, "{sep}filter[provider]={provider}")?;
+            sep = '&';
+        }
+
+        if let Some(subject) = &self.subject {
+            write!(f, "{sep}filter[subject]={subject}")?;
             sep = '&';
         }
 
@@ -162,6 +171,12 @@ pub async fn handler(
 
     let filter = if let Some(provider) = &maybe_provider {
         filter.for_provider(provider)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(subject) = &params.subject {
+        filter.for_subject(subject)
     } else {
         filter
     };
@@ -440,6 +455,46 @@ mod tests {
             "self": "/api/admin/v1/upstream-oauth-links?filter[provider]=01FSHN9AG09NMZYX8MFYH578R9&page[first]=10",
             "first": "/api/admin/v1/upstream-oauth-links?filter[provider]=01FSHN9AG09NMZYX8MFYH578R9&page[first]=10",
             "last": "/api/admin/v1/upstream-oauth-links?filter[provider]=01FSHN9AG09NMZYX8MFYH578R9&page[last]=10"
+          }
+        }
+        "###);
+
+        // Filter by subject
+        let request = Request::get(format!(
+            "/api/admin/v1/upstream-oauth-links?filter[subject]={}",
+            "subject1"
+        ))
+        .bearer(&token)
+        .empty();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 1
+          },
+          "data": [
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0AQZQP8DX40GD59PW",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG09NMZYX8MFYH578R9",
+                "subject": "subject1",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@acme"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[last]=10"
           }
         }
         "###);
