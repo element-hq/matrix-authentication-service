@@ -2457,6 +2457,45 @@
           "format": "uint64",
           "maximum": 86400.0,
           "minimum": 60.0
+        },
+        "inactive_session_expiration": {
+          "description": "Experimetal feature to automatically expire inactive sessions\n\nDisabled by default",
+          "allOf": [
+            {
+              "$ref": "#/definitions/InactiveSessionExpirationConfig"
+            }
+          ]
+        }
+      }
+    },
+    "InactiveSessionExpirationConfig": {
+      "description": "Configuration options for the inactive session expiration feature",
+      "type": "object",
+      "required": [
+        "ttl"
+      ],
+      "properties": {
+        "ttl": {
+          "description": "Time after which an inactive session is automatically finished",
+          "type": "integer",
+          "format": "uint64",
+          "maximum": 7776000.0,
+          "minimum": 600.0
+        },
+        "expire_compat_sessions": {
+          "description": "Should compatibility sessions expire after inactivity",
+          "default": true,
+          "type": "boolean"
+        },
+        "expire_oauth_sessions": {
+          "description": "Should OAuth 2.0 sessions expire after inactivity",
+          "default": true,
+          "type": "boolean"
+        },
+        "expire_user_sessions": {
+          "description": "Should user sessions expire after inactivity",
+          "default": true,
+          "type": "boolean"
         }
       }
     }

@@ -11,7 +11,7 @@ use mas_storage::{
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{
-        ExpireInactiveCompatSessionsJob, ExpireInactiveOAuthSessionsJob,
+        ExpireInactiveCompatSessionsJob, ExpireInactiveOAuthSessionsJob, ExpireInactiveSessionsJob,
         ExpireInactiveUserSessionsJob, QueueJobRepositoryExt, SyncDevicesJob,
     },
     user::BrowserSessionFilter,
@@ -21,6 +21,58 @@ use crate::{
     new_queue::{JobContext, JobError, RunnableJob},
     State,
 };
+
+#[async_trait]
+impl RunnableJob for ExpireInactiveSessionsJob {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let Some(config) = state.site_config().session_expiration.as_ref() else {
+            // Automatic session expiration is disabled
+            return Ok(());
+        };
+
+        let clock = state.clock();
+        let mut rng = state.rng();
+        let now = clock.now();
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+        if let Some(ttl) = config.oauth_session_inactivity_ttl {
+            repo.queue_job()
+                .schedule_job(
+                    &mut rng,
+                    &clock,
+                    ExpireInactiveOAuthSessionsJob::new(now - ttl),
+                )
+                .await
+                .map_err(JobError::retry)?;
+        }
+
+        if let Some(ttl) = config.compat_session_inactivity_ttl {
+            repo.queue_job()
+                .schedule_job(
+                    &mut rng,
+                    &clock,
+                    ExpireInactiveCompatSessionsJob::new(now - ttl),
+                )
+                .await
+                .map_err(JobError::retry)?;
+        }
+
+        if let Some(ttl) = config.user_session_inactivity_ttl {
+            repo.queue_job()
+                .schedule_job(
+                    &mut rng,
+                    &clock,
+                    ExpireInactiveUserSessionsJob::new(now - ttl),
+                )
+                .await
+                .map_err(JobError::retry)?;
+        }
+
+        repo.save().await.map_err(JobError::retry)?;
+
+        Ok(())
+    }
+}
 
 #[async_trait]
 impl RunnableJob for ExpireInactiveOAuthSessionsJob {

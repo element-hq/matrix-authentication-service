@@ -6,6 +6,7 @@
 
 use std::sync::{Arc, LazyLock};
 
+use mas_data_model::SiteConfig;
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
@@ -41,6 +42,7 @@ struct State {
     clock: SystemClock,
     homeserver: Arc<dyn HomeserverConnection<Error = anyhow::Error>>,
     url_builder: UrlBuilder,
+    site_config: SiteConfig,
 }
 
 impl State {
@@ -50,6 +52,7 @@ impl State {
         mailer: Mailer,
         homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
         url_builder: UrlBuilder,
+        site_config: SiteConfig,
     ) -> Self {
         Self {
             pool,
@@ -57,6 +60,7 @@ impl State {
             clock,
             homeserver: Arc::new(homeserver),
             url_builder,
+            site_config,
         }
     }
 
@@ -94,6 +98,10 @@ impl State {
     pub fn url_builder(&self) -> &UrlBuilder {
         &self.url_builder
     }
+
+    pub fn site_config(&self) -> &SiteConfig {
+        &self.site_config
+    }
 }
 
 /// Initialise the workers.
@@ -106,6 +114,7 @@ pub async fn init(
     mailer: &Mailer,
     homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
     url_builder: UrlBuilder,
+    site_config: &SiteConfig,
     cancellation_token: CancellationToken,
     task_tracker: &TaskTracker,
 ) -> Result<(), QueueRunnerError> {
@@ -115,6 +124,7 @@ pub async fn init(
         mailer.clone(),
         homeserver,
         url_builder,
+        site_config.clone(),
     );
     let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
 
@@ -129,6 +139,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
+        .register_handler::<mas_storage::queue::ExpireInactiveSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveCompatSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveUserSessionsJob>()
@@ -136,6 +147,12 @@ pub async fn init(
             "cleanup-expired-tokens",
             "0 0 * * * *".parse()?,
             mas_storage::queue::CleanupExpiredTokensJob,
+        )
+        .add_schedule(
+            "expire-inactive-sessions",
+            // Run this job every 15 minutes
+            "30 */15 * * * *".parse()?,
+            mas_storage::queue::ExpireInactiveSessionsJob,
         );
 
     task_tracker.spawn(worker.run());

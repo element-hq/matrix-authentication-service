@@ -325,6 +325,17 @@ impl InsertableJob for CleanupExpiredTokensJob {
     const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
 }
 
+/// Scheduled job to expire inactive sessions
+///
+/// This job will trigger jobs to expire inactive compat, oauth and user
+/// sessions.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExpireInactiveSessionsJob;
+
+impl InsertableJob for ExpireInactiveSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-sessions";
+}
+
 /// Expire inactive OAuth 2.0 sessions
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExpireInactiveOAuthSessionsJob {

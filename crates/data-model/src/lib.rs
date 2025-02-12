@@ -32,7 +32,7 @@ pub use self::{
         AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, DeviceCodeGrant,
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
-    site_config::{CaptchaConfig, CaptchaService, SiteConfig},
+    site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig, SiteConfig},
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
     },

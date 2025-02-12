@@ -28,6 +28,14 @@ pub struct CaptchaConfig {
     pub secret_key: String,
 }
 
+/// Automatic session expiration configuration
+#[derive(Debug, Clone)]
+pub struct SessionExpirationConfig {
+    pub user_session_inactivity_ttl: Option<Duration>,
+    pub oauth_session_inactivity_ttl: Option<Duration>,
+    pub compat_session_inactivity_ttl: Option<Duration>,
+}
+
 /// Random site configuration we want accessible in various places.
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
@@ -74,4 +82,6 @@ pub struct SiteConfig {
     /// Minimum password complexity, between 0 and 4.
     /// This is a score from zxcvbn.
     pub minimum_password_complexity: u8,
+
+    pub session_expiration: Option<SessionExpirationConfig>,
 }
