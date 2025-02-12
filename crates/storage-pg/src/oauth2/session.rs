@@ -125,6 +125,13 @@ impl Filter for OAuth2SessionFilter<'_> {
                 let scope: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::ScopeList)).contains(scope)
             }))
+            .add_option(self.any_user().map(|any_user| {
+                if any_user {
+                    Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId)).is_not_null()
+                } else {
+                    Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId)).is_null()
+                }
+            }))
             .add_option(self.last_active_after().map(|last_active_after| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::LastActiveAt))
                     .gt(last_active_after)

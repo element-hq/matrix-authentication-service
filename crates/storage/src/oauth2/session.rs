@@ -35,6 +35,7 @@ impl OAuth2SessionState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2SessionFilter<'a> {
     user: Option<&'a User>,
+    any_user: Option<bool>,
     browser_session: Option<&'a BrowserSession>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
@@ -64,6 +65,28 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn user(&self) -> Option<&'a User> {
         self.user
+    }
+
+    /// List sessions which belong to any user
+    #[must_use]
+    pub fn for_any_user(mut self) -> Self {
+        self.any_user = Some(true);
+        self
+    }
+
+    /// List sessions which belong to no user
+    #[must_use]
+    pub fn for_no_user(mut self) -> Self {
+        self.any_user = Some(false);
+        self
+    }
+
+    /// Get the 'any user' filter
+    ///
+    /// Returns [`None`] if no 'any user' filter was set
+    #[must_use]
+    pub fn any_user(&self) -> Option<bool> {
+        self.any_user
     }
 
     /// List sessions started by a specific browser session
