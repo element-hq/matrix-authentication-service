@@ -711,4 +711,19 @@ experimental:
 
   # Time-to-live of compatibility access tokens in seconds, when refresh tokens are supported. Defaults to 300, 5 minutes.
   #compat_token_ttl: 300
+
+  # Experimental feature to automatically expire inactive sessions
+  # Disabled by default
+  #inactive_session_expiration:
+     # Time after which an inactive session is automatically finished in seconds
+     #ttl: 32400
+
+     # Should compatibility sessions expire after inactivity. Defaults to true.
+     #expire_compat_sessions: true
+
+     # Should OAuth 2.0 sessions expire after inactivity. Defaults to true.
+     #expire_oauth_sessions: true
+
+     # Should user sessions expire after inactivity. Defaults to true.
+     #expire_user_sessions: true
 ```
