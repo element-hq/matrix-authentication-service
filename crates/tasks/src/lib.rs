@@ -22,6 +22,7 @@ mod email;
 mod matrix;
 mod new_queue;
 mod recovery;
+mod sessions;
 mod user;
 
 static METER: LazyLock<Meter> = LazyLock::new(|| {
@@ -128,6 +129,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
+        .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .add_schedule(
             "cleanup-expired-tokens",
             "0 0 * * * *".parse()?,
