@@ -11,9 +11,10 @@ use mas_storage::{
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{
-        ExpireInactiveCompatSessionsJob, ExpireInactiveOAuthSessionsJob, QueueJobRepositoryExt,
-        SyncDevicesJob,
+        ExpireInactiveCompatSessionsJob, ExpireInactiveOAuthSessionsJob,
+        ExpireInactiveUserSessionsJob, QueueJobRepositoryExt, SyncDevicesJob,
     },
+    user::BrowserSessionFilter,
 };
 
 use crate::{
@@ -136,6 +137,46 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
             }
 
             repo.compat_session()
+                .finish(&clock, edge)
+                .await
+                .map_err(JobError::retry)?;
+        }
+
+        repo.save().await.map_err(JobError::retry)?;
+
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl RunnableJob for ExpireInactiveUserSessionsJob {
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+        let clock = state.clock();
+        let mut rng = state.rng();
+
+        let filter = BrowserSessionFilter::new()
+            .with_last_active_before(self.threshold())
+            .active_only();
+
+        let pagination = self.pagination(100);
+
+        let page = repo
+            .browser_session()
+            .list(filter, pagination)
+            .await
+            .map_err(JobError::retry)?;
+
+        if let Some(job) = self.next(&page) {
+            tracing::info!("Scheduling job to expire the next batch of inactive sessions");
+            repo.queue_job()
+                .schedule_job(&mut rng, &clock, job)
+                .await
+                .map_err(JobError::retry)?;
+        }
+
+        for edge in page.edges {
+            repo.browser_session()
                 .finish(&clock, edge)
                 .await
                 .map_err(JobError::retry)?;
