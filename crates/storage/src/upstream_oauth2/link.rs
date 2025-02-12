@@ -18,6 +18,7 @@ pub struct UpstreamOAuthLinkFilter<'a> {
     user: Option<&'a User>,
     provider: Option<&'a UpstreamOAuthProvider>,
     provider_enabled: Option<bool>,
+    subject: Option<&'a str>,
 }
 
 impl<'a> UpstreamOAuthLinkFilter<'a> {
@@ -75,6 +76,19 @@ impl<'a> UpstreamOAuthLinkFilter<'a> {
     #[must_use]
     pub const fn provider_enabled(&self) -> Option<bool> {
         self.provider_enabled
+    }
+
+    /// Set the subject filter
+    #[must_use]
+    pub const fn for_subject(mut self, subject: &'a str) -> Self {
+        self.subject = Some(subject);
+        self
+    }
+
+    /// Get the subject filter
+    #[must_use]
+    pub const fn subject(&self) -> Option<&str> {
+        self.subject
     }
 }
 

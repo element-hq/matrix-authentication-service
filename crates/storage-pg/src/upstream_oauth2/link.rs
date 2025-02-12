@@ -101,6 +101,9 @@ impl Filter for UpstreamOAuthLinkFilter<'_> {
                         .take(),
                 ))
             }))
+            .add_option(self.subject().map(|subject| {
+                Expr::col((UpstreamOAuthLinks::Table, UpstreamOAuthLinks::Subject)).eq(subject)
+            }))
     }
 }
 
