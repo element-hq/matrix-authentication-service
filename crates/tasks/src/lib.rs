@@ -129,6 +129,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
+        .register_handler::<mas_storage::queue::ExpireInactiveCompatSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .add_schedule(
             "cleanup-expired-tokens",

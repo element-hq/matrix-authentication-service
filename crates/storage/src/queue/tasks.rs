@@ -4,7 +4,9 @@
 // Please see LICENSE in the repository root for full details.
 
 use chrono::{DateTime, Utc};
-use mas_data_model::{Device, Session, User, UserEmailAuthentication, UserRecoverySession};
+use mas_data_model::{
+    CompatSession, Device, Session, User, UserEmailAuthentication, UserRecoverySession,
+};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
@@ -377,4 +379,61 @@ impl ExpireInactiveOAuthSessionsJob {
 
 impl InsertableJob for ExpireInactiveOAuthSessionsJob {
     const QUEUE_NAME: &'static str = "expire-inactive-oauth-sessions";
+}
+
+/// Expire inactive compatibility sessions
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExpireInactiveCompatSessionsJob {
+    threshold: DateTime<Utc>,
+    after: Option<Ulid>,
+}
+
+impl ExpireInactiveCompatSessionsJob {
+    /// Create a new job to expire inactive compatibility sessions
+    ///
+    /// # Parameters
+    ///
+    /// * `threshold` - The threshold to expire sessions at
+    #[must_use]
+    pub fn new(threshold: DateTime<Utc>) -> Self {
+        Self {
+            threshold,
+            after: None,
+        }
+    }
+
+    /// Get the threshold to expire sessions at
+    #[must_use]
+    pub fn threshold(&self) -> DateTime<Utc> {
+        self.threshold
+    }
+
+    /// Get the pagination cursor
+    #[must_use]
+    pub fn pagination(&self, batch_size: usize) -> Pagination {
+        let pagination = Pagination::first(batch_size);
+        if let Some(after) = self.after {
+            pagination.after(after)
+        } else {
+            pagination
+        }
+    }
+
+    /// Get the next job given the page returned by the database
+    #[must_use]
+    pub fn next(&self, page: &Page<CompatSession>) -> Option<Self> {
+        if !page.has_next_page {
+            return None;
+        }
+
+        let last_edge = page.edges.last()?;
+        Some(Self {
+            threshold: self.threshold,
+            after: Some(last_edge.id),
+        })
+    }
+}
+
+impl InsertableJob for ExpireInactiveCompatSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-compat-sessions";
 }
