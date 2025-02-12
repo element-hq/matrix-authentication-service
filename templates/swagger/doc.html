@@ -18,10 +18,10 @@ Please see LICENSE in the repository root for full details.
         callbackUrl: "{{ callback_url | add_slashes | safe }}",
       };
     </script>
-    {{ include_asset('src/swagger.tsx') | indent(4) | safe }}
+    {{ include_asset('src/swagger.ts') | indent(4) | safe }}
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="swagger-ui"></div>
   </body>
 </html>

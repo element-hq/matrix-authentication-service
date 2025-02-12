@@ -8,7 +8,7 @@ import type { KnipConfig } from "knip";
 export default {
   entry: [
     "src/main.tsx",
-    "src/swagger.tsx",
+    "src/swagger.ts",
     "src/routes/*",
     "i18next-parser.config.ts",
   ],
