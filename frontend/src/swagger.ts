@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { SwaggerUIBundle, SwaggerUIStandalonePreset } from "swagger-ui-dist";
+import { SwaggerUIBundle } from "swagger-ui-dist";
 import "swagger-ui-dist/swagger-ui.css";
 
 type ApiConfig = {
@@ -14,6 +14,7 @@ type ApiConfig = {
 
 interface IWindow {
   API_CONFIG?: ApiConfig;
+  ui?: SwaggerUIBundle;
 }
 
 const config = typeof window !== "undefined" && (window as IWindow).API_CONFIG;
@@ -21,9 +22,10 @@ if (!config) {
   throw new Error("API_CONFIG is not defined");
 }
 
-SwaggerUIBundle({
-  url: "./spec.json",
+(window as IWindow).ui = SwaggerUIBundle({
+  url: config.openapiUrl,
+  oauth2RedirectUrl: config.callbackUrl,
   dom_id: "#swagger-ui",
   deepLinking: true,
-  presets: [SwaggerUIStandalonePreset],
+  presets: [SwaggerUIBundle.presets.apis],
 });
