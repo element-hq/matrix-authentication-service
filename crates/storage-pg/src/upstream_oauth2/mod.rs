@@ -192,6 +192,7 @@ mod tests {
         let filter = UpstreamOAuthLinkFilter::new()
             .for_user(&user)
             .for_provider(&provider)
+            .for_subject("a-subject")
             .enabled_providers_only();
 
         let links = repo

@@ -17,6 +17,7 @@ use crate::passwords::PasswordManager;
 
 mod compat_sessions;
 mod oauth2_sessions;
+mod upstream_oauth_links;
 mod user_emails;
 mod user_sessions;
 mod users;
@@ -94,5 +95,19 @@ where
         .api_route(
             "/user-sessions/{id}",
             get_with(self::user_sessions::get, self::user_sessions::get_doc),
+        )
+        .api_route(
+            "/upstream-oauth-links",
+            get_with(
+                self::upstream_oauth_links::list,
+                self::upstream_oauth_links::list_doc,
+            ),
+        )
+        .api_route(
+            "/upstream-oauth-links/{id}",
+            get_with(
+                self::upstream_oauth_links::get,
+                self::upstream_oauth_links::get_doc,
+            ),
         )
 }

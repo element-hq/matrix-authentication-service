@@ -1758,6 +1758,252 @@
           }
         }
       }
+    },
+    "/api/admin/v1/upstream-oauth-links": {
+      "get": {
+        "tags": [
+          "upstream-oauth-link"
+        ],
+        "summary": "List upstream OAuth 2.0 links",
+        "description": "Retrieve a list of upstream OAuth 2.0 links.",
+        "operationId": "listUpstreamOAuthLinks",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[user]",
+            "description": "Retrieve the items for the given user",
+            "schema": {
+              "description": "Retrieve the items for the given user",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[provider]",
+            "description": "Retrieve the items for the given provider",
+            "schema": {
+              "description": "Retrieve the items for the given provider",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[subject]",
+            "description": "Retrieve the items with the given subject",
+            "schema": {
+              "description": "Retrieve the items with the given subject",
+              "type": "string",
+              "nullable": true
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of upstream OAuth 2.0 links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_UpstreamOAuthLink"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "upstream-oauth-link",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "provider_id": "02081040G2081040G2081040G2",
+                        "subject": "john-42",
+                        "user_id": "030C1G60R30C1G60R30C1G60R3",
+                        "human_account_name": "john.doe@example.com"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-link",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "provider_id": "030C1G60R30C1G60R30C1G60R3",
+                        "subject": "jane-123",
+                        "user_id": null,
+                        "human_account_name": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-links/02081040G2081040G2081040G2"
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-link",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "provider_id": "040G2081040G2081040G208104",
+                        "subject": "bob@social.example.com",
+                        "user_id": "050M2GA1850M2GA1850M2GA185",
+                        "human_account_name": "bob"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-links/030C1G60R30C1G60R30C1G60R3"
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-links?page[first]=3",
+                    "first": "/api/admin/v1/upstream-oauth-links?page[first]=3",
+                    "last": "/api/admin/v1/upstream-oauth-links?page[last]=3",
+                    "next": "/api/admin/v1/upstream-oauth-links?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or provider was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/upstream-oauth-links/{id}": {
+      "get": {
+        "tags": [
+          "upstream-oauth-link"
+        ],
+        "summary": "Get an upstream OAuth 2.0 link",
+        "operationId": "getUpstreamOAuthLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upstream OAuth 2.0 link was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthLink"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-link",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "provider_id": "02081040G2081040G2081040G2",
+                      "subject": "john-42",
+                      "user_id": "030C1G60R30C1G60R30C1G60R3",
+                      "human_account_name": "john.doe@example.com"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Upstream OAuth 2.0 link was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Upstream OAuth 2.0 Link ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2683,6 +2929,130 @@
             "$ref": "#/components/schemas/SelfLinks"
           }
         }
+      },
+      "UpstreamOAuthLinkFilter": {
+        "type": "object",
+        "properties": {
+          "filter[user]": {
+            "description": "Retrieve the items for the given user",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[provider]": {
+            "description": "Retrieve the items for the given provider",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[subject]": {
+            "description": "Retrieve the items with the given subject",
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedResponse_for_UpstreamOAuthLink": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "required": [
+          "data",
+          "links",
+          "meta"
+        ],
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/PaginationLinks"
+          }
+        }
+      },
+      "SingleResource_for_UpstreamOAuthLink": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/UpstreamOAuthLink"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "UpstreamOAuthLink": {
+        "description": "An upstream OAuth 2.0 link",
+        "type": "object",
+        "required": [
+          "created_at",
+          "provider_id",
+          "subject"
+        ],
+        "properties": {
+          "created_at": {
+            "description": "When the object was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "provider_id": {
+            "description": "The ID of the provider",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "subject": {
+            "description": "The subject of the upstream account, unique per provider",
+            "type": "string"
+          },
+          "user_id": {
+            "description": "The ID of the user who owns this link, if any",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "human_account_name": {
+            "description": "A human-readable name of the upstream account",
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SingleResponse_for_UpstreamOAuthLink": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
       }
     }
   },
@@ -2713,6 +3083,10 @@
     {
       "name": "user-session",
       "description": "Manage browser sessions of users"
+    },
+    {
+      "name": "upstream-oauth-link",
+      "description": "Manage links between local users and identities from upstream OAuth 2.0 providers"
     }
   ]
 }

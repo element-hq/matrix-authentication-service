@@ -7,6 +7,7 @@
 use aide::{
     axum::ApiRouter,
     openapi::{OAuth2Flow, OAuth2Flows, OpenApi, SecurityScheme, Server, Tag},
+    transform::TransformOpenApi,
 };
 use axum::{
     extract::{FromRef, FromRequestParts, State},
@@ -37,6 +38,72 @@ mod v1;
 use self::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
+fn finish(t: TransformOpenApi) -> TransformOpenApi {
+    t.title("Matrix Authentication Service admin API")
+        .tag(Tag {
+            name: "compat-session".to_owned(),
+            description: Some("Manage compatibility sessions from legacy clients".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "oauth2-session".to_owned(),
+            description: Some("Manage OAuth2 sessions".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "user".to_owned(),
+            description: Some("Manage users".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "user-email".to_owned(),
+            description: Some("Manage emails associated with users".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "user-session".to_owned(),
+            description: Some("Manage browser sessions of users".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "upstream-oauth-link".to_owned(),
+            description: Some(
+                "Manage links between local users and identities from upstream OAuth 2.0 providers"
+                    .to_owned(),
+            ),
+            ..Default::default()
+        })
+        .security_scheme(
+            "oauth2",
+            SecurityScheme::OAuth2 {
+                flows: OAuth2Flows {
+                    client_credentials: Some(OAuth2Flow::ClientCredentials {
+                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
+                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
+                        scopes: IndexMap::from([(
+                            "urn:mas:admin".to_owned(),
+                            "Grant access to the admin API".to_owned(),
+                        )]),
+                    }),
+                    authorization_code: Some(OAuth2Flow::AuthorizationCode {
+                        authorization_url: OAuth2AuthorizationEndpoint::PATH.to_owned(),
+                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
+                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
+                        scopes: IndexMap::from([(
+                            "urn:mas:admin".to_owned(),
+                            "Grant access to the admin API".to_owned(),
+                        )]),
+                    }),
+                    implicit: None,
+                    password: None,
+                },
+                description: None,
+                extensions: IndexMap::default(),
+            },
+        )
+        .security_requirement_scopes("oauth2", ["urn:mas:admin"])
+}
+
 pub fn router<S>() -> (OpenApi, Router<S>)
 where
     S: Clone + Send + Sync + 'static,
@@ -58,65 +125,7 @@ where
     let mut api = OpenApi::default();
     let router = ApiRouter::<S>::new()
         .nest("/api/admin/v1", self::v1::router())
-        .finish_api_with(&mut api, |t| {
-            t.title("Matrix Authentication Service admin API")
-                .tag(Tag {
-                    name: "compat-session".to_owned(),
-                    description: Some(
-                        "Manage compatibility sessions from legacy clients".to_owned(),
-                    ),
-                    ..Tag::default()
-                })
-                .tag(Tag {
-                    name: "oauth2-session".to_owned(),
-                    description: Some("Manage OAuth2 sessions".to_owned()),
-                    ..Tag::default()
-                })
-                .tag(Tag {
-                    name: "user".to_owned(),
-                    description: Some("Manage users".to_owned()),
-                    ..Tag::default()
-                })
-                .tag(Tag {
-                    name: "user-email".to_owned(),
-                    description: Some("Manage emails associated with users".to_owned()),
-                    ..Tag::default()
-                })
-                .tag(Tag {
-                    name: "user-session".to_owned(),
-                    description: Some("Manage browser sessions of users".to_owned()),
-                    ..Tag::default()
-                })
-                .security_scheme(
-                    "oauth2",
-                    SecurityScheme::OAuth2 {
-                        flows: OAuth2Flows {
-                            client_credentials: Some(OAuth2Flow::ClientCredentials {
-                                refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                                token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                                scopes: IndexMap::from([(
-                                    "urn:mas:admin".to_owned(),
-                                    "Grant access to the admin API".to_owned(),
-                                )]),
-                            }),
-                            authorization_code: Some(OAuth2Flow::AuthorizationCode {
-                                authorization_url: OAuth2AuthorizationEndpoint::PATH.to_owned(),
-                                refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                                token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                                scopes: IndexMap::from([(
-                                    "urn:mas:admin".to_owned(),
-                                    "Grant access to the admin API".to_owned(),
-                                )]),
-                            }),
-                            implicit: None,
-                            password: None,
-                        },
-                        description: None,
-                        extensions: IndexMap::default(),
-                    },
-                )
-                .security_requirement_scopes("oauth2", ["urn:mas:admin"])
-        });
+        .finish_api_with(&mut api, finish);
 
     let router = router
         // Serve the OpenAPI spec as JSON
