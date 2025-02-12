@@ -10,15 +10,14 @@
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
   <script>
-    window.onload = () => {
-      window.ui = SwaggerUIBundle({
-        url: './spec.json',
-        dom_id: '#swagger-ui',
-        presets: [
-          SwaggerUIBundle.presets.apis,
-        ],
-      });
-    };
+    window.ui = SwaggerUIBundle({
+      url: './spec.json',
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      presets: [
+        SwaggerUIBundle.presets.apis,
+      ],
+    });
   </script>
   </body>
 </html>

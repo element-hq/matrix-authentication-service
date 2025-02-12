@@ -1,12 +1,11 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createRoot } from "react-dom/client";
-import SwaggerUI from "swagger-ui-react";
-import "swagger-ui-react/swagger-ui.css";
+import { SwaggerUIBundle, SwaggerUIStandalonePreset } from "swagger-ui-dist";
+import "swagger-ui-dist/swagger-ui.css";
 
 type ApiConfig = {
   openapiUrl: string;
@@ -22,6 +21,9 @@ if (!config) {
   throw new Error("API_CONFIG is not defined");
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <SwaggerUI url={config.openapiUrl} oauth2RedirectUrl={config.callbackUrl} />,
-);
+SwaggerUIBundle({
+  url: "./spec.json",
+  dom_id: "#swagger-ui",
+  deepLinking: true,
+  presets: [SwaggerUIStandalonePreset],
+});
