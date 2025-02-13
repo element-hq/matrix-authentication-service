@@ -19,7 +19,7 @@ By default, the `issuer` will match the root domain where the service is deploye
 An example setup could look like this:
 
   - The deployment domain is `example.com`, so Matrix IDs look like `@user:example.com`
-  - The issuer chosen is `https://example.com/`
+  - The issuer chosen is `https://auth.example.com/`
   - The homeserver is deployed on `matrix.example.com`
   - The authentication service is deployed on `auth.example.com`
   - Calling `https://example.com/.well-known/matrix/client` returns the following JSON:
@@ -30,7 +30,7 @@ An example setup could look like this:
         "base_url": "https://matrix.example.com"
       },
       "org.matrix.msc2965.authentication": {
-        "issuer": "https://example.com/",
+        "issuer": "https://auth.example.com/",
         "account": "https://auth.example.com/account"
       }
     }
@@ -40,7 +40,7 @@ An example setup could look like this:
 
     ```json
     {
-        "issuer": "https://example.com/",
+        "issuer": "https://auth.example.com/",
         "authorization_endpoint": "https://auth.example.com/authorize",
         "token_endpoint": "https://auth.example.com/oauth2/token",
         "jwks_uri": "https://auth.example.com/oauth2/keys.json",
