@@ -48,7 +48,7 @@ function EmailInUse(): React.ReactElement {
         })}
       />
 
-      <ButtonLink as="a" Icon={IconArrowLeft} kind="tertiary" to="/">
+      <ButtonLink Icon={IconArrowLeft} kind="tertiary" to="/">
         {t("action.back")}
       </ButtonLink>
     </Layout>

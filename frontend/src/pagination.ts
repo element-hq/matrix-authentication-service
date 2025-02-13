@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { useState } from "react";
-import * as z from "zod";
+import * as v from "valibot";
 
 // PageInfo we get on connections from the GraphQL API
 type PageInfo = {
@@ -18,32 +18,32 @@ type PageInfo = {
 export const FIRST_PAGE = Symbol("FIRST_PAGE");
 const LAST_PAGE = Symbol("LAST_PAGE");
 
-export const anyPaginationSchema = z.object({
-  first: z.number().nullish(),
-  after: z.string().nullish(),
-  last: z.number().nullish(),
-  before: z.string().nullish(),
+export const anyPaginationSchema = v.object({
+  first: v.nullish(v.number()),
+  after: v.nullish(v.string()),
+  last: v.nullish(v.number()),
+  before: v.nullish(v.string()),
 });
 
-const forwardPaginationSchema = z.object({
-  first: z.number(),
-  after: z.string().nullish(),
+const forwardPaginationSchema = v.object({
+  first: v.number(),
+  after: v.nullish(v.string()),
 });
 
-const backwardPaginationSchema = z.object({
-  last: z.number(),
-  before: z.string().nullish(),
+const backwardPaginationSchema = v.object({
+  last: v.number(),
+  before: v.nullish(v.string()),
 });
 
-const paginationSchema = z.union([
+const paginationSchema = v.union([
   forwardPaginationSchema,
   backwardPaginationSchema,
 ]);
 
-type ForwardPagination = z.infer<typeof forwardPaginationSchema>;
-type BackwardPagination = z.infer<typeof backwardPaginationSchema>;
-export type Pagination = z.infer<typeof paginationSchema>;
-export type AnyPagination = z.infer<typeof anyPaginationSchema>;
+type ForwardPagination = v.InferOutput<typeof forwardPaginationSchema>;
+type BackwardPagination = v.InferOutput<typeof backwardPaginationSchema>;
+export type Pagination = v.InferOutput<typeof paginationSchema>;
+export type AnyPagination = v.InferOutput<typeof anyPaginationSchema>;
 
 // Check if the pagination is a valid pagination
 const isValidPagination = (

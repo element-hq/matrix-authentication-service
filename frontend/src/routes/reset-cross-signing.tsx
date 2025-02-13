@@ -8,21 +8,21 @@ import {
   Outlet,
   createFileRoute,
 } from "@tanstack/react-router";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
 import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
 import { Button, Text } from "@vector-im/compound-web";
-import * as z from "zod";
+import * as v from "valibot";
 
 import { useTranslation } from "react-i18next";
 import BlockList from "../components/BlockList";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 
-const searchSchema = z.object({
-  deepLink: z.boolean().optional(),
+const searchSchema = v.object({
+  deepLink: v.optional(v.boolean()),
 });
 
 export const Route = createFileRoute("/reset-cross-signing")({
+  validateSearch: searchSchema,
   component: () => (
     <Layout>
       <BlockList>
@@ -31,7 +31,6 @@ export const Route = createFileRoute("/reset-cross-signing")({
     </Layout>
   ),
   errorComponent: ResetCrossSigningError,
-  validateSearch: zodSearchValidator(searchSchema),
 });
 
 function ResetCrossSigningError({
