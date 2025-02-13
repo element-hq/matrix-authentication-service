@@ -10,6 +10,7 @@
     "expand": "Expandera",
     "save": "Spara",
     "save_and_continue": "Spara och fortsätt",
+    "sign_out": "Sign out",
     "start_over": "Börja om"
   },
   "branding": {
@@ -46,6 +47,10 @@
         "change": "Ändra lösenord",
         "change_disabled": "Lösenordsändringar är inaktiverad av administratören.",
         "label": "Lösenord"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
       },
       "title": "Ditt konto"
     },
@@ -271,6 +276,7 @@
       "device_id_label": "Enhets-ID",
       "finished_date": "Slutförd <datetime/>",
       "finished_label": "Slutförda",
+      "generic_browser_session": "Browser session",
       "id_label": "ID",
       "ip_label": "IP-adress",
       "last_active_label": "Senast aktiv",

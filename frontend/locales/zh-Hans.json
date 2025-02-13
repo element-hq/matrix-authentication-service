@@ -10,6 +10,7 @@
     "expand": "Expand",
     "save": "保存",
     "save_and_continue": "保存并继续",
+    "sign_out": "Sign out",
     "start_over": "Start over"
   },
   "branding": {
@@ -46,6 +47,10 @@
         "change": "更改密码",
         "change_disabled": "管理员禁止更改密码。",
         "label": "密码"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
       },
       "title": "你的账户"
     },
@@ -178,7 +183,7 @@
         "title": "The link to reset your password has already been used"
       },
       "expired": {
-        "resend_email": "Resend email",
+        "resend_email": "重新发送电子邮件",
         "subtitle": "Request a new email that will be sent to: {{email}}",
         "title": "The link to reset your password has expired"
       },
@@ -270,6 +275,7 @@
       "device_id_label": "设备 ID",
       "finished_date": "已完成 <datetime/>",
       "finished_label": "已完成",
+      "generic_browser_session": "Browser session",
       "id_label": "ID",
       "ip_label": "IP 地址",
       "last_active_label": "最后活动",

@@ -162,7 +162,7 @@
       "expired": {
         "description": "Demander un nouvel e-mail qui sera envoyé à : <span>%(email)s</span>.",
         "heading": "Le lien pour réinitialiser votre mot de passe a expiré",
-        "resend_email": "Renvoyer un e-mail"
+        "resend_email": "Renvoyer l’e-mail"
       },
       "finish": {
         "confirm": "Entrez de nouveau votre nouveau mot de passe",
@@ -175,7 +175,7 @@
         "change_email": "Essayez une autre adresse e-mail",
         "description": "Nous avons envoyé un e-mail contenant un lien pour réinitialiser votre mot de passe si un compte utilise <span>%(email)s</span>.",
         "heading": "Vérifiez vos e-mails",
-        "resend_email": "Renvoyer un e-mail"
+        "resend_email": "Renvoyer l’e-mail"
       },
       "start": {
         "description": "Un e-mail contenant un lien vous permettant de réinitialiser votre mot de passe vous sera envoyé.",

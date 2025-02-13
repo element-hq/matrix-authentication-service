@@ -10,6 +10,7 @@
     "expand": "Erweitern",
     "save": "Speichern",
     "save_and_continue": "Speichern und fortfahren",
+    "sign_out": "Sign out",
     "start_over": "Neu anfangen"
   },
   "branding": {
@@ -47,6 +48,10 @@
         "change_disabled": "Passwortänderungen wurden vom Administrator deaktiviert.",
         "label": "Passwort"
       },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
+      },
       "title": "Dein Konto"
     },
     "add_email_form": {
@@ -62,7 +67,7 @@
       "email_exists_error": "Die eingegebene E-Mail-Adresse ist diesem Konto bereits zugeordnet",
       "email_field_help": "Fügen Sie eine alternative E-Mail-Adresse hinzu, mit der Sie auf dieses Konto zugreifen können.",
       "email_field_label": "E-Mail-Adresse hinzufügen",
-      "email_in_use_error": "Die eingegebene E-Mail-Adresse wird bereits verwendet",
+      "email_in_use_error": "Die eingegebene E-Mail wird bereits verwendet",
       "email_invalid_alert": {
         "text": "Die eingegebene E-Mail-Adresse ist ungültig",
         "title": "Ungültige Email-Adresse"
@@ -180,10 +185,10 @@
       },
       "expired": {
         "resend_email": "E-Mail erneut senden",
-        "subtitle": "Fordern Sie eine neue E-Mail an, die gesendet wird an: {{email}}",
+        "subtitle": "Fordern Sie eine neue E-Mail an, die an folgende Adresse gesendet wird: {{email}}",
         "title": "Der Link zum Zurücksetzen Ihres Passworts ist abgelaufen"
       },
-      "subtitle": "Wählen Sie ein neues Passwort für Ihr Konto.",
+      "subtitle": "Wählen Sie ein neues Passwort für Ihren Account.",
       "title": "Passwort zurücksetzen"
     },
     "password_strength": {
@@ -271,6 +276,7 @@
       "device_id_label": "Geräte-ID",
       "finished_date": "Beendet <datetime/>",
       "finished_label": "Fertig",
+      "generic_browser_session": "Browser session",
       "id_label": "ID",
       "ip_label": "IP-Adresse",
       "last_active_label": "Zuletzt aktiv",

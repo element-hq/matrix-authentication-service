@@ -175,7 +175,7 @@
         "change_email": "Försök med en annan e-postadress",
         "description": "Vi skickade ett e-postmeddelande med en länk för att återställa ditt lösenord om det finns ett konto som använder <span>%(email)s</span>.",
         "heading": "Kontrollera din e-post",
-        "resend_email": "Skicka e-post igen"
+        "resend_email": "Skicka e-post på nytt"
       },
       "start": {
         "description": "Ett e-postmeddelande kommer att skickas med en länk för att återställa ditt lösenord.",

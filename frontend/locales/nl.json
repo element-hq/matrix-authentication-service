@@ -10,6 +10,7 @@
     "expand": "Expand",
     "save": "Opslaan",
     "save_and_continue": "Opslaan en doorgaan",
+    "sign_out": "Sign out",
     "start_over": "Start over"
   },
   "branding": {
@@ -46,6 +47,10 @@
         "change": "Wachtwoord wijzigen",
         "change_disabled": "Password changes are disabled by the administrator.",
         "label": "Wachtwoord"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
       },
       "title": "Uw account"
     },
@@ -271,6 +276,7 @@
       "device_id_label": "Apparaat-ID",
       "finished_date": "Voltooid op <datetime/>",
       "finished_label": "Voltooid",
+      "generic_browser_session": "Browser session",
       "id_label": "ID",
       "ip_label": "IP-adres",
       "last_active_label": "Laatst actief",
