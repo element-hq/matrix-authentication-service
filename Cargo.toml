@@ -115,7 +115,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.28"
+version = "4.5.29"
 features = ["derive"]
 
 # Cron expressions
