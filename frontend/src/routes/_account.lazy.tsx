@@ -29,11 +29,9 @@ function Account(): React.ReactElement {
   return (
     <Layout wide>
       <div className="flex flex-col gap-10">
-        <header className="flex justify-between items-center">
-          <Heading size="md" weight="semibold">
-            {t("frontend.account.title")}
-          </Heading>
-        </header>
+        <Heading size="md" weight="semibold">
+          {t("frontend.account.title")}
+        </Heading>
 
         <div className="flex flex-col gap-4">
           <UserGreeting user={viewer} siteConfig={siteConfig} />
