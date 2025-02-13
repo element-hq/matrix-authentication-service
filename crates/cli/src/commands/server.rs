@@ -166,6 +166,7 @@ impl Options {
                 &mailer,
                 homeserver_connection.clone(),
                 url_builder.clone(),
+                &site_config,
                 shutdown.soft_shutdown_token(),
                 shutdown.task_tracker(),
             )

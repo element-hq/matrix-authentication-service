@@ -73,6 +73,7 @@ impl Options {
             &mailer,
             conn,
             url_builder,
+            &site_config,
             shutdown.soft_shutdown_token(),
             shutdown.task_tracker(),
         )

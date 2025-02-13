@@ -525,7 +525,7 @@ mod tests {
         let pagination = Pagination::first(10);
 
         // First, list all the sessions
-        let filter = OAuth2SessionFilter::new();
+        let filter = OAuth2SessionFilter::new().for_any_user();
         let list = repo
             .oauth2_session()
             .list(filter, pagination)

@@ -139,6 +139,7 @@ pub fn test_site_config() -> SiteConfig {
         account_recovery_allowed: true,
         captcha: None,
         minimum_password_complexity: 1,
+        session_expiration: None,
     }
 }
 

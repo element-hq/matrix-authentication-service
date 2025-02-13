@@ -3,11 +3,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use mas_data_model::{Device, User, UserEmailAuthentication, UserRecoverySession};
+use chrono::{DateTime, Utc};
+use mas_data_model::{
+    BrowserSession, CompatSession, Device, Session, User, UserEmailAuthentication,
+    UserRecoverySession,
+};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
 use super::InsertableJob;
+use crate::{Page, Pagination};
 
 /// This is the previous iteration of the email verification job. It has been
 /// replaced by [`SendEmailAuthenticationCodeJob`]. This struct is kept to be
@@ -193,6 +198,15 @@ impl SyncDevicesJob {
         Self { user_id: user.id }
     }
 
+    /// Create a new job to sync the list of devices of a user with the
+    /// homeserver for the given user ID
+    ///
+    /// This is useful to use in cases where the [`User`] object isn't loaded
+    #[must_use]
+    pub fn new_for_id(user_id: Ulid) -> Self {
+        Self { user_id }
+    }
+
     /// The ID of the user to sync the devices for
     #[must_use]
     pub fn user_id(&self) -> Ulid {
@@ -309,4 +323,186 @@ pub struct CleanupExpiredTokensJob;
 
 impl InsertableJob for CleanupExpiredTokensJob {
     const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
+}
+
+/// Scheduled job to expire inactive sessions
+///
+/// This job will trigger jobs to expire inactive compat, oauth and user
+/// sessions.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExpireInactiveSessionsJob;
+
+impl InsertableJob for ExpireInactiveSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-sessions";
+}
+
+/// Expire inactive OAuth 2.0 sessions
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExpireInactiveOAuthSessionsJob {
+    threshold: DateTime<Utc>,
+    after: Option<Ulid>,
+}
+
+impl ExpireInactiveOAuthSessionsJob {
+    /// Create a new job to expire inactive OAuth 2.0 sessions
+    ///
+    /// # Parameters
+    ///
+    /// * `threshold` - The threshold to expire sessions at
+    #[must_use]
+    pub fn new(threshold: DateTime<Utc>) -> Self {
+        Self {
+            threshold,
+            after: None,
+        }
+    }
+
+    /// Get the threshold to expire sessions at
+    #[must_use]
+    pub fn threshold(&self) -> DateTime<Utc> {
+        self.threshold
+    }
+
+    /// Get the pagination cursor
+    #[must_use]
+    pub fn pagination(&self, batch_size: usize) -> Pagination {
+        let pagination = Pagination::first(batch_size);
+        if let Some(after) = self.after {
+            pagination.after(after)
+        } else {
+            pagination
+        }
+    }
+
+    /// Get the next job given the page returned by the database
+    #[must_use]
+    pub fn next(&self, page: &Page<Session>) -> Option<Self> {
+        if !page.has_next_page {
+            return None;
+        }
+
+        let last_edge = page.edges.last()?;
+        Some(Self {
+            threshold: self.threshold,
+            after: Some(last_edge.id),
+        })
+    }
+}
+
+impl InsertableJob for ExpireInactiveOAuthSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-oauth-sessions";
+}
+
+/// Expire inactive compatibility sessions
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExpireInactiveCompatSessionsJob {
+    threshold: DateTime<Utc>,
+    after: Option<Ulid>,
+}
+
+impl ExpireInactiveCompatSessionsJob {
+    /// Create a new job to expire inactive compatibility sessions
+    ///
+    /// # Parameters
+    ///
+    /// * `threshold` - The threshold to expire sessions at
+    #[must_use]
+    pub fn new(threshold: DateTime<Utc>) -> Self {
+        Self {
+            threshold,
+            after: None,
+        }
+    }
+
+    /// Get the threshold to expire sessions at
+    #[must_use]
+    pub fn threshold(&self) -> DateTime<Utc> {
+        self.threshold
+    }
+
+    /// Get the pagination cursor
+    #[must_use]
+    pub fn pagination(&self, batch_size: usize) -> Pagination {
+        let pagination = Pagination::first(batch_size);
+        if let Some(after) = self.after {
+            pagination.after(after)
+        } else {
+            pagination
+        }
+    }
+
+    /// Get the next job given the page returned by the database
+    #[must_use]
+    pub fn next(&self, page: &Page<CompatSession>) -> Option<Self> {
+        if !page.has_next_page {
+            return None;
+        }
+
+        let last_edge = page.edges.last()?;
+        Some(Self {
+            threshold: self.threshold,
+            after: Some(last_edge.id),
+        })
+    }
+}
+
+impl InsertableJob for ExpireInactiveCompatSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-compat-sessions";
+}
+
+/// Expire inactive user sessions
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExpireInactiveUserSessionsJob {
+    threshold: DateTime<Utc>,
+    after: Option<Ulid>,
+}
+
+impl ExpireInactiveUserSessionsJob {
+    /// Create a new job to expire inactive user/browser sessions
+    ///
+    /// # Parameters
+    ///
+    /// * `threshold` - The threshold to expire sessions at
+    #[must_use]
+    pub fn new(threshold: DateTime<Utc>) -> Self {
+        Self {
+            threshold,
+            after: None,
+        }
+    }
+
+    /// Get the threshold to expire sessions at
+    #[must_use]
+    pub fn threshold(&self) -> DateTime<Utc> {
+        self.threshold
+    }
+
+    /// Get the pagination cursor
+    #[must_use]
+    pub fn pagination(&self, batch_size: usize) -> Pagination {
+        let pagination = Pagination::first(batch_size);
+        if let Some(after) = self.after {
+            pagination.after(after)
+        } else {
+            pagination
+        }
+    }
+
+    /// Get the next job given the page returned by the database
+    #[must_use]
+    pub fn next(&self, page: &Page<BrowserSession>) -> Option<Self> {
+        if !page.has_next_page {
+            return None;
+        }
+
+        let last_edge = page.edges.last()?;
+        Some(Self {
+            threshold: self.threshold,
+            after: Some(last_edge.id),
+        })
+    }
+}
+
+impl InsertableJob for ExpireInactiveUserSessionsJob {
+    const QUEUE_NAME: &'static str = "expire-inactive-user-sessions";
 }

@@ -31,13 +31,27 @@ impl OAuth2SessionState {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ClientKind {
+    Static,
+    Dynamic,
+}
+
+impl ClientKind {
+    pub fn is_static(self) -> bool {
+        matches!(self, Self::Static)
+    }
+}
+
 /// Filter parameters for listing OAuth 2.0 sessions
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2SessionFilter<'a> {
     user: Option<&'a User>,
+    any_user: Option<bool>,
     browser_session: Option<&'a BrowserSession>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
+    client_kind: Option<ClientKind>,
     state: Option<OAuth2SessionState>,
     scope: Option<&'a Scope>,
     last_active_before: Option<DateTime<Utc>>,
@@ -64,6 +78,28 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn user(&self) -> Option<&'a User> {
         self.user
+    }
+
+    /// List sessions which belong to any user
+    #[must_use]
+    pub fn for_any_user(mut self) -> Self {
+        self.any_user = Some(true);
+        self
+    }
+
+    /// List sessions which belong to no user
+    #[must_use]
+    pub fn for_no_user(mut self) -> Self {
+        self.any_user = Some(false);
+        self
+    }
+
+    /// Get the 'any user' filter
+    ///
+    /// Returns [`None`] if no 'any user' filter was set
+    #[must_use]
+    pub fn any_user(&self) -> Option<bool> {
+        self.any_user
     }
 
     /// List sessions started by a specific browser session
@@ -94,6 +130,28 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn client(&self) -> Option<&'a Client> {
         self.client
+    }
+
+    /// List only static clients
+    #[must_use]
+    pub fn only_static_clients(mut self) -> Self {
+        self.client_kind = Some(ClientKind::Static);
+        self
+    }
+
+    /// List only dynamic clients
+    #[must_use]
+    pub fn only_dynamic_clients(mut self) -> Self {
+        self.client_kind = Some(ClientKind::Dynamic);
+        self
+    }
+
+    /// Get the client kind filter
+    ///
+    /// Returns [`None`] if no client kind filter was set
+    #[must_use]
+    pub fn client_kind(&self) -> Option<ClientKind> {
+        self.client_kind
     }
 
     /// Only return sessions with a last active time before the given time

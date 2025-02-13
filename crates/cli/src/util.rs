@@ -12,7 +12,7 @@ use mas_config::{
     EmailTransportKind, ExperimentalConfig, MatrixConfig, PasswordsConfig, PolicyConfig,
     TemplatesConfig,
 };
-use mas_data_model::SiteConfig;
+use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_policy::PolicyFactory;
@@ -180,6 +180,15 @@ pub fn site_config_from_config(
     captcha_config: &CaptchaConfig,
 ) -> Result<SiteConfig, anyhow::Error> {
     let captcha = captcha_config_from_config(captcha_config)?;
+    let session_expiration = experimental_config
+        .inactive_session_expiration
+        .as_ref()
+        .map(|c| SessionExpirationConfig {
+            oauth_session_inactivity_ttl: c.expire_oauth_sessions.then_some(c.ttl),
+            compat_session_inactivity_ttl: c.expire_compat_sessions.then_some(c.ttl),
+            user_session_inactivity_ttl: c.expire_user_sessions.then_some(c.ttl),
+        });
+
     Ok(SiteConfig {
         access_token_ttl: experimental_config.access_token_ttl,
         compat_token_ttl: experimental_config.compat_token_ttl,
@@ -198,6 +207,7 @@ pub fn site_config_from_config(
             && account_config.password_recovery_enabled,
         captcha,
         minimum_password_complexity: password_config.minimum_complexity(),
+        session_expiration,
     })
 }
 
