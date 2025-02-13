@@ -41,7 +41,7 @@ function BrowserSessions(): React.ReactElement {
   // We reverse the list as we are paginating backwards
   const edges = [...viewerSession.user.browserSessions.edges].reverse();
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6">
       <H5>{t("frontend.browser_sessions_overview.heading")}</H5>
 
       <div className="flex gap-2 items-start">

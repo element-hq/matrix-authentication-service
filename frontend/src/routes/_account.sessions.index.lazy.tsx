@@ -52,7 +52,7 @@ function Sessions(): React.ReactElement {
   const edges = [...appSessions.edges].reverse();
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6">
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
       <BrowserSessionsOverview user={viewer} />
       <Separator />

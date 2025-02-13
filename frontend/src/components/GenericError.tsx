@@ -19,7 +19,7 @@ const GenericError: React.FC<{ error: unknown; dontSuspend?: boolean }> = ({
   return (
     <Translation useSuspense={!dontSuspend}>
       {(t) => (
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-6">
           <PageHeading
             invalid
             Icon={IconError}

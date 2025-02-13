@@ -24,9 +24,7 @@ export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
   component: () => (
     <Layout>
-      <div className="flex flex-col gap-10">
-        <Outlet />
-      </div>
+      <Outlet />
     </Layout>
   ),
   errorComponent: ResetCrossSigningError,
