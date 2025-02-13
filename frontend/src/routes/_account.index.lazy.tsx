@@ -35,11 +35,11 @@ const SignOutButton: React.FC<{ id: string }> = ({ id }) => {
     <Dialog.Dialog
       trigger={
         <Button kind="primary" destructive size="lg" Icon={IconSignOut}>
-          Sign out of account
+          {t("frontend.account.sign_out.button")}
         </Button>
       }
     >
-      <Dialog.Title>Sign out of your account?</Dialog.Title>
+      <Dialog.Title>{t("frontend.account.sign_out.dialog")}</Dialog.Title>
 
       <Button
         type="button"

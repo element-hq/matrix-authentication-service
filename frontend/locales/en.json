@@ -46,6 +46,10 @@
         "change_disabled": "Password changes are disabled by the administrator.",
         "label": "Password"
       },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
+      },
       "title": "Your account"
     },
     "add_email_form": {
