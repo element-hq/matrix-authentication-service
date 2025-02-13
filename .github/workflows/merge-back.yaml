@@ -31,5 +31,5 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
-            const script = require('./.github/scripts/merge-back.js');
+            const script = require('./.github/scripts/merge-back.cjs');
             await script({ core, github, context });

@@ -103,5 +103,5 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
-            const script = require('./.github/scripts/create-release-branch.js');
+            const script = require('./.github/scripts/create-release-branch.cjs');
             await script({ core, github, context });
