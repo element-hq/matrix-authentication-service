@@ -5,8 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
-import * as z from "zod";
+import * as v from "valibot";
 
 import { queryOptions } from "@tanstack/react-query";
 import { graphql } from "../gql";
@@ -81,14 +80,15 @@ export const query = (pagination: AnyPagination, inactive: true | undefined) =>
       }),
   });
 
-const searchSchema = z
-  .object({
-    inactive: z.literal(true).optional(),
-  })
-  .and(anyPaginationSchema);
+const searchSchema = v.intersect([
+  v.object({
+    inactive: v.optional(v.literal(true)),
+  }),
+  anyPaginationSchema,
+]);
 
 export const Route = createFileRoute("/_account/sessions/browsers")({
-  validateSearch: zodSearchValidator(searchSchema),
+  validateSearch: searchSchema,
 
   loaderDeps: ({ search: { inactive, ...pagination } }) => ({
     inactive,

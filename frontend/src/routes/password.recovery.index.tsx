@@ -6,8 +6,7 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
-import * as z from "zod";
+import * as v from "valibot";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -31,12 +30,12 @@ export const query = (ticket: string) =>
       graphqlRequest({ query: QUERY, signal, variables: { ticket } }),
   });
 
-const schema = z.object({
-  ticket: z.string(),
+const schema = v.object({
+  ticket: v.string(),
 });
 
 export const Route = createFileRoute("/password/recovery/")({
-  validateSearch: zodSearchValidator(schema),
+  validateSearch: schema,
 
   loaderDeps: ({ search: { ticket } }) => ({ ticket }),
 

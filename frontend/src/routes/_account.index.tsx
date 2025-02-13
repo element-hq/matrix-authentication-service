@@ -6,8 +6,7 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { zodSearchValidator } from "@tanstack/router-zod-adapter";
-import * as z from "zod";
+import * as v from "valibot";
 import { query as userEmailListQuery } from "../components/UserProfile/UserEmailList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -38,39 +37,39 @@ export const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-const actionSchema = z
-  .discriminatedUnion("action", [
-    z.object({
-      action: z.enum(["profile", "org.matrix.profile"]),
+const actionSchema = v.variant("action", [
+  v.object({
+    action: v.picklist(["profile", "org.matrix.profile"]),
+  }),
+  v.object({
+    action: v.picklist(["sessions_list", "org.matrix.sessions_list"]),
+  }),
+  v.object({
+    action: v.picklist(["session_view", "org.matrix.session_view"]),
+    device_id: v.optional(v.string()),
+  }),
+  v.object({
+    action: v.picklist(["session_end", "org.matrix.session_end"]),
+    device_id: v.optional(v.string()),
+  }),
+  v.object({
+    action: v.literal("org.matrix.cross_signing_reset"),
+  }),
+  v.partial(
+    v.looseObject({
+      action: v.never(),
     }),
-    z.object({
-      action: z.enum(["sessions_list", "org.matrix.sessions_list"]),
-    }),
-    z.object({
-      action: z.enum(["session_view", "org.matrix.session_view"]),
-      device_id: z.string().optional(),
-    }),
-    z.object({
-      action: z.enum(["session_end", "org.matrix.session_end"]),
-      device_id: z.string().optional(),
-    }),
-    z.object({
-      action: z.literal("org.matrix.cross_signing_reset"),
-    }),
-    z.object({
-      action: z.undefined(),
-    }),
-  ])
-  .catch({ action: undefined });
+  ),
+]);
 
 export const Route = createFileRoute("/_account/")({
-  validateSearch: zodSearchValidator(actionSchema),
+  validateSearch: actionSchema,
 
   beforeLoad({ search }) {
     switch (search.action) {
       case "profile":
       case "org.matrix.profile":
-        throw redirect({ to: "/" });
+        throw redirect({ to: "/", search: {} });
 
       case "sessions_list":
       case "org.matrix.sessions_list":

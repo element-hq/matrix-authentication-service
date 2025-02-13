@@ -189,7 +189,7 @@ function EmailVerify(): React.ReactElement {
           {t("frontend.verify_email.resend_code")}
         </Button>
 
-        <ButtonLink as="a" Icon={IconArrowLeft} kind="tertiary" to="/">
+        <ButtonLink Icon={IconArrowLeft} kind="tertiary" to="/">
           {t("action.back")}
         </ButtonLink>
       </Form.Root>
