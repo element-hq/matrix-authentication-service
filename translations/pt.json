@@ -6,7 +6,7 @@
     "create_account": "Criar conta",
     "sign_in": "Iniciar sessão",
     "sign_out": "Sair",
-    "skip": "Skip",
+    "skip": "Saltar",
     "start_over": "Recomeçar",
     "submit": "Enviar"
   },
@@ -55,8 +55,8 @@
       "new": "Nova palavra-passe"
     },
     "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
+      "description": "Este é o nome que as outras pessoas irão ver. Pode alterá-lo em qualquer altura.",
+      "headline": "Escolha o seu pseudónimo"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> em <span>%(redirect_uri)s</span> quer aceder à sua conta.",
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
+      "description": "Se se esqueceu das suas credenciais de conta, pode recuperar a sua conta. Também pode começar de novo e utilizar um endereço de correio eletrónico diferente.",
+      "title": "O endereço de correio eletrónico <span>%(email)s</span> já está a ser utilizado"
     },
     "emails": {
       "greeting": "Olá %(username)s,",
@@ -109,17 +109,17 @@
     "errors": {
       "captcha": "A verificação do CAPTCHA falhou, tente novamente",
       "denied_policy": "Negado pela política: %(policy)s",
-      "email_domain_banned": "Email domain is banned by the server policy",
-      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "email_domain_banned": "O domínio de correio eletrónico é proibido pela política do servidor",
+      "email_domain_not_allowed": "O domínio de correio eletrónico não é permitido pela política do servidor",
       "field_required": "Este campo é obrigatório",
       "invalid_credentials": "Credenciais inválidas",
       "password_mismatch": "Os campos de palavra-passe não correspondem",
       "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente.",
-      "username_all_numeric": "Username cannot consist solely of numbers",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_all_numeric": "O nome de utilizador não pode ser constituído apenas por números",
+      "username_invalid_chars": "O nome de utilizador contém caracteres inválidos. Utilize apenas letras minúsculas, números, traços e sublinhados.",
       "username_taken": "Este nome de utilizador já foi utilizado",
-      "username_too_long": "Username is too long",
-      "username_too_short": "Username is too short"
+      "username_too_long": "O nome de utilizador é demasiado longo",
+      "username_too_short": "O nome de utilizador é demasiado curto"
     },
     "login": {
       "call_to_register": "Ainda não tem uma conta?",
@@ -184,9 +184,9 @@
     },
     "register": {
       "call_to_login": "Já tem uma conta?",
-      "continue_with_email": "Continue with email address",
+      "continue_with_email": "Continuar com endereço de e-mail",
       "create_account": {
-        "description": "Por favor, crie uma conta para começar:",
+        "description": "Escolha um nome de utilizador para continuar.",
         "heading": "Criar uma conta"
       },
       "sign_in_instead": "Em vez disso, inicie sessão",

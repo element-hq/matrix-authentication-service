@@ -4,13 +4,14 @@
     "cancel": "Cancelar",
     "clear": "Limpar",
     "close": "Fechar",
-    "collapse": "Collapse",
+    "collapse": "Fechar",
     "continue": "Continuar",
     "edit": "Editar",
-    "expand": "Expand",
+    "expand": "Expandir",
     "save": "Salvar",
     "save_and_continue": "Guardar e Continuar",
-    "start_over": "Start over"
+    "sign_out": "Sign out",
+    "start_over": "Começar de novo"
   },
   "branding": {
     "privacy_policy": {
@@ -34,8 +35,8 @@
   },
   "frontend": {
     "account": {
-      "account_password": "Account password",
-      "contact_info": "Contact info",
+      "account_password": "Palavra-passe da conta",
+      "contact_info": "Informações de contacto",
       "edit_profile": {
         "display_name_help": "Isso é o que os outros verão onde quer que você esteja conectado.",
         "display_name_label": "Nome para exibição",
@@ -46,6 +47,10 @@
         "change": "Alterar palavra-passe",
         "change_disabled": "As alterações de palavra-passe são desactivadas pelo administrador.",
         "label": "Palavra-passe"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
       },
       "title": "A sua conta"
     },
@@ -62,7 +67,7 @@
       "email_exists_error": "O e-mail introduzido já foi adicionado a esta conta",
       "email_field_help": "Adicione um e-mail alternativo que você pode usar para acessar essa conta.",
       "email_field_label": "Adicionar e-mail",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "O e-mail introduzido já está a ser utilizado",
       "email_invalid_alert": {
         "text": "O e-mail introduzido é inválido",
         "title": "E-mail inválido"
@@ -101,7 +106,7 @@
       "web": "Web"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "O endereço de correio eletrónico {{email}} já está a ser utilizado."
     },
     "end_session_button": {
       "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
@@ -116,7 +121,7 @@
     "error_boundary_title": "Algo correu mal",
     "errors": {
       "field_required": "Este campo é obrigatório",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "rate_limit_exceeded": "Efectuou demasiados pedidos num curto espaço de tempo. Aguarde alguns minutos e tente novamente."
     },
     "last_active": {
       "active_date": "Ativo {{relativeDate}}",
@@ -175,15 +180,15 @@
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "To create a new password, start over and select ”Forgot password“.",
-        "title": "The link to reset your password has already been used"
+        "subtitle": "Para criar uma nova palavra-passe, comece de novo e selecione \"Esqueci-me da palavra-passe\".",
+        "title": "A ligação para redefinir a sua palavra-passe já foi utilizada"
       },
       "expired": {
-        "resend_email": "Resend email",
-        "subtitle": "Request a new email that will be sent to: {{email}}",
-        "title": "The link to reset your password has expired"
+        "resend_email": "Reenviar e-mail",
+        "subtitle": "Solicitar um novo e-mail que será enviado para: {{email}}",
+        "title": "A ligação para redefinir a sua palavra-passe expirou"
       },
-      "subtitle": "Choose a new password for your account.",
+      "subtitle": "Escolha uma nova palavra-passe para a sua conta.",
       "title": "Repor a sua palavra-passe"
     },
     "password_strength": {
@@ -271,6 +276,7 @@
       "device_id_label": "ID de dispositivo",
       "finished_date": "Concluído <datetime/>",
       "finished_label": "Concluído",
+      "generic_browser_session": "Browser session",
       "id_label": "Identificação",
       "ip_label": "Endereço IP",
       "last_active_label": "Ativo pela última vez",
@@ -335,8 +341,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "O código expirou. Solicite um novo código.",
+        "title": "Código expirado"
       },
       "code_field_error": "Código não reconhecido",
       "code_field_label": "Código de 6 dígitos",

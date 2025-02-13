@@ -10,6 +10,7 @@
     "expand": "Développer",
     "save": "Enregistrer",
     "save_and_continue": "Enregistrer et continuer",
+    "sign_out": "Se déconnecter",
     "start_over": "Recommencer"
   },
   "branding": {
@@ -46,6 +47,10 @@
         "change": "Changer de mot de passe",
         "change_disabled": "Le changement de mot de passe a été désactivé par l'administrateur.",
         "label": "Mot de passe"
+      },
+      "sign_out": {
+        "button": "Se déconnecter du compte",
+        "dialog": "Se déconnecter de ce compte ?"
       },
       "title": "Votre compte"
     },
@@ -105,7 +110,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Êtes-vous sûr de vouloir terminer cette session ?",
-      "text": "Se déconnecter"
+      "text": "Supprimer l’appareil"
     },
     "error": {
       "hideDetails": "Masquer les détails",
@@ -179,7 +184,7 @@
         "title": "Le lien pour réinitialiser votre mot de passe a déjà été utilisé"
       },
       "expired": {
-        "resend_email": "Renvoyer un e-mail",
+        "resend_email": "Renvoyer l’e-mail",
         "subtitle": "Demander un nouvel e-mail qui sera envoyé à : {{email}}",
         "title": "Le lien pour réinitialiser votre mot de passe a expiré"
       },
@@ -271,6 +276,7 @@
       "device_id_label": "ID de l’appareil",
       "finished_date": "Terminé <datetime/>",
       "finished_label": "Terminée",
+      "generic_browser_session": "Session de navigateur",
       "id_label": "ID",
       "ip_label": "Adresse IP",
       "last_active_label": "Dernière activité",

@@ -10,6 +10,7 @@
     "expand": "Розгорнути",
     "save": "Зберегти",
     "save_and_continue": "Зберегти і продовжити",
+    "sign_out": "Sign out",
     "start_over": "Почати спочатку"
   },
   "branding": {
@@ -46,6 +47,10 @@
         "change": "Змінити пароль",
         "change_disabled": "Зміна пароля заборонена адміністратором.",
         "label": "Пароль"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
       },
       "title": "Ваш аккаунт"
     },
@@ -272,6 +277,7 @@
       "device_id_label": "ID пристрою",
       "finished_date": "Завершено <datetime/>",
       "finished_label": "Завершено",
+      "generic_browser_session": "Browser session",
       "id_label": "ID",
       "ip_label": "IP-адреса",
       "last_active_label": "Остання активність",

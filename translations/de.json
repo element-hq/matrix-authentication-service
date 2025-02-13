@@ -55,8 +55,8 @@
       "new": "Neues Passwort"
     },
     "choose_display_name": {
-      "description": "Dies ist der Name, den andere Leute sehen werden. Sie können dies jederzeit ändern.",
-      "headline": "Wähle deinen Anzeigenamen"
+      "description": "Das ist der Name, den andere Leute sehen werden. Sie können dies jederzeit ändern.",
+      "headline": "Wählen Sie Ihren Anzeigenamen"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf Ihr Konto zugreifen.",
