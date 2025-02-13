@@ -3,7 +3,7 @@
 exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
 <div>
   <div
-    class="_blockList_f8cc7f"
+    class="flex flex-col gap-10"
   >
     <header
       class="_header_92353c"
@@ -27,99 +27,116 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       <h3
         class="_typography_yh5dq_162 _font-heading-md-semibold_yh5dq_121"
       >
-        abcd1234
+        element.io
+        : 
+        Unknown device
       </h3>
     </header>
-    <div
-      class="_block_17898c"
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
-        Session
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
+        Device details
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Last Active
           </h5>
-          <span
-            class="_datumValue_040867"
-            title="Sat, 29 Jul 2023, 03:35"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Inactive for 90+ days
-          </span>
-        </div>
-        <div
-          class="_datum_040867"
+            <span
+              title="Sat, 29 Jul 2023, 03:35"
+            >
+              Inactive for 90+ days
+            </span>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Signed in
           </h5>
-          <time
-            class="_datumValue_040867"
-            datetime="2023-06-29T03:35:17Z"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Thu, 29 Jun 2023, 03:35
-          </time>
-        </div>
-        <div
-          class="_datum_040867"
+            <time
+              datetime="2023-06-29T03:35:17Z"
+            >
+              Thu, 29 Jun 2023, 03:35
+            </time>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Device ID
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             abcd1234
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             IP Address
           </h5>
-          <code
-            class="_datumValue_040867"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            1.2.3.4
-          </code>
-        </div>
-      </div>
-      <div
-        class="_datum_040867"
+            <code>
+              1.2.3.4
+            </code>
+          </p>
+        </li>
+      </ul>
+      <li
+        class="flex flex-col min-w-0"
       >
         <h5
-          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
         >
           Scopes
         </h5>
         <ul
-          class="_list_7f22f8"
+          class="_visual-list_4dcf8_17 mt-1"
         >
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -132,42 +149,36 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
                 d="M16.23 18.792a12.47 12.47 0 0 0-1.455-.455 11.6 11.6 0 0 0-5.55 0c-.487.12-.972.271-1.455.455a8.04 8.04 0 0 1-1.729-1.454c.89-.412 1.794-.729 2.709-.95A13.76 13.76 0 0 1 12 16c1.1 0 2.183.13 3.25.387a14.78 14.78 0 0 1 2.709.95 8.042 8.042 0 0 1-1.73 1.455Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              See your profile info and contact details
-            </p>
+            See your profile info and contact details
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 d="m1.5 21.25 1.45-4.95a10.232 10.232 0 0 1-.712-2.1A10.167 10.167 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.737 9.737 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.737 9.737 0 0 1 12 22c-.75 0-1.483-.08-2.2-.238a10.23 10.23 0 0 1-2.1-.712L2.75 22.5a.936.936 0 0 1-1-.25.936.936 0 0 1-.25-1Zm2.45-1.2 3.2-.95a.949.949 0 0 1 .275-.063c.1-.008.192-.012.275-.012.15 0 .296.013.438.038.141.024.279.07.412.137a7.435 7.435 0 0 0 1.675.6c.583.133 1.175.2 1.775.2 2.233 0 4.125-.775 5.675-2.325C19.225 16.125 20 14.233 20 12c0-2.233-.775-4.125-2.325-5.675C16.125 4.775 14.233 4 12 4c-2.233 0-4.125.775-5.675 2.325C4.775 7.875 4 9.767 4 12c0 .6.067 1.192.2 1.775s.333 1.142.6 1.675c.117.217.18.446.188.688a2.29 2.29 0 0 1-.088.712l-.95 3.2Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              View your existing messages and data
-            </p>
+            View your existing messages and data
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -176,68 +187,65 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
                 fill-rule="evenodd"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              Send new messages on your behalf
-            </p>
+            Send new messages on your behalf
           </li>
         </ul>
-      </div>
-    </div>
-    <div
-      class="_block_17898c"
+      </li>
+    </section>
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
         Client info
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Name
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            element.io
+            Unknown device
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Uri
           </h5>
-          <a
-            class="_link_ue21z_17 _externalLink_a97355"
-            data-kind="primary"
-            data-size="medium"
-            href="https://element.io"
-            rel="noreferrer noopener"
-            target="_blank"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             https://element.io
-          </a>
-        </div>
-      </div>
-    </div>
+          </p>
+        </li>
+      </ul>
+    </section>
     <button
       aria-controls="radix-:r0:"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
       data-kind="secondary"
-      data-size="sm"
+      data-size="lg"
       data-state="closed"
       role="button"
       tabindex="0"
@@ -252,10 +260,10 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
+          d="M7 21c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 5 19V6a.968.968 0 0 1-.713-.287A.968.968 0 0 1 4 5c0-.283.096-.52.287-.713A.968.968 0 0 1 5 4h4a.97.97 0 0 1 .287-.712A.968.968 0 0 1 10 3h4a.97.97 0 0 1 .713.288A.968.968 0 0 1 15 4h4a.97.97 0 0 1 .712.287c.192.192.288.43.288.713s-.096.52-.288.713A.968.968 0 0 1 19 6v13c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 17 21H7ZM7 6v13h10V6H7Zm2 10c0 .283.096.52.287.712.192.192.43.288.713.288s.52-.096.713-.288A.968.968 0 0 0 11 16V9a.967.967 0 0 0-.287-.713A.968.968 0 0 0 10 8a.968.968 0 0 0-.713.287A.968.968 0 0 0 9 9v7Zm4 0c0 .283.096.52.287.712.192.192.43.288.713.288s.52-.096.713-.288A.968.968 0 0 0 15 16V9a.967.967 0 0 0-.287-.713A.968.968 0 0 0 14 8a.968.968 0 0 0-.713.287A.967.967 0 0 0 13 9v7Z"
         />
       </svg>
-      Sign out
+      Remove device
     </button>
   </div>
 </div>
@@ -264,7 +272,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
 exports[`<CompatSessionDetail> > renders a compatability session without an ssoLogin 1`] = `
 <div>
   <div
-    class="_blockList_f8cc7f"
+    class="flex flex-col gap-10"
   >
     <header
       class="_header_92353c"
@@ -289,98 +297,115 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
         class="_typography_yh5dq_162 _font-heading-md-semibold_yh5dq_121"
       >
         abcd1234
+        : 
+        Unknown device
       </h3>
     </header>
-    <div
-      class="_block_17898c"
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
-        Session
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
+        Device details
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Last Active
           </h5>
-          <span
-            class="_datumValue_040867"
-            title="Sat, 29 Jul 2023, 03:35"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Inactive for 90+ days
-          </span>
-        </div>
-        <div
-          class="_datum_040867"
+            <span
+              title="Sat, 29 Jul 2023, 03:35"
+            >
+              Inactive for 90+ days
+            </span>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Signed in
           </h5>
-          <time
-            class="_datumValue_040867"
-            datetime="2023-06-29T03:35:17Z"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Thu, 29 Jun 2023, 03:35
-          </time>
-        </div>
-        <div
-          class="_datum_040867"
+            <time
+              datetime="2023-06-29T03:35:17Z"
+            >
+              Thu, 29 Jun 2023, 03:35
+            </time>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Device ID
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             abcd1234
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             IP Address
           </h5>
-          <code
-            class="_datumValue_040867"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            1.2.3.4
-          </code>
-        </div>
-      </div>
-      <div
-        class="_datum_040867"
+            <code>
+              1.2.3.4
+            </code>
+          </p>
+        </li>
+      </ul>
+      <li
+        class="flex flex-col min-w-0"
       >
         <h5
-          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
         >
           Scopes
         </h5>
         <ul
-          class="_list_7f22f8"
+          class="_visual-list_4dcf8_17 mt-1"
         >
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -393,42 +418,36 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
                 d="M16.23 18.792a12.47 12.47 0 0 0-1.455-.455 11.6 11.6 0 0 0-5.55 0c-.487.12-.972.271-1.455.455a8.04 8.04 0 0 1-1.729-1.454c.89-.412 1.794-.729 2.709-.95A13.76 13.76 0 0 1 12 16c1.1 0 2.183.13 3.25.387a14.78 14.78 0 0 1 2.709.95 8.042 8.042 0 0 1-1.73 1.455Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              See your profile info and contact details
-            </p>
+            See your profile info and contact details
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 d="m1.5 21.25 1.45-4.95a10.232 10.232 0 0 1-.712-2.1A10.167 10.167 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.737 9.737 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.737 9.737 0 0 1 12 22c-.75 0-1.483-.08-2.2-.238a10.23 10.23 0 0 1-2.1-.712L2.75 22.5a.936.936 0 0 1-1-.25.936.936 0 0 1-.25-1Zm2.45-1.2 3.2-.95a.949.949 0 0 1 .275-.063c.1-.008.192-.012.275-.012.15 0 .296.013.438.038.141.024.279.07.412.137a7.435 7.435 0 0 0 1.675.6c.583.133 1.175.2 1.775.2 2.233 0 4.125-.775 5.675-2.325C19.225 16.125 20 14.233 20 12c0-2.233-.775-4.125-2.325-5.675C16.125 4.775 14.233 4 12 4c-2.233 0-4.125.775-5.675 2.325C4.775 7.875 4 9.767 4 12c0 .6.067 1.192.2 1.775s.333 1.142.6 1.675c.117.217.18.446.188.688a2.29 2.29 0 0 1-.088.712l-.95 3.2Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              View your existing messages and data
-            </p>
+            View your existing messages and data
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -437,22 +456,63 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
                 fill-rule="evenodd"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              Send new messages on your behalf
-            </p>
+            Send new messages on your behalf
           </li>
         </ul>
-      </div>
-    </div>
+      </li>
+    </section>
+    <section
+      class="flex flex-col gap-6"
+    >
+      <h4
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
+      >
+        Client info
+        <div
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
+        >
+          <h5
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
+          >
+            Name
+          </h5>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
+          >
+            Unknown device
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
+        >
+          <h5
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
+          >
+            Uri
+          </h5>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
+          />
+        </li>
+      </ul>
+    </section>
     <button
       aria-controls="radix-:r3:"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
       data-kind="secondary"
-      data-size="sm"
+      data-size="lg"
       data-state="closed"
       role="button"
       tabindex="0"
@@ -467,10 +527,10 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
+          d="M7 21c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 5 19V6a.968.968 0 0 1-.713-.287A.968.968 0 0 1 4 5c0-.283.096-.52.287-.713A.968.968 0 0 1 5 4h4a.97.97 0 0 1 .287-.712A.968.968 0 0 1 10 3h4a.97.97 0 0 1 .713.288A.968.968 0 0 1 15 4h4a.97.97 0 0 1 .712.287c.192.192.288.43.288.713s-.096.52-.288.713A.968.968 0 0 1 19 6v13c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0 1 17 21H7ZM7 6v13h10V6H7Zm2 10c0 .283.096.52.287.712.192.192.43.288.713.288s.52-.096.713-.288A.968.968 0 0 0 11 16V9a.967.967 0 0 0-.287-.713A.968.968 0 0 0 10 8a.968.968 0 0 0-.713.287A.968.968 0 0 0 9 9v7Zm4 0c0 .283.096.52.287.712.192.192.43.288.713.288s.52-.096.713-.288A.968.968 0 0 0 15 16V9a.967.967 0 0 0-.287-.713A.968.968 0 0 0 14 8a.968.968 0 0 0-.713.287A.967.967 0 0 0 13 9v7Z"
         />
       </svg>
-      Sign out
+      Remove device
     </button>
   </div>
 </div>
@@ -479,7 +539,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
 exports[`<CompatSessionDetail> > renders a finished compatability session details 1`] = `
 <div>
   <div
-    class="_blockList_f8cc7f"
+    class="flex flex-col gap-10"
   >
     <header
       class="_header_92353c"
@@ -503,113 +563,134 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       <h3
         class="_typography_yh5dq_162 _font-heading-md-semibold_yh5dq_121"
       >
-        abcd1234
+        element.io
+        : 
+        Unknown device
       </h3>
     </header>
-    <div
-      class="_block_17898c"
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
-        Session
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
+        Device details
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Last Active
           </h5>
-          <span
-            class="_datumValue_040867"
-            title="Sat, 29 Jul 2023, 03:35"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Inactive for 90+ days
-          </span>
-        </div>
-        <div
-          class="_datum_040867"
+            <span
+              title="Sat, 29 Jul 2023, 03:35"
+            >
+              Inactive for 90+ days
+            </span>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Signed in
           </h5>
-          <time
-            class="_datumValue_040867"
-            datetime="2023-06-29T03:35:17Z"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            Thu, 29 Jun 2023, 03:35
-          </time>
-        </div>
-        <div
-          class="_datum_040867"
+            <time
+              datetime="2023-06-29T03:35:17Z"
+            >
+              Thu, 29 Jun 2023, 03:35
+            </time>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
+          >
+            Finished
+          </h5>
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
+          >
+            <time
+              datetime="2023-07-29T03:35:17Z"
+            >
+              Sat, 29 Jul 2023, 03:35
+            </time>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
+        >
+          <h5
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Device ID
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             abcd1234
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             IP Address
           </h5>
-          <code
-            class="_datumValue_040867"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            1.2.3.4
-          </code>
-        </div>
-        <div
-          class="_datum_040867"
-        >
-          <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
-          >
-            Finished
-          </h5>
-          <time
-            datetime="2023-07-29T03:35:17Z"
-          >
-            Sat, 29 Jul 2023, 03:35
-          </time>
-        </div>
-      </div>
-      <div
-        class="_datum_040867"
+            <code>
+              1.2.3.4
+            </code>
+          </p>
+        </li>
+      </ul>
+      <li
+        class="flex flex-col min-w-0"
       >
         <h5
-          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+          class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
         >
           Scopes
         </h5>
         <ul
-          class="_list_7f22f8"
+          class="_visual-list_4dcf8_17 mt-1"
         >
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -622,42 +703,36 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
                 d="M16.23 18.792a12.47 12.47 0 0 0-1.455-.455 11.6 11.6 0 0 0-5.55 0c-.487.12-.972.271-1.455.455a8.04 8.04 0 0 1-1.729-1.454c.89-.412 1.794-.729 2.709-.95A13.76 13.76 0 0 1 12 16c1.1 0 2.183.13 3.25.387a14.78 14.78 0 0 1 2.709.95 8.042 8.042 0 0 1-1.73 1.455Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              See your profile info and contact details
-            </p>
+            See your profile info and contact details
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 d="m1.5 21.25 1.45-4.95a10.232 10.232 0 0 1-.712-2.1A10.167 10.167 0 0 1 2 12a9.74 9.74 0 0 1 .788-3.9 10.099 10.099 0 0 1 2.137-3.175c.9-.9 1.958-1.612 3.175-2.137A9.737 9.737 0 0 1 12 2a9.74 9.74 0 0 1 3.9.788 10.098 10.098 0 0 1 3.175 2.137c.9.9 1.613 1.958 2.137 3.175A9.738 9.738 0 0 1 22 12a9.738 9.738 0 0 1-.788 3.9 10.098 10.098 0 0 1-2.137 3.175c-.9.9-1.958 1.613-3.175 2.137A9.737 9.737 0 0 1 12 22c-.75 0-1.483-.08-2.2-.238a10.23 10.23 0 0 1-2.1-.712L2.75 22.5a.936.936 0 0 1-1-.25.936.936 0 0 1-.25-1Zm2.45-1.2 3.2-.95a.949.949 0 0 1 .275-.063c.1-.008.192-.012.275-.012.15 0 .296.013.438.038.141.024.279.07.412.137a7.435 7.435 0 0 0 1.675.6c.583.133 1.175.2 1.775.2 2.233 0 4.125-.775 5.675-2.325C19.225 16.125 20 14.233 20 12c0-2.233-.775-4.125-2.325-5.675C16.125 4.775 14.233 4 12 4c-2.233 0-4.125.775-5.675 2.325C4.775 7.875 4 9.767 4 12c0 .6.067 1.192.2 1.775s.333 1.142.6 1.675c.117.217.18.446.188.688a2.29 2.29 0 0 1-.088.712l-.95 3.2Z"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              View your existing messages and data
-            </p>
+            View your existing messages and data
           </li>
           <li
-            class="_item_7f22f8"
+            class="_visual-list-item_bqeu7_17"
           >
             <svg
-              color="var(--cpd-color-icon-tertiary)"
+              aria-hidden="true"
+              class="_visual-list-item-icon_bqeu7_26"
               fill="currentColor"
-              height="1em"
+              height="24px"
               viewBox="0 0 24 24"
-              width="1em"
+              width="24px"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -666,61 +741,58 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
                 fill-rule="evenodd"
               />
             </svg>
-            <p
-              class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-            >
-              Send new messages on your behalf
-            </p>
+            Send new messages on your behalf
           </li>
         </ul>
-      </div>
-    </div>
-    <div
-      class="_block_17898c"
+      </li>
+    </section>
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
         Client info
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Name
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            element.io
+            Unknown device
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Uri
           </h5>
-          <a
-            class="_link_ue21z_17 _externalLink_a97355"
-            data-kind="primary"
-            data-size="medium"
-            href="https://element.io"
-            rel="noreferrer noopener"
-            target="_blank"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             https://element.io
-          </a>
-        </div>
-      </div>
-    </div>
+          </p>
+        </li>
+      </ul>
+    </section>
   </div>
 </div>
 `;

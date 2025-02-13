@@ -8,7 +8,6 @@ import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { H5 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import BlockList from "../components/BlockList";
 import BrowserSession from "../components/BrowserSession";
 import { ButtonLink } from "../components/ButtonLink";
 import EmptyState from "../components/EmptyState";
@@ -42,7 +41,7 @@ function BrowserSessions(): React.ReactElement {
   // We reverse the list as we are paginating backwards
   const edges = [...viewerSession.user.browserSessions.edges].reverse();
   return (
-    <BlockList>
+    <div className="flex flex-col gap-6">
       <H5>{t("frontend.browser_sessions_overview.heading")}</H5>
 
       <div className="flex gap-2 items-start">
@@ -104,6 +103,6 @@ function BrowserSessions(): React.ReactElement {
           </ButtonLink>
         </div>
       )}
-    </BlockList>
+    </div>
   );
 }

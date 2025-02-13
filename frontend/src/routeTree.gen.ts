@@ -17,6 +17,7 @@ import { Route as ResetCrossSigningImport } from './routes/reset-cross-signing'
 import { Route as AccountImport } from './routes/_account'
 import { Route as ResetCrossSigningIndexImport } from './routes/reset-cross-signing.index'
 import { Route as AccountIndexImport } from './routes/_account.index'
+import { Route as SessionsIdImport } from './routes/sessions.$id'
 import { Route as ResetCrossSigningSuccessImport } from './routes/reset-cross-signing.success'
 import { Route as ResetCrossSigningCancelledImport } from './routes/reset-cross-signing.cancelled'
 import { Route as DevicesSplatImport } from './routes/devices.$'
@@ -27,7 +28,6 @@ import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.
 import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
 import { Route as EmailsIdInUseImport } from './routes/emails.$id.in-use'
 import { Route as AccountSessionsBrowsersImport } from './routes/_account.sessions.browsers'
-import { Route as AccountSessionsIdImport } from './routes/_account.sessions.$id'
 
 // Create Virtual Routes
 
@@ -61,6 +61,12 @@ const AccountIndexRoute = AccountIndexImport.update({
 } as any).lazy(() =>
   import('./routes/_account.index.lazy').then((d) => d.Route),
 )
+
+const SessionsIdRoute = SessionsIdImport.update({
+  id: '/sessions/$id',
+  path: '/sessions/$id',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/sessions.$id.lazy').then((d) => d.Route))
 
 const ResetCrossSigningSuccessRoute = ResetCrossSigningSuccessImport.update({
   id: '/success',
@@ -142,14 +148,6 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersImport.update({
   import('./routes/_account.sessions.browsers.lazy').then((d) => d.Route),
 )
 
-const AccountSessionsIdRoute = AccountSessionsIdImport.update({
-  id: '/sessions/$id',
-  path: '/sessions/$id',
-  getParentRoute: () => AccountRoute,
-} as any).lazy(() =>
-  import('./routes/_account.sessions.$id.lazy').then((d) => d.Route),
-)
-
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -196,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetCrossSigningSuccessImport
       parentRoute: typeof ResetCrossSigningImport
     }
+    '/sessions/$id': {
+      id: '/sessions/$id'
+      path: '/sessions/$id'
+      fullPath: '/sessions/$id'
+      preLoaderRoute: typeof SessionsIdImport
+      parentRoute: typeof rootRoute
+    }
     '/_account/': {
       id: '/_account/'
       path: '/'
@@ -209,13 +214,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/reset-cross-signing/'
       preLoaderRoute: typeof ResetCrossSigningIndexImport
       parentRoute: typeof ResetCrossSigningImport
-    }
-    '/_account/sessions/$id': {
-      id: '/_account/sessions/$id'
-      path: '/sessions/$id'
-      fullPath: '/sessions/$id'
-      preLoaderRoute: typeof AccountSessionsIdImport
-      parentRoute: typeof AccountImport
     }
     '/_account/sessions/browsers': {
       id: '/_account/sessions/browsers'
@@ -273,14 +271,12 @@ declare module '@tanstack/react-router' {
 
 interface AccountRouteChildren {
   AccountIndexRoute: typeof AccountIndexRoute
-  AccountSessionsIdRoute: typeof AccountSessionsIdRoute
   AccountSessionsBrowsersRoute: typeof AccountSessionsBrowsersRoute
   AccountSessionsIndexRoute: typeof AccountSessionsIndexRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountIndexRoute: AccountIndexRoute,
-  AccountSessionsIdRoute: AccountSessionsIdRoute,
   AccountSessionsBrowsersRoute: AccountSessionsBrowsersRoute,
   AccountSessionsIndexRoute: AccountSessionsIndexRoute,
 }
@@ -310,9 +306,9 @@ export interface FileRoutesByFullPath {
   '/devices/$': typeof DevicesSplatRoute
   '/reset-cross-signing/cancelled': typeof ResetCrossSigningCancelledRoute
   '/reset-cross-signing/success': typeof ResetCrossSigningSuccessRoute
+  '/sessions/$id': typeof SessionsIdRoute
   '/': typeof AccountIndexRoute
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
-  '/sessions/$id': typeof AccountSessionsIdRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
@@ -327,9 +323,9 @@ export interface FileRoutesByTo {
   '/devices/$': typeof DevicesSplatRoute
   '/reset-cross-signing/cancelled': typeof ResetCrossSigningCancelledRoute
   '/reset-cross-signing/success': typeof ResetCrossSigningSuccessRoute
+  '/sessions/$id': typeof SessionsIdRoute
   '/': typeof AccountIndexRoute
   '/reset-cross-signing': typeof ResetCrossSigningIndexRoute
-  '/sessions/$id': typeof AccountSessionsIdRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
@@ -347,9 +343,9 @@ export interface FileRoutesById {
   '/devices/$': typeof DevicesSplatRoute
   '/reset-cross-signing/cancelled': typeof ResetCrossSigningCancelledRoute
   '/reset-cross-signing/success': typeof ResetCrossSigningSuccessRoute
+  '/sessions/$id': typeof SessionsIdRoute
   '/_account/': typeof AccountIndexRoute
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
-  '/_account/sessions/$id': typeof AccountSessionsIdRoute
   '/_account/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
@@ -368,9 +364,9 @@ export interface FileRouteTypes {
     | '/devices/$'
     | '/reset-cross-signing/cancelled'
     | '/reset-cross-signing/success'
+    | '/sessions/$id'
     | '/'
     | '/reset-cross-signing/'
-    | '/sessions/$id'
     | '/sessions/browsers'
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
@@ -384,9 +380,9 @@ export interface FileRouteTypes {
     | '/devices/$'
     | '/reset-cross-signing/cancelled'
     | '/reset-cross-signing/success'
+    | '/sessions/$id'
     | '/'
     | '/reset-cross-signing'
-    | '/sessions/$id'
     | '/sessions/browsers'
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
@@ -402,9 +398,9 @@ export interface FileRouteTypes {
     | '/devices/$'
     | '/reset-cross-signing/cancelled'
     | '/reset-cross-signing/success'
+    | '/sessions/$id'
     | '/_account/'
     | '/reset-cross-signing/'
-    | '/_account/sessions/$id'
     | '/_account/sessions/browsers'
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
@@ -420,6 +416,7 @@ export interface RootRouteChildren {
   ResetCrossSigningRoute: typeof ResetCrossSigningRouteWithChildren
   ClientsIdRoute: typeof ClientsIdRoute
   DevicesSplatRoute: typeof DevicesSplatRoute
+  SessionsIdRoute: typeof SessionsIdRoute
   EmailsIdInUseRoute: typeof EmailsIdInUseRoute
   EmailsIdVerifyRoute: typeof EmailsIdVerifyRoute
   PasswordChangeSuccessLazyRoute: typeof PasswordChangeSuccessLazyRoute
@@ -432,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetCrossSigningRoute: ResetCrossSigningRouteWithChildren,
   ClientsIdRoute: ClientsIdRoute,
   DevicesSplatRoute: DevicesSplatRoute,
+  SessionsIdRoute: SessionsIdRoute,
   EmailsIdInUseRoute: EmailsIdInUseRoute,
   EmailsIdVerifyRoute: EmailsIdVerifyRoute,
   PasswordChangeSuccessLazyRoute: PasswordChangeSuccessLazyRoute,
@@ -453,6 +451,7 @@ export const routeTree = rootRoute
         "/reset-cross-signing",
         "/clients/$id",
         "/devices/$",
+        "/sessions/$id",
         "/emails/$id/in-use",
         "/emails/$id/verify",
         "/password/change/success",
@@ -464,7 +463,6 @@ export const routeTree = rootRoute
       "filePath": "_account.tsx",
       "children": [
         "/_account/",
-        "/_account/sessions/$id",
         "/_account/sessions/browsers",
         "/_account/sessions/"
       ]
@@ -491,6 +489,9 @@ export const routeTree = rootRoute
       "filePath": "reset-cross-signing.success.tsx",
       "parent": "/reset-cross-signing"
     },
+    "/sessions/$id": {
+      "filePath": "sessions.$id.tsx"
+    },
     "/_account/": {
       "filePath": "_account.index.tsx",
       "parent": "/_account"
@@ -498,10 +499,6 @@ export const routeTree = rootRoute
     "/reset-cross-signing/": {
       "filePath": "reset-cross-signing.index.tsx",
       "parent": "/reset-cross-signing"
-    },
-    "/_account/sessions/$id": {
-      "filePath": "_account.sessions.$id.tsx",
-      "parent": "/_account"
     },
     "/_account/sessions/browsers": {
       "filePath": "_account.sessions.browsers.tsx",

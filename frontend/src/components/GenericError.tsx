@@ -8,8 +8,6 @@ import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error"
 import { Button } from "@vector-im/compound-web";
 import { useState } from "react";
 import { Translation } from "react-i18next";
-
-import BlockList from "./BlockList";
 import styles from "./GenericError.module.css";
 import PageHeading from "./PageHeading";
 
@@ -21,7 +19,7 @@ const GenericError: React.FC<{ error: unknown; dontSuspend?: boolean }> = ({
   return (
     <Translation useSuspense={!dontSuspend}>
       {(t) => (
-        <BlockList>
+        <div className="flex flex-col gap-6">
           <PageHeading
             invalid
             Icon={IconError}
@@ -46,7 +44,7 @@ const GenericError: React.FC<{ error: unknown; dontSuspend?: boolean }> = ({
               <code>{String(error)}</code>
             </pre>
           )}
-        </BlockList>
+        </div>
       )}
     </Translation>
   );

@@ -60,23 +60,19 @@ export const handlers = [
   mockCurrentUserGreetingQuery(() =>
     HttpResponse.json({
       data: {
-        viewerSession: {
-          __typename: "BrowserSession",
-
-          id: "session-id",
-          user: Object.assign(
-            makeFragmentData(
-              {
-                id: "user-id",
-                matrix: {
-                  mxid: "@alice:example.com",
-                  displayName: "Alice",
-                },
+        viewer: Object.assign(
+          makeFragmentData(
+            {
+              __typename: "User",
+              id: "user-id",
+              matrix: {
+                mxid: "@alice:example.com",
+                displayName: "Alice",
               },
-              USER_GREETING_FRAGMENT,
-            ),
+            },
+            USER_GREETING_FRAGMENT,
           ),
-        },
+        ),
 
         siteConfig: makeFragmentData(
           {
@@ -91,10 +87,13 @@ export const handlers = [
   mockUserProfileQuery(() =>
     HttpResponse.json({
       data: {
-        viewer: {
-          __typename: "User",
-          emails: {
-            totalCount: 1,
+        viewerSession: {
+          __typename: "BrowserSession",
+          id: "browser-session-id",
+          user: {
+            emails: {
+              totalCount: 1,
+            },
           },
         },
 

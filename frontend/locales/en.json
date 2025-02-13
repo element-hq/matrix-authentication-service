@@ -10,6 +10,7 @@
     "expand": "Expand",
     "save": "Save",
     "save_and_continue": "Save and continue",
+    "sign_out": "Sign out",
     "start_over": "Start over"
   },
   "branding": {
@@ -45,6 +46,10 @@
         "change_disabled": "Password changes are disabled by the administrator.",
         "label": "Password"
       },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
+      },
       "title": "Your account"
     },
     "add_email_form": {
@@ -69,8 +74,7 @@
     },
     "compat_session_detail": {
       "client_details_title": "Client info",
-      "name": "Name",
-      "session_details_title": "Session"
+      "name": "Name"
     },
     "device_type_icon_label": {
       "mobile": "Mobile",
@@ -83,7 +87,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Are you sure you want to end this session?",
-      "text": "Sign out"
+      "text": "Remove device"
     },
     "error": {
       "hideDetails": "Hide details",
@@ -233,6 +237,7 @@
       "current": "Current",
       "device_id_label": "Device ID",
       "finished_label": "Finished",
+      "generic_browser_session": "Browser session",
       "ip_label": "IP Address",
       "last_active_label": "Last Active",
       "name_for_platform": "{{name}} for {{platform}}",

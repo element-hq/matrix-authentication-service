@@ -3,10 +3,10 @@
 exports[`<OAuth2ClientDetail> > renders client details 1`] = `
 <div>
   <div
-    class="_blockList_f8cc7f"
+    class="flex flex-col gap-10"
   >
     <header
-      class="_header_477219"
+      class="flex flex-row gap-2 justify-start items-center"
     >
       <h3
         class="_typography_yh5dq_162 _font-heading-md-semibold_yh5dq_121"
@@ -14,71 +14,85 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
         Test Client
       </h3>
     </header>
-    <div
-      class="_block_17898c"
+    <section
+      class="flex flex-col gap-6"
     >
       <h4
-        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _title_17898c"
+        class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102"
       >
         Client info
-      </h4>
-      <div
-        class="_wrapper_040867"
-      >
         <div
-          class="_datum_040867"
+          class="_separator_144s5_17"
+          data-kind="section"
+          data-orientation="horizontal"
+          role="separator"
+        />
+      </h4>
+      <ul
+        class="flex flex-wrap gap-x-10 gap-y-6"
+      >
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Name
           </h5>
           <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 _datumValue_040867"
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
             Test Client
           </p>
-        </div>
-        <div
-          class="_datum_040867"
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Terms of service
           </h5>
-          <a
-            class="_link_ue21z_17 _externalLink_a97355"
-            data-kind="primary"
-            data-size="medium"
-            href="https://client.org/tos"
-            rel="noreferrer noopener"
-            target="_blank"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            client.org/tos
-          </a>
-        </div>
-        <div
-          class="_datum_040867"
+            <a
+              class="_link_ue21z_17 _externalLink_a97355"
+              data-kind="primary"
+              data-size="medium"
+              href="https://client.org/tos"
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              client.org/tos
+            </a>
+          </p>
+        </li>
+        <li
+          class="flex flex-col min-w-0"
         >
           <h5
-            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40"
+            class="_typography_yh5dq_162 _font-body-sm-regular_yh5dq_40 text-secondary"
           >
             Policy
           </h5>
-          <a
-            class="_link_ue21z_17 _externalLink_a97355"
-            data-kind="primary"
-            data-size="medium"
-            href="https://client.org/policy"
-            rel="noreferrer noopener"
-            target="_blank"
+          <p
+            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59 text-ellipsis overflow-hidden"
           >
-            client.org/policy
-          </a>
-        </div>
-      </div>
-    </div>
+            <a
+              class="_link_ue21z_17 _externalLink_a97355"
+              data-kind="primary"
+              data-size="medium"
+              href="https://client.org/policy"
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              client.org/policy
+            </a>
+          </p>
+        </li>
+      </ul>
+    </section>
   </div>
 </div>
 `;

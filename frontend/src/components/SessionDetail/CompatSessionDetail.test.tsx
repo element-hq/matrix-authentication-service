@@ -38,7 +38,7 @@ describe("<CompatSessionDetail>", () => {
 
     expect(container).toMatchSnapshot();
     expect(queryByText("Finished")).toBeFalsy();
-    expect(getByText("Sign out")).toBeTruthy();
+    expect(getByText("Remove device")).toBeTruthy();
   });
 
   it("renders a compatability session without an ssoLogin", () => {
@@ -56,7 +56,7 @@ describe("<CompatSessionDetail>", () => {
 
     expect(container).toMatchSnapshot();
     expect(queryByText("Finished")).toBeFalsy();
-    expect(getByText("Sign out")).toBeTruthy();
+    expect(getByText("Remove device")).toBeTruthy();
   });
 
   it("renders a finished compatability session details", () => {
@@ -74,6 +74,6 @@ describe("<CompatSessionDetail>", () => {
 
     expect(container).toMatchSnapshot();
     expect(getByText("Finished")).toBeTruthy();
-    expect(queryByText("Sign out")).toBeFalsy();
+    expect(queryByText("Remove device")).toBeFalsy();
   });
 });

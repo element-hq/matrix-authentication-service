@@ -1565,28 +1565,17 @@ export type ViewerSession = Anonymous | BrowserSession | Oauth2Session;
 
 export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 
-export type BrowserSession_SessionFragment = { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', raw: string, name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, lastAuthentication?: { __typename?: 'Authentication', id: string, createdAt: string } | null } & { ' $fragmentName'?: 'BrowserSession_SessionFragment' };
-
-export type EndBrowserSessionMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type EndBrowserSessionMutation = { __typename?: 'Mutation', endBrowserSession: { __typename?: 'EndBrowserSessionPayload', status: EndBrowserSessionStatus, browserSession?: (
-      { __typename?: 'BrowserSession', id: string }
-      & { ' $fragmentRefs'?: { 'BrowserSession_SessionFragment': BrowserSession_SessionFragment } }
-    ) | null } };
+export type BrowserSession_SessionFragment = (
+  { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', deviceType: DeviceType, name?: string | null, os?: string | null, model?: string | null } | null }
+  & { ' $fragmentRefs'?: { 'EndBrowserSessionButton_SessionFragment': EndBrowserSessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'BrowserSession_SessionFragment' };
 
 export type OAuth2Client_DetailFragment = { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null, tosUri?: string | null, policyUri?: string | null, redirectUris: Array<string> } & { ' $fragmentName'?: 'OAuth2Client_DetailFragment' };
 
-export type CompatSession_SessionFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
-
-export type EndCompatSessionMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type EndCompatSessionMutation = { __typename?: 'Mutation', endCompatSession: { __typename?: 'EndCompatSessionPayload', status: EndCompatSessionStatus, compatSession?: { __typename?: 'CompatSession', id: string } | null } };
+export type CompatSession_SessionFragment = (
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
 
 export type Footer_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, imprint?: string | null, tosUri?: string | null, policyUri?: string | null } & { ' $fragmentName'?: 'Footer_SiteConfigFragment' };
 
@@ -1598,7 +1587,32 @@ export type FooterQuery = { __typename?: 'Query', siteConfig: (
     & { ' $fragmentRefs'?: { 'Footer_SiteConfigFragment': Footer_SiteConfigFragment } }
   ) };
 
-export type OAuth2Session_SessionFragment = { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } } & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
+export type OAuth2Session_SessionFragment = (
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
+  & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
+
+export type PasswordCreationDoubleInput_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, minimumPasswordComplexity: number } & { ' $fragmentName'?: 'PasswordCreationDoubleInput_SiteConfigFragment' };
+
+export type EndBrowserSessionButton_SessionFragment = { __typename?: 'BrowserSession', id: string, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null } & { ' $fragmentName'?: 'EndBrowserSessionButton_SessionFragment' };
+
+export type EndBrowserSessionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type EndBrowserSessionMutation = { __typename?: 'Mutation', endBrowserSession: { __typename?: 'EndBrowserSessionPayload', status: EndBrowserSessionStatus, browserSession?: { __typename?: 'BrowserSession', id: string } | null } };
+
+export type EndCompatSessionButton_SessionFragment = { __typename?: 'CompatSession', id: string, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'EndCompatSessionButton_SessionFragment' };
+
+export type EndCompatSessionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type EndCompatSessionMutation = { __typename?: 'Mutation', endCompatSession: { __typename?: 'EndCompatSessionPayload', status: EndCompatSessionStatus, compatSession?: { __typename?: 'CompatSession', id: string } | null } };
+
+export type EndOAuth2SessionButton_SessionFragment = { __typename?: 'Oauth2Session', id: string, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } } & { ' $fragmentName'?: 'EndOAuth2SessionButton_SessionFragment' };
 
 export type EndOAuth2SessionMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1607,13 +1621,20 @@ export type EndOAuth2SessionMutationVariables = Exact<{
 
 export type EndOAuth2SessionMutation = { __typename?: 'Mutation', endOauth2Session: { __typename?: 'EndOAuth2SessionPayload', status: EndOAuth2SessionStatus, oauth2Session?: { __typename?: 'Oauth2Session', id: string } | null } };
 
-export type PasswordCreationDoubleInput_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, minimumPasswordComplexity: number } & { ' $fragmentName'?: 'PasswordCreationDoubleInput_SiteConfigFragment' };
+export type BrowserSession_DetailFragment = (
+  { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, lastAuthentication?: { __typename?: 'Authentication', id: string, createdAt: string } | null, user: { __typename?: 'User', id: string, username: string } }
+  & { ' $fragmentRefs'?: { 'EndBrowserSessionButton_SessionFragment': EndBrowserSessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
 
-export type BrowserSession_DetailFragment = { __typename?: 'BrowserSession', id: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, lastAuthentication?: { __typename?: 'Authentication', id: string, createdAt: string } | null, user: { __typename?: 'User', id: string, username: string } } & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
+export type CompatSession_DetailFragment = (
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
 
-export type CompatSession_DetailFragment = { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null } & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
-
-export type OAuth2Session_DetailFragment = { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } } & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
+export type OAuth2Session_DetailFragment = (
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
+  & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
+) & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 
 export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
@@ -1666,26 +1687,10 @@ export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: st
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number } }, siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number } } } | { __typename: 'Oauth2Session' }, siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
-
-export type SessionDetailQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __typename?: 'Anonymous', id: string } | { __typename?: 'BrowserSession', id: string } | { __typename?: 'Oauth2Session', id: string }, node?: { __typename: 'Anonymous', id: string } | { __typename: 'Authentication', id: string } | (
-    { __typename: 'BrowserSession', id: string }
-    & { ' $fragmentRefs'?: { 'BrowserSession_DetailFragment': BrowserSession_DetailFragment } }
-  ) | (
-    { __typename: 'CompatSession', id: string }
-    & { ' $fragmentRefs'?: { 'CompatSession_DetailFragment': CompatSession_DetailFragment } }
-  ) | { __typename: 'CompatSsoLogin', id: string } | { __typename: 'Oauth2Client', id: string } | (
-    { __typename: 'Oauth2Session', id: string }
-    & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
-  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserEmailAuthentication', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
 
 export type BrowserSessionListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1729,10 +1734,10 @@ export type AppSessionsListQuery = { __typename?: 'Query', viewer: { __typename:
 export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CurrentUserGreetingQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
-      { __typename?: 'User' }
-      & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
-    ) } | { __typename: 'Oauth2Session' }, siteConfig: (
+export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
+    { __typename: 'User' }
+    & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
+  ), siteConfig: (
     { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
@@ -1842,6 +1847,22 @@ export type AllowCrossSigningResetMutationVariables = Exact<{
 
 export type AllowCrossSigningResetMutation = { __typename?: 'Mutation', allowUserCrossSigningReset: { __typename?: 'AllowUserCrossSigningResetPayload', user?: { __typename?: 'User', id: string } | null } };
 
+export type SessionDetailQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __typename?: 'Anonymous', id: string } | { __typename?: 'BrowserSession', id: string } | { __typename?: 'Oauth2Session', id: string }, node?: { __typename: 'Anonymous', id: string } | { __typename: 'Authentication', id: string } | (
+    { __typename: 'BrowserSession', id: string }
+    & { ' $fragmentRefs'?: { 'BrowserSession_DetailFragment': BrowserSession_DetailFragment } }
+  ) | (
+    { __typename: 'CompatSession', id: string }
+    & { ' $fragmentRefs'?: { 'CompatSession_DetailFragment': CompatSession_DetailFragment } }
+  ) | { __typename: 'CompatSsoLogin', id: string } | { __typename: 'Oauth2Client', id: string } | (
+    { __typename: 'Oauth2Session', id: string }
+    & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
+  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserEmailAuthentication', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
+
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -1861,26 +1882,40 @@ export const PasswordChange_SiteConfigFragmentDoc = new TypedDocumentString(`
   passwordChangeAllowed
 }
     `, {"fragmentName":"PasswordChange_siteConfig"}) as unknown as TypedDocumentString<PasswordChange_SiteConfigFragment, unknown>;
-export const BrowserSession_SessionFragmentDoc = new TypedDocumentString(`
-    fragment BrowserSession_session on BrowserSession {
+export const EndBrowserSessionButton_SessionFragmentDoc = new TypedDocumentString(`
+    fragment EndBrowserSessionButton_session on BrowserSession {
   id
-  createdAt
-  finishedAt
   userAgent {
-    raw
     name
     os
     model
     deviceType
   }
-  lastActiveIp
-  lastActiveAt
-  lastAuthentication {
-    id
-    createdAt
-  }
 }
-    `, {"fragmentName":"BrowserSession_session"}) as unknown as TypedDocumentString<BrowserSession_SessionFragment, unknown>;
+    `, {"fragmentName":"EndBrowserSessionButton_session"}) as unknown as TypedDocumentString<EndBrowserSessionButton_SessionFragment, unknown>;
+export const BrowserSession_SessionFragmentDoc = new TypedDocumentString(`
+    fragment BrowserSession_session on BrowserSession {
+  id
+  createdAt
+  finishedAt
+  ...EndBrowserSessionButton_session
+  userAgent {
+    deviceType
+    name
+    os
+    model
+  }
+  lastActiveAt
+}
+    fragment EndBrowserSessionButton_session on BrowserSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+}`, {"fragmentName":"BrowserSession_session"}) as unknown as TypedDocumentString<BrowserSession_SessionFragment, unknown>;
 export const OAuth2Client_DetailFragmentDoc = new TypedDocumentString(`
     fragment OAuth2Client_detail on Oauth2Client {
   id
@@ -1893,14 +1928,9 @@ export const OAuth2Client_DetailFragmentDoc = new TypedDocumentString(`
   redirectUris
 }
     `, {"fragmentName":"OAuth2Client_detail"}) as unknown as TypedDocumentString<OAuth2Client_DetailFragment, unknown>;
-export const CompatSession_SessionFragmentDoc = new TypedDocumentString(`
-    fragment CompatSession_session on CompatSession {
+export const EndCompatSessionButton_SessionFragmentDoc = new TypedDocumentString(`
+    fragment EndCompatSessionButton_session on CompatSession {
   id
-  createdAt
-  deviceId
-  finishedAt
-  lastActiveIp
-  lastActiveAt
   userAgent {
     name
     os
@@ -1912,7 +1942,40 @@ export const CompatSession_SessionFragmentDoc = new TypedDocumentString(`
     redirectUri
   }
 }
-    `, {"fragmentName":"CompatSession_session"}) as unknown as TypedDocumentString<CompatSession_SessionFragment, unknown>;
+    `, {"fragmentName":"EndCompatSessionButton_session"}) as unknown as TypedDocumentString<EndCompatSessionButton_SessionFragment, unknown>;
+export const CompatSession_SessionFragmentDoc = new TypedDocumentString(`
+    fragment CompatSession_session on CompatSession {
+  id
+  createdAt
+  deviceId
+  finishedAt
+  lastActiveIp
+  lastActiveAt
+  ...EndCompatSessionButton_session
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}
+    fragment EndCompatSessionButton_session on CompatSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}`, {"fragmentName":"CompatSession_session"}) as unknown as TypedDocumentString<CompatSession_SessionFragment, unknown>;
 export const Footer_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment Footer_siteConfig on SiteConfig {
   id
@@ -1921,6 +1984,23 @@ export const Footer_SiteConfigFragmentDoc = new TypedDocumentString(`
   policyUri
 }
     `, {"fragmentName":"Footer_siteConfig"}) as unknown as TypedDocumentString<Footer_SiteConfigFragment, unknown>;
+export const EndOAuth2SessionButton_SessionFragmentDoc = new TypedDocumentString(`
+    fragment EndOAuth2SessionButton_session on Oauth2Session {
+  id
+  userAgent {
+    name
+    model
+    os
+    deviceType
+  }
+  client {
+    clientId
+    clientName
+    applicationType
+    logoUri
+  }
+}
+    `, {"fragmentName":"EndOAuth2SessionButton_session"}) as unknown as TypedDocumentString<EndOAuth2SessionButton_SessionFragment, unknown>;
 export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
     fragment OAuth2Session_session on Oauth2Session {
   id
@@ -1929,6 +2009,7 @@ export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  ...EndOAuth2SessionButton_session
   userAgent {
     name
     model
@@ -1943,12 +2024,27 @@ export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
     logoUri
   }
 }
-    `, {"fragmentName":"OAuth2Session_session"}) as unknown as TypedDocumentString<OAuth2Session_SessionFragment, unknown>;
+    fragment EndOAuth2SessionButton_session on Oauth2Session {
+  id
+  userAgent {
+    name
+    model
+    os
+    deviceType
+  }
+  client {
+    clientId
+    clientName
+    applicationType
+    logoUri
+  }
+}`, {"fragmentName":"OAuth2Session_session"}) as unknown as TypedDocumentString<OAuth2Session_SessionFragment, unknown>;
 export const BrowserSession_DetailFragmentDoc = new TypedDocumentString(`
     fragment BrowserSession_detail on BrowserSession {
   id
   createdAt
   finishedAt
+  ...EndBrowserSessionButton_session
   userAgent {
     name
     model
@@ -1965,7 +2061,15 @@ export const BrowserSession_DetailFragmentDoc = new TypedDocumentString(`
     username
   }
 }
-    `, {"fragmentName":"BrowserSession_detail"}) as unknown as TypedDocumentString<BrowserSession_DetailFragment, unknown>;
+    fragment EndBrowserSessionButton_session on BrowserSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+}`, {"fragmentName":"BrowserSession_detail"}) as unknown as TypedDocumentString<BrowserSession_DetailFragment, unknown>;
 export const CompatSession_DetailFragmentDoc = new TypedDocumentString(`
     fragment CompatSession_detail on CompatSession {
   id
@@ -1974,6 +2078,7 @@ export const CompatSession_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  ...EndCompatSessionButton_session
   userAgent {
     name
     os
@@ -1984,7 +2089,19 @@ export const CompatSession_DetailFragmentDoc = new TypedDocumentString(`
     redirectUri
   }
 }
-    `, {"fragmentName":"CompatSession_detail"}) as unknown as TypedDocumentString<CompatSession_DetailFragment, unknown>;
+    fragment EndCompatSessionButton_session on CompatSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}`, {"fragmentName":"CompatSession_detail"}) as unknown as TypedDocumentString<CompatSession_DetailFragment, unknown>;
 export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
     fragment OAuth2Session_detail on Oauth2Session {
   id
@@ -1993,6 +2110,12 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  ...EndOAuth2SessionButton_session
+  userAgent {
+    name
+    model
+    os
+  }
   client {
     id
     clientId
@@ -2001,7 +2124,21 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
     logoUri
   }
 }
-    `, {"fragmentName":"OAuth2Session_detail"}) as unknown as TypedDocumentString<OAuth2Session_DetailFragment, unknown>;
+    fragment EndOAuth2SessionButton_session on Oauth2Session {
+  id
+  userAgent {
+    name
+    model
+    os
+    deviceType
+  }
+  client {
+    clientId
+    clientName
+    applicationType
+    logoUri
+  }
+}`, {"fragmentName":"OAuth2Session_detail"}) as unknown as TypedDocumentString<OAuth2Session_DetailFragment, unknown>;
 export const UserEmail_EmailFragmentDoc = new TypedDocumentString(`
     fragment UserEmail_email on UserEmail {
   id
@@ -2060,44 +2197,6 @@ export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
   id
   minimumPasswordComplexity
 }`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
-export const EndBrowserSessionDocument = new TypedDocumentString(`
-    mutation EndBrowserSession($id: ID!) {
-  endBrowserSession(input: {browserSessionId: $id}) {
-    status
-    browserSession {
-      id
-      ...BrowserSession_session
-    }
-  }
-}
-    fragment BrowserSession_session on BrowserSession {
-  id
-  createdAt
-  finishedAt
-  userAgent {
-    raw
-    name
-    os
-    model
-    deviceType
-  }
-  lastActiveIp
-  lastActiveAt
-  lastAuthentication {
-    id
-    createdAt
-  }
-}`) as unknown as TypedDocumentString<EndBrowserSessionMutation, EndBrowserSessionMutationVariables>;
-export const EndCompatSessionDocument = new TypedDocumentString(`
-    mutation EndCompatSession($id: ID!) {
-  endCompatSession(input: {compatSessionId: $id}) {
-    status
-    compatSession {
-      id
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<EndCompatSessionMutation, EndCompatSessionMutationVariables>;
 export const FooterDocument = new TypedDocumentString(`
     query Footer {
   siteConfig {
@@ -2111,6 +2210,26 @@ export const FooterDocument = new TypedDocumentString(`
   tosUri
   policyUri
 }`) as unknown as TypedDocumentString<FooterQuery, FooterQueryVariables>;
+export const EndBrowserSessionDocument = new TypedDocumentString(`
+    mutation EndBrowserSession($id: ID!) {
+  endBrowserSession(input: {browserSessionId: $id}) {
+    status
+    browserSession {
+      id
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<EndBrowserSessionMutation, EndBrowserSessionMutationVariables>;
+export const EndCompatSessionDocument = new TypedDocumentString(`
+    mutation EndCompatSession($id: ID!) {
+  endCompatSession(input: {compatSessionId: $id}) {
+    status
+    compatSession {
+      id
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<EndCompatSessionMutation, EndCompatSessionMutationVariables>;
 export const EndOAuth2SessionDocument = new TypedDocumentString(`
     mutation EndOAuth2Session($id: ID!) {
   endOauth2Session(input: {oauth2SessionId: $id}) {
@@ -2178,11 +2297,14 @@ export const UserEmailListDocument = new TypedDocumentString(`
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
-  viewer {
+  viewerSession {
     __typename
-    ... on User {
-      emails(first: 0) {
-        totalCount
+    ... on BrowserSession {
+      id
+      user {
+        emails(first: 0) {
+          totalCount
+        }
       }
     }
   }
@@ -2203,73 +2325,6 @@ fragment UserEmail_siteConfig on SiteConfig {
 fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
-export const SessionDetailDocument = new TypedDocumentString(`
-    query SessionDetail($id: ID!) {
-  viewerSession {
-    ... on Node {
-      id
-    }
-  }
-  node(id: $id) {
-    __typename
-    id
-    ...CompatSession_detail
-    ...OAuth2Session_detail
-    ...BrowserSession_detail
-  }
-}
-    fragment BrowserSession_detail on BrowserSession {
-  id
-  createdAt
-  finishedAt
-  userAgent {
-    name
-    model
-    os
-  }
-  lastActiveIp
-  lastActiveAt
-  lastAuthentication {
-    id
-    createdAt
-  }
-  user {
-    id
-    username
-  }
-}
-fragment CompatSession_detail on CompatSession {
-  id
-  createdAt
-  deviceId
-  finishedAt
-  lastActiveIp
-  lastActiveAt
-  userAgent {
-    name
-    os
-    model
-  }
-  ssoLogin {
-    id
-    redirectUri
-  }
-}
-fragment OAuth2Session_detail on Oauth2Session {
-  id
-  scope
-  createdAt
-  finishedAt
-  lastActiveIp
-  lastActiveAt
-  client {
-    id
-    clientId
-    clientName
-    clientUri
-    logoUri
-  }
-}`) as unknown as TypedDocumentString<SessionDetailQuery, SessionDetailQueryVariables>;
 export const BrowserSessionListDocument = new TypedDocumentString(`
     query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
   viewerSession {
@@ -2309,18 +2364,22 @@ export const BrowserSessionListDocument = new TypedDocumentString(`
   id
   createdAt
   finishedAt
+  ...EndBrowserSessionButton_session
   userAgent {
-    raw
+    deviceType
+    name
+    os
+    model
+  }
+  lastActiveAt
+}
+fragment EndBrowserSessionButton_session on BrowserSession {
+  id
+  userAgent {
     name
     os
     model
     deviceType
-  }
-  lastActiveIp
-  lastActiveAt
-  lastAuthentication {
-    id
-    createdAt
   }
 }`) as unknown as TypedDocumentString<BrowserSessionListQuery, BrowserSessionListQueryVariables>;
 export const SessionsOverviewDocument = new TypedDocumentString(`
@@ -2379,6 +2438,7 @@ export const AppSessionsListDocument = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  ...EndCompatSessionButton_session
   userAgent {
     name
     os
@@ -2397,6 +2457,7 @@ fragment OAuth2Session_session on Oauth2Session {
   finishedAt
   lastActiveIp
   lastActiveAt
+  ...EndOAuth2SessionButton_session
   userAgent {
     name
     model
@@ -2410,16 +2471,41 @@ fragment OAuth2Session_session on Oauth2Session {
     applicationType
     logoUri
   }
+}
+fragment EndCompatSessionButton_session on CompatSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}
+fragment EndOAuth2SessionButton_session on Oauth2Session {
+  id
+  userAgent {
+    name
+    model
+    os
+    deviceType
+  }
+  client {
+    clientId
+    clientName
+    applicationType
+    logoUri
+  }
 }`) as unknown as TypedDocumentString<AppSessionsListQuery, AppSessionsListQueryVariables>;
 export const CurrentUserGreetingDocument = new TypedDocumentString(`
     query CurrentUserGreeting {
-  viewerSession {
+  viewer {
     __typename
-    ... on BrowserSession {
-      id
-      user {
-        ...UserGreeting_user
-      }
+    ... on User {
+      ...UserGreeting_user
     }
   }
   siteConfig {
@@ -2565,6 +2651,139 @@ export const AllowCrossSigningResetDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>;
+export const SessionDetailDocument = new TypedDocumentString(`
+    query SessionDetail($id: ID!) {
+  viewerSession {
+    ... on Node {
+      id
+    }
+  }
+  node(id: $id) {
+    __typename
+    id
+    ...CompatSession_detail
+    ...OAuth2Session_detail
+    ...BrowserSession_detail
+  }
+}
+    fragment EndBrowserSessionButton_session on BrowserSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+}
+fragment EndCompatSessionButton_session on CompatSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}
+fragment EndOAuth2SessionButton_session on Oauth2Session {
+  id
+  userAgent {
+    name
+    model
+    os
+    deviceType
+  }
+  client {
+    clientId
+    clientName
+    applicationType
+    logoUri
+  }
+}
+fragment BrowserSession_detail on BrowserSession {
+  id
+  createdAt
+  finishedAt
+  ...EndBrowserSessionButton_session
+  userAgent {
+    name
+    model
+    os
+  }
+  lastActiveIp
+  lastActiveAt
+  lastAuthentication {
+    id
+    createdAt
+  }
+  user {
+    id
+    username
+  }
+}
+fragment CompatSession_detail on CompatSession {
+  id
+  createdAt
+  deviceId
+  finishedAt
+  lastActiveIp
+  lastActiveAt
+  ...EndCompatSessionButton_session
+  userAgent {
+    name
+    os
+    model
+  }
+  ssoLogin {
+    id
+    redirectUri
+  }
+}
+fragment OAuth2Session_detail on Oauth2Session {
+  id
+  scope
+  createdAt
+  finishedAt
+  lastActiveIp
+  lastActiveAt
+  ...EndOAuth2SessionButton_session
+  userAgent {
+    name
+    model
+    os
+  }
+  client {
+    id
+    clientId
+    clientName
+    clientUri
+    logoUri
+  }
+}`) as unknown as TypedDocumentString<SessionDetailQuery, SessionDetailQueryVariables>;
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockFooterQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockFooterQuery = (resolver: GraphQLResponseResolver<FooterQuery, FooterQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<FooterQuery, FooterQueryVariables>(
+    'Footer',
+    resolver,
+    options
+  )
 
 /**
  * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
@@ -2606,27 +2825,6 @@ export const mockEndBrowserSessionMutation = (resolver: GraphQLResponseResolver<
 export const mockEndCompatSessionMutation = (resolver: GraphQLResponseResolver<EndCompatSessionMutation, EndCompatSessionMutationVariables>, options?: RequestHandlerOptions) =>
   graphql.mutation<EndCompatSessionMutation, EndCompatSessionMutationVariables>(
     'EndCompatSession',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockFooterQuery(
- *   ({ query, variables }) => {
- *     return HttpResponse.json({
- *       data: { siteConfig }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockFooterQuery = (resolver: GraphQLResponseResolver<FooterQuery, FooterQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<FooterQuery, FooterQueryVariables>(
-    'Footer',
     resolver,
     options
   )
@@ -2749,7 +2947,7 @@ export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEma
  * mockUserProfileQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
- *       data: { viewer, siteConfig }
+ *       data: { viewerSession, siteConfig }
  *     })
  *   },
  *   requestOptions
@@ -2758,28 +2956,6 @@ export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEma
 export const mockUserProfileQuery = (resolver: GraphQLResponseResolver<UserProfileQuery, UserProfileQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserProfileQuery, UserProfileQueryVariables>(
     'UserProfile',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockSessionDetailQuery(
- *   ({ query, variables }) => {
- *     const { id } = variables;
- *     return HttpResponse.json({
- *       data: { viewerSession, node }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockSessionDetailQuery = (resolver: GraphQLResponseResolver<SessionDetailQuery, SessionDetailQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<SessionDetailQuery, SessionDetailQueryVariables>(
-    'SessionDetail',
     resolver,
     options
   )
@@ -2857,7 +3033,7 @@ export const mockAppSessionsListQuery = (resolver: GraphQLResponseResolver<AppSe
  * mockCurrentUserGreetingQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
- *       data: { viewerSession, siteConfig }
+ *       data: { viewer, siteConfig }
  *     })
  *   },
  *   requestOptions
@@ -3128,6 +3304,28 @@ export const mockPasswordRecoveryQuery = (resolver: GraphQLResponseResolver<Pass
 export const mockAllowCrossSigningResetMutation = (resolver: GraphQLResponseResolver<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>, options?: RequestHandlerOptions) =>
   graphql.mutation<AllowCrossSigningResetMutation, AllowCrossSigningResetMutationVariables>(
     'AllowCrossSigningReset',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSessionDetailQuery(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewerSession, node }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSessionDetailQuery = (resolver: GraphQLResponseResolver<SessionDetailQuery, SessionDetailQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<SessionDetailQuery, SessionDetailQueryVariables>(
+    'SessionDetail',
     resolver,
     options
   )

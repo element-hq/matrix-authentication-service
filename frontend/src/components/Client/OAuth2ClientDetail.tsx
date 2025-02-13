@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -9,12 +9,9 @@ import { useTranslation } from "react-i18next";
 
 import { type FragmentType, useFragment } from "../../gql";
 import { graphql } from "../../gql/gql";
-import BlockList from "../BlockList/BlockList";
 import ExternalLink from "../ExternalLink/ExternalLink";
 import ClientAvatar from "../Session/ClientAvatar";
-import SessionDetails from "../SessionDetail/SessionDetails";
-
-import styles from "./OAuth2ClientDetail.module.css";
+import * as Info from "../SessionDetail/SessionInfo";
 
 export const OAUTH2_CLIENT_FRAGMENT = graphql(/* GraphQL */ `
   fragment OAuth2Client_detail on Oauth2Client {
@@ -47,21 +44,9 @@ const OAuth2ClientDetail: React.FC<Props> = ({ client }) => {
   const data = useFragment(OAUTH2_CLIENT_FRAGMENT, client);
   const { t } = useTranslation();
 
-  const details = [
-    { label: t("frontend.oauth2_client_detail.name"), value: data.clientName },
-    {
-      label: t("frontend.oauth2_client_detail.terms"),
-      value: data.tosUri && <FriendlyExternalLink uri={data.tosUri} />,
-    },
-    {
-      label: t("frontend.oauth2_client_detail.policy"),
-      value: data.policyUri && <FriendlyExternalLink uri={data.policyUri} />,
-    },
-  ].filter(({ value }) => !!value);
-
   return (
-    <BlockList>
-      <header className={styles.header}>
+    <div className="flex flex-col gap-10">
+      <header className="flex flex-row gap-2 justify-start items-center">
         <ClientAvatar
           logoUri={data.logoUri || undefined}
           name={data.clientName || data.clientId}
@@ -69,11 +54,42 @@ const OAuth2ClientDetail: React.FC<Props> = ({ client }) => {
         />
         <H3>{data.clientName}</H3>
       </header>
-      <SessionDetails
-        title={t("frontend.oauth2_client_detail.details_title")}
-        details={details}
-      />
-    </BlockList>
+      <Info.DataSection>
+        <Info.DataSectionHeader>
+          {t("frontend.oauth2_client_detail.details_title")}
+        </Info.DataSectionHeader>
+        <Info.DataList>
+          {data.clientName && (
+            <Info.Data>
+              <Info.DataLabel>
+                {t("frontend.oauth2_client_detail.name")}
+              </Info.DataLabel>
+              <Info.DataValue>{data.clientName}</Info.DataValue>
+            </Info.Data>
+          )}
+          {data.tosUri && (
+            <Info.Data>
+              <Info.DataLabel>
+                {t("frontend.oauth2_client_detail.terms")}
+              </Info.DataLabel>
+              <Info.DataValue>
+                <FriendlyExternalLink uri={data.tosUri} />
+              </Info.DataValue>
+            </Info.Data>
+          )}
+          {data.policyUri && (
+            <Info.Data>
+              <Info.DataLabel>
+                {t("frontend.oauth2_client_detail.policy")}
+              </Info.DataLabel>
+              <Info.DataValue>
+                <FriendlyExternalLink uri={data.policyUri} />
+              </Info.DataValue>
+            </Info.Data>
+          )}
+        </Info.DataList>
+      </Info.DataSection>
+    </div>
   );
 };
 

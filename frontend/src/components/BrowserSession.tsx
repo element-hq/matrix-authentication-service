@@ -7,15 +7,12 @@
 import IconChrome from "@browser-logos/chrome/chrome_64x64.png?url";
 import IconFirefox from "@browser-logos/firefox/firefox_64x64.png?url";
 import IconSafari from "@browser-logos/safari/safari_64x64.png?url";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
-import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../gql";
-import { graphqlRequest } from "../graphql";
 import DateTime from "./DateTime";
-import EndSessionButton from "./Session/EndSessionButton";
+import EndBrowserSessionButton from "./Session/EndBrowserSessionButton";
 import LastActive from "./Session/LastActive";
 import * as Card from "./SessionCard";
 
@@ -24,61 +21,16 @@ const FRAGMENT = graphql(/* GraphQL */ `
     id
     createdAt
     finishedAt
+    ...EndBrowserSessionButton_session
     userAgent {
-      raw
+      deviceType
       name
       os
       model
-      deviceType
     }
-    lastActiveIp
     lastActiveAt
-    lastAuthentication {
-      id
-      createdAt
-    }
   }
 `);
-
-const END_SESSION_MUTATION = graphql(/* GraphQL */ `
-  mutation EndBrowserSession($id: ID!) {
-    endBrowserSession(input: { browserSessionId: $id }) {
-      status
-      browserSession {
-        id
-        ...BrowserSession_session
-      }
-    }
-  }
-`);
-
-export const useEndBrowserSession = (
-  sessionId: string,
-  isCurrent: boolean,
-): (() => Promise<void>) => {
-  const queryClient = useQueryClient();
-  const endSession = useMutation({
-    mutationFn: (id: string) =>
-      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
-      queryClient.invalidateQueries({ queryKey: ["browserSessionList"] });
-      queryClient.invalidateQueries({
-        queryKey: ["sessionDetail", data.endBrowserSession.browserSession?.id],
-      });
-
-      if (isCurrent) {
-        window.location.reload();
-      }
-    },
-  });
-
-  const onSessionEnd = useCallback(async (): Promise<void> => {
-    await endSession.mutateAsync(sessionId);
-  }, [endSession.mutateAsync, sessionId]);
-
-  return onSessionEnd;
-};
 
 export const browserLogoUri = (browser?: string): string | undefined => {
   const lcBrowser = browser?.toLowerCase();
@@ -104,8 +56,6 @@ type Props = {
 const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
   const data = useFragment(FRAGMENT, session);
   const { t } = useTranslation();
-
-  const onSessionEnd = useEndBrowserSession(data.id, isCurrent);
 
   const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 
@@ -175,14 +125,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndSessionButton endSession={onSessionEnd}>
-            <Card.Body compact>
-              <Card.Header type={deviceType}>
-                <Card.Name name={deviceName} />
-                {clientName && <Card.Client name={clientName} />}
-              </Card.Header>
-            </Card.Body>
-          </EndSessionButton>
+          <EndBrowserSessionButton session={data} size="sm" />
         </Card.Action>
       )}
     </Card.Root>
