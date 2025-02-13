@@ -13,11 +13,14 @@ import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query UserProfile {
-    viewer {
+    viewerSession {
       __typename
-      ... on User {
-        emails(first: 0) {
-          totalCount
+      ... on BrowserSession {
+        id
+        user {
+          emails(first: 0) {
+            totalCount
+          }
         }
       }
     }

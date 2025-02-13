@@ -6,7 +6,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
     class="_layoutContainer_0c8bf9"
   >
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-10"
     >
       <header
         class="_pageHeading_c10486"
@@ -60,7 +60,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     class="_layoutContainer_0c8bf9"
   >
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-10"
     >
       <header
         class="_pageHeading_c10486"
@@ -96,38 +96,36 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
       </p>
       <ul
-        class="_list_7f22f8"
+        class="_visual-list_4dcf8_17"
       >
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-success-primary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26 _visual-list-item-icon-success_bqeu7_31"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
               d="M9.55 17.575c-.133 0-.258-.02-.375-.063a.876.876 0 0 1-.325-.212L4.55 13c-.183-.183-.27-.42-.263-.713.009-.291.105-.529.288-.712a.948.948 0 0 1 .7-.275.95.95 0 0 1 .7.275L9.55 15.15l8.475-8.475c.183-.183.42-.275.713-.275.291 0 .529.092.712.275.183.183.275.42.275.713 0 .291-.092.529-.275.712l-9.2 9.2c-.1.1-.208.17-.325.212a1.106 1.106 0 0 1-.375.063Z"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            Your account details, contacts, preferences, and chat list will be kept
-          </p>
+          Your account details, contacts, preferences, and chat list will be kept
         </li>
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-tertiary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -139,21 +137,18 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
               fill-rule="evenodd"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            You will lose any message history that's stored only on the server
-          </p>
+          You will lose any message history that's stored only on the server
         </li>
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-tertiary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -165,11 +160,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
               fill-rule="evenodd"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            You will need to verify all your existing devices and contacts again
-          </p>
+          You will need to verify all your existing devices and contacts again
         </li>
       </ul>
       <p
@@ -340,7 +331,7 @@ exports[`Reset cross signing > renders the page 1`] = `
     class="_layoutContainer_0c8bf9"
   >
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-10"
     >
       <header
         class="_pageHeading_c10486"
@@ -376,38 +367,36 @@ exports[`Reset cross signing > renders the page 1`] = `
         If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
       </p>
       <ul
-        class="_list_7f22f8"
+        class="_visual-list_4dcf8_17"
       >
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-success-primary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26 _visual-list-item-icon-success_bqeu7_31"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
               d="M9.55 17.575c-.133 0-.258-.02-.375-.063a.876.876 0 0 1-.325-.212L4.55 13c-.183-.183-.27-.42-.263-.713.009-.291.105-.529.288-.712a.948.948 0 0 1 .7-.275.95.95 0 0 1 .7.275L9.55 15.15l8.475-8.475c.183-.183.42-.275.713-.275.291 0 .529.092.712.275.183.183.275.42.275.713 0 .291-.092.529-.275.712l-9.2 9.2c-.1.1-.208.17-.325.212a1.106 1.106 0 0 1-.375.063Z"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            Your account details, contacts, preferences, and chat list will be kept
-          </p>
+          Your account details, contacts, preferences, and chat list will be kept
         </li>
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-tertiary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -419,21 +408,18 @@ exports[`Reset cross signing > renders the page 1`] = `
               fill-rule="evenodd"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            You will lose any message history that's stored only on the server
-          </p>
+          You will lose any message history that's stored only on the server
         </li>
         <li
-          class="_item_7f22f8"
+          class="_visual-list-item_bqeu7_17"
         >
           <svg
-            color="var(--cpd-color-icon-tertiary)"
+            aria-hidden="true"
+            class="_visual-list-item-icon_bqeu7_26"
             fill="currentColor"
-            height="1em"
+            height="24px"
             viewBox="0 0 24 24"
-            width="1em"
+            width="24px"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -445,11 +431,7 @@ exports[`Reset cross signing > renders the page 1`] = `
               fill-rule="evenodd"
             />
           </svg>
-          <p
-            class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
-          >
-            You will need to verify all your existing devices and contacts again
-          </p>
+          You will need to verify all your existing devices and contacts again
         </li>
       </ul>
       <p
@@ -529,7 +511,7 @@ exports[`Reset cross signing > renders the success page 1`] = `
     class="_layoutContainer_0c8bf9"
   >
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-10"
     >
       <header
         class="_pageHeading_c10486"
@@ -578,7 +560,7 @@ exports[`Reset cross signing > renders the success page 2`] = `
     class="_layoutContainer_0c8bf9"
   >
     <div
-      class="_blockList_f8cc7f"
+      class="flex flex-col gap-10"
     >
       <header
         class="_pageHeading_c10486"

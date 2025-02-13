@@ -15,7 +15,6 @@ import { Alert, Form, Separator } from "@vector-im/compound-web";
 import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -103,7 +102,7 @@ function ChangePassword(): React.ReactNode {
 
   return (
     <Layout>
-      <BlockList>
+      <div className="flex flex-col gap-10">
         <PageHeading
           Icon={IconLockSolid}
           title={t("frontend.password_change.title")}
@@ -181,7 +180,7 @@ function ChangePassword(): React.ReactNode {
             {t("action.cancel")}
           </ButtonLink>
         </Form.Root>
-      </BlockList>
+      </div>
     </Layout>
   );
 }

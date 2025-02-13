@@ -43,10 +43,13 @@ const userProfileHandler = ({
   mockUserProfileQuery(() =>
     HttpResponse.json({
       data: {
-        viewer: {
-          __typename: "User",
-          emails: {
-            totalCount: emailTotalCount,
+        viewerSession: {
+          __typename: "BrowserSession",
+          id: "session-id",
+          user: {
+            emails: {
+              totalCount: emailTotalCount,
+            },
           },
         },
 

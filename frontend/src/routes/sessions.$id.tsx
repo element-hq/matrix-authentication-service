@@ -34,7 +34,7 @@ export const query = (id: string) =>
       graphqlRequest({ query: QUERY, signal, variables: { id } }),
   });
 
-export const Route = createFileRoute("/_account/sessions/$id")({
+export const Route = createFileRoute("/sessions/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
 });

@@ -111,6 +111,10 @@
     flex-wrap: wrap;
     gap: var(--cpd-space-4x) var(--cpd-space-10x);
 
+    & > * {
+      min-width: 0;
+    }
+
     & .key {
       font: var(--cpd-font-body-sm-regular);
       letter-spacing: var(--cpd-font-letter-spacing-body-sm);
@@ -121,6 +125,8 @@
       font: var(--cpd-font-body-md-regular);
       letter-spacing: var(--cpd-font-letter-spacing-body-md);
       color: var(--cpd-color-text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

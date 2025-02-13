@@ -7,8 +7,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import IconCheckCircle from "@vector-im/compound-design-tokens/assets/web/icons/check-circle-solid";
 import { useTranslation } from "react-i18next";
-
-import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
@@ -22,7 +20,7 @@ function ChangePasswordSuccess(): React.ReactNode {
 
   return (
     <Layout>
-      <BlockList>
+      <div className="flex flex-col gap-10">
         <PageHeading
           Icon={IconCheckCircle}
           title={t("frontend.password_change.success.title")}
@@ -33,7 +31,7 @@ function ChangePasswordSuccess(): React.ReactNode {
         <ButtonLink to="/" kind="tertiary">
           {t("action.back")}
         </ButtonLink>
-      </BlockList>
+      </div>
     </Layout>
   );
 }

@@ -2,18 +2,18 @@
 
 exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
 <div
-  aria-describedby="radix-:r75:"
-  aria-labelledby="radix-:r74:"
+  aria-describedby="radix-:r72:"
+  aria-labelledby="radix-:r71:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r73:"
+  id="radix-:r70:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r74:"
+    id="radix-:r71:"
   >
     Edit profile
   </h2>
@@ -150,18 +150,18 @@ exports[`Account home page > display name edit box > displays an error if the di
 
 exports[`Account home page > display name edit box > lets edit the display name 1`] = `
 <div
-  aria-describedby="radix-:r1h:"
-  aria-labelledby="radix-:r1g:"
+  aria-describedby="radix-:r1e:"
+  aria-labelledby="radix-:r1d:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r1f:"
+  id="radix-:r1c:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r1g:"
+    id="radix-:r1d:"
   >
     Edit profile
   </h2>
@@ -308,32 +308,6 @@ exports[`Account home page > renders the page 1`] = `
         >
           Your account
         </h1>
-        <button
-          aria-controls="radix-:r0:"
-          aria-expanded="false"
-          aria-haspopup="dialog"
-          class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
-          data-kind="secondary"
-          data-size="sm"
-          data-state="closed"
-          role="button"
-          tabindex="0"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            fill="currentColor"
-            height="20"
-            viewBox="0 0 24 24"
-            width="20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
-            />
-          </svg>
-          Sign out
-        </button>
       </header>
       <div
         class="flex flex-col gap-4"
@@ -366,10 +340,10 @@ exports[`Account home page > renders the page 1`] = `
             </p>
           </div>
           <button
-            aria-controls="radix-:r3:"
+            aria-controls="radix-:r0:"
             aria-expanded="false"
             aria-haspopup="dialog"
-            aria-labelledby=":r6:"
+            aria-labelledby=":r3:"
             class="_icon-button_bh2qc_17 _editButton_66f22a"
             data-state="closed"
             role="button"
@@ -430,10 +404,10 @@ exports[`Account home page > renders the page 1`] = `
       </div>
     </div>
     <div
-      class="flex flex-col gap-4 mb-4"
+      class="flex flex-col gap-4"
     >
       <section
-        aria-labelledby=":rb:"
+        aria-labelledby=":r8:"
         class="_root_f1daaa"
         data-state="open"
       >
@@ -445,14 +419,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
-              id=":rb:"
+              id=":r8:"
             >
               Contact info
             </h4>
             <button
-              aria-controls="radix-:rd:"
+              aria-controls="radix-:ra:"
               aria-expanded="true"
-              aria-labelledby=":re:"
+              aria-labelledby=":rb:"
               class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
               data-state="open"
               role="button"
@@ -482,7 +456,7 @@ exports[`Account home page > renders the page 1`] = `
         <article
           class="_content_f1daaa"
           data-state="open"
-          id="radix-:rd:"
+          id="radix-:ra:"
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
@@ -493,7 +467,7 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_ssths_67"
-                for="radix-:rj:"
+                for="radix-:rg:"
               >
                 Email
               </label>
@@ -502,7 +476,7 @@ exports[`Account home page > renders the page 1`] = `
               >
                 <input
                   class="_control_9gon8_18 _userEmailField_e2a518"
-                  id="radix-:rj:"
+                  id="radix-:rg:"
                   name="email"
                   readonly=""
                   title=""
@@ -520,7 +494,7 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_ssths_67"
-                for="radix-:rk:"
+                for="radix-:rh:"
               >
                 Add email
               </label>
@@ -528,9 +502,9 @@ exports[`Account home page > renders the page 1`] = `
                 class="_controls_1h4nb_17"
               >
                 <input
-                  aria-describedby="radix-:rl:"
+                  aria-describedby="radix-:ri:"
                   class="_control_9gon8_18"
-                  id="radix-:rk:"
+                  id="radix-:rh:"
                   name="input"
                   required=""
                   title=""
@@ -539,7 +513,7 @@ exports[`Account home page > renders the page 1`] = `
               </div>
               <span
                 class="_message_ssths_93 _help-message_ssths_99"
-                id="radix-:rl:"
+                id="radix-:ri:"
               >
                 Add an alternative email you can use to access this account.
               </span>
@@ -554,7 +528,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <section
-        aria-labelledby=":rm:"
+        aria-labelledby=":rj:"
         class="_root_f1daaa"
         data-state="open"
       >
@@ -566,14 +540,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
-              id=":rm:"
+              id=":rj:"
             >
               Account password
             </h4>
             <button
-              aria-controls="radix-:ro:"
+              aria-controls="radix-:rl:"
               aria-expanded="true"
-              aria-labelledby=":rp:"
+              aria-labelledby=":rm:"
               class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
               data-state="open"
               role="button"
@@ -603,7 +577,7 @@ exports[`Account home page > renders the page 1`] = `
         <article
           class="_content_f1daaa"
           data-state="open"
-          id="radix-:ro:"
+          id="radix-:rl:"
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
@@ -614,14 +588,14 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_ssths_67"
-                for="radix-:ru:"
+                for="radix-:rr:"
               >
                 Password
               </label>
               <input
-                aria-describedby="radix-:rv:"
+                aria-describedby="radix-:rs:"
                 class="_control_9gon8_18"
-                id="radix-:ru:"
+                id="radix-:rr:"
                 name="password_preview"
                 readonly=""
                 title=""
@@ -630,7 +604,7 @@ exports[`Account home page > renders the page 1`] = `
               />
               <span
                 class="_message_ssths_93 _help-message_ssths_99"
-                id="radix-:rv:"
+                id="radix-:rs:"
               >
                 <a
                   class="_link_7634c3"
@@ -650,7 +624,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <section
-        aria-labelledby=":r10:"
+        aria-labelledby=":rt:"
         class="_root_f1daaa"
         data-state="closed"
       >
@@ -662,14 +636,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_yh5dq_162 _font-heading-sm-semibold_yh5dq_102 _triggerTitle_f1daaa"
-              id=":r10:"
+              id=":rt:"
             >
               End-to-end encryption
             </h4>
             <button
-              aria-controls="radix-:r12:"
+              aria-controls="radix-:rv:"
               aria-expanded="false"
-              aria-labelledby=":r13:"
+              aria-labelledby=":r10:"
               class="_icon-button_bh2qc_17 _triggerIcon_f1daaa"
               data-state="closed"
               role="button"
@@ -697,7 +671,39 @@ exports[`Account home page > renders the page 1`] = `
           </div>
         </header>
       </section>
+      <div
+        class="_separator_144s5_17"
+        data-kind="section"
+        data-orientation="horizontal"
+        role="separator"
+      />
     </div>
+    <button
+      aria-controls="radix-:r15:"
+      aria-expanded="false"
+      aria-haspopup="dialog"
+      class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
+      data-kind="primary"
+      data-size="lg"
+      data-state="closed"
+      role="button"
+      tabindex="0"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        fill="currentColor"
+        height="20"
+        viewBox="0 0 24 24"
+        width="20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M9 12.031c0-.283.096-.52.288-.712A.968.968 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7c0-.266.108-.508.325-.725a.93.93 0 0 1 .712-.287.977.977 0 0 1 .688.287l3.6 3.6c.1.1.17.209.212.325.042.117.063.242.063.375 0 .134-.02.259-.063.375a.877.877 0 0 1-.212.325l-3.6 3.6a.93.93 0 0 1-.712.288.977.977 0 0 1-.688-.288 1.02 1.02 0 0 1-.313-.712.931.931 0 0 1 .288-.713l1.875-1.875H10a.968.968 0 0 1-.712-.287A.968.968 0 0 1 9 12.03Zm-6-7c0-.55.196-1.02.588-1.412A1.926 1.926 0 0 1 5 3.03h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5v14h6a.97.97 0 0 1 .713.288.968.968 0 0 1 .287.712.97.97 0 0 1-.287.713.968.968 0 0 1-.713.287H5c-.55 0-1.02-.196-1.412-.587A1.926 1.926 0 0 1 3 19.03v-14Z"
+        />
+      </svg>
+      Sign out of account
+    </button>
     <footer
       class="_legalFooter_eb428f"
     >

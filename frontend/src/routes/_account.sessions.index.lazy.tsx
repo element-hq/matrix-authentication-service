@@ -8,7 +8,6 @@ import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { H3, Separator } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
-import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
 import CompatSession from "../components/CompatSession";
 import EmptyState from "../components/EmptyState";
@@ -53,7 +52,7 @@ function Sessions(): React.ReactElement {
   const edges = [...appSessions.edges].reverse();
 
   return (
-    <BlockList>
+    <div className="flex flex-col gap-10">
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
       <BrowserSessionsOverview user={viewer} />
       <Separator />
@@ -121,6 +120,6 @@ function Sessions(): React.ReactElement {
           </ButtonLink>
         </div>
       )}
-    </BlockList>
+    </div>
   );
 }

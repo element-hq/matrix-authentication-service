@@ -11,15 +11,10 @@ import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
-    viewerSession {
+    viewer {
       __typename
-
-      ... on BrowserSession {
-        id
-
-        user {
-          ...UserGreeting_user
-        }
+      ... on User {
+        ...UserGreeting_user
       }
     }
 

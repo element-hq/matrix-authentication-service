@@ -1,17 +1,16 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../gql";
-import { graphqlRequest } from "../graphql";
+import simplifyUrl from "../utils/simplifyUrl";
 import { browserLogoUri } from "./BrowserSession";
 import DateTime from "./DateTime";
-import EndSessionButton from "./Session/EndSessionButton";
+import EndCompatSessionButton from "./Session/EndCompatSessionButton";
 import LastActive from "./Session/LastActive";
 import * as Card from "./SessionCard";
 
@@ -23,6 +22,7 @@ export const FRAGMENT = graphql(/* GraphQL */ `
     finishedAt
     lastActiveIp
     lastActiveAt
+    ...EndCompatSessionButton_session
     userAgent {
       name
       os
@@ -36,59 +36,11 @@ export const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-export const END_SESSION_MUTATION = graphql(/* GraphQL */ `
-  mutation EndCompatSession($id: ID!) {
-    endCompatSession(input: { compatSessionId: $id }) {
-      status
-      compatSession {
-        id
-      }
-    }
-  }
-`);
-
-export const simplifyUrl = (url: string): string => {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch (_e) {
-    // Not a valid URL, return the original
-    return url;
-  }
-
-  // Clear out the search params and hash
-  parsed.search = "";
-  parsed.hash = "";
-
-  if (parsed.protocol === "https:") {
-    return parsed.hostname;
-  }
-
-  // Return the simplified URL
-  return parsed.toString();
-};
-
 const CompatSession: React.FC<{
   session: FragmentType<typeof FRAGMENT>;
 }> = ({ session }) => {
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, session);
-  const queryClient = useQueryClient();
-  const endSession = useMutation({
-    mutationFn: (id: string) =>
-      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
-      queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
-      queryClient.invalidateQueries({
-        queryKey: ["sessionDetail", data.endCompatSession.compatSession?.id],
-      });
-    },
-  });
-
-  const onSessionEnd = async (): Promise<void> => {
-    await endSession.mutateAsync(data.id);
-  };
 
   const clientName = data.ssoLogin?.redirectUri
     ? simplifyUrl(data.ssoLogin.redirectUri)
@@ -146,14 +98,7 @@ const CompatSession: React.FC<{
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndSessionButton endSession={onSessionEnd}>
-            <Card.Body compact>
-              <Card.Header type={deviceType}>
-                <Card.Name name={deviceName} />
-                {clientName && <Card.Client name={clientName} />}
-              </Card.Header>
-            </Card.Body>
-          </EndSessionButton>
+          <EndCompatSessionButton session={data} size="sm" />
         </Card.Action>
       )}
     </Card.Root>

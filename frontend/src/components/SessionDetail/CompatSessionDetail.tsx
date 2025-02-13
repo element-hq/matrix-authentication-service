@@ -1,21 +1,19 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { VisualList } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
-import { graphqlRequest } from "../../graphql";
-import BlockList from "../BlockList/BlockList";
-import { END_SESSION_MUTATION, simplifyUrl } from "../CompatSession";
+import simplifyUrl from "../../utils/simplifyUrl";
 import DateTime from "../DateTime";
-import ExternalLink from "../ExternalLink/ExternalLink";
-import EndSessionButton from "../Session/EndSessionButton";
-import SessionDetails from "./SessionDetails";
+import EndCompatSessionButton from "../Session/EndCompatSessionButton";
+import LastActive from "../Session/LastActive";
 import SessionHeader from "./SessionHeader";
+import * as Info from "./SessionInfo";
 
 export const FRAGMENT = graphql(/* GraphQL */ `
   fragment CompatSession_detail on CompatSession {
@@ -25,11 +23,15 @@ export const FRAGMENT = graphql(/* GraphQL */ `
     finishedAt
     lastActiveIp
     lastActiveAt
+
+    ...EndCompatSessionButton_session
+
     userAgent {
       name
       os
       model
     }
+
     ssoLogin {
       id
       redirectUri
@@ -43,74 +45,111 @@ type Props = {
 
 const CompatSessionDetail: React.FC<Props> = ({ session }) => {
   const data = useFragment(FRAGMENT, session);
-  const queryClient = useQueryClient();
-  const endSession = useMutation({
-    mutationFn: (id: string) =>
-      graphqlRequest({ query: END_SESSION_MUTATION, variables: { id } }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
-      queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
-      queryClient.invalidateQueries({
-        queryKey: ["sessionDetail", data.endCompatSession.compatSession?.id],
-      });
-    },
-  });
   const { t } = useTranslation();
 
-  const onSessionEnd = async (): Promise<void> => {
-    await endSession.mutateAsync(data.id);
-  };
+  const deviceName =
+    data.userAgent?.model ??
+    (data.userAgent?.name
+      ? data.userAgent?.os
+        ? t("frontend.session.name_for_platform", {
+            name: data.userAgent.name,
+            platform: data.userAgent.os,
+          })
+        : data.userAgent.name
+      : t("frontend.session.unknown_device"));
 
-  const finishedAt = data.finishedAt
-    ? [
-        {
-          label: t("frontend.session.finished_label"),
-          value: <DateTime datetime={parseISO(data.finishedAt)} />,
-        },
-      ]
-    : [];
-
-  const sessionDetails = [...finishedAt];
-
-  const clientDetails: { label: string; value: string | React.ReactElement }[] =
-    [];
-
-  if (data.ssoLogin?.redirectUri) {
-    clientDetails.push({
-      label: t("frontend.compat_session_detail.name"),
-      value: data.userAgent?.name ?? simplifyUrl(data.ssoLogin.redirectUri),
-    });
-    clientDetails.push({
-      label: t("frontend.session.uri_label"),
-      value: (
-        <ExternalLink target="_blank" href={data.ssoLogin?.redirectUri}>
-          {data.ssoLogin?.redirectUri}
-        </ExternalLink>
-      ),
-    });
-  }
+  const clientName = data.ssoLogin?.redirectUri
+    ? simplifyUrl(data.ssoLogin.redirectUri)
+    : data.deviceId || data.id;
 
   return (
-    <BlockList>
-      <SessionHeader to="/sessions">{data.deviceId || data.id}</SessionHeader>
-      <SessionDetails
-        title={t("frontend.compat_session_detail.session_details_title")}
-        deviceId={data.deviceId}
-        signedIn={parseISO(data.createdAt)}
-        lastActive={data.lastActiveAt ? parseISO(data.lastActiveAt) : undefined}
-        ipAddress={data.lastActiveIp ?? undefined}
-        details={sessionDetails}
-        // These scopes need to be kept in sync with `templates/pages/sso.html`
-        scopes={["openid", "urn:matrix:org.matrix.msc2967.client:api:*"]}
-      />
-      {clientDetails.length > 0 ? (
-        <SessionDetails
-          title={t("frontend.compat_session_detail.client_details_title")}
-          details={clientDetails}
-        />
-      ) : null}
-      {!data.finishedAt && <EndSessionButton endSession={onSessionEnd} />}
-    </BlockList>
+    <div className="flex flex-col gap-10">
+      <SessionHeader to="/sessions">
+        {clientName}: {deviceName}
+      </SessionHeader>
+      <Info.DataSection>
+        <Info.DataSectionHeader>
+          {t("frontend.session.title")}
+        </Info.DataSectionHeader>
+        <Info.DataList>
+          {data.lastActiveAt && (
+            <Info.Data>
+              <Info.DataLabel>
+                {t("frontend.session.last_active_label")}
+              </Info.DataLabel>
+              <Info.DataValue>
+                <LastActive lastActive={parseISO(data.lastActiveAt)} />
+              </Info.DataValue>
+            </Info.Data>
+          )}
+
+          <Info.Data>
+            <Info.DataLabel>
+              {t("frontend.session.signed_in_label")}
+            </Info.DataLabel>
+            <Info.DataValue>
+              <DateTime datetime={data.createdAt} />
+            </Info.DataValue>
+          </Info.Data>
+
+          {data.finishedAt && (
+            <Info.Data>
+              <Info.DataLabel>
+                {t("frontend.session.finished_label")}
+              </Info.DataLabel>
+              <Info.DataValue>
+                <DateTime datetime={data.finishedAt} />
+              </Info.DataValue>
+            </Info.Data>
+          )}
+
+          <Info.Data>
+            <Info.DataLabel>
+              {t("frontend.session.device_id_label")}
+            </Info.DataLabel>
+            <Info.DataValue>{data.deviceId}</Info.DataValue>
+          </Info.Data>
+
+          {data.lastActiveIp && (
+            <Info.Data>
+              <Info.DataLabel>{t("frontend.session.ip_label")}</Info.DataLabel>
+              <Info.DataValue>
+                <code>{data.lastActiveIp}</code>
+              </Info.DataValue>
+            </Info.Data>
+          )}
+        </Info.DataList>
+
+        <Info.Data>
+          <Info.DataLabel>{t("frontend.session.scopes_label")}</Info.DataLabel>
+          <VisualList className="mt-1">
+            <Info.ScopeViewProfile />
+            <Info.ScopeViewMessages />
+            <Info.ScopeSendMessages />
+          </VisualList>
+        </Info.Data>
+      </Info.DataSection>
+
+      <Info.DataSection>
+        <Info.DataSectionHeader>
+          {t("frontend.compat_session_detail.client_details_title")}
+        </Info.DataSectionHeader>
+        <Info.DataList>
+          <Info.Data>
+            <Info.DataLabel>
+              {t("frontend.compat_session_detail.name")}
+            </Info.DataLabel>
+            <Info.DataValue>{deviceName}</Info.DataValue>
+          </Info.Data>
+          <Info.Data>
+            <Info.DataLabel>{t("frontend.session.uri_label")}</Info.DataLabel>
+            <Info.DataValue>{data.ssoLogin?.redirectUri}</Info.DataValue>
+          </Info.Data>
+        </Info.DataList>
+      </Info.DataSection>
+
+      {!data.finishedAt && <EndCompatSessionButton session={data} size="lg" />}
+    </div>
   );
 };
 

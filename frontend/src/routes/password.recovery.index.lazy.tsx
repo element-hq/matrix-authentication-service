@@ -16,8 +16,6 @@ import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lo
 import { Alert, Button, Form } from "@vector-im/compound-web";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-
-import BlockList from "../components/BlockList";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -206,7 +204,7 @@ const EmailRecovery: React.FC<{
 
   return (
     <Layout>
-      <BlockList>
+      <div className="flex flex-col gap-10">
         <PageHeading
           Icon={IconLockSolid}
           title={t("frontend.password_reset.title")}
@@ -256,7 +254,7 @@ const EmailRecovery: React.FC<{
             {t("action.save_and_continue")}
           </Form.Submit>
         </Form.Root>
-      </BlockList>
+      </div>
     </Layout>
   );
 };

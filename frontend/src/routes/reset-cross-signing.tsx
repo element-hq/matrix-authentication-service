@@ -13,7 +13,6 @@ import { Button, Text } from "@vector-im/compound-web";
 import * as v from "valibot";
 
 import { useTranslation } from "react-i18next";
-import BlockList from "../components/BlockList";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 
@@ -25,9 +24,9 @@ export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
   component: () => (
     <Layout>
-      <BlockList>
+      <div className="flex flex-col gap-10">
         <Outlet />
-      </BlockList>
+      </div>
     </Layout>
   ),
   errorComponent: ResetCrossSigningError,

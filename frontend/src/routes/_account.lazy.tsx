@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -7,12 +7,9 @@
 import { Outlet, createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { Heading } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-
-import { useEndBrowserSession } from "../components/BrowserSession";
 import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
 import NavItem from "../components/NavItem";
-import EndSessionButton from "../components/Session/EndSessionButton";
 import UserGreeting from "../components/UserGreeting";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -25,10 +22,9 @@ export const Route = createLazyFileRoute("/_account")({
 function Account(): React.ReactElement {
   const { t } = useTranslation();
   const result = useSuspenseQuery(query);
-  const session = result.data.viewerSession;
-  if (session?.__typename !== "BrowserSession") throw notFound();
+  const viewer = result.data.viewer;
+  if (viewer?.__typename !== "User") throw notFound();
   const siteConfig = result.data.siteConfig;
-  const onSessionEnd = useEndBrowserSession(session.id, true);
 
   return (
     <Layout wide>
@@ -37,12 +33,10 @@ function Account(): React.ReactElement {
           <Heading size="md" weight="semibold">
             {t("frontend.account.title")}
           </Heading>
-
-          <EndSessionButton endSession={onSessionEnd} />
         </header>
 
         <div className="flex flex-col gap-4">
-          <UserGreeting user={session.user} siteConfig={siteConfig} />
+          <UserGreeting user={viewer} siteConfig={siteConfig} />
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>

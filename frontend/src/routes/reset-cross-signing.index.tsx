@@ -13,15 +13,16 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import IconCheck from "@vector-im/compound-design-tokens/assets/web/icons/check";
 import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
-import { Button, Text } from "@vector-im/compound-web";
+import {
+  Button,
+  Text,
+  VisualList,
+  VisualListItem,
+} from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
-import {
-  VisualList,
-  VisualListItem,
-} from "../components/VisualList/VisualList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -123,19 +124,15 @@ function ResetCrossSigning(): React.ReactNode {
       </Text>
 
       <VisualList>
-        <VisualListItem
-          Icon={IconCheck}
-          iconColor="var(--cpd-color-icon-success-primary)"
-          label={t("frontend.reset_cross_signing.effect_list.positive_1")}
-        />
-        <VisualListItem
-          Icon={IconInfo}
-          label={t("frontend.reset_cross_signing.effect_list.neutral_1")}
-        />
-        <VisualListItem
-          Icon={IconInfo}
-          label={t("frontend.reset_cross_signing.effect_list.neutral_2")}
-        />
+        <VisualListItem Icon={IconCheck} success>
+          {t("frontend.reset_cross_signing.effect_list.positive_1")}
+        </VisualListItem>
+        <VisualListItem Icon={IconInfo}>
+          {t("frontend.reset_cross_signing.effect_list.neutral_1")}
+        </VisualListItem>
+        <VisualListItem Icon={IconInfo}>
+          {t("frontend.reset_cross_signing.effect_list.neutral_2")}
+        </VisualListItem>
       </VisualList>
 
       <Text className="text-center" size="md" weight="semibold">
