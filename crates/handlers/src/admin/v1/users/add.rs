@@ -109,7 +109,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .id("createUser")
         .summary("Create a new user")
         .tag("user")
-        .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
+        .response_with::<201, Json<SingleResponse<User>>, _>(|t| {
             let [sample, ..] = User::samples();
             let response = SingleResponse::new_canonical(sample);
             t.description("User was created").example(response)
@@ -137,7 +137,7 @@ pub async fn handler(
     NoApi(mut rng): NoApi<BoxRng>,
     State(homeserver): State<BoxHomeserverConnection>,
     Json(params): Json<Request>,
-) -> Result<Json<SingleResponse<User>>, RouteError> {
+) -> Result<(StatusCode, Json<SingleResponse<User>>), RouteError> {
     if repo.user().exists(&params.username).await? {
         return Err(RouteError::UserAlreadyExists);
     }
@@ -170,7 +170,10 @@ pub async fn handler(
 
     repo.save().await?;
 
-    Ok(Json(SingleResponse::new_canonical(User::from(user))))
+    Ok((
+        StatusCode::CREATED,
+        Json(SingleResponse::new_canonical(User::from(user))),
+    ))
 }
 
 #[cfg(test)]
@@ -194,7 +197,7 @@ mod tests {
             }));
 
         let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
+        response.assert_status(StatusCode::CREATED);
 
         let body: serde_json::Value = response.json();
         assert_eq!(body["data"]["type"], "user");
@@ -245,7 +248,7 @@ mod tests {
             }));
 
         let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
+        response.assert_status(StatusCode::CREATED);
 
         let body: serde_json::Value = response.json();
         assert_eq!(body["data"]["type"], "user");
@@ -296,7 +299,7 @@ mod tests {
             }));
 
         let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
+        response.assert_status(StatusCode::CREATED);
 
         let body: serde_json::Value = response.json();
         let id = body["data"]["id"].as_str().unwrap();
