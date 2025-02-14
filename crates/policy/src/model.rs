@@ -166,12 +166,5 @@ pub struct AuthorizationGrantInput<'a> {
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct EmailInput<'a> {
     pub email: &'a str,
-}
 
-/// Input for the password set policy.
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-pub struct PasswordInput<'a> {
-    pub password: &'a str,
 }
