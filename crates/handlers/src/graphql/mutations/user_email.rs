@@ -424,7 +424,11 @@ impl UserEmailMutations {
 
         if !skip_policy_check {
             let mut policy = state.policy().await?;
-            let res = policy.evaluate_email(&input.email).await?;
+            let res = policy
+                .evaluate_email(mas_policy::EmailInput {
+                    email: &input.email,
+                })
+                .await?;
             if !res.valid() {
                 return Ok(AddEmailPayload::Denied {
                     violations: res.violations,
@@ -610,7 +614,11 @@ impl UserEmailMutations {
 
         // Check if the email address is allowed by the policy
         let mut policy = state.policy().await?;
-        let res = policy.evaluate_email(&input.email).await?;
+        let res = policy
+            .evaluate_email(mas_policy::EmailInput {
+                email: &input.email,
+            })
+            .await?;
         if !res.valid() {
             return Ok(StartEmailAuthenticationPayload::Denied {
                 violations: res.violations,

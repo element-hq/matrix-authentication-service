@@ -676,7 +676,12 @@ async fn client_credentials_grant(
 
     // Make the request go through the policy engine
     let res = policy
-        .evaluate_client_credentials_grant(&scope, client)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: None,
+            client,
+            scope: &scope,
+            grant_type: mas_policy::GrantType::ClientCredentials,
+        })
         .await?;
     if !res.valid() {
         return Err(RouteError::DeniedByPolicy(res.violations));

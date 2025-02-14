@@ -226,7 +226,12 @@ pub(crate) async fn complete(
 
     // Run through the policy
     let res = policy
-        .evaluate_authorization_grant(&grant, client, &browser_session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: Some(&browser_session.user),
+            client,
+            scope: &grant.scope,
+            grant_type: mas_policy::GrantType::AuthorizationCode,
+        })
         .await?;
 
     if !res.valid() {

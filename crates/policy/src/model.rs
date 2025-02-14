@@ -92,21 +92,27 @@ impl EvaluationResult {
     }
 }
 
+#[derive(Serialize, Debug)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+pub enum RegistrationMethod {
+    #[serde(rename = "password")]
+    Password,
+
+    #[serde(rename = "upstream-oauth2")]
+    UpstreamOAuth2,
+}
+
 /// Input for the user registration policy.
 #[derive(Serialize, Debug)]
 #[serde(tag = "registration_method")]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-pub enum RegisterInput<'a> {
-    #[serde(rename = "password")]
-    Password { username: &'a str, email: &'a str },
+pub struct RegisterInput<'a> {
+    pub registration_method: RegistrationMethod,
 
-    #[serde(rename = "upstream-oauth2")]
-    UpstreamOAuth2 {
-        username: &'a str,
+    pub username: &'a str,
 
-        #[serde(skip_serializing_if = "Option::is_none")]
-        email: Option<&'a str>,
-    },
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<&'a str>,
 }
 
 /// Input for the client registration policy.

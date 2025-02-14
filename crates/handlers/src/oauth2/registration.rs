@@ -244,7 +244,11 @@ pub(crate) async fn post(
         }
     }
 
-    let res = policy.evaluate_client_registration(&metadata).await?;
+    let res = policy
+        .evaluate_client_registration(mas_policy::ClientRegistrationInput {
+            client_metadata: &metadata,
+        })
+        .await?;
     if !res.valid() {
         return Err(RouteError::PolicyDenied(res.violations));
     }

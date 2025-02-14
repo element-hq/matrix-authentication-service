@@ -441,7 +441,11 @@ pub(crate) async fn get(
                         }
 
                         let res = policy
-                            .evaluate_upstream_oauth_register(&localpart, None)
+                            .evaluate_register(mas_policy::RegisterInput {
+                                registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
+                                username: &localpart,
+                                email: None,
+                            })
                             .await?;
 
                         if res.valid() {
@@ -752,8 +756,13 @@ pub(crate) async fn post(
 
             // Policy check
             let res = policy
-                .evaluate_upstream_oauth_register(&username, email.as_deref())
+                .evaluate_register(mas_policy::RegisterInput {
+                    registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
+                    username: &username,
+                    email: email.as_deref(),
+                })
                 .await?;
+
             if !res.valid() {
                 let form_state =
                     res.violations

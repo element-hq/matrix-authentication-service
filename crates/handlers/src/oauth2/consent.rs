@@ -111,7 +111,12 @@ pub(crate) async fn get(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
         let res = policy
-            .evaluate_authorization_grant(&grant, &client, &session.user)
+            .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+                user: Some(&session.user),
+                client: &client,
+                scope: &grant.scope,
+                grant_type: mas_policy::GrantType::AuthorizationCode,
+            })
             .await?;
 
         if res.valid() {
@@ -185,7 +190,12 @@ pub(crate) async fn post(
         .ok_or(RouteError::NoSuchClient)?;
 
     let res = policy
-        .evaluate_authorization_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: Some(&session.user),
+            client: &client,
+            scope: &grant.scope,
+            grant_type: mas_policy::GrantType::AuthorizationCode,
+        })
         .await?;
 
     if !res.valid() {

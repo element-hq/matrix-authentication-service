@@ -82,7 +82,12 @@ pub(crate) async fn get(
 
     // Evaluate the policy
     let res = policy
-        .evaluate_device_code_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            grant_type: mas_policy::GrantType::DeviceCode,
+            client: &client,
+            scope: &grant.scope,
+            user: Some(&session.user),
+        })
         .await?;
     if !res.valid() {
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
@@ -157,7 +162,12 @@ pub(crate) async fn post(
 
     // Evaluate the policy
     let res = policy
-        .evaluate_device_code_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            grant_type: mas_policy::GrantType::DeviceCode,
+            client: &client,
+            scope: &grant.scope,
+            user: Some(&session.user),
+        })
         .await?;
     if !res.valid() {
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
