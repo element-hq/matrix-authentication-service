@@ -1521,7 +1521,48 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "OAuth 2.0 session ID 00000000000000000000000000 not found"
+                      "title": "User email ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "user-email"
+        ],
+        "summary": "Delete a user email",
+        "operationId": "deleteUserEmail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User email was found"
+          },
+          "404": {
+            "description": "User email was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User email ID 00000000000000000000000000 not found"
                     }
                   ]
                 }
