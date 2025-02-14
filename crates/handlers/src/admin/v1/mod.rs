@@ -82,11 +82,13 @@ where
         )
         .api_route(
             "/user-emails",
-            get_with(self::user_emails::list, self::user_emails::list_doc),
+            get_with(self::user_emails::list, self::user_emails::list_doc)
+                .post_with(self::user_emails::add, self::user_emails::add_doc),
         )
         .api_route(
             "/user-emails/{id}",
-            get_with(self::user_emails::get, self::user_emails::get_doc),
+            get_with(self::user_emails::get, self::user_emails::get_doc)
+                .delete_with(self::user_emails::delete, self::user_emails::delete_doc),
         )
         .api_route(
             "/user-sessions",

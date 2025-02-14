@@ -3,18 +3,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
+use aide::{transform::TransformOperation, NoApi, OperationIo};
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
+use mas_storage::{
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
+    BoxRng,
+};
 use ulid::Ulid;
 
 use crate::{
-    admin::{
-        call_context::CallContext,
-        model::UserEmail,
-        params::UlidPathParam,
-        response::{ErrorResponse, SingleResponse},
-    },
+    admin::{call_context::CallContext, params::UlidPathParam, response::ErrorResponse},
     impl_from_error_for_route,
 };
 
@@ -43,32 +42,39 @@ impl IntoResponse for RouteError {
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
-        .id("getUserEmail")
-        .summary("Get a user email")
+        .id("deleteUserEmail")
+        .summary("Delete a user email")
         .tag("user-email")
-        .response_with::<200, Json<SingleResponse<UserEmail>>, _>(|t| {
-            let [sample, ..] = UserEmail::samples();
-            let response = SingleResponse::new_canonical(sample);
-            t.description("User email was found").example(response)
-        })
+        .response_with::<204, (), _>(|t| t.description("User email was found"))
         .response_with::<404, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotFound(Ulid::nil()));
             t.description("User email was not found").example(response)
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.user_emails.get", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.user_emails.delete", skip_all, err)]
 pub async fn handler(
-    CallContext { mut repo, .. }: CallContext,
+    CallContext {
+        mut repo, clock, ..
+    }: CallContext,
+    NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
-) -> Result<Json<SingleResponse<UserEmail>>, RouteError> {
+) -> Result<StatusCode, RouteError> {
     let email = repo
         .user_email()
         .lookup(*id)
         .await?
         .ok_or(RouteError::NotFound(*id))?;
 
-    Ok(Json(SingleResponse::new_canonical(UserEmail::from(email))))
+    let job = ProvisionUserJob::new_for_id(email.user_id);
+    repo.user_email().remove(email).await?;
+
+    // Schedule a job to update the user
+    repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
+
+    repo.save().await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]
@@ -78,9 +84,8 @@ mod tests {
     use ulid::Ulid;
 
     use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
-
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_get(pool: PgPool) {
+    async fn test_delete(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -106,32 +111,18 @@ mod tests {
 
         repo.save().await.unwrap();
 
+        let request = Request::delete(format!("/api/admin/v1/user-emails/{id}"))
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::NO_CONTENT);
+
+        // Verify that the email was deleted
         let request = Request::get(format!("/api/admin/v1/user-emails/{id}"))
             .bearer(&token)
             .empty();
         let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
-        let body: serde_json::Value = response.json();
-        assert_eq!(body["data"]["type"], "user-email");
-        insta::assert_json_snapshot!(body, @r###"
-        {
-          "data": {
-            "type": "user-email",
-            "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
-            "attributes": {
-              "created_at": "2022-01-16T14:40:00Z",
-              "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
-              "email": "alice@example.com"
-            },
-            "links": {
-              "self": "/api/admin/v1/user-emails/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
-            }
-          },
-          "links": {
-            "self": "/api/admin/v1/user-emails/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
-          }
-        }
-        "###);
+        response.assert_status(StatusCode::NOT_FOUND);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -141,7 +132,7 @@ mod tests {
         let token = state.token_with_scope("urn:mas:admin").await;
 
         let email_id = Ulid::nil();
-        let request = Request::get(format!("/api/admin/v1/user-emails/{email_id}"))
+        let request = Request::delete(format!("/api/admin/v1/user-emails/{email_id}"))
             .bearer(&token)
             .empty();
         let response = state.request(request).await;
