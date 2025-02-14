@@ -430,7 +430,7 @@ pub(crate) async fn get(
                                 .with_code("User exists")
                                 .with_description(format!(
                                     r"Upstream account provider returned {localpart:?} as username,
-                            which is not linked to that upstream account"
+                                    which is not linked to that upstream account"
                                 ))
                                 .with_language(&locale);
 
@@ -444,13 +444,21 @@ pub(crate) async fn get(
                             .evaluate_upstream_oauth_register(&localpart, None)
                             .await?;
 
-                        if !res.valid() {
+                        if res.valid() {
+                            // The username passes the policy check, add it to the context
+                            ctx.with_localpart(
+                                localpart,
+                                provider.claims_imports.localpart.is_forced(),
+                            )
+                        } else if provider.claims_imports.localpart.is_forced() {
+                            // If the username claim is 'forced' but doesn't pass the policy check,
+                            // we display an error message.
                             // TODO: translate
                             let ctx = ErrorContext::new()
                                 .with_code("Policy error")
                                 .with_description(format!(
                                     r"Upstream account provider returned {localpart:?} as username,
-                            which does not pass the policy check: {res}"
+                                    which does not pass the policy check: {res}"
                                 ))
                                 .with_language(&locale);
 
@@ -458,9 +466,10 @@ pub(crate) async fn get(
                                 cookie_jar,
                                 Html(templates.render_error(&ctx)?).into_response(),
                             ));
+                        } else {
+                            // Else, we just ignore it when it doesn't pass the policy check.
+                            ctx
                         }
-
-                        ctx.with_localpart(localpart, provider.claims_imports.localpart.is_forced())
                     }
                     None => ctx,
                 }
