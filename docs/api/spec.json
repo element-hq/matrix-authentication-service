@@ -754,7 +754,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "User was created",
             "content": {
               "application/json": {
