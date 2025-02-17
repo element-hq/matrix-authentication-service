@@ -18,6 +18,16 @@ test_match_regex if {
 	not common.matches_string_constraints("some string", {"regexes": ["^string"]})
 }
 
+test_match_prefix if {
+	common.matches_string_constraints("some string", {"prefixes": ["some"]})
+	not common.matches_string_constraints("some string", {"prefixes": ["string"]})
+}
+
+test_match_suffix if {
+	common.matches_string_constraints("some string", {"suffixes": ["string"]})
+	not common.matches_string_constraints("some string", {"suffixes": ["some"]})
+}
+
 test_ip_in_list if {
 	common.ip_in_list("192.168.1.1", ["192.168.1.1"])
 	common.ip_in_list("192.168.1.1", ["192.168.1.0/24"])

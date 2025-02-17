@@ -8,6 +8,10 @@ matches_string_constraints(str, constraints) if matches_substrings(str, constrai
 
 matches_string_constraints(str, constraints) if matches_literals(str, constraints.literals)
 
+matches_string_constraints(str, constraints) if matches_suffixes(str, constraints.suffixes)
+
+matches_string_constraints(str, constraints) if matches_prefixes(str, constraints.prefixes)
+
 matches_regexes(str, regexes) if {
 	some pattern in regexes
 	regex.match(pattern, str)
@@ -21,6 +25,16 @@ matches_substrings(str, substrings) if {
 matches_literals(str, literals) if {
 	some literal in literals
 	str == literal
+}
+
+matches_suffixes(str, suffixes) if {
+	some suffix in suffixes
+	endswith(str, suffix)
+}
+
+matches_prefixes(str, prefixes) if {
+	some prefix in prefixes
+	startswith(str, prefix)
 }
 
 # Normalize an IP address or CIDR to a CIDR

@@ -391,6 +391,8 @@ policy:
         literals: ["alice@example.com", "bob@example.com"]
         # Regular expressions that match allowed emails
         regexes: ["@example\\.com$"]
+        # Suffixes that match allowed emails
+        suffixes: ["@example.com"]
 
       # If specified, the email address *must not* match one of the banned addresses.
       # If unspecified, all email addresses are allowed.
@@ -401,6 +403,10 @@ policy:
         substrings: ["evil"]
         # Regular expressions that match banned emails
         regexes: ["@evil\\.corp$"]
+        # Suffixes that match banned emails
+        suffixes: ["@evil.corp"]
+        # Prefixes that match banned emails
+        prefixes: ["alice@"]
 
     requester:
       # List of IP addresses and CIDRs that are not allowed to register
@@ -414,6 +420,8 @@ policy:
         literals: ["Pretend this is Real;"]
         substrings: ["Chrome"]
         regexes: ["Chrome 1.*;"]
+        prefixes: ["Mozilla/"]
+        suffixes: ["Safari/605.1.15"]
 ```
 
 ## `rate_limiting`
