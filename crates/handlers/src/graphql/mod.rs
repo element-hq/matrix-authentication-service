@@ -6,7 +6,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::sync::Arc;
+use std::{net::IpAddr, ops::Deref, sync::Arc};
 
 use async_graphql::{
     extensions::Tracing,
@@ -240,7 +240,7 @@ async fn get_requester(
     session_info: SessionInfo,
     token: Option<&str>,
 ) -> Result<Requester, RouteError> {
-    let requester = if let Some(token) = token {
+    let entity = if let Some(token) = token {
         // If we haven't enabled undocumented_oauth2_access on the listener, we bail out
         if !undocumented_oauth2_access {
             return Err(RouteError::InvalidToken);
@@ -285,7 +285,7 @@ async fn get_requester(
             return Err(RouteError::MissingScope);
         }
 
-        Requester::OAuth2Session(Box::new((session, user)))
+        RequestingEntity::OAuth2Session(Box::new((session, user)))
     } else {
         let maybe_session = session_info.load_session(&mut repo).await?;
 
@@ -295,8 +295,14 @@ async fn get_requester(
                 .await;
         }
 
-        Requester::from(maybe_session)
+        RequestingEntity::from(maybe_session)
     };
+
+    let requester = Requester {
+        entity,
+        ip_address: activity_tracker.ip(),
+    };
+
     repo.cancel().await?;
     Ok(requester)
 }
@@ -312,7 +318,6 @@ pub async fn post(
     cookie_jar: CookieJar,
     content_type: Option<TypedHeader<ContentType>>,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
-    requester_fingerprint: RequesterFingerprint,
     body: Body,
 ) -> Result<impl IntoResponse, RouteError> {
     let body = body.into_data_stream();
@@ -339,7 +344,6 @@ pub async fn post(
         MultipartOptions::default(),
     )
     .await?
-    .data(requester_fingerprint)
     .data(requester); // XXX: this should probably return another error response?
 
     let span = span_for_graphql_request(&request);
@@ -366,7 +370,6 @@ pub async fn get(
     activity_tracker: BoundActivityTracker,
     cookie_jar: CookieJar,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
-    requester_fingerprint: RequesterFingerprint,
     RawQuery(query): RawQuery,
 ) -> Result<impl IntoResponse, FancyError> {
     let token = authorization
@@ -383,9 +386,8 @@ pub async fn get(
     )
     .await?;
 
-    let request = async_graphql::http::parse_query_string(&query.unwrap_or_default())?
-        .data(requester)
-        .data(requester_fingerprint);
+    let request =
+        async_graphql::http::parse_query_string(&query.unwrap_or_default())?.data(requester);
 
     let span = span_for_graphql_request(&request);
     let response = schema.execute(request).instrument(span).await;
@@ -417,9 +419,32 @@ pub fn schema_builder() -> SchemaBuilder {
         .register_output_type::<CreationEvent>()
 }
 
+pub struct Requester {
+    entity: RequestingEntity,
+    ip_address: Option<IpAddr>,
+}
+
+impl Requester {
+    pub fn fingerprint(&self) -> RequesterFingerprint {
+        if let Some(ip) = self.ip_address {
+            RequesterFingerprint::new(ip)
+        } else {
+            RequesterFingerprint::EMPTY
+        }
+    }
+}
+
+impl Deref for Requester {
+    type Target = RequestingEntity;
+
+    fn deref(&self) -> &Self::Target {
+        &self.entity
+    }
+}
+
 /// The identity of the requester.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub enum Requester {
+pub enum RequestingEntity {
     /// The requester presented no authentication information.
     #[default]
     Anonymous,
@@ -480,7 +505,7 @@ impl OwnerId for UserId {
     }
 }
 
-impl Requester {
+impl RequestingEntity {
     fn browser_session(&self) -> Option<&BrowserSession> {
         match self {
             Self::BrowserSession(session) => Some(session),
@@ -532,17 +557,21 @@ impl Requester {
             Self::BrowserSession(_) | Self::Anonymous => false,
         }
     }
+
+    fn is_unauthenticated(&self) -> bool {
+        matches!(self, Self::Anonymous)
+    }
 }
 
-impl From<BrowserSession> for Requester {
+impl From<BrowserSession> for RequestingEntity {
     fn from(session: BrowserSession) -> Self {
         Self::BrowserSession(Box::new(session))
     }
 }
 
-impl<T> From<Option<T>> for Requester
+impl<T> From<Option<T>> for RequestingEntity
 where
-    T: Into<Requester>,
+    T: Into<RequestingEntity>,
 {
     fn from(session: Option<T>) -> Self {
         session.map(Into::into).unwrap_or_default()
