@@ -398,6 +398,7 @@ impl UserEmailMutations {
         let state = ctx.state();
         let id = NodeType::User.extract_ulid(&input.user_id)?;
         let requester = ctx.requester();
+        let requester_fingerprint = ctx.requester_fingerprint();
         let clock = state.clock();
         let mut rng = state.rng();
 
@@ -427,6 +428,7 @@ impl UserEmailMutations {
             let res = policy
                 .evaluate_email(mas_policy::EmailInput {
                     email: &input.email,
+                    requester: requester_fingerprint.into(),
                 })
                 .await?;
             if !res.valid() {
@@ -559,6 +561,7 @@ impl UserEmailMutations {
         let mut rng = state.rng();
         let clock = state.clock();
         let requester = ctx.requester();
+        let requester_fingerprint = ctx.requester_fingerprint();
         let limiter = state.limiter();
 
         // Only allow calling this if the requester is a browser session
@@ -617,6 +620,7 @@ impl UserEmailMutations {
         let res = policy
             .evaluate_email(mas_policy::EmailInput {
                 email: &input.email,
+                requester: requester_fingerprint.into(),
             })
             .await?;
         if !res.valid() {

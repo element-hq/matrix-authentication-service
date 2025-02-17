@@ -4,12 +4,29 @@
   "description": "Input for the client registration policy.",
   "type": "object",
   "required": [
-    "client_metadata"
+    "client_metadata",
+    "requester"
   ],
   "properties": {
     "client_metadata": {
       "type": "object",
       "additionalProperties": true
+    },
+    "requester": {
+      "$ref": "#/definitions/Requester"
+    }
+  },
+  "definitions": {
+    "Requester": {
+      "description": "Identity of the requester",
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "description": "IP address of the entity making the request",
+          "type": "string",
+          "format": "ip"
+        }
+      }
     }
   }
 }

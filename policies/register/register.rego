@@ -13,6 +13,26 @@ allow if {
 	count(violation) == 0
 }
 
+# Normalize an IP address or CIDR to a CIDR
+normalize_cidr(ip) := ip if contains(ip, "/")
+
+# If it's an IPv4, append /32
+normalize_cidr(ip) := sprintf("%s/32", [ip]) if {
+	not contains(ip, "/")
+	not contains(ip, ":")
+}
+
+# If it's an IPv6, append /128
+normalize_cidr(ip) := sprintf("%s/128", [ip]) if {
+	not contains(ip, "/")
+	contains(ip, ":")
+}
+
+is_ip_banned(ip) if {
+	some cidr in data.registration.banned_ips
+	net.cidr_contains(normalize_cidr(cidr), ip)
+}
+
 mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
 
 # METADATA
@@ -46,6 +66,10 @@ violation contains {"msg": "unspecified registration method"} if {
 
 violation contains {"msg": "unknown registration method"} if {
 	not input.registration_method in ["password", "upstream-oauth2"]
+}
+
+violation contains {"msg": "IP address is banned"} if {
+	is_ip_banned(input.requester.ip_address)
 }
 
 # Check that we supplied an email for password registration

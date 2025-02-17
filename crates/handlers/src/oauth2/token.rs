@@ -681,6 +681,9 @@ async fn client_credentials_grant(
             client,
             scope: &scope,
             grant_type: mas_policy::GrantType::ClientCredentials,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+            },
         })
         .await?;
     if !res.valid() {

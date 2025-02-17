@@ -43,7 +43,8 @@ use super::{
     UpstreamSessionsCookie,
 };
 use crate::{
-    impl_from_error_for_route, views::shared::OptionalPostAuthAction, PreferredLanguage, SiteConfig,
+    impl_from_error_for_route, views::shared::OptionalPostAuthAction, BoundActivityTracker,
+    PreferredLanguage, SiteConfig,
 };
 
 const DEFAULT_LOCALPART_TEMPLATE: &str = "{{ user.preferred_username }}";
@@ -199,6 +200,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<BoxHomeserverConnection>,
     cookie_jar: CookieJar,
+    activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Path(link_id): Path<Ulid>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -445,6 +447,9 @@ pub(crate) async fn get(
                                 registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
                                 username: &localpart,
                                 email: None,
+                                requester: mas_policy::Requester {
+                                    ip_address: activity_tracker.ip(),
+                                },
                             })
                             .await?;
 
@@ -502,6 +507,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     mut policy: Policy,
     PreferredLanguage(locale): PreferredLanguage,
+    activity_tracker: BoundActivityTracker,
     State(templates): State<Templates>,
     State(homeserver): State<BoxHomeserverConnection>,
     State(url_builder): State<UrlBuilder>,
@@ -760,6 +766,9 @@ pub(crate) async fn post(
                     registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
                     username: &username,
                     email: email.as_deref(),
+                    requester: mas_policy::Requester {
+                        ip_address: activity_tracker.ip(),
+                    },
                 })
                 .await?;
 

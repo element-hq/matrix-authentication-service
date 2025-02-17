@@ -53,6 +53,12 @@ pub struct RequesterFingerprint {
     ip: Option<IpAddr>,
 }
 
+impl From<RequesterFingerprint> for mas_policy::Requester {
+    fn from(val: RequesterFingerprint) -> Self {
+        mas_policy::Requester { ip_address: val.ip }
+    }
+}
+
 impl std::fmt::Display for RequesterFingerprint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(ip) = self.ip {

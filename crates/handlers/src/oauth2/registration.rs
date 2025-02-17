@@ -25,7 +25,7 @@ use thiserror::Error;
 use tracing::info;
 use url::Url;
 
-use crate::impl_from_error_for_route;
+use crate::{impl_from_error_for_route, BoundActivityTracker};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -195,6 +195,7 @@ pub(crate) async fn post(
     clock: BoxClock,
     mut repo: BoxRepository,
     mut policy: Policy,
+    activity_tracker: BoundActivityTracker,
     State(encrypter): State<Encrypter>,
     body: Result<Json<ClientMetadata>, axum::extract::rejection::JsonRejection>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -247,6 +248,9 @@ pub(crate) async fn post(
     let res = policy
         .evaluate_client_registration(mas_policy::ClientRegistrationInput {
             client_metadata: &metadata,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+            },
         })
         .await?;
     if !res.valid() {

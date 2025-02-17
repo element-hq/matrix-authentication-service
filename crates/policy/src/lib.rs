@@ -307,6 +307,7 @@ mod tests {
                 registration_method: RegistrationMethod::Password,
                 username: "hello",
                 email: Some("hello@example.com"),
+                requester: Requester { ip_address: None },
             })
             .await
             .unwrap();
@@ -317,6 +318,7 @@ mod tests {
                 registration_method: RegistrationMethod::Password,
                 username: "hello",
                 email: Some("hello@foo.element.io"),
+                requester: Requester { ip_address: None },
             })
             .await
             .unwrap();
@@ -327,6 +329,7 @@ mod tests {
                 registration_method: RegistrationMethod::Password,
                 username: "hello",
                 email: Some("hello@staging.element.io"),
+                requester: Requester { ip_address: None },
             })
             .await
             .unwrap();

@@ -9,6 +9,8 @@
 //! This is useful to generate JSON schemas for each input type, which can then
 //! be type-checked by Open Policy Agent.
 
+use std::net::IpAddr;
+
 use mas_data_model::{Client, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use serde::{Deserialize, Serialize};
@@ -92,6 +94,15 @@ impl EvaluationResult {
     }
 }
 
+/// Identity of the requester
+#[derive(Serialize, Debug, Default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+pub struct Requester {
+    /// IP address of the entity making the request
+    pub ip_address: Option<IpAddr>,
+}
+
 #[derive(Serialize, Debug)]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum RegistrationMethod {
@@ -113,6 +124,8 @@ pub struct RegisterInput<'a> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<&'a str>,
+
+    pub requester: Requester,
 }
 
 /// Input for the client registration policy.
@@ -125,6 +138,7 @@ pub struct ClientRegistrationInput<'a> {
         schemars(with = "std::collections::HashMap<String, serde_json::Value>")
     )]
     pub client_metadata: &'a VerifiedClientMetadata,
+    pub requester: Requester,
 }
 
 #[derive(Serialize, Debug)]
@@ -158,6 +172,8 @@ pub struct AuthorizationGrantInput<'a> {
     pub scope: &'a Scope,
 
     pub grant_type: GrantType,
+
+    pub requester: Requester,
 }
 
 /// Input for the email add policy.
@@ -167,4 +183,5 @@ pub struct AuthorizationGrantInput<'a> {
 pub struct EmailInput<'a> {
     pub email: &'a str,
 
+    pub requester: Requester,
 }

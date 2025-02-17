@@ -87,6 +87,9 @@ pub(crate) async fn get(
             client: &client,
             scope: &grant.scope,
             user: Some(&session.user),
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+            },
         })
         .await?;
     if !res.valid() {
@@ -167,6 +170,9 @@ pub(crate) async fn post(
             client: &client,
             scope: &grant.scope,
             user: Some(&session.user),
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+            },
         })
         .await?;
     if !res.valid() {

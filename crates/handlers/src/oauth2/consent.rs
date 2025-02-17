@@ -116,6 +116,9 @@ pub(crate) async fn get(
                 client: &client,
                 scope: &grant.scope,
                 grant_type: mas_policy::GrantType::AuthorizationCode,
+                requester: mas_policy::Requester {
+                    ip_address: activity_tracker.ip(),
+                },
             })
             .await?;
 
@@ -195,6 +198,9 @@ pub(crate) async fn post(
             client: &client,
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+            },
         })
         .await?;
 

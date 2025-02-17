@@ -4,11 +4,28 @@
   "description": "Input for the email add policy.",
   "type": "object",
   "required": [
-    "email"
+    "email",
+    "requester"
   ],
   "properties": {
     "email": {
       "type": "string"
+    },
+    "requester": {
+      "$ref": "#/definitions/Requester"
+    }
+  },
+  "definitions": {
+    "Requester": {
+      "description": "Identity of the requester",
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "description": "IP address of the entity making the request",
+          "type": "string",
+          "format": "ip"
+        }
+      }
     }
   }
 }
