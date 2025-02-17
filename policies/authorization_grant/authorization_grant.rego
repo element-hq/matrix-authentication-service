@@ -5,6 +5,8 @@ package authorization_grant
 
 import rego.v1
 
+import data.common
+
 default allow := false
 
 allow if {
@@ -81,4 +83,11 @@ violation contains {"msg": msg} if {
 violation contains {"msg": "only one device scope is allowed at a time"} if {
 	scope_list := split(input.scope, " ")
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")}) > 1
+}
+
+violation contains {"msg": sprintf(
+	"Requester [%s] isn't allowed to do this action",
+	[common.format_requester(input.requester)],
+)} if {
+	common.requester_banned(input.requester, data.requester)
 }

@@ -5,6 +5,7 @@ package register
 
 import rego.v1
 
+import data.common
 import data.email as email_policy
 
 default allow := false
@@ -13,28 +14,6 @@ allow if {
 	count(violation) == 0
 }
 
-# Normalize an IP address or CIDR to a CIDR
-normalize_cidr(ip) := ip if contains(ip, "/")
-
-# If it's an IPv4, append /32
-normalize_cidr(ip) := sprintf("%s/32", [ip]) if {
-	not contains(ip, "/")
-	not contains(ip, ":")
-}
-
-# If it's an IPv6, append /128
-normalize_cidr(ip) := sprintf("%s/128", [ip]) if {
-	not contains(ip, "/")
-	contains(ip, ":")
-}
-
-is_ip_banned(ip) if {
-	some cidr in data.registration.banned_ips
-	net.cidr_contains(normalize_cidr(cidr), ip)
-}
-
-mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
-
 # METADATA
 # entrypoint: true
 violation contains {"field": "username", "code": "username-too-short", "msg": "username too short"} if {
@@ -42,7 +21,7 @@ violation contains {"field": "username", "code": "username-too-short", "msg": "u
 }
 
 violation contains {"field": "username", "code": "username-too-long", "msg": "username too long"} if {
-	user_id := mxid(input.username, data.server_name)
+	user_id := common.mxid(input.username, data.server_name)
 	count(user_id) > 255
 }
 
@@ -68,8 +47,11 @@ violation contains {"msg": "unknown registration method"} if {
 	not input.registration_method in ["password", "upstream-oauth2"]
 }
 
-violation contains {"msg": "IP address is banned"} if {
-	is_ip_banned(input.requester.ip_address)
+violation contains {"msg": sprintf(
+	"Requester [%s] isn't allowed to do this action",
+	[common.format_requester(input.requester)],
+)} if {
+	common.requester_banned(input.requester, data.requester)
 }
 
 # Check that we supplied an email for password registration

@@ -5,6 +5,8 @@ package email
 
 import rego.v1
 
+import data.common
+
 default allow := false
 
 allow if {
@@ -23,6 +25,16 @@ domain_allowed if {
 	glob.match(allowed_domain, ["."], domain)
 }
 
+# Allow any emails if the data.emails.allowed_addresses is not set
+address_allowed if {
+	not data.emails.allowed_addresses
+}
+
+# Allow an email only if its address is in the list of allowed addresses
+address_allowed if {
+	common.matches_string_constraints(input.email, data.emails.allowed_addresses)
+}
+
 # METADATA
 # entrypoint: true
 violation contains {"code": "email-domain-not-allowed", "msg": "email domain is not allowed"} if {
@@ -34,4 +46,14 @@ violation contains {"code": "email-domain-banned", "msg": "email domain is banne
 	[_, domain] := split(input.email, "@")
 	some banned_domain in data.banned_domains
 	glob.match(banned_domain, ["."], domain)
+}
+
+# Deny emails if it's not allowed
+violation contains {"code": "email-not-allowed", "msg": "email is not allowed"} if {
+	not address_allowed
+}
+
+# Deny emails which match the email ban list constraint
+violation contains {"code": "email-banned", "msg": "email is not allowed"} if {
+	common.matches_string_constraints(input.email, data.emails.banned_addresses)
 }
