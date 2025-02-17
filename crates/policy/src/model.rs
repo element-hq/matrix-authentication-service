@@ -37,6 +37,12 @@ pub enum Code {
 
     /// The email domain is banned.
     EmailDomainBanned,
+
+    /// The email address is not allowed.
+    EmailNotAllowed,
+
+    /// The email address is banned.
+    EmailBanned,
 }
 
 impl Code {
@@ -50,6 +56,8 @@ impl Code {
             Self::UsernameAllNumeric => "username-all-numeric",
             Self::EmailDomainNotAllowed => "email-domain-not-allowed",
             Self::EmailDomainBanned => "email-domain-banned",
+            Self::EmailNotAllowed => "email-not-allowed",
+            Self::EmailBanned => "email-banned",
         }
     }
 }
