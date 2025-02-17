@@ -239,6 +239,7 @@ pub(crate) async fn post(
                 email: Some(&form.email),
                 requester: mas_policy::Requester {
                     ip_address: activity_tracker.ip(),
+                    user_agent: user_agent.clone().map(|ua| ua.raw),
                 },
             })
             .await?;

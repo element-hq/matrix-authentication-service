@@ -8,6 +8,7 @@ use axum::{
     extract::{Form, State},
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID, SessionInfoExt};
 use mas_data_model::{AuthorizationCode, Pkce};
@@ -136,6 +137,7 @@ pub(crate) async fn get(
     State(key_store): State<Keystore>,
     State(url_builder): State<UrlBuilder>,
     policy: Policy,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
@@ -165,6 +167,8 @@ pub(crate) async fn get(
     // Get the session info from the cookie
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+
+    let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 
     // One day, we will have try blocks
     let res: Result<Response, RouteError> = ({
@@ -349,6 +353,7 @@ pub(crate) async fn get(
                         &mut rng,
                         &clock,
                         &activity_tracker,
+                        user_agent,
                         repo,
                         key_store,
                         policy,
@@ -401,6 +406,7 @@ pub(crate) async fn get(
                         &mut rng,
                         &clock,
                         &activity_tracker,
+                        user_agent,
                         repo,
                         key_store,
                         policy,

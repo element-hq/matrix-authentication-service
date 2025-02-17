@@ -449,6 +449,7 @@ pub(crate) async fn get(
                                 email: None,
                                 requester: mas_policy::Requester {
                                     ip_address: activity_tracker.ip(),
+                                    user_agent: user_agent.clone().map(|ua| ua.raw),
                                 },
                             })
                             .await?;
@@ -768,6 +769,7 @@ pub(crate) async fn post(
                     email: email.as_deref(),
                     requester: mas_policy::Requester {
                         ip_address: activity_tracker.ip(),
+                        user_agent: user_agent.clone().map(|ua| ua.raw),
                     },
                 })
                 .await?;

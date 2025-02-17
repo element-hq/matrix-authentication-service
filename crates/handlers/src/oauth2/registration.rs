@@ -5,6 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{extract::State, response::IntoResponse, Json};
+use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
@@ -196,6 +197,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(encrypter): State<Encrypter>,
     body: Result<Json<ClientMetadata>, axum::extract::rejection::JsonRejection>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -203,6 +205,8 @@ pub(crate) async fn post(
     let Json(body) = body?;
 
     info!(?body, "Client registration");
+
+    let user_agent = user_agent.map(|ua| ua.to_string());
 
     // Validate the body
     let metadata = body.validate()?;
@@ -250,6 +254,7 @@ pub(crate) async fn post(
             client_metadata: &metadata,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
+                user_agent,
             },
         })
         .await?;

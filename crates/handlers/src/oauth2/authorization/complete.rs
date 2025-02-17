@@ -8,6 +8,7 @@ use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID, SessionInfoExt};
 use mas_data_model::{AuthorizationGrant, BrowserSession, Client, Device};
@@ -89,6 +90,7 @@ pub(crate) async fn get(
     State(key_store): State<Keystore>,
     policy: Policy,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
@@ -96,6 +98,8 @@ pub(crate) async fn get(
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
     let maybe_session = session_info.load_session(&mut repo).await?;
+
+    let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 
     let grant = repo
         .oauth2_authorization_grant()
@@ -130,6 +134,7 @@ pub(crate) async fn get(
         &mut rng,
         &clock,
         &activity_tracker,
+        user_agent,
         repo,
         key_store,
         policy,
@@ -199,6 +204,7 @@ pub(crate) async fn complete(
     rng: &mut (impl rand::RngCore + rand::CryptoRng + Send),
     clock: &impl Clock,
     activity_tracker: &BoundActivityTracker,
+    user_agent: Option<String>,
     mut repo: BoxRepository,
     key_store: Keystore,
     mut policy: Policy,
@@ -233,6 +239,7 @@ pub(crate) async fn complete(
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
+                user_agent,
             },
         })
         .await?;

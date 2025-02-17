@@ -101,6 +101,9 @@ impl EvaluationResult {
 pub struct Requester {
     /// IP address of the entity making the request
     pub ip_address: Option<IpAddr>,
+
+    /// User agent of the entity making the request
+    pub user_agent: Option<String>,
 }
 
 #[derive(Serialize, Debug)]

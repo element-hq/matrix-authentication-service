@@ -683,6 +683,7 @@ async fn client_credentials_grant(
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
+                user_agent: user_agent.clone().map(|ua| ua.raw),
             },
         })
         .await?;

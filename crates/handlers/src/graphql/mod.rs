@@ -238,6 +238,7 @@ async fn get_requester(
     activity_tracker: &BoundActivityTracker,
     mut repo: BoxRepository,
     session_info: SessionInfo,
+    user_agent: Option<String>,
     token: Option<&str>,
 ) -> Result<Requester, RouteError> {
     let entity = if let Some(token) = token {
@@ -301,6 +302,7 @@ async fn get_requester(
     let requester = Requester {
         entity,
         ip_address: activity_tracker.ip(),
+        user_agent,
     };
 
     repo.cancel().await?;
@@ -318,12 +320,14 @@ pub async fn post(
     cookie_jar: CookieJar,
     content_type: Option<TypedHeader<ContentType>>,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     body: Body,
 ) -> Result<impl IntoResponse, RouteError> {
     let body = body.into_data_stream();
     let token = authorization
         .as_ref()
         .map(|TypedHeader(Authorization(bearer))| bearer.token());
+    let user_agent = user_agent.map(|TypedHeader(h)| h.to_string());
     let (session_info, _cookie_jar) = cookie_jar.session_info();
     let requester = get_requester(
         undocumented_oauth2_access,
@@ -331,6 +335,7 @@ pub async fn post(
         &activity_tracker,
         repo,
         session_info,
+        user_agent,
         token,
     )
     .await?;
@@ -370,11 +375,13 @@ pub async fn get(
     activity_tracker: BoundActivityTracker,
     cookie_jar: CookieJar,
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     RawQuery(query): RawQuery,
 ) -> Result<impl IntoResponse, FancyError> {
     let token = authorization
         .as_ref()
         .map(|TypedHeader(Authorization(bearer))| bearer.token());
+    let user_agent = user_agent.map(|TypedHeader(h)| h.to_string());
     let (session_info, _cookie_jar) = cookie_jar.session_info();
     let requester = get_requester(
         undocumented_oauth2_access,
@@ -382,6 +389,7 @@ pub async fn get(
         &activity_tracker,
         repo,
         session_info,
+        user_agent,
         token,
     )
     .await?;
@@ -422,6 +430,7 @@ pub fn schema_builder() -> SchemaBuilder {
 pub struct Requester {
     entity: RequestingEntity,
     ip_address: Option<IpAddr>,
+    user_agent: Option<String>,
 }
 
 impl Requester {
@@ -430,6 +439,13 @@ impl Requester {
             RequesterFingerprint::new(ip)
         } else {
             RequesterFingerprint::EMPTY
+        }
+    }
+
+    pub fn for_policy(&self) -> mas_policy::Requester {
+        mas_policy::Requester {
+            ip_address: self.ip_address,
+            user_agent: self.user_agent.clone(),
         }
     }
 }

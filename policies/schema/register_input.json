@@ -38,6 +38,10 @@
           "description": "IP address of the entity making the request",
           "type": "string",
           "format": "ip"
+        },
+        "user_agent": {
+          "description": "User agent of the entity making the request",
+          "type": "string"
         }
       }
     }

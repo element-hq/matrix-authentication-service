@@ -427,7 +427,7 @@ impl UserEmailMutations {
             let res = policy
                 .evaluate_email(mas_policy::EmailInput {
                     email: &input.email,
-                    requester: requester.fingerprint().into(),
+                    requester: requester.for_policy(),
                 })
                 .await?;
             if !res.valid() {
@@ -618,7 +618,7 @@ impl UserEmailMutations {
         let res = policy
             .evaluate_email(mas_policy::EmailInput {
                 email: &input.email,
-                requester: requester.fingerprint().into(),
+                requester: requester.for_policy(),
             })
             .await?;
         if !res.valid() {
