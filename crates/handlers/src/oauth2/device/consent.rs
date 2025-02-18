@@ -10,6 +10,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Form,
 };
+use axum_extra::TypedHeader;
 use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
@@ -46,6 +47,7 @@ pub(crate) async fn get(
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, FancyError> {
@@ -53,6 +55,8 @@ pub(crate) async fn get(
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let maybe_session = session_info.load_session(&mut repo).await?;
+
+    let user_agent = user_agent.map(|ua| ua.to_string());
 
     let Some(session) = maybe_session else {
         let login = mas_router::Login::and_continue_device_code_grant(grant_id);
@@ -82,7 +86,16 @@ pub(crate) async fn get(
 
     // Evaluate the policy
     let res = policy
-        .evaluate_device_code_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            grant_type: mas_policy::GrantType::DeviceCode,
+            client: &client,
+            scope: &grant.scope,
+            user: Some(&session.user),
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
         .await?;
     if !res.valid() {
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
@@ -119,6 +132,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<ConsentForm>>,
@@ -128,6 +142,8 @@ pub(crate) async fn post(
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let maybe_session = session_info.load_session(&mut repo).await?;
+
+    let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 
     let Some(session) = maybe_session else {
         let login = mas_router::Login::and_continue_device_code_grant(grant_id);
@@ -157,7 +173,16 @@ pub(crate) async fn post(
 
     // Evaluate the policy
     let res = policy
-        .evaluate_device_code_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            grant_type: mas_policy::GrantType::DeviceCode,
+            client: &client,
+            scope: &grant.scope,
+            user: Some(&session.user),
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
         .await?;
     if !res.valid() {
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);

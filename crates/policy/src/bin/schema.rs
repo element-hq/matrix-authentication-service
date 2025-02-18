@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 
 use mas_policy::model::{
-    AuthorizationGrantInput, ClientRegistrationInput, EmailInput, PasswordInput, RegisterInput,
+    AuthorizationGrantInput, ClientRegistrationInput, EmailInput, RegisterInput,
 };
 use schemars::{gen::SchemaSettings, JsonSchema};
 
@@ -45,5 +45,4 @@ fn main() {
     write_schema::<ClientRegistrationInput>(output_root, "client_registration_input.json");
     write_schema::<AuthorizationGrantInput>(output_root, "authorization_grant_input.json");
     write_schema::<EmailInput>(output_root, "email_input.json");
-    write_schema::<PasswordInput>(output_root, "password_input.json");
 }

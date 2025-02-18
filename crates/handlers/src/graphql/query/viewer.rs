@@ -9,7 +9,6 @@ use async_graphql::{Context, Object};
 use crate::graphql::{
     model::{Viewer, ViewerSession},
     state::ContextExt,
-    Requester,
 };
 
 #[derive(Default)]
@@ -21,24 +20,25 @@ impl ViewerQuery {
     async fn viewer(&self, ctx: &Context<'_>) -> Viewer {
         let requester = ctx.requester();
 
-        match requester {
-            Requester::BrowserSession(session) => Viewer::user(session.user.clone()),
-            Requester::OAuth2Session(tuple) => match &tuple.1 {
-                Some(user) => Viewer::user(user.clone()),
-                None => Viewer::anonymous(),
-            },
-            Requester::Anonymous => Viewer::anonymous(),
+        if let Some(user) = requester.user() {
+            return Viewer::user(user.clone());
         }
+
+        Viewer::anonymous()
     }
 
     /// Get the viewer's session
     async fn viewer_session(&self, ctx: &Context<'_>) -> ViewerSession {
         let requester = ctx.requester();
 
-        match requester {
-            Requester::BrowserSession(session) => ViewerSession::browser_session(*session.clone()),
-            Requester::OAuth2Session(tuple) => ViewerSession::oauth2_session(tuple.0.clone()),
-            Requester::Anonymous => ViewerSession::anonymous(),
+        if let Some(session) = requester.browser_session() {
+            return ViewerSession::browser_session(session.clone());
         }
+
+        if let Some(session) = requester.oauth2_session() {
+            return ViewerSession::oauth2_session(session.clone());
+        }
+
+        ViewerSession::anonymous()
     }
 }

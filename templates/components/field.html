@@ -73,6 +73,10 @@ Please see LICENSE in the repository root for full details.
                 {{ _("mas.errors.email_domain_not_allowed") }}
               {% elif error.code == "email-domain-banned" %}
                 {{ _("mas.errors.email_domain_banned") }}
+              {% elif error.code == "email-not-allowed" %}
+                {{ _("mas.errors.email_not_allowed") }}
+              {% elif error.code == "email-banned" %}
+                {{ _("mas.errors.email_banned") }}
               {% else %}
                 {{ _("mas.errors.denied_policy", policy=error.message) }}
               {% endif %}

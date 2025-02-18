@@ -9,6 +9,8 @@
 //! This is useful to generate JSON schemas for each input type, which can then
 //! be type-checked by Open Policy Agent.
 
+use std::net::IpAddr;
+
 use mas_data_model::{Client, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use serde::{Deserialize, Serialize};
@@ -35,6 +37,12 @@ pub enum Code {
 
     /// The email domain is banned.
     EmailDomainBanned,
+
+    /// The email address is not allowed.
+    EmailNotAllowed,
+
+    /// The email address is banned.
+    EmailBanned,
 }
 
 impl Code {
@@ -48,6 +56,8 @@ impl Code {
             Self::UsernameAllNumeric => "username-all-numeric",
             Self::EmailDomainNotAllowed => "email-domain-not-allowed",
             Self::EmailDomainBanned => "email-domain-banned",
+            Self::EmailNotAllowed => "email-not-allowed",
+            Self::EmailBanned => "email-banned",
         }
     }
 }
@@ -92,21 +102,41 @@ impl EvaluationResult {
     }
 }
 
+/// Identity of the requester
+#[derive(Serialize, Debug, Default)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+pub struct Requester {
+    /// IP address of the entity making the request
+    pub ip_address: Option<IpAddr>,
+
+    /// User agent of the entity making the request
+    pub user_agent: Option<String>,
+}
+
+#[derive(Serialize, Debug)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+pub enum RegistrationMethod {
+    #[serde(rename = "password")]
+    Password,
+
+    #[serde(rename = "upstream-oauth2")]
+    UpstreamOAuth2,
+}
+
 /// Input for the user registration policy.
 #[derive(Serialize, Debug)]
 #[serde(tag = "registration_method")]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-pub enum RegisterInput<'a> {
-    #[serde(rename = "password")]
-    Password { username: &'a str, email: &'a str },
+pub struct RegisterInput<'a> {
+    pub registration_method: RegistrationMethod,
 
-    #[serde(rename = "upstream-oauth2")]
-    UpstreamOAuth2 {
-        username: &'a str,
+    pub username: &'a str,
 
-        #[serde(skip_serializing_if = "Option::is_none")]
-        email: Option<&'a str>,
-    },
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<&'a str>,
+
+    pub requester: Requester,
 }
 
 /// Input for the client registration policy.
@@ -119,6 +149,7 @@ pub struct ClientRegistrationInput<'a> {
         schemars(with = "std::collections::HashMap<String, serde_json::Value>")
     )]
     pub client_metadata: &'a VerifiedClientMetadata,
+    pub requester: Requester,
 }
 
 #[derive(Serialize, Debug)]
@@ -152,6 +183,8 @@ pub struct AuthorizationGrantInput<'a> {
     pub scope: &'a Scope,
 
     pub grant_type: GrantType,
+
+    pub requester: Requester,
 }
 
 /// Input for the email add policy.
@@ -160,12 +193,6 @@ pub struct AuthorizationGrantInput<'a> {
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct EmailInput<'a> {
     pub email: &'a str,
-}
 
-/// Input for the password set policy.
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-pub struct PasswordInput<'a> {
-    pub password: &'a str,
+    pub requester: Requester,
 }

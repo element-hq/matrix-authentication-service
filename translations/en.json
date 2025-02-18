@@ -299,7 +299,11 @@
       },
       "denied_policy": "Denied by policy: %(policy)s",
       "@denied_policy": {
-        "context": "components/errors.html:17:7-58, components/field.html:77:19-70"
+        "context": "components/errors.html:17:7-58, components/field.html:81:19-70"
+      },
+      "email_banned": "Email is banned by the server policy",
+      "@email_banned": {
+        "context": "components/field.html:79:19-47"
       },
       "email_domain_banned": "Email domain is banned by the server policy",
       "@email_domain_banned": {
@@ -308,6 +312,10 @@
       "email_domain_not_allowed": "Email domain is not allowed by the server policy",
       "@email_domain_not_allowed": {
         "context": "components/field.html:73:19-59"
+      },
+      "email_not_allowed": "Email is not allowed by the server policy",
+      "@email_not_allowed": {
+        "context": "components/field.html:77:19-52"
       },
       "field_required": "This field is required",
       "@field_required": {
@@ -319,7 +327,7 @@
       },
       "password_mismatch": "Password fields don't match",
       "@password_mismatch": {
-        "context": "components/errors.html:13:7-40, components/field.html:80:17-50"
+        "context": "components/errors.html:13:7-40, components/field.html:84:17-50"
       },
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
       "@rate_limit_exceeded": {
@@ -416,7 +424,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:99:10-31",
+      "context": "components/field.html:103:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {

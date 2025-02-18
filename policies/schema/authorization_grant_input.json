@@ -6,6 +6,7 @@
   "required": [
     "client",
     "grant_type",
+    "requester",
     "scope"
   ],
   "properties": {
@@ -22,6 +23,9 @@
     },
     "grant_type": {
       "$ref": "#/definitions/GrantType"
+    },
+    "requester": {
+      "$ref": "#/definitions/Requester"
     }
   },
   "definitions": {
@@ -32,6 +36,21 @@
         "client_credentials",
         "urn:ietf:params:oauth:grant-type:device_code"
       ]
+    },
+    "Requester": {
+      "description": "Identity of the requester",
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "description": "IP address of the entity making the request",
+          "type": "string",
+          "format": "ip"
+        },
+        "user_agent": {
+          "description": "User agent of the entity making the request",
+          "type": "string"
+        }
+      }
     }
   }
 }

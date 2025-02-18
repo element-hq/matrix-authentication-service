@@ -21,7 +21,7 @@ use zeroize::Zeroizing;
 use crate::graphql::{
     model::{NodeType, User},
     state::ContextExt,
-    Requester, UserId,
+    UserId,
 };
 
 #[derive(Default)]
@@ -728,7 +728,7 @@ impl UserMutations {
         let state = ctx.state();
         let requester = ctx.requester();
         let clock = state.clock();
-        if !matches!(requester, Requester::Anonymous) {
+        if !requester.is_unauthenticated() {
             return Err(async_graphql::Error::new(
                 "Account recovery is only for anonymous users.",
             ));
@@ -830,7 +830,7 @@ impl UserMutations {
         input: ResendRecoveryEmailInput,
     ) -> Result<ResendRecoveryEmailPayload, async_graphql::Error> {
         let state = ctx.state();
-        let requester_fingerprint = ctx.requester_fingerprint();
+        let requester = ctx.requester();
         let clock = state.clock();
         let mut rng = state.rng();
         let limiter = state.limiter();
@@ -847,7 +847,7 @@ impl UserMutations {
             .context("Could not load recovery session")?;
 
         if let Err(e) =
-            limiter.check_account_recovery(requester_fingerprint, &recovery_session.email)
+            limiter.check_account_recovery(requester.fingerprint(), &recovery_session.email)
         {
             tracing::warn!(error = &e as &dyn std::error::Error);
             return Ok(ResendRecoveryEmailPayload::RateLimited);

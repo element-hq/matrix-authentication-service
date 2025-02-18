@@ -424,7 +424,12 @@ impl UserEmailMutations {
 
         if !skip_policy_check {
             let mut policy = state.policy().await?;
-            let res = policy.evaluate_email(&input.email).await?;
+            let res = policy
+                .evaluate_email(mas_policy::EmailInput {
+                    email: &input.email,
+                    requester: requester.for_policy(),
+                })
+                .await?;
             if !res.valid() {
                 return Ok(AddEmailPayload::Denied {
                     violations: res.violations,
@@ -584,7 +589,7 @@ impl UserEmailMutations {
         }
 
         if let Err(e) =
-            limiter.check_email_authentication_email(ctx.requester_fingerprint(), &input.email)
+            limiter.check_email_authentication_email(requester.fingerprint(), &input.email)
         {
             tracing::warn!(error = &e as &dyn std::error::Error);
             return Ok(StartEmailAuthenticationPayload::RateLimited);
@@ -610,7 +615,12 @@ impl UserEmailMutations {
 
         // Check if the email address is allowed by the policy
         let mut policy = state.policy().await?;
-        let res = policy.evaluate_email(&input.email).await?;
+        let res = policy
+            .evaluate_email(mas_policy::EmailInput {
+                email: &input.email,
+                requester: requester.for_policy(),
+            })
+            .await?;
         if !res.valid() {
             return Ok(StartEmailAuthenticationPayload::Denied {
                 violations: res.violations,
@@ -648,9 +658,10 @@ impl UserEmailMutations {
         let mut rng = state.rng();
         let clock = state.clock();
         let limiter = state.limiter();
+        let requester = ctx.requester();
 
         let id = NodeType::UserEmailAuthentication.extract_ulid(&input.id)?;
-        let Some(browser_session) = ctx.requester().browser_session() else {
+        let Some(browser_session) = requester.browser_session() else {
             return Err(async_graphql::Error::new("Unauthorized"));
         };
 
@@ -680,8 +691,8 @@ impl UserEmailMutations {
             return Ok(ResendEmailAuthenticationCodePayload::Completed);
         }
 
-        if let Err(e) = limiter
-            .check_email_authentication_send_code(ctx.requester_fingerprint(), &authentication)
+        if let Err(e) =
+            limiter.check_email_authentication_send_code(requester.fingerprint(), &authentication)
         {
             tracing::warn!(error = &e as &dyn std::error::Error);
             return Ok(ResendEmailAuthenticationCodePayload::RateLimited);

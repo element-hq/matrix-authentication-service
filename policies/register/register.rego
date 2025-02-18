@@ -5,6 +5,7 @@ package register
 
 import rego.v1
 
+import data.common
 import data.email as email_policy
 
 default allow := false
@@ -13,8 +14,6 @@ allow if {
 	count(violation) == 0
 }
 
-mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
-
 # METADATA
 # entrypoint: true
 violation contains {"field": "username", "code": "username-too-short", "msg": "username too short"} if {
@@ -22,7 +21,7 @@ violation contains {"field": "username", "code": "username-too-short", "msg": "u
 }
 
 violation contains {"field": "username", "code": "username-too-long", "msg": "username too long"} if {
-	user_id := mxid(input.username, data.server_name)
+	user_id := common.mxid(input.username, data.server_name)
 	count(user_id) > 255
 }
 
@@ -46,6 +45,13 @@ violation contains {"msg": "unspecified registration method"} if {
 
 violation contains {"msg": "unknown registration method"} if {
 	not input.registration_method in ["password", "upstream-oauth2"]
+}
+
+violation contains {"msg": sprintf(
+	"Requester [%s] isn't allowed to do this action",
+	[common.format_requester(input.requester)],
+)} if {
+	common.requester_banned(input.requester, data.requester)
 }
 
 # Check that we supplied an email for password registration

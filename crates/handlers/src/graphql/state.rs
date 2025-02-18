@@ -10,7 +10,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryError};
 
-use crate::{graphql::Requester, passwords::PasswordManager, Limiter, RequesterFingerprint};
+use crate::{graphql::Requester, passwords::PasswordManager, Limiter};
 
 #[async_trait::async_trait]
 pub trait State {
@@ -31,8 +31,6 @@ pub trait ContextExt {
     fn state(&self) -> &BoxState;
 
     fn requester(&self) -> &Requester;
-
-    fn requester_fingerprint(&self) -> RequesterFingerprint;
 }
 
 impl ContextExt for async_graphql::Context<'_> {
@@ -42,9 +40,5 @@ impl ContextExt for async_graphql::Context<'_> {
 
     fn requester(&self) -> &Requester {
         self.data_unchecked()
-    }
-
-    fn requester_fingerprint(&self) -> RequesterFingerprint {
-        *self.data_unchecked()
     }
 }

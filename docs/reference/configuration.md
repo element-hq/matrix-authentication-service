@@ -382,13 +382,46 @@ policy:
       # don't require clients to provide a client_uri. default: false
       allow_missing_client_uri: false
 
-    # Restrict emails on registration to a specific domain
-    # Items in this array are evaluated as a glob
-    allowed_domains:
-      - *.example.com
-    # Ban specific domains from registration
-    banned_domains:
-      - *.banned.example.com
+    # Restrict what email addresses can be added to a user
+    emails:
+      # If specified, the email address *must* match one of the allowed addresses.
+      # If unspecified, all email addresses are allowed.
+      allowed_addresses:
+        # Exact emails that are allowed
+        literals: ["alice@example.com", "bob@example.com"]
+        # Regular expressions that match allowed emails
+        regexes: ["@example\\.com$"]
+        # Suffixes that match allowed emails
+        suffixes: ["@example.com"]
+
+      # If specified, the email address *must not* match one of the banned addresses.
+      # If unspecified, all email addresses are allowed.
+      banned_addresses:
+        # Exact emails that are banned
+        literals: ["alice@evil.corp", "bob@evil.corp"]
+        # Emails that contains those substrings are banned
+        substrings: ["evil"]
+        # Regular expressions that match banned emails
+        regexes: ["@evil\\.corp$"]
+        # Suffixes that match banned emails
+        suffixes: ["@evil.corp"]
+        # Prefixes that match banned emails
+        prefixes: ["alice@"]
+
+    requester:
+      # List of IP addresses and CIDRs that are not allowed to register
+      banned_ips:
+        - 192.168.0.1
+        - 192.168.1.0/24
+        - fe80::/64
+
+      # User agent patterns that are not allowed to register
+      banned_user_agents:
+        literals: ["Pretend this is Real;"]
+        substrings: ["Chrome"]
+        regexes: ["Chrome 1.*;"]
+        prefixes: ["Mozilla/"]
+        suffixes: ["Safari/605.1.15"]
 ```
 
 ## `rate_limiting`

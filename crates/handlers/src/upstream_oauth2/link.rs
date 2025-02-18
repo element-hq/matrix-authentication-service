@@ -43,7 +43,8 @@ use super::{
     UpstreamSessionsCookie,
 };
 use crate::{
-    impl_from_error_for_route, views::shared::OptionalPostAuthAction, PreferredLanguage, SiteConfig,
+    impl_from_error_for_route, views::shared::OptionalPostAuthAction, BoundActivityTracker,
+    PreferredLanguage, SiteConfig,
 };
 
 const DEFAULT_LOCALPART_TEMPLATE: &str = "{{ user.preferred_username }}";
@@ -199,6 +200,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<BoxHomeserverConnection>,
     cookie_jar: CookieJar,
+    activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Path(link_id): Path<Ulid>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -430,7 +432,7 @@ pub(crate) async fn get(
                                 .with_code("User exists")
                                 .with_description(format!(
                                     r"Upstream account provider returned {localpart:?} as username,
-                            which is not linked to that upstream account"
+                                    which is not linked to that upstream account"
                                 ))
                                 .with_language(&locale);
 
@@ -441,16 +443,32 @@ pub(crate) async fn get(
                         }
 
                         let res = policy
-                            .evaluate_upstream_oauth_register(&localpart, None)
+                            .evaluate_register(mas_policy::RegisterInput {
+                                registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
+                                username: &localpart,
+                                email: None,
+                                requester: mas_policy::Requester {
+                                    ip_address: activity_tracker.ip(),
+                                    user_agent: user_agent.clone().map(|ua| ua.raw),
+                                },
+                            })
                             .await?;
 
-                        if !res.valid() {
+                        if res.valid() {
+                            // The username passes the policy check, add it to the context
+                            ctx.with_localpart(
+                                localpart,
+                                provider.claims_imports.localpart.is_forced(),
+                            )
+                        } else if provider.claims_imports.localpart.is_forced() {
+                            // If the username claim is 'forced' but doesn't pass the policy check,
+                            // we display an error message.
                             // TODO: translate
                             let ctx = ErrorContext::new()
                                 .with_code("Policy error")
                                 .with_description(format!(
                                     r"Upstream account provider returned {localpart:?} as username,
-                            which does not pass the policy check: {res}"
+                                    which does not pass the policy check: {res}"
                                 ))
                                 .with_language(&locale);
 
@@ -458,9 +476,10 @@ pub(crate) async fn get(
                                 cookie_jar,
                                 Html(templates.render_error(&ctx)?).into_response(),
                             ));
+                        } else {
+                            // Else, we just ignore it when it doesn't pass the policy check.
+                            ctx
                         }
-
-                        ctx.with_localpart(localpart, provider.claims_imports.localpart.is_forced())
                     }
                     None => ctx,
                 }
@@ -489,6 +508,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     mut policy: Policy,
     PreferredLanguage(locale): PreferredLanguage,
+    activity_tracker: BoundActivityTracker,
     State(templates): State<Templates>,
     State(homeserver): State<BoxHomeserverConnection>,
     State(url_builder): State<UrlBuilder>,
@@ -743,8 +763,17 @@ pub(crate) async fn post(
 
             // Policy check
             let res = policy
-                .evaluate_upstream_oauth_register(&username, email.as_deref())
+                .evaluate_register(mas_policy::RegisterInput {
+                    registration_method: mas_policy::RegistrationMethod::UpstreamOAuth2,
+                    username: &username,
+                    email: email.as_deref(),
+                    requester: mas_policy::Requester {
+                        ip_address: activity_tracker.ip(),
+                        user_agent: user_agent.clone().map(|ua| ua.raw),
+                    },
+                })
                 .await?;
+
             if !res.valid() {
                 let form_state =
                     res.violations

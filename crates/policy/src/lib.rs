@@ -6,8 +6,6 @@
 
 pub mod model;
 
-use mas_data_model::{AuthorizationGrant, Client, DeviceCodeGrant, User};
-use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use opa_wasm::{
     wasmtime::{Config, Engine, Module, OptLevel, Store},
     Runtime,
@@ -16,9 +14,10 @@ use serde::Serialize;
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
-use self::model::{AuthorizationGrantInput, ClientRegistrationInput, EmailInput, RegisterInput};
-pub use self::model::{Code as ViolationCode, EvaluationResult, Violation};
-use crate::model::GrantType;
+pub use self::model::{
+    AuthorizationGrantInput, ClientRegistrationInput, Code as ViolationCode, EmailInput,
+    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
+};
 
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -190,16 +189,14 @@ impl Policy {
         name = "policy.evaluate_email",
         skip_all,
         fields(
-            input.email = email,
+            %input.email,
         ),
         err,
     )]
     pub async fn evaluate_email(
         &mut self,
-        email: &str,
+        input: EmailInput<'_>,
     ) -> Result<EvaluationResult, EvaluationError> {
-        let input = EmailInput { email };
-
         let [res]: [EvaluationResult; 1] = self
             .instance
             .evaluate(&mut self.store, &self.entrypoints.email, &input)
@@ -212,44 +209,16 @@ impl Policy {
         name = "policy.evaluate.register",
         skip_all,
         fields(
-            input.registration_method = "password",
-            input.user.username = username,
-            input.user.email = email,
+            ?input.registration_method,
+            input.username = input.username,
+            input.email = input.email,
         ),
         err,
     )]
     pub async fn evaluate_register(
         &mut self,
-        username: &str,
-        email: &str,
+        input: RegisterInput<'_>,
     ) -> Result<EvaluationResult, EvaluationError> {
-        let input = RegisterInput::Password { username, email };
-
-        let [res]: [EvaluationResult; 1] = self
-            .instance
-            .evaluate(&mut self.store, &self.entrypoints.register, &input)
-            .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument(
-        name = "policy.evaluate.upstream_oauth_register",
-        skip_all,
-        fields(
-            input.registration_method = "password",
-            input.user.username = username,
-            input.user.email = email,
-        ),
-        err,
-    )]
-    pub async fn evaluate_upstream_oauth_register(
-        &mut self,
-        username: &str,
-        email: Option<&str>,
-    ) -> Result<EvaluationResult, EvaluationError> {
-        let input = RegisterInput::UpstreamOAuth2 { username, email };
-
         let [res]: [EvaluationResult; 1] = self
             .instance
             .evaluate(&mut self.store, &self.entrypoints.register, &input)
@@ -261,10 +230,8 @@ impl Policy {
     #[tracing::instrument(skip(self))]
     pub async fn evaluate_client_registration(
         &mut self,
-        client_metadata: &VerifiedClientMetadata,
+        input: ClientRegistrationInput<'_>,
     ) -> Result<EvaluationResult, EvaluationError> {
-        let input = ClientRegistrationInput { client_metadata };
-
         let [res]: [EvaluationResult; 1] = self
             .instance
             .evaluate(
@@ -281,95 +248,15 @@ impl Policy {
         name = "policy.evaluate.authorization_grant",
         skip_all,
         fields(
-            input.authorization_grant.id = %authorization_grant.id,
-            input.scope = %authorization_grant.scope,
-            input.client.id = %client.id,
-            input.user.id = %user.id,
+            %input.scope,
+            %input.client.id,
         ),
         err,
     )]
     pub async fn evaluate_authorization_grant(
         &mut self,
-        authorization_grant: &AuthorizationGrant,
-        client: &Client,
-        user: &User,
+        input: AuthorizationGrantInput<'_>,
     ) -> Result<EvaluationResult, EvaluationError> {
-        let input = AuthorizationGrantInput {
-            user: Some(user),
-            client,
-            scope: &authorization_grant.scope,
-            grant_type: GrantType::AuthorizationCode,
-        };
-
-        let [res]: [EvaluationResult; 1] = self
-            .instance
-            .evaluate(
-                &mut self.store,
-                &self.entrypoints.authorization_grant,
-                &input,
-            )
-            .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument(
-        name = "policy.evaluate.client_credentials_grant",
-        skip_all,
-        fields(
-            input.scope = %scope,
-            input.client.id = %client.id,
-        ),
-        err,
-    )]
-    pub async fn evaluate_client_credentials_grant(
-        &mut self,
-        scope: &Scope,
-        client: &Client,
-    ) -> Result<EvaluationResult, EvaluationError> {
-        let input = AuthorizationGrantInput {
-            user: None,
-            client,
-            scope,
-            grant_type: GrantType::ClientCredentials,
-        };
-
-        let [res]: [EvaluationResult; 1] = self
-            .instance
-            .evaluate(
-                &mut self.store,
-                &self.entrypoints.authorization_grant,
-                &input,
-            )
-            .await?;
-
-        Ok(res)
-    }
-
-    #[tracing::instrument(
-        name = "policy.evaluate.device_code_grant",
-        skip_all,
-        fields(
-            input.device_code_grant.id = %device_code_grant.id,
-            input.scope = %device_code_grant.scope,
-            input.client.id = %client.id,
-            input.user.id = %user.id,
-        ),
-        err,
-    )]
-    pub async fn evaluate_device_code_grant(
-        &mut self,
-        device_code_grant: &DeviceCodeGrant,
-        client: &Client,
-        user: &User,
-    ) -> Result<EvaluationResult, EvaluationError> {
-        let input = AuthorizationGrantInput {
-            user: Some(user),
-            client,
-            scope: &device_code_grant.scope,
-            grant_type: GrantType::DeviceCode,
-        };
-
         let [res]: [EvaluationResult; 1] = self
             .instance
             .evaluate(
@@ -385,6 +272,7 @@ impl Policy {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[tokio::test]
@@ -415,19 +303,43 @@ mod tests {
         let mut policy = factory.instantiate().await.unwrap();
 
         let res = policy
-            .evaluate_register("hello", "hello@example.com")
+            .evaluate_register(RegisterInput {
+                registration_method: RegistrationMethod::Password,
+                username: "hello",
+                email: Some("hello@example.com"),
+                requester: Requester {
+                    ip_address: None,
+                    user_agent: None,
+                },
+            })
             .await
             .unwrap();
         assert!(!res.valid());
 
         let res = policy
-            .evaluate_register("hello", "hello@foo.element.io")
+            .evaluate_register(RegisterInput {
+                registration_method: RegistrationMethod::Password,
+                username: "hello",
+                email: Some("hello@foo.element.io"),
+                requester: Requester {
+                    ip_address: None,
+                    user_agent: None,
+                },
+            })
             .await
             .unwrap();
         assert!(res.valid());
 
         let res = policy
-            .evaluate_register("hello", "hello@staging.element.io")
+            .evaluate_register(RegisterInput {
+                registration_method: RegistrationMethod::Password,
+                username: "hello",
+                email: Some("hello@staging.element.io"),
+                requester: Requester {
+                    ip_address: None,
+                    user_agent: None,
+                },
+            })
             .await
             .unwrap();
         assert!(!res.valid());

@@ -8,6 +8,7 @@ use axum::{
     extract::{Form, Path, State},
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
     cookies::CookieJar,
@@ -80,12 +81,15 @@ pub(crate) async fn get(
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, RouteError> {
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
     let maybe_session = session_info.load_session(&mut repo).await?;
+
+    let user_agent = user_agent.map(|ua| ua.to_string());
 
     let grant = repo
         .oauth2_authorization_grant()
@@ -111,7 +115,16 @@ pub(crate) async fn get(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
         let res = policy
-            .evaluate_authorization_grant(&grant, &client, &session.user)
+            .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+                user: Some(&session.user),
+                client: &client,
+                scope: &grant.scope,
+                grant_type: mas_policy::GrantType::AuthorizationCode,
+                requester: mas_policy::Requester {
+                    ip_address: activity_tracker.ip(),
+                    user_agent,
+                },
+            })
             .await?;
 
         if res.valid() {
@@ -151,6 +164,7 @@ pub(crate) async fn post(
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
     Path(grant_id): Path<Ulid>,
@@ -161,6 +175,8 @@ pub(crate) async fn post(
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
     let maybe_session = session_info.load_session(&mut repo).await?;
+
+    let user_agent = user_agent.map(|ua| ua.to_string());
 
     let grant = repo
         .oauth2_authorization_grant()
@@ -185,7 +201,16 @@ pub(crate) async fn post(
         .ok_or(RouteError::NoSuchClient)?;
 
     let res = policy
-        .evaluate_authorization_grant(&grant, &client, &session.user)
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: Some(&session.user),
+            client: &client,
+            scope: &grant.scope,
+            grant_type: mas_policy::GrantType::AuthorizationCode,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
         .await?;
 
     if !res.valid() {

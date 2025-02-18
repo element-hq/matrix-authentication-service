@@ -18,8 +18,7 @@ parse_uri(url) := obj if {
 	obj := {"scheme": matches[1], "authority": matches[2], "host": matches[3], "port": matches[4], "path": matches[5]}
 }
 
-secure_url(x) if {
-	x
+secure_url(_) if {
 	data.client_registration.allow_insecure_uris
 }
 
@@ -37,16 +36,12 @@ secure_url(x) if {
 	url.port == ""
 }
 
-host_matches_client_uri(x) if {
-	x
-
+host_matches_client_uri(_) if {
 	# Do not check we allow host mismatch
 	data.client_registration.allow_host_mismatch
 }
 
-host_matches_client_uri(x) if {
-	x
-
+host_matches_client_uri(_) if {
 	# Do not check if the client_uri is missing and we allow that
 	data.client_registration.allow_missing_client_uri
 	not data.client_metadata.client_uri

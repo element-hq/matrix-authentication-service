@@ -233,7 +233,15 @@ pub(crate) async fn post(
         }
 
         let res = policy
-            .evaluate_register(&form.username, &form.email)
+            .evaluate_register(mas_policy::RegisterInput {
+                registration_method: mas_policy::RegistrationMethod::Password,
+                username: &form.username,
+                email: Some(&form.email),
+                requester: mas_policy::Requester {
+                    ip_address: activity_tracker.ip(),
+                    user_agent: user_agent.clone().map(|ua| ua.raw),
+                },
+            })
             .await?;
 
         for violation in res.violations {

@@ -74,3 +74,26 @@ test_invalid_username if {
 test_numeric_username if {
 	not register.allow with input as {"username": "1234", "registration_method": "upstream-oauth2"}
 }
+
+test_ip_ban if {
+	not register.allow with input as {
+		"username": "hello",
+		"registration_method": "upstream-oauth2",
+		"requester": {"ip_address": "1.1.1.1"},
+	}
+		with data.requester.banned_ips as ["1.1.1.1"]
+
+	not register.allow with input as {
+		"username": "hello",
+		"registration_method": "upstream-oauth2",
+		"requester": {"ip_address": "1.1.1.1"},
+	}
+		with data.requester.banned_ips as ["1.0.0.0/8"]
+
+	not register.allow with input as {
+		"username": "hello",
+		"registration_method": "upstream-oauth2",
+		"requester": {"user_agent": "Evil Client"},
+	}
+		with data.requester.banned_user_agents.substrings as ["Evil"]
+}
