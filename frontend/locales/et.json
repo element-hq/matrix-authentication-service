@@ -10,7 +10,7 @@
     "expand": "Laienda",
     "save": "Salvesta",
     "save_and_continue": "Salvesta ja jätka",
-    "sign_out": "Sign out",
+    "sign_out": "Logi välja",
     "start_over": "Alusta uuesti"
   },
   "branding": {
@@ -49,8 +49,8 @@
         "label": "Salasõna"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "Logi kontolt välja",
+        "dialog": "Kas logime sellest kontost välja?"
       },
       "title": "Sinu kasutajakonto"
     },
@@ -110,7 +110,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Kas sa oled kindel, et soovid selle sessiooni lõpetada?",
-      "text": "Logi välja"
+      "text": "Eemalda seade"
     },
     "error": {
       "hideDetails": "Peida lisateave",
@@ -276,7 +276,7 @@
       "device_id_label": "Seadme tunnus",
       "finished_date": "Lõpetatud <datetime/>",
       "finished_label": "Lõpetatud",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "Brauseri sessioon",
       "id_label": "ID",
       "ip_label": "IP-aadress",
       "last_active_label": "Viimati kasutusel",

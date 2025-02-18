@@ -10,7 +10,7 @@
     "expand": "Expandir",
     "save": "Salvar",
     "save_and_continue": "Guardar e Continuar",
-    "sign_out": "Sign out",
+    "sign_out": "Sair",
     "start_over": "Começar de novo"
   },
   "branding": {
@@ -49,8 +49,8 @@
         "label": "Palavra-passe"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "Sair da conta",
+        "dialog": "Sair desta conta?"
       },
       "title": "A sua conta"
     },
@@ -110,7 +110,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
-      "text": "Sair"
+      "text": "Remover dispositivo"
     },
     "error": {
       "hideDetails": "Ocultar detalhes",
@@ -276,7 +276,7 @@
       "device_id_label": "ID de dispositivo",
       "finished_date": "Concluído <datetime/>",
       "finished_label": "Concluído",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "Sessão do navegador",
       "id_label": "Identificação",
       "ip_label": "Endereço IP",
       "last_active_label": "Ativo pela última vez",

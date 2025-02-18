@@ -28,7 +28,7 @@
   "common": {
     "display_name": "Weergavenaam",
     "email_address": "E-mailadres",
-    "loading": "Loading…",
+    "loading": "Laden...",
     "mxid": "Matrix ID",
     "password": "Wachtwoord",
     "password_confirm": "Bevestig wachtwoord",

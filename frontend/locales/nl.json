@@ -10,8 +10,8 @@
     "expand": "Expand",
     "save": "Opslaan",
     "save_and_continue": "Opslaan en doorgaan",
-    "sign_out": "Sign out",
-    "start_over": "Start over"
+    "sign_out": "Uitloggen",
+    "start_over": "Opnieuw beginnen"
   },
   "branding": {
     "privacy_policy": {
@@ -64,7 +64,7 @@
         "text": "Het ingevoerde e-mailadres is al toegevoegd aan dit account",
         "title": "E-mailadres bestaat al"
       },
-      "email_exists_error": "The entered email is already added to this account",
+      "email_exists_error": "Het ingevoerde e-mailadres is al toegevoegd aan dit account",
       "email_field_help": "Voeg een alternatief e-mailadres toe dat u kunt gebruiken om toegang tot dit account te krijgen.",
       "email_field_label": "E-mailadres toevoegen",
       "email_in_use_error": "The entered email is already in use",
@@ -352,12 +352,12 @@
         "title": "New code sent"
       },
       "enter_code_prompt": "Enter the 6-digit code sent to: <email>{{email}}</email>",
-      "heading": "Verify your email",
+      "heading": "Verifieer uw e-mailadres",
       "invalid_code_alert": {
         "description": "Check the code sent to your email and update the fields below to continue.",
         "title": "You entered the wrong code"
       },
-      "resend_code": "Resend code",
+      "resend_code": "Code opnieuw verzenden",
       "resend_email": "Resend email",
       "sent": "Verzonden!",
       "unknown_email": "Unknown email"
