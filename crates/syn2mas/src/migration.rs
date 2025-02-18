@@ -84,6 +84,7 @@ bitflags::bitflags! {
         const IS_SYNAPSE_ADMIN = 0b0000_0001;
         const IS_DEACTIVATED = 0b0000_0010;
         const IS_GUEST = 0b0000_0100;
+        const IS_APPSERVICE = 0b0000_1000;
     }
 }
 
@@ -98,6 +99,10 @@ impl UserFlags {
 
     const fn is_synapse_admin(self) -> bool {
         self.contains(UserFlags::IS_SYNAPSE_ADMIN)
+    }
+
+    const fn is_appservice(self) -> bool {
+        self.contains(UserFlags::IS_APPSERVICE)
     }
 }
 
@@ -254,6 +259,21 @@ async fn migrate_users(
                     flags |= UserFlags::IS_GUEST;
                 }
 
+                if user.appservice_id.is_some() {
+                    flags |= UserFlags::IS_APPSERVICE;
+
+                    // Special case for appservice users: we don't insert them into the database
+                    // We just record the user's information in the state and continue
+                    state.users.insert(
+                        CompactString::new(&mas_user.username),
+                        UserInfo {
+                            mas_user_id: Uuid::nil(),
+                            flags,
+                        },
+                    );
+                    continue;
+                }
+
                 state.users.insert(
                     CompactString::new(&mas_user.username),
                     UserInfo {
@@ -349,10 +369,6 @@ async fn migrate_threepids(
             continue;
         };
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
-                continue;
-            }
-
             // HACK(matrix.org): we seem to have many threepids for unknown users
             if state.users.contains_key(username.to_lowercase().as_str()) {
                 tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
@@ -364,6 +380,10 @@ async fn migrate_threepids(
                 user: synapse_user_id,
             });
         };
+
+        if user_infos.flags.is_appservice() {
+            continue;
+        }
 
         if medium == "email" {
             email_buffer
@@ -444,14 +464,15 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
-                continue;
-            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_external_ids".to_owned(),
                 user: synapse_user_id,
             });
         };
+
+        if user_infos.flags.is_appservice() {
+            continue;
+        }
 
         let Some(&upstream_provider_id) = state.provider_id_mapping.get(&auth_provider) else {
             return Err(Error::MissingAuthProviderMapping {
@@ -534,16 +555,16 @@ async fn migrate_devices(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-                    if is_likely_appservice(&username) {
-                        continue;
-                    }
                     return Err(Error::MissingUserFromDependentTable {
                         table: "devices".to_owned(),
                         user: synapse_user_id,
                     });
                 };
 
-                if user_infos.flags.is_deactivated() || user_infos.flags.is_guest() {
+                if user_infos.flags.is_deactivated()
+                    || user_infos.flags.is_guest()
+                    || user_infos.flags.is_appservice()
+                {
                     continue;
                 }
 
@@ -663,16 +684,16 @@ async fn migrate_unrefreshable_access_tokens(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-                    if is_likely_appservice(&username) {
-                        continue;
-                    }
                     return Err(Error::MissingUserFromDependentTable {
                         table: "access_tokens".to_owned(),
                         user: synapse_user_id,
                     });
                 };
 
-                if user_infos.flags.is_deactivated() || user_infos.flags.is_guest() {
+                if user_infos.flags.is_deactivated()
+                    || user_infos.flags.is_guest()
+                    || user_infos.flags.is_appservice()
+                {
                     continue;
                 }
 
@@ -806,16 +827,16 @@ async fn migrate_refreshable_token_pairs(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            if is_likely_appservice(&username) {
-                continue;
-            }
             return Err(Error::MissingUserFromDependentTable {
                 table: "refresh_tokens".to_owned(),
                 user: synapse_user_id,
             });
         };
 
-        if user_infos.flags.is_deactivated() || user_infos.flags.is_guest() {
+        if user_infos.flags.is_deactivated()
+            || user_infos.flags.is_guest()
+            || user_infos.flags.is_appservice()
+        {
             continue;
         }
 
@@ -916,34 +937,4 @@ fn transform_user(
         });
 
     Ok((new_user, mas_password))
-}
-
-/// Returns true if and only if the given localpart looks like it would belong
-/// to an application service user.
-/// The rule here is that it must start with an underscore.
-/// Synapse reserves these by default, but there is no hard rule prohibiting
-/// other namespaces from being reserved, so this is not a robust check.
-// TODO replace with a more robust mechanism, if we even care about this sanity check
-// e.g. read application service registration files.
-#[inline]
-fn is_likely_appservice(localpart: &str) -> bool {
-    // HACK(matrix.org): These are the namespaces we use on matrix.org
-    localpart.starts_with('_')
-        || localpart.starts_with("freenode_") // Freenode IRC bridge
-        || localpart.starts_with("slack_") // Slack bridge
-        || localpart.starts_with("torn_") // Torn IRC bridge
-        || localpart.starts_with("gitter_") // Gitter bridge
-        || localpart.starts_with("mozilla_") // Mozilla IRC bridge
-        || localpart.starts_with("w3c_") // W3C IRC bridge
-        || localpart.starts_with("fs_") // VoIP conference AS
-        // HACK(matrix.org): Sender localparts of those appservices
-        || localpart == "bifrost"
-        || localpart == "appservice-irc"
-        || localpart == "oftc-irc"
-        || localpart == "slackbot"
-        || localpart == "snoonet-irc"
-        || localpart == "torn-irc"
-        || localpart == "scalar"
-        || localpart == "gitterbot"
-        || localpart == "mozilla-irc"
 }
