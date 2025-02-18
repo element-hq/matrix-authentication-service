@@ -55,13 +55,13 @@
       "new": "Nové heslo"
     },
     "choose_display_name": {
-      "description": "To je jméno, které uvidí ostatní lidé. Můžete to kdykoli změnit.",
-      "headline": "Zvolte zobrazované jméno"
+      "description": "Toto jméno uvidí ostatní lidé. Můžete ho kdykoli změnit.",
+      "headline": "Zvolte si své zobrazované jméno"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> na adrese <span>%(redirect_uri)s</span> chce získat přístup k vašemu účtu.",
       "heading": "Povolit přístup ke svému účtu?",
-      "make_sure_you_trust": "Ujistěte se, že důvěřujete <span>%(client_name)s</span>.",
+      "make_sure_you_trust": "Ujistěte se, že důvěřujete aplikaci <span>%(client_name)s</span>.",
       "this_will_allow": "To <span> %(client_name)s </span> umožní:",
       "you_may_be_sharing": "Je možné, že s tímto webem nebo aplikací sdílíte citlivé informace."
     },
@@ -87,8 +87,8 @@
       }
     },
     "email_in_use": {
-      "description": "Pokud jste zapomněli přihlašovací údaje k účtu, můžete účet obnovit. Můžete také začít znovu a použít jinou e-mailovou adresu.",
-      "title": "E-mailová adresa <span>%(email)s</span> je již používána"
+      "description": "Pokud jste zapomněli přihlašovací údaje k účtu, můžete svůj účet obnovit. Můžete také začít znovu a použít jinou e-mailovou adresu.",
+      "title": "E-mailová adresa <span>%(email)s</span> se již používá"
     },
     "emails": {
       "greeting": "Dobrý den, %(username)s,",

@@ -10,7 +10,7 @@
     "expand": "Rozbalit",
     "save": "Uložit",
     "save_and_continue": "Uložit a pokračovat",
-    "sign_out": "Sign out",
+    "sign_out": "Odhlásit se",
     "start_over": "Začít znovu"
   },
   "branding": {
@@ -49,8 +49,8 @@
         "label": "Heslo"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "Odhlásit se z účtu",
+        "dialog": "Odhlásit se z tohoto účtu?"
       },
       "title": "Váš účet"
     },
@@ -111,7 +111,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
-      "text": "Odhlásit se"
+      "text": "Odstranit zařízení"
     },
     "error": {
       "hideDetails": "Skrýt podrobnosti",
@@ -277,7 +277,7 @@
       "device_id_label": "ID zařízení",
       "finished_date": "Dokončeno <datetime/>",
       "finished_label": "Dokončeno",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "Relace prohlížeče",
       "id_label": "ID",
       "ip_label": "IP adresa",
       "last_active_label": "Naposledy aktivní",
@@ -345,7 +345,7 @@
     "verify_email": {
       "code_expired_alert": {
         "description": "Platnost kódu vypršela. Vyžádejte si prosím nový kód.",
-        "title": "Kód vypršel"
+        "title": "Platnost kódu vypršela"
       },
       "code_field_error": "Kód nebyl rozpoznán",
       "code_field_label": "6místný kód",

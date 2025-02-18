@@ -88,7 +88,7 @@
     },
     "email_in_use": {
       "description": "Kui sa oled unustanud oma konto kasutajanime ja/või salasõna, siis on sul võimalik taastada ligipääs oma kasutajakontole. Lisaks saad uue e-posti aadressi abil alustada nullist.",
-      "title": "E-posti aadress <span>%(email)s</span> on juba kasutusel"
+      "title": "E-posti aadress <span> %(email)s </span> on juba kasutusel"
     },
     "emails": {
       "greeting": "Tere %(username)s,",
@@ -186,7 +186,7 @@
       "call_to_login": "Sul on kasutajakonto juba olemas?",
       "continue_with_email": "Jätka e-posti aadressiga",
       "create_account": {
-        "description": "Jätkamiseks palun vali kasutajanimi.",
+        "description": "Jätkamiseks vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
       },
       "sign_in_instead": "Siis logi sisse",

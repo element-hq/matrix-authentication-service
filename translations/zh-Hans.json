@@ -28,7 +28,7 @@
   "common": {
     "display_name": "显示名称",
     "email_address": "邮箱地址",
-    "loading": "Loading…",
+    "loading": "加载中...",
     "mxid": "Matrix ID",
     "password": "密码",
     "password_confirm": "确认密码",
