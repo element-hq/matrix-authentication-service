@@ -1,8 +1,8 @@
 # Set to 1 to run OPA through Docker
 DOCKER := 0
 PODMAN := 0
-OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:0.70.0-debug
-REGAL_DOCKER_IMAGE := ghcr.io/styrainc/regal:0.29.2
+OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.1.0-debug
+REGAL_DOCKER_IMAGE := ghcr.io/styrainc/regal:0.31.0
 
 INPUTS := \
 	common/common.rego \
