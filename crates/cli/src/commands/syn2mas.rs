@@ -15,7 +15,7 @@ use sqlx::{postgres::PgConnectOptions, types::Uuid, Connection, Either, PgConnec
 use syn2mas::{synapse_config, LockedMasDatabase, MasWriter, SynapseReader};
 use tracing::{error, info_span, warn, Instrument};
 
-use crate::util::database_connection_from_config;
+use crate::util::{database_connection_from_config_with_options, DatabaseConnectOptions};
 
 /// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
 /// errors preventing migration.
@@ -80,6 +80,7 @@ enum Subcommand {
 const NUM_WRITER_CONNECTIONS: usize = 8;
 
 impl Options {
+    #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         warn!("This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING.");
@@ -111,7 +112,13 @@ impl Options {
 
         let config = DatabaseConfig::extract_or_default(figment)?;
 
-        let mut mas_connection = database_connection_from_config(&config).await?;
+        let mut mas_connection = database_connection_from_config_with_options(
+            &config,
+            &DatabaseConnectOptions {
+                log_slow_statements: false,
+            },
+        )
+        .await?;
 
         MIGRATOR
             .run(&mut mas_connection)
@@ -171,14 +178,14 @@ impl Options {
 
         // Display errors and warnings
         if !check_errors.is_empty() {
-            eprintln!("===== Errors =====");
+            eprintln!("\n\n===== Errors =====");
             eprintln!("These issues prevent migrating from Synapse to MAS right now:\n");
             for error in &check_errors {
                 eprintln!("• {error}\n");
             }
         }
         if !check_warnings.is_empty() {
-            eprintln!("===== Warnings =====");
+            eprintln!("\n\n===== Warnings =====");
             eprintln!("These potential issues should be considered before migrating from Synapse to MAS right now:\n");
             for warning in &check_warnings {
                 eprintln!("• {warning}\n");
@@ -216,32 +223,38 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
-                let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
+                // TODO this dry-run flag should be set to false in real circumstances !!!
+                let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
-                    writer_mas_connections.push(database_connection_from_config(&config).await?);
+                    writer_mas_connections.push(
+                        database_connection_from_config_with_options(
+                            &config,
+                            &DatabaseConnectOptions {
+                                log_slow_statements: false,
+                            },
+                        )
+                        .await?,
+                    );
                 }
-                let mut writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
                 #[allow(clippy::disallowed_methods)]
                 let mut rng = thread_rng();
 
-                // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
+                eprintln!("\n\n"); // padding above progress bar
                 syn2mas::migrate(
-                    &mut reader,
-                    &mut writer,
+                    reader,
+                    writer,
                     mas_matrix.homeserver,
                     &clock,
                     &mut rng,
                     provider_id_mappings,
                 )
                 .await?;
-
-                reader.finish().await?;
-                writer.finish().await?;
 
                 Ok(ExitCode::SUCCESS)
             }
