@@ -467,7 +467,7 @@ async fn migrate_threepids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            // HACK(matrix.org): we seem to have many threepids for unknown users
+            // HACK(matrix.org): we seem to have casing inconsistencies
             if state.users.contains_key(username.to_lowercase().as_str()) {
                 tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
                 continue;
@@ -568,6 +568,12 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have casing inconsistencies
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "External ID found in the database matching an MXID with the wrong casing");
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_external_ids".to_owned(),
                 user: synapse_user_id,
@@ -668,6 +674,12 @@ async fn migrate_devices(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    // HACK(matrix.org): we seem to have casing inconsistencies
+                    if state.users.contains_key(username.to_lowercase().as_str()) {
+                        tracing::warn!(mxid = %synapse_user_id, "Device found in the database matching an MXID with the wrong casing");
+                        continue;
+                    }
+
                     return Err(Error::MissingUserFromDependentTable {
                         table: "devices".to_owned(),
                         user: synapse_user_id,
@@ -813,6 +825,12 @@ async fn migrate_unrefreshable_access_tokens(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    // HACK(matrix.org): we seem to have casing inconsistencies
+                    if state.users.contains_key(username.to_lowercase().as_str()) {
+                        tracing::warn!(mxid = %synapse_user_id, "Access token found in the database matching an MXID with the wrong casing");
+                        continue;
+                    }
+
                     return Err(Error::MissingUserFromDependentTable {
                         table: "access_tokens".to_owned(),
                         user: synapse_user_id,
@@ -967,6 +985,12 @@ async fn migrate_refreshable_token_pairs(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have casing inconsistencies
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "Refresh token found in the database matching an MXID with the wrong casing");
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "refresh_tokens".to_owned(),
                 user: synapse_user_id,
