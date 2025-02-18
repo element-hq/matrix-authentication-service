@@ -10,7 +10,7 @@
     "expand": "Erweitern",
     "save": "Speichern",
     "save_and_continue": "Speichern und fortfahren",
-    "sign_out": "Sign out",
+    "sign_out": "Abmelden",
     "start_over": "Neu anfangen"
   },
   "branding": {
@@ -49,8 +49,8 @@
         "label": "Passwort"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "Vom Konto abmelden",
+        "dialog": "Von diesem Konto abmelden?"
       },
       "title": "Dein Konto"
     },
@@ -110,7 +110,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Sind Sie sicher, dass Sie diese Sitzung abmelden möchten?",
-      "text": "Ausloggen"
+      "text": "Gerät entfernen"
     },
     "error": {
       "hideDetails": "Details ausblenden",
@@ -276,7 +276,7 @@
       "device_id_label": "Geräte-ID",
       "finished_date": "Beendet <datetime/>",
       "finished_label": "Fertig",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "Browser-Sitzung",
       "id_label": "ID",
       "ip_label": "IP-Adresse",
       "last_active_label": "Zuletzt aktiv",

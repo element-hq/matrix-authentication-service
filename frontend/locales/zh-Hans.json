@@ -10,8 +10,8 @@
     "expand": "Expand",
     "save": "保存",
     "save_and_continue": "保存并继续",
-    "sign_out": "Sign out",
-    "start_over": "Start over"
+    "sign_out": "注销",
+    "start_over": "重新开始"
   },
   "branding": {
     "privacy_policy": {
@@ -120,7 +120,7 @@
     "error_boundary_title": "出了点问题",
     "errors": {
       "field_required": "此字段为必填项",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "rate_limit_exceeded": "您在短时间内发出了过多请求。请等待几分钟后重试。"
     },
     "last_active": {
       "active_date": "活跃 {{relativeDate}}",
@@ -180,14 +180,14 @@
     "password_reset": {
       "consumed": {
         "subtitle": "To create a new password, start over and select ”Forgot password“.",
-        "title": "The link to reset your password has already been used"
+        "title": "重置密码的链接已被使用"
       },
       "expired": {
         "resend_email": "重新发送电子邮件",
         "subtitle": "Request a new email that will be sent to: {{email}}",
-        "title": "The link to reset your password has expired"
+        "title": "重置密码的链接已过期"
       },
-      "subtitle": "Choose a new password for your account.",
+      "subtitle": "为您的账户选择一个新密码。",
       "title": "重置密码"
     },
     "password_strength": {
