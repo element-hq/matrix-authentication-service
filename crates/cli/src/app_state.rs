@@ -293,7 +293,13 @@ fn infer_client_ip(
     // Each intermediate proxy is supposed to add the client's IP address to front
     // of the list. We are effectively adding the IP we got from the socket to the
     // front of the list.
-    let peer_list: Vec<IpAddr> = peer.into_iter().chain(peers_from_header).collect();
+    // We also call `to_canonical` so that IPv6-mapped IPv4 addresses
+    // (::ffff:A.B.C.D) are converted to IPv4.
+    let peer_list: Vec<IpAddr> = peer
+        .into_iter()
+        .chain(peers_from_header)
+        .map(|ip| ip.to_canonical())
+        .collect();
 
     // We'll fallback to the first IP in the list if all the IPs we got are trusted
     let fallback = peer_list.first().copied();
