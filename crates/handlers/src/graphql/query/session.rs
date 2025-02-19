@@ -44,9 +44,7 @@ impl SessionQuery {
             return Ok(None);
         }
 
-        let Ok(device) = Device::try_from(device_id) else {
-            return Ok(None);
-        };
+        let device = Device::from(device_id);
         let state = ctx.state();
         let mut repo = state.repository().await?;
 
@@ -81,7 +79,14 @@ impl SessionQuery {
 
         // Then, try to find an OAuth 2.0 session. Because we don't have any dedicated
         // device column, we're looking up using the device scope.
-        let scope = Scope::from_iter([device.to_scope_token()]);
+        // All device IDs can't necessarily be encoded as a scope. If it's not the case,
+        // we'll skip looking for OAuth 2.0 sessions.
+        let Ok(scope_token) = device.to_scope_token() else {
+            repo.cancel().await?;
+
+            return Ok(None);
+        };
+        let scope = Scope::from_iter([scope_token]);
         let filter = OAuth2SessionFilter::new()
             .for_user(&user)
             .active_only()

@@ -22,21 +22,22 @@ pub struct Device {
 }
 
 #[derive(Debug, Error)]
-pub enum InvalidDeviceID {
-    #[error("Device ID contains invalid characters")]
+pub enum ToScopeTokenError {
+    #[error("Device ID contains characters that can't be encoded in a scope")]
     InvalidCharacters,
 }
 
 impl Device {
     /// Get the corresponding [`ScopeToken`] for that device
-    #[must_use]
-    pub fn to_scope_token(&self) -> ScopeToken {
-        // SAFETY: the inner id should only have valid scope characters
-        let Ok(scope_token) = format!("{DEVICE_SCOPE_PREFIX}{}", self.id).parse() else {
-            unreachable!()
-        };
-
-        scope_token
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the device ID contains characters that can't be
+    /// encoded in a scope
+    pub fn to_scope_token(&self) -> Result<ScopeToken, ToScopeTokenError> {
+        format!("{DEVICE_SCOPE_PREFIX}{}", self.id)
+            .parse()
+            .map_err(|_| ToScopeTokenError::InvalidCharacters)
     }
 
     /// Get the corresponding [`Device`] from a [`ScopeToken`]
@@ -45,8 +46,7 @@ impl Device {
     #[must_use]
     pub fn from_scope_token(token: &ScopeToken) -> Option<Self> {
         let id = token.as_str().strip_prefix(DEVICE_SCOPE_PREFIX)?;
-        // XXX: we might be silently ignoring errors here, but it's probably fine?
-        Device::try_from(id.to_owned()).ok()
+        Some(Device::from(id.to_owned()))
     }
 
     /// Generate a random device ID
@@ -62,39 +62,15 @@ impl Device {
     }
 }
 
-const fn valid_device_chars(c: char) -> bool {
-    // This matches the regex in the policy
-    c.is_ascii_alphanumeric()
-        || c == '.'
-        || c == '_'
-        || c == '~'
-        || c == '!'
-        || c == '$'
-        || c == '&'
-        || c == '\''
-        || c == '('
-        || c == ')'
-        || c == '*'
-        || c == '+'
-        || c == ','
-        || c == ';'
-        || c == '='
-        || c == ':'
-        || c == '@'
-        || c == '/'
-        || c == '-'
+impl From<String> for Device {
+    fn from(id: String) -> Self {
+        Self { id }
+    }
 }
 
-impl TryFrom<String> for Device {
-    type Error = InvalidDeviceID;
-
-    /// Create a [`Device`] out of an ID, validating the ID has the right shape
-    fn try_from(id: String) -> Result<Self, Self::Error> {
-        if !id.chars().all(valid_device_chars) {
-            return Err(InvalidDeviceID::InvalidCharacters);
-        }
-
-        Ok(Self { id })
+impl From<Device> for String {
+    fn from(device: Device) -> Self {
+        device.id
     }
 }
 
@@ -112,8 +88,8 @@ mod test {
 
     #[test]
     fn test_device_id_to_from_scope_token() {
-        let device = Device::try_from("AABBCCDDEE".to_owned()).unwrap();
-        let scope_token = device.to_scope_token();
+        let device = Device::from("AABBCCDDEE".to_owned());
+        let scope_token = device.to_scope_token().unwrap();
         assert_eq!(
             scope_token.as_str(),
             "urn:matrix:org.matrix.msc2967.client:device:AABBCCDDEE"
