@@ -41,6 +41,7 @@ use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache, Pr
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
+    #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<String>,
 
     /// An extra parameter to track whether the POST request was re-made by us
@@ -48,11 +49,14 @@ pub struct Params {
     #[serde(default)]
     did_mas_repost_to_itself: bool,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     code: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<ClientErrorCode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     error_description: Option<String>,
-    #[allow(dead_code)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     error_uri: Option<String>,
 
     #[serde(flatten)]
