@@ -4,7 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{
+    extract::{rejection::JsonRejection, State},
+    response::IntoResponse,
+    Json,
+};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
@@ -104,7 +108,9 @@ pub struct RequestBody {
 pub enum Credentials {
     #[serde(rename = "m.login.password")]
     Password {
-        identifier: Identifier,
+        identifier: Option<Identifier>,
+        // This property has been deprecated for a while, but some tools still use it.
+        user: Option<String>,
         password: String,
     },
 
@@ -145,6 +151,12 @@ pub enum RouteError {
     #[error("unsupported login method")]
     Unsupported,
 
+    #[error("unsupported identifier type")]
+    UnsupportedIdentifier,
+
+    #[error("missing property 'identifier'")]
+    MissingIdentifier,
+
     #[error("user not found")]
     UserNotFound,
 
@@ -165,6 +177,9 @@ pub enum RouteError {
 
     #[error("invalid login token")]
     InvalidLoginToken,
+
+    #[error(transparent)]
+    InvalidJsonBody(#[from] JsonRejection),
 
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
@@ -188,9 +203,39 @@ impl IntoResponse for RouteError {
                 error: "Too many login attempts",
                 status: StatusCode::TOO_MANY_REQUESTS,
             },
+            Self::InvalidJsonBody(JsonRejection::MissingJsonContentType(_)) => MatrixError {
+                errcode: "M_NOT_JSON",
+                error: "Invalid Content-Type header: expected application/json",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(JsonRejection::JsonSyntaxError(_)) => MatrixError {
+                errcode: "M_NOT_JSON",
+                error: "Body is not a valid JSON document",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(JsonRejection::JsonDataError(_)) => MatrixError {
+                errcode: "M_BAD_JSON",
+                error: "JSON fields are not valid",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(_) => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Unknown error while parsing JSON body",
+                status: StatusCode::BAD_REQUEST,
+            },
             Self::Unsupported => MatrixError {
-                errcode: "M_UNRECOGNIZED",
+                errcode: "M_UNKNOWN",
                 error: "Invalid login type",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::UnsupportedIdentifier => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Unsupported login identifier",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::MissingIdentifier => MatrixError {
+                errcode: "M_BAD_JSON",
+                error: "Missing property 'identifier",
                 status: StatusCode::BAD_REQUEST,
             },
             Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed(_) => {
@@ -228,17 +273,32 @@ pub(crate) async fn post(
     State(limiter): State<Limiter>,
     requester: RequesterFingerprint,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
-    Json(input): Json<RequestBody>,
+    input: Result<Json<RequestBody>, JsonRejection>,
 ) -> Result<impl IntoResponse, RouteError> {
+    let Json(input) = input?;
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
     let (mut session, user) = match (password_manager.is_enabled(), input.credentials) {
         (
             true,
             Credentials::Password {
-                identifier: Identifier::User { user },
+                identifier,
+                user,
                 password,
             },
         ) => {
+            // This is to support both the (very) old and deprecated 'user' property, with
+            // the same behavior as Synapse: it takes precendence over the 'identifier' if
+            // provided
+            let user = match (identifier, user) {
+                (Some(Identifier::User { user }), None) | (_, Some(user)) => user,
+                (Some(Identifier::Unsupported), None) => {
+                    return Err(RouteError::UnsupportedIdentifier);
+                }
+                (None, None) => {
+                    return Err(RouteError::MissingIdentifier);
+                }
+            };
+
             user_password_login(
                 &mut rng,
                 &clock,
