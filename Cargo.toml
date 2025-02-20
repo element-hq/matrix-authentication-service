@@ -308,7 +308,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.138"
+version = "1.0.139"
 features = ["preserve_order"]
 
 # SQL database support
