@@ -229,7 +229,7 @@ impl CompatSession {
             Self {
                 id: Ulid::from_bytes([0x01; 16]),
                 user_id: Ulid::from_bytes([0x01; 16]),
-                device_id: Some("AABBCCDDEE".to_owned().try_into().unwrap()),
+                device_id: Some("AABBCCDDEE".to_owned().into()),
                 user_session_id: Some(Ulid::from_bytes([0x11; 16])),
                 redirect_uri: Some("https://example.com/redirect".parse().unwrap()),
                 created_at: DateTime::default(),
@@ -241,7 +241,7 @@ impl CompatSession {
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
                 user_id: Ulid::from_bytes([0x01; 16]),
-                device_id: Some("FFGGHHIIJJ".to_owned().try_into().unwrap()),
+                device_id: Some("FFGGHHIIJJ".to_owned().into()),
                 user_session_id: Some(Ulid::from_bytes([0x12; 16])),
                 redirect_uri: None,
                 created_at: DateTime::default(),

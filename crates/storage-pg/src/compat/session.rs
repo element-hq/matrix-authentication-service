@@ -59,42 +59,28 @@ struct CompatSessionLookup {
     last_active_ip: Option<IpAddr>,
 }
 
-impl TryFrom<CompatSessionLookup> for CompatSession {
-    type Error = DatabaseInconsistencyError;
-
-    fn try_from(value: CompatSessionLookup) -> Result<Self, Self::Error> {
+impl From<CompatSessionLookup> for CompatSession {
+    fn from(value: CompatSessionLookup) -> Self {
         let id = value.compat_session_id.into();
-        let device = value
-            .device_id
-            .map(Device::try_from)
-            .transpose()
-            .map_err(|e| {
-                DatabaseInconsistencyError::on("compat_sessions")
-                    .column("device_id")
-                    .row(id)
-                    .source(e)
-            })?;
 
         let state = match value.finished_at {
             None => CompatSessionState::Valid,
             Some(finished_at) => CompatSessionState::Finished { finished_at },
         };
 
-        let session = CompatSession {
+        CompatSession {
             id,
             state,
             user_id: value.user_id.into(),
             user_session_id: value.user_session_id.map(Ulid::from),
-            device,
+            device: value.device_id.map(Device::from),
             human_name: value.human_name,
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
             user_agent: value.user_agent.map(UserAgent::parse),
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
-        };
-
-        Ok(session)
+        }
     }
 }
 
@@ -125,16 +111,6 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
 
     fn try_from(value: CompatSessionAndSsoLoginLookup) -> Result<Self, Self::Error> {
         let id = value.compat_session_id.into();
-        let device = value
-            .device_id
-            .map(Device::try_from)
-            .transpose()
-            .map_err(|e| {
-                DatabaseInconsistencyError::on("compat_sessions")
-                    .column("device_id")
-                    .row(id)
-                    .source(e)
-            })?;
 
         let state = match value.finished_at {
             None => CompatSessionState::Valid,
@@ -145,7 +121,7 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
             id,
             state,
             user_id: value.user_id.into(),
-            device,
+            device: value.device_id.map(Device::from),
             human_name: value.human_name,
             user_session_id: value.user_session_id.map(Ulid::from),
             created_at: value.created_at,
@@ -310,7 +286,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
 
         let Some(res) = res else { return Ok(None) };
 
-        Ok(Some(res.try_into()?))
+        Ok(Some(res.into()))
     }
 
     #[tracing::instrument(

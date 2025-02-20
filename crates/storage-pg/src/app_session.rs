@@ -588,7 +588,7 @@ mod tests {
             .unwrap();
 
         let device2 = Device::generate(&mut rng);
-        let scope = Scope::from_iter([OPENID, device2.to_scope_token()]);
+        let scope = Scope::from_iter([OPENID, device2.to_scope_token().unwrap()]);
 
         // We're moving the clock forward by 1 minute between each session to ensure
         // we're getting consistent ordering in lists.
