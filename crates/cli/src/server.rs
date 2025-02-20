@@ -238,9 +238,15 @@ pub fn build_router(
         }
     }
 
-    if let Some(prefix) = prefix {
-        let path = format!("{}/", prefix.trim_end_matches('/'));
-        router = Router::new().nest(&path, router);
+    // We normalize the prefix:
+    //  - if it's None, it becomes '/'
+    //  - if it's Some(..), any trailing '/' is first trimmed, then a '/' is added
+    let prefix = format!("{}/", prefix.unwrap_or_default().trim_end_matches('/'));
+    // Then we only nest the router if the prefix is not empty and not the root
+    // If we blindly nest the router if the prefix is Some("/"), axum will panic as
+    // we're not supposed to nest the router at the root
+    if !prefix.is_empty() && prefix != "/" {
+        router = Router::new().nest(&prefix, router);
     }
 
     router = router.fallback(mas_handlers::fallback);
