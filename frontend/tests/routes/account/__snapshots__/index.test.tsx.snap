@@ -738,8 +738,5 @@ exports[`Account home page > renders the page 1`] = `
       </p>
     </footer>
   </div>
-  <script>
-    
-  </script>
 </DocumentFragment>
 `;
