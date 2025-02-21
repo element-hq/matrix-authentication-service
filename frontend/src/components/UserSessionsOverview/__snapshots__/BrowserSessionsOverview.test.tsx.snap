@@ -9,18 +9,18 @@ exports[`BrowserSessionsOverview > renders with no browser sessions 1`] = `
       class="flex flex-1 flex-col"
     >
       <h5
-        class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
+        class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
       >
         Browsers
       </h5>
       <p
-        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+        class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50"
       >
         0 active sessions
       </p>
     </div>
     <a
-      class="_link_ue21z_17"
+      class="_link_1v5rz_8"
       data-kind="primary"
       data-size="medium"
       href="/sessions/browsers"
@@ -41,18 +41,18 @@ exports[`BrowserSessionsOverview > renders with sessions 1`] = `
       class="flex flex-1 flex-col"
     >
       <h5
-        class="_typography_yh5dq_162 _font-body-lg-semibold_yh5dq_83"
+        class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
       >
         Browsers
       </h5>
       <p
-        class="_typography_yh5dq_162 _font-body-md-regular_yh5dq_59"
+        class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50"
       >
         2 active sessions
       </p>
     </div>
     <a
-      class="_link_ue21z_17"
+      class="_link_1v5rz_8"
       data-kind="primary"
       data-size="medium"
       href="/sessions/browsers"
