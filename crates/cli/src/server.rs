@@ -231,7 +231,7 @@ pub fn build_router(
             // TODO: do a better handler here
             mas_config::HttpResource::ConnectionInfo => router.route(
                 "/connection-info",
-                axum::routing::get(|connection: Extension<ConnectionInfo>| async move {
+                axum::routing::get(async |connection: Extension<ConnectionInfo>| {
                     format!("{connection:?}")
                 }),
             ),

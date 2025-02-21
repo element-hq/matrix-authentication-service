@@ -332,7 +332,7 @@ where
         .route(
             "/account",
             get(
-                |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| async move {
+                async |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
                     let prefix = url_builder.prefix().unwrap_or_default();
                     let route = mas_router::Account::route();
                     let destination = if let Some(query) = query {
@@ -356,7 +356,7 @@ where
         )
         .route(
             mas_router::ChangePasswordDiscovery::route(),
-            get(|State(url_builder): State<UrlBuilder>| async move {
+            get(async |State(url_builder): State<UrlBuilder>| {
                 url_builder.redirect(&mas_router::AccountPasswordChange)
             }),
         )
@@ -438,7 +438,7 @@ where
             get(self::oauth2::device::consent::get).post(self::oauth2::device::consent::post),
         )
         .layer(AndThenLayer::new(
-            move |response: axum::response::Response| async move {
+            async move |response: axum::response::Response| {
                 if response.status().is_server_error() {
                     // Error responses should have an ErrorContext attached to them
                     let ext = response.extensions().get::<ErrorContext>();

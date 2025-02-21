@@ -98,7 +98,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::CompatSsoLogin))
                     .transpose()?;
@@ -172,7 +172,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::CompatSession))
                     .transpose()?;
@@ -264,7 +264,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::BrowserSession))
                     .transpose()?;
@@ -346,7 +346,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::UserEmail))
                     .transpose()?;
@@ -419,7 +419,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::OAuth2Session))
                     .transpose()?;
@@ -514,7 +514,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_type(NodeType::UpstreamOAuth2Link)
@@ -602,7 +602,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_types(&[NodeType::OAuth2Session, NodeType::CompatSession])

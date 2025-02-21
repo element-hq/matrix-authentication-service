@@ -94,7 +94,7 @@ impl UpstreamOAuthQuery {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_type(NodeType::UpstreamOAuth2Provider)
