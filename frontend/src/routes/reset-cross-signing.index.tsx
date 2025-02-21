@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import IconCheck from "@vector-im/compound-design-tokens/assets/web/icons/check";
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import {
   Button,
@@ -114,7 +114,7 @@ function ResetCrossSigning(): React.ReactNode {
   return (
     <>
       <PageHeading
-        Icon={IconError}
+        Icon={IconErrorSolid}
         title={t("frontend.reset_cross_signing.heading")}
         invalid
       />

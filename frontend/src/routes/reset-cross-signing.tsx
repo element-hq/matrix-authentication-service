@@ -8,7 +8,7 @@ import {
   Outlet,
   createFileRoute,
 } from "@tanstack/react-router";
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button, Text } from "@vector-im/compound-web";
 import * as v from "valibot";
 
@@ -37,7 +37,7 @@ function ResetCrossSigningError({
   return (
     <Layout>
       <PageHeading
-        Icon={IconError}
+        Icon={IconErrorSolid}
         title={t("frontend.reset_cross_signing.failure.heading")}
         invalid
       />
