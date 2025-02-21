@@ -70,7 +70,7 @@
     "happy-dom": "^17.1.1",
     "i18next-parser": "^9.3.0",
     "knip": "^5.44.4",
-    "msw": "^2.7.0",
+    "msw": "^2.7.1",
     "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.5.3",
     "postcss-import": "^16.1.0",
