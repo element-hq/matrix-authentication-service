@@ -287,7 +287,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - run: mkdir -p ~/.cargo/bin
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
