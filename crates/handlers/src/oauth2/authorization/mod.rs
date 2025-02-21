@@ -10,14 +10,14 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID, SessionInfoExt};
+use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID};
 use mas_data_model::{AuthorizationCode, Pkce};
 use mas_keystore::Keystore;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
     BoxClock, BoxRepository, BoxRng,
+    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::{PolicyViolationContext, TemplateContext, Templates};
 use oauth2_types::{
@@ -26,13 +26,13 @@ use oauth2_types::{
     requests::{AuthorizationRequest, GrantType, Prompt, ResponseMode},
     response_type::ResponseType,
 };
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use serde::Deserialize;
 use thiserror::Error;
 use tracing::warn;
 
 use self::{callback::CallbackDestination, complete::GrantCompletionError};
-use crate::{impl_from_error_for_route, BoundActivityTracker, PreferredLanguage};
+use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
 pub mod complete;

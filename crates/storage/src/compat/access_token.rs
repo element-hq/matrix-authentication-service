@@ -10,7 +10,7 @@ use mas_data_model::{CompatAccessToken, CompatSession};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`CompatAccessTokenRepository`] helps interacting with
 /// [`CompatAccessToken`] saved in the storage backend

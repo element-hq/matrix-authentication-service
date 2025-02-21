@@ -13,7 +13,7 @@ use clap::Parser;
 use mas_config::{ConfigurationSection, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
-    filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer, Registry,
+    EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 mod app_state;

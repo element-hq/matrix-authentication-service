@@ -4,21 +4,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::{SiteConfig, TokenFormatError, TokenType};
 use mas_storage::{
-    compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
     BoxClock, BoxRepository, BoxRng, Clock,
+    compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
 };
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, DurationMilliSeconds};
+use serde_with::{DurationMilliSeconds, serde_as};
 use thiserror::Error;
 
 use super::MatrixError;
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Deserialize)]
 pub struct RequestBody {

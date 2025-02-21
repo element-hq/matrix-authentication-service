@@ -8,7 +8,7 @@
 
 use std::str::FromStr;
 
-use pest::{error::ErrorVariant, iterators::Pair, Parser, Span};
+use pest::{Parser, Span, error::ErrorVariant, iterators::Pair};
 
 use super::message::{
     ArgumentReference, Message, PaddingSpecifier, Part, Placeholder, TypeSpecifier,
@@ -119,7 +119,7 @@ fn interpret_padding_specifier(pair: &Pair<Rule>) -> Result<PaddingSpecifier> {
                     message: format!("Unexpected padding specifier: {specifier:?}"),
                 },
                 pair.as_span(),
-            ))
+            ));
         }
     };
 
@@ -177,7 +177,7 @@ fn interpret_type_specifier(pair: &Pair<Rule>) -> Result<TypeSpecifier> {
                     message: String::from("Unexpected type specifier"),
                 },
                 pair.as_span(),
-            ))
+            ));
         }
     };
 

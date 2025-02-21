@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use headers::{CacheControl, Pragma};
@@ -16,7 +16,7 @@ use mas_axum_utils::{
 use mas_data_model::UserAgent;
 use mas_keystore::Encrypter;
 use mas_router::UrlBuilder;
-use mas_storage::{oauth2::OAuth2DeviceCodeGrantParams, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2DeviceCodeGrantParams};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     requests::{DeviceAuthorizationRequest, DeviceAuthorizationResponse, GrantType},
@@ -25,7 +25,7 @@ use oauth2_types::{
 use rand::distributions::{Alphanumeric, DistString};
 use thiserror::Error;
 
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -164,7 +164,7 @@ mod tests {
     };
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_device_code_request(pool: PgPool) {

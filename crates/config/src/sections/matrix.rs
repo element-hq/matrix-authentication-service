@@ -5,8 +5,8 @@
 // Please see LICENSE in the repository root for full details.
 
 use rand::{
-    distributions::{Alphanumeric, DistString},
     Rng,
+    distributions::{Alphanumeric, DistString},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -67,8 +67,8 @@ impl MatrixConfig {
 #[cfg(test)]
 mod tests {
     use figment::{
-        providers::{Format, Yaml},
         Figment, Jail,
+        providers::{Format, Yaml},
     };
 
     use super::*;

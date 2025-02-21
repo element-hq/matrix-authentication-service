@@ -11,7 +11,7 @@
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
-use super::{is_syn2mas_in_progress, locking::LockedMasDatabase, MAS_TABLES_AFFECTED_BY_MIGRATION};
+use super::{MAS_TABLES_AFFECTED_BY_MIGRATION, is_syn2mas_in_progress, locking::LockedMasDatabase};
 
 #[derive(Debug, Error, ContextInto)]
 pub enum Error {

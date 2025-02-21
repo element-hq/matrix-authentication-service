@@ -10,7 +10,7 @@ use figment::Figment;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::jwk::PublicJsonWebKeySet;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 use ulid::Ulid;
 use url::Url;
 
@@ -249,8 +249,8 @@ mod tests {
     use std::str::FromStr;
 
     use figment::{
-        providers::{Format, Yaml},
         Figment, Jail,
+        providers::{Format, Yaml},
     };
 
     use super::*;

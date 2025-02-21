@@ -6,8 +6,9 @@
 
 use std::ops::{Deref, DerefMut};
 
-use futures_util::{future::BoxFuture, FutureExt, TryFutureExt};
+use futures_util::{FutureExt, TryFutureExt, future::BoxFuture};
 use mas_storage::{
+    BoxRepository, MapErr, Repository, RepositoryAccess, RepositoryError, RepositoryTransaction,
     app_session::AppSessionRepository,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
@@ -23,12 +24,12 @@ use mas_storage::{
         UpstreamOAuthSessionRepository,
     },
     user::{BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository},
-    BoxRepository, MapErr, Repository, RepositoryAccess, RepositoryError, RepositoryTransaction,
 };
 use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 use tracing::Instrument;
 
 use crate::{
+    DatabaseError,
     app_session::PgAppSessionRepository,
     compat::{
         PgCompatAccessTokenRepository, PgCompatRefreshTokenRepository, PgCompatSessionRepository,
@@ -52,7 +53,6 @@ use crate::{
         PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRepository,
         PgUserTermsRepository,
     },
-    DatabaseError,
 };
 
 /// An implementation of the [`Repository`] trait backed by a PostgreSQL

@@ -14,7 +14,7 @@ use async_trait::async_trait;
 use mas_data_model::{Client, JwksOrJwksUri, User};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
-use mas_storage::{oauth2::OAuth2ClientRepository, Clock};
+use mas_storage::{Clock, oauth2::OAuth2ClientRepository};
 use oauth2_types::{
     oidc::ApplicationType,
     requests::GrantType,
@@ -23,12 +23,12 @@ use oauth2_types::{
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
 use sqlx::PgConnection;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 use ulid::Ulid;
 use url::Url;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError, DatabaseInconsistencyError};
+use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
 
 /// An implementation of [`OAuth2ClientRepository`] for a PostgreSQL connection
 pub struct PgOAuth2ClientRepository<'c> {
@@ -224,7 +224,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
             _ => {
                 return Err(DatabaseInconsistencyError::on("oauth2_clients")
                     .column("jwks(_uri)")
-                    .row(id))
+                    .row(id));
             }
         };
 

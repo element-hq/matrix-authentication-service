@@ -10,8 +10,8 @@
 use async_trait::async_trait;
 use mas_data_model::User;
 use mas_storage::{
-    user::{UserFilter, UserRepository},
     Clock,
+    user::{UserFilter, UserRepository},
 };
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query};
@@ -21,11 +21,11 @@ use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError,
     filter::{Filter, StatementExt},
     iden::Users,
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError,
 };
 
 mod email;

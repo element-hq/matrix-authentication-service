@@ -4,21 +4,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{response::IntoResponse, Json};
+use axum::{Json, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
-use headers::{authorization::Bearer, Authorization};
+use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::TokenType;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionRepository},
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use thiserror::Error;
 
 use super::MatrixError;
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Error, Debug)]
 pub enum RouteError {

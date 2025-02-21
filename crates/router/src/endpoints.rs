@@ -7,8 +7,8 @@
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-pub use crate::traits::*;
 use crate::UrlBuilder;
+pub use crate::traits::*;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(rename_all = "snake_case", tag = "kind")]

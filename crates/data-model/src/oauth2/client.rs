@@ -121,6 +121,7 @@ impl Client {
     }
 
     /// Create a client metadata object for this client
+    #[must_use]
     pub fn into_metadata(self) -> ClientMetadata {
         let (jwks, jwks_uri) = match self.jwks {
             Some(JwksOrJwksUri::Jwks(jwks)) => (Some(jwks), None),
@@ -130,7 +131,7 @@ impl Client {
         ClientMetadata {
             redirect_uris: Some(self.redirect_uris.clone()),
             response_types: None,
-            grant_types: Some(self.grant_types.into_iter().map(Into::into).collect()),
+            grant_types: Some(self.grant_types.clone()),
             application_type: self.application_type.clone(),
             client_name: self.client_name.map(|n| Localized::new(n, [])),
             logo_uri: self.logo_uri.map(|n| Localized::new(n, [])),

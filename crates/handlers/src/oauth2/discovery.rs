@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use mas_iana::oauth::{
     OAuthAuthorizationEndpointResponseType, OAuthClientAuthenticationMethod,
     PkceCodeChallengeMethod,
@@ -198,7 +198,7 @@ mod tests {
     use oauth2_types::oidc::ProviderMetadata;
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_valid_discovery_metadata(pool: PgPool) {

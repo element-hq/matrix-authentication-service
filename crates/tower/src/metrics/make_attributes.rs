@@ -6,7 +6,7 @@
 
 use opentelemetry::{KeyValue, Value};
 
-use crate::{utils::KV, FnWrapper};
+use crate::{FnWrapper, utils::KV};
 
 /// Make metrics attributes from a type.
 pub trait MetricsAttributes<T> {

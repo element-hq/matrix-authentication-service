@@ -19,10 +19,10 @@ use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
 use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions, PgConnection, PgPool,
+    postgres::{PgConnectOptions, PgPoolOptions},
 };
-use tracing::{log::LevelFilter, Instrument};
+use tracing::{Instrument, log::LevelFilter};
 
 pub async fn password_manager_from_config(
     config: &PasswordsConfig,
@@ -280,7 +280,9 @@ fn database_connect_options_from_config(
         (Some(pem), None) => options.ssl_client_cert_from_pem(pem.as_bytes()),
         (None, Some(path)) => options.ssl_client_cert(path),
         (Some(_), Some(_)) => {
-            anyhow::bail!("invalid database configuration: both `ssl_certificate` and `ssl_certificate_file` are set")
+            anyhow::bail!(
+                "invalid database configuration: both `ssl_certificate` and `ssl_certificate_file` are set"
+            )
         }
     };
 

@@ -19,7 +19,7 @@ mod test_utils {
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
-    use oauth2_types::scope::{Scope, OPENID};
+    use oauth2_types::scope::{OPENID, Scope};
 
     pub(crate) fn oidc_provider_params(name: &str) -> UpstreamOAuthProviderParams {
         UpstreamOAuthProviderParams {

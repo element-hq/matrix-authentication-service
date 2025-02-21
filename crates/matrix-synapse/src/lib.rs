@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use error::SynapseResponseExt;
 use http::{Method, StatusCode};
 use mas_http::RequestBuilderExt as _;

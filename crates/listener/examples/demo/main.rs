@@ -14,8 +14,8 @@ use std::{
 
 use anyhow::Context;
 use hyper::{Request, Response};
-use mas_listener::{server::Server, ConnectionInfo};
-use tokio_rustls::rustls::{server::WebPkiClientVerifier, RootCertStore, ServerConfig};
+use mas_listener::{ConnectionInfo, server::Server};
+use tokio_rustls::rustls::{RootCertStore, ServerConfig, server::WebPkiClientVerifier};
 use tokio_util::sync::CancellationToken;
 use tower::service_fn;
 
@@ -51,7 +51,9 @@ async fn main() -> Result<(), anyhow::Error> {
             .with_tls(tls_config.clone()),
     ];
 
-    tracing::info!("Listening on http://127.0.0.1:3000, http(proxy)://127.0.0.1:3001, https://127.0.0.1:3002 and https(proxy)://127.0.0.1:3003");
+    tracing::info!(
+        "Listening on http://127.0.0.1:3000, http(proxy)://127.0.0.1:3001, https://127.0.0.1:3002 and https(proxy)://127.0.0.1:3003"
+    );
 
     let hard_shutdown = CancellationToken::new();
     let soft_shutdown = hard_shutdown.child_token();

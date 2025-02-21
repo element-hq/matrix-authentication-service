@@ -25,6 +25,7 @@ use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    SynapseReader,
     mas_writer::{
         self, MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
         MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
@@ -34,7 +35,6 @@ use crate::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
-    SynapseReader,
 };
 
 #[derive(Debug, Error, ContextInto)]
@@ -56,7 +56,9 @@ pub enum Error {
     },
     #[error("user {user} was not found for migration but a row in {table} was found for them")]
     MissingUserFromDependentTable { table: String, user: FullUserId },
-    #[error("missing a mapping for the auth provider with ID {synapse_id:?} (used by {user} and maybe other users)")]
+    #[error(
+        "missing a mapping for the auth provider with ID {synapse_id:?} (used by {user} and maybe other users)"
+    )]
     MissingAuthProviderMapping {
         /// `auth_provider` ID of the provider in Synapse, for which we have no
         /// mapping

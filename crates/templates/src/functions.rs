@@ -13,18 +13,17 @@ use std::{
     collections::HashMap,
     fmt::Formatter,
     str::FromStr,
-    sync::{atomic::AtomicUsize, Arc},
+    sync::{Arc, atomic::AtomicUsize},
 };
 
 use camino::Utf8Path;
-use mas_i18n::{sprintf::FormattedMessagePart, Argument, ArgumentList, DataLocale, Translator};
+use mas_i18n::{Argument, ArgumentList, DataLocale, Translator, sprintf::FormattedMessagePart};
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
 use minijinja::{
-    escape_formatter,
+    Error, ErrorKind, State, Value, escape_formatter,
     machinery::make_string_output,
-    value::{from_args, Kwargs, Object, ViaDeserialize},
-    Error, ErrorKind, State, Value,
+    value::{Kwargs, Object, ViaDeserialize, from_args},
 };
 use url::Url;
 
@@ -153,7 +152,7 @@ fn function_add_params_to_url(
             return Err(Error::new(
                 ErrorKind::InvalidOperation,
                 "Invalid `mode` parameter",
-            ))
+            ));
         }
     };
 

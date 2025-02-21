@@ -4,8 +4,8 @@ use std::{borrow::Cow, fmt, marker::PhantomData, str};
 
 use base64ct::Encoding;
 use serde::{
-    de::{self, Unexpected, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
+    de::{self, Unexpected, Visitor},
 };
 
 /// A wrapper around `Vec<u8>` that (de)serializes from / to a base64 string.

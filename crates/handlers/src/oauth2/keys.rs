@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use mas_keystore::Keystore;
 
 #[tracing::instrument(name = "handlers.oauth2.keys.get", skip_all)]

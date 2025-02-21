@@ -8,22 +8,22 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use mas_storage::{
-    upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
     Clock, Page, Pagination,
+    upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
 };
 use rand::RngCore;
-use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError,
     filter::{Filter, StatementExt},
     iden::{UpstreamOAuthLinks, UpstreamOAuthProviders},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError,
 };
 
 /// An implementation of [`UpstreamOAuthLinkRepository`] for a PostgreSQL

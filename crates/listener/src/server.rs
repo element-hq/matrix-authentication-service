@@ -5,14 +5,13 @@
 // Please see LICENSE in the repository root for full details.
 
 use std::{
-    future::Future,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
     time::Duration,
 };
 
-use futures_util::{stream::SelectAll, StreamExt};
+use futures_util::{StreamExt, stream::SelectAll};
 use hyper::{Request, Response};
 use hyper_util::{
     rt::{TokioExecutor, TokioIo},
@@ -28,11 +27,11 @@ use tower_http::add_extension::AddExtension;
 use tracing::Instrument;
 
 use crate::{
+    ConnectionInfo,
     maybe_tls::{MaybeTlsAcceptor, MaybeTlsStream, TlsStreamInfo},
     proxy_protocol::{MaybeProxyAcceptor, ProxyAcceptError},
     rewind::Rewind,
     unix_or_tcp::{SocketAddr, UnixOrTcpConnection, UnixOrTcpListener},
-    ConnectionInfo,
 };
 
 /// The timeout for the handshake to complete

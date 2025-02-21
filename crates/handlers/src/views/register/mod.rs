@@ -7,7 +7,7 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse, Response},
 };
-use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt as _, FancyError, SessionInfoExt};
+use mas_axum_utils::{FancyError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
 use mas_data_model::SiteConfig;
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};

@@ -18,7 +18,7 @@ use mas_iana::{
 };
 use mas_jose::jwk::PublicJsonWebKeySet;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, TimestampSeconds};
+use serde_with::{TimestampSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
 use url::Url;
 
@@ -1036,7 +1036,7 @@ mod tests {
 
         // id_token token - Ok
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::IdTokenToken.into()
+            OAuthAuthorizationEndpointResponseType::IdTokenToken.into(),
         ]);
         metadata.clone().validate().unwrap();
 
@@ -1056,7 +1056,7 @@ mod tests {
 
         // code id_token - Ok
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::CodeIdToken.into()
+            OAuthAuthorizationEndpointResponseType::CodeIdToken.into(),
         ]);
         metadata.clone().validate().unwrap();
 
@@ -1068,7 +1068,7 @@ mod tests {
 
         // code token - Ok
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::CodeToken.into()
+            OAuthAuthorizationEndpointResponseType::CodeToken.into(),
         ]);
         metadata.clone().validate().unwrap();
 
@@ -1079,7 +1079,7 @@ mod tests {
 
         // id_token token - Ok
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::IdTokenToken.into()
+            OAuthAuthorizationEndpointResponseType::IdTokenToken.into(),
         ]);
         metadata.clone().validate().unwrap();
 
@@ -1246,7 +1246,7 @@ mod tests {
 
         // Err - code id_token
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::CodeIdToken.into()
+            OAuthAuthorizationEndpointResponseType::CodeIdToken.into(),
         ]);
         assert_matches!(
             metadata.clone().validate(),
@@ -1272,7 +1272,7 @@ mod tests {
 
         // Err - id_token token
         metadata.response_types = Some(vec![
-            OAuthAuthorizationEndpointResponseType::IdTokenToken.into()
+            OAuthAuthorizationEndpointResponseType::IdTokenToken.into(),
         ]);
         assert_matches!(
             metadata.clone().validate(),

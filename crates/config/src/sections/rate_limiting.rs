@@ -8,7 +8,7 @@ use std::{num::NonZeroU32, time::Duration};
 
 use governor::Quota;
 use schemars::JsonSchema;
-use serde::{de::Error as _, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error as _};
 
 use crate::ConfigurationSection;
 

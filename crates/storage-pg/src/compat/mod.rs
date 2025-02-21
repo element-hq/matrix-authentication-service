@@ -22,13 +22,13 @@ mod tests {
     use chrono::Duration;
     use mas_data_model::{Device, UserAgent};
     use mas_storage::{
+        Clock, Pagination, RepositoryAccess,
         clock::MockClock,
         compat::{
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionFilter,
             CompatSessionRepository, CompatSsoLoginFilter,
         },
         user::UserRepository,
-        Clock, Pagination, RepositoryAccess,
     };
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
@@ -336,17 +336,18 @@ mod tests {
         {
             let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
             // Adding the same token a second time should conflict
-            assert!(repo
-                .compat_access_token()
-                .add(
-                    &mut rng,
-                    &clock,
-                    &session,
-                    FIRST_TOKEN.to_owned(),
-                    Some(Duration::try_minutes(1).unwrap()),
-                )
-                .await
-                .is_err());
+            assert!(
+                repo.compat_access_token()
+                    .add(
+                        &mut rng,
+                        &clock,
+                        &session,
+                        FIRST_TOKEN.to_owned(),
+                        Some(Duration::try_minutes(1).unwrap()),
+                    )
+                    .await
+                    .is_err()
+            );
             repo.cancel().await.unwrap();
         }
 
@@ -507,11 +508,12 @@ mod tests {
         assert!(refresh_token_lookup.is_consumed());
 
         // Consuming it again should not work
-        assert!(repo
-            .compat_refresh_token()
-            .consume(&clock, refresh_token)
-            .await
-            .is_err());
+        assert!(
+            repo.compat_refresh_token()
+                .consume(&clock, refresh_token)
+                .await
+                .is_err()
+        );
 
         repo.save().await.unwrap();
     }

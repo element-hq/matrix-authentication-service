@@ -7,13 +7,13 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{CompatAccessToken, CompatSession};
-use mas_storage::{compat::CompatAccessTokenRepository, Clock};
+use mas_storage::{Clock, compat::CompatAccessTokenRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError};
+use crate::{DatabaseError, tracing::ExecuteExt};
 
 /// An implementation of [`CompatAccessTokenRepository`] for a PostgreSQL
 /// connection

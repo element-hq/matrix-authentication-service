@@ -11,11 +11,11 @@ use mas_iana::oauth::PkceCodeChallengeMethod;
 use oauth2_types::{
     pkce::{CodeChallengeError, CodeChallengeMethodExt},
     requests::ResponseMode,
-    scope::{Scope, OPENID, PROFILE},
+    scope::{OPENID, PROFILE, Scope},
 };
 use rand::{
-    distributions::{Alphanumeric, DistString},
     RngCore,
+    distributions::{Alphanumeric, DistString},
 };
 use ruma_common::UserId;
 use serde::Serialize;

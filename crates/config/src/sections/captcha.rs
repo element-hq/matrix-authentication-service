@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 
 use crate::ConfigurationSection;
 

@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{
     UserAgent, UserEmailAuthentication, UserRegistration, UserRegistrationPassword,
 };
-use mas_storage::{user::UserRegistrationRepository, Clock};
+use mas_storage::{Clock, user::UserRegistrationRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -395,7 +395,7 @@ mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
     use mas_data_model::{UserAgent, UserRegistrationPassword};
-    use mas_storage::{clock::MockClock, Clock};
+    use mas_storage::{Clock, clock::MockClock};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;

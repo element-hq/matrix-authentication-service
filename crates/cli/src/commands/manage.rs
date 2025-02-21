@@ -8,8 +8,8 @@ use std::{collections::BTreeMap, process::ExitCode};
 
 use anyhow::Context;
 use clap::{ArgAction, CommandFactory, Parser};
-use console::{pad_str, style, Alignment, Style, Term};
-use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect, Input, Password};
+use console::{Alignment, Style, Term, pad_str, style};
+use dialoguer::{Confirm, FuzzySelect, Input, Password, theme::ColorfulTheme};
 use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PasswordsConfig,
@@ -19,6 +19,7 @@ use mas_email::Address;
 use mas_matrix::HomeserverConnection;
 use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
+    Clock, RepositoryAccess, SystemClock,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
     queue::{
@@ -26,11 +27,10 @@ use mas_storage::{
         SyncDevicesJob,
     },
     user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
-    Clock, RepositoryAccess, SystemClock,
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{RngCore, SeedableRng};
-use sqlx::{types::Uuid, Acquire};
+use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
 
 use crate::util::{database_connection_from_config, password_manager_from_config};
@@ -266,7 +266,9 @@ impl Options {
                 )
                 .entered();
 
-                tracing::warn!("The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead.");
+                tracing::warn!(
+                    "The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead."
+                );
 
                 Ok(ExitCode::SUCCESS)
             }

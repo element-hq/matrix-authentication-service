@@ -21,11 +21,11 @@ use oauth2_types::requests::AccessTokenResponse;
 use rand::SeedableRng;
 use serde_json::Value;
 use wiremock::{
-    matchers::{header, method, path},
     Mock, Request, ResponseTemplate,
+    matchers::{header, method, path},
 };
 
-use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, CLIENT_SECRET};
+use crate::{ACCESS_TOKEN, CLIENT_ID, CLIENT_SECRET, client_credentials, init_test, now};
 
 #[tokio::test]
 async fn pass_none() {

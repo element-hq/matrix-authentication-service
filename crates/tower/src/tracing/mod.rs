@@ -11,9 +11,9 @@ mod make_span;
 mod service;
 
 pub use self::{
-    enrich_span::{enrich_span_fn, EnrichSpan},
+    enrich_span::{EnrichSpan, enrich_span_fn},
     future::TraceFuture,
     layer::TraceLayer,
-    make_span::{make_span_fn, MakeSpan},
+    make_span::{MakeSpan, make_span_fn},
     service::TraceService,
 };

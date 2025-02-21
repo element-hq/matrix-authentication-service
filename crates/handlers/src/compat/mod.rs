@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{response::IntoResponse, Json};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use serde::Serialize;
 

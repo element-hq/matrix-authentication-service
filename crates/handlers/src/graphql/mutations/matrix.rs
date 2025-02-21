@@ -5,12 +5,12 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
+use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
 
 use crate::graphql::{
+    UserId,
     model::{NodeType, User},
     state::ContextExt,
-    UserId,
 };
 
 #[derive(Default)]

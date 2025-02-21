@@ -18,20 +18,20 @@
 use std::{convert::Infallible, sync::LazyLock, time::Duration};
 
 use axum::{
+    Extension, Router,
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
     http::Method,
     response::{Html, IntoResponse},
     routing::{get, post},
-    Extension, Router,
 };
 use headers::HeaderName;
 use hyper::{
+    StatusCode, Version,
     header::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
     },
-    StatusCode, Version,
 };
-use mas_axum_utils::{cookies::CookieJar, FancyError};
+use mas_axum_utils::{FancyError, cookies::CookieJar};
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
@@ -88,13 +88,13 @@ macro_rules! impl_from_error_for_route {
     };
 }
 
-pub use mas_axum_utils::{cookies::CookieManager, ErrorWrapper};
+pub use mas_axum_utils::{ErrorWrapper, cookies::CookieManager};
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
     graphql::{
-        schema as graphql_schema, schema_builder as graphql_schema_builder, Schema as GraphQLSchema,
+        Schema as GraphQLSchema, schema as graphql_schema, schema_builder as graphql_schema_builder,
     },
     preferred_language::PreferredLanguage,
     rate_limit::{Limiter, RequesterFingerprint},
@@ -332,7 +332,7 @@ where
         .route(
             "/account",
             get(
-                |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| async move {
+                async |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
                     let prefix = url_builder.prefix().unwrap_or_default();
                     let route = mas_router::Account::route();
                     let destination = if let Some(query) = query {
@@ -356,7 +356,7 @@ where
         )
         .route(
             mas_router::ChangePasswordDiscovery::route(),
-            get(|State(url_builder): State<UrlBuilder>| async move {
+            get(async |State(url_builder): State<UrlBuilder>| {
                 url_builder.redirect(&mas_router::AccountPasswordChange)
             }),
         )
@@ -438,7 +438,7 @@ where
             get(self::oauth2::device::consent::get).post(self::oauth2::device::consent::post),
         )
         .layer(AndThenLayer::new(
-            move |response: axum::response::Response| async move {
+            async move |response: axum::response::Response| {
                 if response.status().is_server_error() {
                     // Error responses should have an ErrorContext attached to them
                     let ext = response.extensions().get::<ErrorContext>();

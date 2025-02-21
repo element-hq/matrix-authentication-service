@@ -13,7 +13,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// An [`OAuth2AuthorizationGrantRepository`] helps interacting with
 /// [`AuthorizationGrant`] saved in the storage backend
@@ -91,7 +91,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn find_by_code(&mut self, code: &str)
-        -> Result<Option<AuthorizationGrant>, Self::Error>;
+    -> Result<Option<AuthorizationGrant>, Self::Error>;
 
     /// Fulfill an authorization grant, by giving the [`Session`] that it
     /// created

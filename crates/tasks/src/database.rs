@@ -11,8 +11,8 @@ use mas_storage::queue::CleanupExpiredTokensJob;
 use tracing::{debug, info};
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 #[async_trait]

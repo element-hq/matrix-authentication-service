@@ -14,12 +14,12 @@ use mas_iana::{
 };
 use mas_jose::jwk::PublicJsonWebKeySet;
 use serde::{
+    Deserialize, Serialize,
     de::{DeserializeOwned, Error},
     ser::SerializeMap,
-    Deserialize, Serialize,
 };
 use serde_json::Value;
-use serde_with::{serde_as, skip_serializing_none, DurationSeconds};
+use serde_with::{DurationSeconds, serde_as, skip_serializing_none};
 use url::Url;
 
 use super::{ClientMetadata, Localized, VerifiedClientMetadata};

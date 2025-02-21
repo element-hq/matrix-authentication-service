@@ -5,13 +5,13 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Description, Object, ID,
+    Context, Description, ID, Object,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
 use mas_storage::{
-    app_session::AppSessionFilter, user::BrowserSessionRepository, Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess, app_session::AppSessionFilter, user::BrowserSessionRepository,
 };
 
 use super::{
@@ -122,7 +122,7 @@ impl BrowserSession {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_types(&[NodeType::OAuth2Session, NodeType::CompatSession])

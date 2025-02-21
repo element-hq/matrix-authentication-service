@@ -6,9 +6,9 @@
 
 use base64ct::{Base64Url, Encoding};
 use chrono::{DateTime, Utc};
-use crc::{Crc, CRC_32_ISO_HDLC};
+use crc::{CRC_32_ISO_HDLC, Crc};
 use mas_iana::oauth::OAuthTokenTypeHint;
-use rand::{distributions::Alphanumeric, Rng, RngCore};
+use rand::{Rng, RngCore, distributions::Alphanumeric};
 use thiserror::Error;
 use ulid::Ulid;
 
@@ -444,7 +444,9 @@ mod tests {
         ));
 
         // Whilst this is a macaroon, it's not a Synapse macaroon
-        assert!(! is_likely_synapse_macaroon("MDAxY2xvY2F0aW9uIGh0dHA6Ly9teWJhbmsvCjAwMjZpZGVudGlmaWVyIHdlIHVzZWQgb3VyIHNlY3JldCBrZXkKMDAyZnNpZ25hdHVyZSDj2eApCFJsTAA5rhURQRXZf91ovyujebNCqvD2F9BVLwo"));
+        assert!(!is_likely_synapse_macaroon(
+            "MDAxY2xvY2F0aW9uIGh0dHA6Ly9teWJhbmsvCjAwMjZpZGVudGlmaWVyIHdlIHVzZWQgb3VyIHNlY3JldCBrZXkKMDAyZnNpZ25hdHVyZSDj2eApCFJsTAA5rhURQRXZf91ovyujebNCqvD2F9BVLwo"
+        ));
 
         // None of these are macaroons
         assert!(!is_likely_synapse_macaroon(

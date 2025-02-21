@@ -12,7 +12,7 @@ use axum::{
 };
 use headers::HeaderMapExt as _;
 use mas_axum_utils::language_detection::AcceptLanguage;
-use mas_i18n::{locale, DataLocale, Translator};
+use mas_i18n::{DataLocale, Translator, locale};
 
 pub struct PreferredLanguage(pub DataLocale);
 

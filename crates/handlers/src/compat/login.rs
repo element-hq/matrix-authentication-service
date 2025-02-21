@@ -5,9 +5,9 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
-    extract::{rejection::JsonRejection, State},
-    response::IntoResponse,
     Json,
+    extract::{State, rejection::JsonRejection},
+    response::IntoResponse,
 };
 use axum_extra::{extract::WithRejection, typed_header::TypedHeader};
 use chrono::Duration;
@@ -18,23 +18,23 @@ use mas_data_model::{
 };
 use mas_matrix::BoxHomeserverConnection;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
     user::{UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, DurationMilliSeconds};
+use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
 use super::MatrixError;
 use crate::{
-    impl_from_error_for_route, passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
-    BoundActivityTracker, Limiter, RequesterFingerprint,
+    BoundActivityTracker, Limiter, RequesterFingerprint, impl_from_error_for_route,
+    passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
 };
 
 #[derive(Debug, Serialize)]
@@ -520,7 +520,7 @@ mod tests {
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{setup, test_site_config, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
     /// Test that the server advertises the right login flows.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -7,22 +7,22 @@
 use std::str::FromStr;
 
 use axum::{
+    Form,
     extract::State,
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use axum_extra::typed_header::TypedHeader;
 use lettre::Address;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_data_model::{SiteConfig, UserAgent};
 use mas_router::UrlBuilder;
 use mas_storage::{
-    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
     BoxClock, BoxRepository, BoxRng,
+    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
 };
 use mas_templates::{
     EmptyContext, FieldError, FormError, FormState, RecoveryStartContext, RecoveryStartFormField,

@@ -7,9 +7,9 @@
 //! Common schema definitions
 
 use schemars::{
-    gen::SchemaGenerator,
-    schema::{InstanceType, Metadata, Schema, SchemaObject, StringValidation},
     JsonSchema,
+    r#gen::SchemaGenerator,
+    schema::{InstanceType, Metadata, Schema, SchemaObject, StringValidation},
 };
 
 /// A type to use for schema definitions of ULIDs

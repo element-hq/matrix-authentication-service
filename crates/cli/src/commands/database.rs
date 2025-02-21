@@ -11,7 +11,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSectionExt, DatabaseConfig};
 use mas_storage_pg::MIGRATOR;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 
 use crate::util::database_connection_from_config;
 

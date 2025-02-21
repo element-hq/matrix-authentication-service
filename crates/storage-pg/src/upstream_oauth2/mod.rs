@@ -24,6 +24,7 @@ mod tests {
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{
+        Pagination, RepositoryAccess,
         clock::MockClock,
         upstream_oauth2::{
             UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository, UpstreamOAuthProviderFilter,
@@ -31,9 +32,8 @@ mod tests {
             UpstreamOAuthSessionRepository,
         },
         user::UserRepository,
-        Pagination, RepositoryAccess,
     };
-    use oauth2_types::scope::{Scope, OPENID};
+    use oauth2_types::scope::{OPENID, Scope};
     use rand::SeedableRng;
     use sqlx::PgPool;
 
@@ -407,15 +407,16 @@ mod tests {
         assert_eq!(&edge_ids, &ids[6..8]);
 
         // There should not be any disabled providers
-        assert!(repo
-            .upstream_oauth_provider()
-            .list(
-                UpstreamOAuthProviderFilter::new().disabled_only(),
-                Pagination::first(1)
-            )
-            .await
-            .unwrap()
-            .edges
-            .is_empty());
+        assert!(
+            repo.upstream_oauth_provider()
+                .list(
+                    UpstreamOAuthProviderFilter::new().disabled_only(),
+                    Pagination::first(1)
+                )
+                .await
+                .unwrap()
+                .edges
+                .is_empty()
+        );
     }
 }

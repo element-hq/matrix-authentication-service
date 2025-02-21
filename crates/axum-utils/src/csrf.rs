@@ -5,11 +5,11 @@
 // Please see LICENSE in the repository root for full details.
 
 use chrono::{DateTime, Duration, Utc};
-use data_encoding::{DecodeError, BASE64URL_NOPAD};
+use data_encoding::{BASE64URL_NOPAD, DecodeError};
 use mas_storage::Clock;
-use rand::{Rng, RngCore};
+use rand::{Rng, RngCore, distributions::Standard, prelude::Distribution as _};
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, TimestampSeconds};
+use serde_with::{TimestampSeconds, serde_as};
 use thiserror::Error;
 
 use crate::cookies::{CookieDecodeError, CookieJar};
@@ -56,7 +56,7 @@ impl CsrfToken {
 
     /// Generate a new random token valid for a specified duration
     fn generate(now: DateTime<Utc>, mut rng: impl Rng, ttl: Duration) -> Self {
-        let token = rng.gen();
+        let token = Standard.sample(&mut rng);
         Self::new(token, now, ttl)
     }
 

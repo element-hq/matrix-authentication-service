@@ -4,13 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::future::Future;
-
-use opentelemetry::{metrics::UpDownCounter, KeyValue};
+use opentelemetry::{KeyValue, metrics::UpDownCounter};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::{MetricsAttributes, METER};
+use crate::{METER, MetricsAttributes};
 
 /// A [`Layer`] that records the number of in-flight requests.
 ///

@@ -10,7 +10,7 @@ use std::{num::NonZeroU16, str::FromStr};
 
 use lettre::message::Mailbox;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 
 use super::ConfigurationSection;
 

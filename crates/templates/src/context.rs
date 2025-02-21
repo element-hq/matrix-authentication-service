@@ -28,12 +28,12 @@ use mas_data_model::{
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
-use oauth2_types::scope::{Scope, OPENID};
+use oauth2_types::scope::{OPENID, Scope};
 use rand::{
-    distributions::{Alphanumeric, DistString},
     Rng,
+    distributions::{Alphanumeric, DistString},
 };
-use serde::{ser::SerializeStruct, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, ser::SerializeStruct};
 use ulid::Ulid;
 use url::Url;
 

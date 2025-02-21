@@ -5,10 +5,10 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
+    Form,
     extract::{Path, State},
     http::Method,
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
@@ -18,11 +18,11 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_oidc_client::requests::jose::JwtVerificationData;
 use mas_router::UrlBuilder;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock,
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
     },
-    BoxClock, BoxRepository, BoxRng, Clock,
 };
 use mas_templates::{FormPostContext, Templates};
 use oauth2_types::{errors::ClientErrorCode, requests::AccessTokenRequest};
@@ -32,12 +32,12 @@ use thiserror::Error;
 use ulid::Ulid;
 
 use super::{
+    UpstreamSessionsCookie,
     cache::LazyProviderInfos,
     client_credentials_for_provider,
-    template::{environment, AttributeMappingContext},
-    UpstreamSessionsCookie,
+    template::{AttributeMappingContext, environment},
 };
-use crate::{impl_from_error_for_route, upstream_oauth2::cache::MetadataCache, PreferredLanguage};
+use crate::{PreferredLanguage, impl_from_error_for_route, upstream_oauth2::cache::MetadataCache};
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {

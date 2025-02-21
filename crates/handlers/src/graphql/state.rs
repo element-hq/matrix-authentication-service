@@ -10,7 +10,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryError};
 
-use crate::{graphql::Requester, passwords::PasswordManager, Limiter};
+use crate::{Limiter, graphql::Requester, passwords::PasswordManager};
 
 #[async_trait::async_trait]
 pub trait State {

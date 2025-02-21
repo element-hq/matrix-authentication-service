@@ -13,8 +13,8 @@ use mas_data_model::{
     UpstreamOAuthAuthorizationSession, User, UserAgent,
 };
 use mas_storage::{
-    user::{BrowserSessionFilter, BrowserSessionRepository},
     Clock, Page, Pagination,
+    user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder};
@@ -24,11 +24,11 @@ use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
     iden::{UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
 };
 
 /// An implementation of [`BrowserSessionRepository`] for a PostgreSQL

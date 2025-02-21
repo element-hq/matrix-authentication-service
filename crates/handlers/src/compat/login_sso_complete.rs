@@ -13,16 +13,16 @@ use axum::{
 };
 use chrono::Duration;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_data_model::Device;
 use mas_matrix::BoxHomeserverConnection;
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{
-    compat::{CompatSessionRepository, CompatSsoLoginRepository},
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    compat::{CompatSessionRepository, CompatSsoLoginRepository},
 };
 use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
 use serde::{Deserialize, Serialize};

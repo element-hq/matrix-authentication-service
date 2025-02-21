@@ -12,11 +12,11 @@ use std::{
 
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio_rustls::{
-    rustls::{
-        pki_types::CertificateDer, ProtocolVersion, ServerConfig, ServerConnection,
-        SupportedCipherSuite,
-    },
     TlsAcceptor,
+    rustls::{
+        ProtocolVersion, ServerConfig, ServerConnection, SupportedCipherSuite,
+        pki_types::CertificateDer,
+    },
 };
 
 #[derive(Debug, Clone)]

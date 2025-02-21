@@ -21,7 +21,7 @@ use super::jose::JwtVerificationData;
 use crate::{
     error::{IdTokenError, TokenRefreshError},
     requests::{jose::verify_id_token, token::request_access_token},
-    types::{client_credentials::ClientCredentials, IdToken},
+    types::{IdToken, client_credentials::ClientCredentials},
 };
 
 /// Exchange an authorization code for an access token.

@@ -9,10 +9,10 @@
 use async_trait::async_trait;
 use mas_data_model::{CompatSession, CompatSessionState, Device, Session, SessionState, UserAgent};
 use mas_storage::{
+    Page, Pagination,
     app_session::{AppSession, AppSessionFilter, AppSessionRepository, AppSessionState},
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
-    Page, Pagination,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use sea_query::{
@@ -23,11 +23,11 @@ use sqlx::PgConnection;
 use ulid::Ulid;
 
 use crate::{
+    DatabaseError, ExecuteExt,
     errors::DatabaseInconsistencyError,
     filter::StatementExt,
     iden::{CompatSessions, OAuth2Sessions},
     pagination::QueryBuilderExt,
-    DatabaseError, ExecuteExt,
 };
 
 /// An implementation of [`AppSessionRepository`] for a PostgreSQL connection
@@ -464,14 +464,14 @@ mod tests {
     use chrono::Duration;
     use mas_data_model::Device;
     use mas_storage::{
+        Pagination, RepositoryAccess,
         app_session::{AppSession, AppSessionFilter},
         clock::MockClock,
         oauth2::OAuth2SessionRepository,
-        Pagination, RepositoryAccess,
     };
     use oauth2_types::{
         requests::GrantType,
-        scope::{Scope, OPENID},
+        scope::{OPENID, Scope},
     };
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;

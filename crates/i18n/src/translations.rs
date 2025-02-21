@@ -11,9 +11,9 @@ use std::{
 
 use icu_plurals::PluralCategory;
 use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
     de::{MapAccess, Visitor},
     ser::SerializeMap,
-    Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use crate::sprintf::Message;
@@ -300,7 +300,7 @@ impl Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sprintf::{arg_list, ArgumentList};
+    use crate::sprintf::{ArgumentList, arg_list};
 
     #[test]
     fn test_it_works() {

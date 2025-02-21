@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use figment::{error::Error as FigmentError, Figment};
+use figment::{Figment, error::Error as FigmentError};
 use serde::de::DeserializeOwned;
 
 /// Trait implemented by all configuration section to help loading specific part

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{future::Future, task::ready};
+use std::task::ready;
 
 use pin_project_lite::pin_project;
 use tracing::Span;

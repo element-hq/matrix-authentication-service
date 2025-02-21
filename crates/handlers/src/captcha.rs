@@ -39,7 +39,9 @@ pub enum Error {
     #[error("The CAPTCHA provider returned an invalid response")]
     InvalidResponse,
 
-    #[error("The hostname in the CAPTCHA response ({got:?}) does not match the site hostname ({expected:?})")]
+    #[error(
+        "The hostname in the CAPTCHA response ({got:?}) does not match the site hostname ({expected:?})"
+    )]
     HostnameMismatch { expected: String, got: String },
 
     #[error("The CAPTCHA provider returned an error")]

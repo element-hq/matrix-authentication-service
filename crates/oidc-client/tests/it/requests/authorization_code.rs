@@ -15,8 +15,8 @@ use mas_oidc_client::{
     error::{IdTokenError, TokenAuthorizationCodeError},
     requests::{
         authorization_code::{
-            access_token_with_authorization_code, build_authorization_url,
             AuthorizationRequestData, AuthorizationValidationData,
+            access_token_with_authorization_code, build_authorization_url,
         },
         jose::JwtVerificationData,
     },
@@ -28,13 +28,13 @@ use oauth2_types::{
 use rand::SeedableRng;
 use url::Url;
 use wiremock::{
-    matchers::{method, path},
     Mock, Request, ResponseTemplate,
+    matchers::{method, path},
 };
 
 use crate::{
-    client_credentials, id_token, init_test, now, ACCESS_TOKEN, AUTHORIZATION_CODE, CLIENT_ID,
-    CODE_VERIFIER, ID_TOKEN_SIGNING_ALG, NONCE, REDIRECT_URI,
+    ACCESS_TOKEN, AUTHORIZATION_CODE, CLIENT_ID, CODE_VERIFIER, ID_TOKEN_SIGNING_ALG, NONCE,
+    REDIRECT_URI, client_credentials, id_token, init_test, now,
 };
 
 #[test]

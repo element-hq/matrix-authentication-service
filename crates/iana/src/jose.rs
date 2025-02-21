@@ -142,7 +142,7 @@ impl schemars::JsonSchema for JsonWebSignatureAlg {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -508,7 +508,7 @@ impl schemars::JsonSchema for JsonWebEncryptionAlg {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -861,7 +861,7 @@ impl schemars::JsonSchema for JsonWebEncryptionEnc {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1020,7 +1020,7 @@ impl schemars::JsonSchema for JsonWebEncryptionCompressionAlgorithm {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1129,7 +1129,7 @@ impl schemars::JsonSchema for JsonWebKeyType {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1277,7 +1277,7 @@ impl schemars::JsonSchema for JsonWebKeyEcEllipticCurve {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1425,7 +1425,7 @@ impl schemars::JsonSchema for JsonWebKeyOkpEllipticCurve {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1563,7 +1563,7 @@ impl schemars::JsonSchema for JsonWebKeyUse {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {
@@ -1705,7 +1705,7 @@ impl schemars::JsonSchema for JsonWebKeyOperation {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
             schemars::schema::SchemaObject {

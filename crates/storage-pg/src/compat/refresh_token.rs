@@ -9,13 +9,13 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{
     CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
 };
-use mas_storage::{compat::CompatRefreshTokenRepository, Clock};
+use mas_storage::{Clock, compat::CompatRefreshTokenRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError};
+use crate::{DatabaseError, tracing::ExecuteExt};
 
 /// An implementation of [`CompatRefreshTokenRepository`] for a PostgreSQL
 /// connection

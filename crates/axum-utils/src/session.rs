@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use mas_data_model::BrowserSession;
-use mas_storage::{user::BrowserSessionRepository, RepositoryAccess};
+use mas_storage::{RepositoryAccess, user::BrowserSessionRepository};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 

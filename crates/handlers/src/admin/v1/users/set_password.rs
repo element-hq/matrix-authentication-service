@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, NoApi, OperationIo};
-use axum::{extract::State, response::IntoResponse, Json};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_storage::BoxRng;
 use schemars::JsonSchema;
@@ -138,13 +138,13 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
-    use mas_storage::{user::UserPasswordRepository, RepositoryAccess};
+    use mas_storage::{RepositoryAccess, user::UserPasswordRepository};
     use sqlx::PgPool;
     use zeroize::Zeroizing;
 
     use crate::{
         passwords::PasswordManager,
-        test_utils::{setup, RequestBuilderExt, ResponseExt, TestState},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Description, Enum, InputObject, Object, ID};
+use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
 use mas_storage::{
     queue::{
         DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _,
@@ -19,9 +19,9 @@ use url::Url;
 use zeroize::Zeroizing;
 
 use crate::graphql::{
+    UserId,
     model::{NodeType, User},
     state::ContextExt,
-    UserId,
 };
 
 #[derive(Default)]
@@ -679,7 +679,7 @@ impl UserMutations {
 
             let Some(current_password_attempt) = input.current_password else {
                 return Err(async_graphql::Error::new(
-                    "You must supply `currentPassword` to change your own password if you are not an administrator"
+                    "You must supply `currentPassword` to change your own password if you are not an administrator",
                 ));
             };
 

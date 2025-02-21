@@ -11,6 +11,7 @@ use async_trait::async_trait;
 use mas_data_model::Device;
 use mas_matrix::ProvisionRequest;
 use mas_storage::{
+    Pagination, RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{
@@ -18,13 +19,12 @@ use mas_storage::{
         SyncDevicesJob,
     },
     user::{UserEmailRepository, UserRepository},
-    Pagination, RepositoryAccess,
 };
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 /// Job to provision a user on the Matrix homeserver.
