@@ -28,7 +28,7 @@ jobs:
       - name: Compute the new minor RC
         id: next
         run: |
-          CURRENT_VERSION="$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
+          CURRENT_VERSION="$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
           NEXT_VERSION="$(npx --yes semver@7.5.4 -i preminor --preid rc "${CURRENT_VERSION}")"
           # compute the short minor version, e.g. 0.1.0-rc.1 -> 0.1
           SHORT_VERSION="$(echo "${NEXT_VERSION}" | cut -d. -f1-2)"
