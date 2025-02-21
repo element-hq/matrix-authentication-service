@@ -110,6 +110,7 @@ pub(crate) struct TestState {
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
+    pub task_tracker: TaskTracker,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -246,8 +247,27 @@ impl TestState {
             clock,
             rng,
             http_client,
+            task_tracker,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
+    }
+
+    /// Reset the test utils to a fresh state, with the same configuration.
+    pub async fn reset(self) -> Self {
+        let site_config = self.site_config.clone();
+        let pool = self.pool.clone();
+        let task_tracker = self.task_tracker.clone();
+
+        // This should trigger the cancellation drop guard
+        drop(self);
+
+        // Wait for tasks to complete
+        task_tracker.close();
+        task_tracker.wait().await;
+
+        Self::from_pool_with_site_config(pool, site_config)
+            .await
+            .unwrap()
     }
 
     pub async fn request<B>(&self, request: Request<B>) -> Response<String>
