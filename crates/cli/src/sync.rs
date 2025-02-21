@@ -11,11 +11,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use mas_config::{ClientsConfig, UpstreamOAuth2Config};
 use mas_keystore::Encrypter;
 use mas_storage::{
-    upstream_oauth2::{UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams},
     Clock, Pagination, RepositoryAccess,
+    upstream_oauth2::{UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams},
 };
 use mas_storage_pg::PgRepository;
-use sqlx::{postgres::PgAdvisoryLock, Connection, PgConnection};
+use sqlx::{Connection, PgConnection, postgres::PgAdvisoryLock};
 use tracing::{error, info, info_span, warn};
 
 fn map_import_action(
@@ -155,9 +155,13 @@ pub async fn config_sync(
         } else {
             let len = existing_disabled.len();
             match len {
-                0 => {},
-                1 => warn!("A provider is soft-deleted in the database. Run `mas-cli config sync --prune` to delete it."),
-                n => warn!("{n} providers are soft-deleted in the database. Run `mas-cli config sync --prune` to delete them."),
+                0 => {}
+                1 => warn!(
+                    "A provider is soft-deleted in the database. Run `mas-cli config sync --prune` to delete it."
+                ),
+                n => warn!(
+                    "{n} providers are soft-deleted in the database. Run `mas-cli config sync --prune` to delete them."
+                ),
             }
         }
 
@@ -318,9 +322,13 @@ pub async fn config_sync(
         } else {
             let len = to_delete.count();
             match len {
-                0 => {},
-                1 => warn!("A static client in the database is not in the config. Run with `--prune` to delete it."),
-                n => warn!("{n} static clients in the database are not in the config. Run with `--prune` to delete them."),
+                0 => {}
+                1 => warn!(
+                    "A static client in the database is not in the config. Run with `--prune` to delete it."
+                ),
+                n => warn!(
+                    "{n} static clients in the database are not in the config. Run with `--prune` to delete them."
+                ),
             }
         }
 

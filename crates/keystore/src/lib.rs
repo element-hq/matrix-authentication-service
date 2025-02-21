@@ -8,7 +8,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use der::{zeroize::Zeroizing, Decode, Encode, EncodePem};
+use der::{Decode, Encode, EncodePem, zeroize::Zeroizing};
 use elliptic_curve::{pkcs8::EncodePrivateKey, sec1::ToEncodedPoint};
 use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};

@@ -8,7 +8,7 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse},
 };
-use mas_axum_utils::{cookies::CookieJar, FancyError};
+use mas_axum_utils::{FancyError, cookies::CookieJar};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository};
 use mas_templates::{

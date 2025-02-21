@@ -9,8 +9,8 @@
 use async_trait::async_trait;
 use chrono::Duration;
 use mas_storage::{
-    queue::{QueueWorkerRepository, Worker},
     Clock,
+    queue::{QueueWorkerRepository, Worker},
 };
 use rand::RngCore;
 use sqlx::PgConnection;

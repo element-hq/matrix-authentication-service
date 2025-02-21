@@ -9,12 +9,12 @@ use axum::{
     response::IntoResponse,
 };
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{user::BrowserSessionRepository, BoxClock, BoxRepository};
+use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
 

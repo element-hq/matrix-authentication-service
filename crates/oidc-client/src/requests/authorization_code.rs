@@ -22,11 +22,11 @@ use oauth2_types::{
         AccessTokenRequest, AccessTokenResponse, AuthorizationCodeGrant, AuthorizationRequest,
         Display, Prompt, ResponseMode,
     },
-    scope::{Scope, OPENID},
+    scope::{OPENID, Scope},
 };
 use rand::{
-    distributions::{Alphanumeric, DistString},
     Rng,
+    distributions::{Alphanumeric, DistString},
 };
 use serde::Serialize;
 use url::Url;
@@ -35,7 +35,7 @@ use super::jose::JwtVerificationData;
 use crate::{
     error::{AuthorizationError, IdTokenError, TokenAuthorizationCodeError},
     requests::{jose::verify_id_token, token::request_access_token},
-    types::{client_credentials::ClientCredentials, IdToken},
+    types::{IdToken, client_credentials::ClientCredentials},
 };
 
 /// The data necessary to build an authorization request.

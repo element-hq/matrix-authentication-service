@@ -4,12 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, NoApi, OperationIo};
-use axum::{response::IntoResponse, Json};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_storage::{
-    queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
     BoxRng,
+    queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
 };
 use tracing::info;
 use ulid::Ulid;
@@ -103,10 +103,10 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_storage::{user::UserRepository, Clock, RepositoryAccess};
-    use sqlx::{types::Json, PgPool};
+    use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
+    use sqlx::{PgPool, types::Json};
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_deactivate_user(pool: PgPool) {

@@ -10,10 +10,10 @@ use aide::{
     transform::TransformOpenApi,
 };
 use axum::{
+    Json, Router,
     extract::{FromRef, FromRequestParts, State},
     http::HeaderName,
     response::Html,
-    Json, Router,
 };
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
@@ -119,7 +119,8 @@ where
     aide::generate::infer_responses(false);
 
     aide::generate::in_context(|ctx| {
-        ctx.schema = schemars::gen::SchemaGenerator::new(schemars::gen::SchemaSettings::openapi3());
+        ctx.schema =
+            schemars::r#gen::SchemaGenerator::new(schemars::r#gen::SchemaSettings::openapi3());
     });
 
     let mut api = OpenApi::default();

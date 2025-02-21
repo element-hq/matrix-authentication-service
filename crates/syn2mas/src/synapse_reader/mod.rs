@@ -12,7 +12,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Transaction, Type};
+use sqlx::{Acquire, FromRow, PgConnection, Postgres, Transaction, Type, query};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -474,14 +474,14 @@ mod test {
 
     use futures_util::TryStreamExt;
     use insta::assert_debug_snapshot;
-    use sqlx::{migrate::Migrator, PgPool};
+    use sqlx::{PgPool, migrate::Migrator};
 
     use crate::{
+        SynapseReader,
         synapse_reader::{
             SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshableTokenPair,
             SynapseThreepid, SynapseUser,
         },
-        SynapseReader,
     };
 
     // TODO test me

@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Description, Enum, Object, ID};
+use async_graphql::{Context, Description, Enum, ID, Object};
 use chrono::{DateTime, Utc};
 use mas_storage::{oauth2::OAuth2ClientRepository, user::BrowserSessionRepository};
 use oauth2_types::{oidc::ApplicationType, scope::Scope};
@@ -13,7 +13,7 @@ use ulid::Ulid;
 use url::Url;
 
 use super::{BrowserSession, NodeType, SessionState, User, UserAgent};
-use crate::graphql::{state::ContextExt, UserId};
+use crate::graphql::{UserId, state::ContextExt};
 
 /// An OAuth 2.0 session represents a client session which used the OAuth APIs
 /// to login.

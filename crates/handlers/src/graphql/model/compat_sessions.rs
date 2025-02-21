@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Description, Enum, Object, ID};
+use async_graphql::{Context, Description, Enum, ID, Object};
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
 use mas_storage::{compat::CompatSessionRepository, user::UserRepository};

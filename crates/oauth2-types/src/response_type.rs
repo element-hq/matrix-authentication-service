@@ -212,9 +212,11 @@ impl TryFrom<ResponseType> for OAuthAuthorizationEndpointResponseType {
             [ResponseTypeToken::IdToken, ResponseTypeToken::Token] => {
                 OAuthAuthorizationEndpointResponseType::IdTokenToken
             }
-            [ResponseTypeToken::Code, ResponseTypeToken::IdToken, ResponseTypeToken::Token] => {
-                OAuthAuthorizationEndpointResponseType::CodeIdTokenToken
-            }
+            [
+                ResponseTypeToken::Code,
+                ResponseTypeToken::IdToken,
+                ResponseTypeToken::Token,
+            ] => OAuthAuthorizationEndpointResponseType::CodeIdTokenToken,
             _ => OAuthAuthorizationEndpointResponseType::None,
         };
 

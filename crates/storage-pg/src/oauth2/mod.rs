@@ -26,13 +26,13 @@ mod tests {
     use chrono::Duration;
     use mas_data_model::{AuthorizationCode, UserAgent};
     use mas_storage::{
+        Clock, Pagination,
         clock::MockClock,
         oauth2::{OAuth2DeviceCodeGrantParams, OAuth2SessionFilter, OAuth2SessionRepository},
-        Clock, Pagination,
     };
     use oauth2_types::{
         requests::{GrantType, ResponseMode},
-        scope::{Scope, EMAIL, OPENID, PROFILE},
+        scope::{EMAIL, OPENID, PROFILE, Scope},
     };
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;

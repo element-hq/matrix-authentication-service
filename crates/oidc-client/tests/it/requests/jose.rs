@@ -17,11 +17,11 @@ use mas_jose::{
 };
 use mas_oidc_client::{
     error::{IdTokenError, JwtVerificationError},
-    requests::jose::{verify_id_token, JwtVerificationData},
+    requests::jose::{JwtVerificationData, verify_id_token},
     types::IdToken,
 };
 
-use crate::{keystore, now, CLIENT_ID, ID_TOKEN_SIGNING_ALG, SUBJECT_IDENTIFIER};
+use crate::{CLIENT_ID, ID_TOKEN_SIGNING_ALG, SUBJECT_IDENTIFIER, keystore, now};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum IdTokenFlag {

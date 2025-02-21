@@ -14,7 +14,7 @@ use mas_data_model::{
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{pagination::Page, repository_impl, Clock, Pagination};
+use crate::{Clock, Pagination, pagination::Page, repository_impl};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BrowserSessionState {

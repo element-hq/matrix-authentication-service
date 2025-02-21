@@ -7,17 +7,17 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use mas_storage::{
+    RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{DeactivateUserJob, ReactivateUserJob},
     user::{BrowserSessionFilter, UserRepository},
-    RepositoryAccess,
 };
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 /// Job to deactivate a user, both locally and on the Matrix homeserver.

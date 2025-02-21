@@ -7,12 +7,12 @@ resolver = "2"
 package.version = "0.14.1"
 package.license = "AGPL-3.0-only"
 package.authors = ["Element Backend Team"]
-package.edition = "2021"
+package.edition = "2024"
 package.homepage = "https://element-hq.github.io/matrix-authentication-service/"
 package.repository = "https://github.com/element-hq/matrix-authentication-service/"
 
 [workspace.lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
 
 [workspace.lints.clippy]
 # We use groups as good defaults, but with a lower priority so that we can override them

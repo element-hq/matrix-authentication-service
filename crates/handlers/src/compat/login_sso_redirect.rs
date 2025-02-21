@@ -11,7 +11,7 @@ use axum::{
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
-use mas_storage::{compat::CompatSsoLoginRepository, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, compat::CompatSsoLoginRepository};
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Deserialize;
 use serde_with::serde;

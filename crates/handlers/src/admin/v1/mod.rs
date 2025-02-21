@@ -5,8 +5,8 @@
 // Please see LICENSE in the repository root for full details.
 
 use aide::axum::{
-    routing::{get_with, post_with},
     ApiRouter,
+    routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
 use mas_matrix::BoxHomeserverConnection;

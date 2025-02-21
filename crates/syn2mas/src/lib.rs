@@ -9,12 +9,13 @@ mod synapse_reader;
 mod migration;
 
 pub use self::{
-    mas_writer::{checks::mas_pre_migration_checks, locking::LockedMasDatabase, MasWriter},
+    mas_writer::{MasWriter, checks::mas_pre_migration_checks, locking::LockedMasDatabase},
     migration::migrate,
     synapse_reader::{
+        SynapseReader,
         checks::{
             synapse_config_check, synapse_config_check_against_mas_config, synapse_database_check,
         },
-        config as synapse_config, SynapseReader,
+        config as synapse_config,
     },
 };

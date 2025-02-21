@@ -20,7 +20,7 @@ use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use sqlx::migrate::Migrate;
-use tracing::{info, info_span, warn, Instrument};
+use tracing::{Instrument, info, info_span, warn};
 
 use crate::{
     app_state::AppState,
@@ -63,7 +63,9 @@ impl Options {
         info!(version = crate::VERSION, "Starting up");
 
         if self.migrate {
-            warn!("The `--migrate` flag is deprecated and will be removed in a future release. Please use `--no-migrate` to disable automatic migrations on startup.");
+            warn!(
+                "The `--migrate` flag is deprecated and will be removed in a future release. Please use `--no-migrate` to disable automatic migrations on startup."
+            );
         }
 
         // Connect to the database
@@ -78,7 +80,9 @@ impl Options {
             let has_missing_migrations = MIGRATOR.iter().any(|m| !applied.contains(&m.version));
             if has_missing_migrations {
                 // Refuse to start if there are pending migrations
-                return Err(anyhow::anyhow!("The server is running with `--no-migrate` but there are pending. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."));
+                return Err(anyhow::anyhow!(
+                    "The server is running with `--no-migrate` but there are pending. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."
+                ));
             }
         } else {
             info!("Running pending database migrations");

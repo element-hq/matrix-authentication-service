@@ -7,9 +7,9 @@
 use std::marker::PhantomData;
 
 use digest::{
+    Digest, Mac, OutputSizeUser,
     crypto_common::BlockSizeUser,
     generic_array::{ArrayLength, GenericArray},
-    Digest, Mac, OutputSizeUser,
 };
 use signature::{Signer, Verifier};
 use thiserror::Error;

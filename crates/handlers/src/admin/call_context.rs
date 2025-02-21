@@ -8,12 +8,12 @@ use std::convert::Infallible;
 
 use aide::OperationIo;
 use axum::{
+    Json,
     extract::FromRequestParts,
     response::{IntoResponse, Response},
-    Json,
 };
 use axum_extra::TypedHeader;
-use headers::{authorization::Bearer, Authorization};
+use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_data_model::{Session, User};
 use mas_storage::{BoxClock, BoxRepository, RepositoryError};

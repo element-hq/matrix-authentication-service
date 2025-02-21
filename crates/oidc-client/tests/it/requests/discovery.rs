@@ -14,8 +14,8 @@ use mas_oidc_client::{
 use oauth2_types::oidc::{ProviderMetadata, SubjectType};
 use url::Url;
 use wiremock::{
-    matchers::{method, path},
     Mock, ResponseTemplate,
+    matchers::{method, path},
 };
 
 use crate::init_test;

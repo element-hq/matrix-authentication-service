@@ -11,7 +11,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`UserRegistrationRepository`] helps interacting with [`UserRegistration`]
 /// saved in the storage backend

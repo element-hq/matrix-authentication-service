@@ -9,17 +9,17 @@ use async_trait::async_trait;
 use mas_email::{Address, Mailbox};
 use mas_i18n::DataLocale;
 use mas_storage::{
+    Pagination, RepositoryAccess,
     queue::SendAccountRecoveryEmailsJob,
     user::{UserEmailFilter, UserRecoveryRepository},
-    Pagination, RepositoryAccess,
 };
 use mas_templates::{EmailRecoveryContext, TemplateContext};
 use rand::distributions::{Alphanumeric, DistString};
 use tracing::{error, info};
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 /// Job to send account recovery emails for a given recovery session.

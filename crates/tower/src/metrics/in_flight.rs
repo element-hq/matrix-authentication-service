@@ -6,11 +6,11 @@
 
 use std::future::Future;
 
-use opentelemetry::{metrics::UpDownCounter, KeyValue};
+use opentelemetry::{KeyValue, metrics::UpDownCounter};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::{MetricsAttributes, METER};
+use crate::{METER, MetricsAttributes};
 
 /// A [`Layer`] that records the number of in-flight requests.
 ///

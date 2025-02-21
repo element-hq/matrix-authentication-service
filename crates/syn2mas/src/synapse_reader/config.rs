@@ -266,12 +266,14 @@ mod test {
         }
 
         // SQLite configs are not accepted
-        assert!(DatabaseSection {
-            name: "sqlite3".to_owned(),
-            args: DatabaseArgsSuboption::default(),
-        }
-        .to_sqlx_postgres()
-        .is_none());
+        assert!(
+            DatabaseSection {
+                name: "sqlite3".to_owned(),
+                args: DatabaseArgsSuboption::default(),
+            }
+            .to_sqlx_postgres()
+            .is_none()
+        );
 
         assert_eq_options(
             DatabaseSection {

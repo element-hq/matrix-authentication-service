@@ -10,13 +10,13 @@ use mas_data_model::{
     UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink,
     UpstreamOAuthProvider,
 };
-use mas_storage::{upstream_oauth2::UpstreamOAuthSessionRepository, Clock};
+use mas_storage::{Clock, upstream_oauth2::UpstreamOAuthSessionRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError, DatabaseInconsistencyError};
+use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
 
 /// An implementation of [`UpstreamOAuthSessionRepository`] for a PostgreSQL
 /// connection
@@ -91,9 +91,10 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
                 consumed_at,
             },
             _ => {
-                return Err(
-                    DatabaseInconsistencyError::on("upstream_oauth_authorization_sessions").row(id),
+                return Err(DatabaseInconsistencyError::on(
+                    "upstream_oauth_authorization_sessions",
                 )
+                .row(id));
             }
         };
 

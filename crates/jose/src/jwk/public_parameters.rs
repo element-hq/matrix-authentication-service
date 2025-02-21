@@ -160,7 +160,7 @@ impl OkpPublicParameters {
 }
 
 mod rsa_impls {
-    use rsa::{traits::PublicKeyParts, BigUint, RsaPublicKey};
+    use rsa::{BigUint, RsaPublicKey, traits::PublicKeyParts};
 
     use super::{JsonWebKeyPublicParameters, RsaPublicParameters};
     use crate::base64::Base64UrlNoPad;
@@ -214,8 +214,8 @@ mod ec_impls {
     use digest::typenum::Unsigned;
     use ecdsa::EncodedPoint;
     use elliptic_curve::{
-        sec1::{Coordinates, FromEncodedPoint, ModulusSize, ToEncodedPoint},
         AffinePoint, FieldBytes, PublicKey,
+        sec1::{Coordinates, FromEncodedPoint, ModulusSize, ToEncodedPoint},
     };
 
     use super::{super::JwkEcCurve, EcPublicParameters, JsonWebKeyPublicParameters};

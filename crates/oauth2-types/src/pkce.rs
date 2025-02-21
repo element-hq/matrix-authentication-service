@@ -135,9 +135,10 @@ mod tests {
         // This challenge comes from the RFC7636 appendices
         let challenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 
-        assert!(S256
-            .verify(challenge, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
-            .is_ok());
+        assert!(
+            S256.verify(challenge, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
+                .is_ok()
+        );
 
         assert!(Plain.verify(challenge, challenge).is_ok());
 

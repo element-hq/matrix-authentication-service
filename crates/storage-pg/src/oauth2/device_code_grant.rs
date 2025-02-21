@@ -10,8 +10,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, DeviceCodeGrant, DeviceCodeGrantState, Session, UserAgent};
 use mas_storage::{
-    oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository},
     Clock,
+    oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository},
 };
 use oauth2_types::scope::Scope;
 use rand::RngCore;
@@ -19,7 +19,7 @@ use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{errors::DatabaseInconsistencyError, DatabaseError, ExecuteExt};
+use crate::{DatabaseError, ExecuteExt, errors::DatabaseInconsistencyError};
 
 /// An implementation of [`OAuth2DeviceCodeGrantRepository`] for a PostgreSQL
 /// connection

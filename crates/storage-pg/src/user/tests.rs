@@ -6,12 +6,12 @@
 
 use chrono::Duration;
 use mas_storage::{
+    Clock, Pagination, RepositoryAccess,
     clock::MockClock,
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
     },
-    Clock, Pagination, RepositoryAccess,
 };
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
@@ -36,12 +36,13 @@ async fn test_user_repo(pool: PgPool) {
 
     // Initially, the user shouldn't exist
     assert!(!repo.user().exists(USERNAME).await.unwrap());
-    assert!(repo
-        .user()
-        .find_by_username(USERNAME)
-        .await
-        .unwrap()
-        .is_none());
+    assert!(
+        repo.user()
+            .find_by_username(USERNAME)
+            .await
+            .unwrap()
+            .is_none()
+    );
 
     assert_eq!(repo.user().count(all).await.unwrap(), 0);
     assert_eq!(repo.user().count(admin).await.unwrap(), 0);
@@ -58,12 +59,13 @@ async fn test_user_repo(pool: PgPool) {
 
     // And now it should exist
     assert!(repo.user().exists(USERNAME).await.unwrap());
-    assert!(repo
-        .user()
-        .find_by_username(USERNAME)
-        .await
-        .unwrap()
-        .is_some());
+    assert!(
+        repo.user()
+            .find_by_username(USERNAME)
+            .await
+            .unwrap()
+            .is_some()
+    );
     assert!(repo.user().lookup(user.id).await.unwrap().is_some());
 
     assert_eq!(repo.user().count(all).await.unwrap(), 1);
@@ -74,11 +76,12 @@ async fn test_user_repo(pool: PgPool) {
 
     // Adding a second time should give a conflict
     // It should not poison the transaction though
-    assert!(repo
-        .user()
-        .add(&mut rng, &clock, USERNAME.to_owned())
-        .await
-        .is_err());
+    assert!(
+        repo.user()
+            .add(&mut rng, &clock, USERNAME.to_owned())
+            .await
+            .is_err()
+    );
 
     // Try locking a user
     assert!(user.is_valid());
@@ -198,12 +201,13 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
 
     // The user email should not exist yet
-    assert!(repo
-        .user_email()
-        .find(&user, EMAIL)
-        .await
-        .unwrap()
-        .is_none());
+    assert!(
+        repo.user_email()
+            .find(&user, EMAIL)
+            .await
+            .unwrap()
+            .is_none()
+    );
 
     let all = UserEmailFilter::new().for_user(&user);
 
@@ -222,12 +226,13 @@ async fn test_user_email_repo(pool: PgPool) {
     // Check the counts
     assert_eq!(repo.user_email().count(all).await.unwrap(), 1);
 
-    assert!(repo
-        .user_email()
-        .find(&user, EMAIL)
-        .await
-        .unwrap()
-        .is_some());
+    assert!(
+        repo.user_email()
+            .find(&user, EMAIL)
+            .await
+            .unwrap()
+            .is_some()
+    );
 
     let user_email = repo
         .user_email()

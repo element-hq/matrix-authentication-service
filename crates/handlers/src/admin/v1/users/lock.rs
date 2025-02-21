@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
-use axum::{response::IntoResponse, Json};
+use aide::{OperationIo, transform::TransformOperation};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use ulid::Ulid;
 
@@ -92,10 +92,10 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_storage::{user::UserRepository, Clock, RepositoryAccess};
+    use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_lock_user(pool: PgPool) {

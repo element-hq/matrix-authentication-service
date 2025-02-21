@@ -9,7 +9,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{UserAgent, UserEmail, UserRecoverySession, UserRecoveryTicket};
-use mas_storage::{user::UserRecoveryRepository, Clock};
+use mas_storage::{Clock, user::UserRecoveryRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;

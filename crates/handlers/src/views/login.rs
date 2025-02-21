@@ -11,18 +11,18 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
-use mas_data_model::{oauth2::LoginHint, BrowserSession, UserAgent};
+use mas_data_model::{BrowserSession, UserAgent, oauth2::LoginHint};
 use mas_i18n::DataLocale;
 use mas_matrix::BoxHomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use mas_templates::{
     FieldError, FormError, LoginContext, LoginFormField, PostAuthContext, PostAuthContextInner,
@@ -34,8 +34,8 @@ use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
 use crate::{
-    passwords::PasswordManager, BoundActivityTracker, Limiter, PreferredLanguage,
-    RequesterFingerprint, SiteConfig,
+    BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
+    passwords::PasswordManager,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -345,8 +345,8 @@ async fn render(
 #[cfg(test)]
 mod test {
     use hyper::{
-        header::{CONTENT_TYPE, LOCATION},
         Request, StatusCode,
+        header::{CONTENT_TYPE, LOCATION},
     };
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
@@ -354,8 +354,8 @@ mod test {
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_router::Route;
     use mas_storage::{
-        upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
         RepositoryAccess,
+        upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
     };
     use mas_templates::escape_html;
     use oauth2_types::scope::OPENID;
@@ -363,10 +363,10 @@ mod test {
     use zeroize::Zeroizing;
 
     use crate::{
-        test_utils::{
-            setup, test_site_config, CookieHelper, RequestBuilderExt, ResponseExt, TestState,
-        },
         SiteConfig,
+        test_utils::{
+            CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+        },
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -475,13 +475,17 @@ mod test {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(response.body().contains(&escape_html("First Ltd.")));
-        assert!(response
-            .body()
-            .contains(&escape_html(&first_provider_login.path_and_query())));
+        assert!(
+            response
+                .body()
+                .contains(&escape_html(&first_provider_login.path_and_query()))
+        );
         assert!(response.body().contains(&escape_html("second.com")));
-        assert!(response
-            .body()
-            .contains(&escape_html(&second_provider_login.path_and_query())));
+        assert!(
+            response
+                .body()
+                .contains(&escape_html(&second_provider_login.path_and_query()))
+        );
     }
 
     async fn user_with_password(state: &TestState, username: &str, password: &str) {

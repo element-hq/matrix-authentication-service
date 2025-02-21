@@ -6,8 +6,8 @@
 
 use base64ct::{Base64UrlUnpadded, Encoding};
 use rand::thread_rng;
-use serde::{de::DeserializeOwned, Serialize};
-use signature::{rand_core::CryptoRngCore, RandomizedSigner, SignatureEncoding, Verifier};
+use serde::{Serialize, de::DeserializeOwned};
+use signature::{RandomizedSigner, SignatureEncoding, Verifier, rand_core::CryptoRngCore};
 use thiserror::Error;
 
 use super::{header::JsonWebSignatureHeader, raw::RawJwt};
@@ -396,7 +396,10 @@ mod tests {
             jwt.raw.signature(),
             "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         );
-        assert_eq!(jwt.raw.signed_part(), "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ");
+        assert_eq!(
+            jwt.raw.signed_part(),
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
+        );
     }
 
     #[test]

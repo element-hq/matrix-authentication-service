@@ -6,27 +6,27 @@
 
 use anyhow::Context as _;
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Description, Enum, Object, Union, ID,
+    Context, Description, Enum, ID, Object, Union,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
 use mas_storage::{
+    Pagination, RepositoryAccess,
     app_session::AppSessionFilter,
     compat::{CompatSessionFilter, CompatSsoLoginFilter, CompatSsoLoginRepository},
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
     user::{BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository},
-    Pagination, RepositoryAccess,
 };
 
 use super::{
-    compat_sessions::{CompatSessionType, CompatSsoLogin},
-    matrix::MatrixUser,
     BrowserSession, CompatSession, Cursor, NodeCursor, NodeType, OAuth2Session,
     PreloadedTotalCount, SessionState, UpstreamOAuth2Link,
+    compat_sessions::{CompatSessionType, CompatSsoLogin},
+    matrix::MatrixUser,
 };
-use crate::graphql::{state::ContextExt, DateFilter};
+use crate::graphql::{DateFilter, state::ContextExt};
 
 #[derive(Description)]
 /// A user is an individual's account.

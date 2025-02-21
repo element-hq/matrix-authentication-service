@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use async_graphql::{Context, MergedObject, Object, ID};
+use async_graphql::{Context, ID, MergedObject, Object};
 
 use crate::graphql::{
     model::{

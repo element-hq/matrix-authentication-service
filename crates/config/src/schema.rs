@@ -7,9 +7,9 @@
 //! Useful JSON Schema definitions
 
 use schemars::{
-    gen::SchemaGenerator,
-    schema::{InstanceType, Schema, SchemaObject},
     JsonSchema,
+    r#gen::SchemaGenerator,
+    schema::{InstanceType, Schema, SchemaObject},
 };
 
 /// A network hostname
@@ -20,8 +20,8 @@ impl JsonSchema for Hostname {
         "Hostname".to_string()
     }
 
-    fn json_schema(gen: &mut SchemaGenerator) -> Schema {
-        hostname(gen)
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        hostname(generator)
     }
 }
 

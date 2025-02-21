@@ -24,7 +24,7 @@ pub use self::{
     cursor::{Cursor, NodeCursor},
     node::{Node, NodeType},
     oauth::{OAuth2Client, OAuth2Session},
-    site_config::{SiteConfig, SITE_CONFIG_ID},
+    site_config::{SITE_CONFIG_ID, SiteConfig},
     upstream_oauth::{UpstreamOAuth2Link, UpstreamOAuth2Provider},
     users::{AppSession, User, UserEmail, UserEmailAuthentication, UserRecoveryTicket},
     viewer::{Anonymous, Viewer, ViewerSession},

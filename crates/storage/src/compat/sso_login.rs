@@ -10,7 +10,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{pagination::Page, repository_impl, Clock, Pagination};
+use crate::{Clock, Pagination, pagination::Page, repository_impl};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompatSsoLoginState {

@@ -7,13 +7,13 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{AccessToken, AccessTokenState, Session};
-use mas_storage::{oauth2::OAuth2AccessTokenRepository, Clock};
+use mas_storage::{Clock, oauth2::OAuth2AccessTokenRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError};
+use crate::{DatabaseError, tracing::ExecuteExt};
 
 /// An implementation of [`OAuth2AccessTokenRepository`] for a PostgreSQL
 /// connection

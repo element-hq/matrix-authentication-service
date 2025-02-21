@@ -9,7 +9,7 @@ use mas_data_model::{CompatAccessToken, CompatRefreshToken, CompatSession};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`CompatRefreshTokenRepository`] helps interacting with
 /// [`CompatRefreshToken`] saved in the storage backend

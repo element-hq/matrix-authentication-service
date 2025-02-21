@@ -8,26 +8,26 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports};
 use mas_storage::{
+    Clock, Page, Pagination,
     upstream_oauth2::{
         UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
     },
-    Clock, Page, Pagination,
 };
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
-use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
-use sqlx::{types::Json, PgConnection};
-use tracing::{info_span, Instrument};
+use sqlx::{PgConnection, types::Json};
+use tracing::{Instrument, info_span};
 use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::UpstreamOAuthProviders,
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
 };
 
 /// An implementation of [`UpstreamOAuthProviderRepository`] for a PostgreSQL

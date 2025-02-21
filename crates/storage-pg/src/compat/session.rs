@@ -13,11 +13,11 @@ use mas_data_model::{
     User, UserAgent,
 };
 use mas_storage::{
-    compat::{CompatSessionFilter, CompatSessionRepository},
     Clock, Page, Pagination,
+    compat::{CompatSessionFilter, CompatSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -25,11 +25,11 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt, StatementWithJoinsExt},
     iden::{CompatSessions, CompatSsoLogins},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
 };
 
 /// An implementation of [`CompatSessionRepository`] for a PostgreSQL connection

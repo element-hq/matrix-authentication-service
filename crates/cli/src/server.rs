@@ -12,22 +12,22 @@ use std::{
 
 use anyhow::Context;
 use axum::{
+    Extension, Router,
     error_handling::HandleErrorLayer,
     extract::{FromRef, MatchedPath},
-    Extension, Router,
 };
 use hyper::{
-    header::{HeaderValue, CACHE_CONTROL, USER_AGENT},
     Method, Request, Response, StatusCode, Version,
+    header::{CACHE_CONTROL, HeaderValue, USER_AGENT},
 };
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
-use mas_listener::{unix_or_tcp::UnixOrTcpListener, ConnectionInfo};
+use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
 use mas_tower::{
-    make_span_fn, metrics_attributes_fn, DurationRecorderLayer, InFlightCounterLayer, TraceLayer,
-    KV,
+    DurationRecorderLayer, InFlightCounterLayer, KV, TraceLayer, make_span_fn,
+    metrics_attributes_fn,
 };
 use opentelemetry::{Key, KeyValue};
 use opentelemetry_http::HeaderExtractor;

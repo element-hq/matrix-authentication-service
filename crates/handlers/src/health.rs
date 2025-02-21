@@ -7,7 +7,7 @@
 use axum::{extract::State, response::IntoResponse};
 use mas_axum_utils::FancyError;
 use sqlx::PgPool;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 
 pub async fn get(State(pool): State<PgPool>) -> Result<impl IntoResponse, FancyError> {
     let mut conn = pool.acquire().await?;
@@ -26,7 +26,7 @@ mod tests {
     use hyper::{Request, StatusCode};
 
     use super::*;
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_get_health(pool: PgPool) {

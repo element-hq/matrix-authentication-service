@@ -10,15 +10,15 @@ use mas_iana::oauth::{OAuthAccessTokenType, OAuthClientAuthenticationMethod};
 use mas_oidc_client::requests::client_credentials::access_token_with_client_credentials;
 use oauth2_types::{
     requests::AccessTokenResponse,
-    scope::{Scope, PROFILE},
+    scope::{PROFILE, Scope},
 };
 use rand::SeedableRng;
 use wiremock::{
-    matchers::{method, path},
     Mock, Request, ResponseTemplate,
+    matchers::{method, path},
 };
 
-use crate::{client_credentials, init_test, now, ACCESS_TOKEN, CLIENT_ID, CLIENT_SECRET};
+use crate::{ACCESS_TOKEN, CLIENT_ID, CLIENT_SECRET, client_credentials, init_test, now};
 
 #[tokio::test]
 async fn pass_access_token_with_client_credentials() {

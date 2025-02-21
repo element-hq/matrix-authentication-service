@@ -12,24 +12,24 @@ use std::{
 use anyhow::Context as _;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{header::CONTENT_TYPE, Response};
+use hyper::{Response, header::CONTENT_TYPE};
 use mas_config::{
     MetricsConfig, MetricsExporterKind, Propagator, TelemetryConfig, TracingConfig,
     TracingExporterKind,
 };
 use opentelemetry::{
+    InstrumentationScope, KeyValue,
     metrics::Meter,
     propagation::{TextMapCompositePropagator, TextMapPropagator},
     trace::TracerProvider as _,
-    InstrumentationScope, KeyValue,
 };
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_prometheus::PrometheusExporter;
 use opentelemetry_sdk::{
+    Resource,
     metrics::{ManualReader, PeriodicReader, SdkMeterProvider},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{Sampler, Tracer, TracerProvider},
-    Resource,
 };
 use opentelemetry_semantic_conventions as semcov;
 use prometheus::Registry;
@@ -80,7 +80,7 @@ fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send 
     }
 }
 
-fn propagator(propagators: &[Propagator]) -> impl TextMapPropagator {
+fn propagator(propagators: &[Propagator]) -> TextMapCompositePropagator {
     let propagators = propagators.iter().copied().map(match_propagator).collect();
 
     TextMapCompositePropagator::new(propagators)
@@ -185,7 +185,9 @@ fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
 
 pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFuture> {
     if PROMETHEUS_REGISTRY.get().is_none() {
-        tracing::warn!("A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config");
+        tracing::warn!(
+            "A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config"
+        );
     }
 
     tower::service_fn(prometheus_service_fn as _)

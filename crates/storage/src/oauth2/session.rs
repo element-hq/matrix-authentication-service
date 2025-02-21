@@ -13,7 +13,7 @@ use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{pagination::Page, repository_impl, Clock, Pagination};
+use crate::{Clock, Pagination, pagination::Page, repository_impl};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OAuth2SessionState {
@@ -357,7 +357,7 @@ pub trait OAuth2SessionRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn finish(&mut self, clock: &dyn Clock, session: Session)
-        -> Result<Session, Self::Error>;
+    -> Result<Session, Self::Error>;
 
     /// Mark all the [`Session`] matching the given filter as finished
     ///

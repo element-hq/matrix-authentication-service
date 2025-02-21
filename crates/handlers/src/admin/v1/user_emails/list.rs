@@ -3,15 +3,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
+use aide::{OperationIo, transform::TransformOperation};
 use axum::{
-    extract::{rejection::QueryRejection, Query},
-    response::IntoResponse,
     Json,
+    extract::{Query, rejection::QueryRejection},
+    response::IntoResponse,
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
-use mas_storage::{user::UserEmailFilter, Page};
+use mas_storage::{Page, user::UserEmailFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use ulid::Ulid;
@@ -164,7 +164,7 @@ mod tests {
     use hyper::{Request, StatusCode};
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_list(pool: PgPool) {

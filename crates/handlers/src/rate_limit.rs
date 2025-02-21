@@ -6,7 +6,7 @@
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
 
-use governor::{clock::QuantaClock, state::keyed::DashMapStateStore, RateLimiter};
+use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
 use mas_config::RateLimitingConfig;
 use mas_data_model::{User, UserEmailAuthentication};
 use ulid::Ulid;
@@ -302,7 +302,7 @@ impl Limiter {
 #[cfg(test)]
 mod tests {
     use mas_data_model::User;
-    use mas_storage::{clock::MockClock, Clock};
+    use mas_storage::{Clock, clock::MockClock};
     use rand::SeedableRng;
 
     use super::*;

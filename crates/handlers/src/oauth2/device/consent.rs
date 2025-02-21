@@ -6,15 +6,15 @@
 
 use anyhow::Context;
 use axum::{
+    Form,
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use axum_extra::TypedHeader;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_policy::Policy;
 use mas_router::UrlBuilder;

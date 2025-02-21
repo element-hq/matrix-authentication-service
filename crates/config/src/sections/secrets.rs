@@ -6,13 +6,14 @@
 
 use std::borrow::Cow;
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
 use rand::{
-    distributions::{Alphanumeric, DistString},
     Rng, SeedableRng,
+    distributions::{Alphanumeric, DistString, Standard},
+    prelude::Distribution as _,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -245,7 +246,7 @@ impl SecretsConfig {
         };
 
         Ok(Self {
-            encryption: rng.gen(),
+            encryption: Standard.sample(&mut rng),
             keys: vec![rsa_key, ec_p256_key, ec_p384_key, ec_k256_key],
         })
     }

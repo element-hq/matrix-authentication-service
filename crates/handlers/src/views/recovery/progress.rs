@@ -5,21 +5,21 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
+    Form,
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use hyper::StatusCode;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_data_model::SiteConfig;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
     BoxClock, BoxRepository, BoxRng,
+    queue::{QueueJobRepositoryExt as _, SendAccountRecoveryEmailsJob},
 };
 use mas_templates::{EmptyContext, RecoveryProgressContext, TemplateContext, Templates};
 use ulid::Ulid;

@@ -29,7 +29,9 @@ impl Options {
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let _span = info_span!("cli.doctor").entered();
-        info!("💡 Running diagnostics, make sure that both MAS and Synapse are running, and that MAS is using the same configuration files as this tool.");
+        info!(
+            "💡 Running diagnostics, make sure that both MAS and Synapse are running, and that MAS is using the same configuration files as this tool."
+        );
 
         let config = RootConfig::extract(figment)?;
 

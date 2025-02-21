@@ -11,7 +11,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::{public_parameters::JsonWebKeyPublicParameters, ParametersInfo};
+use super::{ParametersInfo, public_parameters::JsonWebKeyPublicParameters};
 use crate::base64::Base64UrlNoPad;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -273,8 +273,8 @@ impl From<EcPrivateParameters> for super::public_parameters::EcPublicParameters 
 
 mod ec_impls {
     use elliptic_curve::{
-        sec1::{Coordinates, FromEncodedPoint, ModulusSize, ToEncodedPoint},
         AffinePoint, Curve, SecretKey,
+        sec1::{Coordinates, FromEncodedPoint, ModulusSize, ToEncodedPoint},
     };
 
     use super::{super::JwkEcCurve, EcPrivateParameters};

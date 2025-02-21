@@ -5,13 +5,13 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Description, Object, ID,
+    Context, Description, ID, Object,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
 use mas_storage::{
-    app_session::AppSessionFilter, user::BrowserSessionRepository, Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess, app_session::AppSessionFilter, user::BrowserSessionRepository,
 };
 
 use super::{

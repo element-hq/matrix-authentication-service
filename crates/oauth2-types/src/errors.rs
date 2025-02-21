@@ -411,9 +411,7 @@ impl ClientErrorCode {
             ClientErrorCode::InvalidClientMetadata => {
                 "The value of one of the client metadata fields is invalid"
             }
-            ClientErrorCode::AuthorizationPending => {
-                "The authorization request is still pending"
-            }
+            ClientErrorCode::AuthorizationPending => "The authorization request is still pending",
             ClientErrorCode::SlowDown => {
                 "The interval must be increased by 5 seconds for this and all subsequent requests"
             }
@@ -422,7 +420,7 @@ impl ClientErrorCode {
             }
             ClientErrorCode::UnsupportedTokenType => {
                 "The authorization server does not support the revocation of the presented token type."
-            },
+            }
             ClientErrorCode::Unknown(_) => "",
         }
     }

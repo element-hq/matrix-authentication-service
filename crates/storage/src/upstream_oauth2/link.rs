@@ -9,7 +9,7 @@ use mas_data_model::{UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{pagination::Page, repository_impl, Clock, Pagination};
+use crate::{Clock, Pagination, pagination::Page, repository_impl};
 
 /// Filter parameters for listing upstream OAuth links
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

@@ -11,23 +11,23 @@ use axum::{
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
+    SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
     sentry::SentryEventID,
-    SessionInfoExt,
 };
 use mas_data_model::{AuthorizationGrantStage, Device};
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
     BoxClock, BoxRepository, BoxRng,
+    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};
 use thiserror::Error;
 use ulid::Ulid;
 
-use crate::{impl_from_error_for_route, BoundActivityTracker, PreferredLanguage};
+use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub enum RouteError {

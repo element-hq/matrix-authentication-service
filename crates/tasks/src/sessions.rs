@@ -18,8 +18,8 @@ use mas_storage::{
 };
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 #[async_trait]

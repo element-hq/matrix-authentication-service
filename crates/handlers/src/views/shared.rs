@@ -7,10 +7,10 @@
 use anyhow::Context;
 use mas_router::{PostAuthAction, Route, UrlBuilder};
 use mas_storage::{
+    RepositoryAccess,
     compat::CompatSsoLoginRepository,
     oauth2::OAuth2AuthorizationGrantRepository,
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository},
-    RepositoryAccess,
 };
 use mas_templates::{PostAuthContext, PostAuthContextInner};
 use serde::{Deserialize, Serialize};

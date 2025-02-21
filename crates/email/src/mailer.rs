@@ -7,8 +7,8 @@
 //! Send emails to users
 
 use lettre::{
-    message::{Mailbox, MessageBuilder, MultiPart},
     AsyncTransport, Message,
+    message::{Mailbox, MessageBuilder, MultiPart},
 };
 use mas_templates::{EmailRecoveryContext, EmailVerificationContext, Templates, WithLanguage};
 use thiserror::Error;

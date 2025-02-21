@@ -141,14 +141,18 @@ fn load_encrypted_as_unencrypted_error() {
 #[test]
 fn load_unencrypted_as_encrypted_error() {
     let pem = include_str!("./keys/rsa.pkcs8.pem");
-    assert!(PrivateKey::load_encrypted_pem(pem, PASSWORD)
-        .unwrap_err()
-        .is_unencrypted());
+    assert!(
+        PrivateKey::load_encrypted_pem(pem, PASSWORD)
+            .unwrap_err()
+            .is_unencrypted()
+    );
 
     let der = include_bytes!("./keys/rsa.pkcs8.der");
-    assert!(PrivateKey::load_encrypted_der(der, PASSWORD)
-        .unwrap_err()
-        .is_unencrypted());
+    assert!(
+        PrivateKey::load_encrypted_der(der, PASSWORD)
+            .unwrap_err()
+            .is_unencrypted()
+    );
 }
 
 #[allow(clippy::similar_names)]

@@ -10,19 +10,19 @@ use mas_data_model::{AccessToken, Client, TokenType, User};
 use mas_matrix::{HomeserverConnection, ProvisionRequest};
 use mas_router::SimpleRoute;
 use mas_storage::{
-    oauth2::{OAuth2AccessTokenRepository, OAuth2ClientRepository},
     RepositoryAccess,
+    oauth2::{OAuth2AccessTokenRepository, OAuth2ClientRepository},
 };
 use oauth2_types::{
     registration::ClientRegistrationResponse,
     requests::AccessTokenResponse,
-    scope::{Scope, ScopeToken, OPENID},
+    scope::{OPENID, Scope, ScopeToken},
 };
 use sqlx::PgPool;
 
 use crate::{
     test_utils,
-    test_utils::{setup, RequestBuilderExt, ResponseExt, TestState},
+    test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
 };
 
 async fn create_test_client(state: &TestState) -> Client {

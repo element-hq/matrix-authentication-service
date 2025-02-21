@@ -20,12 +20,12 @@ use cookie_store::{CookieStore, RawCookie};
 use futures_util::future::BoxFuture;
 use headers::{Authorization, ContentType, HeaderMapExt, HeaderName, HeaderValue};
 use hyper::{
-    header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
     Request, Response, StatusCode,
+    header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
 };
 use mas_axum_utils::{
-    cookies::{CookieJar, CookieManager},
     ErrorWrapper,
+    cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
 use mas_data_model::SiteConfig;
@@ -34,13 +34,13 @@ use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_matrix::{BoxHomeserverConnection, HomeserverConnection, MockHomeserverConnection};
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::{SimpleRoute, UrlBuilder};
-use mas_storage::{clock::MockClock, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, clock::MockClock};
 use mas_storage_pg::{DatabaseError, PgRepository};
 use mas_templates::{SiteConfigExt, Templates};
 use oauth2_types::{registration::ClientRegistrationResponse, requests::AccessTokenResponse};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use sqlx::PgPool;
 use tokio_util::{
     sync::{CancellationToken, DropGuard},
@@ -50,10 +50,9 @@ use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
 use crate::{
-    graphql,
+    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
-    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint,
 };
 
 /// Setup rustcrypto and tracing for tests.

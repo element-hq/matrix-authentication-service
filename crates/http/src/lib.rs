@@ -15,8 +15,8 @@ mod ext;
 mod reqwest;
 
 pub use self::{
-    ext::{set_propagator, CorsLayerExt},
-    reqwest::{client as reqwest_client, RequestBuilderExt},
+    ext::{CorsLayerExt, set_propagator},
+    reqwest::{RequestBuilderExt, client as reqwest_client},
 };
 
 static METER: LazyLock<opentelemetry::metrics::Meter> = LazyLock::new(|| {

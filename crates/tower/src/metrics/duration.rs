@@ -6,11 +6,11 @@
 
 use std::{future::Future, time::Instant};
 
-use opentelemetry::{metrics::Histogram, KeyValue};
+use opentelemetry::{KeyValue, metrics::Histogram};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::{utils::FnWrapper, MetricsAttributes, METER};
+use crate::{METER, MetricsAttributes, utils::FnWrapper};
 
 /// A [`Layer`] that records the duration of requests in milliseconds.
 #[derive(Clone, Debug)]

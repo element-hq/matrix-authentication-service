@@ -10,23 +10,23 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, Client, Session, SessionState, User, UserAgent};
 use mas_storage::{
-    oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
     Clock, Page, Pagination,
+    oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
-use sea_query::{enum_def, extension::postgres::PgExpr, Expr, PgFunc, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PgFunc, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::{OAuth2Clients, OAuth2Sessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
 };
 
 /// An implementation of [`OAuth2SessionRepository`] for a PostgreSQL connection

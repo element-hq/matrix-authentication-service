@@ -5,11 +5,11 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Enum, InputObject, Object, ID};
+use async_graphql::{Context, Enum, ID, InputObject, Object};
 use mas_storage::{
+    RepositoryAccess,
     compat::CompatSessionRepository,
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
-    RepositoryAccess,
 };
 
 use crate::graphql::{

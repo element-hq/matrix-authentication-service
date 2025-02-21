@@ -17,8 +17,8 @@ use mas_iana::{
 };
 use serde::{Deserialize, Serialize};
 use serde_with::{
-    formats::SpaceSeparator, serde_as, skip_serializing_none, DeserializeFromStr, SerializeDisplay,
-    StringWithSeparator,
+    DeserializeFromStr, SerializeDisplay, StringWithSeparator, formats::SpaceSeparator, serde_as,
+    skip_serializing_none,
 };
 use thiserror::Error;
 use url::Url;
@@ -1276,7 +1276,7 @@ mod tests {
             token_endpoint: Some(Url::parse("https://localhost/token").unwrap()),
             jwks_uri: Some(Url::parse("https://localhost/jwks").unwrap()),
             response_types_supported: Some(vec![
-                OAuthAuthorizationEndpointResponseType::Code.into()
+                OAuthAuthorizationEndpointResponseType::Code.into(),
             ]),
             subject_types_supported: Some(vec![SubjectType::Public]),
             id_token_signing_alg_values_supported: Some(vec![JsonWebSignatureAlg::Rs256]),

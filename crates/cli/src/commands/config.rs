@@ -15,7 +15,7 @@ use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use rand::SeedableRng;
 use tokio::io::AsyncWriteExt;
-use tracing::{info, info_span, Instrument};
+use tracing::{Instrument, info, info_span};
 
 use crate::util::database_connection_from_config;
 

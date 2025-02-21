@@ -10,15 +10,15 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID, SessionInfoExt};
+use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID};
 use mas_data_model::{AuthorizationGrant, BrowserSession, Client, Device};
 use mas_keystore::Keystore;
 use mas_policy::{EvaluationResult, Policy};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository, OAuth2SessionRepository},
     user::BrowserSessionRepository,
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use mas_templates::{PolicyViolationContext, TemplateContext, Templates};
 use oauth2_types::requests::AuthorizationResponse;
@@ -28,7 +28,7 @@ use ulid::Ulid;
 
 use super::callback::CallbackDestination;
 use crate::{
-    impl_from_error_for_route, oauth2::generate_id_token, BoundActivityTracker, PreferredLanguage,
+    BoundActivityTracker, PreferredLanguage, impl_from_error_for_route, oauth2::generate_id_token,
 };
 
 #[derive(Debug, Error)]

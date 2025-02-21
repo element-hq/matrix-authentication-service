@@ -15,10 +15,10 @@ use mas_jose::{
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_oidc_client::types::{client_credentials::ClientCredentials, IdToken};
+use mas_oidc_client::types::{IdToken, client_credentials::ClientCredentials};
 use rand::{
-    distributions::{Alphanumeric, DistString},
     SeedableRng,
+    distributions::{Alphanumeric, DistString},
 };
 use url::Url;
 use wiremock::MockServer;

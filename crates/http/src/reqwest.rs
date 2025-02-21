@@ -13,12 +13,12 @@ use std::{
 use futures_util::FutureExt as _;
 use headers::{ContentLength, HeaderMapExt as _, UserAgent};
 use hyper_util::client::legacy::connect::{
-    dns::{GaiResolver, Name},
     HttpInfo,
+    dns::{GaiResolver, Name},
 };
 use opentelemetry::{
-    metrics::{Histogram, UpDownCounter},
     KeyValue,
+    metrics::{Histogram, UpDownCounter},
 };
 use opentelemetry_http::HeaderInjector;
 use opentelemetry_semantic_conventions::{

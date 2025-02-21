@@ -8,8 +8,8 @@ use std::{collections::HashMap, sync::Arc};
 
 use base64ct::{Base64, Base64Unpadded, Base64Url, Base64UrlUnpadded, Encoding};
 use minijinja::{
-    value::{Enumerator, Object},
     Environment, Error, ErrorKind, Value,
+    value::{Enumerator, Object},
 };
 
 /// Context passed to the attribute mapping template

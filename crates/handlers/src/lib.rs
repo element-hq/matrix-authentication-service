@@ -18,20 +18,20 @@
 use std::{convert::Infallible, sync::LazyLock, time::Duration};
 
 use axum::{
+    Extension, Router,
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
     http::Method,
     response::{Html, IntoResponse},
     routing::{get, post},
-    Extension, Router,
 };
 use headers::HeaderName;
 use hyper::{
+    StatusCode, Version,
     header::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
     },
-    StatusCode, Version,
 };
-use mas_axum_utils::{cookies::CookieJar, FancyError};
+use mas_axum_utils::{FancyError, cookies::CookieJar};
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
@@ -88,13 +88,13 @@ macro_rules! impl_from_error_for_route {
     };
 }
 
-pub use mas_axum_utils::{cookies::CookieManager, ErrorWrapper};
+pub use mas_axum_utils::{ErrorWrapper, cookies::CookieManager};
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
     graphql::{
-        schema as graphql_schema, schema_builder as graphql_schema_builder, Schema as GraphQLSchema,
+        Schema as GraphQLSchema, schema as graphql_schema, schema_builder as graphql_schema_builder,
     },
     preferred_language::PreferredLanguage,
     rate_limit::{Limiter, RequesterFingerprint},

@@ -7,18 +7,18 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use chrono::{DateTime, Utc};
-use mas_storage::{user::BrowserSessionRepository, RepositoryAccess};
+use mas_storage::{RepositoryAccess, user::BrowserSessionRepository};
 use opentelemetry::{
-    metrics::{Counter, Histogram},
     Key, KeyValue,
+    metrics::{Counter, Histogram},
 };
 use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use ulid::Ulid;
 
 use crate::{
-    activity_tracker::{Message, SessionKind},
     METER,
+    activity_tracker::{Message, SessionKind},
 };
 
 /// The maximum number of pending activity records before we flush them to the

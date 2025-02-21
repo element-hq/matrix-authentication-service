@@ -11,7 +11,7 @@ use reqwest::Client;
 use tokio::io::AsyncWriteExt;
 use tracing::Level;
 
-mod gen;
+mod generation;
 pub mod jose;
 pub mod oauth;
 pub mod traits;
@@ -98,23 +98,23 @@ impl Display for File {
             let is_exhaustive = section.key == "OAuthAuthorizationEndpointResponseType";
             writeln!(f)?;
 
-            self::gen::struct_def(f, section, list, is_exhaustive)?;
+            self::generation::struct_def(f, section, list, is_exhaustive)?;
             writeln!(f)?;
 
             // Write the Display impl
-            self::gen::display_impl(f, section, list, is_exhaustive)?;
+            self::generation::display_impl(f, section, list, is_exhaustive)?;
             writeln!(f)?;
 
             // Write the FromStr impl
-            self::gen::from_str_impl(f, section, list, is_exhaustive)?;
+            self::generation::from_str_impl(f, section, list, is_exhaustive)?;
             writeln!(f)?;
 
             // Write the Serialize and Deserialize impls
-            self::gen::serde_impl(f, section)?;
+            self::generation::serde_impl(f, section)?;
             writeln!(f)?;
 
             // Write the JsonSchema impl
-            self::gen::json_schema_impl(f, section, list)?;
+            self::generation::json_schema_impl(f, section, list)?;
         }
 
         Ok(())

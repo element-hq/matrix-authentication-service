@@ -7,8 +7,8 @@
 pub mod model;
 
 use opa_wasm::{
-    wasmtime::{Config, Engine, Module, OptLevel, Store},
     Runtime,
+    wasmtime::{Config, Engine, Module, OptLevel, Store},
 };
 use serde::Serialize;
 use thiserror::Error;

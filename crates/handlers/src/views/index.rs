@@ -8,12 +8,12 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
-use mas_axum_utils::{cookies::CookieJar, csrf::CsrfExt, FancyError, SessionInfoExt};
+use mas_axum_utils::{FancyError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{IndexContext, TemplateContext, Templates};
 
-use crate::{preferred_language::PreferredLanguage, BoundActivityTracker};
+use crate::{BoundActivityTracker, preferred_language::PreferredLanguage};
 
 #[tracing::instrument(name = "handlers.views.index.get", skip_all, err)]
 pub async fn get(

@@ -6,8 +6,8 @@
 use std::sync::LazyLock;
 
 use sqlx::{
-    postgres::{PgAdvisoryLock, PgAdvisoryLockGuard},
     Either, PgConnection,
+    postgres::{PgAdvisoryLock, PgAdvisoryLockGuard},
 };
 
 static SYN2MAS_ADVISORY_LOCK: LazyLock<PgAdvisoryLock> =

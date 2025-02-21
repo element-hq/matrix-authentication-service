@@ -7,13 +7,13 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{Password, User};
-use mas_storage::{user::UserPasswordRepository, Clock};
+use mas_storage::{Clock, user::UserPasswordRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError, DatabaseInconsistencyError};
+use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
 
 /// An implementation of [`UserPasswordRepository`] for a PostgreSQL connection
 pub struct PgUserPasswordRepository<'c> {

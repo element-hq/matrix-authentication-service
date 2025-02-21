@@ -10,12 +10,12 @@
 use std::{fmt::Display, net::IpAddr};
 
 use chrono::{DateTime, Utc};
-use futures_util::{future::BoxFuture, FutureExt, TryStreamExt};
-use sqlx::{query, query_as, Executor, PgConnection};
+use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
+use sqlx::{Executor, PgConnection, query, query_as};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{error, info, warn, Level};
+use tracing::{Level, error, info, warn};
 use uuid::Uuid;
 
 use self::{
@@ -175,7 +175,10 @@ impl WriterConnectionPool {
                 }
             }
         }
-        assert_eq!(finished_connections, num_connections, "syn2mas had a bug: connections went missing {finished_connections} != {num_connections}");
+        assert_eq!(
+            finished_connections, num_connections,
+            "syn2mas had a bug: connections went missing {finished_connections} != {num_connections}"
+        );
 
         if errors.is_empty() {
             Ok(())
@@ -1091,12 +1094,12 @@ mod test {
     use uuid::Uuid;
 
     use crate::{
+        LockedMasDatabase, MasWriter,
         mas_writer::{
             MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
             MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
             MasNewUserPassword,
         },
-        LockedMasDatabase, MasWriter,
     };
 
     /// A snapshot of a whole database

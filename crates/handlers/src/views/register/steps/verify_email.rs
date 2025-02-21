@@ -9,12 +9,12 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{
+    FancyError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError,
 };
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{user::UserEmailRepository, BoxClock, BoxRepository, BoxRng, RepositoryAccess};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryAccess, user::UserEmailRepository};
 use mas_templates::{
     FieldError, RegisterStepsVerifyEmailContext, RegisterStepsVerifyEmailFormField,
     TemplateContext, Templates, ToFormState,
@@ -22,7 +22,7 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::{views::shared::OptionalPostAuthAction, Limiter, PreferredLanguage};
+use crate::{Limiter, PreferredLanguage, views::shared::OptionalPostAuthAction};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CodeForm {

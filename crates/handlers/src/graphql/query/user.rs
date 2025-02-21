@@ -5,15 +5,15 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Enum, Object, ID,
+    Context, Enum, ID, Object,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
-use mas_storage::{user::UserFilter, Pagination};
+use mas_storage::{Pagination, user::UserFilter};
 
 use crate::graphql::{
+    UserId,
     model::{Cursor, NodeCursor, NodeType, PreloadedTotalCount, User},
     state::ContextExt as _,
-    UserId,
 };
 
 #[derive(Default)]

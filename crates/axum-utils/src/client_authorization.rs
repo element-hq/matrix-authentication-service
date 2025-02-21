@@ -7,24 +7,24 @@
 use std::collections::HashMap;
 
 use axum::{
+    BoxError, Json,
     extract::{
-        rejection::{FailedToDeserializeForm, FormRejection},
         Form, FromRequest, FromRequestParts,
+        rejection::{FailedToDeserializeForm, FormRejection},
     },
     response::IntoResponse,
-    BoxError, Json,
 };
 use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
-use headers::{authorization::Basic, Authorization};
+use headers::{Authorization, authorization::Basic};
 use http::{Request, StatusCode};
 use mas_data_model::{Client, JwksOrJwksUri};
 use mas_http::RequestBuilderExt;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::{jwk::PublicJsonWebKeySet, jwt::Jwt};
 use mas_keystore::Encrypter;
-use mas_storage::{oauth2::OAuth2ClientRepository, RepositoryAccess};
+use mas_storage::{RepositoryAccess, oauth2::OAuth2ClientRepository};
 use oauth2_types::errors::{ClientError, ClientErrorCode};
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
 use thiserror::Error;
 
@@ -371,7 +371,7 @@ where
             Err(FormRejection::InvalidFormContentType(_err)) => (None, None, None, None, None),
             // If the form could not be read, return a Bad Request error
             Err(FormRejection::FailedToDeserializeForm(err)) => {
-                return Err(ClientAuthorizationError::BadForm(err))
+                return Err(ClientAuthorizationError::BadForm(err));
             }
             // Other errors (body read twice, byte stream broke) return an internal error
             Err(e) => return Err(ClientAuthorizationError::Internal(Box::new(e))),

@@ -6,7 +6,7 @@
 
 #![allow(clippy::str_to_string)] // ComplexObject macro uses &str.to_string()
 
-use async_graphql::{ComplexObject, Enum, SimpleObject, ID};
+use async_graphql::{ComplexObject, Enum, ID, SimpleObject};
 use url::Url;
 
 pub const SITE_CONFIG_ID: &str = "site_config";

@@ -4,14 +4,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
 use mas_policy::{Policy, Violation};
-use mas_storage::{oauth2::OAuth2ClientRepository, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     registration::{
@@ -26,7 +26,7 @@ use thiserror::Error;
 use tracing::info;
 use url::Url;
 
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -337,7 +337,7 @@ mod tests {
 
     use crate::{
         oauth2::registration::host_is_public_suffix,
-        test_utils::{setup, RequestBuilderExt, ResponseExt, TestState},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
 
     #[test]

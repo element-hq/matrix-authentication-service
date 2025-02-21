@@ -10,20 +10,20 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use chrono::Duration;
-use mas_axum_utils::{cookies::CookieJar, FancyError, SessionInfoExt as _};
+use mas_axum_utils::{FancyError, SessionInfoExt as _, cookies::CookieJar};
 use mas_data_model::UserAgent;
 use mas_matrix::BoxHomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     user::UserEmailFilter,
-    BoxClock, BoxRepository, BoxRng,
 };
 use mas_templates::{RegisterStepsEmailInUseContext, TemplateContext as _, Templates};
 use ulid::Ulid;
 
 use super::super::cookie::UserRegistrationSessions;
-use crate::{views::shared::OptionalPostAuthAction, BoundActivityTracker, PreferredLanguage};
+use crate::{BoundActivityTracker, PreferredLanguage, views::shared::OptionalPostAuthAction};
 
 #[tracing::instrument(
     name = "handlers.views.register.steps.finish.get",

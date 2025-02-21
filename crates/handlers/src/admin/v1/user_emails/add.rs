@@ -5,13 +5,13 @@
 
 use std::str::FromStr as _;
 
-use aide::{transform::TransformOperation, NoApi, OperationIo};
-use axum::{response::IntoResponse, Json};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_storage::{
+    BoxRng,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     user::UserEmailFilter,
-    BoxRng,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -165,7 +165,7 @@ mod tests {
     use sqlx::PgPool;
     use ulid::Ulid;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_create(pool: PgPool) {
         setup();

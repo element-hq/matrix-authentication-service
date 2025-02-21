@@ -14,11 +14,11 @@ use icu_locid_transform::fallback::{
 };
 use icu_plurals::{PluralRules, PluralsError};
 use icu_provider::{
-    data_key, fallback::LocaleFallbackConfig, DataError, DataErrorKind, DataKey, DataLocale,
-    DataRequest, DataRequestMetadata,
+    DataError, DataErrorKind, DataKey, DataLocale, DataRequest, DataRequestMetadata, data_key,
+    fallback::LocaleFallbackConfig,
 };
 use icu_provider_adapters::fallback::LocaleFallbackProvider;
-use icu_relativetime::{options::Numeric, RelativeTimeFormatter, RelativeTimeFormatterOptions};
+use icu_relativetime::{RelativeTimeFormatter, RelativeTimeFormatterOptions, options::Numeric};
 use thiserror::Error;
 use writeable::Writeable;
 
