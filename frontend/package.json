@@ -67,7 +67,7 @@
     "autoprefixer": "^10.4.20",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.10.0",
-    "happy-dom": "^17.1.0",
+    "happy-dom": "^17.1.1",
     "i18next-parser": "^9.3.0",
     "knip": "^5.44.1",
     "msw": "^2.7.0",
