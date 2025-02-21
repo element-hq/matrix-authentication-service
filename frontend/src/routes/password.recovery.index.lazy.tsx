@@ -11,7 +11,7 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
 import type { FormEvent } from "react";
@@ -63,7 +63,7 @@ const EmailConsumed: React.FC = () => {
   return (
     <Layout>
       <PageHeading
-        Icon={IconError}
+        Icon={IconErrorSolid}
         title={t("frontend.password_reset.consumed.title")}
         subtitle={t("frontend.password_reset.consumed.subtitle")}
         invalid
@@ -117,7 +117,7 @@ const EmailExpired: React.FC<{
   return (
     <Layout>
       <PageHeading
-        Icon={IconError}
+        Icon={IconErrorSolid}
         title={t("frontend.password_reset.expired.title")}
         subtitle={t("frontend.password_reset.expired.subtitle", {
           email: userRecoveryTicket.email,

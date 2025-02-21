@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button } from "@vector-im/compound-web";
 import { useState } from "react";
 import { Translation } from "react-i18next";
@@ -22,7 +22,7 @@ const GenericError: React.FC<{ error: unknown; dontSuspend?: boolean }> = ({
         <div className="flex flex-col gap-6">
           <PageHeading
             invalid
-            Icon={IconError}
+            Icon={IconErrorSolid}
             title={t("frontend.error.title", {
               defaultValue: "Something went wrong",
             })}
