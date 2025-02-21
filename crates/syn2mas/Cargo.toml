@@ -25,7 +25,7 @@ tracing.workspace = true
 futures-util = "0.3.30"
 
 rand.workspace = true
-uuid = "1.13.2"
+uuid = "1.14.0"
 ulid = { workspace = true, features = ["uuid"] }
 
 mas-config.workspace = true
