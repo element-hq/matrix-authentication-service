@@ -72,7 +72,7 @@
     "knip": "^5.44.1",
     "msw": "^2.7.0",
     "msw-storybook-addon": "^2.0.4",
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.3",
     "postcss-import": "^16.1.0",
     "postcss-nesting": "^13.0.1",
     "rimraf": "^6.0.1",
