@@ -154,6 +154,8 @@ jobs:
 
       - name: Run `cargo-deny`
         uses: EmbarkStudios/cargo-deny-action@v2.0.5
+        with:
+          rust-version: stable
 
   check-schema:
     name: Check schema
