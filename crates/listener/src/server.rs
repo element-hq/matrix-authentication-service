@@ -5,7 +5,6 @@
 // Please see LICENSE in the repository root for full details.
 
 use std::{
-    future::Future,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},

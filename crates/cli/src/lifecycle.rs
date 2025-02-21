@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{future::Future, process::ExitCode, time::Duration};
+use std::{process::ExitCode, time::Duration};
 
 use futures_util::future::{BoxFuture, Either};
 use mas_handlers::ActivityTracker;

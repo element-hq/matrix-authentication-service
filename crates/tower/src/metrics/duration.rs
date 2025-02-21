@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{future::Future, time::Instant};
+use std::time::Instant;
 
 use opentelemetry::{KeyValue, metrics::Histogram};
 use pin_project_lite::pin_project;

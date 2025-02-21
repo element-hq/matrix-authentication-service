@@ -4,7 +4,6 @@
 // Please see LICENSE in the repository root for full details.
 
 use std::{
-    future::Future,
     str::FromStr,
     sync::{Arc, LazyLock},
     time::Duration,
