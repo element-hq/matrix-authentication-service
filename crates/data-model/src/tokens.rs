@@ -1,10 +1,10 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use base64ct::{Base64Url, Encoding};
+use base64ct::{Base64UrlUnpadded, Encoding};
 use chrono::{DateTime, Utc};
 use crc::{CRC_32_ISO_HDLC, Crc};
 use mas_iana::oauth::OAuthTokenTypeHint;
@@ -353,7 +353,7 @@ impl PartialEq<OAuthTokenTypeHint> for TokenType {
 /// We won't bother to decode them fully, but we can check to see if the first
 /// constraint is the `location` constraint.
 fn is_likely_synapse_macaroon(token: &str) -> bool {
-    let Ok(decoded) = Base64Url::decode_vec(token) else {
+    let Ok(decoded) = Base64UrlUnpadded::decode_vec(token) else {
         return false;
     };
     decoded.get(4..13) == Some(b"location ")
@@ -443,8 +443,8 @@ mod tests {
             "MDAxYmxvY2F0aW9uIGxpYnJlcHVzaC5uZXQKMDAx"
         ));
 
-        // Whilst this is a macaroon, it's not a Synapse macaroon
-        assert!(!is_likely_synapse_macaroon(
+        // This is a valid macaroon (even though Synapse did not generate this one)
+        assert!(is_likely_synapse_macaroon(
             "MDAxY2xvY2F0aW9uIGh0dHA6Ly9teWJhbmsvCjAwMjZpZGVudGlmaWVyIHdlIHVzZWQgb3VyIHNlY3JldCBrZXkKMDAyZnNpZ25hdHVyZSDj2eApCFJsTAA5rhURQRXZf91ovyujebNCqvD2F9BVLwo"
         ));
 
