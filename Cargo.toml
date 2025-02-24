@@ -1,7 +1,7 @@
 [workspace]
 default-members = ["crates/cli"]
 members = ["crates/*"]
-resolver = "3"
+resolver = "2"
 
 # Updated in the CI with a `sed` command
 package.version = "0.14.1"
