@@ -2059,6 +2059,10 @@ type User implements Node {
     """
     last: Int
   ): AppSessionConnection!
+  """
+  Check if the user has a password set.
+  """
+  hasPassword: Boolean!
 }
 
 """

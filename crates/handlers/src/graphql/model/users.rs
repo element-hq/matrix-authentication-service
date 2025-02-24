@@ -705,6 +705,16 @@ impl User {
         )
         .await
     }
+
+    /// Check if the user has a password set.
+    async fn has_password(&self, ctx: &Context<'_>) -> Result<bool, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        let password = repo.user_password().active(&self.0).await?;
+
+        Ok(password.is_some())
+    }
 }
 
 /// A session in an application, either a compatibility or an OAuth 2.0 one
