@@ -20,17 +20,20 @@ bytes.workspace = true
 camino.workspace = true
 clap.workspace = true
 console = "0.15.10"
-dialoguer = { version = "0.11.0", default-features = false, features = ["fuzzy-select", "password"] }
+dialoguer = { version = "0.11.0", default-features = false, features = [
+    "fuzzy-select",
+    "password",
+] }
 dotenvy = "0.15.7"
 figment.workspace = true
 futures-util.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 ipnetwork = "0.20.0"
-itertools = "0.13.0"
+itertools = "0.14.0"
 listenfd = "1.0.2"
 rand.workspace = true
-rand_chacha = "0.3.1"
+rand_chacha.workspace = true
 reqwest.workspace = true
 rustls.workspace = true
 sd-notify = "0.4.5"

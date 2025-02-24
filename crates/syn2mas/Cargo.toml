@@ -22,7 +22,7 @@ sqlx.workspace = true
 chrono.workspace = true
 compact_str.workspace = true
 tracing.workspace = true
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 
 rand.workspace = true
 uuid = "1.14.0"

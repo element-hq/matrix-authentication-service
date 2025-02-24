@@ -93,7 +93,7 @@ version = "1.6.0"
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.6.0"
+version = "2.8.0"
 
 # Bytes
 [workspace.dependencies.bytes]
@@ -187,7 +187,7 @@ features = ["yaml", "json"]
 
 # Email sending
 [workspace.dependencies.lettre]
-version = "0.11.13"
+version = "0.11.14"
 default-features = false
 features = [
     "tokio1-rustls-tls",
@@ -246,6 +246,10 @@ features = ["std", "pkcs5", "encryption"]
 # Random values
 [workspace.dependencies.rand]
 version = "0.8.5"
+[workspace.dependencies.rand_chacha]
+version = "0.3.1"
+[workspace.dependencies.rand_core]
+version = "0.6.4"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
@@ -414,7 +418,7 @@ features = ["serde"]
 
 # ULID support
 [workspace.dependencies.ulid]
-version = "1.1.4"
+version = "=1.1.4"   # Pinned to the latest version which used rand 0.8
 features = ["serde"]
 
 # HTTP mock server
