@@ -55,7 +55,9 @@ async fn main() -> anyhow::Result<ExitCode> {
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
     let res = try_main().await;
-    self::telemetry::shutdown();
+    if let Err(err) = self::telemetry::shutdown() {
+        eprintln!("Failed to shutdown telemetry exporters: {err}");
+    }
     res
 }
 
