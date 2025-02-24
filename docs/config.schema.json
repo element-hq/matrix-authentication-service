@@ -1190,9 +1190,6 @@
     "TracingConfig": {
       "description": "Configuration related to exporting traces",
       "type": "object",
-      "required": [
-        "propagators"
-      ],
       "properties": {
         "exporter": {
           "description": "Exporter to use when exporting traces",
@@ -1211,6 +1208,7 @@
         },
         "propagators": {
           "description": "List of propagation formats to use for incoming and outgoing requests",
+          "default": [],
           "type": "array",
           "items": {
             "$ref": "#/definitions/Propagator"
