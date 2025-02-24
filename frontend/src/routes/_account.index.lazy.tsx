@@ -94,7 +94,7 @@ function Index(): React.ReactElement {
           </>
         )}
 
-        {siteConfig.passwordLoginEnabled && (
+        {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
           <>
             <Collapsible.Section
               defaultOpen
