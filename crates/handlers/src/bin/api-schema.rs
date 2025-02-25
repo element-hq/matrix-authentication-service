@@ -13,7 +13,7 @@
 )]
 #![warn(clippy::pedantic)]
 
-use std::io::Write;
+use std::{io::Write, sync::Arc};
 
 use aide::openapi::{Server, ServerVariable};
 use indexmap::IndexMap;
@@ -58,6 +58,7 @@ impl_from_ref!(mas_templates::Templates);
 impl_from_ref!(mas_matrix::BoxHomeserverConnection);
 impl_from_ref!(mas_keystore::Keystore);
 impl_from_ref!(mas_handlers::passwords::PasswordManager);
+impl_from_ref!(Arc<mas_policy::PolicyFactory>);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mut api, _) = mas_handlers::admin_api_router::<DummyState>();

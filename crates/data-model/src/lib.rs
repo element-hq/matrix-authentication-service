@@ -10,6 +10,7 @@ use thiserror::Error;
 
 pub(crate) mod compat;
 pub mod oauth2;
+pub(crate) mod policy_data;
 mod site_config;
 pub(crate) mod tokens;
 pub(crate) mod upstream_oauth2;
@@ -32,6 +33,7 @@ pub use self::{
         AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, DeviceCodeGrant,
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
+    policy_data::PolicyData,
     site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig, SiteConfig},
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,

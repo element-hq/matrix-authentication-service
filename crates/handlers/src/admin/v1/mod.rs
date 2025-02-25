@@ -4,12 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::axum::{
     ApiRouter,
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
 use mas_matrix::BoxHomeserverConnection;
+use mas_policy::PolicyFactory;
 use mas_storage::BoxRng;
 
 use super::call_context::CallContext;
@@ -17,6 +20,7 @@ use crate::passwords::PasswordManager;
 
 mod compat_sessions;
 mod oauth2_sessions;
+mod policy_data;
 mod upstream_oauth_links;
 mod user_emails;
 mod user_sessions;
@@ -27,6 +31,7 @@ where
     S: Clone + Send + Sync + 'static,
     BoxHomeserverConnection: FromRef<S>,
     PasswordManager: FromRef<S>,
+    Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
 {
@@ -46,6 +51,21 @@ where
         .api_route(
             "/oauth2-sessions/{id}",
             get_with(self::oauth2_sessions::get, self::oauth2_sessions::get_doc),
+        )
+        .api_route(
+            "/policy-data",
+            post_with(self::policy_data::set, self::policy_data::set_doc),
+        )
+        .api_route(
+            "/policy-data/latest",
+            get_with(
+                self::policy_data::get_latest,
+                self::policy_data::get_latest_doc,
+            ),
+        )
+        .api_route(
+            "/policy-data/{id}",
+            get_with(self::policy_data::get, self::policy_data::get_doc),
         )
         .api_route(
             "/users",

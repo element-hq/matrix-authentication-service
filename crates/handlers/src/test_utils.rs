@@ -513,6 +513,12 @@ impl FromRef<TestState> for SiteConfig {
     }
 }
 
+impl FromRef<TestState> for Arc<PolicyFactory> {
+    fn from_ref(input: &TestState) -> Self {
+        input.policy_factory.clone()
+    }
+}
+
 impl FromRef<TestState> for BoxHomeserverConnection {
     fn from_ref(input: &TestState) -> Self {
         Box::new(input.homeserver_connection.clone())
