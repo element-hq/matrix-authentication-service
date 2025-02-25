@@ -12,7 +12,7 @@ publish = false
 workspace = true
 
 [dependencies]
-arc-swap = "1.7.1"
+arc-swap.workspace = true
 tracing.workspace = true
 tokio.workspace = true
 walkdir = "2.5.0"
