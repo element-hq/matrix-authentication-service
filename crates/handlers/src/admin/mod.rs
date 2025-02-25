@@ -46,6 +46,11 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ..Tag::default()
         })
         .tag(Tag {
+            name: "policy-data".to_owned(),
+            description: Some("Manage the dynamic policy data".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
             name: "oauth2-session".to_owned(),
             description: Some("Manage OAuth2 sessions".to_owned()),
             ..Tag::default()
