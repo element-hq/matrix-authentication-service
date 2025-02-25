@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM policy_data\n            WHERE policy_data_id IN (\n                SELECT policy_data_id\n                FROM policy_data\n                ORDER BY policy_data_id DESC\n                OFFSET $1\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5006c3e60c98c91a0b0fbb3205373e81d9b75e90929af80961f8b5910873a43e"
+}
