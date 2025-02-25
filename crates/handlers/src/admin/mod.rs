@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::{
     axum::ApiRouter,
     openapi::{OAuth2Flow, OAuth2Flows, OpenApi, SecurityScheme, Server, Tag},
@@ -20,6 +22,7 @@ use indexmap::IndexMap;
 use mas_axum_utils::FancyError;
 use mas_http::CorsLayerExt;
 use mas_matrix::BoxHomeserverConnection;
+use mas_policy::PolicyFactory;
 use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
     UrlBuilder,
@@ -118,6 +121,7 @@ where
     CallContext: FromRequestParts<S>,
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
+    Arc<PolicyFactory>: FromRef<S>,
 {
     // We *always* want to explicitly set the possible responses, beacuse the
     // infered ones are not necessarily correct

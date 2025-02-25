@@ -4,12 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::axum::{
     ApiRouter,
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
 use mas_matrix::BoxHomeserverConnection;
+use mas_policy::PolicyFactory;
 use mas_storage::BoxRng;
 
 use super::call_context::CallContext;
@@ -28,6 +31,7 @@ where
     S: Clone + Send + Sync + 'static,
     BoxHomeserverConnection: FromRef<S>,
     PasswordManager: FromRef<S>,
+    Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
 {

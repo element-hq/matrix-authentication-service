@@ -2,9 +2,12 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 
+use std::sync::Arc;
+
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
+use mas_policy::PolicyFactory;
 use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -21,6 +24,9 @@ use crate::{
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
+    #[error("Failed to instanciate policy with the provided data")]
+    InvalidPolicyData(#[from] mas_policy::LoadError),
+
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
@@ -30,7 +36,10 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let status = StatusCode::INTERNAL_SERVER_ERROR;
+        let status = match self {
+            RouteError::InvalidPolicyData(_) => StatusCode::BAD_REQUEST,
+            RouteError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
         (status, Json(error)).into_response()
     }
 }
@@ -62,6 +71,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Policy data was successfully set")
                 .example(response)
         })
+        .response_with::<400, Json<ErrorResponse>, _>(|t| {
+            let error = ErrorResponse::from_error(&RouteError::InvalidPolicyData(
+                mas_policy::LoadError::invalid_data_example(),
+            ));
+            t.description("Invalid policy data").example(error)
+        })
 }
 
 #[tracing::instrument(name = "handler.admin.v1.policy_data.set", skip_all, err)]
@@ -70,12 +85,16 @@ pub async fn handler(
         mut repo, clock, ..
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
+    State(policy_factory): State<Arc<PolicyFactory>>,
     Json(request): Json<SetPolicyDataRequest>,
 ) -> Result<(StatusCode, Json<SingleResponse<PolicyData>>), RouteError> {
     let policy_data = repo
         .policy_data()
         .set(&mut rng, &clock, request.data)
         .await?;
+
+    // Swap the policy data. This will fail if the policy data is invalid
+    policy_factory.set_dynamic_data(policy_data.clone()).await?;
 
     repo.save().await?;
 

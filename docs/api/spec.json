@@ -640,6 +640,29 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid policy data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Failed to instanciate policy with the provided data"
+                    },
+                    {
+                      "title": "invalid policy data"
+                    },
+                    {
+                      "title": "Failed to merge policy data objects"
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       }

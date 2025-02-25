@@ -204,6 +204,12 @@ impl FromRef<AppState> for Limiter {
     }
 }
 
+impl FromRef<AppState> for Arc<PolicyFactory> {
+    fn from_ref(input: &AppState) -> Self {
+        input.policy_factory.clone()
+    }
+}
+
 impl FromRef<AppState> for BoxHomeserverConnection {
     fn from_ref(input: &AppState) -> Self {
         Box::new(input.homeserver_connection.clone())
