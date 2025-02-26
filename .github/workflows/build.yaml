@@ -304,7 +304,6 @@ jobs:
         # This transforms the ouput to an object which looks like this:
         # { reguar: { digest: "…", tags: ["…", "…"] }, debug: { digest: "…", tags: ["…"] }, … }
         id: output
-        if: github.event_name != 'pull_request'
         run: |
           echo 'metadata<<EOF' >> $GITHUB_OUTPUT
           echo '${{ steps.bake.outputs.metadata }}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
