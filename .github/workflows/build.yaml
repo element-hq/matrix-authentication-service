@@ -4,15 +4,14 @@ on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
     tags:
       - "v*"
 
-  # Only run for pull requests if relevant files were changed
+  # Run when there is a label change on the pull request
+  # This runs only if the 'Z-Build-Workflow' is added to the pull request
   pull_request:
-    branches:
-      - main
-      - 'release/**'
+    types: [labeled]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,10 +30,16 @@ env:
 jobs:
   compute-version:
     name: Compute version using git describe
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
     outputs:
       describe: ${{ steps.git.outputs.describe }}
       timestamp: ${{ steps.git.outputs.timestamp }}
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
@@ -50,6 +55,7 @@ jobs:
 
   build-assets:
     name: Build assets
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
 
     permissions:
@@ -81,6 +87,7 @@ jobs:
 
   build-binaries:
     name: Build binaries
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
 
     needs:
@@ -139,6 +146,7 @@ jobs:
 
   assemble-archives:
     name: Assemble release archives
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
 
     needs:
@@ -193,6 +201,7 @@ jobs:
 
   build-image:
     name: Build and push Docker image
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
 
     outputs:
@@ -221,6 +230,7 @@ jobs:
             latest=auto
           tags: |
             type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -237,6 +247,7 @@ jobs:
             suffix=-debug,onlatest=true
           tags: |
             type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -252,6 +263,7 @@ jobs:
             latest=auto
           tags: |
             type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -268,31 +280,15 @@ jobs:
               mirrors = ["mirror.gcr.io"]
 
       - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # For pull-requests, only read from the cache, do not try to push to the
-      # cache or the image itself
-      - name: Build
-        uses: docker/bake-action@v6.4.0
-        if: github.event_name == 'pull_request'
-        with:
-          files: |
-            ./docker-bake.hcl
-            cwd://${{ steps.meta.outputs.bake-file }}
-            cwd://${{ steps.meta-debug.outputs.bake-file }}
-            cwd://${{ steps.meta-syn2mas.outputs.bake-file }}
-          set: |
-            base.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache
-
       - name: Build and push
         id: bake
         uses: docker/bake-action@v6.4.0
-        if: github.event_name != 'pull_request'
         with:
           files: |
             ./docker-bake.hcl
@@ -308,7 +304,6 @@ jobs:
         # This transforms the ouput to an object which looks like this:
         # { reguar: { digest: "…", tags: ["…", "…"] }, debug: { digest: "…", tags: ["…"] }, … }
         id: output
-        if: github.event_name != 'pull_request'
         run: |
           echo 'metadata<<EOF' >> $GITHUB_OUTPUT
           echo '${{ steps.bake.outputs.metadata }}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
@@ -334,12 +329,11 @@ jobs:
   syn2mas:
     name: Release syn2mas on NPM
     runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request'
 
     permissions:
       contents: read
       id-token: write
-
-    if: github.event_name != 'pull_request'
 
     steps:
       - name: Checkout the code
@@ -428,14 +422,16 @@ jobs:
 
   unstable:
     name: Update the unstable release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+
     needs:
       - assemble-archives
       - build-image
-    if: github.ref == 'refs/heads/main'
 
     permissions:
       contents: write
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
@@ -460,7 +456,7 @@ jobs:
       - name: Update unstable release
         uses: softprops/action-gh-release@v2
         with:
-          name: 'Unstable build'
+          name: "Unstable build"
           tag_name: unstable
           body: |
             This is an automatically updated unstable release containing the latest builds from the main branch.
@@ -501,3 +497,31 @@ jobs:
             artifacts/mas-cli-x86_64-linux.tar.gz
           prerelease: true
           make_latest: false
+
+  pr-cleanup:
+    name: "Remove workflow build PR label and comment on it"
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' && github.event.label.name == 'Z-Build-Workflow'
+
+    needs:
+      - build-image
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+        with:
+          sparse-checkout: |
+            .github/scripts
+
+      - name: Remove label and comment
+        uses: actions/github-script@v7.0.1
+        env:
+          BUILD_IMAGE_MANIFEST: ${{ needs.build-image.outputs.metadata }}
+        with:
+          script: |
+            const script = require('./.github/scripts/cleanup-pr.cjs');
+            await script({ core, github, context });
