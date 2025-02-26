@@ -190,7 +190,7 @@ upstream_oauth2:
       issuer: "https://<authentik-domain>/application/o/<app-slug>/" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
-      scope: "openid profile email"
+      scope: "openid profile email offline_access"
       claims_imports:
         localpart:
           action: require
