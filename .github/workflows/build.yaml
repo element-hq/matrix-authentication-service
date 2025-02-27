@@ -222,7 +222,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.6.1
+        uses: docker/metadata-action@v5.7.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action
@@ -238,7 +238,7 @@ jobs:
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v5.6.1
+        uses: docker/metadata-action@v5.7.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action-debug
@@ -255,7 +255,7 @@ jobs:
 
       - name: Docker meta (syn2mas)
         id: meta-syn2mas
-        uses: docker/metadata-action@v5.6.1
+        uses: docker/metadata-action@v5.7.0
         with:
           images: "${{ env.IMAGE_SYN2MAS }}"
           bake-target: docker-metadata-action-syn2mas
