@@ -192,6 +192,8 @@ pub struct SynapseUser {
     /// account!
     pub is_guest: SynapseBool,
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
+    /// The ID of the appservice that created this user, if any.
+    pub appservice_id: Option<String>,
 }
 
 /// Row of the `user_threepids` table in Synapse.
@@ -369,9 +371,8 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              name, password_hash, admin, deactivated, creation_ts, is_guest
+              name, password_hash, admin, deactivated, creation_ts, is_guest, appservice_id
             FROM users
-            WHERE appservice_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)
