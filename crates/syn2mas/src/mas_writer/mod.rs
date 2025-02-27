@@ -23,7 +23,7 @@ use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tracing::{Level, Span, error, info, warn};
-use tracing_indicatif::{span_ext::IndicatifSpanExt, style::ProgressStyle};
+use tracing_indicatif::span_ext::IndicatifSpanExt;
 use uuid::{NonNilUuid, Uuid};
 
 use self::{
@@ -550,14 +550,6 @@ impl MasWriter {
         constraints_to_restore: &[ConstraintDescription],
     ) -> Result<(), Error> {
         let span = Span::current();
-        // TODO this style is a quick workaround for showing the message, but
-        // might not be optimal for other purposes
-        span.pb_set_style(
-            &ProgressStyle::with_template(
-                "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}",
-            )
-            .unwrap(),
-        );
         span.pb_set_length((indices_to_restore.len() + constraints_to_restore.len()) as u64);
 
         // First restore all indices. The order is not important as far as I know.
