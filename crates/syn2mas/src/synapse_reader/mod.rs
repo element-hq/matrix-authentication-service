@@ -341,7 +341,7 @@ impl<'conn> SynapseReader<'conn> {
         // On matrix.org, counting users and devices properly takes around 1m10s,
         // which is unnecessary extra downtime during the migration, just to
         // show a more accurate progress bar and size a hash map accurately.
-        let users: usize = sqlx::query_scalar::<_, i64>(
+        let users = sqlx::query_scalar::<_, i64>(
             "
             SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'users'::regclass;
             ",

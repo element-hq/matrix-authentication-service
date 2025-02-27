@@ -15,12 +15,13 @@ use std::{pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
-use futures_util::StreamExt as _;
+use futures_util::{SinkExt, StreamExt as _, TryStreamExt as _};
 use mas_storage::Clock;
-use rand::RngCore;
+use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tracing::{Level, info};
+use tokio_util::sync::PollSender;
+use tracing::{Instrument as _, Level, info};
 use ulid::Ulid;
 use uuid::{NonNilUuid, Uuid};
 
@@ -54,6 +55,15 @@ pub enum Error {
         source: ExtractLocalpartError,
         user: FullUserId,
     },
+    #[error("channel closed")]
+    ChannelClosed,
+
+    #[error("task failed ({context}): {source}")]
+    Join {
+        source: tokio::task::JoinError,
+        context: String,
+    },
+
     #[error("user {user} was not found for migration but a row in {table} was found for them")]
     MissingUserFromDependentTable { table: String, user: FullUserId },
     #[error(
@@ -182,82 +192,98 @@ async fn migrate_users(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
-    let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
-    let mut users_stream = pin!(synapse.read_users());
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
 
-    while let Some(user_res) = users_stream.next().await {
-        let user = user_res.into_synapse("reading user")?;
+    let mut rng = rand_chacha::ChaCha8Rng::from_rng(rng).expect("failed to seed rng");
+    let task = tokio::spawn(
+        async move {
+            let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
+            let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
 
-        // Handling an edge case: some AS users may have invalid localparts containing
-        // extra `:` characters. These users are ignored and a warning is logged.
-        if user.appservice_id.is_some()
-            && user
-                .name
-                .0
-                .strip_suffix(&format!(":{}", state.server_name))
-                .is_some_and(|localpart| localpart.contains(':'))
-        {
-            tracing::warn!("AS user {} has invalid localpart, ignoring!", user.name.0);
-            continue;
-        }
+            while let Some(user) = rx.recv().await {
+                // Handling an edge case: some AS users may have invalid localparts containing
+                // extra `:` characters. These users are ignored and a warning is logged.
+                if user.appservice_id.is_some()
+                    && user
+                        .name
+                        .0
+                        .strip_suffix(&format!(":{}", state.server_name))
+                        .is_some_and(|localpart| localpart.contains(':'))
+                {
+                    tracing::warn!("AS user {} has invalid localpart, ignoring!", user.name.0);
+                    continue;
+                }
 
-        let (mas_user, mas_password_opt) = transform_user(&user, &state.server_name, rng)?;
+                let (mas_user, mas_password_opt) =
+                    transform_user(&user, &state.server_name, &mut rng)?;
 
-        let mut flags = UserFlags::empty();
-        if bool::from(user.admin) {
-            flags |= UserFlags::IS_SYNAPSE_ADMIN;
-        }
-        if bool::from(user.deactivated) {
-            flags |= UserFlags::IS_DEACTIVATED;
-        }
-        if bool::from(user.is_guest) {
-            flags |= UserFlags::IS_GUEST;
-        }
-        if user.appservice_id.is_some() {
-            flags |= UserFlags::IS_APPSERVICE;
+                let mut flags = UserFlags::empty();
+                if bool::from(user.admin) {
+                    flags |= UserFlags::IS_SYNAPSE_ADMIN;
+                }
+                if bool::from(user.deactivated) {
+                    flags |= UserFlags::IS_DEACTIVATED;
+                }
+                if bool::from(user.is_guest) {
+                    flags |= UserFlags::IS_GUEST;
+                }
+                if user.appservice_id.is_some() {
+                    flags |= UserFlags::IS_APPSERVICE;
 
-            // Special case for appservice users: we don't insert them into the database
-            // We just record the user's information in the state and continue
-            state.users.insert(
-                CompactString::new(&mas_user.username),
-                UserInfo {
-                    mas_user_id: None,
-                    flags,
-                },
-            );
-            continue;
-        }
+                    // Special case for appservice users: we don't insert them into the database
+                    // We just record the user's information in the state and continue
+                    state.users.insert(
+                        CompactString::new(&mas_user.username),
+                        UserInfo {
+                            mas_user_id: None,
+                            flags,
+                        },
+                    );
+                    continue;
+                }
 
-        state.users.insert(
-            CompactString::new(&mas_user.username),
-            UserInfo {
-                mas_user_id: Some(mas_user.user_id),
-                flags,
-            },
-        );
+                state.users.insert(
+                    CompactString::new(&mas_user.username),
+                    UserInfo {
+                        mas_user_id: Some(mas_user.user_id),
+                        flags,
+                    },
+                );
 
-        user_buffer
-            .write(&mut mas, mas_user)
-            .await
-            .into_mas("writing user")?;
+                user_buffer
+                    .write(&mut mas, mas_user)
+                    .await
+                    .into_mas("writing user")?;
 
-        if let Some(mas_password) = mas_password_opt {
-            password_buffer
-                .write(&mut mas, mas_password)
+                if let Some(mas_password) = mas_password_opt {
+                    password_buffer
+                        .write(&mut mas, mas_password)
+                        .await
+                        .into_mas("writing password")?;
+                }
+            }
+
+            user_buffer
+                .finish(&mut mas)
                 .await
-                .into_mas("writing password")?;
-        }
-    }
+                .into_mas("writing users")?;
+            password_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing passwords")?;
 
-    user_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing users")?;
-    password_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing passwords")?;
+            Ok((mas, state))
+        }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
+
+    synapse
+        .read_users()
+        .map_err(|e| e.into_synapse("reading users"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .await?;
+
+    let (mas, state) = task.await.into_join("user write task")??;
 
     info!(
         "users migrated in {:.1}s",
@@ -448,92 +474,109 @@ async fn migrate_devices(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let mut devices_stream = pin!(synapse.read_devices());
-    let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
-    while let Some(device_res) = devices_stream.next().await {
-        let SynapseDevice {
-            user_id: synapse_user_id,
-            device_id,
-            display_name,
-            last_seen,
-            ip,
-            user_agent,
-        } = device_res.into_synapse("reading Synapse device")?;
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let task = tokio::spawn(
+        async move {
+            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-        let username = synapse_user_id
-            .extract_localpart(&state.server_name)
-            .into_extract_localpart(synapse_user_id.clone())?
-            .to_owned();
-        let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            return Err(Error::MissingUserFromDependentTable {
-                table: "devices".to_owned(),
-                user: synapse_user_id,
-            });
-        };
+            while let Some(device) = rx.recv().await {
+                let SynapseDevice {
+                    user_id: synapse_user_id,
+                    device_id,
+                    display_name,
+                    last_seen,
+                    ip,
+                    user_agent,
+                } = device;
+                let username = synapse_user_id
+                    .extract_localpart(&state.server_name)
+                    .into_extract_localpart(synapse_user_id.clone())?
+                    .to_owned();
+                let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    return Err(Error::MissingUserFromDependentTable {
+                        table: "devices".to_owned(),
+                        user: synapse_user_id,
+                    });
+                };
 
-        let Some(mas_user_id) = user_infos.mas_user_id else {
-            continue;
-        };
+                let Some(mas_user_id) = user_infos.mas_user_id else {
+                    continue;
+                };
 
-        if user_infos.flags.is_deactivated()
-            || user_infos.flags.is_guest()
-            || user_infos.flags.is_appservice()
-        {
-            continue;
-        }
+                if user_infos.flags.is_deactivated()
+                    || user_infos.flags.is_guest()
+                    || user_infos.flags.is_appservice()
+                {
+                    continue;
+                }
 
-        let session_id = *state
-            .devices_to_compat_sessions
-            .entry((mas_user_id, CompactString::new(&device_id)))
-            .or_insert_with(||
+                let session_id = *state
+                    .devices_to_compat_sessions
+                    .entry((mas_user_id, CompactString::new(&device_id)))
+                    .or_insert_with(||
                 // We don't have a creation time for this device (as it has no access token),
                 // so use now as a least-evil fallback.
-                Ulid::with_source(rng).into());
-        let created_at = Ulid::from(session_id).datetime().into();
+                Ulid::with_source(&mut rng).into());
+                let created_at = Ulid::from(session_id).datetime().into();
 
-        // As we're using a real IP type in the MAS database, it is possible
-        // that we encounter invalid IP addresses in the Synapse database.
-        // In that case, we should ignore them, but still log a warning.
-        // One special case: Synapse will record '-' as IP in some cases, we don't want
-        // to log about those
-        let last_active_ip = ip.filter(|ip| ip != "-").and_then(|ip| {
-            ip.parse()
-                .map_err(|e| {
-                    tracing::warn!(
-                        error = &e as &dyn std::error::Error,
-                        mxid = %synapse_user_id,
-                        %device_id,
-                        %ip,
-                        "Failed to parse device IP, ignoring"
-                    );
-                })
-                .ok()
-        });
+                // As we're using a real IP type in the MAS database, it is possible
+                // that we encounter invalid IP addresses in the Synapse database.
+                // In that case, we should ignore them, but still log a warning.
+                // One special case: Synapse will record '-' as IP in some cases, we don't want
+                // to log about those
+                let last_active_ip = ip.filter(|ip| ip != "-").and_then(|ip| {
+                    ip.parse()
+                        .map_err(|e| {
+                            tracing::warn!(
+                                error = &e as &dyn std::error::Error,
+                                mxid = %synapse_user_id,
+                                %device_id,
+                                %ip,
+                                "Failed to parse device IP, ignoring"
+                            );
+                        })
+                        .ok()
+                });
 
-        write_buffer
-            .write(
-                &mut mas,
-                MasNewCompatSession {
-                    session_id,
-                    user_id: mas_user_id,
-                    device_id: Some(device_id),
-                    human_name: display_name,
-                    created_at,
-                    is_synapse_admin: user_infos.flags.is_synapse_admin(),
-                    last_active_at: last_seen.map(DateTime::from),
-                    last_active_ip,
-                    user_agent,
-                },
-            )
-            .await
-            .into_mas("writing compat sessions")?;
-    }
+                // TODO skip access tokens for deactivated users
+                write_buffer
+                    .write(
+                        &mut mas,
+                        MasNewCompatSession {
+                            session_id,
+                            user_id: mas_user_id,
+                            device_id: Some(device_id),
+                            human_name: display_name,
+                            created_at,
+                            is_synapse_admin: user_infos.flags.is_synapse_admin(),
+                            last_active_at: last_seen.map(DateTime::from),
+                            last_active_ip,
+                            user_agent,
+                        },
+                    )
+                    .await
+                    .into_mas("writing compat sessions")?;
+            }
 
-    write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing compat sessions")?;
+            write_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing compat sessions")?;
+
+            Ok((mas, state))
+        }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
+
+    synapse
+        .read_devices()
+        .map_err(|e| e.into_synapse("reading devices"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .await?;
+
+    let (mas, state) = task.await.into_join("device write task")??;
 
     info!(
         "devices migrated in {:.1}s",
@@ -555,107 +598,124 @@ async fn migrate_unrefreshable_access_tokens(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let mut token_stream = pin!(synapse.read_unrefreshable_access_tokens());
-    let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
-    let mut deviceless_session_write_buffer =
-        MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
-    while let Some(token_res) = token_stream.next().await {
-        let SynapseAccessToken {
-            user_id: synapse_user_id,
-            device_id,
-            token,
-            valid_until_ms,
-            last_validated,
-        } = token_res.into_synapse("reading Synapse access token")?;
+    let now = clock.now();
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let task = tokio::spawn(
+        async move {
+            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
+            let mut deviceless_session_write_buffer =
+                MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-        let username = synapse_user_id
-            .extract_localpart(&state.server_name)
-            .into_extract_localpart(synapse_user_id.clone())?
-            .to_owned();
-        let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            return Err(Error::MissingUserFromDependentTable {
-                table: "access_tokens".to_owned(),
-                user: synapse_user_id,
-            });
-        };
+            while let Some(token) = rx.recv().await {
+                let SynapseAccessToken {
+                    user_id: synapse_user_id,
+                    device_id,
+                    token,
+                    valid_until_ms,
+                    last_validated,
+                } = token;
+                let username = synapse_user_id
+                    .extract_localpart(&state.server_name)
+                    .into_extract_localpart(synapse_user_id.clone())?
+                    .to_owned();
+                let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    return Err(Error::MissingUserFromDependentTable {
+                        table: "access_tokens".to_owned(),
+                        user: synapse_user_id,
+                    });
+                };
 
-        let Some(mas_user_id) = user_infos.mas_user_id else {
-            continue;
-        };
+                let Some(mas_user_id) = user_infos.mas_user_id else {
+                    continue;
+                };
 
-        if user_infos.flags.is_deactivated()
-            || user_infos.flags.is_guest()
-            || user_infos.flags.is_appservice()
-        {
-            continue;
-        }
+                if user_infos.flags.is_deactivated()
+                    || user_infos.flags.is_guest()
+                    || user_infos.flags.is_appservice()
+                {
+                    continue;
+                }
 
-        // It's not always accurate, but last_validated is *often* the creation time of
-        // the device If we don't have one, then use the current time as a
-        // fallback.
-        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
+                // It's not always accurate, but last_validated is *often* the creation time of
+                // the device If we don't have one, then use the current time as a
+                // fallback.
+                let created_at = last_validated.map_or_else(|| now, DateTime::from);
 
-        let session_id = if let Some(device_id) = device_id {
-            // Use the existing device_id if this is the second token for a device
-            *state
-                .devices_to_compat_sessions
-                .entry((mas_user_id, CompactString::new(&device_id)))
-                .or_insert_with(|| {
-                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng))
-                })
-        } else {
-            // If this is a deviceless access token, create a deviceless compat session
-            // for it (since otherwise we won't create one whilst migrating devices)
-            let deviceless_session_id =
-                Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+                let session_id = if let Some(device_id) = device_id {
+                    // Use the existing device_id if this is the second token for a device
+                    *state
+                        .devices_to_compat_sessions
+                        .entry((mas_user_id, CompactString::new(&device_id)))
+                        .or_insert_with(|| {
+                            Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng))
+                        })
+                } else {
+                    // If this is a deviceless access token, create a deviceless compat session
+                    // for it (since otherwise we won't create one whilst migrating devices)
+                    let deviceless_session_id =
+                        Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
 
-            deviceless_session_write_buffer
-                .write(
-                    &mut mas,
-                    MasNewCompatSession {
-                        session_id: deviceless_session_id,
-                        user_id: mas_user_id,
-                        device_id: None,
-                        human_name: None,
-                        created_at,
-                        is_synapse_admin: false,
-                        last_active_at: None,
-                        last_active_ip: None,
-                        user_agent: None,
-                    },
-                )
+                    deviceless_session_write_buffer
+                        .write(
+                            &mut mas,
+                            MasNewCompatSession {
+                                session_id: deviceless_session_id,
+                                user_id: mas_user_id,
+                                device_id: None,
+                                human_name: None,
+                                created_at,
+                                is_synapse_admin: false,
+                                last_active_at: None,
+                                last_active_ip: None,
+                                user_agent: None,
+                            },
+                        )
+                        .await
+                        .into_mas("failed to write deviceless compat sessions")?;
+
+                    deviceless_session_id
+                };
+
+                let token_id =
+                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+
+                write_buffer
+                    .write(
+                        &mut mas,
+                        MasNewCompatAccessToken {
+                            token_id,
+                            session_id,
+                            access_token: token,
+                            created_at,
+                            expires_at: valid_until_ms.map(DateTime::from),
+                        },
+                    )
+                    .await
+                    .into_mas("writing compat access tokens")?;
+            }
+            write_buffer
+                .finish(&mut mas)
                 .await
-                .into_mas("failed to write deviceless compat sessions")?;
+                .into_mas("writing compat access tokens")?;
+            deviceless_session_write_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing deviceless compat sessions")?;
 
-            deviceless_session_id
-        };
+            Ok((mas, state))
+        }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
 
-        let token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
+    synapse
+        .read_unrefreshable_access_tokens()
+        .map_err(|e| e.into_synapse("reading tokens"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .await?;
 
-        write_buffer
-            .write(
-                &mut mas,
-                MasNewCompatAccessToken {
-                    token_id,
-                    session_id,
-                    access_token: token,
-                    created_at,
-                    expires_at: valid_until_ms.map(DateTime::from),
-                },
-            )
-            .await
-            .into_mas("writing compat access tokens")?;
-    }
-
-    write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing compat access tokens")?;
-    deviceless_session_write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing deviceless compat sessions")?;
+    let (mas, state) = task.await.into_join("token write task")??;
 
     info!(
         "non-refreshable access tokens migrated in {:.1}s",
