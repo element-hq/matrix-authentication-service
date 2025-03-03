@@ -29,6 +29,7 @@ use crate::{
 };
 
 mod email;
+mod passkey;
 mod password;
 mod recovery;
 mod registration;
@@ -39,9 +40,10 @@ mod terms;
 mod tests;
 
 pub use self::{
-    email::PgUserEmailRepository, password::PgUserPasswordRepository,
-    recovery::PgUserRecoveryRepository, registration::PgUserRegistrationRepository,
-    session::PgBrowserSessionRepository, terms::PgUserTermsRepository,
+    email::PgUserEmailRepository, passkey::PgUserPasskeyRepository,
+    password::PgUserPasswordRepository, recovery::PgUserRecoveryRepository,
+    registration::PgUserRegistrationRepository, session::PgBrowserSessionRepository,
+    terms::PgUserTermsRepository,
 };
 
 /// An implementation of [`UserRepository`] for a PostgreSQL connection
