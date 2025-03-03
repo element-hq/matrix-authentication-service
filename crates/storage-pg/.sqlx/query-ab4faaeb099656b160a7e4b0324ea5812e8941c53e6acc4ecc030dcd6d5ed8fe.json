@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_passkey_challenges\n                SET completed_at = $2\n                WHERE user_passkey_challenge_id = $1\n                  AND completed_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ab4faaeb099656b160a7e4b0324ea5812e8941c53e6acc4ecc030dcd6d5ed8fe"
+}

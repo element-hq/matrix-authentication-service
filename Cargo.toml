@@ -727,6 +727,10 @@ features = ["rustc"]
 [workspace.dependencies.walkdir]
 version = "2.5.0"
 
+[workspace.dependencies.webauthn_rp]
+version = "0.3.0"
+features = ["bin", "serde_relaxed", "custom", "serializable_server_state"]
+
 # HTTP mock server
 [workspace.dependencies.wiremock]
 version = "0.6.4"

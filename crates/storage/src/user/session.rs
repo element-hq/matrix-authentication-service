@@ -10,6 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Authentication, BrowserSession, Clock, Password, UpstreamOAuthAuthorizationSession, User,
+    UserPasskey,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -279,6 +280,26 @@ pub trait BrowserSessionRepository: Send + Sync {
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,
     ) -> Result<Authentication, Self::Error>;
 
+    /// Authenticate a [`BrowserSession`] with the given [`UserPasskey`]
+    ///
+    /// # Parameters
+    ///
+    /// * `rng`: The random number generator to use
+    /// * `clock`: The clock used to generate timestamps
+    /// * `user_session`: The session to authenticate
+    /// * `user_passkey`: The passkey which was used to authenticate
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn authenticate_with_passkey(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user_session: &BrowserSession,
+        user_passkey: &UserPasskey,
+    ) -> Result<Authentication, Self::Error>;
+
     /// Get the last successful authentication for a [`BrowserSession`]
     ///
     /// # Params
@@ -352,6 +373,14 @@ repository_impl!(BrowserSessionRepository:
         clock: &dyn Clock,
         user_session: &BrowserSession,
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<Authentication, Self::Error>;
+
+    async fn authenticate_with_passkey(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user_session: &BrowserSession,
+        user_passkey: &UserPasskey,
     ) -> Result<Authentication, Self::Error>;
 
     async fn get_last_authentication(

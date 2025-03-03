@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_passkeys\n                SET last_used_at = $2, dynamic_state = $3\n                WHERE user_passkey_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cfc57569729d5fc900d4ebc0136a78edec1b66be5ff6d57ab90ac06e0f1098be"
+}

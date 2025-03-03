@@ -33,6 +33,7 @@ tracing.workspace = true
 ulid.workspace = true
 url.workspace = true
 uuid.workspace = true
+webauthn_rp.workspace = true
 
 oauth2-types.workspace = true
 mas-storage.workspace = true
