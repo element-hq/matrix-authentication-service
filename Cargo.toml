@@ -271,7 +271,7 @@ version = "0.5.0"
 
 # JSON Schema generation
 [workspace.dependencies.schemars]
-version = "0.8.21"
+version = "0.8.22"
 features = ["url", "chrono", "preserve_order"]
 
 # Query builder
