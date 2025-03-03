@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_passkey_challenges\n                  ( user_passkey_challenge_id\n                  , user_session_id\n                  , state\n                  , created_at\n                  )\n                VALUES ($1, $2, $3, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bytea",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "74e377397d05062d15b8b7a674390af5ecca2f977b8d74311b4cad401e2650e5"
+}
