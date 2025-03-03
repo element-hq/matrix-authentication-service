@@ -32,6 +32,12 @@ pub enum Code {
     /// The username contains only numeric characters.
     UsernameAllNumeric,
 
+    /// The username is banned.
+    UsernameBanned,
+
+    /// The username is not allowed.
+    UsernameNotAllowed,
+
     /// The email domain is not allowed.
     EmailDomainNotAllowed,
 
@@ -54,6 +60,8 @@ impl Code {
             Self::UsernameTooLong => "username-too-long",
             Self::UsernameInvalidChars => "username-invalid-chars",
             Self::UsernameAllNumeric => "username-all-numeric",
+            Self::UsernameBanned => "username-banned",
+            Self::UsernameNotAllowed => "username-not-allowed",
             Self::EmailDomainNotAllowed => "email-domain-not-allowed",
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",

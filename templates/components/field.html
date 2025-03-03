@@ -69,6 +69,10 @@ Please see LICENSE in the repository root for full details.
                 {{ _("mas.errors.username_invalid_chars") }}
               {% elif error.code == "username-all-numeric" %}
                 {{ _("mas.errors.username_all_numeric") }}
+              {% elif error.code == "username-banned" %}
+                {{ _("mas.errors.username_banned") }}
+              {% elif error.code == "username-not-allowed" %}
+                {{ _("mas.errors.username_not_allowed") }}
               {% elif error.code == "email-domain-not-allowed" %}
                 {{ _("mas.errors.email_domain_not_allowed") }}
               {% elif error.code == "email-domain-banned" %}

@@ -382,6 +382,35 @@ policy:
       # don't require clients to provide a client_uri. default: false
       allow_missing_client_uri: false
 
+    # Restrictions on user registration
+    registration:
+      # If specified, the username (localpart) *must* match one of the allowed
+      # usernames. If unspecified, all usernames are allowed.
+      allowed_usernames:
+        # Exact usernames that are allowed
+        literals: ["alice", "bob"]
+        # Substrings that match allowed usernames
+        substrings: ["user"]
+        # Regular expressions that match allowed usernames
+        regexes: ["^[a-z]+$"]
+        # Prefixes that match allowed usernames
+        prefixes: ["user-"]
+        # Suffixes that match allowed usernames
+        suffixes: ["-corp"]
+      # If specified, the username (localpart) *must not* match one of the
+      # banned usernames. If unspecified, all usernames are allowed.
+      banned_usernames:
+        # Exact usernames that are banned
+        literals: ["admin", "root"]
+        # Substrings that match banned usernames
+        substrings: ["admin", "root"]
+        # Regular expressions that match banned usernames
+        regexes: ["^admin$", "^root$"]
+        # Prefixes that match banned usernames
+        prefixes: ["admin-", "root-"]
+        # Suffixes that match banned usernames
+        suffixes: ["-admin", "-root"]
+
     # Restrict what email addresses can be added to a user
     emails:
       # If specified, the email address *must* match one of the allowed addresses.
