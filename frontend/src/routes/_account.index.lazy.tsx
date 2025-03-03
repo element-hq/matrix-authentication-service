@@ -118,6 +118,16 @@ function Index(): React.ReactElement {
           </>
         )}
 
+        {siteConfig.passkeysEnabled && (
+          <>
+            <Collapsible.Section title={t("frontend.account.passkeys.title")}>
+              placeholder text
+            </Collapsible.Section>
+
+            <Separator kind="section" />
+          </>
+        )}
+
         <Collapsible.Section title={t("common.e2ee")}>
           <Text className="text-secondary" size="md">
             {t("frontend.reset_cross_signing.description")}

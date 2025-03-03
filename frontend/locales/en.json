@@ -64,7 +64,10 @@
         "button": "Sign out of account",
         "dialog": "Sign out of this account?"
       },
-      "title": "Your account"
+      "title": "Your account",
+      "passkeys": {
+        "title": "Passkeys"
+      }
     },
     "add_email_form": {
       "email_denied_error": "The entered email is not allowed by the server policy",

@@ -47,6 +47,7 @@ impl SiteConfigExt for SiteConfig {
             password_registration: self.password_registration_enabled,
             password_login: self.password_login_enabled,
             account_recovery: self.account_recovery_allowed,
+            passkeys_enabled: self.passkeys_enabled,
         }
     }
 }
