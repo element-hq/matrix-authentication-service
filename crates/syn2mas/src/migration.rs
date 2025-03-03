@@ -181,6 +181,20 @@ async fn migrate_users(
 
     while let Some(user_res) = users_stream.next().await {
         let user = user_res.into_synapse("reading user")?;
+
+        // Handling an edge case: some AS users may have invalid localparts containing
+        // extra `:` characters. These users are ignored and a warning is logged.
+        if user.appservice_id.is_some()
+            && user
+                .name
+                .0
+                .strip_suffix(&format!(":{}", state.server_name))
+                .is_some_and(|localpart| localpart.contains(':'))
+        {
+            tracing::warn!("AS user {} has invalid localpart, ignoring!", user.name.0);
+            continue;
+        }
+
         let (mas_user, mas_password_opt) = transform_user(&user, &state.server_name, rng)?;
 
         let mut flags = UserFlags::empty();
