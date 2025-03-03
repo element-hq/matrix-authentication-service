@@ -51,6 +51,7 @@ const QUERY = graphql(/* GraphQL */ `
     siteConfig {
       emailChangeAllowed
       passwordLoginEnabled
+      passkeysEnabled
       accountDeactivationAllowed
       ...AddEmailForm_siteConfig
       ...UserEmailList_siteConfig
@@ -221,6 +222,16 @@ function Index(): React.ReactElement {
               title={t("frontend.account.account_password")}
             >
               <AccountManagementPasswordPreview siteConfig={siteConfig} />
+            </Collapsible.Section>
+
+            <Separator kind="section" />
+          </>
+        )}
+
+        {siteConfig.passkeysEnabled && (
+          <>
+            <Collapsible.Section title={t("frontend.account.passkeys.title")}>
+              placeholder text
             </Collapsible.Section>
 
             <Separator kind="section" />

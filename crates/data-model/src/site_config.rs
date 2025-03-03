@@ -87,4 +87,7 @@ pub struct SiteConfig {
     pub minimum_password_complexity: u8,
 
     pub session_expiration: Option<SessionExpirationConfig>,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }
