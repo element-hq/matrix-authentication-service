@@ -35,6 +35,13 @@ const FALLBACKER: LocaleFallbackerWithConfig<'static> = LocaleFallbacker::new().
     config
 });
 
+/// Construct a [`DataRequest`] for the given locale
+pub fn data_request_for_locale(locale: &DataLocale) -> DataRequest<'_> {
+    let mut metadata = DataRequestMetadata::default();
+    metadata.silent = true;
+    DataRequest { locale, metadata }
+}
+
 /// Error type for loading translations
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -200,19 +207,16 @@ impl Translator {
     /// Returns an error if the requested locale is not found, or if the
     /// requested key is not found.
     pub fn message(&self, locale: &DataLocale, key: &str) -> Result<&Message, DataError> {
-        let request = DataRequest {
-            locale,
-            metadata: DataRequestMetadata::default(),
-        };
+        let request = data_request_for_locale(locale);
 
         let tree = self
             .translations
             .get(locale)
-            .ok_or(DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
 
         let message = tree
             .message(key)
-            .ok_or(DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
 
         Ok(message)
     }
@@ -273,19 +277,16 @@ impl Translator {
         let plurals = PluralRules::try_new_cardinal_unstable(&self.plural_provider, locale)?;
         let category = plurals.category_for(count);
 
-        let request = DataRequest {
-            locale,
-            metadata: DataRequestMetadata::default(),
-        };
+        let request = data_request_for_locale(locale);
 
         let tree = self
             .translations
             .get(locale)
-            .ok_or(DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
 
         let message = tree
             .pluralize(key, category)
-            .ok_or(DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
 
         Ok(message)
     }
