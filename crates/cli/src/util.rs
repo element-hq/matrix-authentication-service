@@ -222,6 +222,7 @@ pub fn site_config_from_config(
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
+        passkeys_enabled: experimental_config.passkeys,
     })
 }
 

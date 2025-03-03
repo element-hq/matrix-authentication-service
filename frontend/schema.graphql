@@ -1758,6 +1758,10 @@ type SiteConfig implements Node {
   """
   loginWithEmailAllowed: Boolean!
   """
+  Whether passkeys are enabled
+  """
+  passkeysEnabled: Boolean!
+  """
   The ID of the site configuration.
   """
   id: ID!
