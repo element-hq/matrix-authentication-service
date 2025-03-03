@@ -511,6 +511,7 @@ mod tests {
             password_registration: true,
             account_recovery: true,
             login_with_email_allowed: true,
+            passkeys_enabled: true,
         };
         let vite_manifest_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");

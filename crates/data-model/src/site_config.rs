@@ -96,4 +96,7 @@ pub struct SiteConfig {
 
     /// The iframe URL to show in the plan tab of the UI
     pub plan_management_iframe_uri: Option<String>,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }

@@ -224,6 +224,10 @@ pub fn site_config_from_config(
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
         plan_management_iframe_uri: experimental_config.plan_management_iframe_uri.clone(),
+        passkeys_enabled: experimental_config
+            .passkeys
+            .as_ref()
+            .is_some_and(|c| c.enabled),
     })
 }
 

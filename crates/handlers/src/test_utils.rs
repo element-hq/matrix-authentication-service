@@ -147,6 +147,7 @@ pub fn test_site_config() -> SiteConfig {
         session_expiration: None,
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
+        passkeys_enabled: false,
     }
 }
 

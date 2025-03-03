@@ -55,6 +55,9 @@
         "title": "Edit profile",
         "username_label": "Username"
       },
+      "passkeys": {
+        "title": "Passkeys"
+      },
       "password": {
         "change": "Change password",
         "change_disabled": "Password changes are disabled by the administrator.",

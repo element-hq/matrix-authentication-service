@@ -1762,6 +1762,10 @@ type SiteConfig implements Node {
   """
   planManagementIframeUri: String
   """
+  Whether passkeys are enabled
+  """
+  passkeysEnabled: Boolean!
+  """
   The ID of the site configuration.
   """
   id: ID!

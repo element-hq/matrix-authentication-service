@@ -26,6 +26,9 @@ pub struct SiteFeatures {
 
     /// Whether users can log in with their email address.
     pub login_with_email_allowed: bool,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }
 
 impl Object for SiteFeatures {
@@ -35,6 +38,7 @@ impl Object for SiteFeatures {
             "password_login" => Some(Value::from(self.password_login)),
             "account_recovery" => Some(Value::from(self.account_recovery)),
             "login_with_email_allowed" => Some(Value::from(self.login_with_email_allowed)),
+            "passkeys_enabled" => Some(Value::from(self.passkeys_enabled)),
             _ => None,
         }
     }
@@ -45,6 +49,7 @@ impl Object for SiteFeatures {
             "password_login",
             "account_recovery",
             "login_with_email_allowed",
+            "passkeys_enabled",
         ])
     }
 }

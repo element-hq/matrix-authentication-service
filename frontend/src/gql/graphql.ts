@@ -1290,6 +1290,8 @@ export type SiteConfig = Node & {
    * in use is <https://crates.io/crates/zxcvbn>.
    */
   minimumPasswordComplexity: Scalars['Int']['output'];
+  /** Whether passkeys are enabled */
+  passkeysEnabled: Scalars['Boolean']['output'];
   /** Whether passwords are enabled and users can change their own passwords. */
   passwordChangeAllowed: Scalars['Boolean']['output'];
   /** Whether passwords are enabled for login. */
@@ -1856,7 +1858,7 @@ export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typena
       { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
     ) } | { __typename: 'Oauth2Session' }, siteConfig: (
-    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, accountDeactivationAllowed: boolean }
+    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, passkeysEnabled: boolean, accountDeactivationAllowed: boolean }
     & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
@@ -2549,6 +2551,7 @@ export const UserProfileDocument = new TypedDocumentString(`
   siteConfig {
     emailChangeAllowed
     passwordLoginEnabled
+    passkeysEnabled
     accountDeactivationAllowed
     ...AddEmailForm_siteConfig
     ...UserEmailList_siteConfig

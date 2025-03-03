@@ -14,7 +14,7 @@
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:191:26-52"
+      "context": "pages/login.html:102:33-59, pages/upstream_oauth2/do_register.html:191:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -99,7 +99,7 @@
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
+      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
     }
   },
   "error": {
@@ -419,11 +419,11 @@
     "login": {
       "call_to_register": "Don't have an account yet?",
       "@call_to_register": {
-        "context": "pages/login.html:90:13-44"
+        "context": "pages/login.html:98:13-44"
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:81:15-67, pages/register/index.html:53:15-67",
+        "context": "pages/login.html:89:15-67, pages/register/index.html:53:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -451,11 +451,15 @@
       },
       "no_login_methods": "No login methods available.",
       "@no_login_methods": {
-        "context": "pages/login.html:100:11-42"
+        "context": "pages/login.html:108:11-42"
       },
       "username_or_email": "Username or Email",
       "@username_or_email": {
-        "context": "pages/login.html:46:37-69"
+        "context": "pages/login.html:47:39-71"
+      },
+      "with_passkey": "Sign in with a Passkey",
+      "@with_passkey": {
+        "context": "pages/login.html:76:28-55"
       }
     },
     "navbar": {
