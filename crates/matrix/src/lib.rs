@@ -5,12 +5,15 @@
 // Please see LICENSE in the repository root for full details.
 
 mod mock;
+mod readonly;
 
 use std::{collections::HashSet, sync::Arc};
 
 use ruma_common::UserId;
 
-pub use self::mock::HomeserverConnection as MockHomeserverConnection;
+pub use self::{
+    mock::HomeserverConnection as MockHomeserverConnection, readonly::ReadOnlyHomeserverConnection,
+};
 
 #[derive(Debug)]
 pub struct MatrixUser {

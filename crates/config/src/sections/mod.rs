@@ -37,7 +37,7 @@ pub use self::{
         BindConfig as HttpBindConfig, HttpConfig, ListenerConfig as HttpListenerConfig,
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
     },
-    matrix::MatrixConfig,
+    matrix::{HomeserverKind, MatrixConfig},
     passwords::{Algorithm as PasswordAlgorithm, PasswordsConfig},
     policy::PolicyConfig,
     rate_limiting::RateLimitingConfig,
