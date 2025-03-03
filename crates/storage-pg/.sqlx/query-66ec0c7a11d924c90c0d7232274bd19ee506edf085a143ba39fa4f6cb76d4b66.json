@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_passkeys\n                SET last_used_at = $2, data = $3\n                WHERE user_passkey_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66ec0c7a11d924c90c0d7232274bd19ee506edf085a143ba39fa4f6cb76d4b66"
+}
