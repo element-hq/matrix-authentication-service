@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_storage::{
     BoxRng,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
@@ -135,7 +137,7 @@ pub async fn handler(
         mut repo, clock, ..
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<User>>), RouteError> {
     if repo.user().exists(&params.username).await? {

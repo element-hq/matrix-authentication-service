@@ -17,7 +17,7 @@ pub trait State {
     async fn repository(&self) -> Result<BoxRepository, RepositoryError>;
     async fn policy(&self) -> Result<Policy, mas_policy::InstantiateError>;
     fn password_manager(&self) -> PasswordManager;
-    fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error>;
+    fn homeserver_connection(&self) -> &dyn HomeserverConnection;
     fn clock(&self) -> BoxClock;
     fn rng(&self) -> BoxRng;
     fn site_config(&self) -> &SiteConfig;

@@ -12,10 +12,6 @@ use ruma_common::UserId;
 
 pub use self::mock::HomeserverConnection as MockHomeserverConnection;
 
-// TODO: this should probably be another error type by default
-pub type BoxHomeserverConnection<Error = anyhow::Error> =
-    Box<dyn HomeserverConnection<Error = Error>>;
-
 #[derive(Debug)]
 pub struct MatrixUser {
     pub displayname: Option<String>,
@@ -180,9 +176,6 @@ impl ProvisionRequest {
 
 #[async_trait::async_trait]
 pub trait HomeserverConnection: Send + Sync {
-    /// The error type returned by all methods.
-    type Error;
-
     /// Get the homeserver URL.
     fn homeserver(&self) -> &str;
 
@@ -221,7 +214,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the user does not
     /// exist.
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error>;
+    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error>;
 
     /// Provision a user on the homeserver.
     ///
@@ -234,7 +227,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the user could not
     /// be provisioned.
-    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, Self::Error>;
+    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error>;
 
     /// Check whether a given username is available on the homeserver.
     ///
@@ -245,7 +238,7 @@ pub trait HomeserverConnection: Send + Sync {
     /// # Errors
     ///
     /// Returns an error if the homeserver is unreachable.
-    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error>;
+    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error>;
 
     /// Create a device for a user on the homeserver.
     ///
@@ -258,7 +251,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the device could
     /// not be created.
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error>;
+    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error>;
 
     /// Delete a device for a user on the homeserver.
     ///
@@ -271,7 +264,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the device could
     /// not be deleted.
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error>;
+    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error>;
 
     /// Sync the list of devices of a user with the homeserver.
     ///
@@ -284,7 +277,8 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the devices could
     /// not be synced.
-    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error>;
+    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>)
+    -> Result<(), anyhow::Error>;
 
     /// Delete a user on the homeserver.
     ///
@@ -297,7 +291,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the user could not
     /// be deleted.
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error>;
+    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error>;
 
     /// Reactivate a user on the homeserver.
     ///
@@ -309,7 +303,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the user could not
     /// be reactivated.
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), Self::Error>;
+    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error>;
 
     /// Set the displayname of a user on the homeserver.
     ///
@@ -322,7 +316,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the displayname
     /// could not be set.
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error>;
+    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error>;
 
     /// Unset the displayname of a user on the homeserver.
     ///
@@ -334,7 +328,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the displayname
     /// could not be unset.
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), Self::Error>;
+    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error>;
 
     /// Temporarily allow a user to reset their cross-signing keys.
     ///
@@ -346,58 +340,60 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the cross-signing
     /// reset could not be allowed.
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error>;
+    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error>;
 }
 
 #[async_trait::async_trait]
 impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T {
-    type Error = T::Error;
-
     fn homeserver(&self) -> &str {
         (**self).homeserver()
     }
 
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error> {
+    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
         (**self).query_user(mxid).await
     }
 
-    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, Self::Error> {
+    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         (**self).provision_user(request).await
     }
 
-    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error> {
+    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         (**self).create_device(mxid, device_id).await
     }
 
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         (**self).delete_device(mxid, device_id).await
     }
 
-    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error> {
+    async fn sync_devices(
+        &self,
+        mxid: &str,
+        devices: HashSet<String>,
+    ) -> Result<(), anyhow::Error> {
         (**self).sync_devices(mxid, devices).await
     }
 
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error> {
+    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
         (**self).delete_user(mxid, erase).await
     }
 
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).reactivate_user(mxid).await
     }
 
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error> {
+    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
         (**self).set_displayname(mxid, displayname).await
     }
 
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).unset_displayname(mxid).await
     }
 
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).allow_cross_signing_reset(mxid).await
     }
 }
@@ -405,53 +401,55 @@ impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T
 // Implement for Arc<T> where T: HomeserverConnection
 #[async_trait::async_trait]
 impl<T: HomeserverConnection + ?Sized> HomeserverConnection for Arc<T> {
-    type Error = T::Error;
-
     fn homeserver(&self) -> &str {
         (**self).homeserver()
     }
 
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error> {
+    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
         (**self).query_user(mxid).await
     }
 
-    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, Self::Error> {
+    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         (**self).provision_user(request).await
     }
 
-    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error> {
+    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         (**self).create_device(mxid, device_id).await
     }
 
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         (**self).delete_device(mxid, device_id).await
     }
 
-    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error> {
+    async fn sync_devices(
+        &self,
+        mxid: &str,
+        devices: HashSet<String>,
+    ) -> Result<(), anyhow::Error> {
         (**self).sync_devices(mxid, devices).await
     }
 
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error> {
+    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
         (**self).delete_user(mxid, erase).await
     }
 
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).reactivate_user(mxid).await
     }
 
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error> {
+    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
         (**self).set_displayname(mxid, displayname).await
     }
 
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).unset_displayname(mxid).await
     }
 
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
         (**self).allow_cross_signing_reset(mxid).await
     }
 }

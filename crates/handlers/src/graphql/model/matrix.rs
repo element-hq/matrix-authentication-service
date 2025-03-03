@@ -26,7 +26,7 @@ impl MatrixUser {
     pub(crate) async fn load<C: HomeserverConnection + ?Sized>(
         conn: &C,
         user: &str,
-    ) -> Result<MatrixUser, C::Error> {
+    ) -> Result<MatrixUser, anyhow::Error> {
         let mxid = conn.mxid(user);
 
         let info = conn.query_user(&mxid).await?;

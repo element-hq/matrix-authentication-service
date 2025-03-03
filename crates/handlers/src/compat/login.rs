@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
     Json,
     extract::{State, rejection::JsonRejection},
@@ -16,7 +18,7 @@ use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::{
     CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User, UserAgent,
 };
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     compat::{
@@ -268,7 +270,7 @@ pub(crate) async fn post(
     State(password_manager): State<PasswordManager>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(limiter): State<Limiter>,
     requester: RequesterFingerprint,
@@ -441,7 +443,7 @@ async fn user_password_login(
     limiter: &Limiter,
     requester: RequesterFingerprint,
     repo: &mut BoxRepository,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
     username: String,
     password: String,
 ) -> Result<(CompatSession, User), RouteError> {
