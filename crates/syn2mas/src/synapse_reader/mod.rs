@@ -73,7 +73,7 @@ impl FullUserId {
             return Err(ExtractLocalpartError::NoAtSigil);
         };
 
-        let Some((localpart, server_name)) = without_sigil.rsplit_once(':') else {
+        let Some((localpart, server_name)) = without_sigil.split_once(':') else {
             return Err(ExtractLocalpartError::NoSeparator);
         };
 
