@@ -292,7 +292,7 @@ impl Options {
                     .context("User not found")?;
 
                 let device = if let Some(device_id) = device_id {
-                    device_id.try_into()?
+                    device_id.into()
                 } else {
                     Device::generate(&mut rng)
                 };

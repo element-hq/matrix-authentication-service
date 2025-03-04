@@ -786,6 +786,9 @@ pub struct IntrospectionResponse {
 
     /// String identifier for the token.
     pub jti: Option<String>,
+
+    /// MAS extension: explicit device ID
+    pub device_id: Option<String>,
 }
 
 /// A request to the [Revocation Endpoint].

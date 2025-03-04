@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{Json, extract::State, response::IntoResponse};
-use hyper::StatusCode;
+use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
+use hyper::{HeaderMap, StatusCode};
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     sentry::SentryEventID,
@@ -74,6 +74,10 @@ pub enum RouteError {
     #[error("unknown compat session")]
     CantLoadCompatSession,
 
+    /// The Device ID in the compat session can't be encoded as a scope
+    #[error("device ID contains characters that are not allowed in a scope")]
+    CantEncodeDeviceID(#[from] mas_data_model::ToScopeTokenError),
+
     #[error("invalid user")]
     InvalidUser,
 
@@ -120,7 +124,8 @@ impl IntoResponse for RouteError {
             | Self::InvalidUser
             | Self::InvalidCompatSession
             | Self::InvalidOAuthSession
-            | Self::InvalidTokenFormat(_) => Json(INACTIVE).into_response(),
+            | Self::InvalidTokenFormat(_)
+            | Self::CantEncodeDeviceID(_) => Json(INACTIVE).into_response(),
             Self::NotAllowed => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::AccessDenied)),
@@ -152,6 +157,7 @@ const INACTIVE: IntrospectionResponse = IntrospectionResponse {
     aud: None,
     iss: None,
     jti: None,
+    device_id: None,
 };
 
 const API_SCOPE: ScopeToken = ScopeToken::from_static("urn:matrix:org.matrix.msc2967.client:api:*");
@@ -170,6 +176,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     activity_tracker: ActivityTracker,
     State(encrypter): State<Encrypter>,
+    headers: HeaderMap,
     client_authorization: ClientAuthorization<IntrospectionRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
     let client = client_authorization
@@ -201,6 +208,16 @@ pub(crate) async fn post(
             return Err(RouteError::UnexpectedTokenType);
         }
     }
+
+    // Not all device IDs can be encoded as scope. On OAuth 2.0 sessions, we
+    // don't have this problem, as the device ID *is* already encoded as a scope.
+    // But on compatibility sessions, it's possible to have device IDs with
+    // spaces in them, or other weird characters.
+    // In those cases, we prefer explicitly giving out the device ID as a separate
+    // field. The client introspecting tells us whether it supports having the
+    // device ID as a separate field through this header.
+    let supports_explicit_device_id =
+        headers.get("X-MAS-Supports-Device-Id") == Some(&HeaderValue::from_static("1"));
 
     // XXX: we should get the IP from the client introspecting the token
     let ip = None;
@@ -270,6 +287,7 @@ pub(crate) async fn post(
                 aud: None,
                 iss: None,
                 jti: Some(access_token.jti()),
+                device_id: None,
             }
         }
 
@@ -329,6 +347,7 @@ pub(crate) async fn post(
                 aud: None,
                 iss: None,
                 jti: Some(refresh_token.jti()),
+                device_id: None,
             }
         }
 
@@ -365,7 +384,19 @@ pub(crate) async fn post(
 
             // Grant the synapse admin scope if the session has the admin flag set.
             let synapse_admin_scope_opt = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
-            let device_scope_opt = session.device.as_ref().map(Device::to_scope_token);
+
+            // If the client supports explicitly giving the device ID in the response, skip
+            // encoding it in the scope
+            let device_scope_opt = if supports_explicit_device_id {
+                None
+            } else {
+                session
+                    .device
+                    .as_ref()
+                    .map(Device::to_scope_token)
+                    .transpose()?
+            };
+
             let scope = [API_SCOPE]
                 .into_iter()
                 .chain(device_scope_opt)
@@ -389,6 +420,7 @@ pub(crate) async fn post(
                 aud: None,
                 iss: None,
                 jti: None,
+                device_id: session.device.map(Device::into),
             }
         }
 
@@ -425,7 +457,19 @@ pub(crate) async fn post(
 
             // Grant the synapse admin scope if the session has the admin flag set.
             let synapse_admin_scope_opt = session.is_synapse_admin.then_some(SYNAPSE_ADMIN_SCOPE);
-            let device_scope_opt = session.device.as_ref().map(Device::to_scope_token);
+
+            // If the client supports explicitly giving the device ID in the response, skip
+            // encoding it in the scope
+            let device_scope_opt = if supports_explicit_device_id {
+                None
+            } else {
+                session
+                    .device
+                    .as_ref()
+                    .map(Device::to_scope_token)
+                    .transpose()?
+            };
+
             let scope = [API_SCOPE]
                 .into_iter()
                 .chain(device_scope_opt)
@@ -449,6 +493,7 @@ pub(crate) async fn post(
                 aud: None,
                 iss: None,
                 jti: None,
+                device_id: session.device.map(Device::into),
             }
         }
     };
@@ -777,10 +822,30 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let response: IntrospectionResponse = response.json();
         assert!(response.active);
-        assert_eq!(response.username, Some("alice".to_owned()));
-        assert_eq!(response.client_id, Some("legacy".to_owned()));
+        assert_eq!(response.username.as_deref(), Some("alice"));
+        assert_eq!(response.client_id.as_deref(), Some("legacy"));
         assert_eq!(response.token_type, Some(OAuthTokenTypeHint::AccessToken));
-        assert_eq!(response.scope, Some(expected_scope.clone()));
+        assert_eq!(response.scope.as_ref(), Some(&expected_scope));
+        assert_eq!(response.device_id.as_deref(), Some(device_id));
+
+        // Check that requesting with X-MAS-Supports-Device-Id removes the device ID
+        // from the scope but not from the explicit device_id field
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .header("X-MAS-Supports-Device-Id", "1")
+            .form(json!({ "token": access_token }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(response.active);
+        assert_eq!(response.username.as_deref(), Some("alice"));
+        assert_eq!(response.client_id.as_deref(), Some("legacy"));
+        assert_eq!(response.token_type, Some(OAuthTokenTypeHint::AccessToken));
+        assert_eq!(
+            response.scope.map(|s| s.to_string()),
+            Some("urn:matrix:org.matrix.msc2967.client:api:*".to_owned())
+        );
+        assert_eq!(response.device_id.as_deref(), Some(device_id));
 
         // Do the same request, but with a token_type_hint
         let request = Request::post(OAuth2Introspection::PATH)
@@ -808,10 +873,11 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let response: IntrospectionResponse = response.json();
         assert!(response.active);
-        assert_eq!(response.username, Some("alice".to_owned()));
-        assert_eq!(response.client_id, Some("legacy".to_owned()));
+        assert_eq!(response.username.as_deref(), Some("alice"));
+        assert_eq!(response.client_id.as_deref(), Some("legacy"));
         assert_eq!(response.token_type, Some(OAuthTokenTypeHint::RefreshToken));
-        assert_eq!(response.scope, Some(expected_scope.clone()));
+        assert_eq!(response.scope.as_ref(), Some(&expected_scope));
+        assert_eq!(response.device_id.as_deref(), Some(device_id));
 
         // Do the same request, but with a token_type_hint
         let request = Request::post(OAuth2Introspection::PATH)
