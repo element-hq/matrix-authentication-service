@@ -35,7 +35,7 @@ jobs:
 
       - name: Extract the current version
         id: current
-        run: echo "version=$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "mas-cli") | .version')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')" >> "$GITHUB_OUTPUT"
 
       - name: Compute the new minor RC
         id: next

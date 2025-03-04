@@ -11,21 +11,21 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_router::UrlBuilder;
 use mas_storage::{
-    user::{BrowserSessionRepository, UserPasswordRepository},
     BoxClock, BoxRepository, BoxRng,
+    user::{BrowserSessionRepository, UserPasswordRepository},
 };
 use mas_templates::{ReauthContext, TemplateContext, Templates};
 use serde::Deserialize;
 use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
-use crate::{passwords::PasswordManager, BoundActivityTracker, PreferredLanguage, SiteConfig};
+use crate::{BoundActivityTracker, PreferredLanguage, SiteConfig, passwords::PasswordManager};
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct ReauthForm {

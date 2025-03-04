@@ -9,7 +9,7 @@ use mas_data_model::User;
 use rand_core::RngCore;
 use url::Url;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`UserTermsRepository`] helps interacting with the terms of service agreed
 /// by a [`User`]

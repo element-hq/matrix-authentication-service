@@ -4,13 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, NoApi, OperationIo};
-use axum::{extract::State, response::IntoResponse, Json};
+use std::sync::Arc;
+
+use aide::{NoApi, OperationIo, transform::TransformOperation};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     BoxRng,
+    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -135,7 +137,7 @@ pub async fn handler(
         mut repo, clock, ..
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<User>>), RouteError> {
     if repo.user().exists(&params.username).await? {
@@ -179,10 +181,10 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
-    use mas_storage::{user::UserRepository, RepositoryAccess};
+    use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_add_user(pool: PgPool) {

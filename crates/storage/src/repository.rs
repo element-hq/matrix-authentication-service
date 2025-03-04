@@ -123,11 +123,11 @@ pub trait RepositoryAccess: Send {
 
     /// Get an [`UserPasswordRepository`]
     fn user_password<'c>(&'c mut self)
-        -> Box<dyn UserPasswordRepository<Error = Self::Error> + 'c>;
+    -> Box<dyn UserPasswordRepository<Error = Self::Error> + 'c>;
 
     /// Get an [`UserRecoveryRepository`]
     fn user_recovery<'c>(&'c mut self)
-        -> Box<dyn UserRecoveryRepository<Error = Self::Error> + 'c>;
+    -> Box<dyn UserRecoveryRepository<Error = Self::Error> + 'c>;
 
     /// Get an [`UserRegistrationRepository`]
     fn user_registration<'c>(
@@ -147,7 +147,7 @@ pub trait RepositoryAccess: Send {
 
     /// Get an [`OAuth2ClientRepository`]
     fn oauth2_client<'c>(&'c mut self)
-        -> Box<dyn OAuth2ClientRepository<Error = Self::Error> + 'c>;
+    -> Box<dyn OAuth2ClientRepository<Error = Self::Error> + 'c>;
 
     /// Get an [`OAuth2AuthorizationGrantRepository`]
     fn oauth2_authorization_grant<'c>(
@@ -209,10 +209,11 @@ pub trait RepositoryAccess: Send {
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
 /// [`Repository`] for the [`crate::MapErr`] wrapper and [`Box<R>`]
 mod impls {
-    use futures_util::{future::BoxFuture, FutureExt, TryFutureExt};
+    use futures_util::{FutureExt, TryFutureExt, future::BoxFuture};
 
     use super::RepositoryAccess;
     use crate::{
+        MapErr, Repository, RepositoryTransaction,
         app_session::AppSessionRepository,
         compat::{
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
@@ -232,7 +233,6 @@ mod impls {
             BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
             UserRegistrationRepository, UserRepository, UserTermsRepository,
         },
-        MapErr, Repository, RepositoryTransaction,
     };
 
     // --- Repository ---

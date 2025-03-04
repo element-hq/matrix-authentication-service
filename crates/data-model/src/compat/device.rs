@@ -6,8 +6,8 @@
 
 use oauth2_types::scope::ScopeToken;
 use rand::{
-    distributions::{Alphanumeric, DistString},
     RngCore,
+    distributions::{Alphanumeric, DistString},
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

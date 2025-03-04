@@ -91,6 +91,7 @@ export const handlers = [
           __typename: "BrowserSession",
           id: "browser-session-id",
           user: {
+            hasPassword: true,
             emails: {
               totalCount: 1,
             },

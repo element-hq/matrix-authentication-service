@@ -4,29 +4,31 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
+    Form,
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
     sentry::SentryEventID,
-    FancyError, SessionInfoExt,
 };
 use mas_data_model::{User, UserAgent};
 use mas_jose::jwt::Jwt;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository},
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{
     ErrorContext, FieldError, FormError, TemplateContext, Templates, ToFormState,
@@ -39,12 +41,12 @@ use tracing::warn;
 use ulid::Ulid;
 
 use super::{
-    template::{environment, AttributeMappingContext},
     UpstreamSessionsCookie,
+    template::{AttributeMappingContext, environment},
 };
 use crate::{
-    impl_from_error_for_route, views::shared::OptionalPostAuthAction, BoundActivityTracker,
-    PreferredLanguage, SiteConfig,
+    BoundActivityTracker, PreferredLanguage, SiteConfig, impl_from_error_for_route,
+    views::shared::OptionalPostAuthAction,
 };
 
 const DEFAULT_LOCALPART_TEMPLATE: &str = "{{ user.preferred_username }}";
@@ -74,7 +76,9 @@ pub(crate) enum RouteError {
     RequiredAttributeEmpty { template: String },
 
     /// Required claim was missing in `id_token`
-    #[error("Template {template:?} could not be rendered from the upstream provider's response for required claim")]
+    #[error(
+        "Template {template:?} could not be rendered from the upstream provider's response for required claim"
+    )]
     RequiredAttributeRender {
         template: String,
 
@@ -198,7 +202,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     cookie_jar: CookieJar,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -510,7 +514,7 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     activity_tracker: BoundActivityTracker,
     State(templates): State<Templates>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
     Path(link_id): Path<Ulid>,
@@ -864,7 +868,7 @@ pub(crate) async fn post(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{header::CONTENT_TYPE, Request, StatusCode};
+    use hyper::{Request, StatusCode, header::CONTENT_TYPE};
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderImportPreference,
         UpstreamOAuthProviderTokenAuthMethod,
@@ -873,13 +877,13 @@ mod tests {
     use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
     use mas_router::Route;
     use mas_storage::{
-        upstream_oauth2::UpstreamOAuthProviderParams, user::UserEmailFilter, Pagination,
+        Pagination, upstream_oauth2::UpstreamOAuthProviderParams, user::UserEmailFilter,
     };
-    use oauth2_types::scope::{Scope, OPENID};
+    use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
 
     use super::UpstreamSessionsCookie;
-    use crate::test_utils::{setup, CookieHelper, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register(pool: PgPool) {

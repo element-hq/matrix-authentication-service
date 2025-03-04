@@ -12,7 +12,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{query, Acquire, FromRow, PgConnection, Postgres, Transaction, Type};
+use sqlx::{Acquire, FromRow, PgConnection, Postgres, Transaction, Type, query};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -192,6 +192,8 @@ pub struct SynapseUser {
     /// account!
     pub is_guest: SynapseBool,
     // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
+    /// The ID of the appservice that created this user, if any.
+    pub appservice_id: Option<String>,
 }
 
 /// Row of the `user_threepids` table in Synapse.
@@ -369,9 +371,8 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              name, password_hash, admin, deactivated, creation_ts, is_guest
+              name, password_hash, admin, deactivated, creation_ts, is_guest, appservice_id
             FROM users
-            WHERE appservice_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)
@@ -416,7 +417,7 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               user_id, device_id, display_name, last_seen, ip, user_agent
             FROM devices
-            WHERE NOT hidden
+            WHERE NOT hidden AND device_id != 'guest_device'
             ",
         )
         .fetch(&mut *self.txn)
@@ -474,14 +475,14 @@ mod test {
 
     use futures_util::TryStreamExt;
     use insta::assert_debug_snapshot;
-    use sqlx::{migrate::Migrator, PgPool};
+    use sqlx::{PgPool, migrate::Migrator};
 
     use crate::{
+        SynapseReader,
         synapse_reader::{
             SynapseAccessToken, SynapseDevice, SynapseExternalId, SynapseRefreshableTokenPair,
             SynapseThreepid, SynapseUser,
         },
-        SynapseReader,
     };
 
     // TODO test me

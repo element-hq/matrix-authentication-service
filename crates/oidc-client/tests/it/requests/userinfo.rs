@@ -7,11 +7,11 @@
 use mas_oidc_client::requests::userinfo::fetch_userinfo;
 use serde_json::json;
 use wiremock::{
-    matchers::{header, method, path},
     Mock, ResponseTemplate,
+    matchers::{header, method, path},
 };
 
-use crate::{init_test, ACCESS_TOKEN, SUBJECT_IDENTIFIER};
+use crate::{ACCESS_TOKEN, SUBJECT_IDENTIFIER, init_test};
 
 #[tokio::test]
 async fn pass_fetch_userinfo() {

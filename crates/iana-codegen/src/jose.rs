@@ -7,8 +7,8 @@
 use serde::Deserialize;
 
 use crate::{
-    traits::{s, Section},
     EnumEntry,
+    traits::{Section, s},
 };
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]

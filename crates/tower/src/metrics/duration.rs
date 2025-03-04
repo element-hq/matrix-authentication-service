@@ -4,13 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{future::Future, time::Instant};
+use std::time::Instant;
 
-use opentelemetry::{metrics::Histogram, KeyValue};
+use opentelemetry::{KeyValue, metrics::Histogram};
 use pin_project_lite::pin_project;
 use tower::{Layer, Service};
 
-use crate::{utils::FnWrapper, MetricsAttributes, METER};
+use crate::{METER, MetricsAttributes, utils::FnWrapper};
 
 /// A [`Layer`] that records the duration of requests in milliseconds.
 #[derive(Clone, Debug)]

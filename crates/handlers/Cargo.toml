@@ -75,14 +75,14 @@ elliptic-curve.workspace = true
 governor.workspace = true
 indexmap = "2.7.1"
 pkcs8.workspace = true
-psl = "2.1.85"
+psl = "2.1.86"
 time = "0.3.37"
 url.workspace = true
 mime = "0.3.17"
 minijinja.workspace = true
 minijinja-contrib.workspace = true
 rand.workspace = true
-rand_chacha = "0.3.1"
+rand_chacha.workspace = true
 headers.workspace = true
 ulid.workspace = true
 

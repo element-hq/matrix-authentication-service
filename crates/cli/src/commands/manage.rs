@@ -8,8 +8,8 @@ use std::{collections::BTreeMap, process::ExitCode};
 
 use anyhow::Context;
 use clap::{ArgAction, CommandFactory, Parser};
-use console::{pad_str, style, Alignment, Style, Term};
-use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect, Input, Password};
+use console::{Alignment, Style, Term, pad_str, style};
+use dialoguer::{Confirm, FuzzySelect, Input, Password, theme::ColorfulTheme};
 use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PasswordsConfig,
@@ -17,8 +17,8 @@ use mas_config::{
 use mas_data_model::{Device, TokenType, Ulid, UpstreamOAuthProvider, User};
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
-use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
+    Clock, RepositoryAccess, SystemClock,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
     queue::{
@@ -26,14 +26,16 @@ use mas_storage::{
         SyncDevicesJob,
     },
     user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
-    Clock, RepositoryAccess, SystemClock,
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{RngCore, SeedableRng};
-use sqlx::{types::Uuid, Acquire};
+use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
 
-use crate::util::{database_connection_from_config, password_manager_from_config};
+use crate::util::{
+    database_connection_from_config, homeserver_connection_from_config,
+    password_manager_from_config,
+};
 
 const USER_ATTRIBUTES_HEADING: &str = "User attributes";
 
@@ -266,7 +268,9 @@ impl Options {
                 )
                 .entered();
 
-                tracing::warn!("The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead.");
+                tracing::warn!(
+                    "The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead."
+                );
 
                 Ok(ExitCode::SUCCESS)
             }
@@ -489,12 +493,7 @@ impl Options {
                 let matrix_config = MatrixConfig::extract(figment)?;
 
                 let password_manager = password_manager_from_config(&password_config).await?;
-                let homeserver = SynapseConnection::new(
-                    matrix_config.homeserver,
-                    matrix_config.endpoint,
-                    matrix_config.secret,
-                    http_client,
-                );
+                let homeserver = homeserver_connection_from_config(&matrix_config, http_client);
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -744,7 +743,7 @@ impl std::fmt::Display for HumanReadable<&UpstreamOAuthProvider> {
 async fn check_and_normalize_username<'a>(
     localpart_or_mxid: &'a str,
     repo: &mut dyn RepositoryAccess<Error = DatabaseError>,
-    homeserver: &SynapseConnection,
+    homeserver: &dyn HomeserverConnection,
 ) -> anyhow::Result<&'a str> {
     // XXX: this is a very basic MXID to localpart conversion
     // Strip any leading '@'
@@ -826,7 +825,7 @@ impl UserCreationRequest<'_> {
     }
 
     /// Show the user creation request in a human-readable format
-    fn show(&self, term: &Term, homeserver: &SynapseConnection) -> std::io::Result<()> {
+    fn show(&self, term: &Term, homeserver: &dyn HomeserverConnection) -> std::io::Result<()> {
         let value_style = Style::new().green();
         let key_style = Style::new().bold();
         let warning_style = Style::new().italic().red().bright();

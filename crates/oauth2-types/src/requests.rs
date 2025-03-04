@@ -15,8 +15,8 @@ use language_tags::LanguageTag;
 use mas_iana::oauth::{OAuthAccessTokenType, OAuthTokenTypeHint};
 use serde::{Deserialize, Serialize};
 use serde_with::{
-    formats::SpaceSeparator, serde_as, skip_serializing_none, DeserializeFromStr, DisplayFromStr,
-    DurationSeconds, SerializeDisplay, StringWithSeparator, TimestampSeconds,
+    DeserializeFromStr, DisplayFromStr, DurationSeconds, SerializeDisplay, StringWithSeparator,
+    TimestampSeconds, formats::SpaceSeparator, serde_as, skip_serializing_none,
 };
 use url::Url;
 

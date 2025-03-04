@@ -15,20 +15,19 @@ use mas_config::{
 };
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
-use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use sqlx::migrate::Migrate;
-use tracing::{info, info_span, warn, Instrument};
+use tracing::{Instrument, info, info_span, warn};
 
 use crate::{
     app_state::AppState,
     lifecycle::LifecycleManager,
     util::{
-        database_pool_from_config, mailer_from_config, password_manager_from_config,
-        policy_factory_from_config, site_config_from_config, templates_from_config,
-        test_mailer_in_background,
+        database_pool_from_config, homeserver_connection_from_config, mailer_from_config,
+        password_manager_from_config, policy_factory_from_config, site_config_from_config,
+        templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -63,7 +62,9 @@ impl Options {
         info!(version = crate::VERSION, "Starting up");
 
         if self.migrate {
-            warn!("The `--migrate` flag is deprecated and will be removed in a future release. Please use `--no-migrate` to disable automatic migrations on startup.");
+            warn!(
+                "The `--migrate` flag is deprecated and will be removed in a future release. Please use `--no-migrate` to disable automatic migrations on startup."
+            );
         }
 
         // Connect to the database
@@ -78,7 +79,9 @@ impl Options {
             let has_missing_migrations = MIGRATOR.iter().any(|m| !applied.contains(&m.version));
             if has_missing_migrations {
                 // Refuse to start if there are pending migrations
-                return Err(anyhow::anyhow!("The server is running with `--no-migrate` but there are pending. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."));
+                return Err(anyhow::anyhow!(
+                    "The server is running with `--no-migrate` but there are pending. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."
+                ));
             }
         } else {
             info!("Running pending database migrations");
@@ -149,12 +152,8 @@ impl Options {
 
         let http_client = mas_http::reqwest_client();
 
-        let homeserver_connection = SynapseConnection::new(
-            config.matrix.homeserver.clone(),
-            config.matrix.endpoint.clone(),
-            config.matrix.secret.clone(),
-            http_client.clone(),
-        );
+        let homeserver_connection =
+            homeserver_connection_from_config(&config.matrix, http_client.clone());
 
         if !self.no_worker {
             let mailer = mailer_from_config(&config.email, &templates)?;

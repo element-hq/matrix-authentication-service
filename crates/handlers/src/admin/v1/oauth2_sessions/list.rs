@@ -6,15 +6,15 @@
 
 use std::str::FromStr;
 
-use aide::{transform::TransformOperation, OperationIo};
+use aide::{OperationIo, transform::TransformOperation};
 use axum::{
-    extract::{rejection::QueryRejection, Query},
-    response::IntoResponse,
     Json,
+    extract::{Query, rejection::QueryRejection},
+    response::IntoResponse,
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
-use mas_storage::{oauth2::OAuth2SessionFilter, Page};
+use mas_storage::{Page, oauth2::OAuth2SessionFilter};
 use oauth2_types::scope::{Scope, ScopeToken};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -314,7 +314,7 @@ mod tests {
     use hyper::{Request, StatusCode};
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_oauth2_simple_session_list(pool: PgPool) {

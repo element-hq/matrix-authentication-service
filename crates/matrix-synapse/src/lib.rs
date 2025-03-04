@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use error::SynapseResponseExt;
 use http::{Method, StatusCode};
 use mas_http::RequestBuilderExt as _;
@@ -157,8 +157,6 @@ struct UsernameAvailableResponse {
 
 #[async_trait::async_trait]
 impl HomeserverConnection for SynapseConnection {
-    type Error = anyhow::Error;
-
     fn homeserver(&self) -> &str {
         &self.homeserver
     }
@@ -172,7 +170,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error> {
+    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
 
         let response = self
@@ -207,7 +205,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error> {
+    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
         let localpart = urlencoding::encode(localpart);
 
         let response = self
@@ -252,7 +250,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, Self::Error> {
+    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         let mut body = SynapseUser {
             external_ids: Some(vec![ExternalID {
                 auth_provider: SYNAPSE_AUTH_PROVIDER.to_owned(),
@@ -311,7 +309,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
 
         let response = self
@@ -348,7 +346,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
         let device_id = urlencoding::encode(device_id);
 
@@ -384,7 +382,11 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error> {
+    async fn sync_devices(
+        &self,
+        mxid: &str,
+        devices: HashSet<String>,
+    ) -> Result<(), anyhow::Error> {
         // Get the list of current devices
         let mxid_url = urlencoding::encode(mxid);
 
@@ -454,7 +456,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error> {
+    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
 
         let response = self
@@ -521,7 +523,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error> {
+    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
         let response = self
             .put(&format!("_matrix/client/v3/profile/{mxid}/displayname"))
@@ -554,7 +556,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Display),
     )]
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
         self.set_displayname(mxid, "").await
     }
 
@@ -567,7 +569,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
         let mxid = urlencoding::encode(mxid);
 
         let response = self

@@ -6,7 +6,7 @@
 
 use tokio::io::AsyncRead;
 
-use super::{acceptor::ProxyAcceptError, ProxyAcceptor, ProxyProtocolV1Info};
+use super::{ProxyAcceptor, ProxyProtocolV1Info, acceptor::ProxyAcceptError};
 use crate::rewind::Rewind;
 
 #[derive(Clone, Copy)]

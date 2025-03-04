@@ -2,9 +2,9 @@ name: Coverage
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,17 +26,14 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.70.0
+      - uses: ./.github/actions/build-policies
 
       - name: Run OPA tests with coverage
         working-directory: ./policies
         run: make coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: policies/coverage.json
@@ -63,7 +60,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: frontend/coverage/
@@ -119,10 +116,10 @@ jobs:
         run: |
           cargo test --no-fail-fast --workspace
         env:
-          RUSTFLAGS: '-Cinstrument-coverage'
+          RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "cargo-test-%p-%m.profraw"
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
-          SQLX_OFFLINE: '1'
+          SQLX_OFFLINE: "1"
 
       - name: Build grcov report
         run: |
@@ -130,7 +127,7 @@ jobs:
           grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/coverage/*.lcov

@@ -5,14 +5,14 @@
 
 use anyhow::Context as _;
 use axum::{
+    Form,
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
-    Form,
 };
 use mas_axum_utils::{
+    FancyError,
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
-    FancyError,
 };
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
@@ -23,7 +23,7 @@ use mas_templates::{
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::{views::shared::OptionalPostAuthAction, PreferredLanguage};
+use crate::{PreferredLanguage, views::shared::OptionalPostAuthAction};
 
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "snake_case")]

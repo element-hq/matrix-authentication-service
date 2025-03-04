@@ -6,8 +6,8 @@
 
 pub use minijinja::machinery::parse;
 use minijinja::{
-    machinery::ast::{Call, CallArg, Const, Expr, Macro, Spanned, Stmt},
     ErrorKind,
+    machinery::ast::{Call, CallArg, Const, Expr, Macro, Spanned, Stmt},
 };
 
 use crate::key::{Context, Key};

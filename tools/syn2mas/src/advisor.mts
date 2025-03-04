@@ -192,10 +192,6 @@ export async function advisor(): Promise<void> {
     warn(
       "Synapse has a non-standard password auth enabled which won't work after migration and will need to be manually mapped to an upstream OpenID Provider during migration",
     );
-  } else if (synapseConfig.password_config?.enabled !== false) {
-    warn(
-      "Synapse has password auth enabled, but support for password auth in MAS is not feature complete",
-    );
   }
 
   const externalIdAuthProviders = (await synapse
@@ -213,8 +209,8 @@ export async function advisor(): Promise<void> {
     synapse.count("*").from<SUser>("users").whereNotNull("password_hash"),
   );
   if (usersWithPassword > 0) {
-    warn(
-      `Synapse database contains ${usersWithPassword} users with a password which will be migrated. However, support for password auth in MAS is not feature complete`,
+    log.info(
+      `Synapse database contains ${usersWithPassword} users with a password which will be migrated.`,
     );
   }
 

@@ -10,12 +10,12 @@ use std::{ffi::OsString, num::NonZeroU16, sync::Arc};
 
 use async_trait::async_trait;
 use lettre::{
+    AsyncTransport, Tokio1Executor,
     address::Envelope,
     transport::{
         sendmail::AsyncSendmailTransport,
-        smtp::{authentication::Credentials, AsyncSmtpTransport},
+        smtp::{AsyncSmtpTransport, authentication::Credentials},
     },
-    AsyncTransport, Tokio1Executor,
 };
 use thiserror::Error;
 

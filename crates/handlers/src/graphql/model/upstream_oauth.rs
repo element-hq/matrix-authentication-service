@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use anyhow::Context as _;
-use async_graphql::{Context, Object, ID};
+use async_graphql::{Context, ID, Object};
 use chrono::{DateTime, Utc};
 use mas_storage::{upstream_oauth2::UpstreamOAuthProviderRepository, user::UserRepository};
 use url::Url;

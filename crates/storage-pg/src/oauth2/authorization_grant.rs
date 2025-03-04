@@ -12,7 +12,7 @@ use mas_data_model::{
     AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Pkce, Session,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
-use mas_storage::{oauth2::OAuth2AuthorizationGrantRepository, Clock};
+use mas_storage::{Clock, oauth2::OAuth2AuthorizationGrantRepository};
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -20,7 +20,7 @@ use ulid::Ulid;
 use url::Url;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError, DatabaseInconsistencyError};
+use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
 
 /// An implementation of [`OAuth2AuthorizationGrantRepository`] for a PostgreSQL
 /// connection

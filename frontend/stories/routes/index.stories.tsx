@@ -34,11 +34,13 @@ const userProfileHandler = ({
   passwordLoginEnabled,
   passwordChangeAllowed,
   emailTotalCount,
+  hasPassword,
 }: {
   emailChangeAllowed: boolean;
   passwordLoginEnabled: boolean;
   passwordChangeAllowed: boolean;
   emailTotalCount: number;
+  hasPassword: boolean;
 }): GraphQLHandler =>
   mockUserProfileQuery(() =>
     HttpResponse.json({
@@ -47,6 +49,7 @@ const userProfileHandler = ({
           __typename: "BrowserSession",
           id: "session-id",
           user: {
+            hasPassword,
             emails: {
               totalCount: emailTotalCount,
             },
@@ -130,6 +133,7 @@ export const MultipleEmails: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: true,
           emailTotalCount: 3,
+          hasPassword: true,
         }),
         threeEmailsHandler,
       ],
@@ -147,6 +151,7 @@ export const NoEmails: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 0,
+          hasPassword: true,
         }),
       ],
     },
@@ -163,6 +168,7 @@ export const MultipleEmailsNoChange: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 3,
+          hasPassword: true,
         }),
         threeEmailsHandler,
       ],
@@ -180,6 +186,7 @@ export const NoEmailChange: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 1,
+          hasPassword: true,
         }),
       ],
     },
@@ -196,6 +203,7 @@ export const NoPasswordChange: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: true,
           emailTotalCount: 1,
+          hasPassword: true,
         }),
       ],
     },
@@ -212,6 +220,7 @@ export const NoPasswordLogin: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: true,
           emailTotalCount: 1,
+          hasPassword: true,
         }),
       ],
     },
@@ -228,6 +237,7 @@ export const NoPasswordNoEmailChange: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: false,
           emailTotalCount: 0,
+          hasPassword: false,
         }),
       ],
     },

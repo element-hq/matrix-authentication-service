@@ -6,14 +6,14 @@
 
 use async_trait::async_trait;
 use mas_data_model::User;
-use mas_storage::{user::UserTermsRepository, Clock};
+use mas_storage::{Clock, user::UserTermsRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use url::Url;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError};
+use crate::{DatabaseError, tracing::ExecuteExt};
 
 /// An implementation of [`UserTermsRepository`] for a PostgreSQL connection
 pub struct PgUserTermsRepository<'c> {

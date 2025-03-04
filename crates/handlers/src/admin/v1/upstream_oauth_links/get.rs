@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
-use axum::{response::IntoResponse, Json};
+use aide::{OperationIo, transform::TransformOperation};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use ulid::Ulid;
 
@@ -83,7 +83,7 @@ mod tests {
     use ulid::Ulid;
 
     use super::super::test_utils;
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_get(pool: PgPool) {

@@ -280,8 +280,8 @@ impl ConfigurationSection for DatabaseConfig {
 #[cfg(test)]
 mod tests {
     use figment::{
-        providers::{Format, Yaml},
         Figment, Jail,
+        providers::{Format, Yaml},
     };
 
     use super::*;

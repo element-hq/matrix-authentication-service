@@ -9,24 +9,24 @@
 use std::{net::IpAddr, ops::Deref, sync::Arc};
 
 use async_graphql::{
-    extensions::Tracing,
-    http::{playground_source, GraphQLPlaygroundConfig, MultipartOptions},
     EmptySubscription, InputObject,
+    extensions::Tracing,
+    http::{GraphQLPlaygroundConfig, MultipartOptions, playground_source},
 };
 use axum::{
+    Extension, Json,
     body::Body,
     extract::{RawQuery, State as AxumState},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
-    Extension, Json,
 };
 use axum_extra::typed_header::TypedHeader;
 use chrono::{DateTime, Utc};
 use futures_util::TryStreamExt;
-use headers::{authorization::Bearer, Authorization, ContentType, HeaderValue};
+use headers::{Authorization, ContentType, HeaderValue, authorization::Bearer};
 use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
-    cookies::CookieJar, sentry::SentryEventID, FancyError, SessionInfo, SessionInfoExt,
+    FancyError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
 };
 use mas_data_model::{BrowserSession, Session, SiteConfig, User};
 use mas_matrix::HomeserverConnection;
@@ -35,10 +35,10 @@ use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, Clock, RepositoryError, SystemClock};
 use mas_storage_pg::PgRepository;
 use opentelemetry_semantic_conventions::trace::{GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME};
-use rand::{thread_rng, SeedableRng};
+use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaChaRng;
 use sqlx::PgPool;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 use ulid::Ulid;
 
 mod model;
@@ -53,8 +53,8 @@ use self::{
     query::Query,
 };
 use crate::{
-    impl_from_error_for_route, passwords::PasswordManager, BoundActivityTracker, Limiter,
-    RequesterFingerprint,
+    BoundActivityTracker, Limiter, RequesterFingerprint, impl_from_error_for_route,
+    passwords::PasswordManager,
 };
 
 #[cfg(test)]
@@ -69,7 +69,7 @@ pub struct ExtraRouterParameters {
 
 struct GraphQLState {
     pool: PgPool,
-    homeserver_connection: Arc<dyn HomeserverConnection<Error = anyhow::Error>>,
+    homeserver_connection: Arc<dyn HomeserverConnection>,
     policy_factory: Arc<PolicyFactory>,
     site_config: SiteConfig,
     password_manager: PasswordManager,
@@ -99,7 +99,7 @@ impl state::State for GraphQLState {
         &self.site_config
     }
 
-    fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
+    fn homeserver_connection(&self) -> &dyn HomeserverConnection {
         self.homeserver_connection.as_ref()
     }
 
@@ -129,7 +129,7 @@ impl state::State for GraphQLState {
 pub fn schema(
     pool: &PgPool,
     policy_factory: &Arc<PolicyFactory>,
-    homeserver_connection: impl HomeserverConnection<Error = anyhow::Error> + 'static,
+    homeserver_connection: impl HomeserverConnection + 'static,
     site_config: SiteConfig,
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
@@ -276,7 +276,7 @@ async fn get_requester(
         };
 
         // If there is a user for this session, check that it is not locked
-        let user_valid = user.as_ref().map_or(true, User::is_valid);
+        let user_valid = user.as_ref().is_none_or(User::is_valid);
 
         if !token.is_valid(clock.now()) || !session.is_valid() || !user_valid {
             return Err(RouteError::InvalidToken);

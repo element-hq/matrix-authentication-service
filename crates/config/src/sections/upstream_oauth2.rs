@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use mas_iana::jose::JsonWebSignatureAlg;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 use serde_with::skip_serializing_none;
 use ulid::Ulid;
 use url::Url;
@@ -60,7 +60,9 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 | TokenAuthMethod::PrivateKeyJwt
                 | TokenAuthMethod::SignInWithApple => {
                     if provider.client_secret.is_some() {
-                        return annotate(figment::Error::custom("Unexpected field `client_secret` for the selected authentication method"));
+                        return annotate(figment::Error::custom(
+                            "Unexpected field `client_secret` for the selected authentication method",
+                        ));
                     }
                 }
                 TokenAuthMethod::ClientSecretBasic

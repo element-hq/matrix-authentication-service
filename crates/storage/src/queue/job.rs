@@ -14,7 +14,7 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ulid::Ulid;
 
 use super::Worker;
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// Represents a job in the job queue
 pub struct Job {

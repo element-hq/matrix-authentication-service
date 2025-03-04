@@ -11,7 +11,7 @@ use mas_data_model::{UserAgent, UserEmail, UserRecoverySession, UserRecoveryTick
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`UserRecoveryRepository`] helps interacting with [`UserRecoverySession`]
 /// and [`UserRecoveryTicket`] saved in the storage backend

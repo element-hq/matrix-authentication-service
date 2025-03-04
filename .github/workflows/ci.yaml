@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
 
 concurrency:
@@ -31,10 +31,7 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.70.0
+      - uses: ./.github/actions/build-policies
 
       - name: Setup Regal
         uses: StyraInc/setup-regal@v1
@@ -73,7 +70,6 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
-
   frontend-test:
     name: Run the frontend test suite
     runs-on: ubuntu-24.04
@@ -97,7 +93,6 @@ jobs:
       - name: Test
         working-directory: ./frontend
         run: npm test
-
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -123,7 +118,6 @@ jobs:
         working-directory: ./frontend
         run: npm run knip
 
-
   rustfmt:
     name: Check Rust style
     runs-on: ubuntu-24.04
@@ -143,7 +137,6 @@ jobs:
       - name: Check style
         run: cargo fmt --all -- --check
 
-
   cargo-deny:
     name: Run `cargo deny` checks
     runs-on: ubuntu-24.04
@@ -160,8 +153,9 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Run `cargo-deny`
-        uses: EmbarkStudios/cargo-deny-action@v2.0.4
-
+        uses: EmbarkStudios/cargo-deny-action@v2.0.6
+        with:
+          rust-version: stable
 
   check-schema:
     name: Check schema
@@ -203,7 +197,6 @@ jobs:
             exit 1
           fi
 
-
   clippy:
     name: Run Clippy
     needs: [rustfmt, opa-lint]
@@ -217,18 +210,11 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.84.0
+        uses: dtolnay/rust-toolchain@1.85.0
         with:
           components: clippy
 
-      - name: Setup OPA
-        uses: open-policy-agent/setup-opa@v2.2.0
-        with:
-          version: 0.64.1
-
-      - name: Compile OPA policies
-        working-directory: ./policies
-        run: make
+      - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.7
@@ -236,7 +222,6 @@ jobs:
       - name: Run clippy
         run: |
           cargo clippy --workspace --tests --bins --lib -- -D warnings
-
 
   compile-test-artifacts:
     name: Compile test artifacts
@@ -263,14 +248,13 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
         env:
-          SQLX_OFFLINE: '1'
+          SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
-
 
   test:
     name: Run test suite with Rust stable
@@ -303,7 +287,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
-      - run: mkdir -p ~/.cargo/bin
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:

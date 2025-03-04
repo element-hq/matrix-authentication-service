@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use mas_policy::model::{
     AuthorizationGrantInput, ClientRegistrationInput, EmailInput, RegisterInput,
 };
-use schemars::{gen::SchemaSettings, JsonSchema};
+use schemars::{JsonSchema, r#gen::SchemaSettings};
 
 fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
     let mut writer: Box<dyn std::io::Write> = match out_dir {

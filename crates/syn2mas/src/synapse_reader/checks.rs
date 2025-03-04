@@ -13,7 +13,7 @@ use mas_config::{
     BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt, MatrixConfig,
     PasswordAlgorithm, PasswordsConfig, UpstreamOAuth2Config,
 };
-use sqlx::{prelude::FromRow, query_as, query_scalar, PgConnection};
+use sqlx::{PgConnection, prelude::FromRow, query_as, query_scalar};
 use thiserror::Error;
 
 use super::config::Config;
@@ -38,19 +38,29 @@ pub enum CheckError {
     #[error("MAS config is missing a password hashing scheme with version '1'")]
     MissingPasswordScheme,
 
-    #[error("Password scheme version '1' in the MAS config must use the Bcrypt algorithm, so that Synapse passwords can be imported and will be compatible.")]
+    #[error(
+        "Password scheme version '1' in the MAS config must use the Bcrypt algorithm, so that Synapse passwords can be imported and will be compatible."
+    )]
     PasswordSchemeNotBcrypt,
 
-    #[error("Password scheme version '1' in the MAS config must have the same secret as the `pepper` value from Synapse, so that Synapse passwords can be imported and will be compatible.")]
+    #[error(
+        "Password scheme version '1' in the MAS config must have the same secret as the `pepper` value from Synapse, so that Synapse passwords can be imported and will be compatible."
+    )]
     PasswordSchemeWrongPepper,
 
-    #[error("Synapse database contains {num_guests} guests which aren't supported by MAS. See https://github.com/element-hq/matrix-authentication-service/issues/1445")]
+    #[error(
+        "Synapse database contains {num_guests} guests which aren't supported by MAS. See https://github.com/element-hq/matrix-authentication-service/issues/1445"
+    )]
     GuestsInDatabase { num_guests: i64 },
 
-    #[error("Guest support is enabled in the Synapse configuration. Guests aren't supported by MAS, but if you don't have any then you could disable the option. See https://github.com/element-hq/matrix-authentication-service/issues/1445")]
+    #[error(
+        "Guest support is enabled in the Synapse configuration. Guests aren't supported by MAS, but if you don't have any then you could disable the option. See https://github.com/element-hq/matrix-authentication-service/issues/1445"
+    )]
     GuestsEnabled,
 
-    #[error("Synapse database contains {num_non_email_3pids} non-email 3PIDs (probably phone numbers), which are not supported by MAS.")]
+    #[error(
+        "Synapse database contains {num_non_email_3pids} non-email 3PIDs (probably phone numbers), which are not supported by MAS."
+    )]
     NonEmailThreepidsInDatabase { num_non_email_3pids: i64 },
 
     #[error(
@@ -58,16 +68,24 @@ pub enum CheckError {
     )]
     ThreepidChangesEnabled,
 
-    #[error("Synapse config has `login_via_existing_session.enabled` set to true, which must be disabled.")]
+    #[error(
+        "Synapse config has `login_via_existing_session.enabled` set to true, which must be disabled."
+    )]
     LoginViaExistingSessionEnabled,
 
-    #[error("MAS configuration has the wrong `matrix.homeserver` set ({mas:?}), it should match Synapse's `server_name` ({synapse:?})")]
+    #[error(
+        "MAS configuration has the wrong `matrix.homeserver` set ({mas:?}), it should match Synapse's `server_name` ({synapse:?})"
+    )]
     ServerNameMismatch { synapse: String, mas: String },
 
-    #[error("Synapse database contains {num_users} users associated to the OpenID Connect or OAuth2 provider '{provider}' but the Synapse configuration does not contain this provider.")]
+    #[error(
+        "Synapse database contains {num_users} users associated to the OpenID Connect or OAuth2 provider '{provider}' but the Synapse configuration does not contain this provider."
+    )]
     SynapseMissingOAuthProvider { provider: String, num_users: i64 },
 
-    #[error("Synapse config contains an OpenID Connect or OAuth2 provider '{provider}' (issuer: {issuer:?}) used by {num_users} users which must also be configured in the MAS configuration as an upstream provider.")]
+    #[error(
+        "Synapse config contains an OpenID Connect or OAuth2 provider '{provider}' (issuer: {issuer:?}) used by {num_users} users which must also be configured in the MAS configuration as an upstream provider."
+    )]
     MasMissingOAuthProvider {
         provider: String,
         issuer: String,
@@ -80,22 +98,32 @@ pub enum CheckError {
 /// proceeding with the migration.
 #[derive(Debug, Error)]
 pub enum CheckWarning {
-    #[error("Synapse config contains OIDC auth configuration (issuer: {issuer:?}) which will need to be manually mapped to an upstream OpenID Connect Provider during migration.")]
+    #[error(
+        "Synapse config contains OIDC auth configuration (issuer: {issuer:?}) which will need to be manually mapped to an upstream OpenID Connect Provider during migration."
+    )]
     UpstreamOidcProvider { issuer: String },
 
-    #[error("Synapse config contains {0} auth configuration which will need to be manually mapped as an upstream OAuth 2.0 provider during migration.")]
+    #[error(
+        "Synapse config contains {0} auth configuration which will need to be manually mapped as an upstream OAuth 2.0 provider during migration."
+    )]
     ExternalAuthSystem(&'static str),
 
-    #[error("Synapse config has registration enabled. This must be disabled after migration before bringing Synapse back online.")]
+    #[error(
+        "Synapse config has registration enabled. This must be disabled after migration before bringing Synapse back online."
+    )]
     DisableRegistrationAfterMigration,
 
     #[error("Synapse config has `user_consent` enabled. This should be disabled after migration.")]
     DisableUserConsentAfterMigration,
 
-    #[error("Synapse config has `user_consent` enabled but MAS has not been configured with terms of service. You may wish to set up a `tos_uri` in your MAS branding configuration to replace the user consent.")]
+    #[error(
+        "Synapse config has `user_consent` enabled but MAS has not been configured with terms of service. You may wish to set up a `tos_uri` in your MAS branding configuration to replace the user consent."
+    )]
     ShouldPortUserConsentAsTerms,
 
-    #[error("Synapse config has a registration CAPTCHA enabled, but no CAPTCHA has been configured in MAS. You may wish to manually configure this.")]
+    #[error(
+        "Synapse config has a registration CAPTCHA enabled, but no CAPTCHA has been configured in MAS. You may wish to manually configure this."
+    )]
     ShouldPortRegistrationCaptcha,
 }
 

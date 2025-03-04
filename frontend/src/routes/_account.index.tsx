@@ -18,6 +18,7 @@ const QUERY = graphql(/* GraphQL */ `
       ... on BrowserSession {
         id
         user {
+          hasPassword
           emails(first: 0) {
             totalCount
           }

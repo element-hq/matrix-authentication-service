@@ -11,24 +11,24 @@ use mas_data_model::{
     UserRegistration,
 };
 use mas_storage::{
-    user::{UserEmailFilter, UserEmailRepository},
     Clock, Page, Pagination,
+    user::{UserEmailFilter, UserEmailRepository},
 };
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
-use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
-use tracing::{info_span, Instrument};
+use tracing::{Instrument, info_span};
 use ulid::Ulid;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError,
     filter::{Filter, StatementExt},
     iden::UserEmails,
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError,
 };
 
 /// An implementation of [`UserEmailRepository`] for a PostgreSQL connection

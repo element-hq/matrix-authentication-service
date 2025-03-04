@@ -4,12 +4,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::axum::{
-    routing::{get_with, post_with},
     ApiRouter,
+    routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_storage::BoxRng;
 
 use super::call_context::CallContext;
@@ -25,7 +27,7 @@ mod users;
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,

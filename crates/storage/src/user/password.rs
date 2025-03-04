@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use mas_data_model::{Password, User};
 use rand_core::RngCore;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// A [`UserPasswordRepository`] helps interacting with [`Password`] saved in
 /// the storage backend

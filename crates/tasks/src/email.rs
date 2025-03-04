@@ -9,12 +9,12 @@ use chrono::Duration;
 use mas_email::{Address, EmailVerificationContext, Mailbox};
 use mas_storage::queue::{SendEmailAuthenticationCodeJob, VerifyEmailJob};
 use mas_templates::TemplateContext as _;
-use rand::{distributions::Uniform, Rng};
+use rand::{Rng, distributions::Uniform};
 use tracing::info;
 
 use crate::{
-    new_queue::{JobContext, JobError, RunnableJob},
     State,
+    new_queue::{JobContext, JobError, RunnableJob},
 };
 
 #[async_trait]

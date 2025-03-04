@@ -14,13 +14,13 @@ use mas_data_model::UpstreamOAuthProvider;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
     BoxClock, BoxRepository, BoxRng,
+    upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
 };
 use thiserror::Error;
 use ulid::Ulid;
 
-use super::{cache::LazyProviderInfos, UpstreamSessionsCookie};
+use super::{UpstreamSessionsCookie, cache::LazyProviderInfos};
 use crate::{
     impl_from_error_for_route, upstream_oauth2::cache::MetadataCache,
     views::shared::OptionalPostAuthAction,

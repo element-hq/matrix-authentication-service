@@ -7,8 +7,8 @@
 use std::sync::Arc;
 
 use minijinja::{
-    value::{Enumerator, Object},
     Value,
+    value::{Enumerator, Object},
 };
 
 /// Site branding information.

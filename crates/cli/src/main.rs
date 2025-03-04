@@ -13,7 +13,7 @@ use clap::Parser;
 use mas_config::{ConfigurationSection, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
-    filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer, Registry,
+    EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 mod app_state;
@@ -55,7 +55,9 @@ async fn main() -> anyhow::Result<ExitCode> {
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
     let res = try_main().await;
-    self::telemetry::shutdown();
+    if let Err(err) = self::telemetry::shutdown() {
+        eprintln!("Failed to shutdown telemetry exporters: {err}");
+    }
     res
 }
 

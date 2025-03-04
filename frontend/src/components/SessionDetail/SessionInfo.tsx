@@ -5,7 +5,7 @@
 
 import IconChat from "@vector-im/compound-design-tokens/assets/web/icons/chat";
 import IconComputer from "@vector-im/compound-design-tokens/assets/web/icons/computer";
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send";
 import IconUserProfile from "@vector-im/compound-design-tokens/assets/web/icons/user-profile";
@@ -68,7 +68,7 @@ export const ScopeSendMessages: React.FC = () => {
 const ScopeSynapseAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconError}>
+    <VisualListItem Icon={IconErrorSolid}>
       {t("mas.scope.synapse_admin")}
     </VisualListItem>
   );
@@ -77,7 +77,9 @@ const ScopeSynapseAdmin: React.FC = () => {
 const ScopeMasAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconError}>{t("mas.scope.mas_admin")}</VisualListItem>
+    <VisualListItem Icon={IconErrorSolid}>
+      {t("mas.scope.mas_admin")}
+    </VisualListItem>
   );
 };
 

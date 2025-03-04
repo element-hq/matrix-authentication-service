@@ -11,9 +11,9 @@ use mas_config::{
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
-use sqlx::{postgres::PgConnectOptions, types::Uuid, Connection, Either, PgConnection};
-use syn2mas::{synapse_config, LockedMasDatabase, MasWriter, SynapseReader};
-use tracing::{error, info_span, warn, Instrument};
+use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
+use syn2mas::{LockedMasDatabase, MasWriter, SynapseReader, synapse_config};
+use tracing::{Instrument, error, info_span, warn};
 
 use crate::util::database_connection_from_config;
 
@@ -82,7 +82,9 @@ const NUM_WRITER_CONNECTIONS: usize = 8;
 impl Options {
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
-        warn!("This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING.");
+        warn!(
+            "This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING."
+        );
         if !self.experimental_accepted {
             error!("Please agree that you can only use this tool for testing.");
             return Ok(ExitCode::FAILURE);
@@ -179,7 +181,9 @@ impl Options {
         }
         if !check_warnings.is_empty() {
             eprintln!("===== Warnings =====");
-            eprintln!("These potential issues should be considered before migrating from Synapse to MAS right now:\n");
+            eprintln!(
+                "These potential issues should be considered before migrating from Synapse to MAS right now:\n"
+            );
             for warning in &check_warnings {
                 eprintln!("• {warning}\n");
             }
@@ -216,12 +220,12 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
-                let mut reader = SynapseReader::new(&mut syn_conn, true).await?;
+                let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
                     writer_mas_connections.push(database_connection_from_config(&config).await?);
                 }
-                let mut writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
@@ -231,17 +235,14 @@ impl Options {
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
                 syn2mas::migrate(
-                    &mut reader,
-                    &mut writer,
+                    reader,
+                    writer,
                     mas_matrix.homeserver,
                     &clock,
                     &mut rng,
                     provider_id_mappings,
                 )
                 .await?;
-
-                reader.finish().await?;
-                writer.finish().await?;
 
                 Ok(ExitCode::SUCCESS)
             }

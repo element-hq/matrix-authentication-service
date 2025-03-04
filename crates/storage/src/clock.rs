@@ -10,7 +10,7 @@
 //! [`SystemClock`] which uses the system time, and a [`MockClock`], which can
 //! be used and freely manipulated in tests.
 
-use std::sync::{atomic::AtomicI64, Arc};
+use std::sync::{Arc, atomic::AtomicI64};
 
 use chrono::{DateTime, TimeZone, Utc};
 

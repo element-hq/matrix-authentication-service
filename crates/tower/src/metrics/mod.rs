@@ -11,5 +11,5 @@ mod make_attributes;
 pub use self::{
     duration::{DurationRecorderFuture, DurationRecorderLayer, DurationRecorderService},
     in_flight::{InFlightCounterLayer, InFlightCounterService, InFlightFuture},
-    make_attributes::{metrics_attributes_fn, MetricsAttributes},
+    make_attributes::{MetricsAttributes, metrics_attributes_fn},
 };

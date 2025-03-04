@@ -5,10 +5,10 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Object, ID,
+    Context, ID, Object,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
-use mas_storage::{upstream_oauth2::UpstreamOAuthProviderFilter, Pagination, RepositoryAccess};
+use mas_storage::{Pagination, RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderFilter};
 
 use crate::graphql::{
     model::{
@@ -94,7 +94,7 @@ impl UpstreamOAuthQuery {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_type(NodeType::UpstreamOAuth2Provider)

@@ -8,11 +8,11 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{CompatSession, CompatSsoLogin, CompatSsoLoginState};
 use mas_storage::{
-    compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
     Clock, Page, Pagination,
+    compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
 };
 use rand::RngCore;
-use sea_query::{enum_def, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -20,11 +20,11 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
+    DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::{CompatSessions, CompatSsoLogins},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
-    DatabaseError, DatabaseInconsistencyError,
 };
 
 /// An implementation of [`CompatSsoLoginRepository`] for a PostgreSQL

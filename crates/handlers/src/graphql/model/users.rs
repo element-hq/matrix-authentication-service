@@ -6,27 +6,27 @@
 
 use anyhow::Context as _;
 use async_graphql::{
-    connection::{query, Connection, Edge, OpaqueCursor},
-    Context, Description, Enum, Object, Union, ID,
+    Context, Description, Enum, ID, Object, Union,
+    connection::{Connection, Edge, OpaqueCursor, query},
 };
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
 use mas_storage::{
+    Pagination, RepositoryAccess,
     app_session::AppSessionFilter,
     compat::{CompatSessionFilter, CompatSsoLoginFilter, CompatSsoLoginRepository},
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
     user::{BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository},
-    Pagination, RepositoryAccess,
 };
 
 use super::{
-    compat_sessions::{CompatSessionType, CompatSsoLogin},
-    matrix::MatrixUser,
     BrowserSession, CompatSession, Cursor, NodeCursor, NodeType, OAuth2Session,
     PreloadedTotalCount, SessionState, UpstreamOAuth2Link,
+    compat_sessions::{CompatSessionType, CompatSsoLogin},
+    matrix::MatrixUser,
 };
-use crate::graphql::{state::ContextExt, DateFilter};
+use crate::graphql::{DateFilter, state::ContextExt};
 
 #[derive(Description)]
 /// A user is an individual's account.
@@ -98,7 +98,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::CompatSsoLogin))
                     .transpose()?;
@@ -172,7 +172,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::CompatSession))
                     .transpose()?;
@@ -264,7 +264,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::BrowserSession))
                     .transpose()?;
@@ -346,7 +346,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::UserEmail))
                     .transpose()?;
@@ -419,7 +419,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::OAuth2Session))
                     .transpose()?;
@@ -514,7 +514,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_type(NodeType::UpstreamOAuth2Link)
@@ -602,7 +602,7 @@ impl User {
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            async |after, before, first, last| {
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| {
                         x.extract_for_types(&[NodeType::OAuth2Session, NodeType::CompatSession])
@@ -704,6 +704,16 @@ impl User {
             },
         )
         .await
+    }
+
+    /// Check if the user has a password set.
+    async fn has_password(&self, ctx: &Context<'_>) -> Result<bool, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        let password = repo.user_password().active(&self.0).await?;
+
+        Ok(password.is_some())
     }
 }
 

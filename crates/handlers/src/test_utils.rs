@@ -20,27 +20,27 @@ use cookie_store::{CookieStore, RawCookie};
 use futures_util::future::BoxFuture;
 use headers::{Authorization, ContentType, HeaderMapExt, HeaderName, HeaderValue};
 use hyper::{
-    header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
     Request, Response, StatusCode,
+    header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
 };
 use mas_axum_utils::{
-    cookies::{CookieJar, CookieManager},
     ErrorWrapper,
+    cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
 use mas_data_model::SiteConfig;
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_matrix::{BoxHomeserverConnection, HomeserverConnection, MockHomeserverConnection};
+use mas_matrix::{HomeserverConnection, MockHomeserverConnection};
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::{SimpleRoute, UrlBuilder};
-use mas_storage::{clock::MockClock, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, clock::MockClock};
 use mas_storage_pg::{DatabaseError, PgRepository};
 use mas_templates::{SiteConfigExt, Templates};
 use oauth2_types::{registration::ClientRegistrationResponse, requests::AccessTokenResponse};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use sqlx::PgPool;
 use tokio_util::{
     sync::{CancellationToken, DropGuard},
@@ -50,10 +50,9 @@ use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
 use crate::{
-    graphql,
+    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
-    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint,
 };
 
 /// Setup rustcrypto and tracing for tests.
@@ -110,6 +109,7 @@ pub(crate) struct TestState {
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
+    pub task_tracker: TaskTracker,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -246,8 +246,27 @@ impl TestState {
             clock,
             rng,
             http_client,
+            task_tracker,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
+    }
+
+    /// Reset the test utils to a fresh state, with the same configuration.
+    pub async fn reset(self) -> Self {
+        let site_config = self.site_config.clone();
+        let pool = self.pool.clone();
+        let task_tracker = self.task_tracker.clone();
+
+        // This should trigger the cancellation drop guard
+        drop(self);
+
+        // Wait for tasks to complete
+        task_tracker.close();
+        task_tracker.wait().await;
+
+        Self::from_pool_with_site_config(pool, site_config)
+            .await
+            .unwrap()
     }
 
     pub async fn request<B>(&self, request: Request<B>) -> Response<String>
@@ -401,7 +420,7 @@ impl graphql::State for TestGraphQLState {
         self.password_manager.clone()
     }
 
-    fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
+    fn homeserver_connection(&self) -> &dyn HomeserverConnection {
         &self.homeserver_connection
     }
 
@@ -494,9 +513,9 @@ impl FromRef<TestState> for SiteConfig {
     }
 }
 
-impl FromRef<TestState> for BoxHomeserverConnection {
+impl FromRef<TestState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &TestState) -> Self {
-        Box::new(input.homeserver_connection.clone())
+        input.homeserver_connection.clone()
     }
 }
 

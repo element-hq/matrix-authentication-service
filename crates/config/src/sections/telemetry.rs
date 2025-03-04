@@ -59,6 +59,7 @@ pub struct TracingConfig {
     pub endpoint: Option<Url>,
 
     /// List of propagation formats to use for incoming and outgoing requests
+    #[serde(default)]
     pub propagators: Vec<Propagator>,
 }
 

@@ -5,9 +5,9 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
+    Extension,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension,
 };
 use axum_extra::typed_header::TypedHeader;
 use headers::ContentType;

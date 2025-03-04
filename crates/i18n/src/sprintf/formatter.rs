@@ -8,7 +8,7 @@ use std::fmt::Formatter;
 
 use pad::{Alignment, PadStr};
 use serde::Serialize;
-use serde_json::{ser::PrettyFormatter, Value};
+use serde_json::{Value, ser::PrettyFormatter};
 use thiserror::Error;
 
 use super::{ArgumentList, Message};

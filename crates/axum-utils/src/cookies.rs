@@ -14,7 +14,7 @@ use axum::{
 };
 use axum_extra::extract::cookie::{Cookie, Key, PrivateCookieJar, SameSite};
 use http::request::Parts;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use thiserror::Error;
 use url::Url;
 

@@ -12,22 +12,22 @@ use std::{
 
 use anyhow::Context;
 use axum::{
+    Extension, Router,
     error_handling::HandleErrorLayer,
     extract::{FromRef, MatchedPath},
-    Extension, Router,
 };
 use hyper::{
-    header::{HeaderValue, CACHE_CONTROL, USER_AGENT},
     Method, Request, Response, StatusCode, Version,
+    header::{CACHE_CONTROL, HeaderValue, USER_AGENT},
 };
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
-use mas_listener::{unix_or_tcp::UnixOrTcpListener, ConnectionInfo};
+use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
 use mas_tower::{
-    make_span_fn, metrics_attributes_fn, DurationRecorderLayer, InFlightCounterLayer, TraceLayer,
-    KV,
+    DurationRecorderLayer, InFlightCounterLayer, KV, TraceLayer, make_span_fn,
+    metrics_attributes_fn,
 };
 use opentelemetry::{Key, KeyValue};
 use opentelemetry_http::HeaderExtractor;
@@ -231,16 +231,22 @@ pub fn build_router(
             // TODO: do a better handler here
             mas_config::HttpResource::ConnectionInfo => router.route(
                 "/connection-info",
-                axum::routing::get(|connection: Extension<ConnectionInfo>| async move {
+                axum::routing::get(async |connection: Extension<ConnectionInfo>| {
                     format!("{connection:?}")
                 }),
             ),
         }
     }
 
-    if let Some(prefix) = prefix {
-        let path = format!("{}/", prefix.trim_end_matches('/'));
-        router = Router::new().nest(&path, router);
+    // We normalize the prefix:
+    //  - if it's None, it becomes '/'
+    //  - if it's Some(..), any trailing '/' is first trimmed, then a '/' is added
+    let prefix = format!("{}/", prefix.unwrap_or_default().trim_end_matches('/'));
+    // Then we only nest the router if the prefix is not empty and not the root
+    // If we blindly nest the router if the prefix is Some("/"), axum will panic as
+    // we're not supposed to nest the router at the root
+    if !prefix.is_empty() && prefix != "/" {
+        router = Router::new().nest(&prefix, router);
     }
 
     router = router.fallback(mas_handlers::fallback);

@@ -12,7 +12,7 @@ use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, Device, User
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock, Page, Pagination};
+use crate::{Clock, Page, Pagination, repository_impl};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompatSessionState {

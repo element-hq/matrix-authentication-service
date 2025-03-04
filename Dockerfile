@@ -8,9 +8,9 @@
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
-ARG RUSTC_VERSION=1.84.0
+ARG RUSTC_VERSION=1.85.0
 ARG NODEJS_VERSION=20.15.0
-ARG OPA_VERSION=0.64.1
+ARG OPA_VERSION=1.1.0
 ARG CARGO_AUDITABLE_VERSION=0.6.6
 
 ##########################################

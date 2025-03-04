@@ -5,9 +5,9 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{
+    Json,
     extract::State,
     response::{IntoResponse, Response},
-    Json,
 };
 use hyper::StatusCode;
 use mas_axum_utils::{
@@ -21,12 +21,12 @@ use mas_jose::{
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{oauth2::OAuth2ClientRepository, BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use thiserror::Error;
 
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[skip_serializing_none]
 #[derive(Serialize)]

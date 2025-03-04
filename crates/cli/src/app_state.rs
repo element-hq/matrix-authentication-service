@@ -10,19 +10,18 @@ use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
-    passwords::PasswordManager, ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper,
-    GraphQLSchema, Limiter, MetadataCache, RequesterFingerprint,
+    ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
+    MetadataCache, RequesterFingerprint, passwords::PasswordManager,
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
-use mas_matrix::BoxHomeserverConnection;
-use mas_matrix_synapse::SynapseConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, SystemClock};
 use mas_storage_pg::PgRepository;
 use mas_templates::Templates;
-use opentelemetry::{metrics::Histogram, KeyValue};
+use opentelemetry::{KeyValue, metrics::Histogram};
 use rand::SeedableRng;
 use sqlx::PgPool;
 use tracing::Instrument;
@@ -37,7 +36,7 @@ pub struct AppState {
     pub cookie_manager: CookieManager,
     pub encrypter: Encrypter,
     pub url_builder: UrlBuilder,
-    pub homeserver_connection: SynapseConnection,
+    pub homeserver_connection: Arc<dyn HomeserverConnection>,
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: GraphQLSchema,
     pub http_client: reqwest::Client,
@@ -204,9 +203,9 @@ impl FromRef<AppState> for Limiter {
     }
 }
 
-impl FromRef<AppState> for BoxHomeserverConnection {
+impl FromRef<AppState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &AppState) -> Self {
-        Box::new(input.homeserver_connection.clone())
+        Arc::clone(&input.homeserver_connection)
     }
 }
 
@@ -343,7 +342,9 @@ impl FromRequestParts<AppState> for RequesterFingerprint {
         } else {
             // If we can't infer the IP address, we'll just use an empty fingerprint and
             // warn about it
-            tracing::warn!("Could not infer client IP address for an operation which rate-limits based on IP addresses");
+            tracing::warn!(
+                "Could not infer client IP address for an operation which rate-limits based on IP addresses"
+            );
             Ok(RequesterFingerprint::EMPTY)
         }
     }

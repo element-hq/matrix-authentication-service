@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use aide::{transform::TransformOperation, OperationIo};
-use axum::{extract::State, response::IntoResponse, Json};
+use std::sync::Arc;
+
+use aide::{OperationIo, transform::TransformOperation};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use ulid::Ulid;
 
 use crate::{
@@ -67,7 +69,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.users.unlock", skip_all, err)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
@@ -99,10 +101,10 @@ pub async fn handler(
 mod tests {
     use hyper::{Request, StatusCode};
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use mas_storage::{user::UserRepository, RepositoryAccess};
+    use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_unlock_user(pool: PgPool) {

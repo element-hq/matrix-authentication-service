@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
     extract::{Form, Query, State},
     response::{Html, IntoResponse, Response},
@@ -11,18 +13,18 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
-use mas_data_model::{oauth2::LoginHint, BrowserSession, UserAgent};
+use mas_data_model::{BrowserSession, UserAgent, oauth2::LoginHint};
 use mas_i18n::DataLocale;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use mas_templates::{
     FieldError, FormError, LoginContext, LoginFormField, PostAuthContext, PostAuthContextInner,
@@ -34,8 +36,8 @@ use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
 use crate::{
-    passwords::PasswordManager, BoundActivityTracker, Limiter, PreferredLanguage,
-    RequesterFingerprint, SiteConfig,
+    BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
+    passwords::PasswordManager,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -56,7 +58,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
@@ -99,7 +101,7 @@ pub(crate) async fn get(
         csrf_token,
         &mut repo,
         &templates,
-        homeserver,
+        &homeserver,
     )
     .await?;
 
@@ -116,7 +118,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(limiter): State<Limiter>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
@@ -161,7 +163,7 @@ pub(crate) async fn post(
             csrf_token,
             &mut repo,
             &templates,
-            homeserver,
+            &homeserver,
         )
         .await?;
 
@@ -207,7 +209,7 @@ pub(crate) async fn post(
                 csrf_token,
                 &mut repo,
                 &templates,
-                homeserver,
+                &homeserver,
             )
             .await?;
 
@@ -301,7 +303,7 @@ async fn login(
 fn handle_login_hint(
     ctx: &mut LoginContext,
     next: &PostAuthContext,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
 ) {
     let form_state = ctx.form_state_mut();
 
@@ -326,11 +328,11 @@ async fn render(
     csrf_token: CsrfToken,
     repo: &mut impl RepositoryAccess,
     templates: &Templates,
-    homeserver: BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
 ) -> Result<String, FancyError> {
     let next = action.load_context(repo).await?;
     let ctx = if let Some(next) = next {
-        handle_login_hint(&mut ctx, &next, &homeserver);
+        handle_login_hint(&mut ctx, &next, homeserver);
 
         ctx.with_post_action(next)
     } else {
@@ -345,8 +347,8 @@ async fn render(
 #[cfg(test)]
 mod test {
     use hyper::{
-        header::{CONTENT_TYPE, LOCATION},
         Request, StatusCode,
+        header::{CONTENT_TYPE, LOCATION},
     };
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
@@ -354,8 +356,8 @@ mod test {
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_router::Route;
     use mas_storage::{
-        upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
         RepositoryAccess,
+        upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository},
     };
     use mas_templates::escape_html;
     use oauth2_types::scope::OPENID;
@@ -363,10 +365,10 @@ mod test {
     use zeroize::Zeroizing;
 
     use crate::{
-        test_utils::{
-            setup, test_site_config, CookieHelper, RequestBuilderExt, ResponseExt, TestState,
-        },
         SiteConfig,
+        test_utils::{
+            CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+        },
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -475,13 +477,17 @@ mod test {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(response.body().contains(&escape_html("First Ltd.")));
-        assert!(response
-            .body()
-            .contains(&escape_html(&first_provider_login.path_and_query())));
+        assert!(
+            response
+                .body()
+                .contains(&escape_html(&first_provider_login.path_and_query()))
+        );
         assert!(response.body().contains(&escape_html("second.com")));
-        assert!(response
-            .body()
-            .contains(&escape_html(&second_provider_login.path_and_query())));
+        assert!(
+            response
+                .body()
+                .contains(&escape_html(&second_provider_login.path_and_query()))
+        );
     }
 
     async fn user_with_password(state: &TestState, username: &str, password: &str) {

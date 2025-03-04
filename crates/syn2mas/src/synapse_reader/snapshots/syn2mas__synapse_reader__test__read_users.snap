@@ -22,5 +22,6 @@ expression: users
         is_guest: SynapseBool(
             false,
         ),
+        appservice_id: None,
     },
 }

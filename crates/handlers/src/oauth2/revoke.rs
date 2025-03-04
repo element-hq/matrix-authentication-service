@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
@@ -14,8 +14,8 @@ use mas_data_model::TokenType;
 use mas_iana::oauth::OAuthTokenTypeHint;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
     BoxClock, BoxRepository, BoxRng, RepositoryAccess,
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
 };
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
@@ -23,7 +23,7 @@ use oauth2_types::{
 };
 use thiserror::Error;
 
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -172,7 +172,7 @@ pub(crate) async fn post(
         // token type or if the token was a compat access/refresh token. In those cases, we return
         // an unknown token error.
         (Some(OAuthTokenTypeHint::AccessToken | OAuthTokenTypeHint::RefreshToken) | None, _) => {
-            return Err(RouteError::UnknownToken)
+            return Err(RouteError::UnknownToken);
         }
 
         (Some(_), _) => return Err(RouteError::UnsupportedTokenType),
@@ -233,14 +233,14 @@ mod tests {
     use oauth2_types::{
         registration::ClientRegistrationResponse,
         requests::AccessTokenResponse,
-        scope::{Scope, OPENID},
+        scope::{OPENID, Scope},
     };
     use sqlx::PgPool;
 
     use super::*;
     use crate::{
         oauth2::generate_token_pair,
-        test_utils::{setup, RequestBuilderExt, ResponseExt, TestState},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -9,8 +9,8 @@ use std::process::ExitCode;
 use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::{
-    providers::{Env, Format, Yaml},
     Figment,
+    providers::{Env, Format, Yaml},
 };
 
 mod config;

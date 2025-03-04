@@ -9,20 +9,20 @@ use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use cron::Schedule;
 use mas_storage::{
-    queue::{InsertableJob, Job, JobMetadata, Worker},
     Clock, RepositoryAccess, RepositoryError,
+    queue::{InsertableJob, Job, JobMetadata, Worker},
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use opentelemetry::{
-    metrics::{Counter, Histogram, UpDownCounter},
     KeyValue,
+    metrics::{Counter, Histogram, UpDownCounter},
 };
-use rand::{distributions::Uniform, Rng, RngCore};
+use rand::{Rng, RngCore, distributions::Uniform};
 use rand_chacha::ChaChaRng;
 use serde::de::DeserializeOwned;
 use sqlx::{
-    postgres::{PgAdvisoryLock, PgListener},
     Acquire, Either,
+    postgres::{PgAdvisoryLock, PgListener},
 };
 use thiserror::Error;
 use tokio::{task::JoinSet, time::Instant};
@@ -31,7 +31,7 @@ use tracing::{Instrument as _, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 use ulid::Ulid;
 
-use crate::{State, METER};
+use crate::{METER, State};
 
 type JobPayload = serde_json::Value;
 

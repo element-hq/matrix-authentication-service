@@ -7,13 +7,13 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{AccessToken, RefreshToken, RefreshTokenState, Session};
-use mas_storage::{oauth2::OAuth2RefreshTokenRepository, Clock};
+use mas_storage::{Clock, oauth2::OAuth2RefreshTokenRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{tracing::ExecuteExt, DatabaseError, DatabaseInconsistencyError};
+use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
 
 /// An implementation of [`OAuth2RefreshTokenRepository`] for a PostgreSQL
 /// connection
@@ -63,7 +63,7 @@ impl TryFrom<OAuth2RefreshTokenLookup> for RefreshToken {
             _ => {
                 return Err(DatabaseInconsistencyError::on("oauth2_refresh_tokens")
                     .column("next_oauth2_refresh_token_id")
-                    .row(id))
+                    .row(id));
             }
         };
 

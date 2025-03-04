@@ -14,6 +14,14 @@ allow if {
 	count(violation) == 0
 }
 
+username_allowed if {
+	not data.registration.allowed_usernames
+}
+
+username_allowed if {
+	common.matches_string_constraints(input.username, data.registration.allowed_usernames)
+}
+
 # METADATA
 # entrypoint: true
 violation contains {"field": "username", "code": "username-too-short", "msg": "username too short"} if {
@@ -37,6 +45,20 @@ violation contains {
 	"msg": "username contains invalid characters",
 } if {
 	not regex.match(`^[a-z0-9.=_/-]+$`, input.username)
+}
+
+violation contains {
+	"field": "username", "code": "username-banned",
+	"msg": "username is banned",
+} if {
+	common.matches_string_constraints(input.username, data.registration.banned_usernames)
+}
+
+violation contains {
+	"field": "username", "code": "username-not-allowed",
+	"msg": "username is not allowed",
+} if {
+	not username_allowed
 }
 
 violation contains {"msg": "unspecified registration method"} if {

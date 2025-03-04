@@ -13,7 +13,7 @@ use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// Parameters used to create a new [`DeviceCodeGrant`]
 pub struct OAuth2DeviceCodeGrantParams<'a> {

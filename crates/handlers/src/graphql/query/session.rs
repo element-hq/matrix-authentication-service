@@ -4,19 +4,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use async_graphql::{Context, Object, Union, ID};
+use async_graphql::{Context, ID, Object, Union};
 use mas_data_model::Device;
 use mas_storage::{
+    Pagination, RepositoryAccess,
     compat::{CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
-    Pagination, RepositoryAccess,
 };
 use oauth2_types::scope::Scope;
 
 use crate::graphql::{
+    UserId,
     model::{CompatSession, NodeType, OAuth2Session},
     state::ContextExt,
-    UserId,
 };
 
 #[derive(Default)]

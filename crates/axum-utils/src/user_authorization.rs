@@ -8,20 +8,20 @@ use std::{collections::HashMap, error::Error};
 
 use axum::{
     extract::{
-        rejection::{FailedToDeserializeForm, FormRejection},
         Form, FromRequest, FromRequestParts,
+        rejection::{FailedToDeserializeForm, FormRejection},
     },
     response::{IntoResponse, Response},
 };
 use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
-use headers::{authorization::Bearer, Authorization, Header, HeaderMapExt, HeaderName};
-use http::{header::WWW_AUTHENTICATE, HeaderMap, HeaderValue, Request, StatusCode};
+use headers::{Authorization, Header, HeaderMapExt, HeaderName, authorization::Bearer};
+use http::{HeaderMap, HeaderValue, Request, StatusCode, header::WWW_AUTHENTICATE};
 use mas_data_model::Session;
 use mas_storage::{
-    oauth2::{OAuth2AccessTokenRepository, OAuth2SessionRepository},
     Clock, RepositoryAccess,
+    oauth2::{OAuth2AccessTokenRepository, OAuth2SessionRepository},
 };
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::{Deserialize, de::DeserializeOwned};
 use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
@@ -319,7 +319,7 @@ where
                 Err(FormRejection::InvalidFormContentType(_err)) => (None, None),
                 // If the form could not be read, return a Bad Request error
                 Err(FormRejection::FailedToDeserializeForm(err)) => {
-                    return Err(UserAuthorizationError::BadForm(err))
+                    return Err(UserAuthorizationError::BadForm(err));
                 }
                 // Other errors (body read twice, byte stream broke) return an internal error
                 Err(e) => return Err(UserAuthorizationError::Internal(Box::new(e))),

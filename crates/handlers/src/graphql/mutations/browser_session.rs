@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use async_graphql::{Context, Enum, InputObject, Object, ID};
+use async_graphql::{Context, Enum, ID, InputObject, Object};
 use mas_storage::RepositoryAccess;
 
 use crate::graphql::{

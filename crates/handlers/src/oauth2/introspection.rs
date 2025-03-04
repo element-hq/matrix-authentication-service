@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, http::HeaderValue, response::IntoResponse, Json};
+use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
@@ -14,10 +14,10 @@ use mas_data_model::{Device, TokenFormatError, TokenType};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
 use mas_keystore::Encrypter;
 use mas_storage::{
+    BoxClock, BoxRepository, Clock,
     compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
     oauth2::{OAuth2AccessTokenRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository},
     user::UserRepository,
-    BoxClock, BoxRepository, Clock,
 };
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
@@ -26,7 +26,7 @@ use oauth2_types::{
 };
 use thiserror::Error;
 
-use crate::{impl_from_error_for_route, ActivityTracker};
+use crate::{ActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -515,7 +515,7 @@ mod tests {
     use oauth2_types::{
         registration::ClientRegistrationResponse,
         requests::IntrospectionResponse,
-        scope::{Scope, OPENID},
+        scope::{OPENID, Scope},
     };
     use serde_json::json;
     use sqlx::PgPool;
@@ -523,7 +523,7 @@ mod tests {
 
     use crate::{
         oauth2::generate_token_pair,
-        test_utils::{setup, RequestBuilderExt, ResponseExt, TestState},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use axum::{
     extract::{Form, Query, State},
@@ -14,19 +14,19 @@ use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::{
+    FancyError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
-    FancyError, SessionInfoExt,
 };
 use mas_data_model::{CaptchaConfig, UserAgent};
 use mas_i18n::DataLocale;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     user::{UserEmailRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
 };
 use mas_templates::{
     FieldError, FormError, FormState, PasswordRegisterContext, RegisterFormField, TemplateContext,
@@ -37,9 +37,9 @@ use zeroize::Zeroizing;
 
 use super::cookie::UserRegistrationSessions;
 use crate::{
+    BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
     captcha::Form as CaptchaForm, passwords::PasswordManager,
-    views::shared::OptionalPostAuthAction, BoundActivityTracker, Limiter, PreferredLanguage,
-    RequesterFingerprint, SiteConfig,
+    views::shared::OptionalPostAuthAction,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -128,7 +128,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(http_client): State<reqwest::Client>,
     (State(limiter), requester): (State<Limiter>, RequesterFingerprint),
     mut policy: Policy,
@@ -409,17 +409,17 @@ async fn render(
 #[cfg(test)]
 mod tests {
     use hyper::{
-        header::{CONTENT_TYPE, LOCATION},
         Request, StatusCode,
+        header::{CONTENT_TYPE, LOCATION},
     };
     use mas_router::Route;
     use sqlx::PgPool;
 
     use crate::{
-        test_utils::{
-            setup, test_site_config, CookieHelper, RequestBuilderExt, ResponseExt, TestState,
-        },
         SiteConfig,
+        test_utils::{
+            CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+        },
     };
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

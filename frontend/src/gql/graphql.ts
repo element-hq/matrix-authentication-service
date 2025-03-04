@@ -1338,6 +1338,8 @@ export type User = Node & {
   createdAt: Scalars['DateTime']['output'];
   /** Get the list of emails, chronologically sorted */
   emails: UserEmailConnection;
+  /** Check if the user has a password set. */
+  hasPassword: Scalars['Boolean']['output'];
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** When the user was locked out. */
@@ -1687,7 +1689,7 @@ export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: st
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number } } } | { __typename: 'Oauth2Session' }, siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } } } | { __typename: 'Oauth2Session' }, siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
     & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
@@ -2302,6 +2304,7 @@ export const UserProfileDocument = new TypedDocumentString(`
     ... on BrowserSession {
       id
       user {
+        hasPassword
         emails(first: 0) {
           totalCount
         }

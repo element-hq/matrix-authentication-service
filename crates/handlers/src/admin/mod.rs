@@ -4,22 +4,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::{
     axum::ApiRouter,
     openapi::{OAuth2Flow, OAuth2Flows, OpenApi, SecurityScheme, Server, Tag},
     transform::TransformOpenApi,
 };
 use axum::{
+    Json, Router,
     extract::{FromRef, FromRequestParts, State},
     http::HeaderName,
     response::Html,
-    Json, Router,
 };
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::FancyError;
 use mas_http::CorsLayerExt;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
     UrlBuilder,
@@ -107,7 +109,7 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
 pub fn router<S>() -> (OpenApi, Router<S>)
 where
     S: Clone + Send + Sync + 'static,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
@@ -119,7 +121,8 @@ where
     aide::generate::infer_responses(false);
 
     aide::generate::in_context(|ctx| {
-        ctx.schema = schemars::gen::SchemaGenerator::new(schemars::gen::SchemaSettings::openapi3());
+        ctx.schema =
+            schemars::r#gen::SchemaGenerator::new(schemars::r#gen::SchemaSettings::openapi3());
     });
 
     let mut api = OpenApi::default();

@@ -75,6 +75,20 @@ test_numeric_username if {
 	not register.allow with input as {"username": "1234", "registration_method": "upstream-oauth2"}
 }
 
+test_allowed_username if {
+	register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
+		with data.registration.allowed_usernames.literals as ["hello"]
+	not register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
+		with data.registration.allowed_usernames.literals as ["world"]
+}
+
+test_banned_username if {
+	not register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
+		with data.registration.banned_usernames.literals as ["hello"]
+	register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
+		with data.registration.banned_usernames.literals as ["world"]
+}
+
 test_ip_ban if {
 	not register.allow with input as {
 		"username": "hello",

@@ -4,33 +4,39 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
-use axum_extra::typed_header::TypedHeader;
+use std::sync::Arc;
+
+use axum::{
+    Json,
+    extract::{State, rejection::JsonRejection},
+    response::IntoResponse,
+};
+use axum_extra::{extract::WithRejection, typed_header::TypedHeader};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
 use mas_data_model::{
     CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User, UserAgent,
 };
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
     user::{UserPasswordRepository, UserRepository},
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, DurationMilliSeconds};
+use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
 use super::MatrixError;
 use crate::{
-    impl_from_error_for_route, passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
-    BoundActivityTracker, Limiter, RequesterFingerprint,
+    BoundActivityTracker, Limiter, RequesterFingerprint, impl_from_error_for_route,
+    passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
 };
 
 #[derive(Debug, Serialize)]
@@ -104,7 +110,9 @@ pub struct RequestBody {
 pub enum Credentials {
     #[serde(rename = "m.login.password")]
     Password {
-        identifier: Identifier,
+        identifier: Option<Identifier>,
+        // This property has been deprecated for a while, but some tools still use it.
+        user: Option<String>,
         password: String,
     },
 
@@ -145,6 +153,12 @@ pub enum RouteError {
     #[error("unsupported login method")]
     Unsupported,
 
+    #[error("unsupported identifier type")]
+    UnsupportedIdentifier,
+
+    #[error("missing property 'identifier'")]
+    MissingIdentifier,
+
     #[error("user not found")]
     UserNotFound,
 
@@ -165,6 +179,9 @@ pub enum RouteError {
 
     #[error("invalid login token")]
     InvalidLoginToken,
+
+    #[error(transparent)]
+    InvalidJsonBody(#[from] JsonRejection),
 
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
@@ -188,9 +205,39 @@ impl IntoResponse for RouteError {
                 error: "Too many login attempts",
                 status: StatusCode::TOO_MANY_REQUESTS,
             },
+            Self::InvalidJsonBody(JsonRejection::MissingJsonContentType(_)) => MatrixError {
+                errcode: "M_NOT_JSON",
+                error: "Invalid Content-Type header: expected application/json",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(JsonRejection::JsonSyntaxError(_)) => MatrixError {
+                errcode: "M_NOT_JSON",
+                error: "Body is not a valid JSON document",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(JsonRejection::JsonDataError(_)) => MatrixError {
+                errcode: "M_BAD_JSON",
+                error: "JSON fields are not valid",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::InvalidJsonBody(_) => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Unknown error while parsing JSON body",
+                status: StatusCode::BAD_REQUEST,
+            },
             Self::Unsupported => MatrixError {
-                errcode: "M_UNRECOGNIZED",
+                errcode: "M_UNKNOWN",
                 error: "Invalid login type",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::UnsupportedIdentifier => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Unsupported login identifier",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::MissingIdentifier => MatrixError {
+                errcode: "M_BAD_JSON",
+                error: "Missing property 'identifier",
                 status: StatusCode::BAD_REQUEST,
             },
             Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed(_) => {
@@ -223,22 +270,36 @@ pub(crate) async fn post(
     State(password_manager): State<PasswordManager>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(limiter): State<Limiter>,
     requester: RequesterFingerprint,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
-    Json(input): Json<RequestBody>,
+    WithRejection(Json(input), _): WithRejection<Json<RequestBody>, RouteError>,
 ) -> Result<impl IntoResponse, RouteError> {
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
     let (mut session, user) = match (password_manager.is_enabled(), input.credentials) {
         (
             true,
             Credentials::Password {
-                identifier: Identifier::User { user },
+                identifier,
+                user,
                 password,
             },
         ) => {
+            // This is to support both the (very) old and deprecated 'user' property, with
+            // the same behavior as Synapse: it takes precendence over the 'identifier' if
+            // provided
+            let user = match (identifier, user) {
+                (Some(Identifier::User { user }), None) | (_, Some(user)) => user,
+                (Some(Identifier::Unsupported), None) => {
+                    return Err(RouteError::UnsupportedIdentifier);
+                }
+                (None, None) => {
+                    return Err(RouteError::MissingIdentifier);
+                }
+            };
+
             user_password_login(
                 &mut rng,
                 &clock,
@@ -382,7 +443,7 @@ async fn user_password_login(
     limiter: &Limiter,
     requester: RequesterFingerprint,
     repo: &mut BoxRepository,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
     username: String,
     password: String,
 ) -> Result<(CompatSession, User), RouteError> {
@@ -461,7 +522,7 @@ mod tests {
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
     /// Test that the server advertises the right login flows.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -475,23 +536,71 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        assert_eq!(
-            body,
-            serde_json::json!({
-                "flows": [
-                    {
-                        "type": "m.login.password",
-                    },
-                    {
-                        "type": "m.login.sso",
-                        "org.matrix.msc3824.delegated_oidc_compatibility": true,
-                    },
-                    {
-                        "type": "m.login.token",
-                    }
-                ],
-            })
-        );
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "flows": [
+            {
+              "type": "m.login.password"
+            },
+            {
+              "type": "m.login.sso",
+              "org.matrix.msc3824.delegated_oidc_compatibility": true
+            },
+            {
+              "type": "m.login.token"
+            }
+          ]
+        }
+        "###);
+    }
+
+    /// Test the cases where the body is invalid
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_bad_body(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // No/empty body
+        let request = Request::post("/_matrix/client/v3/login").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_NOT_JSON",
+          "error": "Invalid Content-Type header: expected application/json"
+        }
+        "###);
+
+        // Missing keys in body
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({}));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_BAD_JSON",
+          "error": "JSON fields are not valid"
+        }
+        "###);
+
+        // Invalid JSON
+        let request = Request::post("/_matrix/client/v3/login")
+            .header("Content-Type", "application/json")
+            .body("{".to_owned())
+            .unwrap();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_NOT_JSON",
+          "error": "Body is not a valid JSON document"
+        }
+        "###);
     }
 
     /// Test that the server doesn't allow login with a password if the password
@@ -499,11 +608,15 @@ mod tests {
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_password_disabled(pool: PgPool) {
         setup();
-        let state = {
-            let mut state = TestState::from_pool(pool).await.unwrap();
-            state.password_manager = PasswordManager::disabled();
-            state
-        };
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
 
         // Now let's get the login flows
         let request = Request::get("/_matrix/client/v3/login").empty();
@@ -511,20 +624,19 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        assert_eq!(
-            body,
-            serde_json::json!({
-                "flows": [
-                    {
-                        "type": "m.login.sso",
-                        "org.matrix.msc3824.delegated_oidc_compatibility": true,
-                    },
-                    {
-                        "type": "m.login.token",
-                    }
-                ],
-            })
-        );
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "flows": [
+            {
+              "type": "m.login.sso",
+              "org.matrix.msc3824.delegated_oidc_compatibility": true
+            },
+            {
+              "type": "m.login.token"
+            }
+          ]
+        }
+        "###);
 
         // Try to login with a password, it should be rejected
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -539,7 +651,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::BAD_REQUEST);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_UNRECOGNIZED");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_UNKNOWN",
+          "error": "Invalid login type"
+        }
+        "###);
     }
 
     async fn user_with_password(state: &TestState, username: &str, password: &str) {
@@ -593,12 +710,14 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
-        let body: ResponseBody = response.json();
-        assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id.as_ref().unwrap().as_str().len(), 10);
-        assert_eq!(body.user_id, "@alice:example.com");
-        assert_eq!(body.refresh_token, None);
-        assert_eq!(body.expires_in_ms, None);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
+          "device_id": "ZGpSvYQqlq",
+          "user_id": "@alice:example.com"
+        }
+        "###);
 
         // Do the same, but this time ask for a refresh token.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -614,12 +733,38 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
-        let body: ResponseBody = response.json();
-        assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id.as_ref().unwrap().as_str().len(), 10);
-        assert_eq!(body.user_id, "@alice:example.com");
-        assert!(body.refresh_token.is_some());
-        assert!(body.expires_in_ms.is_some());
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
+          "device_id": "42oTpLoieH",
+          "user_id": "@alice:example.com",
+          "refresh_token": "mcr_7IvDc44woP66fRQoS9MVcHXO9OeBmR_0jDGr1",
+          "expires_in_ms": 300000
+        }
+        "###);
+
+        // Try logging in with the 'user' property
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "user": "alice",
+            "password": "password",
+        }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
+          "device_id": "Yp7FM44zJN",
+          "user_id": "@alice:example.com"
+        }
+        "###);
+
+        // Reset the state, to reset rate limits
+        let state = state.reset().await;
 
         // Try to login with a wrong password.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -634,7 +779,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_FORBIDDEN");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
 
         // Try to login with a wrong username.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -677,12 +827,14 @@ mod tests {
 
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
-        let body: ResponseBody = response.json();
-        assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id.as_ref().unwrap().as_str().len(), 10);
-        assert_eq!(body.user_id, "@alice:example.com");
-        assert_eq!(body.refresh_token, None);
-        assert_eq!(body.expires_in_ms, None);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
+          "device_id": "ZGpSvYQqlq",
+          "user_id": "@alice:example.com"
+        }
+        "###);
 
         // With a MXID, but with the wrong server name
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -697,7 +849,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_FORBIDDEN");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
     }
 
     /// Test that password logins are rate limited.
@@ -747,8 +904,39 @@ mod tests {
         let response = state.request(request.clone()).await;
         response.assert_status(StatusCode::TOO_MANY_REQUESTS);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_LIMIT_EXCEEDED");
-        assert_eq!(body["error"], "Too many login attempts");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_LIMIT_EXCEEDED",
+          "error": "Too many login attempts"
+        }
+        "###);
+    }
+
+    /// Test the response of an unsupported password identifier.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unsupported_login_identifier(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Try to login with an unsupported login flow.
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.email",
+                "user": "user@example.com"
+            },
+            "password": "password"
+        }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_UNKNOWN",
+          "error": "Unsupported login identifier"
+        }
+        "###);
     }
 
     /// Test the response of an unsupported login flow.
@@ -765,7 +953,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::BAD_REQUEST);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_UNRECOGNIZED");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_UNKNOWN",
+          "error": "Invalid login type"
+        }
+        "###);
     }
 
     /// Test `m.login.token` login flow.
@@ -800,7 +993,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_FORBIDDEN");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
+        }
+        "###);
 
         let (device, token) = get_login_token(&state, &user).await;
 
@@ -812,12 +1010,15 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
-        let body: ResponseBody = response.json();
-        assert!(!body.access_token.is_empty());
-        assert_eq!(body.device_id, Some(device));
-        assert_eq!(body.user_id, "@alice:example.com");
-        assert_eq!(body.refresh_token, None);
-        assert_eq!(body.expires_in_ms, None);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_uihy4bk51gxgUbUTa4XIh92RARTPTj_xADEE4",
+          "device_id": "Yp7FM44zJN",
+          "user_id": "@alice:example.com"
+        }
+        "###);
+        assert_eq!(body["device_id"], device.to_string());
 
         // Try again with the same token, it should fail.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -827,7 +1028,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_FORBIDDEN");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
+        }
+        "###);
 
         // Try to login, but wait too long before sending the request.
         let (_device, token) = get_login_token(&state, &user).await;
@@ -844,7 +1050,12 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert_eq!(body["errcode"], "M_FORBIDDEN");
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Login token expired"
+        }
+        "###);
     }
 
     /// Get a login token for a user.

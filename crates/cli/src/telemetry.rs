@@ -4,32 +4,31 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{
-    sync::{LazyLock, OnceLock},
-    time::Duration,
-};
+use std::sync::{LazyLock, OnceLock};
 
 use anyhow::Context as _;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{header::CONTENT_TYPE, Response};
+use hyper::{Response, header::CONTENT_TYPE};
 use mas_config::{
     MetricsConfig, MetricsExporterKind, Propagator, TelemetryConfig, TracingConfig,
     TracingExporterKind,
 };
 use opentelemetry::{
+    InstrumentationScope, KeyValue,
     metrics::Meter,
     propagation::{TextMapCompositePropagator, TextMapPropagator},
     trace::TracerProvider as _,
-    InstrumentationScope, KeyValue,
 };
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_prometheus::PrometheusExporter;
 use opentelemetry_sdk::{
-    metrics::{ManualReader, PeriodicReader, SdkMeterProvider},
-    propagation::{BaggagePropagator, TraceContextPropagator},
-    trace::{Sampler, Tracer, TracerProvider},
     Resource,
+    metrics::{ManualReader, SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
+    propagation::{BaggagePropagator, TraceContextPropagator},
+    trace::{
+        Sampler, SdkTracerProvider, Tracer, span_processor_with_async_runtime::BatchSpanProcessor,
+    },
 };
 use opentelemetry_semantic_conventions as semcov;
 use prometheus::Registry;
@@ -47,6 +46,7 @@ pub static METER: LazyLock<Meter> =
 
 pub static TRACER: OnceLock<Tracer> = OnceLock::new();
 static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
+static TRACER_PROVIDER: OnceLock<SdkTracerProvider> = OnceLock::new();
 static PROMETHEUS_REGISTRY: OnceLock<Registry> = OnceLock::new();
 
 pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
@@ -63,12 +63,16 @@ pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn shutdown() {
-    opentelemetry::global::shutdown_tracer_provider();
+pub fn shutdown() -> opentelemetry_sdk::error::OTelSdkResult {
+    if let Some(tracer_provider) = TRACER_PROVIDER.get() {
+        tracer_provider.shutdown()?;
+    }
 
     if let Some(meter_provider) = METER_PROVIDER.get() {
-        meter_provider.shutdown().unwrap();
+        meter_provider.shutdown()?;
     }
+
+    Ok(())
 }
 
 fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send + Sync> {
@@ -80,20 +84,20 @@ fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send 
     }
 }
 
-fn propagator(propagators: &[Propagator]) -> impl TextMapPropagator {
+fn propagator(propagators: &[Propagator]) -> TextMapCompositePropagator {
     let propagators = propagators.iter().copied().map(match_propagator).collect();
 
     TextMapCompositePropagator::new(propagators)
 }
 
-fn stdout_tracer_provider() -> TracerProvider {
+fn stdout_tracer_provider() -> SdkTracerProvider {
     let exporter = opentelemetry_stdout::SpanExporter::default();
-    TracerProvider::builder()
+    SdkTracerProvider::builder()
         .with_simple_exporter(exporter)
         .build()
 }
 
-fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<TracerProvider> {
+fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<SdkTracerProvider> {
     let mut exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
         .with_http_client(mas_http::reqwest_client());
@@ -104,8 +108,11 @@ fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<TracerProvider
         .build()
         .context("Failed to configure OTLP trace exporter")?;
 
-    let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+    let batch_processor =
+        BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+
+    let tracer_provider = SdkTracerProvider::builder()
+        .with_span_processor(batch_processor)
         .with_resource(resource())
         .with_sampler(Sampler::AlwaysOn)
         .build();
@@ -119,6 +126,9 @@ fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
         TracingExporterKind::Stdout => stdout_tracer_provider(),
         TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref())?,
     };
+    TRACER_PROVIDER
+        .set(tracer_provider.clone())
+        .map_err(|_| anyhow::anyhow!("TRACER_PROVIDER was set twice"))?;
 
     let tracer = tracer_provider.tracer_with_scope(SCOPE.clone());
     TRACER
@@ -185,7 +195,9 @@ fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
 
 pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFuture> {
     if PROMETHEUS_REGISTRY.get().is_none() {
-        tracing::warn!("A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config");
+        tracing::warn!(
+            "A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config"
+        );
     }
 
     tower::service_fn(prometheus_service_fn as _)
@@ -230,25 +242,20 @@ fn init_meter(config: &MetricsConfig) -> anyhow::Result<()> {
 }
 
 fn resource() -> Resource {
-    let resource = Resource::new([
-        KeyValue::new(semcov::resource::SERVICE_NAME, env!("CARGO_PKG_NAME")),
-        KeyValue::new(semcov::resource::SERVICE_VERSION, crate::VERSION),
-        KeyValue::new(semcov::resource::PROCESS_RUNTIME_NAME, "rust"),
-        KeyValue::new(
-            semcov::resource::PROCESS_RUNTIME_VERSION,
-            env!("VERGEN_RUSTC_SEMVER"),
-        ),
-    ]);
-
-    let detected = Resource::from_detectors(
-        Duration::from_secs(5),
-        vec![
-            Box::new(opentelemetry_sdk::resource::EnvResourceDetector::new()),
+    Resource::builder()
+        .with_service_name(env!("CARGO_PKG_NAME"))
+        .with_detectors(&[
+            Box::new(opentelemetry_resource_detectors::HostResourceDetector::default()),
             Box::new(opentelemetry_resource_detectors::OsResourceDetector),
             Box::new(opentelemetry_resource_detectors::ProcessResourceDetector),
-            Box::new(opentelemetry_sdk::resource::TelemetryResourceDetector),
-        ],
-    );
-
-    resource.merge(&detected)
+        ])
+        .with_attributes([
+            KeyValue::new(semcov::resource::SERVICE_VERSION, crate::VERSION),
+            KeyValue::new(semcov::resource::PROCESS_RUNTIME_NAME, "rust"),
+            KeyValue::new(
+                semcov::resource::PROCESS_RUNTIME_VERSION,
+                env!("VERGEN_RUSTC_SEMVER"),
+            ),
+        ])
+        .build()
 }

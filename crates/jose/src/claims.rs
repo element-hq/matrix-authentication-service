@@ -8,7 +8,7 @@ use std::{collections::HashMap, convert::Infallible, marker::PhantomData, ops::D
 
 use base64ct::{Base64UrlUnpadded, Encoding};
 use mas_iana::jose::JsonWebSignatureAlg;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use sha2::{Digest, Sha256, Sha384, Sha512};
 use thiserror::Error;
 
@@ -640,15 +640,18 @@ mod tests {
 
             // so no leeway should be fine as well here
             let time_options = TimeOptions::new(now).leeway(chrono::Duration::zero());
-            assert!(IAT
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(NBF
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(EXP
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
+            assert!(
+                IAT.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                NBF.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                EXP.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
         }
 
         // Let's go back in time a bit
@@ -668,9 +671,10 @@ mod tests {
                 NBF.extract_required_with_options(&mut claims, &time_options),
                 Err(ClaimError::ValidationError { claim: "nbf", .. }),
             ));
-            assert!(EXP
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
+            assert!(
+                EXP.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
         }
 
         {
@@ -680,15 +684,18 @@ mod tests {
             // but no time variance is allowed. "iat" and "nbf" validation will fail
             let time_options =
                 TimeOptions::new(now).leeway(chrono::Duration::microseconds(2 * 60 * 1000 * 1000));
-            assert!(IAT
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(NBF
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(EXP
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
+            assert!(
+                IAT.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                NBF.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                EXP.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
         }
 
         // Let's wait some time so it expires
@@ -700,12 +707,14 @@ mod tests {
 
             // but no time variance is allowed. "exp" validation will fail
             let time_options = TimeOptions::new(now).leeway(chrono::Duration::zero());
-            assert!(IAT
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(NBF
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
+            assert!(
+                IAT.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                NBF.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
             assert!(matches!(
                 EXP.extract_required_with_options(&mut claims, &time_options),
                 Err(ClaimError::ValidationError { claim: "exp", .. }),
@@ -718,15 +727,18 @@ mod tests {
             // Same, but with a 2 minutes leeway should be fine then
             let time_options =
                 TimeOptions::new(now).leeway(chrono::Duration::try_minutes(2).unwrap());
-            assert!(IAT
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(NBF
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
-            assert!(EXP
-                .extract_required_with_options(&mut claims, &time_options)
-                .is_ok());
+            assert!(
+                IAT.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                NBF.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
+            assert!(
+                EXP.extract_required_with_options(&mut claims, &time_options)
+                    .is_ok()
+            );
         }
     }
 

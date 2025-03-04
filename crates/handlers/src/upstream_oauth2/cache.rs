@@ -11,7 +11,7 @@ use mas_data_model::{
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use mas_oidc_client::error::DiscoveryError;
-use mas_storage::{upstream_oauth2::UpstreamOAuthProviderRepository, RepositoryAccess};
+use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderRepository};
 use oauth2_types::oidc::VerifiedProviderMetadata;
 use tokio::sync::RwLock;
 use url::Url;
@@ -57,7 +57,7 @@ impl<'a> LazyProviderInfos<'a> {
                 UpstreamOAuthProviderDiscoveryMode::Oidc => true,
                 UpstreamOAuthProviderDiscoveryMode::Insecure => false,
                 UpstreamOAuthProviderDiscoveryMode::Disabled => {
-                    return Err(DiscoveryError::Disabled)
+                    return Err(DiscoveryError::Disabled);
                 }
             };
 
@@ -296,12 +296,12 @@ mod tests {
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
-    use mas_storage::{clock::MockClock, Clock};
-    use oauth2_types::scope::{Scope, OPENID};
+    use mas_storage::{Clock, clock::MockClock};
+    use oauth2_types::scope::{OPENID, Scope};
     use ulid::Ulid;
     use wiremock::{
-        matchers::{method, path},
         Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
     };
 
     use super::*;

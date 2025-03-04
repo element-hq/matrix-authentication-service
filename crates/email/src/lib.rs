@@ -12,7 +12,7 @@ mod mailer;
 mod transport;
 
 pub use lettre::{
-    message::Mailbox, transport::smtp::authentication::Credentials as SmtpCredentials, Address,
+    Address, message::Mailbox, transport::smtp::authentication::Credentials as SmtpCredentials,
 };
 pub use mas_templates::EmailVerificationContext;
 

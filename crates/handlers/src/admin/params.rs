@@ -11,12 +11,12 @@ use std::num::NonZeroUsize;
 
 use aide::OperationIo;
 use axum::{
+    Json,
     extract::{
-        rejection::{PathRejection, QueryRejection},
         FromRequestParts, Path, Query,
+        rejection::{PathRejection, QueryRejection},
     },
     response::IntoResponse,
-    Json,
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;

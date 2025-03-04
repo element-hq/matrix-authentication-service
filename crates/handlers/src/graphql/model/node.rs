@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use async_graphql::{Interface, ID};
+use async_graphql::{ID, Interface};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;

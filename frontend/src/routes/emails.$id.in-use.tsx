@@ -6,7 +6,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
-import IconError from "@vector-im/compound-design-tokens/assets/web/icons/error";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
@@ -41,7 +41,7 @@ function EmailInUse(): React.ReactElement {
   return (
     <Layout>
       <PageHeading
-        Icon={IconError}
+        Icon={IconErrorSolid}
         invalid
         title={t("frontend.email_in_use.heading", {
           email: userEmailAuthentication.email,

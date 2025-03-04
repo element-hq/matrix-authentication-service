@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use mas_i18n::{translations::TranslationTree, Message};
+use mas_i18n::{Message, translations::TranslationTree};
 use minijinja::machinery::Span;
 
 pub struct Context {

@@ -7,10 +7,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
-use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use futures_util::future::OptionFuture;
 use pbkdf2::Pbkdf2;
-use rand::{CryptoRng, Rng, RngCore, SeedableRng};
+use rand::{CryptoRng, RngCore, SeedableRng, distributions::Standard, prelude::Distribution};
 use thiserror::Error;
 use zeroize::Zeroizing;
 use zxcvbn::zxcvbn;
@@ -267,7 +267,7 @@ impl Algorithm {
                     password.extend_from_slice(pepper);
                 }
 
-                let salt = rng.gen();
+                let salt = Standard.sample(&mut rng);
 
                 let hashed = bcrypt::hash_with_salt(password, cost.unwrap_or(12), salt)?;
                 Ok(hashed.format_for_version(bcrypt::Version::TwoB))

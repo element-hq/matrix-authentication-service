@@ -7,18 +7,19 @@
 use std::{collections::HashMap, fs::File, io::BufReader, str::FromStr};
 
 use camino::{Utf8Path, Utf8PathBuf};
-use icu_list::{ListError, ListFormatter, ListLength};
+use icu_experimental::relativetime::{
+    RelativeTimeFormatter, RelativeTimeFormatterOptions, options::Numeric,
+};
 use icu_locid::{Locale, ParserError};
 use icu_locid_transform::fallback::{
     LocaleFallbackPriority, LocaleFallbackSupplement, LocaleFallbacker, LocaleFallbackerWithConfig,
 };
 use icu_plurals::{PluralRules, PluralsError};
 use icu_provider::{
-    data_key, fallback::LocaleFallbackConfig, DataError, DataErrorKind, DataKey, DataLocale,
-    DataRequest, DataRequestMetadata,
+    DataError, DataErrorKind, DataKey, DataLocale, DataRequest, DataRequestMetadata, data_key,
+    fallback::LocaleFallbackConfig,
 };
 use icu_provider_adapters::fallback::LocaleFallbackProvider;
-use icu_relativetime::{options::Numeric, RelativeTimeFormatter, RelativeTimeFormatterOptions};
 use thiserror::Error;
 use writeable::Writeable;
 
@@ -33,6 +34,13 @@ const FALLBACKER: LocaleFallbackerWithConfig<'static> = LocaleFallbacker::new().
     config.fallback_supplement = Some(LocaleFallbackSupplement::Collation);
     config
 });
+
+/// Construct a [`DataRequest`] for the given locale
+pub fn data_request_for_locale(locale: &DataLocale) -> DataRequest<'_> {
+    let mut metadata = DataRequestMetadata::default();
+    metadata.silent = true;
+    DataRequest { locale, metadata }
+}
 
 /// Error type for loading translations
 #[derive(Debug, Error)]
@@ -74,7 +82,6 @@ pub enum LoadError {
 pub struct Translator {
     translations: HashMap<DataLocale, TranslationTree>,
     plural_provider: LocaleFallbackProvider<icu_plurals::provider::Baked>,
-    list_provider: LocaleFallbackProvider<icu_list::provider::Baked>,
     default_locale: DataLocale,
 }
 
@@ -87,13 +94,10 @@ impl Translator {
             icu_plurals::provider::Baked,
             fallbacker.clone(),
         );
-        let list_provider =
-            LocaleFallbackProvider::new_with_fallbacker(icu_list::provider::Baked, fallbacker);
 
         Self {
             translations,
             plural_provider,
-            list_provider,
             // TODO: make this configurable
             default_locale: icu_locid::locale!("en").into(),
         }
@@ -203,19 +207,16 @@ impl Translator {
     /// Returns an error if the requested locale is not found, or if the
     /// requested key is not found.
     pub fn message(&self, locale: &DataLocale, key: &str) -> Result<&Message, DataError> {
-        let request = DataRequest {
-            locale,
-            metadata: DataRequestMetadata::default(),
-        };
+        let request = data_request_for_locale(locale);
 
         let tree = self
             .translations
             .get(locale)
-            .ok_or(DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
 
         let message = tree
             .message(key)
-            .ok_or(DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
 
         Ok(message)
     }
@@ -276,71 +277,18 @@ impl Translator {
         let plurals = PluralRules::try_new_cardinal_unstable(&self.plural_provider, locale)?;
         let category = plurals.category_for(count);
 
-        let request = DataRequest {
-            locale,
-            metadata: DataRequestMetadata::default(),
-        };
+        let request = data_request_for_locale(locale);
 
         let tree = self
             .translations
             .get(locale)
-            .ok_or(DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
 
         let message = tree
             .pluralize(key, category)
-            .ok_or(DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
 
         Ok(message)
-    }
-
-    /// Format a list of items with the "and" conjunction.
-    ///
-    /// # Parameters
-    ///
-    /// * `locale` - The locale to use.
-    /// * `items` - The items to format.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the requested locale is not found.
-    pub fn and_list<'a, W: Writeable + 'a, I: Iterator<Item = W> + Clone + 'a>(
-        &'a self,
-        locale: &DataLocale,
-        items: I,
-    ) -> Result<String, ListError> {
-        let formatter = ListFormatter::try_new_and_with_length_unstable(
-            &self.list_provider,
-            locale,
-            ListLength::Wide,
-        )?;
-
-        let list = formatter.format_to_string(items);
-        Ok(list)
-    }
-
-    /// Format a list of items with the "or" conjunction.
-    ///
-    /// # Parameters
-    ///
-    /// * `locale` - The locale to use.
-    /// * `items` - The items to format.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the requested locale is not found.
-    pub fn or_list<'a, W: Writeable + 'a, I: Iterator<Item = W> + Clone + 'a>(
-        &'a self,
-        locale: &DataLocale,
-        items: I,
-    ) -> Result<String, ListError> {
-        let formatter = ListFormatter::try_new_or_with_length_unstable(
-            &self.list_provider,
-            locale,
-            ListLength::Wide,
-        )?;
-
-        let list = formatter.format_to_string(items);
-        Ok(list)
     }
 
     /// Format a relative date
@@ -358,7 +306,7 @@ impl Translator {
         &self,
         locale: &DataLocale,
         days: i64,
-    ) -> Result<String, icu_relativetime::RelativeTimeError> {
+    ) -> Result<String, icu_experimental::relativetime::RelativeTimeError> {
         // TODO: this is not using the fallbacker
         let formatter = RelativeTimeFormatter::try_new_long_day(
             locale,
@@ -528,30 +476,5 @@ mod tests {
         let formatted = message.format(&arg_list!(count = 1)).unwrap();
         assert_eq!(formatted, "1 active session.");
         assert_eq!(locale, locale!("en").into());
-    }
-
-    #[test]
-    fn test_list() {
-        let translator = translator();
-
-        let list = translator
-            .and_list(&locale!("en").into(), ["one", "two", "three"].iter())
-            .unwrap();
-        assert_eq!(list, "one, two, and three");
-
-        let list = translator
-            .and_list(&locale!("fr").into(), ["un", "deux", "trois"].iter())
-            .unwrap();
-        assert_eq!(list, "un, deux et trois");
-
-        let list = translator
-            .or_list(&locale!("en").into(), ["one", "two", "three"].iter())
-            .unwrap();
-        assert_eq!(list, "one, two, or three");
-
-        let list = translator
-            .or_list(&locale!("fr").into(), ["un", "deux", "trois"].iter())
-            .unwrap();
-        assert_eq!(list, "un, deux ou trois");
     }
 }

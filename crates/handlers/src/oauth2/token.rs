@@ -4,7 +4,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use axum::{extract::State, response::IntoResponse, Json};
+use std::sync::Arc;
+
+use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use headers::{CacheControl, HeaderMap, HeaderMapExt, Pragma};
@@ -17,17 +19,17 @@ use mas_data_model::{
     AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType, UserAgent,
 };
 use mas_keystore::{Encrypter, Keystore};
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_oidc_client::types::scope::ScopeToken;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository,
         OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
     user::BrowserSessionRepository,
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
 };
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
@@ -43,7 +45,7 @@ use tracing::{debug, info};
 use ulid::Ulid;
 
 use super::{generate_id_token, generate_token_pair};
-use crate::{impl_from_error_for_route, BoundActivityTracker};
+use crate::{BoundActivityTracker, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -103,7 +105,9 @@ pub(crate) enum RouteError {
     )]
     NoSuchNextRefreshToken { next: Ulid, previous: Ulid },
 
-    #[error("failed to load the access token ({access_token:?}) associated with the next refresh token ({refresh_token:?})")]
+    #[error(
+        "failed to load the access token ({access_token:?}) associated with the next refresh token ({refresh_token:?})"
+    )]
     NoSuchNextAccessToken {
         access_token: Ulid,
         refresh_token: Ulid,
@@ -224,7 +228,7 @@ pub(crate) async fn post(
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(encrypter): State<Encrypter>,
     policy: Policy,
@@ -335,7 +339,7 @@ async fn authorization_code_grant(
     url_builder: &UrlBuilder,
     site_config: &SiteConfig,
     mut repo: BoxRepository,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &Arc<dyn HomeserverConnection>,
     user_agent: Option<UserAgent>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
@@ -739,7 +743,7 @@ async fn device_code_grant(
     url_builder: &UrlBuilder,
     site_config: &SiteConfig,
     mut repo: BoxRepository,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &Arc<dyn HomeserverConnection>,
     user_agent: Option<UserAgent>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
@@ -884,12 +888,12 @@ mod tests {
     use oauth2_types::{
         registration::ClientRegistrationResponse,
         requests::{DeviceAuthorizationResponse, ResponseMode},
-        scope::{Scope, OPENID},
+        scope::{OPENID, Scope},
     };
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{setup, RequestBuilderExt, ResponseExt, TestState};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_auth_code_grant(pool: PgPool) {

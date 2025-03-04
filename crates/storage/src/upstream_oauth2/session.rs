@@ -9,7 +9,7 @@ use mas_data_model::{UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, Upstr
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{repository_impl, Clock};
+use crate::{Clock, repository_impl};
 
 /// An [`UpstreamOAuthSessionRepository`] helps interacting with
 /// [`UpstreamOAuthAuthorizationSession`] saved in the storage backend
