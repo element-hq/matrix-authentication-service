@@ -16,7 +16,7 @@ use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tracing::{Level, error, info, warn};
-use uuid::Uuid;
+use uuid::{NonNilUuid, Uuid};
 
 use self::{
     constraint_pausing::{ConstraintDescription, IndexDescription},
@@ -197,7 +197,7 @@ pub struct MasWriter {
 }
 
 pub struct MasNewUser {
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub username: String,
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
@@ -210,20 +210,20 @@ pub struct MasNewUser {
 
 pub struct MasNewUserPassword {
     pub user_password_id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub hashed_password: String,
     pub created_at: DateTime<Utc>,
 }
 
 pub struct MasNewEmailThreepid {
     pub user_email_id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub email: String,
     pub created_at: DateTime<Utc>,
 }
 
 pub struct MasNewUnsupportedThreepid {
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub medium: String,
     pub address: String,
     pub created_at: DateTime<Utc>,
@@ -231,7 +231,7 @@ pub struct MasNewUnsupportedThreepid {
 
 pub struct MasNewUpstreamOauthLink {
     pub link_id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub upstream_provider_id: Uuid,
     pub subject: String,
     pub created_at: DateTime<Utc>,
@@ -239,7 +239,7 @@ pub struct MasNewUpstreamOauthLink {
 
 pub struct MasNewCompatSession {
     pub session_id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: NonNilUuid,
     pub device_id: Option<String>,
     pub human_name: Option<String>,
     pub created_at: DateTime<Utc>,
@@ -598,7 +598,7 @@ impl MasWriter {
                         is_guest,
                     } in users
                     {
-                        user_ids.push(user_id);
+                        user_ids.push(user_id.get());
                         usernames.push(username);
                         created_ats.push(created_at);
                         locked_ats.push(locked_at);
@@ -662,7 +662,7 @@ impl MasWriter {
             } in passwords
             {
                 user_password_ids.push(user_password_id);
-                user_ids.push(user_id);
+                user_ids.push(user_id.get());
                 hashed_passwords.push(hashed_password);
                 created_ats.push(created_at);
                 versions.push(MIGRATED_PASSWORD_VERSION.into());
@@ -705,7 +705,7 @@ impl MasWriter {
                 } in threepids
                 {
                     user_email_ids.push(user_email_id);
-                    user_ids.push(user_id);
+                    user_ids.push(user_id.get());
                     emails.push(email);
                     created_ats.push(created_at);
                 }
@@ -748,7 +748,7 @@ impl MasWriter {
                     created_at,
                 } in threepids
                 {
-                    user_ids.push(user_id);
+                    user_ids.push(user_id.get());
                     mediums.push(medium);
                     addresses.push(address);
                     created_ats.push(created_at);
@@ -793,7 +793,7 @@ impl MasWriter {
                 } in links
                 {
                     link_ids.push(link_id);
-                    user_ids.push(user_id);
+                    user_ids.push(user_id.get());
                     upstream_provider_ids.push(upstream_provider_id);
                     subjects.push(subject);
                     created_ats.push(created_at);
@@ -850,7 +850,7 @@ impl MasWriter {
                     } in sessions
                     {
                         session_ids.push(session_id);
-                        user_ids.push(user_id);
+                        user_ids.push(user_id.get());
                         device_ids.push(device_id);
                         human_names.push(human_name);
                         created_ats.push(created_at);
@@ -1091,7 +1091,7 @@ mod test {
     use futures_util::TryStreamExt;
     use serde::Serialize;
     use sqlx::{Column, PgConnection, PgPool, Row};
-    use uuid::Uuid;
+    use uuid::{NonNilUuid, Uuid};
 
     use crate::{
         LockedMasDatabase, MasWriter,
@@ -1213,7 +1213,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1231,7 +1231,7 @@ mod test {
     /// Tests writing a single user, with a password.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_write_user_with_password(pool: PgPool) {
-        const USER_ID: Uuid = Uuid::from_u128(1u128);
+        const USER_ID: NonNilUuid = NonNilUuid::new(Uuid::from_u128(1u128)).unwrap();
 
         let mut writer = make_mas_writer(&pool).await;
 
@@ -1268,7 +1268,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1281,7 +1281,7 @@ mod test {
         writer
             .write_email_threepids(vec![MasNewEmailThreepid {
                 user_email_id: Uuid::from_u128(2u128),
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 email: "alice@example.org".to_owned(),
                 created_at: DateTime::default(),
             }])
@@ -1301,7 +1301,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1313,7 +1313,7 @@ mod test {
 
         writer
             .write_unsupported_threepids(vec![MasNewUnsupportedThreepid {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 medium: "msisdn".to_owned(),
                 address: "441189998819991197253".to_owned(),
                 created_at: DateTime::default(),
@@ -1335,7 +1335,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1347,7 +1347,7 @@ mod test {
 
         writer
             .write_upstream_oauth_links(vec![MasNewUpstreamOauthLink {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 link_id: Uuid::from_u128(3u128),
                 upstream_provider_id: Uuid::from_u128(4u128),
                 subject: "12345.67890".to_owned(),
@@ -1368,7 +1368,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1380,7 +1380,7 @@ mod test {
 
         writer
             .write_compat_sessions(vec![MasNewCompatSession {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 session_id: Uuid::from_u128(5u128),
                 created_at: DateTime::default(),
                 device_id: Some("ADEVICE".to_owned()),
@@ -1405,7 +1405,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1417,7 +1417,7 @@ mod test {
 
         writer
             .write_compat_sessions(vec![MasNewCompatSession {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 session_id: Uuid::from_u128(5u128),
                 created_at: DateTime::default(),
                 device_id: Some("ADEVICE".to_owned()),
@@ -1454,7 +1454,7 @@ mod test {
 
         writer
             .write_users(vec![MasNewUser {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
@@ -1466,7 +1466,7 @@ mod test {
 
         writer
             .write_compat_sessions(vec![MasNewCompatSession {
-                user_id: Uuid::from_u128(1u128),
+                user_id: NonNilUuid::new(Uuid::from_u128(1u128)).unwrap(),
                 session_id: Uuid::from_u128(5u128),
                 created_at: DateTime::default(),
                 device_id: Some("ADEVICE".to_owned()),

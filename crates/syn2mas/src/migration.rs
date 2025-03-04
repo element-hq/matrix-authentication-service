@@ -22,7 +22,7 @@ use thiserror::Error;
 use thiserror_ext::ContextInto;
 use tracing::Level;
 use ulid::Ulid;
-use uuid::Uuid;
+use uuid::{NonNilUuid, Uuid};
 
 use crate::{
     SynapseReader,
@@ -98,7 +98,7 @@ impl UserFlags {
 
 #[derive(Debug, Clone, Copy)]
 struct UserInfo {
-    mas_user_id: Uuid,
+    mas_user_id: Option<NonNilUuid>,
     flags: UserFlags,
 }
 
@@ -110,7 +110,7 @@ struct MigrationState {
     users: HashMap<CompactString, UserInfo>,
 
     /// Mapping of MAS user ID + device ID to a MAS compat session ID.
-    devices_to_compat_sessions: HashMap<(Uuid, CompactString), Uuid>,
+    devices_to_compat_sessions: HashMap<(NonNilUuid, CompactString), Uuid>,
 
     /// A mapping of Synapse external ID providers to MAS upstream OAuth 2.0
     /// provider ID
@@ -190,7 +190,7 @@ async fn migrate_users(
             state.users.insert(
                 CompactString::new(&mas_user.username),
                 UserInfo {
-                    mas_user_id: Uuid::nil(),
+                    mas_user_id: None,
                     flags,
                 },
             );
@@ -200,7 +200,7 @@ async fn migrate_users(
         state.users.insert(
             CompactString::new(&mas_user.username),
             UserInfo {
-                mas_user_id: mas_user.user_id,
+                mas_user_id: Some(mas_user.user_id),
                 flags,
             },
         );
@@ -258,16 +258,16 @@ async fn migrate_threepids(
             });
         };
 
-        if user_infos.flags.is_appservice() {
+        let Some(mas_user_id) = user_infos.mas_user_id else {
             continue;
-        }
+        };
 
         if medium == "email" {
             email_buffer
                 .write(
                     mas,
                     MasNewEmailThreepid {
-                        user_id: user_infos.mas_user_id,
+                        user_id: mas_user_id,
                         user_email_id: Uuid::from(Ulid::from_datetime_with_source(
                             created_at.into(),
                             rng,
@@ -283,7 +283,7 @@ async fn migrate_threepids(
                 .write(
                     mas,
                     MasNewUnsupportedThreepid {
-                        user_id: user_infos.mas_user_id,
+                        user_id: mas_user_id,
                         medium,
                         address,
                         created_at,
@@ -337,9 +337,9 @@ async fn migrate_external_ids(
             });
         };
 
-        if user_infos.flags.is_appservice() {
+        let Some(mas_user_id) = user_infos.mas_user_id else {
             continue;
-        }
+        };
 
         let Some(&upstream_provider_id) = state.provider_id_mapping.get(&auth_provider) else {
             return Err(Error::MissingAuthProviderMapping {
@@ -350,7 +350,7 @@ async fn migrate_external_ids(
 
         // To save having to store user creation times, extract it from the ULID
         // This gives millisecond precision — good enough.
-        let user_created_ts = Ulid::from(user_infos.mas_user_id).datetime();
+        let user_created_ts = Ulid::from(mas_user_id.get()).datetime();
 
         let link_id: Uuid = Ulid::from_datetime_with_source(user_created_ts, rng).into();
 
@@ -359,7 +359,7 @@ async fn migrate_external_ids(
                 mas,
                 MasNewUpstreamOauthLink {
                     link_id,
-                    user_id: user_infos.mas_user_id,
+                    user_id: mas_user_id,
                     upstream_provider_id,
                     subject,
                     created_at: user_created_ts.into(),
@@ -416,6 +416,10 @@ async fn migrate_devices(
             });
         };
 
+        let Some(mas_user_id) = user_infos.mas_user_id else {
+            continue;
+        };
+
         if user_infos.flags.is_deactivated()
             || user_infos.flags.is_guest()
             || user_infos.flags.is_appservice()
@@ -425,7 +429,7 @@ async fn migrate_devices(
 
         let session_id = *state
             .devices_to_compat_sessions
-            .entry((user_infos.mas_user_id, CompactString::new(&device_id)))
+            .entry((mas_user_id, CompactString::new(&device_id)))
             .or_insert_with(||
                 // We don't have a creation time for this device (as it has no access token),
                 // so use now as a least-evil fallback.
@@ -454,7 +458,7 @@ async fn migrate_devices(
                 mas,
                 MasNewCompatSession {
                     session_id,
-                    user_id: user_infos.mas_user_id,
+                    user_id: mas_user_id,
                     device_id: Some(device_id),
                     human_name: display_name,
                     created_at,
@@ -510,6 +514,10 @@ async fn migrate_unrefreshable_access_tokens(
             });
         };
 
+        let Some(mas_user_id) = user_infos.mas_user_id else {
+            continue;
+        };
+
         if user_infos.flags.is_deactivated()
             || user_infos.flags.is_guest()
             || user_infos.flags.is_appservice()
@@ -526,7 +534,7 @@ async fn migrate_unrefreshable_access_tokens(
             // Use the existing device_id if this is the second token for a device
             *state
                 .devices_to_compat_sessions
-                .entry((user_infos.mas_user_id, CompactString::new(&device_id)))
+                .entry((mas_user_id, CompactString::new(&device_id)))
                 .or_insert_with(|| {
                     Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng))
                 })
@@ -541,7 +549,7 @@ async fn migrate_unrefreshable_access_tokens(
                     mas,
                     MasNewCompatSession {
                         session_id: deviceless_session_id,
-                        user_id: user_infos.mas_user_id,
+                        user_id: mas_user_id,
                         device_id: None,
                         human_name: None,
                         created_at,
@@ -622,6 +630,10 @@ async fn migrate_refreshable_token_pairs(
             });
         };
 
+        let Some(mas_user_id) = user_infos.mas_user_id else {
+            continue;
+        };
+
         if user_infos.flags.is_deactivated()
             || user_infos.flags.is_guest()
             || user_infos.flags.is_appservice()
@@ -637,7 +649,7 @@ async fn migrate_refreshable_token_pairs(
         // Use the existing device_id if this is the second token for a device
         let session_id = *state
             .devices_to_compat_sessions
-            .entry((user_infos.mas_user_id, CompactString::new(&device_id)))
+            .entry((mas_user_id, CompactString::new(&device_id)))
             .or_insert_with(|| Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng)));
 
         let access_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
@@ -695,11 +707,15 @@ fn transform_user(
         .into_extract_localpart(user.name.clone())?
         .to_owned();
 
+    let user_id = Uuid::from(Ulid::from_datetime_with_source(
+        DateTime::<Utc>::from(user.creation_ts).into(),
+        rng,
+    ))
+    .try_into()
+    .expect("ULID generation lead to a nil UUID, this is a bug!");
+
     let new_user = MasNewUser {
-        user_id: Uuid::from(Ulid::from_datetime_with_source(
-            DateTime::<Utc>::from(user.creation_ts).into(),
-            rng,
-        )),
+        user_id,
         username,
         created_at: user.creation_ts.into(),
         locked_at: bool::from(user.deactivated).then_some(user.creation_ts.into()),
