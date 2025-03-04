@@ -14,17 +14,22 @@ anyhow.workspace = true
 bitflags.workspace = true
 camino.workspace = true
 figment.workspace = true
+pin-project-lite = "0.2.16"
 serde.workspace = true
 thiserror.workspace = true
 thiserror-ext.workspace = true
 tokio.workspace = true
+tokio-util.workspace = true
 sqlx.workspace = true
 chrono.workspace = true
 compact_str.workspace = true
 tracing.workspace = true
+tracing-indicatif.workspace = true
 futures-util = "0.3.31"
+rustc-hash = "2.1.1"
 
 rand.workspace = true
+rand_chacha = "0.3.1"
 uuid = "1.14.0"
 ulid = { workspace = true, features = ["uuid"] }
 
