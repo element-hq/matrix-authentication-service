@@ -76,7 +76,7 @@ version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
-version = "0.1.86"
+version = "0.1.87"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
@@ -275,7 +275,7 @@ version = "0.5.0"
 
 # JSON Schema generation
 [workspace.dependencies.schemars]
-version = "0.8.21"
+version = "0.8.22"
 features = ["url", "chrono", "preserve_order"]
 
 # Query builder
@@ -316,7 +316,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.139"
+version = "1.0.140"
 features = ["preserve_order"]
 
 # SQL database support

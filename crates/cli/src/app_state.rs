@@ -15,8 +15,7 @@ use mas_handlers::{
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
-use mas_matrix::BoxHomeserverConnection;
-use mas_matrix_synapse::SynapseConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, SystemClock};
@@ -37,7 +36,7 @@ pub struct AppState {
     pub cookie_manager: CookieManager,
     pub encrypter: Encrypter,
     pub url_builder: UrlBuilder,
-    pub homeserver_connection: SynapseConnection,
+    pub homeserver_connection: Arc<dyn HomeserverConnection>,
     pub policy_factory: Arc<PolicyFactory>,
     pub graphql_schema: GraphQLSchema,
     pub http_client: reqwest::Client,
@@ -210,9 +209,9 @@ impl FromRef<AppState> for Arc<PolicyFactory> {
     }
 }
 
-impl FromRef<AppState> for BoxHomeserverConnection {
+impl FromRef<AppState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &AppState) -> Self {
-        Box::new(input.homeserver_connection.clone())
+        Arc::clone(&input.homeserver_connection)
     }
 }
 

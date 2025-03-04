@@ -50,13 +50,11 @@ impl HomeserverConnection {
 
 #[async_trait]
 impl crate::HomeserverConnection for HomeserverConnection {
-    type Error = anyhow::Error;
-
     fn homeserver(&self) -> &str {
         &self.homeserver
     }
 
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, Self::Error> {
+    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
         let users = self.users.read().await;
         let user = users.get(mxid).context("User not found")?;
         Ok(MatrixUser {
@@ -66,7 +64,7 @@ impl crate::HomeserverConnection for HomeserverConnection {
         })
     }
 
-    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, Self::Error> {
+    async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         let mut users = self.users.write().await;
         let inserted = !users.contains_key(request.mxid());
         let user = users.entry(request.mxid().to_owned()).or_insert(MockUser {
@@ -99,7 +97,7 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(inserted)
     }
 
-    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, Self::Error> {
+    async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
         if self.reserved_localparts.read().await.contains(localpart) {
             return Ok(false);
         }
@@ -109,28 +107,32 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(!users.contains_key(&mxid))
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.devices.insert(device_id.to_owned());
         Ok(())
     }
 
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), Self::Error> {
+    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.devices.remove(device_id);
         Ok(())
     }
 
-    async fn sync_devices(&self, mxid: &str, devices: HashSet<String>) -> Result<(), Self::Error> {
+    async fn sync_devices(
+        &self,
+        mxid: &str,
+        devices: HashSet<String>,
+    ) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.devices = devices;
         Ok(())
     }
 
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), Self::Error> {
+    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.devices.clear();
@@ -144,7 +146,7 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(())
     }
 
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.deactivated = false;
@@ -152,21 +154,21 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(())
     }
 
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), Self::Error> {
+    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.displayname = Some(displayname.to_owned());
         Ok(())
     }
 
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.displayname = None;
         Ok(())
     }
 
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), Self::Error> {
+    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.cross_signing_reset_allowed = true;

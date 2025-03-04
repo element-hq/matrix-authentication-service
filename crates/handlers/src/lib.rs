@@ -15,7 +15,11 @@
     clippy::let_with_type_underscore,
 )]
 
-use std::{convert::Infallible, sync::LazyLock, time::Duration};
+use std::{
+    convert::Infallible,
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
 
 use axum::{
     Extension, Router,
@@ -35,7 +39,7 @@ use mas_axum_utils::{FancyError, cookies::CookieJar};
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Route, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
@@ -198,7 +202,7 @@ where
     Encrypter: FromRef<S>,
     reqwest::Client: FromRef<S>,
     SiteConfig: FromRef<S>,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
@@ -254,7 +258,7 @@ where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
     SiteConfig: FromRef<S>,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     Limiter: FromRef<S>,
     BoundActivityTracker: FromRequestParts<S>,
@@ -322,7 +326,7 @@ where
     SiteConfig: FromRef<S>,
     Limiter: FromRef<S>,
     reqwest::Client: FromRef<S>,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,

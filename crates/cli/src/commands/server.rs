@@ -15,7 +15,6 @@ use mas_config::{
 };
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
-use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
@@ -26,9 +25,10 @@ use crate::{
     app_state::AppState,
     lifecycle::LifecycleManager,
     util::{
-        database_pool_from_config, load_policy_factory_dynamic_data_continuously,
-        mailer_from_config, password_manager_from_config, policy_factory_from_config,
-        site_config_from_config, templates_from_config, test_mailer_in_background,
+        database_pool_from_config, homeserver_connection_from_config,
+        load_policy_factory_dynamic_data_continuously, mailer_from_config,
+        password_manager_from_config, policy_factory_from_config, site_config_from_config,
+        templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -161,12 +161,8 @@ impl Options {
 
         let http_client = mas_http::reqwest_client();
 
-        let homeserver_connection = SynapseConnection::new(
-            config.matrix.homeserver.clone(),
-            config.matrix.endpoint.clone(),
-            config.matrix.secret.clone(),
-            http_client.clone(),
-        );
+        let homeserver_connection =
+            homeserver_connection_from_config(&config.matrix, http_client.clone());
 
         if !self.no_worker {
             let mailer = mailer_from_config(&config.email, &templates)?;

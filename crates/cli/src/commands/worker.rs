@@ -9,15 +9,14 @@ use std::{process::ExitCode, time::Duration};
 use clap::Parser;
 use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
-use mas_matrix_synapse::SynapseConnection;
 use mas_router::UrlBuilder;
 use tracing::{info, info_span};
 
 use crate::{
     lifecycle::LifecycleManager,
     util::{
-        database_pool_from_config, mailer_from_config, site_config_from_config,
-        templates_from_config, test_mailer_in_background,
+        database_pool_from_config, homeserver_connection_from_config, mailer_from_config,
+        site_config_from_config, templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -58,12 +57,7 @@ impl Options {
         test_mailer_in_background(&mailer, Duration::from_secs(30));
 
         let http_client = mas_http::reqwest_client();
-        let conn = SynapseConnection::new(
-            config.matrix.homeserver.clone(),
-            config.matrix.endpoint.clone(),
-            config.matrix.secret.clone(),
-            http_client,
-        );
+        let conn = homeserver_connection_from_config(&config.matrix, http_client);
 
         drop(config);
 

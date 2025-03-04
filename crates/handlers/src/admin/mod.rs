@@ -21,7 +21,7 @@ use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::FancyError;
 use mas_http::CorsLayerExt;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
 use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
@@ -115,7 +115,7 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
 pub fn router<S>() -> (OpenApi, Router<S>)
 where
     S: Clone + Send + Sync + 'static,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
 use axum::{
@@ -18,7 +18,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
 };
 use mas_data_model::Device;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
@@ -120,7 +120,7 @@ pub async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,

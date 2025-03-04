@@ -17,7 +17,6 @@ use mas_config::{
 use mas_data_model::{Device, TokenType, Ulid, UpstreamOAuthProvider, User};
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
-use mas_matrix_synapse::SynapseConnection;
 use mas_storage::{
     Clock, RepositoryAccess, SystemClock,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
@@ -33,7 +32,10 @@ use rand::{RngCore, SeedableRng};
 use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
 
-use crate::util::{database_connection_from_config, password_manager_from_config};
+use crate::util::{
+    database_connection_from_config, homeserver_connection_from_config,
+    password_manager_from_config,
+};
 
 const USER_ATTRIBUTES_HEADING: &str = "User attributes";
 
@@ -491,12 +493,7 @@ impl Options {
                 let matrix_config = MatrixConfig::extract(figment)?;
 
                 let password_manager = password_manager_from_config(&password_config).await?;
-                let homeserver = SynapseConnection::new(
-                    matrix_config.homeserver,
-                    matrix_config.endpoint,
-                    matrix_config.secret,
-                    http_client,
-                );
+                let homeserver = homeserver_connection_from_config(&matrix_config, http_client);
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -746,7 +743,7 @@ impl std::fmt::Display for HumanReadable<&UpstreamOAuthProvider> {
 async fn check_and_normalize_username<'a>(
     localpart_or_mxid: &'a str,
     repo: &mut dyn RepositoryAccess<Error = DatabaseError>,
-    homeserver: &SynapseConnection,
+    homeserver: &dyn HomeserverConnection,
 ) -> anyhow::Result<&'a str> {
     // XXX: this is a very basic MXID to localpart conversion
     // Strip any leading '@'
@@ -828,7 +825,7 @@ impl UserCreationRequest<'_> {
     }
 
     /// Show the user creation request in a human-readable format
-    fn show(&self, term: &Term, homeserver: &SynapseConnection) -> std::io::Result<()> {
+    fn show(&self, term: &Term, homeserver: &dyn HomeserverConnection) -> std::io::Result<()> {
         let value_style = Style::new().green();
         let key_style = Style::new().bold();
         let warning_style = Style::new().italic().red().bright();

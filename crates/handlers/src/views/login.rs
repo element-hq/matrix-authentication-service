@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
     extract::{Form, Query, State},
     response::{Html, IntoResponse, Response},
@@ -17,7 +19,7 @@ use mas_axum_utils::{
 };
 use mas_data_model::{BrowserSession, UserAgent, oauth2::LoginHint};
 use mas_i18n::DataLocale;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
@@ -56,7 +58,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
@@ -99,7 +101,7 @@ pub(crate) async fn get(
         csrf_token,
         &mut repo,
         &templates,
-        homeserver,
+        &homeserver,
     )
     .await?;
 
@@ -116,7 +118,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(limiter): State<Limiter>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
@@ -161,7 +163,7 @@ pub(crate) async fn post(
             csrf_token,
             &mut repo,
             &templates,
-            homeserver,
+            &homeserver,
         )
         .await?;
 
@@ -207,7 +209,7 @@ pub(crate) async fn post(
                 csrf_token,
                 &mut repo,
                 &templates,
-                homeserver,
+                &homeserver,
             )
             .await?;
 
@@ -301,7 +303,7 @@ async fn login(
 fn handle_login_hint(
     ctx: &mut LoginContext,
     next: &PostAuthContext,
-    homeserver: &BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
 ) {
     let form_state = ctx.form_state_mut();
 
@@ -326,11 +328,11 @@ async fn render(
     csrf_token: CsrfToken,
     repo: &mut impl RepositoryAccess,
     templates: &Templates,
-    homeserver: BoxHomeserverConnection,
+    homeserver: &dyn HomeserverConnection,
 ) -> Result<String, FancyError> {
     let next = action.load_context(repo).await?;
     let ctx = if let Some(next) = next {
-        handle_login_hint(&mut ctx, &next, &homeserver);
+        handle_login_hint(&mut ctx, &next, homeserver);
 
         ctx.with_post_action(next)
     } else {

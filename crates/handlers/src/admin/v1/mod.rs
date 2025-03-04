@@ -11,7 +11,7 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
 use mas_storage::BoxRng;
 
@@ -29,7 +29,7 @@ mod users;
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
-    BoxHomeserverConnection: FromRef<S>,
+    Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,

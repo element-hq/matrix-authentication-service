@@ -31,7 +31,7 @@ use mas_config::RateLimitingConfig;
 use mas_data_model::SiteConfig;
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
-use mas_matrix::{BoxHomeserverConnection, HomeserverConnection, MockHomeserverConnection};
+use mas_matrix::{HomeserverConnection, MockHomeserverConnection};
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::{SimpleRoute, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng, clock::MockClock};
@@ -420,7 +420,7 @@ impl graphql::State for TestGraphQLState {
         self.password_manager.clone()
     }
 
-    fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
+    fn homeserver_connection(&self) -> &dyn HomeserverConnection {
         &self.homeserver_connection
     }
 
@@ -519,9 +519,9 @@ impl FromRef<TestState> for Arc<PolicyFactory> {
     }
 }
 
-impl FromRef<TestState> for BoxHomeserverConnection {
+impl FromRef<TestState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &TestState) -> Self {
-        Box::new(input.homeserver_connection.clone())
+        input.homeserver_connection.clone()
     }
 }
 

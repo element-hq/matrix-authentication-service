@@ -23,10 +23,29 @@ fn default_endpoint() -> Url {
     Url::parse("http://localhost:8008/").unwrap()
 }
 
+/// The kind of homeserver it is.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum HomeserverKind {
+    /// Homeserver is Synapse
+    #[default]
+    Synapse,
+
+    /// Homeserver is Synapse, in read-only mode
+    ///
+    /// This is meant for testing rolling out Matrix Authentication Service with
+    /// no risk of writing data to the homeserver.
+    SynapseReadOnly,
+}
+
 /// Configuration related to the Matrix homeserver
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MatrixConfig {
+    /// The kind of homeserver it is.
+    #[serde(default)]
+    pub kind: HomeserverKind,
+
     /// The server name of the homeserver.
     #[serde(default = "default_homeserver")]
     pub homeserver: String,
@@ -49,6 +68,7 @@ impl MatrixConfig {
         R: Rng + Send,
     {
         Self {
+            kind: HomeserverKind::default(),
             homeserver: default_homeserver(),
             secret: Alphanumeric.sample_string(&mut rng, 32),
             endpoint: default_endpoint(),
@@ -57,6 +77,7 @@ impl MatrixConfig {
 
     pub(crate) fn test() -> Self {
         Self {
+            kind: HomeserverKind::default(),
             homeserver: default_homeserver(),
             secret: "test".to_owned(),
             endpoint: default_endpoint(),
