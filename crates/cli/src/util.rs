@@ -4,17 +4,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
-    EmailTransportKind, ExperimentalConfig, MatrixConfig, PasswordsConfig, PolicyConfig,
-    TemplatesConfig,
+    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
+    PolicyConfig, TemplatesConfig,
 };
 use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
+use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
+use mas_matrix_synapse::SynapseConnection;
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
@@ -344,6 +346,32 @@ pub async fn database_connection_from_config(
         .connect()
         .await
         .context("could not connect to the database")
+}
+
+/// Create a clonable, type-erased [`HomeserverConnection`] from the
+/// configuration
+pub fn homeserver_connection_from_config(
+    config: &MatrixConfig,
+    http_client: reqwest::Client,
+) -> Arc<dyn HomeserverConnection> {
+    match config.kind {
+        HomeserverKind::Synapse => Arc::new(SynapseConnection::new(
+            config.homeserver.clone(),
+            config.endpoint.clone(),
+            config.secret.clone(),
+            http_client,
+        )),
+        HomeserverKind::SynapseReadOnly => {
+            let connection = SynapseConnection::new(
+                config.homeserver.clone(),
+                config.endpoint.clone(),
+                config.secret.clone(),
+                http_client,
+            );
+            let readonly = ReadOnlyHomeserverConnection::new(connection);
+            Arc::new(readonly)
+        }
+    }
 }
 
 #[cfg(test)]

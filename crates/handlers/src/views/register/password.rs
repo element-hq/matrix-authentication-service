@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use axum::{
     extract::{Form, Query, State},
@@ -20,7 +20,7 @@ use mas_axum_utils::{
 };
 use mas_data_model::{CaptchaConfig, UserAgent};
 use mas_i18n::DataLocale;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
@@ -128,7 +128,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(http_client): State<reqwest::Client>,
     (State(limiter), requester): (State<Limiter>, RequesterFingerprint),
     mut policy: Policy,

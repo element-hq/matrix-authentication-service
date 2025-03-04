@@ -1612,6 +1612,15 @@
         "secret"
       ],
       "properties": {
+        "kind": {
+          "description": "The kind of homeserver it is.",
+          "default": "synapse",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HomeserverKind"
+            }
+          ]
+        },
         "homeserver": {
           "description": "The server name of the homeserver.",
           "default": "localhost:8008",
@@ -1628,6 +1637,25 @@
           "format": "uri"
         }
       }
+    },
+    "HomeserverKind": {
+      "description": "The kind of homeserver it is.",
+      "oneOf": [
+        {
+          "description": "Homeserver is Synapse",
+          "type": "string",
+          "enum": [
+            "synapse"
+          ]
+        },
+        {
+          "description": "Homeserver is Synapse, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
+          "type": "string",
+          "enum": [
+            "synapse_read_only"
+          ]
+        }
+      ]
     },
     "PolicyConfig": {
       "description": "Application secrets",

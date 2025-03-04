@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
     Form,
     extract::{Path, State},
@@ -19,7 +21,7 @@ use mas_axum_utils::{
 };
 use mas_data_model::{User, UserAgent};
 use mas_jose::jwt::Jwt;
-use mas_matrix::BoxHomeserverConnection;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
@@ -200,7 +202,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     cookie_jar: CookieJar,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -512,7 +514,7 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     activity_tracker: BoundActivityTracker,
     State(templates): State<Templates>,
-    State(homeserver): State<BoxHomeserverConnection>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
     Path(link_id): Path<Ulid>,

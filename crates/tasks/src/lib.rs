@@ -40,7 +40,7 @@ struct State {
     pool: Pool<Postgres>,
     mailer: Mailer,
     clock: SystemClock,
-    homeserver: Arc<dyn HomeserverConnection<Error = anyhow::Error>>,
+    homeserver: Arc<dyn HomeserverConnection>,
     url_builder: UrlBuilder,
     site_config: SiteConfig,
 }
@@ -50,7 +50,7 @@ impl State {
         pool: Pool<Postgres>,
         clock: SystemClock,
         mailer: Mailer,
-        homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
+        homeserver: impl HomeserverConnection + 'static,
         url_builder: UrlBuilder,
         site_config: SiteConfig,
     ) -> Self {
@@ -91,7 +91,7 @@ impl State {
         Ok(repo)
     }
 
-    pub fn matrix_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
+    pub fn matrix_connection(&self) -> &dyn HomeserverConnection {
         self.homeserver.as_ref()
     }
 
@@ -112,7 +112,7 @@ impl State {
 pub async fn init(
     pool: &Pool<Postgres>,
     mailer: &Mailer,
-    homeserver: impl HomeserverConnection<Error = anyhow::Error> + 'static,
+    homeserver: impl HomeserverConnection + 'static,
     url_builder: UrlBuilder,
     site_config: &SiteConfig,
     cancellation_token: CancellationToken,

@@ -69,7 +69,7 @@ pub struct ExtraRouterParameters {
 
 struct GraphQLState {
     pool: PgPool,
-    homeserver_connection: Arc<dyn HomeserverConnection<Error = anyhow::Error>>,
+    homeserver_connection: Arc<dyn HomeserverConnection>,
     policy_factory: Arc<PolicyFactory>,
     site_config: SiteConfig,
     password_manager: PasswordManager,
@@ -99,7 +99,7 @@ impl state::State for GraphQLState {
         &self.site_config
     }
 
-    fn homeserver_connection(&self) -> &dyn HomeserverConnection<Error = anyhow::Error> {
+    fn homeserver_connection(&self) -> &dyn HomeserverConnection {
         self.homeserver_connection.as_ref()
     }
 
@@ -129,7 +129,7 @@ impl state::State for GraphQLState {
 pub fn schema(
     pool: &PgPool,
     policy_factory: &Arc<PolicyFactory>,
-    homeserver_connection: impl HomeserverConnection<Error = anyhow::Error> + 'static,
+    homeserver_connection: impl HomeserverConnection + 'static,
     site_config: SiteConfig,
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
