@@ -12,7 +12,7 @@ use mas_context::LogContext;
 use mas_data_model::{BoxClock, BoxRng, SiteConfig, SystemClock};
 use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
-    MetadataCache, RequesterFingerprint, passwords::PasswordManager,
+    MetadataCache, RequesterFingerprint, passwords::PasswordManager, webauthn::Webauthn,
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
@@ -47,6 +47,7 @@ pub struct AppState {
     pub activity_tracker: ActivityTracker,
     pub trusted_proxies: Vec<IpNetwork>,
     pub limiter: Limiter,
+    pub webauthn: Webauthn,
 }
 
 impl AppState {
@@ -211,6 +212,12 @@ impl FromRef<AppState> for Arc<PolicyFactory> {
 impl FromRef<AppState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &AppState) -> Self {
         Arc::clone(&input.homeserver_connection)
+    }
+}
+
+impl FromRef<AppState> for Webauthn {
+    fn from_ref(input: &AppState) -> Self {
+        input.webauthn.clone()
     }
 }
 

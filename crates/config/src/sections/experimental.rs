@@ -52,6 +52,14 @@ pub struct PasskeysConfig {
     /// Whether passkeys are enabled or not
     #[serde(default)]
     pub enabled: bool,
+    /// Relying Party Identifier to use
+    ///
+    /// If not set, the host from `public_base` is used
+    #[serde(default)]
+    pub rpid: Option<String>,
+    /// Additional allowed origins. `rpid` and `public_base` are already allowed
+    #[serde(default)]
+    pub allowed_origins: Option<Vec<String>>,
 }
 
 /// Configuration sections for experimental options

@@ -55,6 +55,7 @@ use crate::{
     ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
+    webauthn::Webauthn,
 };
 
 /// Setup rustcrypto and tracing for tests.
@@ -203,6 +204,8 @@ impl TestState {
             PasswordManager::disabled()
         };
 
+        let webauthn = Webauthn::new(&url_builder.http_base(), None)?;
+
         let policy_factory =
             policy_factory(&site_config.server_name, serde_json::json!({})).await?;
 
@@ -224,6 +227,7 @@ impl TestState {
             password_manager: password_manager.clone(),
             url_builder: url_builder.clone(),
             limiter: limiter.clone(),
+            webauthn: webauthn.clone(),
         };
         let state: crate::graphql::BoxState = Box::new(graphql_state);
 
@@ -437,6 +441,7 @@ struct TestGraphQLState {
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
     limiter: Limiter,
+    webauthn: Webauthn,
 }
 
 #[async_trait::async_trait]
@@ -471,6 +476,10 @@ impl graphql::State for TestGraphQLState {
 
     fn limiter(&self) -> &Limiter {
         &self.limiter
+    }
+
+    fn webauthn(&self) -> &Webauthn {
+        &self.webauthn
     }
 
     fn rng(&self) -> BoxRng {

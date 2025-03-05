@@ -29,7 +29,7 @@ use crate::{
         database_pool_from_config, homeserver_connection_from_config,
         load_policy_factory_dynamic_data_continuously, mailer_from_config,
         password_manager_from_config, policy_factory_from_config, site_config_from_config,
-        templates_from_config, test_mailer_in_background,
+        templates_from_config, test_mailer_in_background, webauthn_from_config,
     },
 };
 
@@ -191,6 +191,8 @@ impl Options {
 
         let password_manager = password_manager_from_config(&config.passwords).await?;
 
+        let webauthn = webauthn_from_config(&config.http, &config.experimental)?;
+
         // The upstream OIDC metadata cache
         let metadata_cache = MetadataCache::new();
 
@@ -226,6 +228,7 @@ impl Options {
             password_manager.clone(),
             url_builder.clone(),
             limiter.clone(),
+            webauthn.clone(),
         );
 
         let state = {
@@ -246,6 +249,7 @@ impl Options {
                 activity_tracker,
                 trusted_proxies,
                 limiter,
+                webauthn,
             };
             s.init_metrics();
             s.init_metadata_cache();

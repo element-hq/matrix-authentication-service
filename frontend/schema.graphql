@@ -539,6 +539,68 @@ enum CompleteEmailAuthenticationStatus {
 }
 
 """
+The input for the `completeRegisterPasskey` mutation
+"""
+input CompleteRegisterPasskeyInput {
+  """
+  The ID of the passkey challenge to complete
+  """
+  id: ID!
+  """
+  Name of the passkey
+  """
+  name: String!
+  """
+  The response from `navigator.credentials.create()` as a JSON string
+  """
+  response: String!
+}
+
+"""
+The payload of the `completeRegisterPasskey` mutation
+"""
+type CompleteRegisterPasskeyPayload {
+  """
+  Status of the operation
+  """
+  status: CompleteRegisterPasskeyStatus!
+  """
+  The passkey that was added
+  """
+  passkey: UserPasskey
+  """
+  The error when the status is `INVALID_RESPONSE`
+  """
+  error: String
+}
+
+"""
+The status of the `completeRegisterPasskey` mutation
+"""
+enum CompleteRegisterPasskeyStatus {
+  """
+  The passkey was added
+  """
+  ADDED
+  """
+  The challenge was invalid
+  """
+  INVALID_CHALLENGE
+  """
+  The response was invalid
+  """
+  INVALID_RESPONSE
+  """
+  The name for the passkey was invalid
+  """
+  INVALID_NAME
+  """
+  The passkey credential already exists
+  """
+  EXISTS
+}
+
+"""
 The input of the `createOauth2Session` mutation.
 """
 input CreateOAuth2SessionInput {
@@ -877,6 +939,24 @@ type Mutation {
   completeEmailAuthentication(
     input: CompleteEmailAuthenticationInput!
   ): CompleteEmailAuthenticationPayload!
+  """
+  Start registering a new passkey
+  """
+  startRegisterPasskey: StartRegisterPasskeyPayload!
+  """
+  Complete registering a new passkey
+  """
+  completeRegisterPasskey(
+    input: CompleteRegisterPasskeyInput!
+  ): CompleteRegisterPasskeyPayload!
+  """
+  Rename a passkey
+  """
+  renamePasskey(input: RenamePasskeyInput!): RenamePasskeyPayload!
+  """
+  Remove a passkey
+  """
+  removePasskey(input: RemovePasskeyInput!): RemovePasskeyPayload!
   """
   Add a user. This is only available to administrators.
   """
@@ -1311,6 +1391,90 @@ enum RemoveEmailStatus {
   The password provided is incorrect
   """
   INCORRECT_PASSWORD
+}
+
+"""
+The input for the `removePasskey` mutation
+"""
+input RemovePasskeyInput {
+  """
+  The ID of the passkey to remove
+  """
+  id: ID!
+}
+
+"""
+The payload of the `removePasskey` mutation
+"""
+type RemovePasskeyPayload {
+  """
+  Status of the operation
+  """
+  status: RemovePasskeyStatus!
+  """
+  The passkey that was removed
+  """
+  passkey: UserPasskey
+}
+
+"""
+The status of the `removePasskey` mutation
+"""
+enum RemovePasskeyStatus {
+  """
+  The passkey was removed
+  """
+  REMOVED
+  """
+  The passkey was not found
+  """
+  NOT_FOUND
+}
+
+"""
+The input for the `renamePasskey` mutation
+"""
+input RenamePasskeyInput {
+  """
+  The ID of the passkey to rename
+  """
+  id: ID!
+  """
+  new name for the passkey
+  """
+  name: String!
+}
+
+"""
+The payload of the `renamePasskey` mutation
+"""
+type RenamePasskeyPayload {
+  """
+  Status of the operation
+  """
+  status: RenamePasskeyStatus!
+  """
+  The passkey that was renamed
+  """
+  passkey: UserPasskey
+}
+
+"""
+The status of the `renamePasskey` mutation
+"""
+enum RenamePasskeyStatus {
+  """
+  The passkey was renamed
+  """
+  RENAMED
+  """
+  The new name was invalid
+  """
+  INVALID
+  """
+  The passkey was not found
+  """
+  NOT_FOUND
 }
 
 """
@@ -1839,6 +2003,17 @@ enum StartEmailAuthenticationStatus {
 }
 
 """
+The payload of the `startRegisterPasskey` mutation
+"""
+type StartRegisterPasskeyPayload {
+  id: ID!
+  """
+  The options to pass to `navigator.credentials.create()` as a JSON string
+  """
+  options: String!
+}
+
+"""
 The input for the `unlockUser` mutation.
 """
 input UnlockUserInput {
@@ -2239,6 +2414,27 @@ type User implements Node {
     last: Int
   ): AppSessionConnection!
   """
+  Get the list of passkeys, chronologically sorted
+  """
+  passkeys(
+    """
+    Returns the elements in the list that come after the cursor.
+    """
+    after: String
+    """
+    Returns the elements in the list that come before the cursor.
+    """
+    before: String
+    """
+    Returns the first *n* elements from the list.
+    """
+    first: Int
+    """
+    Returns the last *n* elements from the list.
+    """
+    last: Int
+  ): UserPasskeyConnection!
+  """
   Check if the user has a password set.
   """
   hasPassword: Boolean!
@@ -2401,6 +2597,61 @@ enum UserEmailState {
   The email address has been confirmed.
   """
   CONFIRMED
+}
+
+"""
+A passkey
+"""
+type UserPasskey {
+  """
+  ID of the object
+  """
+  id: ID!
+  """
+  Name of the passkey
+  """
+  name: String!
+  """
+  When the object was created.
+  """
+  createdAt: DateTime!
+  """
+  When the passkey was last used
+  """
+  lastUsedAt: DateTime
+}
+
+type UserPasskeyConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [UserPasskeyEdge!]!
+  """
+  A list of nodes.
+  """
+  nodes: [UserPasskey!]!
+  """
+  Identifies the total count of items in the connection.
+  """
+  totalCount: Int!
+}
+
+"""
+An edge in a connection.
+"""
+type UserPasskeyEdge {
+  """
+  The item at the end of the edge
+  """
+  node: UserPasskey!
+  """
+  A cursor for use in pagination
+  """
+  cursor: String!
 }
 
 """

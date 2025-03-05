@@ -3441,6 +3441,7 @@ dependencies = [
  "tracing-subscriber",
  "ulid",
  "url",
+ "webauthn_rp",
  "wiremock",
  "zeroize",
  "zxcvbn",

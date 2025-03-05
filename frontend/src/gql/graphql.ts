@@ -356,6 +356,40 @@ export type CompleteEmailAuthenticationStatus =
   /** Too many attempts to complete an email authentication */
   | 'RATE_LIMITED';
 
+/** The input for the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyInput = {
+  /** The ID of the passkey challenge to complete */
+  id: Scalars['ID']['input'];
+  /** Name of the passkey */
+  name: Scalars['String']['input'];
+  /** The response from `navigator.credentials.create()` as a JSON string */
+  response: Scalars['String']['input'];
+};
+
+/** The payload of the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyPayload = {
+  __typename?: 'CompleteRegisterPasskeyPayload';
+  /** The error when the status is `INVALID_RESPONSE` */
+  error?: Maybe<Scalars['String']['output']>;
+  /** The passkey that was added */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: CompleteRegisterPasskeyStatus;
+};
+
+/** The status of the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyStatus =
+  /** The passkey was added */
+  | 'ADDED'
+  /** The passkey credential already exists */
+  | 'EXISTS'
+  /** The challenge was invalid */
+  | 'INVALID_CHALLENGE'
+  /** The name for the passkey was invalid */
+  | 'INVALID_NAME'
+  /** The response was invalid */
+  | 'INVALID_RESPONSE';
+
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
   /** Whether the session should issue a never-expiring access token */
@@ -547,6 +581,8 @@ export type Mutation = {
   allowUserCrossSigningReset: AllowUserCrossSigningResetPayload;
   /** Complete the email authentication flow */
   completeEmailAuthentication: CompleteEmailAuthenticationPayload;
+  /** Complete registering a new passkey */
+  completeRegisterPasskey: CompleteRegisterPasskeyPayload;
   /**
    * Create a new arbitrary OAuth 2.0 Session.
    *
@@ -567,6 +603,10 @@ export type Mutation = {
   lockUser: LockUserPayload;
   /** Remove an email address */
   removeEmail: RemoveEmailPayload;
+  /** Remove a passkey */
+  removePasskey: RemovePasskeyPayload;
+  /** Rename a passkey */
+  renamePasskey: RenamePasskeyPayload;
   /** Resend the email authentication code */
   resendEmailAuthenticationCode: ResendEmailAuthenticationCodePayload;
   /**
@@ -604,6 +644,8 @@ export type Mutation = {
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Start a new email authentication flow */
   startEmailAuthentication: StartEmailAuthenticationPayload;
+  /** Start registering a new passkey */
+  startRegisterPasskey: StartRegisterPasskeyPayload;
   /** Unlock and reactivate a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
 };
@@ -630,6 +672,12 @@ export type MutationAllowUserCrossSigningResetArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationCompleteEmailAuthenticationArgs = {
   input: CompleteEmailAuthenticationInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationCompleteRegisterPasskeyArgs = {
+  input: CompleteRegisterPasskeyInput;
 };
 
 
@@ -672,6 +720,18 @@ export type MutationLockUserArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationRemoveEmailArgs = {
   input: RemoveEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationRemovePasskeyArgs = {
+  input: RemovePasskeyInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationRenamePasskeyArgs = {
+  input: RenamePasskeyInput;
 };
 
 
@@ -1027,6 +1087,54 @@ export type RemoveEmailStatus =
   /** The email address was removed */
   | 'REMOVED';
 
+/** The input for the `removePasskey` mutation */
+export type RemovePasskeyInput = {
+  /** The ID of the passkey to remove */
+  id: Scalars['ID']['input'];
+};
+
+/** The payload of the `removePasskey` mutation */
+export type RemovePasskeyPayload = {
+  __typename?: 'RemovePasskeyPayload';
+  /** The passkey that was removed */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: RemovePasskeyStatus;
+};
+
+/** The status of the `removePasskey` mutation */
+export type RemovePasskeyStatus =
+  /** The passkey was not found */
+  | 'NOT_FOUND'
+  /** The passkey was removed */
+  | 'REMOVED';
+
+/** The input for the `renamePasskey` mutation */
+export type RenamePasskeyInput = {
+  /** The ID of the passkey to rename */
+  id: Scalars['ID']['input'];
+  /** new name for the passkey */
+  name: Scalars['String']['input'];
+};
+
+/** The payload of the `renamePasskey` mutation */
+export type RenamePasskeyPayload = {
+  __typename?: 'RenamePasskeyPayload';
+  /** The passkey that was renamed */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: RenamePasskeyStatus;
+};
+
+/** The status of the `renamePasskey` mutation */
+export type RenamePasskeyStatus =
+  /** The new name was invalid */
+  | 'INVALID'
+  /** The passkey was not found */
+  | 'NOT_FOUND'
+  /** The passkey was renamed */
+  | 'RENAMED';
+
 /** The input for the `resendEmailAuthenticationCode` mutation */
 export type ResendEmailAuthenticationCodeInput = {
   /** The ID of the authentication session to resend the code for */
@@ -1347,6 +1455,14 @@ export type StartEmailAuthenticationStatus =
   /** The email address was started */
   | 'STARTED';
 
+/** The payload of the `startRegisterPasskey` mutation */
+export type StartRegisterPasskeyPayload = {
+  __typename?: 'StartRegisterPasskeyPayload';
+  id: Scalars['ID']['output'];
+  /** The options to pass to `navigator.credentials.create()` as a JSON string */
+  options: Scalars['String']['output'];
+};
+
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
   /** The ID of the user to unlock */
@@ -1479,6 +1595,8 @@ export type User = Node & {
   matrix: MatrixUser;
   /** Get the list of OAuth 2.0 sessions, chronologically sorted */
   oauth2Sessions: Oauth2SessionConnection;
+  /** Get the list of passkeys, chronologically sorted */
+  passkeys: UserPasskeyConnection;
   /** Get the list of upstream OAuth 2.0 links */
   upstreamOauth2Links: UpstreamOAuth2LinkConnection;
   /** Username chosen by the user. */
@@ -1550,6 +1668,15 @@ export type UserOauth2SessionsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   lastActive?: InputMaybe<DateFilter>;
   state?: InputMaybe<SessionState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserPasskeysArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1658,6 +1785,40 @@ export type UserEmailState =
   | 'CONFIRMED'
   /** The email address is pending confirmation. */
   | 'PENDING';
+
+/** A passkey */
+export type UserPasskey = {
+  __typename?: 'UserPasskey';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** ID of the object */
+  id: Scalars['ID']['output'];
+  /** When the passkey was last used */
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Name of the passkey */
+  name: Scalars['String']['output'];
+};
+
+export type UserPasskeyConnection = {
+  __typename?: 'UserPasskeyConnection';
+  /** A list of edges. */
+  edges: Array<UserPasskeyEdge>;
+  /** A list of nodes. */
+  nodes: Array<UserPasskey>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UserPasskeyEdge = {
+  __typename?: 'UserPasskeyEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: UserPasskey;
+};
 
 /** A recovery ticket */
 export type UserRecoveryTicket = CreationEvent & Node & {

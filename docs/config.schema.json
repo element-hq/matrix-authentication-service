@@ -2707,6 +2707,19 @@
           "description": "Whether passkeys are enabled or not",
           "default": false,
           "type": "boolean"
+        },
+        "rpid": {
+          "description": "Relying Party Identifier to use\n\nIf not set, the host from `public_base` is used",
+          "default": null,
+          "type": "string"
+        },
+        "allowed_origins": {
+          "description": "Additional allowed origins. `rpid` and `public_base` are already allowed",
+          "default": null,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

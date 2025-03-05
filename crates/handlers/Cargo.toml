@@ -66,6 +66,7 @@ tower.workspace = true
 tracing.workspace = true
 ulid.workspace = true
 url.workspace = true
+webauthn_rp.workspace = true
 zeroize.workspace = true
 
 mas-axum-utils.workspace = true

@@ -59,6 +59,7 @@ mod oauth2;
 pub mod passwords;
 pub mod upstream_oauth2;
 mod views;
+pub mod webauthn;
 
 mod activity_tracker;
 mod captcha;

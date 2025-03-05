@@ -26,7 +26,9 @@ pub use self::{
     oauth::{OAuth2Client, OAuth2Session},
     site_config::{SITE_CONFIG_ID, SiteConfig},
     upstream_oauth::{UpstreamOAuth2Link, UpstreamOAuth2Provider},
-    users::{AppSession, User, UserEmail, UserEmailAuthentication, UserRecoveryTicket},
+    users::{
+        AppSession, User, UserEmail, UserEmailAuthentication, UserPasskey, UserRecoveryTicket,
+    },
     viewer::{Anonymous, Viewer, ViewerSession},
 };
 
