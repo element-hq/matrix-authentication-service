@@ -128,6 +128,7 @@ pub fn test_site_config() -> SiteConfig {
         access_token_ttl: Duration::try_minutes(5).unwrap(),
         compat_token_ttl: Duration::try_minutes(5).unwrap(),
         server_name: "example.com".to_owned(),
+        public_base: "https://example.com".parse().unwrap(),
         policy_uri: Some("https://example.com/policy".parse().unwrap()),
         tos_uri: Some("https://example.com/tos".parse().unwrap()),
         imprint: None,

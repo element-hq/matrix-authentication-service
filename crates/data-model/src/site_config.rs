@@ -49,6 +49,9 @@ pub struct SiteConfig {
     /// The server name, e.g. "matrix.org".
     pub server_name: String,
 
+    /// Public base URL
+    pub public_base: Url,
+
     /// The URL to the privacy policy.
     pub policy_uri: Option<Url>,
 

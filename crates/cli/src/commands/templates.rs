@@ -10,7 +10,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt,
-    ExperimentalConfig, MatrixConfig, PasswordsConfig, TemplatesConfig,
+    ExperimentalConfig, HttpConfig, MatrixConfig, PasswordsConfig, TemplatesConfig,
 };
 use mas_storage::{Clock, SystemClock};
 use rand::SeedableRng;
@@ -44,6 +44,7 @@ impl Options {
                 let password_config = PasswordsConfig::extract_or_default(figment)?;
                 let account_config = AccountConfig::extract_or_default(figment)?;
                 let captcha_config = CaptchaConfig::extract_or_default(figment)?;
+                let http_config = HttpConfig::extract_or_default(figment)?;
 
                 let clock = SystemClock::default();
                 // XXX: we should disallow SeedableRng::from_entropy
@@ -57,6 +58,7 @@ impl Options {
                     &password_config,
                     &account_config,
                     &captcha_config,
+                    &http_config,
                 )?;
                 let templates =
                     templates_from_config(&template_config, &site_config, &url_builder).await?;

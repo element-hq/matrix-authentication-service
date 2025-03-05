@@ -47,6 +47,7 @@ impl Options {
             &config.passwords,
             &config.account,
             &config.captcha,
+            &config.http,
         )?;
 
         // Load and compile the templates
