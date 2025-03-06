@@ -935,6 +935,11 @@ export type QueryUsersArgs = {
 
 /** The input for the `removeEmail` mutation */
 export type RemoveEmailInput = {
+  /**
+   * The user's current password. This is required if the user is not an
+   * admin and it has a password on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the email address to remove */
   userEmailId: Scalars['ID']['input'];
 };
@@ -952,6 +957,8 @@ export type RemoveEmailPayload = {
 
 /** The status of the `removeEmail` mutation */
 export type RemoveEmailStatus =
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address was not found */
   | 'NOT_FOUND'
   /** The email address was removed */
@@ -1190,6 +1197,11 @@ export type StartEmailAuthenticationInput = {
   email: Scalars['String']['input'];
   /** The language to use for the email */
   language?: Scalars['String']['input'];
+  /**
+   * The user's current password. This is required if the user has a password
+   * on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The payload of the `startEmailAuthentication` mutation */
@@ -1207,6 +1219,8 @@ export type StartEmailAuthenticationPayload = {
 export type StartEmailAuthenticationStatus =
   /** The email address isn't allowed by the policy */
   | 'DENIED'
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address is invalid */
   | 'INVALID_EMAIL_ADDRESS'
   /** The email address is already in use on this account */
