@@ -6,15 +6,19 @@
 import { HttpResponse } from "msw";
 import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
 import { FRAGMENT as FOOTER_FRAGMENT } from "../../src/components/Footer/Footer";
-import {
-  CONFIG_FRAGMENT as USER_EMAIL_CONFIG_FRAGMENT,
-  FRAGMENT as USER_EMAIL_FRAGMENT,
-} from "../../src/components/UserEmail/UserEmail";
+import { FRAGMENT as USER_EMAIL_FRAGMENT } from "../../src/components/UserEmail/UserEmail";
 import {
   CONFIG_FRAGMENT as USER_GREETING_CONFIG_FRAGMENT,
   FRAGMENT as USER_GREETING_FRAGMENT,
 } from "../../src/components/UserGreeting/UserGreeting";
-import { CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT } from "../../src/components/UserProfile/UserEmailList";
+import {
+  CONFIG_FRAGMENT as ADD_USER_EMAIL_CONFIG_FRAGMENT,
+  USER_FRAGMENT as ADD_USER_EMAIL_USER_FRAGMENT,
+} from "../../src/components/UserProfile/AddEmailForm";
+import {
+  CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT,
+  USER_FRAGMENT as USER_EMAIL_LIST_USER_FRAGMENT,
+} from "../../src/components/UserProfile/UserEmailList";
 import { makeFragmentData } from "../../src/gql";
 import {
   mockCurrentUserGreetingQuery,
@@ -90,12 +94,26 @@ export const handlers = [
         viewerSession: {
           __typename: "BrowserSession",
           id: "browser-session-id",
-          user: {
-            hasPassword: true,
-            emails: {
-              totalCount: 1,
+          user: Object.assign(
+            {
+              hasPassword: true,
+              emails: {
+                totalCount: 1,
+              },
             },
-          },
+            makeFragmentData(
+              {
+                hasPassword: true,
+              },
+              ADD_USER_EMAIL_USER_FRAGMENT,
+            ),
+            makeFragmentData(
+              {
+                hasPassword: true,
+              },
+              USER_EMAIL_LIST_USER_FRAGMENT,
+            ),
+          ),
         },
 
         siteConfig: Object.assign(
@@ -106,12 +124,14 @@ export const handlers = [
           makeFragmentData(
             {
               emailChangeAllowed: true,
+              passwordLoginEnabled: true,
             },
-            USER_EMAIL_CONFIG_FRAGMENT,
+            ADD_USER_EMAIL_CONFIG_FRAGMENT,
           ),
           makeFragmentData(
             {
               emailChangeAllowed: true,
+              passwordLoginEnabled: true,
             },
             USER_EMAIL_LIST_CONFIG_FRAGMENT,
           ),

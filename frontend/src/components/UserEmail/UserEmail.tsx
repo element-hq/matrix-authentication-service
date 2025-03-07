@@ -7,16 +7,25 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
 import IconEmail from "@vector-im/compound-design-tokens/assets/web/icons/email";
-import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
-import type { ComponentProps, ReactNode } from "react";
+import {
+  Button,
+  ErrorMessage,
+  Form,
+  IconButton,
+  Tooltip,
+} from "@vector-im/compound-web";
+import { type ReactNode, useCallback, useState } from "react";
 import { Translation, useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import { Close, Description, Dialog, Title } from "../Dialog";
+import LoadingSpinner from "../LoadingSpinner";
+import PasswordConfirmationModal, {
+  usePasswordConfirmation,
+} from "../PasswordConfirmation";
 import styles from "./UserEmail.module.css";
 
-// This component shows a single user email address, with controls to verify it,
-// resend the verification email, remove it, and set it as the primary email address.
+// This component shows a single user email address, with controls to remove it
 
 export const FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmail_email on UserEmail {
@@ -25,15 +34,9 @@ export const FRAGMENT = graphql(/* GraphQL */ `
   }
 `);
 
-export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
-  fragment UserEmail_siteConfig on SiteConfig {
-    emailChangeAllowed
-  }
-`);
-
 const REMOVE_EMAIL_MUTATION = graphql(/* GraphQL */ `
-  mutation RemoveEmail($id: ID!) {
-    removeEmail(input: { userEmailId: $id }) {
+  mutation RemoveEmail($id: ID!, $password: String) {
+    removeEmail(input: { userEmailId: $id, password: $password }) {
       status
 
       user {
@@ -64,92 +67,135 @@ const DeleteButton: React.FC<{ disabled?: boolean; onClick?: () => void }> = ({
   </Translation>
 );
 
-const DeleteButtonWithConfirmation: React.FC<
-  ComponentProps<typeof DeleteButton> & { email: string }
-> = ({ email, onClick, ...rest }) => {
-  const { t } = useTranslation();
-  const onConfirm = (): void => {
-    onClick?.();
-  };
-
-  // NOOP function, otherwise we dont render a cancel button
-  const onDeny = (): void => {};
-
-  return (
-    <Dialog trigger={<DeleteButton {...rest} />}>
-      <Title>
-        {t("frontend.user_email.delete_button_confirmation_modal.body")}
-      </Title>
-      <Description className={styles.emailModalBox}>
-        <IconEmail />
-        <div>{email}</div>
-      </Description>
-      <div className="flex flex-col gap-4">
-        <Close asChild>
-          <Button
-            kind="primary"
-            destructive
-            onClick={onConfirm}
-            Icon={IconDelete}
-          >
-            {t("frontend.user_email.delete_button_confirmation_modal.action")}
-          </Button>
-        </Close>
-        <Close asChild>
-          <Button kind="tertiary" onClick={onDeny}>
-            {t("action.cancel")}
-          </Button>
-        </Close>
-      </div>
-    </Dialog>
-  );
-};
-
 const UserEmail: React.FC<{
   email: FragmentType<typeof FRAGMENT>;
   canRemove?: boolean;
+  shouldPromptPassword?: boolean;
   onRemove?: () => void;
-}> = ({ email, canRemove, onRemove }) => {
+}> = ({ email, canRemove, shouldPromptPassword, onRemove }) => {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   const data = useFragment(FRAGMENT, email);
   const queryClient = useQueryClient();
+  const [promptPassword, passwordConfirmationRef] = usePasswordConfirmation();
 
   const removeEmail = useMutation({
-    mutationFn: (id: string) =>
-      graphqlRequest({ query: REMOVE_EMAIL_MUTATION, variables: { id } }),
-    onSuccess: (_data) => {
-      onRemove?.();
+    mutationFn: ({ id, password }: { id: string; password?: string }) =>
+      graphqlRequest({
+        query: REMOVE_EMAIL_MUTATION,
+        variables: { id, password },
+      }),
+
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       queryClient.invalidateQueries({ queryKey: ["userEmails"] });
+
+      // Don't close the modal unless the mutation was successful removed (or not found)
+      if (
+        data.removeEmail.status !== "NOT_FOUND" &&
+        data.removeEmail.status !== "REMOVED"
+      ) {
+        return;
+      }
+
+      onRemove?.();
+      setOpen(false);
     },
   });
 
-  const onRemoveClick = (): void => {
-    removeEmail.mutate(data.id);
-  };
+  const onRemoveClick = useCallback(
+    async (_e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
+      let password = undefined;
+      if (shouldPromptPassword) {
+        password = await promptPassword();
+      }
+      removeEmail.mutate({ id: data.id, password });
+    },
+    [data.id, promptPassword, shouldPromptPassword, removeEmail.mutate],
+  );
+
+  const onOpenChange = useCallback(
+    (open: boolean) => {
+      // Don't change the modal state if the mutation is pending
+      if (removeEmail.isPending) return;
+      removeEmail.reset();
+      setOpen(open);
+    },
+    [removeEmail.isPending, removeEmail.reset],
+  );
+
+  const status = removeEmail.data?.removeEmail.status ?? null;
 
   return (
-    <Form.Root>
-      <Form.Field name="email">
-        <Form.Label>{t("frontend.user_email.email")}</Form.Label>
+    <>
+      <PasswordConfirmationModal
+        title={t(
+          "frontend.user_email.delete_button_confirmation_modal.password_confirmation",
+        )}
+        destructive
+        ref={passwordConfirmationRef}
+      />
+      <Form.Root>
+        <Form.Field name="email">
+          <Form.Label>{t("frontend.user_email.email")}</Form.Label>
 
-        <div className="flex items-center gap-2">
-          <Form.TextControl
-            type="email"
-            readOnly
-            value={data.email}
-            className={styles.userEmailField}
-          />
-          {canRemove && (
-            <DeleteButtonWithConfirmation
-              email={data.email}
-              disabled={removeEmail.isPending}
-              onClick={onRemoveClick}
+          <div className="flex items-center gap-2">
+            <Form.TextControl
+              type="email"
+              readOnly
+              value={data.email}
+              className={styles.userEmailField}
             />
-          )}
-        </div>
-      </Form.Field>
-    </Form.Root>
+            {canRemove && (
+              <Dialog
+                trigger={<DeleteButton />}
+                open={open}
+                onOpenChange={onOpenChange}
+              >
+                <Title>
+                  {t(
+                    "frontend.user_email.delete_button_confirmation_modal.body",
+                  )}
+                </Title>
+                <Description className={styles.emailModalBox}>
+                  <IconEmail />
+                  <div>{data.email}</div>
+                </Description>
+
+                {status === "INCORRECT_PASSWORD" && (
+                  <ErrorMessage>
+                    {t(
+                      "frontend.user_email.delete_button_confirmation_modal.incorrect_password",
+                    )}
+                  </ErrorMessage>
+                )}
+
+                <div className="flex flex-col gap-4">
+                  <Button
+                    kind="primary"
+                    type="button"
+                    destructive
+                    onClick={onRemoveClick}
+                    disabled={removeEmail.isPending}
+                    Icon={removeEmail.isPending ? undefined : IconDelete}
+                  >
+                    {!!removeEmail.isPending && <LoadingSpinner inline />}
+                    {t(
+                      "frontend.user_email.delete_button_confirmation_modal.action",
+                    )}
+                  </Button>
+                  <Close asChild>
+                    <Button disabled={removeEmail.isPending} kind="tertiary">
+                      {t("action.cancel")}
+                    </Button>
+                  </Close>
+                </div>
+              </Dialog>
+            )}
+          </div>
+        </Form.Field>
+      </Form.Root>
+    </>
   );
 };
 

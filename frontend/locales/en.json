@@ -5,6 +5,7 @@
     "clear": "Clear",
     "close": "Close",
     "collapse": "Collapse",
+    "confirm": "Confirm",
     "continue": "Continue",
     "edit": "Edit",
     "expand": "Expand",
@@ -27,6 +28,7 @@
     "e2ee": "End-to-end encryption",
     "loading": "Loading…",
     "next": "Next",
+    "password": "Password",
     "previous": "Previous",
     "saved": "Saved",
     "saving": "Saving…"
@@ -57,7 +59,9 @@
       "email_field_help": "Add an alternative email you can use to access this account.",
       "email_field_label": "Add email",
       "email_in_use_error": "The entered email is already in use",
-      "email_invalid_error": "The entered email is invalid"
+      "email_invalid_error": "The entered email is invalid",
+      "incorrect_password_error": "Incorrect password, please try again",
+      "password_confirmation": "Confirm your account password to add this email address"
     },
     "browser_session_details": {
       "current_badge": "Current"
@@ -258,7 +262,9 @@
     "user_email": {
       "delete_button_confirmation_modal": {
         "action": "Delete email",
-        "body": "Delete this email?"
+        "body": "Delete this email?",
+        "incorrect_password": "Incorrect password, please try again",
+        "password_confirmation": "Confirm your account password to delete this email address"
       },
       "delete_button_title": "Remove email address",
       "email": "Email"
