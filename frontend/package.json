@@ -54,7 +54,7 @@
     "@storybook/test": "^8.5.5",
     "@tanstack/react-query-devtools": "^5.67.1",
     "@tanstack/router-devtools": "^1.112.18",
-    "@tanstack/router-vite-plugin": "^1.112.18",
+    "@tanstack/router-vite-plugin": "^1.112.19",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
