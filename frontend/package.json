@@ -87,6 +87,8 @@
     "vitest": "^3.0.5"
   },
   "msw": {
-    "workerDirectory": [".storybook/public"]
+    "workerDirectory": [
+      ".storybook/public"
+    ]
   }
 }
