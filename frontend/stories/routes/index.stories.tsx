@@ -8,11 +8,15 @@ import { expect, userEvent, waitFor, within } from "@storybook/test";
 import i18n from "i18next";
 import { type GraphQLHandler, HttpResponse } from "msw";
 import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
+import { FRAGMENT as USER_EMAIL_FRAGMENT } from "../../src/components/UserEmail/UserEmail";
 import {
-  CONFIG_FRAGMENT as USER_EMAIL_CONFIG_FRAGMENT,
-  FRAGMENT as USER_EMAIL_FRAGMENT,
-} from "../../src/components/UserEmail/UserEmail";
-import { CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT } from "../../src/components/UserProfile/UserEmailList";
+  CONFIG_FRAGMENT as ADD_USER_EMAIL_CONFIG_FRAGMENT,
+  USER_FRAGMENT as ADD_USER_EMAIL_USER_FRAGMENT,
+} from "../../src/components/UserProfile/AddEmailForm";
+import {
+  CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT,
+  USER_FRAGMENT as USER_EMAIL_LIST_USER_FRAGMENT,
+} from "../../src/components/UserProfile/UserEmailList";
 import { makeFragmentData } from "../../src/gql";
 import {
   mockUserEmailListQuery,
@@ -48,12 +52,26 @@ const userProfileHandler = ({
         viewerSession: {
           __typename: "BrowserSession",
           id: "session-id",
-          user: {
-            hasPassword,
-            emails: {
-              totalCount: emailTotalCount,
+          user: Object.assign(
+            {
+              hasPassword,
+              emails: {
+                totalCount: emailTotalCount,
+              },
             },
-          },
+            makeFragmentData(
+              {
+                hasPassword,
+              },
+              ADD_USER_EMAIL_USER_FRAGMENT,
+            ),
+            makeFragmentData(
+              {
+                hasPassword,
+              },
+              USER_EMAIL_LIST_USER_FRAGMENT,
+            ),
+          ),
         },
 
         siteConfig: Object.assign(
@@ -64,12 +82,14 @@ const userProfileHandler = ({
           makeFragmentData(
             {
               emailChangeAllowed,
+              passwordLoginEnabled,
             },
-            USER_EMAIL_CONFIG_FRAGMENT,
+            ADD_USER_EMAIL_CONFIG_FRAGMENT,
           ),
           makeFragmentData(
             {
               emailChangeAllowed,
+              passwordLoginEnabled,
             },
             USER_EMAIL_LIST_CONFIG_FRAGMENT,
           ),

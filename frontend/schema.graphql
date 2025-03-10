@@ -1203,6 +1203,11 @@ input RemoveEmailInput {
   The ID of the email address to remove
   """
   userEmailId: ID!
+  """
+  The user's current password. This is required if the user is not an
+  admin and it has a password on its account.
+  """
+  password: String
 }
 
 """
@@ -1235,6 +1240,10 @@ enum RemoveEmailStatus {
   The email address was not found
   """
   NOT_FOUND
+  """
+  The password provided is incorrect
+  """
+  INCORRECT_PASSWORD
 }
 
 """
@@ -1610,6 +1619,11 @@ input StartEmailAuthenticationInput {
   """
   email: String!
   """
+  The user's current password. This is required if the user has a password
+  on its account.
+  """
+  password: String
+  """
   The language to use for the email
   """
   language: String! = "en"
@@ -1657,6 +1671,10 @@ enum StartEmailAuthenticationStatus {
   The email address is already in use on this account
   """
   IN_USE
+  """
+  The password provided is incorrect
+  """
+  INCORRECT_PASSWORD
 }
 
 """

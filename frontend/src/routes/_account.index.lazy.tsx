@@ -85,9 +85,18 @@ function Index(): React.ReactElement {
               defaultOpen
               title={t("frontend.account.contact_info")}
             >
-              <UserEmailList siteConfig={siteConfig} />
+              <UserEmailList
+                user={viewerSession.user}
+                siteConfig={siteConfig}
+              />
 
-              {siteConfig.emailChangeAllowed && <AddEmailForm onAdd={onAdd} />}
+              {siteConfig.emailChangeAllowed && (
+                <AddEmailForm
+                  user={viewerSession.user}
+                  siteConfig={siteConfig}
+                  onAdd={onAdd}
+                />
+              )}
             </Collapsible.Section>
 
             <Separator kind="section" />

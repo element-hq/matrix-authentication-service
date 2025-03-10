@@ -6,17 +6,74 @@
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
+use mas_data_model::SiteConfig;
 use mas_i18n::DataLocale;
 use mas_storage::{
-    RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     user::{UserEmailFilter, UserEmailRepository, UserRepository},
 };
+use zeroize::Zeroizing;
 
-use crate::graphql::{
-    model::{NodeType, User, UserEmail, UserEmailAuthentication},
-    state::ContextExt,
+use crate::{
+    graphql::{
+        Requester,
+        model::{NodeType, User, UserEmail, UserEmailAuthentication},
+        state::ContextExt,
+    },
+    passwords::PasswordManager,
 };
+
+/// Check the password if neeed
+///
+/// Returns true if password verification is not needed, or if the password is
+/// correct. Returns false if the password is incorrect or missing.
+async fn verify_password_if_needed(
+    requester: &Requester,
+    config: &SiteConfig,
+    password_manager: &PasswordManager,
+    password: Option<String>,
+    user: &mas_data_model::User,
+    repo: &mut BoxRepository,
+) -> Result<bool, async_graphql::Error> {
+    // If the requester is admin, they don't need to provide a password
+    if requester.is_admin() {
+        return Ok(true);
+    }
+
+    // If password login is disabled, assume we don't want the user to reauth
+    if !config.password_login_enabled {
+        return Ok(true);
+    }
+
+    // Else we need to check if the user has a password
+    let Some(user_password) = repo
+        .user_password()
+        .active(user)
+        .await
+        .context("Failed to load user password")?
+    else {
+        // User has no password, so we don't need to verify the password
+        return Ok(true);
+    };
+
+    let Some(password) = password else {
+        // There is a password on the user, but not provided in the input
+        return Ok(false);
+    };
+
+    let password = Zeroizing::new(password.into_bytes());
+
+    let res = password_manager
+        .verify(
+            user_password.version,
+            password,
+            user_password.hashed_password,
+        )
+        .await;
+
+    Ok(res.is_ok())
+}
 
 #[derive(Default)]
 pub struct UserEmailMutations {
@@ -120,6 +177,10 @@ impl AddEmailPayload {
 struct RemoveEmailInput {
     /// The ID of the email address to remove
     user_email_id: ID,
+
+    /// The user's current password. This is required if the user is not an
+    /// admin and it has a password on its account.
+    password: Option<String>,
 }
 
 /// The status of the `removeEmail` mutation
@@ -130,6 +191,9 @@ enum RemoveEmailStatus {
 
     /// The email address was not found
     NotFound,
+
+    /// The password provided is incorrect
+    IncorrectPassword,
 }
 
 /// The payload of the `removeEmail` mutation
@@ -137,6 +201,7 @@ enum RemoveEmailStatus {
 enum RemoveEmailPayload {
     Removed(mas_data_model::UserEmail),
     NotFound,
+    IncorrectPassword,
 }
 
 #[Object(use_type_description)]
@@ -146,6 +211,7 @@ impl RemoveEmailPayload {
         match self {
             RemoveEmailPayload::Removed(_) => RemoveEmailStatus::Removed,
             RemoveEmailPayload::NotFound => RemoveEmailStatus::NotFound,
+            RemoveEmailPayload::IncorrectPassword => RemoveEmailStatus::IncorrectPassword,
         }
     }
 
@@ -153,19 +219,22 @@ impl RemoveEmailPayload {
     async fn email(&self) -> Option<UserEmail> {
         match self {
             RemoveEmailPayload::Removed(email) => Some(UserEmail(email.clone())),
-            RemoveEmailPayload::NotFound => None,
+            RemoveEmailPayload::NotFound | RemoveEmailPayload::IncorrectPassword => None,
         }
     }
 
     /// The user to whom the email address belonged
     async fn user(&self, ctx: &Context<'_>) -> Result<Option<User>, async_graphql::Error> {
         let state = ctx.state();
-        let mut repo = state.repository().await?;
 
         let user_id = match self {
             RemoveEmailPayload::Removed(email) => email.user_id,
-            RemoveEmailPayload::NotFound => return Ok(None),
+            RemoveEmailPayload::NotFound | RemoveEmailPayload::IncorrectPassword => {
+                return Ok(None);
+            }
         };
+
+        let mut repo = state.repository().await?;
 
         let user = repo
             .user()
@@ -226,6 +295,10 @@ struct StartEmailAuthenticationInput {
     /// The email address to add to the account
     email: String,
 
+    /// The user's current password. This is required if the user has a password
+    /// on its account.
+    password: Option<String>,
+
     /// The language to use for the email
     #[graphql(default = "en")]
     language: String,
@@ -244,6 +317,8 @@ enum StartEmailAuthenticationStatus {
     Denied,
     /// The email address is already in use on this account
     InUse,
+    /// The password provided is incorrect
+    IncorrectPassword,
 }
 
 /// The payload of the `startEmailAuthentication` mutation
@@ -256,6 +331,7 @@ enum StartEmailAuthenticationPayload {
         violations: Vec<mas_policy::Violation>,
     },
     InUse,
+    IncorrectPassword,
 }
 
 #[Object(use_type_description)]
@@ -268,6 +344,7 @@ impl StartEmailAuthenticationPayload {
             Self::RateLimited => StartEmailAuthenticationStatus::RateLimited,
             Self::Denied { .. } => StartEmailAuthenticationStatus::Denied,
             Self::InUse => StartEmailAuthenticationStatus::InUse,
+            Self::IncorrectPassword => StartEmailAuthenticationStatus::IncorrectPassword,
         }
     }
 
@@ -275,9 +352,11 @@ impl StartEmailAuthenticationPayload {
     async fn authentication(&self) -> Option<&UserEmailAuthentication> {
         match self {
             Self::Started(authentication) => Some(authentication),
-            Self::InvalidEmailAddress | Self::RateLimited | Self::Denied { .. } | Self::InUse => {
-                None
-            }
+            Self::InvalidEmailAddress
+            | Self::RateLimited
+            | Self::Denied { .. }
+            | Self::InUse
+            | Self::IncorrectPassword => None,
         }
     }
 
@@ -494,6 +573,20 @@ impl UserEmailMutations {
             .await?
             .context("Failed to load user")?;
 
+        // Validate the password input if needed
+        if !verify_password_if_needed(
+            requester,
+            state.site_config(),
+            &state.password_manager(),
+            input.password,
+            &user,
+            &mut repo,
+        )
+        .await?
+        {
+            return Ok(RemoveEmailPayload::IncorrectPassword);
+        }
+
         // TODO: don't allow removing the last email address
 
         repo.user_email().remove(user_email.clone()).await?;
@@ -625,6 +718,20 @@ impl UserEmailMutations {
             return Ok(StartEmailAuthenticationPayload::Denied {
                 violations: res.violations,
             });
+        }
+
+        // Validate the password input if needed
+        if !verify_password_if_needed(
+            requester,
+            state.site_config(),
+            &state.password_manager(),
+            input.password,
+            &browser_session.user,
+            &mut repo,
+        )
+        .await?
+        {
+            return Ok(StartEmailAuthenticationPayload::IncorrectPassword);
         }
 
         // Create a new authentication session
