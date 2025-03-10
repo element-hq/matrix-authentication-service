@@ -935,6 +935,11 @@ export type QueryUsersArgs = {
 
 /** The input for the `removeEmail` mutation */
 export type RemoveEmailInput = {
+  /**
+   * The user's current password. This is required if the user is not an
+   * admin and it has a password on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the email address to remove */
   userEmailId: Scalars['ID']['input'];
 };
@@ -952,6 +957,8 @@ export type RemoveEmailPayload = {
 
 /** The status of the `removeEmail` mutation */
 export type RemoveEmailStatus =
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address was not found */
   | 'NOT_FOUND'
   /** The email address was removed */
@@ -1190,6 +1197,11 @@ export type StartEmailAuthenticationInput = {
   email: Scalars['String']['input'];
   /** The language to use for the email */
   language?: Scalars['String']['input'];
+  /**
+   * The user's current password. This is required if the user has a password
+   * on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The payload of the `startEmailAuthentication` mutation */
@@ -1207,6 +1219,8 @@ export type StartEmailAuthenticationPayload = {
 export type StartEmailAuthenticationStatus =
   /** The email address isn't allowed by the policy */
   | 'DENIED'
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address is invalid */
   | 'INVALID_EMAIL_ADDRESS'
   /** The email address is already in use on this account */
@@ -1640,10 +1654,9 @@ export type OAuth2Session_DetailFragment = (
 
 export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
-export type UserEmail_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmail_SiteConfigFragment' };
-
 export type RemoveEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1661,8 +1674,13 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
+export type AddEmailForm_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'AddEmailForm_UserFragment' };
+
+export type AddEmailForm_SiteConfigFragment = { __typename?: 'SiteConfig', passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AddEmailForm_SiteConfigFragment' };
+
 export type AddEmailMutationVariables = Exact<{
   email: Scalars['String']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
   language: Scalars['String']['input'];
 }>;
 
@@ -1682,16 +1700,21 @@ export type UserEmailListQuery = { __typename?: 'Query', viewer: { __typename: '
           & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
         ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } };
 
-export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
+export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'UserEmailList_UserFragment' };
+
+export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } } } | { __typename: 'Oauth2Session' }, siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
+      { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
+      & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment } }
+    ) } | { __typename: 'Oauth2Session' }, siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
-    & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
+    & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
   ) };
 
 export type BrowserSessionListQueryVariables = Exact<{
@@ -2151,11 +2174,6 @@ export const UserEmail_EmailFragmentDoc = new TypedDocumentString(`
   email
 }
     `, {"fragmentName":"UserEmail_email"}) as unknown as TypedDocumentString<UserEmail_EmailFragment, unknown>;
-export const UserEmail_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment UserEmail_siteConfig on SiteConfig {
-  emailChangeAllowed
-}
-    `, {"fragmentName":"UserEmail_siteConfig"}) as unknown as TypedDocumentString<UserEmail_SiteConfigFragment, unknown>;
 export const UserGreeting_UserFragmentDoc = new TypedDocumentString(`
     fragment UserGreeting_user on User {
   id
@@ -2170,9 +2188,25 @@ export const UserGreeting_SiteConfigFragmentDoc = new TypedDocumentString(`
   displayNameChangeAllowed
 }
     `, {"fragmentName":"UserGreeting_siteConfig"}) as unknown as TypedDocumentString<UserGreeting_SiteConfigFragment, unknown>;
+export const AddEmailForm_UserFragmentDoc = new TypedDocumentString(`
+    fragment AddEmailForm_user on User {
+  hasPassword
+}
+    `, {"fragmentName":"AddEmailForm_user"}) as unknown as TypedDocumentString<AddEmailForm_UserFragment, unknown>;
+export const AddEmailForm_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment AddEmailForm_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+    `, {"fragmentName":"AddEmailForm_siteConfig"}) as unknown as TypedDocumentString<AddEmailForm_SiteConfigFragment, unknown>;
+export const UserEmailList_UserFragmentDoc = new TypedDocumentString(`
+    fragment UserEmailList_user on User {
+  hasPassword
+}
+    `, {"fragmentName":"UserEmailList_user"}) as unknown as TypedDocumentString<UserEmailList_UserFragment, unknown>;
 export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
+  passwordLoginEnabled
 }
     `, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
@@ -2247,8 +2281,8 @@ export const EndOAuth2SessionDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>;
 export const RemoveEmailDocument = new TypedDocumentString(`
-    mutation RemoveEmail($id: ID!) {
-  removeEmail(input: {userEmailId: $id}) {
+    mutation RemoveEmail($id: ID!, $password: String) {
+  removeEmail(input: {userEmailId: $id, password: $password}) {
     status
     user {
       id
@@ -2264,8 +2298,10 @@ export const SetDisplayNameDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
 export const AddEmailDocument = new TypedDocumentString(`
-    mutation AddEmail($email: String!, $language: String!) {
-  startEmailAuthentication(input: {email: $email, language: $language}) {
+    mutation AddEmail($email: String!, $password: String, $language: String!) {
+  startEmailAuthentication(
+    input: {email: $email, password: $password, language: $language}
+  ) {
     status
     violations
     authentication {
@@ -2308,6 +2344,8 @@ export const UserProfileDocument = new TypedDocumentString(`
     ... on BrowserSession {
       id
       user {
+        ...AddEmailForm_user
+        ...UserEmailList_user
         hasPassword
         emails(first: 0) {
           totalCount
@@ -2318,19 +2356,26 @@ export const UserProfileDocument = new TypedDocumentString(`
   siteConfig {
     emailChangeAllowed
     passwordLoginEnabled
+    ...AddEmailForm_siteConfig
     ...UserEmailList_siteConfig
-    ...UserEmail_siteConfig
     ...PasswordChange_siteConfig
   }
 }
     fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
 }
-fragment UserEmail_siteConfig on SiteConfig {
-  emailChangeAllowed
+fragment AddEmailForm_user on User {
+  hasPassword
+}
+fragment AddEmailForm_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment UserEmailList_user on User {
+  hasPassword
 }
 fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
+  passwordLoginEnabled
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
 export const BrowserSessionListDocument = new TypedDocumentString(`
     query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
@@ -2865,7 +2910,7 @@ export const mockEndOAuth2SessionMutation = (resolver: GraphQLResponseResolver<E
  * @example
  * mockRemoveEmailMutation(
  *   ({ query, variables }) => {
- *     const { id } = variables;
+ *     const { id, password } = variables;
  *     return HttpResponse.json({
  *       data: { removeEmail }
  *     })
@@ -2909,7 +2954,7 @@ export const mockSetDisplayNameMutation = (resolver: GraphQLResponseResolver<Set
  * @example
  * mockAddEmailMutation(
  *   ({ query, variables }) => {
- *     const { email, language } = variables;
+ *     const { email, password, language } = variables;
  *     return HttpResponse.json({
  *       data: { startEmailAuthentication }
  *     })

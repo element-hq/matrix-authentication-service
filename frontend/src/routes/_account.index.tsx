@@ -18,6 +18,8 @@ const QUERY = graphql(/* GraphQL */ `
       ... on BrowserSession {
         id
         user {
+          ...AddEmailForm_user
+          ...UserEmailList_user
           hasPassword
           emails(first: 0) {
             totalCount
@@ -29,8 +31,8 @@ const QUERY = graphql(/* GraphQL */ `
     siteConfig {
       emailChangeAllowed
       passwordLoginEnabled
+      ...AddEmailForm_siteConfig
       ...UserEmailList_siteConfig
-      ...UserEmail_siteConfig
       ...PasswordChange_siteConfig
     }
   }

@@ -60,16 +60,30 @@ export const query = (pagination: AnyPagination = { first: 6 }) =>
       }),
   });
 
+export const USER_FRAGMENT = graphql(/* GraphQL */ `
+  fragment UserEmailList_user on User {
+    hasPassword
+  }
+`);
+
 export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment UserEmailList_siteConfig on SiteConfig {
     emailChangeAllowed
+    passwordLoginEnabled
   }
 `);
 
 const UserEmailList: React.FC<{
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
-}> = ({ siteConfig }) => {
-  const { emailChangeAllowed } = useFragment(CONFIG_FRAGMENT, siteConfig);
+  user: FragmentType<typeof USER_FRAGMENT>;
+}> = ({ siteConfig, user }) => {
+  const { emailChangeAllowed, passwordLoginEnabled } = useFragment(
+    CONFIG_FRAGMENT,
+    siteConfig,
+  );
+  const { hasPassword } = useFragment(USER_FRAGMENT, user);
+  const shouldPromptPassword = hasPassword && passwordLoginEnabled;
+
   const [pending, startTransition] = useTransition();
 
   const [pagination, setPagination] = usePagination();
@@ -102,6 +116,7 @@ const UserEmailList: React.FC<{
           email={edge.node}
           key={edge.cursor}
           canRemove={canRemove}
+          shouldPromptPassword={shouldPromptPassword}
           onRemove={onRemove}
         />
       ))}
