@@ -93,7 +93,7 @@ version = "1.6.0"
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.8.0"
+version = "2.9.0"
 
 # Bytes
 [workspace.dependencies.bytes]
