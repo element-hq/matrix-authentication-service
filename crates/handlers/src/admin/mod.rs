@@ -22,6 +22,7 @@ use indexmap::IndexMap;
 use mas_axum_utils::FancyError;
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
+use mas_policy::PolicyFactory;
 use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
     UrlBuilder,
@@ -45,6 +46,11 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
         .tag(Tag {
             name: "compat-session".to_owned(),
             description: Some("Manage compatibility sessions from legacy clients".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "policy-data".to_owned(),
+            description: Some("Manage the dynamic policy data".to_owned()),
             ..Tag::default()
         })
         .tag(Tag {
@@ -115,6 +121,7 @@ where
     CallContext: FromRequestParts<S>,
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
+    Arc<PolicyFactory>: FromRef<S>,
 {
     // We *always* want to explicitly set the possible responses, beacuse the
     // infered ones are not necessarily correct

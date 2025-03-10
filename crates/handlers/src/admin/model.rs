@@ -534,3 +534,50 @@ impl UpstreamOAuthLink {
         ]
     }
 }
+
+/// The policy data
+#[derive(Serialize, JsonSchema)]
+pub struct PolicyData {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The creation date of the policy data
+    created_at: DateTime<Utc>,
+
+    /// The policy data content
+    data: serde_json::Value,
+}
+
+impl From<mas_data_model::PolicyData> for PolicyData {
+    fn from(policy_data: mas_data_model::PolicyData) -> Self {
+        Self {
+            id: policy_data.id,
+            created_at: policy_data.created_at,
+            data: policy_data.data,
+        }
+    }
+}
+
+impl Resource for PolicyData {
+    const KIND: &'static str = "policy-data";
+    const PATH: &'static str = "/api/admin/v1/policy-data";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl PolicyData {
+    /// Samples of policy data
+    pub fn samples() -> [Self; 1] {
+        [Self {
+            id: Ulid::from_bytes([0x01; 16]),
+            created_at: DateTime::default(),
+            data: serde_json::json!({
+                "hello": "world",
+                "foo": 42,
+                "bar": true
+            }),
+        }]
+    }
+}

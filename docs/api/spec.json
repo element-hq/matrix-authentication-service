@@ -593,6 +593,208 @@
         }
       }
     },
+    "/api/admin/v1/policy-data": {
+      "post": {
+        "tags": [
+          "policy-data"
+        ],
+        "summary": "Set the current policy data",
+        "operationId": "setPolicyData",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPolicyDataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Policy data was successfully set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PolicyData"
+                },
+                "example": {
+                  "data": {
+                    "type": "policy-data",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "data": {
+                        "hello": "world",
+                        "foo": 42,
+                        "bar": true
+                      }
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid policy data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Failed to instanciate policy with the provided data"
+                    },
+                    {
+                      "title": "invalid policy data"
+                    },
+                    {
+                      "title": "Failed to merge policy data objects"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/policy-data/latest": {
+      "get": {
+        "tags": [
+          "policy-data"
+        ],
+        "summary": "Get the latest policy data",
+        "operationId": "getLatestPolicyData",
+        "responses": {
+          "200": {
+            "description": "Latest policy data was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PolicyData"
+                },
+                "example": {
+                  "data": {
+                    "type": "policy-data",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "data": {
+                        "hello": "world",
+                        "foo": 42,
+                        "bar": true
+                      }
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No policy data was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "No policy data found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/policy-data/{id}": {
+      "get": {
+        "tags": [
+          "policy-data"
+        ],
+        "summary": "Get policy data by ID",
+        "operationId": "getPolicyData",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy data was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PolicyData"
+                },
+                "example": {
+                  "data": {
+                    "type": "policy-data",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "data": {
+                        "hello": "world",
+                        "foo": 42,
+                        "bar": true
+                      }
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/policy-data/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Policy data was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Policy data with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/users": {
       "get": {
         "tags": [
@@ -2666,6 +2868,86 @@
           }
         }
       },
+      "SetPolicyDataRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/policy-data`",
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "examples": [
+              {
+                "hello": "world",
+                "foo": 42,
+                "bar": true
+              }
+            ]
+          }
+        }
+      },
+      "SingleResponse_for_PolicyData": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_PolicyData"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "SingleResource_for_PolicyData": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/PolicyData"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "PolicyData": {
+        "description": "The policy data",
+        "type": "object",
+        "required": [
+          "created_at",
+          "data"
+        ],
+        "properties": {
+          "created_at": {
+            "description": "The creation date of the policy data",
+            "type": "string",
+            "format": "date-time"
+          },
+          "data": {
+            "description": "The policy data content"
+          }
+        }
+      },
       "UserFilter": {
         "type": "object",
         "properties": {
@@ -3251,6 +3533,10 @@
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"
+    },
+    {
+      "name": "policy-data",
+      "description": "Manage the dynamic policy data"
     },
     {
       "name": "oauth2-session",

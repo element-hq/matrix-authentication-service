@@ -18,6 +18,7 @@ use mas_storage::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
+    policy_data::PolicyDataRepository,
     queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
@@ -40,6 +41,7 @@ use crate::{
         PgOAuth2ClientRepository, PgOAuth2DeviceCodeGrantRepository,
         PgOAuth2RefreshTokenRepository, PgOAuth2SessionRepository,
     },
+    policy_data::PgPolicyDataRepository,
     queue::{
         job::PgQueueJobRepository, schedule::PgQueueScheduleRepository,
         worker::PgQueueWorkerRepository,
@@ -282,5 +284,9 @@ where
         &'c mut self,
     ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
         Box::new(PgQueueScheduleRepository::new(self.conn.as_mut()))
+    }
+
+    fn policy_data<'c>(&'c mut self) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
+        Box::new(PgPolicyDataRepository::new(self.conn.as_mut()))
     }
 }

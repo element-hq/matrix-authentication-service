@@ -119,6 +119,7 @@ mod utils;
 pub mod app_session;
 pub mod compat;
 pub mod oauth2;
+pub mod policy_data;
 pub mod queue;
 pub mod upstream_oauth2;
 pub mod user;
