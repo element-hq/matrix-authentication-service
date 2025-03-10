@@ -8,6 +8,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound, redirect, useNavigate } from "@tanstack/react-router";
 import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign-out";
 import { Button, Text } from "@vector-im/compound-web";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import AccountDeleteButton from "../components/AccountDeleteButton";
@@ -19,9 +20,11 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import Separator from "../components/Separator";
 import { useEndBrowserSession } from "../components/Session/EndBrowserSessionButton";
 import AddEmailForm from "../components/UserProfile/AddEmailForm";
+import AddPasskeyForm from "../components/UserProfile/AddPasskeyForm";
 import UserEmailList, {
   query as userEmailListQuery,
 } from "../components/UserProfile/UserEmailList";
+import UserPasskeyList from "../components/UserProfile/UserPasskeyList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -230,7 +233,10 @@ function Index(): React.ReactElement {
       {siteConfig.passkeysEnabled && (
         <>
           <Collapsible.Section title={t("frontend.account.passkeys.title")}>
-            placeholder text
+            <Suspense fallback={<LoadingSpinner />}>
+              <UserPasskeyList />
+              <AddPasskeyForm />
+            </Suspense>
           </Collapsible.Section>
 
           <Separator kind="section" />

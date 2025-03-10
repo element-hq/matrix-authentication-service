@@ -56,6 +56,21 @@
         "username_label": "Username"
       },
       "passkeys": {
+        "add": "Add passkey",
+        "challenge_invalid_error": "The request expired, please try again.",
+        "created_at_message": "Created {{date}}",
+        "delete_button_confirmation_modal": {
+          "action": "Delete passkey",
+          "body": "Delete this passkey?"
+        },
+        "delete_button_title": "Remove passkey",
+        "exists_error": "This passkey already exists.",
+        "last_used_message": "Last used {{date}}",
+        "name_field_help": "Give your passkey a name you can identify later",
+        "name_field_label": "Name",
+        "name_invalid_error": "The entered name is invalid",
+        "never_used_message": "Never used",
+        "response_invalid_error": "The response from your passkey was invalid: {{error}}",
         "title": "Passkeys"
       },
       "password": {
