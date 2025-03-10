@@ -14,6 +14,14 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
+
+    # `paste`, as used by `aws-lc-rs` is unmaintained, but we're not concerned
+    # about it having a security vulnerability
+    "RUSTSEC-2024-0436",
+
+    # rust-protobuf has an infinite recursion issue when parsing inputs. We only
+    # use protobuf for opentelemetry output, so we are not affected
+    "RUSTSEC-2024-0437",
 ]
 
 [licenses]
