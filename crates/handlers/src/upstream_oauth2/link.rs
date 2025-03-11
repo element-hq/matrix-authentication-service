@@ -19,7 +19,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     sentry::SentryEventID,
 };
-use mas_data_model::{User, UserAgent};
+use mas_data_model::UserAgent;
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -31,8 +31,8 @@ use mas_storage::{
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
 };
 use mas_templates::{
-    ErrorContext, FieldError, FormError, TemplateContext, Templates, ToFormState,
-    UpstreamExistingLinkContext, UpstreamRegister, UpstreamSuggestLink,
+    AccountInactiveContext, ErrorContext, FieldError, FormError, TemplateContext, Templates,
+    ToFormState, UpstreamExistingLinkContext, UpstreamRegister, UpstreamSuggestLink,
 };
 use minijinja::Environment;
 use serde::{Deserialize, Serialize};
@@ -272,8 +272,6 @@ pub(crate) async fn get(
                 .user()
                 .lookup(user_id)
                 .await?
-                // XXX: is that right?
-                .filter(User::is_valid)
                 .ok_or(RouteError::UserNotFound)?;
 
             let ctx = UpstreamExistingLinkContext::new(user)
@@ -300,8 +298,26 @@ pub(crate) async fn get(
                 .user()
                 .lookup(user_id)
                 .await?
-                .filter(mas_data_model::User::is_valid)
                 .ok_or(RouteError::UserNotFound)?;
+
+            // Check that the user is not locked or deactivated
+            if user.deactivated_at.is_some() {
+                // The account is deactivated, show the 'account deactivated' fallback
+                let ctx = AccountInactiveContext::new(user)
+                    .with_csrf(csrf_token.form_value())
+                    .with_language(locale);
+                let fallback = templates.render_account_deactivated(&ctx)?;
+                return Ok((cookie_jar, Html(fallback).into_response()));
+            }
+
+            if user.locked_at.is_some() {
+                // The account is locked, show the 'account locked' fallback
+                let ctx = AccountInactiveContext::new(user)
+                    .with_csrf(csrf_token.form_value())
+                    .with_language(locale);
+                let fallback = templates.render_account_locked(&ctx)?;
+                return Ok((cookie_jar, Html(fallback).into_response()));
+            }
 
             let session = repo
                 .browser_session()
