@@ -25,7 +25,11 @@ use serde::Deserialize;
 use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
-use crate::{BoundActivityTracker, PreferredLanguage, SiteConfig, passwords::PasswordManager};
+use crate::{
+    BoundActivityTracker, PreferredLanguage, SiteConfig,
+    passwords::PasswordManager,
+    session::{SessionOrFallback, load_session_or_fallback},
+};
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct ReauthForm {
@@ -52,10 +56,18 @@ pub(crate) async fn get(
             .into_response());
     }
 
-    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
     let Some(session) = maybe_session else {
         // If there is no session, redirect to the login screen, keeping the
@@ -63,6 +75,8 @@ pub(crate) async fn get(
         let login = mas_router::Login::from(query.post_auth_action);
         return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
     };
+
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     activity_tracker
         .record_browser_session(&clock, &session)
@@ -89,6 +103,8 @@ pub(crate) async fn get(
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
+    PreferredLanguage(locale): PreferredLanguage,
+    State(templates): State<Templates>,
     State(password_manager): State<PasswordManager>,
     State(url_builder): State<UrlBuilder>,
     State(site_config): State<SiteConfig>,
@@ -104,9 +120,18 @@ pub(crate) async fn post(
 
     let form = cookie_jar.verify_form(&clock, form)?;
 
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
     let Some(session) = maybe_session else {
         // If there is no session, redirect to the login screen, keeping the

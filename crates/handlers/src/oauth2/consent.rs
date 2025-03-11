@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -11,7 +11,6 @@ use axum::{
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
     sentry::SentryEventID,
@@ -27,7 +26,10 @@ use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Tem
 use thiserror::Error;
 use ulid::Ulid;
 
-use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
+use crate::{
+    BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
+    session::{SessionOrFallback, load_session_or_fallback},
+};
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -54,6 +56,7 @@ impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::LoadError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
+impl_from_error_for_route!(crate::session::SessionLoadError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -85,9 +88,18 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, RouteError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 
@@ -107,48 +119,48 @@ pub(crate) async fn get(
         return Err(RouteError::GrantNotPending);
     }
 
-    if let Some(session) = maybe_session {
-        activity_tracker
-            .record_browser_session(&clock, &session)
-            .await;
-
-        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-
-        let res = policy
-            .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
-                user: Some(&session.user),
-                client: &client,
-                scope: &grant.scope,
-                grant_type: mas_policy::GrantType::AuthorizationCode,
-                requester: mas_policy::Requester {
-                    ip_address: activity_tracker.ip(),
-                    user_agent,
-                },
-            })
-            .await?;
-
-        if res.valid() {
-            let ctx = ConsentContext::new(grant, client)
-                .with_session(session)
-                .with_csrf(csrf_token.form_value())
-                .with_language(locale);
-
-            let content = templates.render_consent(&ctx)?;
-
-            Ok((cookie_jar, Html(content)).into_response())
-        } else {
-            let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
-                .with_session(session)
-                .with_csrf(csrf_token.form_value())
-                .with_language(locale);
-
-            let content = templates.render_policy_violation(&ctx)?;
-
-            Ok((cookie_jar, Html(content)).into_response())
-        }
-    } else {
+    let Some(session) = maybe_session else {
         let login = mas_router::Login::and_continue_grant(grant_id);
-        Ok((cookie_jar, url_builder.redirect(&login)).into_response())
+        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+    };
+
+    activity_tracker
+        .record_browser_session(&clock, &session)
+        .await;
+
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+
+    let res = policy
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: Some(&session.user),
+            client: &client,
+            scope: &grant.scope,
+            grant_type: mas_policy::GrantType::AuthorizationCode,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
+        .await?;
+
+    if res.valid() {
+        let ctx = ConsentContext::new(grant, client)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_consent(&ctx)?;
+
+        Ok((cookie_jar, Html(content)).into_response())
+    } else {
+        let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_policy_violation(&ctx)?;
+
+        Ok((cookie_jar, Html(content)).into_response())
     }
 }
 
@@ -161,6 +173,8 @@ pub(crate) async fn get(
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
+    PreferredLanguage(locale): PreferredLanguage,
+    State(templates): State<Templates>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -172,9 +186,18 @@ pub(crate) async fn post(
 ) -> Result<Response, RouteError> {
     cookie_jar.verify_form(&clock, form)?;
 
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 

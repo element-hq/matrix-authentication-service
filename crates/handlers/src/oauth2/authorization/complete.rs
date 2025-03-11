@@ -97,7 +97,7 @@ pub(crate) async fn get(
 ) -> Result<Response, RouteError> {
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let maybe_session = session_info.load_active_session(&mut repo).await?;
 
     let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 

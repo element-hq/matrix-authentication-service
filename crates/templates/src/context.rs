@@ -1590,6 +1590,33 @@ impl TemplateContext for DeviceConsentContext {
     }
 }
 
+/// Context used by the `account/deactivated.html` and `account/locked.html`
+/// templates
+#[derive(Serialize)]
+pub struct AccountInactiveContext {
+    user: User,
+}
+
+impl AccountInactiveContext {
+    /// Constructs a new context with an existing linked user
+    #[must_use]
+    pub fn new(user: User) -> Self {
+        Self { user }
+    }
+}
+
+impl TemplateContext for AccountInactiveContext {
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        User::samples(now, rng)
+            .into_iter()
+            .map(|user| AccountInactiveContext { user })
+            .collect()
+    }
+}
+
 /// Context used by the `form_post.html` template
 #[derive(Serialize)]
 pub struct FormPostContext<T> {
