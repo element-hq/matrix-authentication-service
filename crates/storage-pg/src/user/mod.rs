@@ -331,6 +331,42 @@ impl UserRepository for PgUserRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.user.deactivate",
+        skip_all,
+        fields(
+            db.query.text,
+            %user.id,
+        ),
+        err,
+    )]
+    async fn deactivate(&mut self, clock: &dyn Clock, mut user: User) -> Result<User, Self::Error> {
+        if user.deactivated_at.is_some() {
+            return Ok(user);
+        }
+
+        let deactivated_at = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE users
+                SET deactivated_at = $2
+                WHERE user_id = $1
+                  AND deactivated_at IS NULL
+            "#,
+            Uuid::from(user.id),
+            deactivated_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user.deactivated_at = Some(user.created_at);
+
+        Ok(user)
+    }
+
+    #[tracing::instrument(
         name = "db.user.set_can_request_admin",
         skip_all,
         fields(

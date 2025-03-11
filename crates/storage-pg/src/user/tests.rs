@@ -33,6 +33,7 @@ async fn test_user_repo(pool: PgPool) {
     let non_admin = all.cannot_request_admin_only();
     let active = all.active_only();
     let locked = all.locked_only();
+    let deactivated = all.deactivated_only();
 
     // Initially, the user shouldn't exist
     assert!(!repo.user().exists(USERNAME).await.unwrap());
@@ -49,6 +50,7 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(non_admin).await.unwrap(), 0);
     assert_eq!(repo.user().count(active).await.unwrap(), 0);
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 0);
 
     // Adding the user should work
     let user = repo
@@ -73,6 +75,7 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(non_admin).await.unwrap(), 1);
     assert_eq!(repo.user().count(active).await.unwrap(), 1);
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 0);
 
     // Adding a second time should give a conflict
     // It should not poison the transaction though
@@ -93,6 +96,7 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(non_admin).await.unwrap(), 1);
     assert_eq!(repo.user().count(active).await.unwrap(), 0);
     assert_eq!(repo.user().count(locked).await.unwrap(), 1);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 0);
 
     // Check that the property is retrieved on lookup
     let user = repo.user().lookup(user.id).await.unwrap().unwrap();
@@ -123,6 +127,7 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(non_admin).await.unwrap(), 0);
     assert_eq!(repo.user().count(active).await.unwrap(), 1);
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 0);
 
     // Check that the property is retrieved on lookup
     let user = repo.user().lookup(user.id).await.unwrap().unwrap();
@@ -145,6 +150,26 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(non_admin).await.unwrap(), 1);
     assert_eq!(repo.user().count(active).await.unwrap(), 1);
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 0);
+
+    // Deactivating the user should work
+    let user = repo.user().deactivate(&clock, user).await.unwrap();
+    assert!(user.deactivated_at.is_some());
+
+    // Check that the property is retrieved on lookup
+    let user = repo.user().lookup(user.id).await.unwrap().unwrap();
+    assert!(user.deactivated_at.is_some());
+
+    // Deactivating a second time should not fail
+    let user = repo.user().deactivate(&clock, user).await.unwrap();
+    assert!(user.deactivated_at.is_some());
+
+    assert_eq!(repo.user().count(all).await.unwrap(), 1);
+    assert_eq!(repo.user().count(admin).await.unwrap(), 0);
+    assert_eq!(repo.user().count(non_admin).await.unwrap(), 1);
+    assert_eq!(repo.user().count(active).await.unwrap(), 0);
+    assert_eq!(repo.user().count(locked).await.unwrap(), 0);
+    assert_eq!(repo.user().count(deactivated).await.unwrap(), 1);
 
     // Check the list method
     let list = repo.user().list(all, Pagination::first(10)).await.unwrap();
@@ -171,8 +196,7 @@ async fn test_user_repo(pool: PgPool) {
         .list(active, Pagination::first(10))
         .await
         .unwrap();
-    assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges.len(), 0);
 
     let list = repo
         .user()
@@ -180,6 +204,14 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 0);
+
+    let list = repo
+        .user()
+        .list(deactivated, Pagination::first(10))
+        .await
+        .unwrap();
+    assert_eq!(list.edges.len(), 1);
+    assert_eq!(list.edges[0].id, user.id);
 
     repo.save().await.unwrap();
 }
