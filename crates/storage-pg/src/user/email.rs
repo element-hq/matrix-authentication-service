@@ -14,12 +14,10 @@ use mas_storage::{
     Clock, Page, Pagination,
     user::{UserEmailFilter, UserEmailRepository},
 };
-use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
-use tracing::{Instrument, info_span};
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -317,12 +315,10 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
         tracing::Span::current().record("user_email.id", tracing::field::display(id));
 
-        // We now always set the 'confirmed_at' field, so that older app version
-        // consider those emails as verified.
         sqlx::query!(
             r#"
-                INSERT INTO user_emails (user_email_id, user_id, email, created_at, confirmed_at)
-                VALUES ($1, $2, $3, $4, $4)
+                INSERT INTO user_emails (user_email_id, user_id, email, created_at)
+                VALUES ($1, $2, $3, $4)
             "#,
             Uuid::from(id),
             Uuid::from(user.id),
@@ -353,22 +349,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         err,
     )]
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error> {
-        let span = info_span!(
-            "db.user_email.remove.codes",
-            { DB_QUERY_TEXT } = tracing::field::Empty
-        );
-        sqlx::query!(
-            r#"
-                DELETE FROM user_email_confirmation_codes
-                WHERE user_email_id = $1
-            "#,
-            Uuid::from(user_email.id),
-        )
-        .record(&span)
-        .execute(&mut *self.conn)
-        .instrument(span)
-        .await?;
-
         let res = sqlx::query!(
             r#"
                 DELETE FROM user_emails
