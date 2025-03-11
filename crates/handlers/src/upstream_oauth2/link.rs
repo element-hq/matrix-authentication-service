@@ -465,7 +465,9 @@ pub(crate) async fn get(
                             .await
                             .map_err(RouteError::HomeserverConnection)?;
 
-                        if maybe_existing_user.is_some() || !is_available {
+                        if !provider.allow_existing_users
+                            && (maybe_existing_user.is_some() || !is_available)
+                        {
                             if let Some(existing_user) = maybe_existing_user {
                                 // The mapper returned a username which already exists, but isn't
                                 // linked to this upstream user.
@@ -742,15 +744,16 @@ pub(crate) async fn post(
                         mas_templates::UpstreamRegisterFormField::Username,
                         FieldError::Required,
                     );
-                } else if repo.user().exists(&username).await? {
+                } else if !provider.allow_existing_users && repo.user().exists(&username).await? {
                     form_state.add_error_on_field(
                         mas_templates::UpstreamRegisterFormField::Username,
                         FieldError::Exists,
                     );
-                } else if !homeserver
-                    .is_localpart_available(&username)
-                    .await
-                    .map_err(RouteError::HomeserverConnection)?
+                } else if !provider.allow_existing_users
+                    && !homeserver
+                        .is_localpart_available(&username)
+                        .await
+                        .map_err(RouteError::HomeserverConnection)?
                 {
                     // The user already exists on the homeserver
                     tracing::warn!(
@@ -830,10 +833,22 @@ pub(crate) async fn post(
                     .into_response());
             }
 
-            REGISTRATION_COUNTER.add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
-
-            // Now we can create the user
-            let user = repo.user().add(&mut rng, &clock, username).await?;
+            let user = if provider.allow_existing_users {
+                // If the provider allows existing users, we can use the existing user
+                let existing_user = repo.user().find_by_username(&username).await?;
+                if existing_user.is_some() {
+                    existing_user.unwrap()
+                } else {
+                    REGISTRATION_COUNTER
+                        .add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
+                    // This case should not happen
+                    repo.user().add(&mut rng, &clock, username).await?
+                }
+            } else {
+                REGISTRATION_COUNTER.add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
+                // Now we can create the user
+                repo.user().add(&mut rng, &clock, username).await?
+            };
 
             if let Some(terms_url) = &site_config.tos_uri {
                 repo.user_terms()
@@ -975,6 +990,7 @@ mod tests {
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
+                    allow_existing_users: true,
                     additional_authorization_parameters: Vec::new(),
                     ui_order: 0,
                 },
