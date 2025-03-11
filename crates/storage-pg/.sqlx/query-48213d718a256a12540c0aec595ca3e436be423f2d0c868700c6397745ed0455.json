@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_id\n                     , username\n                     , created_at\n                     , locked_at\n                     , can_request_admin\n                FROM users\n                WHERE username = $1\n            ",
+  "query": "\n                SELECT user_id\n                     , username\n                     , created_at\n                     , locked_at\n                     , deactivated_at\n                     , can_request_admin\n                FROM users\n                WHERE username = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -25,6 +25,11 @@
       },
       {
         "ordinal": 4,
+        "name": "deactivated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
         "name": "can_request_admin",
         "type_info": "Bool"
       }
@@ -39,8 +44,9 @@
       false,
       false,
       true,
+      true,
       false
     ]
   },
-  "hash": "e1a18bd82d28fd86d8b8da8a6ac6eddf224ab32cf96e9c28706dd9aa1d09332b"
+  "hash": "48213d718a256a12540c0aec595ca3e436be423f2d0c868700c6397745ed0455"
 }

@@ -327,6 +327,7 @@ mod tests {
             sub: "123-456".to_owned(),
             created_at: now,
             locked_at: None,
+            deactivated_at: None,
             can_request_admin: false,
         };
 
@@ -336,6 +337,7 @@ mod tests {
             sub: "123-456".to_owned(),
             created_at: now,
             locked_at: None,
+            deactivated_at: None,
             can_request_admin: false,
         };
 

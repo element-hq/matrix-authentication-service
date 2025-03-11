@@ -21,14 +21,15 @@ pub struct User {
     pub sub: String,
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
+    pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
 }
 
 impl User {
-    /// Returns `true` unless the user is locked.
+    /// Returns `true` unless the user is locked or deactivated.
     #[must_use]
     pub fn is_valid(&self) -> bool {
-        self.locked_at.is_none()
+        self.locked_at.is_none() && self.deactivated_at.is_none()
     }
 }
 
@@ -42,6 +43,7 @@ impl User {
             sub: "123-456".to_owned(),
             created_at: now,
             locked_at: None,
+            deactivated_at: None,
             can_request_admin: false,
         }]
     }

@@ -32,6 +32,9 @@ pub use self::{
 /// The state of a user account
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UserState {
+    /// The account is deactivated, it has the `deactivated_at` timestamp set
+    Deactivated,
+
     /// The account is locked, it has the `locked_at` timestamp set
     Locked,
 
@@ -46,6 +49,14 @@ impl UserState {
     #[must_use]
     pub fn is_locked(&self) -> bool {
         matches!(self, Self::Locked)
+    }
+
+    /// Returns `true` if the user state is [`Deactivated`].
+    ///
+    /// [`Deactivated`]: UserState::Deactivated
+    #[must_use]
+    pub fn is_deactivated(&self) -> bool {
+        matches!(self, Self::Deactivated)
     }
 
     /// Returns `true` if the user state is [`Active`].
@@ -83,6 +94,13 @@ impl UserFilter<'_> {
     #[must_use]
     pub fn locked_only(mut self) -> Self {
         self.state = Some(UserState::Locked);
+        self
+    }
+
+    /// Filter for deactivated users
+    #[must_use]
+    pub fn deactivated_only(mut self) -> Self {
+        self.state = Some(UserState::Deactivated);
         self
     }
 
