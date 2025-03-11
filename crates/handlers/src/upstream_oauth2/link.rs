@@ -722,7 +722,7 @@ pub(crate) async fn post(
                     homeserver_denied_username = true;
                 }
 
-                // If we need have a TOS in the config, make sure the user has accepted it
+                // If we have a TOS in the config, make sure the user has accepted it
                 if site_config.tos_uri.is_some() && !accept_terms {
                     form_state.add_error_on_field(
                         mas_templates::UpstreamRegisterFormField::AcceptTerms,
