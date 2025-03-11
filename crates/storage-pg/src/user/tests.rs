@@ -290,6 +290,21 @@ async fn test_user_email_repo(pool: PgPool) {
     repo.user_email().remove(user_email).await.unwrap();
     assert_eq!(repo.user_email().count(all).await.unwrap(), 0);
 
+    // Add a few emails
+    for i in 0..5 {
+        let email = format!("email{i}@example.com");
+        repo.user_email()
+            .add(&mut rng, &clock, &user, email)
+            .await
+            .unwrap();
+    }
+    assert_eq!(repo.user_email().count(all).await.unwrap(), 5);
+
+    // Try removing all the emails
+    let affected = repo.user_email().remove_bulk(all).await.unwrap();
+    assert_eq!(affected, 5);
+    assert_eq!(repo.user_email().count(all).await.unwrap(), 0);
+
     repo.save().await.unwrap();
 }
 

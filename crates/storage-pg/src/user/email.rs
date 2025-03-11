@@ -366,6 +366,28 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.user_email.remove_bulk",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn remove_bulk(&mut self, filter: UserEmailFilter<'_>) -> Result<usize, Self::Error> {
+        let (sql, arguments) = Query::delete()
+            .from_table(UserEmails::Table)
+            .apply_filter(filter)
+            .build_sqlx(PostgresQueryBuilder);
+
+        let res = sqlx::query_with(&sql, arguments)
+            .traced()
+            .execute(&mut *self.conn)
+            .await?;
+
+        Ok(res.rows_affected().try_into().unwrap_or(usize::MAX))
+    }
+
+    #[tracing::instrument(
         name = "db.user_email.add_authentication_for_session",
         skip_all,
         fields(
