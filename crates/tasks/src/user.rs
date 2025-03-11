@@ -42,12 +42,19 @@ impl RunnableJob for DeactivateUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        // Let's first lock the user
+        // Let's first lock & deactivate the user
         let user = repo
             .user()
             .lock(&clock, user)
             .await
             .context("Failed to lock user")
+            .map_err(JobError::retry)?;
+
+        let user = repo
+            .user()
+            .deactivate(&clock, user)
+            .await
+            .context("Failed to deactivate user")
             .map_err(JobError::retry)?;
 
         // Kill all sessions for the user
