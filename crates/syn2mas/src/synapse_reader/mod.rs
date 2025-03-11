@@ -185,6 +185,8 @@ pub struct SynapseUser {
     pub admin: SynapseBool,
     /// Whether the user is deactivated
     pub deactivated: SynapseBool,
+    /// Whether the user is locked
+    pub locked: bool,
     /// When the user was created
     pub creation_ts: SecondsTimestamp,
     /// Whether the user is a guest.
@@ -371,7 +373,7 @@ impl<'conn> SynapseReader<'conn> {
         sqlx::query_as(
             "
             SELECT
-              name, password_hash, admin, deactivated, creation_ts, is_guest, appservice_id
+              name, password_hash, admin, deactivated, locked, creation_ts, is_guest, appservice_id
             FROM users
             ",
         )
