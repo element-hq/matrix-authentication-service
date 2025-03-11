@@ -11,7 +11,7 @@ use mas_storage::{
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{DeactivateUserJob, ReactivateUserJob},
-    user::{BrowserSessionFilter, UserRepository},
+    user::{BrowserSessionFilter, UserEmailFilter, UserRepository},
 };
 use tracing::info;
 
@@ -80,6 +80,14 @@ impl RunnableJob for DeactivateUserJob {
             .await
             .map_err(JobError::retry)?;
         info!(affected = n, "Killed all compatibility sessions for user");
+
+        // Delete all the email addresses for the user
+        let n = repo
+            .user_email()
+            .remove_bulk(UserEmailFilter::new().for_user(&user))
+            .await
+            .map_err(JobError::retry)?;
+        info!(affected = n, "Removed all email addresses for user");
 
         // Before calling back to the homeserver, commit the changes to the database, as
         // we want the user to be locked out as soon as possible
