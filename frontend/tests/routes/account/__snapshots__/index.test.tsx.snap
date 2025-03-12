@@ -400,7 +400,7 @@ exports[`Account home page > renders the page 1`] = `
       </div>
     </div>
     <div
-      class="flex flex-col gap-4"
+      class="flex flex-col gap-6"
     >
       <section
         aria-labelledby=":r8:"
@@ -518,9 +518,8 @@ exports[`Account home page > renders the page 1`] = `
         </article>
       </section>
       <div
-        class="_separator_7ckbw_8"
-        data-kind="section"
-        data-orientation="horizontal"
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc"
         role="separator"
       />
       <section
@@ -614,9 +613,8 @@ exports[`Account home page > renders the page 1`] = `
         </article>
       </section>
       <div
-        class="_separator_7ckbw_8"
-        data-kind="section"
-        data-orientation="horizontal"
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc"
         role="separator"
       />
       <section
@@ -668,9 +666,8 @@ exports[`Account home page > renders the page 1`] = `
         </header>
       </section>
       <div
-        class="_separator_7ckbw_8"
-        data-kind="section"
-        data-orientation="horizontal"
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc"
         role="separator"
       />
     </div>

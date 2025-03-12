@@ -39,13 +39,12 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Device details
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >
@@ -199,13 +198,12 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Client info
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >
@@ -308,13 +306,12 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Device details
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >
@@ -468,13 +465,12 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Client info
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >
@@ -575,13 +571,12 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Device details
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >
@@ -753,13 +748,12 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
         class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93"
       >
         Client info
-        <div
-          class="_separator_7ckbw_8"
-          data-kind="section"
-          data-orientation="horizontal"
-          role="separator"
-        />
       </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc _section_162edc -mt-4"
+        role="separator"
+      />
       <ul
         class="flex flex-wrap gap-x-10 gap-y-6"
       >

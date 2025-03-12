@@ -11,13 +11,14 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign-out";
-import { Button, Separator, Text } from "@vector-im/compound-web";
+import { Button, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import AccountManagementPasswordPreview from "../components/AccountManagementPasswordPreview";
 import { ButtonLink } from "../components/ButtonLink";
 import * as Collapsible from "../components/Collapsible";
 import * as Dialog from "../components/Dialog";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Separator from "../components/Separator";
 import { useEndBrowserSession } from "../components/Session/EndBrowserSessionButton";
 import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList from "../components/UserProfile/UserEmailList";
@@ -75,7 +76,7 @@ function Index(): React.ReactElement {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {/* Only display this section if the user can add email addresses to their
           account *or* if they have any existing email addresses */}
         {(siteConfig.emailChangeAllowed ||

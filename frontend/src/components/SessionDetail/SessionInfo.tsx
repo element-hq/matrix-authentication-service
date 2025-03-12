@@ -11,7 +11,6 @@ import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send";
 import IconUserProfile from "@vector-im/compound-design-tokens/assets/web/icons/user-profile";
 import {
   Heading,
-  Separator,
   Text,
   VisualList,
   VisualListItem,
@@ -19,6 +18,7 @@ import {
 import cx from "classnames";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
+import Separator from "../Separator/Separator";
 
 export const ScopeViewProfile: React.FC = () => {
   const { t } = useTranslation();
@@ -178,8 +178,10 @@ export const DataSection: React.FC<
 export const DataSectionHeader: React.FC<
   React.PropsWithChildren<{ className?: string }>
 > = ({ children, className }) => (
-  <Heading as="h4" size="sm" weight="semibold" className={className}>
-    {children}
-    <Separator kind="section" />
-  </Heading>
+  <>
+    <Heading as="h4" size="sm" weight="semibold" className={className}>
+      {children}
+    </Heading>
+    <Separator className="-mt-4" kind="section" />
+  </>
 );
