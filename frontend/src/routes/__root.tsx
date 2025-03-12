@@ -11,7 +11,7 @@ import {
   Outlet,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import GenericError from "../components/GenericError";
 import Layout, { query } from "../components/Layout";
 import NotFound from "../components/NotFound";
