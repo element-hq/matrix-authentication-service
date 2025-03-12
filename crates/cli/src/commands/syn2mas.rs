@@ -236,7 +236,7 @@ impl Options {
 
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
-                eprintln!("\n\n"); // padding above progress bar
+                eprintln!("\n\n");
                 syn2mas::migrate(
                     reader,
                     writer,
