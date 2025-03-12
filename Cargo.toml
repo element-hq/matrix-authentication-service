@@ -61,6 +61,9 @@ syn2mas = { path = "./crates/syn2mas", version = "=0.14.1" }
 version = "0.14.1"
 features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
+[workspace.dependencies.arc-swap]
+version = "1.7.1"
+
 # GraphQL server
 [workspace.dependencies.async-graphql]
 version = "7.0.15"
