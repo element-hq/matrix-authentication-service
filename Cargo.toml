@@ -146,7 +146,7 @@ version = "0.4.0"
 
 # HTTP request/response
 [workspace.dependencies.http]
-version = "1.2.0"
+version = "1.3.1"
 
 # HTTP body trait
 [workspace.dependencies.http-body]
