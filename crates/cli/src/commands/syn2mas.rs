@@ -80,6 +80,7 @@ enum Subcommand {
 const NUM_WRITER_CONNECTIONS: usize = 8;
 
 impl Options {
+    #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         warn!(
@@ -173,14 +174,14 @@ impl Options {
 
         // Display errors and warnings
         if !check_errors.is_empty() {
-            eprintln!("===== Errors =====");
+            eprintln!("\n\n===== Errors =====");
             eprintln!("These issues prevent migrating from Synapse to MAS right now:\n");
             for error in &check_errors {
                 eprintln!("• {error}\n");
             }
         }
         if !check_warnings.is_empty() {
-            eprintln!("===== Warnings =====");
+            eprintln!("\n\n===== Warnings =====");
             eprintln!(
                 "These potential issues should be considered before migrating from Synapse to MAS right now:\n"
             );
@@ -220,6 +221,7 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
+                // TODO this dry-run flag should be set to false in real circumstances !!!
                 let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
@@ -234,6 +236,7 @@ impl Options {
 
                 // TODO progress reporting
                 let mas_matrix = MatrixConfig::extract(figment)?;
+                eprintln!("\n\n");
                 syn2mas::migrate(
                     reader,
                     writer,

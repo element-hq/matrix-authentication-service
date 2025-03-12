@@ -338,28 +338,31 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error
     pub async fn count_rows(&mut self) -> Result<SynapseRowCounts, Error> {
-        let users: usize = sqlx::query_scalar::<_, i64>(
+        // We don't get to filter out application service users by using this estimate,
+        // which is a shame, but on a large database this is way faster.
+        // On matrix.org, counting users and devices properly takes around 1m10s,
+        // which is unnecessary extra downtime during the migration, just to
+        // show a more accurate progress bar and size a hash map accurately.
+        let users = sqlx::query_scalar::<_, i64>(
             "
-            SELECT COUNT(1) FROM users
-            WHERE appservice_id IS NULL
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'users'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse users")?
+        .into_database("estimating count of users")?
         .max(0)
         .try_into()
         .unwrap_or(usize::MAX);
 
         let devices = sqlx::query_scalar::<_, i64>(
             "
-            SELECT COUNT(1) FROM devices
-            WHERE NOT hidden
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'devices'::regclass;
             ",
         )
         .fetch_one(&mut *self.txn)
         .await
-        .into_database("counting Synapse devices")?
+        .into_database("estimating count of devices")?
         .max(0)
         .try_into()
         .unwrap_or(usize::MAX);
@@ -429,6 +432,12 @@ impl<'conn> SynapseReader<'conn> {
     /// Reads unrefreshable access tokens from the Synapse database.
     /// This does not include access tokens used for puppetting users, as those
     /// are not supported by MAS.
+    ///
+    /// This also excludes access tokens whose referenced device ID does not
+    /// exist, except for deviceless access tokens.
+    /// (It's unclear what mechanism led to these, but since Synapse has no
+    /// foreign key constraints and is not consistently atomic about this,
+    /// it should be no surprise really)
     pub fn read_unrefreshable_access_tokens(
         &mut self,
     ) -> impl Stream<Item = Result<SynapseAccessToken, Error>> + '_ {
@@ -437,7 +446,15 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
             FROM access_tokens at0
+            INNER JOIN devices USING (user_id, device_id)
             WHERE at0.puppets_user_id IS NULL AND at0.refresh_token_id IS NULL
+
+            UNION
+
+            SELECT
+              at0.user_id, at0.device_id, at0.token, at0.valid_until_ms, at0.last_validated
+            FROM access_tokens at0
+            WHERE at0.puppets_user_id IS NULL AND at0.refresh_token_id IS NULL AND at0.device_id IS NULL
             ",
         )
         .fetch(&mut *self.txn)
@@ -461,7 +478,8 @@ impl<'conn> SynapseReader<'conn> {
             SELECT
               rt0.user_id, rt0.device_id, at0.token AS access_token, rt0.token AS refresh_token, at0.valid_until_ms, at0.last_validated
             FROM refresh_tokens rt0
-            LEFT JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
+            INNER JOIN devices USING (device_id)
+            INNER JOIN access_tokens at0 ON at0.refresh_token_id = rt0.id AND at0.user_id = rt0.user_id AND at0.device_id = rt0.device_id
             LEFT JOIN access_tokens at1 ON at1.refresh_token_id = rt0.next_token_id
             WHERE NOT at1.used OR at1.used IS NULL
             ",
@@ -554,7 +572,10 @@ mod test {
         assert_debug_snapshot!(devices);
     }
 
-    #[sqlx::test(migrator = "MIGRATOR", fixtures("user_alice", "access_token_alice"))]
+    #[sqlx::test(
+        migrator = "MIGRATOR",
+        fixtures("user_alice", "devices_alice", "access_token_alice")
+    )]
     async fn test_read_access_token(pool: PgPool) {
         let mut conn = pool.acquire().await.expect("failed to get connection");
         let mut reader = SynapseReader::new(&mut conn, false)
@@ -573,7 +594,7 @@ mod test {
     /// Tests that puppetting access tokens are ignored.
     #[sqlx::test(
         migrator = "MIGRATOR",
-        fixtures("user_alice", "access_token_alice_with_puppet")
+        fixtures("user_alice", "devices_alice", "access_token_alice_with_puppet")
     )]
     async fn test_read_access_token_puppet(pool: PgPool) {
         let mut conn = pool.acquire().await.expect("failed to get connection");
@@ -592,7 +613,7 @@ mod test {
 
     #[sqlx::test(
         migrator = "MIGRATOR",
-        fixtures("user_alice", "access_token_alice_with_refresh_token")
+        fixtures("user_alice", "devices_alice", "access_token_alice_with_refresh_token")
     )]
     async fn test_read_access_and_refresh_tokens(pool: PgPool) {
         let mut conn = pool.acquire().await.expect("failed to get connection");
@@ -621,7 +642,11 @@ mod test {
 
     #[sqlx::test(
         migrator = "MIGRATOR",
-        fixtures("user_alice", "access_token_alice_with_unused_refresh_token")
+        fixtures(
+            "user_alice",
+            "devices_alice",
+            "access_token_alice_with_unused_refresh_token"
+        )
     )]
     async fn test_read_access_and_unused_refresh_tokens(pool: PgPool) {
         let mut conn = pool.acquire().await.expect("failed to get connection");

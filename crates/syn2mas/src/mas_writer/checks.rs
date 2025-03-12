@@ -10,6 +10,7 @@
 
 use thiserror::Error;
 use thiserror_ext::ContextInto;
+use tracing::Instrument as _;
 
 use super::{MAS_TABLES_AFFECTED_BY_MIGRATION, is_syn2mas_in_progress, locking::LockedMasDatabase};
 
@@ -46,7 +47,7 @@ pub enum Error {
 /// - If any MAS tables involved in the migration are not empty.
 /// - If we can't check whether syn2mas is already in progress on this database
 ///   or not.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(name = "syn2mas.mas_pre_migration_checks", skip_all)]
 pub async fn mas_pre_migration_checks(mas_connection: &mut LockedMasDatabase) -> Result<(), Error> {
     if is_syn2mas_in_progress(mas_connection.as_mut())
         .await
@@ -60,8 +61,11 @@ pub async fn mas_pre_migration_checks(mas_connection: &mut LockedMasDatabase) ->
     // empty database.
 
     for &table in MAS_TABLES_AFFECTED_BY_MIGRATION {
-        let row_present = sqlx::query(&format!("SELECT 1 AS dummy FROM {table} LIMIT 1"))
+        let query = format!("SELECT 1 AS dummy FROM {table} LIMIT 1");
+        let span = tracing::info_span!("db.query", db.query.text = query);
+        let row_present = sqlx::query(&query)
             .fetch_optional(mas_connection.as_mut())
+            .instrument(span)
             .await
             .into_maybe_not_mas(table)?
             .is_some();
