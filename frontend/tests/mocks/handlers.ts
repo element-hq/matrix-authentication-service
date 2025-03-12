@@ -4,6 +4,10 @@
 // Please see LICENSE in the repository root for full details.
 
 import { HttpResponse } from "msw";
+import {
+  CONFIG_FRAGMENT as ACCOUNT_DELETE_BUTTON_CONFIG_FRAGMENT,
+  USER_FRAGMENT as ACCOUNT_DELETE_BUTTON_USER_FRAGMENT,
+} from "../../src/components/AccountDeleteButton";
 import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
 import { FRAGMENT as FOOTER_FRAGMENT } from "../../src/components/Footer/Footer";
 import { FRAGMENT as USER_EMAIL_FRAGMENT } from "../../src/components/UserEmail/UserEmail";
@@ -113,6 +117,17 @@ export const handlers = [
               },
               USER_EMAIL_LIST_USER_FRAGMENT,
             ),
+            makeFragmentData(
+              {
+                hasPassword: true,
+                username: "alice",
+                matrix: {
+                  displayName: "Alice",
+                  mxid: "@alice:example.com",
+                },
+              },
+              ACCOUNT_DELETE_BUTTON_USER_FRAGMENT,
+            ),
           ),
         },
 
@@ -120,6 +135,7 @@ export const handlers = [
           {
             emailChangeAllowed: true,
             passwordLoginEnabled: true,
+            accountDeactivationAllowed: true,
           },
           makeFragmentData(
             {
@@ -140,6 +156,12 @@ export const handlers = [
               passwordChangeAllowed: true,
             },
             PASSWORD_CHANGE_CONFIG_FRAGMENT,
+          ),
+          makeFragmentData(
+            {
+              passwordLoginEnabled: true,
+            },
+            ACCOUNT_DELETE_BUTTON_CONFIG_FRAGMENT,
           ),
         ),
       },

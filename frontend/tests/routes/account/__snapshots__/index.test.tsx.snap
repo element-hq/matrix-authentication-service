@@ -2,18 +2,18 @@
 
 exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
 <div
-  aria-describedby="radix-:r7q:"
-  aria-labelledby="radix-:r7p:"
+  aria-describedby="radix-:r86:"
+  aria-labelledby="radix-:r85:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r7o:"
+  id="radix-:r84:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r7p:"
+    id="radix-:r85:"
   >
     Edit profile
   </h2>
@@ -40,29 +40,29 @@ exports[`Account home page > display name edit box > displays an error if the di
         <label
           class="_label_19upo_59"
           data-invalid="true"
-          for="radix-:r9a:"
+          for="radix-:r9p:"
         >
           Display name
         </label>
         <div
           class="_container_1s836_8"
-          id=":r9b:"
+          id=":r9q:"
         >
           <input
-            aria-describedby="radix-:r9h:"
+            aria-describedby="radix-:ra0:"
             aria-invalid="true"
             autocomplete="name"
             class="_control_sqdq4_10 _control_1s836_13"
             data-invalid="true"
-            id="radix-:r9a:"
+            id="radix-:r9p:"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls=":r9b:"
-            aria-labelledby=":r9c:"
+            aria-controls=":r9q:"
+            aria-labelledby=":r9r:"
             class="_action_1s836_24"
             type="button"
           >
@@ -82,7 +82,7 @@ exports[`Account home page > display name edit box > displays an error if the di
         </div>
         <span
           class="_message_19upo_85 _help-message_19upo_91"
-          id="radix-:r9h:"
+          id="radix-:ra0:"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -92,13 +92,13 @@ exports[`Account home page > display name edit box > displays an error if the di
       >
         <label
           class="_label_19upo_59"
-          for="radix-:r9i:"
+          for="radix-:ra1:"
         >
           Username
         </label>
         <input
           class="_control_sqdq4_10"
-          id="radix-:r9i:"
+          id="radix-:ra1:"
           name="mxid"
           readonly=""
           title=""
@@ -129,7 +129,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     Cancel
   </button>
   <button
-    aria-labelledby=":r9j:"
+    aria-labelledby=":ra2:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -150,18 +150,18 @@ exports[`Account home page > display name edit box > displays an error if the di
 
 exports[`Account home page > display name edit box > lets edit the display name 1`] = `
 <div
-  aria-describedby="radix-:r1k:"
-  aria-labelledby="radix-:r1j:"
+  aria-describedby="radix-:r1n:"
+  aria-labelledby="radix-:r1m:"
   class="_body_9cf7b0"
   data-state="open"
-  id="radix-:r1i:"
+  id="radix-:r1l:"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_9cf7b0"
-    id="radix-:r1j:"
+    id="radix-:r1m:"
   >
     Edit profile
   </h2>
@@ -186,27 +186,27 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_19upo_59"
-          for="radix-:r34:"
+          for="radix-:r3a:"
         >
           Display name
         </label>
         <div
           class="_container_1s836_8"
-          id=":r35:"
+          id=":r3b:"
         >
           <input
-            aria-describedby="radix-:r3b:"
+            aria-describedby="radix-:r3h:"
             autocomplete="name"
             class="_control_sqdq4_10 _control_1s836_13"
-            id="radix-:r34:"
+            id="radix-:r3a:"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls=":r35:"
-            aria-labelledby=":r36:"
+            aria-controls=":r3b:"
+            aria-labelledby=":r3c:"
             class="_action_1s836_24"
             type="button"
           >
@@ -226,7 +226,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
         </div>
         <span
           class="_message_19upo_85 _help-message_19upo_91"
-          id="radix-:r3b:"
+          id="radix-:r3h:"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -236,13 +236,13 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_19upo_59"
-          for="radix-:r3c:"
+          for="radix-:r3i:"
         >
           Username
         </label>
         <input
           class="_control_sqdq4_10"
-          id="radix-:r3c:"
+          id="radix-:r3i:"
           name="mxid"
           readonly=""
           title=""
@@ -273,7 +273,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     Cancel
   </button>
   <button
-    aria-labelledby=":r3d:"
+    aria-labelledby=":r3j:"
     class="_close_9cf7b0"
     type="button"
   >
@@ -670,33 +670,69 @@ exports[`Account home page > renders the page 1`] = `
         class="_separator_162edc _section_162edc"
         role="separator"
       />
-    </div>
-    <button
-      aria-controls="radix-:r1b:"
-      aria-expanded="false"
-      aria-haspopup="dialog"
-      class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
-      data-kind="primary"
-      data-size="lg"
-      data-state="closed"
-      role="button"
-      tabindex="0"
-      type="button"
-    >
-      <svg
-        aria-hidden="true"
-        fill="currentColor"
-        height="20"
-        viewBox="0 0 24 24"
-        width="20"
-        xmlns="http://www.w3.org/2000/svg"
+      <button
+        aria-controls="radix-:r1b:"
+        aria-expanded="false"
+        aria-haspopup="dialog"
+        class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
+        data-kind="primary"
+        data-size="lg"
+        data-state="closed"
+        role="button"
+        tabindex="0"
+        type="button"
       >
-        <path
-          d="M9 12.031q0-.424.288-.712A.97.97 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7q0-.4.325-.725a.93.93 0 0 1 .712-.287.98.98 0 0 1 .688.287l3.6 3.6q.15.15.212.325.063.175.063.375 0 .201-.062.375a.9.9 0 0 1-.213.325l-3.6 3.6q-.3.3-.712.288a.98.98 0 0 1-.688-.288 1.02 1.02 0 0 1-.312-.712.93.93 0 0 1 .287-.713l1.875-1.875H10a.97.97 0 0 1-.712-.287A.97.97 0 0 1 9 12.03m-6-7q0-.824.588-1.412A1.93 1.93 0 0 1 5 3.03h6q.424 0 .713.288.287.287.287.712t-.287.713A.97.97 0 0 1 11 5.03H5v14h6q.424 0 .713.288.287.287.287.712t-.287.713a.97.97 0 0 1-.713.287H5q-.824 0-1.412-.587A1.93 1.93 0 0 1 3 19.03z"
-        />
-      </svg>
-      Sign out of account
-    </button>
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9 12.031q0-.424.288-.712A.97.97 0 0 1 10 11.03h7.15l-1.875-1.875a.96.96 0 0 1-.3-.7q0-.4.325-.725a.93.93 0 0 1 .712-.287.98.98 0 0 1 .688.287l3.6 3.6q.15.15.212.325.063.175.063.375 0 .201-.062.375a.9.9 0 0 1-.213.325l-3.6 3.6q-.3.3-.712.288a.98.98 0 0 1-.688-.288 1.02 1.02 0 0 1-.312-.712.93.93 0 0 1 .287-.713l1.875-1.875H10a.97.97 0 0 1-.712-.287A.97.97 0 0 1 9 12.03m-6-7q0-.824.588-1.412A1.93 1.93 0 0 1 5 3.03h6q.424 0 .713.288.287.287.287.712t-.287.713A.97.97 0 0 1 11 5.03H5v14h6q.424 0 .713.288.287.287.287.712t-.287.713a.97.97 0 0 1-.713.287H5q-.824 0-1.412-.587A1.93 1.93 0 0 1 3 19.03z"
+          />
+        </svg>
+        Sign out of account
+      </button>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc"
+        role="separator"
+      />
+      <button
+        aria-controls="radix-:r1e:"
+        aria-expanded="false"
+        aria-haspopup="dialog"
+        class="_button_vczzf_8 self-center _has-icon_vczzf_57 _destructive_vczzf_107"
+        data-kind="tertiary"
+        data-size="sm"
+        data-state="closed"
+        role="button"
+        tabindex="0"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+          />
+        </svg>
+        Delete account
+      </button>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_162edc"
+        role="separator"
+      />
+    </div>
     <footer
       class="_legalFooter_eb428f"
     >

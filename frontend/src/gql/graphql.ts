@@ -1617,6 +1617,18 @@ export type Viewer = Anonymous | User;
 /** Represents the current viewer's session */
 export type ViewerSession = Anonymous | BrowserSession | Oauth2Session;
 
+export type AccountDeleteButton_UserFragment = { __typename?: 'User', username: string, hasPassword: boolean, matrix: { __typename?: 'MatrixUser', mxid: string, displayName?: string | null } } & { ' $fragmentName'?: 'AccountDeleteButton_UserFragment' };
+
+export type AccountDeleteButton_SiteConfigFragment = { __typename?: 'SiteConfig', passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AccountDeleteButton_SiteConfigFragment' };
+
+export type DeactivateUserMutationVariables = Exact<{
+  hsErase: Scalars['Boolean']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type DeactivateUserMutation = { __typename?: 'Mutation', deactivateUser: { __typename?: 'DeactivateUserPayload', status: DeactivateUserStatus } };
+
 export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 
 export type BrowserSession_SessionFragment = (
@@ -1749,10 +1761,10 @@ export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
       { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
-      & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment } }
+      & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
     ) } | { __typename: 'Oauth2Session' }, siteConfig: (
-    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
-    & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
+    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, accountDeactivationAllowed: boolean }
+    & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
 export type BrowserSessionListQueryVariables = Exact<{
@@ -1944,6 +1956,21 @@ export class TypedDocumentString<TResult, TVariables>
     return this.value;
   }
 }
+export const AccountDeleteButton_UserFragmentDoc = new TypedDocumentString(`
+    fragment AccountDeleteButton_user on User {
+  username
+  hasPassword
+  matrix {
+    mxid
+    displayName
+  }
+}
+    `, {"fragmentName":"AccountDeleteButton_user"}) as unknown as TypedDocumentString<AccountDeleteButton_UserFragment, unknown>;
+export const AccountDeleteButton_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment AccountDeleteButton_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+    `, {"fragmentName":"AccountDeleteButton_siteConfig"}) as unknown as TypedDocumentString<AccountDeleteButton_SiteConfigFragment, unknown>;
 export const PasswordChange_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
@@ -2275,6 +2302,13 @@ export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
   id
   minimumPasswordComplexity
 }`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
+export const DeactivateUserDocument = new TypedDocumentString(`
+    mutation DeactivateUser($hsErase: Boolean!, $password: String) {
+  deactivateUser(input: {hsErase: $hsErase, password: $password}) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<DeactivateUserMutation, DeactivateUserMutationVariables>;
 export const FooterDocument = new TypedDocumentString(`
     query Footer {
   siteConfig {
@@ -2384,6 +2418,7 @@ export const UserProfileDocument = new TypedDocumentString(`
       user {
         ...AddEmailForm_user
         ...UserEmailList_user
+        ...AccountDeleteButton_user
         hasPassword
         emails(first: 0) {
           totalCount
@@ -2394,12 +2429,25 @@ export const UserProfileDocument = new TypedDocumentString(`
   siteConfig {
     emailChangeAllowed
     passwordLoginEnabled
+    accountDeactivationAllowed
     ...AddEmailForm_siteConfig
     ...UserEmailList_siteConfig
     ...PasswordChange_siteConfig
+    ...AccountDeleteButton_siteConfig
   }
 }
-    fragment PasswordChange_siteConfig on SiteConfig {
+    fragment AccountDeleteButton_user on User {
+  username
+  hasPassword
+  matrix {
+    mxid
+    displayName
+  }
+}
+fragment AccountDeleteButton_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
 }
 fragment AddEmailForm_user on User {
@@ -2853,6 +2901,28 @@ fragment OAuth2Session_detail on Oauth2Session {
     logoUri
   }
 }`) as unknown as TypedDocumentString<SessionDetailQuery, SessionDetailQueryVariables>;
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockDeactivateUserMutation(
+ *   ({ query, variables }) => {
+ *     const { hsErase, password } = variables;
+ *     return HttpResponse.json({
+ *       data: { deactivateUser }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockDeactivateUserMutation = (resolver: GraphQLResponseResolver<DeactivateUserMutation, DeactivateUserMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<DeactivateUserMutation, DeactivateUserMutationVariables>(
+    'DeactivateUser',
+    resolver,
+    options
+  )
 
 /**
  * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))

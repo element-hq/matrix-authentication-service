@@ -13,6 +13,7 @@ import {
 import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign-out";
 import { Button, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
+import AccountDeleteButton from "../components/AccountDeleteButton";
 import AccountManagementPasswordPreview from "../components/AccountManagementPasswordPreview";
 import { ButtonLink } from "../components/ButtonLink";
 import * as Collapsible from "../components/Collapsible";
@@ -127,9 +128,21 @@ function Index(): React.ReactElement {
         </Collapsible.Section>
 
         <Separator kind="section" />
-      </div>
 
-      <SignOutButton id={viewerSession.id} />
+        <SignOutButton id={viewerSession.id} />
+
+        {siteConfig.accountDeactivationAllowed && (
+          <>
+            <Separator />
+            <AccountDeleteButton
+              user={viewerSession.user}
+              siteConfig={siteConfig}
+            />
+          </>
+        )}
+
+        <Separator />
+      </div>
     </>
   );
 }
