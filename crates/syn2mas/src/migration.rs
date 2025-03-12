@@ -11,7 +11,14 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{pin::pin, time::Instant};
+use std::{
+    pin::pin,
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
+    time::Instant,
+};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
@@ -32,6 +39,7 @@ use crate::{
         MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
         MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
+    progress::{Progress, ProgressStage},
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
@@ -147,6 +155,7 @@ pub async fn migrate(
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     provider_id_mapping: std::collections::HashMap<String, Uuid>,
+    progress: &Progress,
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
@@ -162,14 +171,58 @@ pub async fn migrate(
         provider_id_mapping,
     };
 
-    let (mas, state) = migrate_users(&mut synapse, mas, state, rng).await?;
-    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state).await?;
-    let (mas, state) = migrate_external_ids(&mut synapse, mas, rng, state).await?;
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "users",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
+    let (mas, state) = migrate_users(&mut synapse, mas, state, rng, migrated_counter).await?;
+
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "threepids",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
+    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, &migrated_counter).await?;
+
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "external_ids",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
     let (mas, state) =
-        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state).await?;
+        migrate_external_ids(&mut synapse, mas, rng, state, &migrated_counter).await?;
+
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "unrefreshable_access_tokens",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
     let (mas, state) =
-        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state).await?;
-    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state).await?;
+        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state, migrated_counter)
+            .await?;
+
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "refreshable_token_pairs",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
+    let (mas, state) =
+        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state, &migrated_counter)
+            .await?;
+
+    let migrated_counter = Arc::new(AtomicU32::new(0));
+    progress.set_current_stage(ProgressStage::MigratingData {
+        entity: "devices",
+        migrated: migrated_counter.clone(),
+        approx_count: counts.users as u64,
+    });
+    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state, migrated_counter).await?;
 
     synapse
         .finish()
@@ -189,6 +242,7 @@ async fn migrate_users(
     mut mas: MasWriter,
     mut state: MigrationState,
     rng: &mut impl RngCore,
+    progress_counter: Arc<AtomicU32>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -261,6 +315,8 @@ async fn migrate_users(
                         .await
                         .into_mas("writing password")?;
                 }
+
+                progress_counter.fetch_add(1, Ordering::Relaxed);
             }
 
             user_buffer
@@ -304,6 +360,7 @@ async fn migrate_threepids(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
+    progress_counter: &AtomicU32,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -365,6 +422,8 @@ async fn migrate_threepids(
                 .await
                 .into_mas("writing unsupported threepid")?;
         }
+
+        progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 
     email_buffer
@@ -394,6 +453,7 @@ async fn migrate_external_ids(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
+    progress_counter: &AtomicU32,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -447,6 +507,8 @@ async fn migrate_external_ids(
             )
             .await
             .into_mas("failed to write upstream link")?;
+
+        progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 
     write_buffer
@@ -476,6 +538,7 @@ async fn migrate_devices(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     mut state: MigrationState,
+    progress_counter: Arc<AtomicU32>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -563,6 +626,8 @@ async fn migrate_devices(
                     )
                     .await
                     .into_mas("writing compat sessions")?;
+
+                progress_counter.fetch_add(1, Ordering::Relaxed);
             }
 
             write_buffer
@@ -605,6 +670,7 @@ async fn migrate_unrefreshable_access_tokens(
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
+    progress_counter: Arc<AtomicU32>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -704,6 +770,8 @@ async fn migrate_unrefreshable_access_tokens(
                     )
                     .await
                     .into_mas("writing compat access tokens")?;
+
+                progress_counter.fetch_add(1, Ordering::Relaxed);
             }
             write_buffer
                 .finish(&mut mas)
@@ -749,6 +817,7 @@ async fn migrate_refreshable_token_pairs(
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
+    progress_counter: &AtomicU32,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
@@ -830,6 +899,8 @@ async fn migrate_refreshable_token_pairs(
             )
             .await
             .into_mas("writing compat refresh tokens")?;
+
+        progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 
     access_token_write_buffer
