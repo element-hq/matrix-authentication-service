@@ -50,7 +50,7 @@ const UserCard: React.FC<{
   username: string;
 }> = ({ mxid, displayName, username }) => (
   <section className="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
-    <Avatar id={mxid} name={displayName || username} size="48px" />
+    <Avatar id={mxid} name={displayName || username} size="56px" />
     <div className="flex-1 flex flex-col">
       <Text type="body" weight="semibold" size="lg" className="text-primary">
         {displayName || username}
@@ -174,7 +174,7 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
           i18nKey="frontend.account.delete_account.dialog_description"
           components={{
             text: <Text type="body" weight="regular" size="md" />,
-            list: <ul className="list-disc list-inside pl-2" />,
+            list: <ul className="list-disc list-outside pl-6" />,
             item: <Text as="li" type="body" weight="regular" size="md" />,
             profile: (
               <UserCard
