@@ -46,6 +46,9 @@ pub struct SiteConfig {
     /// Whether passwords are enabled and users can register using a password.
     password_registration_enabled: bool,
 
+    /// Whether users can delete their own account.
+    account_deactivation_allowed: bool,
+
     /// Minimum password complexity, from 0 to 4, in terms of a zxcvbn score.
     /// The exact scorer (including dictionaries and other data tables)
     /// in use is <https://crates.io/crates/zxcvbn>.
@@ -93,6 +96,7 @@ impl SiteConfig {
             password_login_enabled: data_model.password_login_enabled,
             password_change_allowed: data_model.password_change_allowed,
             password_registration_enabled: data_model.password_registration_enabled,
+            account_deactivation_allowed: data_model.account_deactivation_allowed,
             minimum_password_complexity: data_model.minimum_password_complexity,
         }
     }

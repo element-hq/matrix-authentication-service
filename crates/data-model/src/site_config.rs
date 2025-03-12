@@ -76,6 +76,9 @@ pub struct SiteConfig {
     /// Whether users can recover their account via email.
     pub account_recovery_allowed: bool,
 
+    /// Whether users can delete their own account.
+    pub account_deactivation_allowed: bool,
+
     /// Captcha configuration
     pub captcha: Option<CaptchaConfig>,
 

@@ -207,6 +207,7 @@ pub fn site_config_from_config(
             && account_config.password_change_allowed,
         account_recovery_allowed: password_config.enabled()
             && account_config.password_recovery_enabled,
+        account_deactivation_allowed: account_config.account_deactivation_allowed,
         captcha,
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,

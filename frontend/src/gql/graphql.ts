@@ -1161,6 +1161,8 @@ export type SetPrimaryEmailStatus =
 
 export type SiteConfig = Node & {
   __typename?: 'SiteConfig';
+  /** Whether users can delete their own account. */
+  accountDeactivationAllowed: Scalars['Boolean']['output'];
   /** The configuration of CAPTCHA provider. */
   captchaConfig?: Maybe<CaptchaConfig>;
   /** Whether users can change their display name. */
