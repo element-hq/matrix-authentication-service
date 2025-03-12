@@ -517,9 +517,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     pkce_mode,
                     response_mode,
                     additional_parameters,
+                    ui_order,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                          $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+                          $12, $13, $14, $15, $16, $17, $18, $19, $20,
+                          $21, $22, $23)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -543,7 +545,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         discovery_mode = EXCLUDED.discovery_mode,
                         pkce_mode = EXCLUDED.pkce_mode,
                         response_mode = EXCLUDED.response_mode,
-                        additional_parameters = EXCLUDED.additional_parameters
+                        additional_parameters = EXCLUDED.additional_parameters,
+                        ui_order = EXCLUDED.ui_order
                 RETURNING created_at
             "#,
             Uuid::from(id),
@@ -582,6 +585,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.pkce_mode.as_str(),
             params.response_mode.as_ref().map(ToString::to_string),
             Json(&params.additional_authorization_parameters) as _,
+            params.ui_order,
             created_at,
         )
         .traced()
@@ -917,6 +921,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>"
                 FROM upstream_oauth_providers
                 WHERE disabled_at IS NULL
+                ORDER BY ui_order ASC, upstream_oauth_provider_id ASC
             "#,
         )
         .traced()

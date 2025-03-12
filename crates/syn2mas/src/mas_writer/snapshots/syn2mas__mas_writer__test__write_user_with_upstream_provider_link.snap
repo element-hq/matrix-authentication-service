@@ -30,6 +30,7 @@ upstream_oauth_providers:
     token_endpoint_auth_method: client_secret_basic
     token_endpoint_override: ~
     token_endpoint_signing_alg: ~
+    ui_order: "0"
     upstream_oauth_provider_id: 00000000-0000-0000-0000-000000000004
     userinfo_endpoint_override: ~
     userinfo_signed_response_alg: ~

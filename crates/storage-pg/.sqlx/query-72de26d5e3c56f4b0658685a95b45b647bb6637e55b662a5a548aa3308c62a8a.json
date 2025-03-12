@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO upstream_oauth_providers (\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    token_endpoint_auth_method,\n                    token_endpoint_signing_alg,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    client_id,\n                    encrypted_client_secret,\n                    claims_imports,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    jwks_uri_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters,\n                    ui_order,\n                    created_at\n                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,\n                          $12, $13, $14, $15, $16, $17, $18, $19, $20,\n                          $21, $22, $23)\n                ON CONFLICT (upstream_oauth_provider_id)\n                    DO UPDATE\n                    SET\n                        issuer = EXCLUDED.issuer,\n                        human_name = EXCLUDED.human_name,\n                        brand_name = EXCLUDED.brand_name,\n                        scope = EXCLUDED.scope,\n                        token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method,\n                        token_endpoint_signing_alg = EXCLUDED.token_endpoint_signing_alg,\n                        id_token_signed_response_alg = EXCLUDED.id_token_signed_response_alg,\n                        fetch_userinfo = EXCLUDED.fetch_userinfo,\n                        userinfo_signed_response_alg = EXCLUDED.userinfo_signed_response_alg,\n                        disabled_at = NULL,\n                        client_id = EXCLUDED.client_id,\n                        encrypted_client_secret = EXCLUDED.encrypted_client_secret,\n                        claims_imports = EXCLUDED.claims_imports,\n                        authorization_endpoint_override = EXCLUDED.authorization_endpoint_override,\n                        token_endpoint_override = EXCLUDED.token_endpoint_override,\n                        userinfo_endpoint_override = EXCLUDED.userinfo_endpoint_override,\n                        jwks_uri_override = EXCLUDED.jwks_uri_override,\n                        discovery_mode = EXCLUDED.discovery_mode,\n                        pkce_mode = EXCLUDED.pkce_mode,\n                        response_mode = EXCLUDED.response_mode,\n                        additional_parameters = EXCLUDED.additional_parameters,\n                        ui_order = EXCLUDED.ui_order\n                RETURNING created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "72de26d5e3c56f4b0658685a95b45b647bb6637e55b662a5a548aa3308c62a8a"
+}

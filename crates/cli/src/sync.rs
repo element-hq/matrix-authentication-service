@@ -165,10 +165,13 @@ pub async fn config_sync(
             }
         }
 
-        for provider in upstream_oauth2_config.providers {
+        for (index, provider) in upstream_oauth2_config.providers.into_iter().enumerate() {
             if !provider.enabled {
                 continue;
             }
+
+            // Use the position in the config of the provider as position in the UI
+            let ui_order = index.try_into().unwrap_or(i32::MAX);
 
             let _span = info_span!("provider", %provider.id).entered();
             if existing_enabled_ids.contains(&provider.id) {
@@ -293,6 +296,7 @@ pub async fn config_sync(
                             .additional_authorization_parameters
                             .into_iter()
                             .collect(),
+                        ui_order,
                     },
                 )
                 .await?;
