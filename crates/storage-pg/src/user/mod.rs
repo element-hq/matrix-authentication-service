@@ -72,6 +72,7 @@ mod priv_ {
         pub(super) username: String,
         pub(super) created_at: DateTime<Utc>,
         pub(super) locked_at: Option<DateTime<Utc>>,
+        pub(super) deactivated_at: Option<DateTime<Utc>>,
         pub(super) can_request_admin: bool,
     }
 }
@@ -87,6 +88,7 @@ impl From<UserLookup> for User {
             sub: id.to_string(),
             created_at: value.created_at,
             locked_at: value.locked_at,
+            deactivated_at: value.deactivated_at,
             can_request_admin: value.can_request_admin,
         }
     }
@@ -96,10 +98,18 @@ impl Filter for UserFilter<'_> {
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
         sea_query::Condition::all()
             .add_option(self.state().map(|state| {
-                if state.is_locked() {
-                    Expr::col((Users::Table, Users::LockedAt)).is_not_null()
-                } else {
-                    Expr::col((Users::Table, Users::LockedAt)).is_null()
+                match state {
+                    mas_storage::user::UserState::Deactivated => {
+                        Expr::col((Users::Table, Users::DeactivatedAt)).is_not_null()
+                    }
+                    mas_storage::user::UserState::Locked => {
+                        Expr::col((Users::Table, Users::LockedAt)).is_not_null()
+                    }
+                    mas_storage::user::UserState::Active => {
+                        Expr::col((Users::Table, Users::LockedAt))
+                            .is_null()
+                            .and(Expr::col((Users::Table, Users::DeactivatedAt)).is_null())
+                    }
                 }
             }))
             .add_option(self.can_request_admin().map(|can_request_admin| {
@@ -129,6 +139,7 @@ impl UserRepository for PgUserRepository<'_> {
                      , username
                      , created_at
                      , locked_at
+                     , deactivated_at
                      , can_request_admin
                 FROM users
                 WHERE user_id = $1
@@ -161,6 +172,7 @@ impl UserRepository for PgUserRepository<'_> {
                      , username
                      , created_at
                      , locked_at
+                     , deactivated_at
                      , can_request_admin
                 FROM users
                 WHERE username = $1
@@ -220,6 +232,7 @@ impl UserRepository for PgUserRepository<'_> {
             sub: id.to_string(),
             created_at,
             locked_at: None,
+            deactivated_at: None,
             can_request_admin: false,
         })
     }
@@ -318,6 +331,42 @@ impl UserRepository for PgUserRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.user.deactivate",
+        skip_all,
+        fields(
+            db.query.text,
+            %user.id,
+        ),
+        err,
+    )]
+    async fn deactivate(&mut self, clock: &dyn Clock, mut user: User) -> Result<User, Self::Error> {
+        if user.deactivated_at.is_some() {
+            return Ok(user);
+        }
+
+        let deactivated_at = clock.now();
+        let res = sqlx::query!(
+            r#"
+                UPDATE users
+                SET deactivated_at = $2
+                WHERE user_id = $1
+                  AND deactivated_at IS NULL
+            "#,
+            Uuid::from(user.id),
+            deactivated_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user.deactivated_at = Some(user.created_at);
+
+        Ok(user)
+    }
+
+    #[tracing::instrument(
         name = "db.user.set_can_request_admin",
         skip_all,
         fields(
@@ -381,6 +430,10 @@ impl UserRepository for PgUserRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::LockedAt)),
                 UserLookupIden::LockedAt,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::DeactivatedAt)),
+                UserLookupIden::DeactivatedAt,
             )
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),

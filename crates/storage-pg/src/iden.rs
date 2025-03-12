@@ -25,6 +25,7 @@ pub enum Users {
     Username,
     CreatedAt,
     LockedAt,
+    DeactivatedAt,
     CanRequestAdmin,
 }
 

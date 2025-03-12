@@ -18,11 +18,11 @@
     },
     "sign_in": "Sign in",
     "@sign_in": {
-      "context": "pages/index.html:30:26-45"
+      "context": "pages/account/deactivated.html:23:28-47, pages/account/locked.html:23:28-47, pages/index.html:30:26-45"
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "pages/consent.html:65:28-48, pages/device_consent.html:135:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "pages/account/logged_out.html:22:28-48, pages/consent.html:65:28-48, pages/device_consent.html:135:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
@@ -110,6 +110,38 @@
     }
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "This account (<em>%(mxid)s</em>) has been deleted. If this is not expected, contact your server administrator.",
+        "@description": {
+          "context": "pages/account/deactivated.html:20:27-78"
+        },
+        "heading": "Account deleted",
+        "@heading": {
+          "context": "pages/account/deactivated.html:18:29-65"
+        }
+      },
+      "locked": {
+        "description": "This account (<em>%(mxid)s</em>) has been locked. If this is not expected, contact your server administrator.",
+        "@description": {
+          "context": "pages/account/locked.html:20:27-73"
+        },
+        "heading": "Account locked",
+        "@heading": {
+          "context": "pages/account/locked.html:18:29-60"
+        }
+      },
+      "logged_out": {
+        "description": "This session has been terminated. Sign out to be able to log back in",
+        "@description": {
+          "context": "pages/account/logged_out.html:19:27-66"
+        },
+        "heading": "Session terminated",
+        "@heading": {
+          "context": "pages/account/logged_out.html:18:29-64"
+        }
+      }
+    },
     "back_to_homepage": "Go back to the homepage",
     "@back_to_homepage": {
       "context": "pages/404.html:16:29-54"

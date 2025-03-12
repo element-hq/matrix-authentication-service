@@ -164,6 +164,19 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
 
+    /// Delete all [`UserEmail`] with the given filter
+    ///
+    /// Returns the number of deleted [`UserEmail`]s
+    ///
+    /// # Parameters
+    ///
+    /// * `filter`: The filter parameters
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn remove_bulk(&mut self, filter: UserEmailFilter<'_>) -> Result<usize, Self::Error>;
+
     /// Add a new [`UserEmailAuthentication`] for a [`BrowserSession`]
     ///
     /// # Parameters
@@ -302,6 +315,8 @@ repository_impl!(UserEmailRepository:
         email: String,
     ) -> Result<UserEmail, Self::Error>;
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error>;
+
+    async fn remove_bulk(&mut self, filter: UserEmailFilter<'_>) -> Result<usize, Self::Error>;
 
     async fn add_authentication_for_session(
         &mut self,

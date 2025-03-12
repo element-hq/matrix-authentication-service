@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE users\n                SET deactivated_at = $2\n                WHERE user_id = $1\n                  AND deactivated_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f7aba76cd7df75d6a9a6d91d5ddebaedf37437f3bd4f796f5581fab997587d7"
+}

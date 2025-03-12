@@ -201,6 +201,7 @@ pub struct MasNewUser {
     pub username: String,
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
+    pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
     /// Whether the user was a Synapse guest.
     /// Although MAS doesn't support guest access, it's still useful to track
@@ -587,6 +588,8 @@ impl MasWriter {
                     let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
                     let mut locked_ats: Vec<Option<DateTime<Utc>>> =
                         Vec::with_capacity(users.len());
+                    let mut deactivated_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(users.len());
                     let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
                     let mut is_guests: Vec<bool> = Vec::with_capacity(users.len());
                     for MasNewUser {
@@ -594,6 +597,7 @@ impl MasWriter {
                         username,
                         created_at,
                         locked_at,
+                        deactivated_at,
                         can_request_admin,
                         is_guest,
                     } in users
@@ -602,6 +606,7 @@ impl MasWriter {
                         usernames.push(username);
                         created_ats.push(created_at);
                         locked_ats.push(locked_at);
+                        deactivated_ats.push(deactivated_at);
                         can_request_admins.push(can_request_admin);
                         is_guests.push(is_guest);
                     }
@@ -611,17 +616,20 @@ impl MasWriter {
                         INSERT INTO syn2mas__users (
                           user_id, username,
                           created_at, locked_at,
+                          deactivated_at,
                           can_request_admin, is_guest)
                         SELECT * FROM UNNEST(
                           $1::UUID[], $2::TEXT[],
                           $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
-                          $5::BOOL[], $6::BOOL[])
+                          $5::TIMESTAMP WITH TIME ZONE[],
+                          $6::BOOL[], $7::BOOL[])
                         "#,
                         &user_ids[..],
                         &usernames[..],
                         &created_ats[..],
                         // We need to override the typing for arrays of optionals (sqlx limitation)
                         &locked_ats[..] as &[Option<DateTime<Utc>>],
+                        &deactivated_ats[..] as &[Option<DateTime<Utc>>],
                         &can_request_admins[..],
                         &is_guests[..],
                     )
@@ -1217,6 +1225,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1241,6 +1250,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1272,6 +1282,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1305,6 +1316,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1339,6 +1351,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1372,6 +1385,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1409,6 +1423,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1458,6 +1473,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])

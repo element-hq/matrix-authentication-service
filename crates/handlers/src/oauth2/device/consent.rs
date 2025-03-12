@@ -12,7 +12,7 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    FancyError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -24,7 +24,10 @@ use serde::Deserialize;
 use tracing::warn;
 use ulid::Ulid;
 
-use crate::{BoundActivityTracker, PreferredLanguage};
+use crate::{
+    BoundActivityTracker, PreferredLanguage,
+    session::{SessionOrFallback, load_session_or_fallback},
+};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -51,10 +54,20 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, FancyError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 
@@ -137,11 +150,20 @@ pub(crate) async fn post(
     Path(grant_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<ConsentForm>>,
 ) -> Result<Response, FancyError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
     let form = cookie_jar.verify_form(&clock, form)?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-
-    let maybe_session = session_info.load_session(&mut repo).await?;
 
     let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 

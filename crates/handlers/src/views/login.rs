@@ -38,6 +38,7 @@ use super::shared::OptionalPostAuthAction;
 use crate::{
     BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::PasswordManager,
+    session::{SessionOrFallback, load_session_or_fallback},
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -64,10 +65,20 @@ pub(crate) async fn get(
     Query(query): Query<OptionalPostAuthAction>,
     cookie_jar: CookieJar,
 ) -> Result<Response, FancyError> {
-    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-    let (session_info, cookie_jar) = cookie_jar.session_info();
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     if let Some(session) = maybe_session {
         activity_tracker

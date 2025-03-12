@@ -46,7 +46,7 @@ pub(crate) async fn get(
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let maybe_session = session_info.load_active_session(&mut repo).await?;
     if maybe_session.is_some() {
         // TODO: redirect to continue whatever action was going on
         return Ok((cookie_jar, url_builder.redirect(&mas_router::Index)).into_response());
@@ -100,7 +100,7 @@ pub(crate) async fn post(
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let maybe_session = session_info.load_active_session(&mut repo).await?;
     if maybe_session.is_some() {
         // TODO: redirect to continue whatever action was going on
         return Ok((cookie_jar, url_builder.redirect(&mas_router::Index)).into_response());

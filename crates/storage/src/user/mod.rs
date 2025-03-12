@@ -32,6 +32,9 @@ pub use self::{
 /// The state of a user account
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UserState {
+    /// The account is deactivated, it has the `deactivated_at` timestamp set
+    Deactivated,
+
     /// The account is locked, it has the `locked_at` timestamp set
     Locked,
 
@@ -46,6 +49,14 @@ impl UserState {
     #[must_use]
     pub fn is_locked(&self) -> bool {
         matches!(self, Self::Locked)
+    }
+
+    /// Returns `true` if the user state is [`Deactivated`].
+    ///
+    /// [`Deactivated`]: UserState::Deactivated
+    #[must_use]
+    pub fn is_deactivated(&self) -> bool {
+        matches!(self, Self::Deactivated)
     }
 
     /// Returns `true` if the user state is [`Active`].
@@ -83,6 +94,13 @@ impl UserFilter<'_> {
     #[must_use]
     pub fn locked_only(mut self) -> Self {
         self.state = Some(UserState::Locked);
+        self
+    }
+
+    /// Filter for deactivated users
+    #[must_use]
+    pub fn deactivated_only(mut self) -> Self {
+        self.state = Some(UserState::Deactivated);
         self
     }
 
@@ -210,6 +228,20 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
 
+    /// Deactivate a [`User`]
+    ///
+    /// Returns the deactivated [`User`]
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock used to generate timestamps
+    /// * `user`: The [`User`] to deactivate
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
+
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -280,6 +312,7 @@ repository_impl!(UserRepository:
     async fn exists(&mut self, username: &str) -> Result<bool, Self::Error>;
     async fn lock(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
+    async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,
