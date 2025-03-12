@@ -602,6 +602,45 @@ The input/output is a string in RFC3339 format.
 scalar DateTime
 
 """
+The input for the `deactivateUser` mutation.
+"""
+input DeactivateUserInput {
+  """
+  Whether to ask the homeserver to GDPR-erase the user
+  """
+  hsErase: Boolean!
+  """
+  The password of the user to deactivate.
+  """
+  password: String
+}
+
+"""
+The payload for the `deactivateUser` mutation.
+"""
+type DeactivateUserPayload {
+  """
+  Status of the operation
+  """
+  status: DeactivateUserStatus!
+  user: User
+}
+
+"""
+The status of the `deactivateUser` mutation.
+"""
+enum DeactivateUserStatus {
+  """
+  The user was deactivated.
+  """
+  DEACTIVATED
+  """
+  The password was wrong.
+  """
+  INCORRECT_PASSWORD
+}
+
+"""
 The type of a user agent
 """
 enum DeviceType {
@@ -875,6 +914,13 @@ type Mutation {
   resendRecoveryEmail(
     input: ResendRecoveryEmailInput!
   ): ResendRecoveryEmailPayload!
+  """
+  Deactivate the current user account
+
+  If the user has a password, it *must* be supplied in the `password`
+  field.
+  """
+  deactivateUser(input: DeactivateUserInput!): DeactivateUserPayload!
   """
   Create a new arbitrary OAuth 2.0 Session.
 

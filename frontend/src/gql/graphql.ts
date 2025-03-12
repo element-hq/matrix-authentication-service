@@ -389,6 +389,29 @@ export type DateFilter = {
   before?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+/** The input for the `deactivateUser` mutation. */
+export type DeactivateUserInput = {
+  /** Whether to ask the homeserver to GDPR-erase the user */
+  hsErase: Scalars['Boolean']['input'];
+  /** The password of the user to deactivate. */
+  password?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The payload for the `deactivateUser` mutation. */
+export type DeactivateUserPayload = {
+  __typename?: 'DeactivateUserPayload';
+  /** Status of the operation */
+  status: DeactivateUserStatus;
+  user?: Maybe<User>;
+};
+
+/** The status of the `deactivateUser` mutation. */
+export type DeactivateUserStatus =
+  /** The user was deactivated. */
+  | 'DEACTIVATED'
+  /** The password was wrong. */
+  | 'INCORRECT_PASSWORD';
+
 /** The type of a user agent */
 export type DeviceType =
   /** A mobile phone. Can also sometimes be a tablet. */
@@ -519,6 +542,13 @@ export type Mutation = {
    * Only available for administrators.
    */
   createOauth2Session: CreateOAuth2SessionPayload;
+  /**
+   * Deactivate the current user account
+   *
+   * If the user has a password, it *must* be supplied in the `password`
+   * field.
+   */
+  deactivateUser: DeactivateUserPayload;
   endBrowserSession: EndBrowserSessionPayload;
   endCompatSession: EndCompatSessionPayload;
   endOauth2Session: EndOAuth2SessionPayload;
@@ -593,6 +623,12 @@ export type MutationCompleteEmailAuthenticationArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationCreateOauth2SessionArgs = {
   input: CreateOAuth2SessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationDeactivateUserArgs = {
+  input: DeactivateUserInput;
 };
 
 

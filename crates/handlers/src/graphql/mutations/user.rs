@@ -18,6 +18,7 @@ use ulid::Ulid;
 use url::Url;
 use zeroize::Zeroizing;
 
+use super::verify_password_if_needed;
 use crate::graphql::{
     UserId,
     model::{NodeType, User},
@@ -379,6 +380,54 @@ impl ResendRecoveryEmailPayload {
                 let route = mas_router::AccountRecoveryProgress::new(*recovery_session_id);
                 Some(url_builder.absolute_url_for(&route))
             }
+        }
+    }
+}
+
+/// The input for the `deactivateUser` mutation.
+#[derive(InputObject)]
+pub struct DeactivateUserInput {
+    /// Whether to ask the homeserver to GDPR-erase the user
+    hs_erase: bool,
+
+    /// The password of the user to deactivate.
+    password: Option<String>,
+}
+
+/// The payload for the `deactivateUser` mutation.
+#[derive(Description)]
+pub enum DeactivateUserPayload {
+    /// The user was deactivated.
+    Deactivated(mas_data_model::User),
+
+    /// The password was wrong or missing.
+    IncorrectPassword,
+}
+
+/// The status of the `deactivateUser` mutation.
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum DeactivateUserStatus {
+    /// The user was deactivated.
+    Deactivated,
+
+    /// The password was wrong.
+    IncorrectPassword,
+}
+
+#[Object(use_type_description)]
+impl DeactivateUserPayload {
+    /// Status of the operation
+    async fn status(&self) -> DeactivateUserStatus {
+        match self {
+            Self::Deactivated(_) => DeactivateUserStatus::Deactivated,
+            Self::IncorrectPassword => DeactivateUserStatus::IncorrectPassword,
+        }
+    }
+
+    async fn user(&self) -> Option<User> {
+        match self {
+            Self::Deactivated(user) => Some(User(user.clone())),
+            Self::IncorrectPassword => None,
         }
     }
 }
@@ -867,5 +916,65 @@ impl UserMutations {
         Ok(ResendRecoveryEmailPayload::Sent {
             recovery_session_id: recovery_session.id,
         })
+    }
+
+    /// Deactivate the current user account
+    ///
+    /// If the user has a password, it *must* be supplied in the `password`
+    /// field.
+    async fn deactivate_user(
+        &self,
+        ctx: &Context<'_>,
+        input: DeactivateUserInput,
+    ) -> Result<DeactivateUserPayload, async_graphql::Error> {
+        let state = ctx.state();
+        let mut rng = state.rng();
+        let clock = state.clock();
+        let requester = ctx.requester();
+        let site_config = state.site_config();
+
+        // Only allow calling this if the requester is a browser session
+        let Some(browser_session) = requester.browser_session() else {
+            return Err(async_graphql::Error::new("Unauthorized"));
+        };
+
+        if !site_config.account_deactivation_allowed {
+            return Err(async_graphql::Error::new(
+                "Account deactivation is not allowed on this server",
+            ));
+        }
+
+        let mut repo = state.repository().await?;
+        if !verify_password_if_needed(
+            requester,
+            site_config,
+            &state.password_manager(),
+            input.password,
+            &browser_session.user,
+            &mut repo,
+        )
+        .await?
+        {
+            return Ok(DeactivateUserPayload::IncorrectPassword);
+        }
+
+        // Deactivate the user right away
+        let user = repo
+            .user()
+            .deactivate(&state.clock(), browser_session.user.clone())
+            .await?;
+
+        // and then schedule a job to deactivate it fully
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                DeactivateUserJob::new(&user, input.hs_erase),
+            )
+            .await?;
+
+        repo.save().await?;
+
+        Ok(DeactivateUserPayload::Deactivated(user))
     }
 }
