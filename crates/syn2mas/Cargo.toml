@@ -11,6 +11,7 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+arc-swap.workspace = true
 bitflags.workspace = true
 camino.workspace = true
 figment.workspace = true
@@ -33,6 +34,9 @@ ulid = { workspace = true, features = ["uuid"] }
 
 mas-config.workspace = true
 mas-storage.workspace = true
+
+opentelemetry.workspace = true
+opentelemetry-semantic-conventions.workspace = true
 
 [dev-dependencies]
 mas-storage-pg.workspace = true
