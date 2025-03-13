@@ -10,7 +10,6 @@ use mas_config::{
 };
 use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
-use opentelemetry::KeyValue;
 use rand::thread_rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
 use syn2mas::{
@@ -18,10 +17,7 @@ use syn2mas::{
 };
 use tracing::{Instrument, error, info, info_span, warn};
 
-use crate::{
-    telemetry::METER,
-    util::{DatabaseConnectOptions, database_connection_from_config_with_options},
-};
+use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
 
 /// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
 /// errors preventing migration.
@@ -258,7 +254,6 @@ impl Options {
 
                 let occasional_progress_logger_task =
                     tokio::spawn(occasional_progress_logger(progress.clone()));
-                let progress_telemetry_task = tokio::spawn(progress_telemetry(progress.clone()));
 
                 let mas_matrix = MatrixConfig::extract(figment)?;
                 eprintln!("\n\n");
@@ -274,7 +269,6 @@ impl Options {
                 .await?;
 
                 occasional_progress_logger_task.abort();
-                progress_telemetry_task.abort();
 
                 Ok(ExitCode::SUCCESS)
             }
@@ -309,35 +303,6 @@ async fn occasional_progress_logger(progress: Progress) {
             ProgressStage::RebuildConstraint { constraint_name } => {
                 info!(name: "progress", "still waiting for rebuild of constraint {constraint_name}");
             }
-        }
-    }
-}
-
-/// Reports migration progress as OpenTelemetry metrics
-async fn progress_telemetry(progress: Progress) {
-    let migrated_data_counter = METER
-        .u64_gauge("migrated_data")
-        .with_description("How many entities have been migrated so far")
-        .build();
-    let max_data_counter = METER
-        .u64_gauge("max_data")
-        .with_description("How many entities of the given type exist (approximate)")
-        .build();
-
-    loop {
-        tokio::time::sleep(Duration::from_secs(10)).await;
-        if let ProgressStage::MigratingData {
-            entity,
-            migrated,
-            approx_count,
-        } = &**progress.get_current_stage()
-        {
-            let metrics_kv = [KeyValue::new("entity", *entity)];
-            let migrated = migrated.load(Ordering::Relaxed);
-            migrated_data_counter.record(u64::from(migrated), &metrics_kv);
-            max_data_counter.record(*approx_count, &metrics_kv);
-        } else {
-            // not sure how to map other stages
         }
     }
 }

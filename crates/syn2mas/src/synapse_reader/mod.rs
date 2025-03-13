@@ -268,6 +268,10 @@ const TABLES_TO_LOCK: &[&str] = &[
 pub struct SynapseRowCounts {
     pub users: usize,
     pub devices: usize,
+    pub threepids: usize,
+    pub external_ids: usize,
+    pub access_tokens: usize,
+    pub refresh_tokens: usize,
 }
 
 pub struct SynapseReader<'c> {
@@ -367,7 +371,62 @@ impl<'conn> SynapseReader<'conn> {
         .try_into()
         .unwrap_or(usize::MAX);
 
-        Ok(SynapseRowCounts { users, devices })
+        let threepids = sqlx::query_scalar::<_, i64>(
+            "
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'user_threepids'::regclass;
+            "
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("estimating count of threepids")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
+
+        let access_tokens = sqlx::query_scalar::<_, i64>(
+            "
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'access_tokens'::regclass;
+            "
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("estimating count of access tokens")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
+
+        let refresh_tokens = sqlx::query_scalar::<_, i64>(
+            "
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'refresh_tokens'::regclass;
+            "
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("estimating count of refresh tokens")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
+
+        let external_ids = sqlx::query_scalar::<_, i64>(
+            "
+            SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'user_external_ids'::regclass;
+            "
+        )
+        .fetch_one(&mut *self.txn)
+        .await
+        .into_database("estimating count of external IDs")?
+        .max(0)
+        .try_into()
+        .unwrap_or(usize::MAX);
+
+        Ok(SynapseRowCounts {
+            users,
+            devices,
+            threepids,
+            external_ids,
+            access_tokens,
+            refresh_tokens,
+        })
     }
 
     /// Reads Synapse users, excluding application service users (which do not

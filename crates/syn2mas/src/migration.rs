@@ -24,6 +24,7 @@ use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_storage::Clock;
+use opentelemetry::{KeyValue, metrics::Counter};
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -43,6 +44,11 @@ use crate::{
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
+    },
+    telemetry::{
+        K_ENTITY, METER, V_ENTITY_DEVICES, V_ENTITY_EXTERNAL_IDS,
+        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS, V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
+        V_ENTITY_THREEPIDS, V_ENTITY_USERS,
     },
 };
 
@@ -147,7 +153,7 @@ struct MigrationState {
 ///
 /// - An underlying database access error, either to MAS or to Synapse.
 /// - Invalid data in the Synapse database.
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::implicit_hasher, clippy::too_many_lines)]
 pub async fn migrate(
     mut synapse: SynapseReader<'_>,
     mas: MasWriter,
@@ -158,6 +164,45 @@ pub async fn migrate(
     progress: &Progress,
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
+
+    let approx_total_counter = METER
+        .u64_counter("syn2mas.entity.approx_total")
+        .with_description("Approximate number of entities of this type to be migrated")
+        .build();
+    let migrated_otel_counter = METER
+        .u64_counter("syn2mas.entity.migrated")
+        .with_description("Number of entities of this type that have been migrated so far")
+        .build();
+
+    approx_total_counter.add(
+        counts.users as u64,
+        &[KeyValue::new(K_ENTITY, V_ENTITY_USERS)],
+    );
+    approx_total_counter.add(
+        counts.devices as u64,
+        &[KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)],
+    );
+    approx_total_counter.add(
+        counts.threepids as u64,
+        &[KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)],
+    );
+    approx_total_counter.add(
+        counts.external_ids as u64,
+        &[KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)],
+    );
+    // assume 1 refreshable access token per refresh token.
+    let approx_nonrefreshable_access_tokens = counts.access_tokens - counts.refresh_tokens;
+    approx_total_counter.add(
+        approx_nonrefreshable_access_tokens as u64,
+        &[KeyValue::new(
+            K_ENTITY,
+            V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+        )],
+    );
+    approx_total_counter.add(
+        counts.refresh_tokens as u64,
+        &[KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)],
+    );
 
     let state = MigrationState {
         server_name,
@@ -173,56 +218,101 @@ pub async fn migrate(
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "users",
+        entity: V_ENTITY_USERS,
         migrated: migrated_counter.clone(),
         approx_count: counts.users as u64,
     });
-    let (mas, state) = migrate_users(&mut synapse, mas, state, rng, migrated_counter).await?;
+    let (mas, state) = migrate_users(
+        &mut synapse,
+        mas,
+        state,
+        rng,
+        migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "threepids",
+        entity: V_ENTITY_THREEPIDS,
         migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
+        approx_count: counts.threepids as u64,
     });
-    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, &migrated_counter).await?;
+    let (mas, state) = migrate_threepids(
+        &mut synapse,
+        mas,
+        rng,
+        state,
+        &migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "external_ids",
+        entity: V_ENTITY_EXTERNAL_IDS,
         migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
+        approx_count: counts.external_ids as u64,
     });
-    let (mas, state) =
-        migrate_external_ids(&mut synapse, mas, rng, state, &migrated_counter).await?;
+    let (mas, state) = migrate_external_ids(
+        &mut synapse,
+        mas,
+        rng,
+        state,
+        &migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "unrefreshable_access_tokens",
+        entity: V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
         migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
+        approx_count: (counts.access_tokens - counts.refresh_tokens) as u64,
     });
-    let (mas, state) =
-        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state, migrated_counter)
-            .await?;
+    let (mas, state) = migrate_unrefreshable_access_tokens(
+        &mut synapse,
+        mas,
+        clock,
+        rng,
+        state,
+        migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "refreshable_token_pairs",
+        entity: V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
         migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
+        approx_count: counts.refresh_tokens as u64,
     });
-    let (mas, state) =
-        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state, &migrated_counter)
-            .await?;
+    let (mas, state) = migrate_refreshable_token_pairs(
+        &mut synapse,
+        mas,
+        clock,
+        rng,
+        state,
+        &migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     let migrated_counter = Arc::new(AtomicU32::new(0));
     progress.set_current_stage(ProgressStage::MigratingData {
         entity: "devices",
         migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
+        approx_count: counts.devices as u64,
     });
-    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state, migrated_counter).await?;
+    let (mas, _state) = migrate_devices(
+        &mut synapse,
+        mas,
+        rng,
+        state,
+        migrated_counter,
+        migrated_otel_counter.clone(),
+    )
+    .await?;
 
     synapse
         .finish()
@@ -243,8 +333,10 @@ async fn migrate_users(
     mut state: MigrationState,
     rng: &mut impl RngCore,
     progress_counter: Arc<AtomicU32>,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
 
@@ -316,6 +408,7 @@ async fn migrate_users(
                         .into_mas("writing password")?;
                 }
 
+                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.fetch_add(1, Ordering::Relaxed);
             }
 
@@ -361,8 +454,10 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: &AtomicU32,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)];
 
     let mut email_buffer = MasWriteBuffer::new(&mas, MasWriter::write_email_threepids);
     let mut unsupported_buffer = MasWriteBuffer::new(&mas, MasWriter::write_unsupported_threepids);
@@ -423,6 +518,7 @@ async fn migrate_threepids(
                 .into_mas("writing unsupported threepid")?;
         }
 
+        migrated_otel_counter.add(1, &otel_kv);
         progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 
@@ -454,8 +550,10 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: &AtomicU32,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)];
 
     let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_upstream_oauth_links);
     let mut extids_stream = pin!(synapse.read_user_external_ids());
@@ -508,6 +606,7 @@ async fn migrate_external_ids(
             .await
             .into_mas("failed to write upstream link")?;
 
+        migrated_otel_counter.add(1, &otel_kv);
         progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 
@@ -539,8 +638,10 @@ async fn migrate_devices(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: Arc<AtomicU32>,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)];
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
@@ -627,6 +728,7 @@ async fn migrate_devices(
                     .await
                     .into_mas("writing compat sessions")?;
 
+                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.fetch_add(1, Ordering::Relaxed);
             }
 
@@ -671,8 +773,13 @@ async fn migrate_unrefreshable_access_tokens(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: Arc<AtomicU32>,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(
+        K_ENTITY,
+        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+    )];
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
@@ -771,6 +878,7 @@ async fn migrate_unrefreshable_access_tokens(
                     .await
                     .into_mas("writing compat access tokens")?;
 
+                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.fetch_add(1, Ordering::Relaxed);
             }
             write_buffer
@@ -818,8 +926,10 @@ async fn migrate_refreshable_token_pairs(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: &AtomicU32,
+    migrated_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)];
 
     let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
     let mut access_token_write_buffer =
@@ -900,6 +1010,7 @@ async fn migrate_refreshable_token_pairs(
             .await
             .into_mas("writing compat refresh tokens")?;
 
+        migrated_otel_counter.add(1, &otel_kv);
         progress_counter.fetch_add(1, Ordering::Relaxed);
     }
 

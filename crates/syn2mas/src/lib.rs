@@ -8,6 +8,7 @@ mod synapse_reader;
 
 mod migration;
 mod progress;
+mod telemetry;
 
 type RandomState = rustc_hash::FxBuildHasher;
 type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;

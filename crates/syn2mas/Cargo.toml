@@ -35,6 +35,9 @@ ulid = { workspace = true, features = ["uuid"] }
 mas-config.workspace = true
 mas-storage.workspace = true
 
+opentelemetry.workspace = true
+opentelemetry-semantic-conventions.workspace = true
+
 [dev-dependencies]
 mas-storage-pg.workspace = true
 

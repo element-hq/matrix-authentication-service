@@ -6108,6 +6108,8 @@ dependencies = [
  "mas-config",
  "mas-storage",
  "mas-storage-pg",
+ "opentelemetry",
+ "opentelemetry-semantic-conventions",
  "rand",
  "rand_chacha",
  "rustc-hash 2.1.1",
