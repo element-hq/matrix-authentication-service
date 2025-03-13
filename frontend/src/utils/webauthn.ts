@@ -116,3 +116,13 @@ export async function performRegistration(options: string): Promise<string> {
 
   return JSON.stringify(credential);
 }
+
+export async function performAuthentication(options: string): Promise<string> {
+  const publicKey = PublicKeyCredential.parseRequestOptionsFromJSON(
+    JSON.parse(options),
+  );
+
+  const credential = await navigator.credentials.get({ publicKey });
+
+  return JSON.stringify(credential);
+}

@@ -27,6 +27,7 @@ Please see LICENSE in the repository root for full details.
   name="",
   type="submit",
   class="",
+  id="",
   value="",
   disabled=False,
   kind="primary",
@@ -40,6 +41,7 @@ Please see LICENSE in the repository root for full details.
     type="{{ type }}"
     {% if disabled %}disabled{% endif %}
     class="cpd-button {{ class }}"
+    id="{{id}}"
     data-kind="{{ kind }}"
     data-size="{{ size }}"
     {% if autocapitalize %}autocapitilize="{{ autocapitilize }}"{% endif %}
@@ -53,6 +55,7 @@ Please see LICENSE in the repository root for full details.
   name="",
   type="submit",
   class="",
+  id="",
   value="",
   disabled=False,
   autocomplete=False,
@@ -65,6 +68,7 @@ Please see LICENSE in the repository root for full details.
     {% if disabled %}disabled{% endif %}
     data-kind="primary"
     class="cpd-link {{ class }}"
+    id="{{id}}"
     {% if autocapitalize %}autocapitilize="{{ autocapitilize }}"{% endif %}
     {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
     {% if autocorrect %}autocorrect="{{ autocorrect }}"{% endif %}
@@ -76,6 +80,7 @@ Please see LICENSE in the repository root for full details.
   name="",
   type="submit",
   class="",
+  id="",
   value="",
   disabled=False,
   size="lg",
@@ -87,6 +92,7 @@ Please see LICENSE in the repository root for full details.
     value="{{ value }}"
     type="{{ type }}"
     class="cpd-button {{ class }}"
+    id="{{id}}"
     data-kind="secondary"
     data-size="{{ size }}"
     {% if disabled %}disabled{% endif %}

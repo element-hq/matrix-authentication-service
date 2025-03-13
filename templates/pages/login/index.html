@@ -10,6 +10,8 @@ Please see LICENSE in the repository root for full details.
 
 {% from "components/idp_brand.html" import logo %}
 
+{% set params = next["params"] | default({}) | to_params(prefix="?") %}
+
 {% block content %}
   <form method="POST" class="flex flex-col gap-10">
     <header class="page-heading">
@@ -73,7 +75,7 @@ Please see LICENSE in the repository root for full details.
       {% endif %}
 
       {% if features.passkeys_enabled %}
-        {{ button.link(text=_("mas.login.with_passkey")) }}
+        {{ button.link(text=_("mas.login.with_passkey"), href="/login/passkey" ~ params) }}
       {% endif %}
 
       {% if (features.password_login or features.passkeys_enabled) and providers %}
@@ -81,7 +83,6 @@ Please see LICENSE in the repository root for full details.
       {% endif %}
 
       {% if providers %}
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {% for provider in providers %}
           {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
           <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
@@ -98,12 +99,11 @@ Please see LICENSE in the repository root for full details.
           {{ _("mas.login.call_to_register") }}
         </p>
 
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
       </div>
     {% endif %}
 
-    {% if not providers and not features.password_login %}
+    {% if not providers and not features.password_login and not features.passkeys_enabled %}
       <div class="text-center">
         {{ _("mas.login.no_login_methods") }}
       </div>
