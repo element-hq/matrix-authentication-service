@@ -388,6 +388,13 @@ impl ResendRecoveryEmailPayload {
 #[derive(InputObject)]
 pub struct DeactivateUserInput {
     /// Whether to ask the homeserver to GDPR-erase the user
+    ///
+    /// This is equivalent to the `erase` parameter on the
+    /// `/_matrix/client/v3/account/deactivate` C-S API, which is
+    /// implementation-specific.
+    ///
+    /// What Synapse does is documented here:
+    /// <https://element-hq.github.io/synapse/latest/admin_api/user_admin_api.html#deactivate-account>
     hs_erase: bool,
 
     /// The password of the user to deactivate.
