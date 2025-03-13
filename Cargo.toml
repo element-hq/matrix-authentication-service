@@ -331,7 +331,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.11"
+version = "2.0.12"
 
 [workspace.dependencies.thiserror-ext]
 version = "0.2.1"
