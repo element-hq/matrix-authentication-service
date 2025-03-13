@@ -10,6 +10,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% from "components/idp_brand.html" import logo %}
 
+{% set params = next["params"] | default({}) | to_params(prefix="?") %}
+
 {% block content %}
   <form method="POST" class="flex flex-col gap-10">
     <header class="page-heading">
@@ -68,12 +70,19 @@ Please see LICENSE files in the repository root for full details.
         {{ button.button(text=_("action.continue")) }}
       {% endif %}
 
-      {% if features.password_login and features.passkeys_enabled %}
-        {{ field.separator() }}
-      {% endif %}
-
       {% if features.passkeys_enabled %}
-        {{ button.link(text=_("mas.login.with_passkey")) }}
+        <div id="passkey-root"></div>
+
+        <div class="hidden">
+          {% call(f) field.field(name="passkey_challenge_id", form_state=form) %}
+            <input {{ field.attributes(f) }} class="cpd-text-control" type="hidden" />
+          {% endcall %}
+
+          {% call(f) field.field(name="passkey_response", form_state=form) %}
+            <input {{ field.attributes(f) }} class="cpd-text-control" type="hidden" />
+          {% endcall %}
+        </div>
+
       {% endif %}
 
       {% if (features.password_login or features.passkeys_enabled) and providers %}
@@ -81,7 +90,6 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
 
       {% if providers %}
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {% for provider in providers %}
           {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
           <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
@@ -98,15 +106,21 @@ Please see LICENSE files in the repository root for full details.
           {{ _("mas.login.call_to_register") }}
         </p>
 
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
       </div>
     {% endif %}
 
-    {% if not providers and not features.password_login %}
+    {% if not providers and not features.password_login and not features.passkeys_enabled %}
       <div class="text-center">
         {{ _("mas.login.no_login_methods") }}
       </div>
     {% endif %}
   </form>
+
+  {% if features.passkeys_enabled %}
+    <script>
+      window.WEBAUTHN_OPTIONS = "{{ webauthn_options | add_slashes | safe }}";
+    </script>
+    {{ include_asset('src/template_passkey.tsx') | indent(4) | safe }}
+  {% endif %}
 {% endblock content %}

@@ -346,5 +346,8 @@
       "view_messages": "View your existing messages and data",
       "view_profile": "See your profile info and contact details"
     }
+  },
+  "passkeys": {
+    "login": "Continue with Passkey"
   }
 }

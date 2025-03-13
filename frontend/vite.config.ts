@@ -59,6 +59,7 @@ export default defineConfig((env) => ({
         resolve(__dirname, "src/shared.css"),
         resolve(__dirname, "src/templates.css"),
         resolve(__dirname, "src/swagger.ts"),
+        resolve(__dirname, "src/template_passkey.tsx"),
       ],
     },
   },
