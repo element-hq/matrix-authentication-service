@@ -2465,7 +2465,7 @@
           "type": "boolean"
         },
         "account_deactivation_allowed": {
-          "description": "Whether users are allowed to delete their own account. Defaults to `false`.",
+          "description": "Whether users are allowed to delete their own account. Defaults to `true`.",
           "type": "boolean"
         }
       }

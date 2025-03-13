@@ -63,8 +63,8 @@ pub struct AccountConfig {
     pub password_recovery_enabled: bool,
 
     /// Whether users are allowed to delete their own account. Defaults to
-    /// `false`.
-    #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    /// `true`.
+    #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
     pub account_deactivation_allowed: bool,
 }
 
@@ -76,7 +76,7 @@ impl Default for AccountConfig {
             password_registration_enabled: default_false(),
             password_change_allowed: default_true(),
             password_recovery_enabled: default_false(),
-            account_deactivation_allowed: default_false(),
+            account_deactivation_allowed: default_true(),
         }
     }
 }
@@ -89,7 +89,7 @@ impl AccountConfig {
             && is_default_true(&self.displayname_change_allowed)
             && is_default_true(&self.password_change_allowed)
             && is_default_false(&self.password_recovery_enabled)
-            && is_default_false(&self.account_deactivation_allowed)
+            && is_default_true(&self.account_deactivation_allowed)
     }
 }
 

@@ -312,8 +312,8 @@ account:
 
   # Whether users are allowed to delete their own account
   #
-  # Defaults to `false`.
-  account_deactivation_allowed: false
+  # Defaults to `true`.
+  account_deactivation_allowed: true
 ```
 
 ## `captcha`
