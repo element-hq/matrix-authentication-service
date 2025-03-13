@@ -20,6 +20,7 @@ const QUERY = graphql(/* GraphQL */ `
         user {
           ...AddEmailForm_user
           ...UserEmailList_user
+          ...AccountDeleteButton_user
           hasPassword
           emails(first: 0) {
             totalCount
@@ -31,9 +32,11 @@ const QUERY = graphql(/* GraphQL */ `
     siteConfig {
       emailChangeAllowed
       passwordLoginEnabled
+      accountDeactivationAllowed
       ...AddEmailForm_siteConfig
       ...UserEmailList_siteConfig
       ...PasswordChange_siteConfig
+      ...AccountDeleteButton_siteConfig
     }
   }
 `);

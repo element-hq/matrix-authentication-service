@@ -309,6 +309,11 @@ account:
   # Defaults to `false`.
   # This has no effect if password login is disabled.
   password_recovery_enabled: false
+
+  # Whether users are allowed to delete their own account
+  #
+  # Defaults to `true`.
+  account_deactivation_allowed: true
 ```
 
 ## `captcha`

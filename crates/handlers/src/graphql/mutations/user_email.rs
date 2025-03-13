@@ -6,74 +6,18 @@
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
-use mas_data_model::SiteConfig;
 use mas_i18n::DataLocale;
 use mas_storage::{
-    BoxRepository, RepositoryAccess,
+    RepositoryAccess,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     user::{UserEmailFilter, UserEmailRepository, UserRepository},
 };
-use zeroize::Zeroizing;
 
-use crate::{
-    graphql::{
-        Requester,
-        model::{NodeType, User, UserEmail, UserEmailAuthentication},
-        state::ContextExt,
-    },
-    passwords::PasswordManager,
+use super::verify_password_if_needed;
+use crate::graphql::{
+    model::{NodeType, User, UserEmail, UserEmailAuthentication},
+    state::ContextExt,
 };
-
-/// Check the password if neeed
-///
-/// Returns true if password verification is not needed, or if the password is
-/// correct. Returns false if the password is incorrect or missing.
-async fn verify_password_if_needed(
-    requester: &Requester,
-    config: &SiteConfig,
-    password_manager: &PasswordManager,
-    password: Option<String>,
-    user: &mas_data_model::User,
-    repo: &mut BoxRepository,
-) -> Result<bool, async_graphql::Error> {
-    // If the requester is admin, they don't need to provide a password
-    if requester.is_admin() {
-        return Ok(true);
-    }
-
-    // If password login is disabled, assume we don't want the user to reauth
-    if !config.password_login_enabled {
-        return Ok(true);
-    }
-
-    // Else we need to check if the user has a password
-    let Some(user_password) = repo
-        .user_password()
-        .active(user)
-        .await
-        .context("Failed to load user password")?
-    else {
-        // User has no password, so we don't need to verify the password
-        return Ok(true);
-    };
-
-    let Some(password) = password else {
-        // There is a password on the user, but not provided in the input
-        return Ok(false);
-    };
-
-    let password = Zeroizing::new(password.into_bytes());
-
-    let res = password_manager
-        .verify(
-            user_password.version,
-            password,
-            user_password.hashed_password,
-        )
-        .await;
-
-    Ok(res.is_ok())
-}
 
 #[derive(Default)]
 pub struct UserEmailMutations {

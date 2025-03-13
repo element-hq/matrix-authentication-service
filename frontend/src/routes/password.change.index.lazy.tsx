@@ -11,7 +11,7 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
-import { Alert, Form, Separator } from "@vector-im/compound-web";
+import { Alert, Form } from "@vector-im/compound-web";
 import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -20,6 +20,7 @@ import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
+import Separator from "../components/Separator";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
