@@ -7,7 +7,7 @@
 //! Database-related tasks
 
 use async_trait::async_trait;
-use mas_storage::queue::CleanupExpiredTokensJob;
+use mas_storage::queue::{CleanupExpiredTokensJob, PruneStalePolicyDataJob};
 use tracing::{debug, info};
 
 use crate::{
@@ -33,6 +33,31 @@ impl RunnableJob for CleanupExpiredTokensJob {
             debug!("no token to clean up");
         } else {
             info!(count, "cleaned up revoked tokens");
+        }
+
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl RunnableJob for PruneStalePolicyDataJob {
+    #[tracing::instrument(name = "job.prune_stale_policy_data", skip_all, err)]
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+        // Keep the last 10 policy data
+        let count = repo
+            .policy_data()
+            .prune(10)
+            .await
+            .map_err(JobError::retry)?;
+
+        repo.save().await.map_err(JobError::retry)?;
+
+        if count == 0 {
+            debug!("no stale policy data to prune");
+        } else {
+            info!(count, "pruned stale policy data");
         }
 
         Ok(())

@@ -506,3 +506,11 @@ impl ExpireInactiveUserSessionsJob {
 impl InsertableJob for ExpireInactiveUserSessionsJob {
     const QUEUE_NAME: &'static str = "expire-inactive-user-sessions";
 }
+
+/// Prune stale policy data
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PruneStalePolicyDataJob;
+
+impl InsertableJob for PruneStalePolicyDataJob {
+    const QUEUE_NAME: &'static str = "prune-stale-policy-data";
+}
