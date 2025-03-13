@@ -89,17 +89,20 @@
   display: flex;
   flex-direction: column;
 
+  /* Make sure the border radius cuts the content */
+  overflow: hidden;
+  contain: paint;
+
+  /* Cap the block size */
+  max-block-size: calc(100vh - var(--cpd-space-4x));
+  max-block-size: calc(100svh - var(--cpd-space-4x));
+
   /* Drawer comes in the Android style by default */
   --border-radius: 28px;
   --handle-block-size: 4px;
   --handle-inline-size: 32px;
   --handle-inset-block-start: var(--cpd-space-4x);
   --handle-inset-block-end: 0px;
-  --content-inset-block-start: calc(
-    var(--handle-inset-block-start) +
-    var(--handle-block-size) +
-    var(--handle-inset-block-end)
-  );
 }
 
 .drawer[data-platform="ios"] {
@@ -111,31 +114,20 @@
 }
 
 .drawer .body {
-  padding-inline: var(--cpd-space-4x);
-  padding-block-start: calc(
-    var(--content-inset-block-start) +
-    var(--cpd-space-6x)
-  );
-  padding-block-end: var(--cpd-space-12x);
-  border-start-start-radius: var(--border-radius);
-  border-start-end-radius: var(--border-radius);
-
-  /* Even with overflow: auto, the content can still overflow at the corners
-  where it meets with the curved border. A contain: paint fixes that. */
-  contain: paint;
-  overflow: auto;
+  overflow-y: auto;
   scrollbar-width: none;
-
-  --cpd-separator-spacing: 0;
-  --cpd-separator-inset: var(--cpd-space-4x);
+  padding-inline: var(--cpd-space-4x);
+  margin-block-start: var(--cpd-space-2x);
+  padding-block-start: var(--cpd-space-4x);
+  padding-block-end: var(--cpd-space-12x);
 }
 
-.drawer .body::before {
-  content: "";
-  position: absolute;
+.drawer .handle {
+  align-self: center;
   block-size: var(--handle-block-size);
-  inset-inline: calc((100% - var(--handle-inline-size)) / 2);
-  inset-block-start: var(--handle-inset-block-start);
+  inline-size: var(--handle-inline-size);
+  margin-block-start: var(--handle-inset-block-start);
+  margin-block-end: var(--handle-inset-block-end);
   background: var(--cpd-color-icon-secondary);
   border-radius: var(--cpd-radius-pill-effect);
 }
