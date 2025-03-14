@@ -371,6 +371,10 @@ where
             mas_router::Login::route(),
             get(self::views::login::get).post(self::views::login::post),
         )
+        .route(
+            mas_router::PasskeyLogin::route(),
+            get(self::views::login::passkey::get).post(self::views::login::passkey::post),
+        )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
             mas_router::Reauth::route(),

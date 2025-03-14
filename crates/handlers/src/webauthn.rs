@@ -6,11 +6,15 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use url::Url;
-use webauthn_rs::{Webauthn, WebauthnBuilder, prelude::PasskeyRegistration};
+use webauthn_rs::{
+    Webauthn, WebauthnBuilder,
+    prelude::{DiscoverableAuthentication, PasskeyRegistration},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ChallengeState {
     Registration(PasskeyRegistration),
+    Authentication(DiscoverableAuthentication),
 }
 
 /// Builds a webauthn instance.
