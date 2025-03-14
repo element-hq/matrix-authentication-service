@@ -29,6 +29,7 @@ use self::{
     constraint_pausing::{ConstraintDescription, IndexDescription},
     locking::LockedMasDatabase,
 };
+use crate::Progress;
 
 pub mod checks;
 pub mod locking;
@@ -550,16 +551,19 @@ impl MasWriter {
         conn: &mut LockedMasDatabase,
         indices_to_restore: &[IndexDescription],
         constraints_to_restore: &[ConstraintDescription],
+        progress: &Progress,
     ) -> Result<(), Error> {
         // First restore all indices. The order is not important as far as I know.
         // However the indices are needed before constraints.
         for index in indices_to_restore.iter().rev() {
+            progress.rebuild_index(index.name.clone());
             constraint_pausing::restore_index(conn.as_mut(), index).await?;
         }
         // Then restore all constraints.
         // The order here is the reverse of drop order, since some constraints may rely
         // on other constraints to work.
         for constraint in constraints_to_restore.iter().rev() {
+            progress.rebuild_constraint(constraint.name.clone());
             constraint_pausing::restore_constraint(conn.as_mut(), constraint).await?;
         }
         Ok(())
@@ -574,7 +578,7 @@ impl MasWriter {
     ///
     /// - If the database connection experiences an error.
     #[tracing::instrument(skip_all)]
-    pub async fn finish(mut self) -> Result<PgConnection, Error> {
+    pub async fn finish(mut self, progress: &Progress) -> Result<PgConnection, Error> {
         self.write_buffer_finish_checker.check_all_finished()?;
 
         // Commit all writer transactions to the database.
@@ -595,6 +599,7 @@ impl MasWriter {
             &mut self.conn,
             &self.indices_to_restore,
             &self.constraints_to_restore,
+            progress,
         )
         .await?;
 
@@ -1148,7 +1153,7 @@ mod test {
     use uuid::{NonNilUuid, Uuid};
 
     use crate::{
-        LockedMasDatabase, MasWriter,
+        LockedMasDatabase, MasWriter, Progress,
         mas_writer::{
             MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
             MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
@@ -1278,7 +1283,10 @@ mod test {
             .await
             .expect("failed to write user");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1312,7 +1320,10 @@ mod test {
             .await
             .expect("failed to write password");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1345,7 +1356,10 @@ mod test {
             .await
             .expect("failed to write e-mail");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1379,7 +1393,10 @@ mod test {
             .await
             .expect("failed to write phone number (unsupported threepid)");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1415,7 +1432,10 @@ mod test {
             .await
             .expect("failed to write link");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1453,7 +1473,10 @@ mod test {
             .await
             .expect("failed to write compat session");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1502,7 +1525,10 @@ mod test {
             .await
             .expect("failed to write access token");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1563,7 +1589,10 @@ mod test {
             .await
             .expect("failed to write refresh token");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
