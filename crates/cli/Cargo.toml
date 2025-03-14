@@ -19,7 +19,7 @@ axum.workspace = true
 bytes.workspace = true
 camino.workspace = true
 clap.workspace = true
-console = "0.15.10"
+console = "0.15.11"
 dialoguer = { version = "0.11.0", default-features = false, features = [
     "fuzzy-select",
     "password",

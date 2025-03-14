@@ -8,13 +8,16 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse},
 };
-use mas_axum_utils::{FancyError, SessionInfoExt, cookies::CookieJar};
+use mas_axum_utils::{FancyError, cookies::CookieJar};
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository};
+use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{AppContext, TemplateContext, Templates};
 use serde::Deserialize;
 
-use crate::{BoundActivityTracker, PreferredLanguage};
+use crate::{
+    BoundActivityTracker, PreferredLanguage,
+    session::{SessionOrFallback, load_session_or_fallback},
+};
 
 #[derive(Deserialize)]
 pub struct Params {
@@ -31,13 +34,24 @@ pub async fn get(
     Query(Params { action }): Query<Params>,
     mut repo: BoxRepository,
     clock: BoxClock,
+    mut rng: BoxRng,
     cookie_jar: CookieJar,
 ) -> Result<impl IntoResponse, FancyError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-    let session = session_info.load_session(&mut repo).await?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
     // TODO: keep the full path, not just the action
-    let Some(session) = session else {
+    let Some(session) = maybe_session else {
         return Ok((
             cookie_jar,
             url_builder.redirect(&mas_router::Login::and_then(

@@ -7,10 +7,16 @@ mod mas_writer;
 mod synapse_reader;
 
 mod migration;
+mod progress;
+mod telemetry;
+
+type RandomState = rustc_hash::FxBuildHasher;
+type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
 
 pub use self::{
     mas_writer::{MasWriter, checks::mas_pre_migration_checks, locking::LockedMasDatabase},
     migration::migrate,
+    progress::{Progress, ProgressStage},
     synapse_reader::{
         SynapseReader,
         checks::{

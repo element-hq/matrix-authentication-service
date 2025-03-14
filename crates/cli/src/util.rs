@@ -210,6 +210,7 @@ pub fn site_config_from_config(
             && account_config.password_change_allowed,
         account_recovery_allowed: password_config.enabled()
             && account_config.password_recovery_enabled,
+        account_deactivation_allowed: account_config.account_deactivation_allowed,
         captcha,
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,
@@ -234,6 +235,7 @@ pub async fn templates_from_config(
 
 fn database_connect_options_from_config(
     config: &DatabaseConfig,
+    opts: &DatabaseConnectOptions,
 ) -> Result<PgConnectOptions, anyhow::Error> {
     let options = if let Some(uri) = config.uri.as_deref() {
         uri.parse()
@@ -318,9 +320,11 @@ fn database_connect_options_from_config(
         None => options,
     };
 
-    let options = options
-        .log_statements(LevelFilter::Debug)
-        .log_slow_statements(LevelFilter::Warn, Duration::from_millis(100));
+    let mut options = options.log_statements(LevelFilter::Debug);
+
+    if opts.log_slow_statements {
+        options = options.log_slow_statements(LevelFilter::Warn, Duration::from_millis(100));
+    }
 
     Ok(options)
 }
@@ -328,7 +332,7 @@ fn database_connect_options_from_config(
 /// Create a database connection pool from the configuration
 #[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
 pub async fn database_pool_from_config(config: &DatabaseConfig) -> Result<PgPool, anyhow::Error> {
-    let options = database_connect_options_from_config(config)?;
+    let options = database_connect_options_from_config(config, &DatabaseConnectOptions::default())?;
     PgPoolOptions::new()
         .max_connections(config.max_connections.into())
         .min_connections(config.min_connections)
@@ -340,12 +344,37 @@ pub async fn database_pool_from_config(config: &DatabaseConfig) -> Result<PgPool
         .context("could not connect to the database")
 }
 
+pub struct DatabaseConnectOptions {
+    pub log_slow_statements: bool,
+}
+
+impl Default for DatabaseConnectOptions {
+    fn default() -> Self {
+        Self {
+            log_slow_statements: true,
+        }
+    }
+}
+
 /// Create a single database connection from the configuration
 #[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
 pub async fn database_connection_from_config(
     config: &DatabaseConfig,
 ) -> Result<PgConnection, anyhow::Error> {
-    database_connect_options_from_config(config)?
+    database_connect_options_from_config(config, &DatabaseConnectOptions::default())?
+        .connect()
+        .await
+        .context("could not connect to the database")
+}
+
+/// Create a single database connection from the configuration,
+/// with specific options.
+#[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
+pub async fn database_connection_from_config_with_options(
+    config: &DatabaseConfig,
+    options: &DatabaseConnectOptions,
+) -> Result<PgConnection, anyhow::Error> {
+    database_connect_options_from_config(config, options)?
         .connect()
         .await
         .context("could not connect to the database")

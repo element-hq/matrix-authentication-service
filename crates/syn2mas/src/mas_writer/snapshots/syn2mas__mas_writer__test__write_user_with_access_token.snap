@@ -23,6 +23,7 @@ compat_sessions:
 users:
   - can_request_admin: "false"
     created_at: "1970-01-01 00:00:00+00"
+    deactivated_at: ~
     is_guest: "false"
     locked_at: ~
     primary_user_email_id: ~

@@ -1,0 +1,26 @@
+{#
+Copyright 2025 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="flex flex-col gap-6">
+    <header class="page-heading">
+      <div class="icon invalid">
+        {{ icon.delete() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">{{ _("mas.account.deactivated.heading") }}</h1>
+        {% set mxid = "@" + user.username + ":" + branding.server_name %}
+        <p class="text">{{ _("mas.account.deactivated.description", mxid=mxid) }}</p>
+      </div>
+
+      {{ logout.button(text=_("action.sign_in"), csrf_token=csrf_token) }}
+    </header>
+  </main>
+{% endblock %}

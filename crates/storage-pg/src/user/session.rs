@@ -59,6 +59,7 @@ struct SessionLookup {
     user_username: String,
     user_created_at: DateTime<Utc>,
     user_locked_at: Option<DateTime<Utc>>,
+    user_deactivated_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
 }
 
@@ -73,6 +74,7 @@ impl TryFrom<SessionLookup> for BrowserSession {
             sub: id.to_string(),
             created_at: value.user_created_at,
             locked_at: value.user_locked_at,
+            deactivated_at: value.user_deactivated_at,
             can_request_admin: value.user_can_request_admin,
         };
 
@@ -173,6 +175,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , u.username              AS "user_username"
                      , u.created_at            AS "user_created_at"
                      , u.locked_at             AS "user_locked_at"
+                     , u.deactivated_at        AS "user_deactivated_at"
                      , u.can_request_admin     AS "user_can_request_admin"
                 FROM user_sessions s
                 INNER JOIN users u
@@ -355,6 +358,10 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::LockedAt)),
                 SessionLookupIden::UserLockedAt,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::DeactivatedAt)),
+                SessionLookupIden::UserDeactivatedAt,
             )
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),

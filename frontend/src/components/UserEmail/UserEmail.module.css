@@ -38,6 +38,7 @@ button[disabled] .user-email-delete-icon {
   display: flex;
   align-items: center;
   gap: var(--cpd-space-4x);
+  border-radius: var(--cpd-space-4x);
   border: 1px solid var(--cpd-color-gray-400);
   padding: var(--cpd-space-3x);
   font: var(--cpd-font-body-md-semibold);

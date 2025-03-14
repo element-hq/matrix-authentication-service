@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use mas_data_model::BrowserSession;
-use mas_storage::{RepositoryAccess, user::BrowserSessionRepository};
+use mas_storage::RepositoryAccess;
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
@@ -33,13 +33,12 @@ impl SessionInfo {
         self
     }
 
-    /// Load the [`BrowserSession`] from database
+    /// Load the active [`BrowserSession`] from database
     ///
     /// # Errors
     ///
-    /// Returns an error if the session is not found or if the session is not
-    /// active anymore
-    pub async fn load_session<E>(
+    /// Returns an error if the underlying repository fails to load the session.
+    pub async fn load_active_session<E>(
         &self,
         repo: &mut impl RepositoryAccess<Error = E>,
     ) -> Result<Option<BrowserSession>, E> {
@@ -55,6 +54,12 @@ impl SessionInfo {
             .filter(BrowserSession::active);
 
         Ok(maybe_session)
+    }
+
+    /// Get the current session ID, if any
+    #[must_use]
+    pub fn current_session_id(&self) -> Option<Ulid> {
+        self.current
     }
 }
 

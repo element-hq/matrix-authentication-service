@@ -125,10 +125,15 @@ impl Filter for OAuth2SessionFilter<'_> {
                 }
             }))
             .add_option(self.device().map(|device| {
-                Expr::val(device.to_scope_token().to_string()).eq(PgFunc::any(Expr::col((
-                    OAuth2Sessions::Table,
-                    OAuth2Sessions::ScopeList,
-                ))))
+                if let Ok(scope_token) = device.to_scope_token() {
+                    Expr::val(scope_token.to_string()).eq(PgFunc::any(Expr::col((
+                        OAuth2Sessions::Table,
+                        OAuth2Sessions::ScopeList,
+                    ))))
+                } else {
+                    // If the device ID can't be encoded as a scope token, match no rows
+                    Expr::val(false).into()
+                }
             }))
             .add_option(self.browser_session().map(|browser_session| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserSessionId))

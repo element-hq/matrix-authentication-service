@@ -29,20 +29,26 @@ pub(crate) async fn post(
 ) -> Result<impl IntoResponse, FancyError> {
     let form = cookie_jar.verify_form(&clock, form)?;
 
-    let (session_info, mut cookie_jar) = cookie_jar.session_info();
+    let (session_info, cookie_jar) = cookie_jar.session_info();
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    if let Some(session_id) = session_info.current_session_id() {
+        let maybe_session = repo.browser_session().lookup(session_id).await?;
+        if let Some(session) = maybe_session {
+            if session.finished_at.is_none() {
+                activity_tracker
+                    .record_browser_session(&clock, &session)
+                    .await;
 
-    if let Some(session) = maybe_session {
-        activity_tracker
-            .record_browser_session(&clock, &session)
-            .await;
-
-        repo.browser_session().finish(&clock, session).await?;
-        cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended());
+                repo.browser_session().finish(&clock, session).await?;
+            }
+        }
     }
 
     repo.save().await?;
+
+    // We always want to clear out the session cookie, even if the session was
+    // invalid
+    let cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended());
 
     let destination = if let Some(action) = form {
         action.go_next(&url_builder)

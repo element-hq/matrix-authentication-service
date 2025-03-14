@@ -117,7 +117,7 @@ jobs:
             ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.8
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2

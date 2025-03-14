@@ -172,14 +172,15 @@ const MAX_CONCURRENT_JOBS: usize = 10;
 const MAX_JOBS_TO_FETCH: usize = 5;
 
 // How many attempts a job should be retried
-const MAX_ATTEMPTS: usize = 5;
+const MAX_ATTEMPTS: usize = 10;
 
 /// Returns the delay to wait before retrying a job
 ///
-/// Uses an exponential backoff: 1s, 2s, 4s, 8s, 16s
+/// Uses an exponential backoff: 5s, 10s, 20s, 40s, 1m20s, 2m40s, 5m20s, 10m50s,
+/// 21m40s, 43m20s
 fn retry_delay(attempt: usize) -> Duration {
     let attempt = u32::try_from(attempt).unwrap_or(u32::MAX);
-    Duration::milliseconds(2_i64.saturating_pow(attempt) * 1000)
+    Duration::milliseconds(2_i64.saturating_pow(attempt) * 5_000)
 }
 
 type JobResult = Result<(), JobError>;

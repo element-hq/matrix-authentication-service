@@ -1,0 +1,25 @@
+{#
+Copyright 2025 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="flex flex-col gap-6">
+    <header class="page-heading">
+      <div class="icon invalid">
+        {{ icon.leave() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">{{ _("mas.account.logged_out.heading") }}</h1>
+        <p class="text">{{ _("mas.account.logged_out.description") }}</p>
+      </div>
+
+      {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token) }}
+    </header>
+  </main>
+{% endblock %}

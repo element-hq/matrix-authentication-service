@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createLazyFileRoute, notFound } from "@tanstack/react-router";
-import { H3, Separator } from "@vector-im/compound-web";
+import { H3 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
 import { ButtonLink } from "../components/ButtonLink";
@@ -17,6 +17,7 @@ import BrowserSessionsOverview from "../components/UserSessionsOverview/BrowserS
 import { usePages } from "../pagination";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
+import Separator from "../components/Separator";
 import { listQuery, query } from "./_account.sessions.index";
 
 const PAGE_SIZE = 6;
@@ -55,7 +56,7 @@ function Sessions(): React.ReactElement {
     <div className="flex flex-col gap-6">
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
       <BrowserSessionsOverview user={viewer} />
-      <Separator />
+      <Separator kind="section" />
       <div className="flex gap-2 justify-start items-center">
         <Filter
           to="/sessions"

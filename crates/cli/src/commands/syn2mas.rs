@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::ExitCode};
+use std::{collections::HashMap, process::ExitCode, sync::atomic::Ordering, time::Duration};
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
@@ -12,10 +12,12 @@ use mas_storage::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
-use syn2mas::{LockedMasDatabase, MasWriter, SynapseReader, synapse_config};
-use tracing::{Instrument, error, info_span, warn};
+use syn2mas::{
+    LockedMasDatabase, MasWriter, Progress, ProgressStage, SynapseReader, synapse_config,
+};
+use tracing::{Instrument, error, info, info_span, warn};
 
-use crate::util::database_connection_from_config;
+use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
 
 /// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
 /// errors preventing migration.
@@ -80,6 +82,7 @@ enum Subcommand {
 const NUM_WRITER_CONNECTIONS: usize = 8;
 
 impl Options {
+    #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         warn!(
@@ -113,7 +116,13 @@ impl Options {
 
         let config = DatabaseConfig::extract_or_default(figment)?;
 
-        let mut mas_connection = database_connection_from_config(&config).await?;
+        let mut mas_connection = database_connection_from_config_with_options(
+            &config,
+            &DatabaseConnectOptions {
+                log_slow_statements: false,
+            },
+        )
+        .await?;
 
         MIGRATOR
             .run(&mut mas_connection)
@@ -173,14 +182,14 @@ impl Options {
 
         // Display errors and warnings
         if !check_errors.is_empty() {
-            eprintln!("===== Errors =====");
+            eprintln!("\n\n===== Errors =====");
             eprintln!("These issues prevent migrating from Synapse to MAS right now:\n");
             for error in &check_errors {
                 eprintln!("• {error}\n");
             }
         }
         if !check_warnings.is_empty() {
-            eprintln!("===== Warnings =====");
+            eprintln!("\n\n===== Warnings =====");
             eprintln!(
                 "These potential issues should be considered before migrating from Synapse to MAS right now:\n"
             );
@@ -220,10 +229,19 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
+                // TODO this dry-run flag should be set to false in real circumstances !!!
                 let reader = SynapseReader::new(&mut syn_conn, true).await?;
                 let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
                 for _ in 0..NUM_WRITER_CONNECTIONS {
-                    writer_mas_connections.push(database_connection_from_config(&config).await?);
+                    writer_mas_connections.push(
+                        database_connection_from_config_with_options(
+                            &config,
+                            &DatabaseConnectOptions {
+                                log_slow_statements: false,
+                            },
+                        )
+                        .await?,
+                    );
                 }
                 let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
@@ -232,8 +250,13 @@ impl Options {
                 #[allow(clippy::disallowed_methods)]
                 let mut rng = thread_rng();
 
-                // TODO progress reporting
+                let progress = Progress::default();
+
+                let occasional_progress_logger_task =
+                    tokio::spawn(occasional_progress_logger(progress.clone()));
+
                 let mas_matrix = MatrixConfig::extract(figment)?;
+                eprintln!("\n\n");
                 syn2mas::migrate(
                     reader,
                     writer,
@@ -241,10 +264,44 @@ impl Options {
                     &clock,
                     &mut rng,
                     provider_id_mappings,
+                    &progress,
                 )
                 .await?;
 
+                occasional_progress_logger_task.abort();
+
                 Ok(ExitCode::SUCCESS)
+            }
+        }
+    }
+}
+
+/// Logs progress every 30 seconds, as a lightweight alternative to a progress
+/// bar. For most deployments, the migration will not take 30 seconds so this
+/// will not be relevant. In other cases, this will give the operator an idea of
+/// what's going on.
+async fn occasional_progress_logger(progress: Progress) {
+    loop {
+        tokio::time::sleep(Duration::from_secs(30)).await;
+        match &**progress.get_current_stage() {
+            ProgressStage::SettingUp => {
+                info!(name: "progress", "still setting up");
+            }
+            ProgressStage::MigratingData {
+                entity,
+                migrated,
+                approx_count,
+            } => {
+                let migrated = migrated.load(Ordering::Relaxed);
+                #[allow(clippy::cast_precision_loss)]
+                let percent = (f64::from(migrated) / *approx_count as f64) * 100.0;
+                info!(name: "progress", "migrating {entity}: {migrated}/~{approx_count} (~{percent:.1}%)");
+            }
+            ProgressStage::RebuildIndex { index_name } => {
+                info!(name: "progress", "still waiting for rebuild of index {index_name}");
+            }
+            ProgressStage::RebuildConstraint { constraint_name } => {
+                info!(name: "progress", "still waiting for rebuild of constraint {constraint_name}");
             }
         }
     }

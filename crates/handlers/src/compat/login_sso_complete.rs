@@ -13,7 +13,7 @@ use axum::{
 };
 use chrono::Duration;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    FancyError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -28,7 +28,10 @@ use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::PreferredLanguage;
+use crate::{
+    PreferredLanguage,
+    session::{SessionOrFallback, load_session_or_fallback},
+};
 
 #[derive(Serialize)]
 struct AllParams<'s> {
@@ -61,10 +64,20 @@ pub async fn get(
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
 ) -> Result<Response, FancyError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let Some(session) = maybe_session else {
         // If there is no session, redirect to the login or register screen
@@ -126,10 +139,20 @@ pub async fn post(
     Query(params): Query<Params>,
     Form(form): Form<ProtectedForm<()>>,
 ) -> Result<Response, FancyError> {
-    let (session_info, cookie_jar) = cookie_jar.session_info();
-    cookie_jar.verify_form(&clock, form)?;
+    let (cookie_jar, maybe_session) = match load_session_or_fallback(
+        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+    )
+    .await?
+    {
+        SessionOrFallback::MaybeSession {
+            cookie_jar,
+            maybe_session,
+            ..
+        } => (cookie_jar, maybe_session),
+        SessionOrFallback::Fallback { response } => return Ok(response),
+    };
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    cookie_jar.verify_form(&clock, form)?;
 
     let Some(session) = maybe_session else {
         // If there is no session, redirect to the login or register screen

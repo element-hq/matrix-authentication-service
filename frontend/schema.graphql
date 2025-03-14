@@ -602,6 +602,52 @@ The input/output is a string in RFC3339 format.
 scalar DateTime
 
 """
+The input for the `deactivateUser` mutation.
+"""
+input DeactivateUserInput {
+  """
+  Whether to ask the homeserver to GDPR-erase the user
+
+  This is equivalent to the `erase` parameter on the
+  `/_matrix/client/v3/account/deactivate` C-S API, which is
+  implementation-specific.
+
+  What Synapse does is documented here:
+  <https://element-hq.github.io/synapse/latest/admin_api/user_admin_api.html#deactivate-account>
+  """
+  hsErase: Boolean!
+  """
+  The password of the user to deactivate.
+  """
+  password: String
+}
+
+"""
+The payload for the `deactivateUser` mutation.
+"""
+type DeactivateUserPayload {
+  """
+  Status of the operation
+  """
+  status: DeactivateUserStatus!
+  user: User
+}
+
+"""
+The status of the `deactivateUser` mutation.
+"""
+enum DeactivateUserStatus {
+  """
+  The user was deactivated.
+  """
+  DEACTIVATED
+  """
+  The password was wrong.
+  """
+  INCORRECT_PASSWORD
+}
+
+"""
 The type of a user agent
 """
 enum DeviceType {
@@ -875,6 +921,13 @@ type Mutation {
   resendRecoveryEmail(
     input: ResendRecoveryEmailInput!
   ): ResendRecoveryEmailPayload!
+  """
+  Deactivate the current user account
+
+  If the user has a password, it *must* be supplied in the `password`
+  field.
+  """
+  deactivateUser(input: DeactivateUserInput!): DeactivateUserPayload!
   """
   Create a new arbitrary OAuth 2.0 Session.
 
@@ -1203,6 +1256,11 @@ input RemoveEmailInput {
   The ID of the email address to remove
   """
   userEmailId: ID!
+  """
+  The user's current password. This is required if the user is not an
+  admin and it has a password on its account.
+  """
+  password: String
 }
 
 """
@@ -1235,6 +1293,10 @@ enum RemoveEmailStatus {
   The email address was not found
   """
   NOT_FOUND
+  """
+  The password provided is incorrect
+  """
+  INCORRECT_PASSWORD
 }
 
 """
@@ -1590,6 +1652,10 @@ type SiteConfig implements Node {
   """
   passwordRegistrationEnabled: Boolean!
   """
+  Whether users can delete their own account.
+  """
+  accountDeactivationAllowed: Boolean!
+  """
   Minimum password complexity, from 0 to 4, in terms of a zxcvbn score.
   The exact scorer (including dictionaries and other data tables)
   in use is <https://crates.io/crates/zxcvbn>.
@@ -1609,6 +1675,11 @@ input StartEmailAuthenticationInput {
   The email address to add to the account
   """
   email: String!
+  """
+  The user's current password. This is required if the user has a password
+  on its account.
+  """
+  password: String
   """
   The language to use for the email
   """
@@ -1657,6 +1728,10 @@ enum StartEmailAuthenticationStatus {
   The email address is already in use on this account
   """
   IN_USE
+  """
+  The password provided is incorrect
+  """
+  INCORRECT_PASSWORD
 }
 
 """

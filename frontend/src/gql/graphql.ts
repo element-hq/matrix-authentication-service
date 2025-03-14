@@ -389,6 +389,38 @@ export type DateFilter = {
   before?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+/** The input for the `deactivateUser` mutation. */
+export type DeactivateUserInput = {
+  /**
+   * Whether to ask the homeserver to GDPR-erase the user
+   *
+   * This is equivalent to the `erase` parameter on the
+   * `/_matrix/client/v3/account/deactivate` C-S API, which is
+   * implementation-specific.
+   *
+   * What Synapse does is documented here:
+   * <https://element-hq.github.io/synapse/latest/admin_api/user_admin_api.html#deactivate-account>
+   */
+  hsErase: Scalars['Boolean']['input'];
+  /** The password of the user to deactivate. */
+  password?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The payload for the `deactivateUser` mutation. */
+export type DeactivateUserPayload = {
+  __typename?: 'DeactivateUserPayload';
+  /** Status of the operation */
+  status: DeactivateUserStatus;
+  user?: Maybe<User>;
+};
+
+/** The status of the `deactivateUser` mutation. */
+export type DeactivateUserStatus =
+  /** The user was deactivated. */
+  | 'DEACTIVATED'
+  /** The password was wrong. */
+  | 'INCORRECT_PASSWORD';
+
 /** The type of a user agent */
 export type DeviceType =
   /** A mobile phone. Can also sometimes be a tablet. */
@@ -519,6 +551,13 @@ export type Mutation = {
    * Only available for administrators.
    */
   createOauth2Session: CreateOAuth2SessionPayload;
+  /**
+   * Deactivate the current user account
+   *
+   * If the user has a password, it *must* be supplied in the `password`
+   * field.
+   */
+  deactivateUser: DeactivateUserPayload;
   endBrowserSession: EndBrowserSessionPayload;
   endCompatSession: EndCompatSessionPayload;
   endOauth2Session: EndOAuth2SessionPayload;
@@ -593,6 +632,12 @@ export type MutationCompleteEmailAuthenticationArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationCreateOauth2SessionArgs = {
   input: CreateOAuth2SessionInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationDeactivateUserArgs = {
+  input: DeactivateUserInput;
 };
 
 
@@ -935,6 +980,11 @@ export type QueryUsersArgs = {
 
 /** The input for the `removeEmail` mutation */
 export type RemoveEmailInput = {
+  /**
+   * The user's current password. This is required if the user is not an
+   * admin and it has a password on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the email address to remove */
   userEmailId: Scalars['ID']['input'];
 };
@@ -952,6 +1002,8 @@ export type RemoveEmailPayload = {
 
 /** The status of the `removeEmail` mutation */
 export type RemoveEmailStatus =
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address was not found */
   | 'NOT_FOUND'
   /** The email address was removed */
@@ -1154,6 +1206,8 @@ export type SetPrimaryEmailStatus =
 
 export type SiteConfig = Node & {
   __typename?: 'SiteConfig';
+  /** Whether users can delete their own account. */
+  accountDeactivationAllowed: Scalars['Boolean']['output'];
   /** The configuration of CAPTCHA provider. */
   captchaConfig?: Maybe<CaptchaConfig>;
   /** Whether users can change their display name. */
@@ -1190,6 +1244,11 @@ export type StartEmailAuthenticationInput = {
   email: Scalars['String']['input'];
   /** The language to use for the email */
   language?: Scalars['String']['input'];
+  /**
+   * The user's current password. This is required if the user has a password
+   * on its account.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The payload of the `startEmailAuthentication` mutation */
@@ -1207,6 +1266,8 @@ export type StartEmailAuthenticationPayload = {
 export type StartEmailAuthenticationStatus =
   /** The email address isn't allowed by the policy */
   | 'DENIED'
+  /** The password provided is incorrect */
+  | 'INCORRECT_PASSWORD'
   /** The email address is invalid */
   | 'INVALID_EMAIL_ADDRESS'
   /** The email address is already in use on this account */
@@ -1565,6 +1626,18 @@ export type Viewer = Anonymous | User;
 /** Represents the current viewer's session */
 export type ViewerSession = Anonymous | BrowserSession | Oauth2Session;
 
+export type AccountDeleteButton_UserFragment = { __typename?: 'User', username: string, hasPassword: boolean, matrix: { __typename?: 'MatrixUser', mxid: string, displayName?: string | null } } & { ' $fragmentName'?: 'AccountDeleteButton_UserFragment' };
+
+export type AccountDeleteButton_SiteConfigFragment = { __typename?: 'SiteConfig', passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AccountDeleteButton_SiteConfigFragment' };
+
+export type DeactivateUserMutationVariables = Exact<{
+  hsErase: Scalars['Boolean']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type DeactivateUserMutation = { __typename?: 'Mutation', deactivateUser: { __typename?: 'DeactivateUserPayload', status: DeactivateUserStatus } };
+
 export type PasswordChange_SiteConfigFragment = { __typename?: 'SiteConfig', passwordChangeAllowed: boolean } & { ' $fragmentName'?: 'PasswordChange_SiteConfigFragment' };
 
 export type BrowserSession_SessionFragment = (
@@ -1640,10 +1713,9 @@ export type OAuth2Session_DetailFragment = (
 
 export type UserEmail_EmailFragment = { __typename?: 'UserEmail', id: string, email: string } & { ' $fragmentName'?: 'UserEmail_EmailFragment' };
 
-export type UserEmail_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmail_SiteConfigFragment' };
-
 export type RemoveEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1661,8 +1733,13 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
+export type AddEmailForm_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'AddEmailForm_UserFragment' };
+
+export type AddEmailForm_SiteConfigFragment = { __typename?: 'SiteConfig', passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AddEmailForm_SiteConfigFragment' };
+
 export type AddEmailMutationVariables = Exact<{
   email: Scalars['String']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
   language: Scalars['String']['input'];
 }>;
 
@@ -1682,16 +1759,21 @@ export type UserEmailListQuery = { __typename?: 'Query', viewer: { __typename: '
           & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
         ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } };
 
-export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
+export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'UserEmailList_UserFragment' };
+
+export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } } } | { __typename: 'Oauth2Session' }, siteConfig: (
-    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean }
-    & { ' $fragmentRefs'?: { 'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'UserEmail_SiteConfigFragment': UserEmail_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment } }
+export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
+      { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
+      & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
+    ) } | { __typename: 'Oauth2Session' }, siteConfig: (
+    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, accountDeactivationAllowed: boolean }
+    & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
 export type BrowserSessionListQueryVariables = Exact<{
@@ -1870,15 +1952,34 @@ export class TypedDocumentString<TResult, TVariables>
   implements DocumentTypeDecoration<TResult, TVariables>
 {
   __apiType?: DocumentTypeDecoration<TResult, TVariables>['__apiType'];
+  private value: string;
+  public __meta__?: Record<string, any> | undefined;
 
-  constructor(private value: string, public __meta__?: Record<string, any> | undefined) {
+  constructor(value: string, __meta__?: Record<string, any> | undefined) {
     super(value);
+    this.value = value;
+    this.__meta__ = __meta__;
   }
 
   toString(): string & DocumentTypeDecoration<TResult, TVariables> {
     return this.value;
   }
 }
+export const AccountDeleteButton_UserFragmentDoc = new TypedDocumentString(`
+    fragment AccountDeleteButton_user on User {
+  username
+  hasPassword
+  matrix {
+    mxid
+    displayName
+  }
+}
+    `, {"fragmentName":"AccountDeleteButton_user"}) as unknown as TypedDocumentString<AccountDeleteButton_UserFragment, unknown>;
+export const AccountDeleteButton_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment AccountDeleteButton_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+    `, {"fragmentName":"AccountDeleteButton_siteConfig"}) as unknown as TypedDocumentString<AccountDeleteButton_SiteConfigFragment, unknown>;
 export const PasswordChange_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
@@ -2147,11 +2248,6 @@ export const UserEmail_EmailFragmentDoc = new TypedDocumentString(`
   email
 }
     `, {"fragmentName":"UserEmail_email"}) as unknown as TypedDocumentString<UserEmail_EmailFragment, unknown>;
-export const UserEmail_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment UserEmail_siteConfig on SiteConfig {
-  emailChangeAllowed
-}
-    `, {"fragmentName":"UserEmail_siteConfig"}) as unknown as TypedDocumentString<UserEmail_SiteConfigFragment, unknown>;
 export const UserGreeting_UserFragmentDoc = new TypedDocumentString(`
     fragment UserGreeting_user on User {
   id
@@ -2166,9 +2262,25 @@ export const UserGreeting_SiteConfigFragmentDoc = new TypedDocumentString(`
   displayNameChangeAllowed
 }
     `, {"fragmentName":"UserGreeting_siteConfig"}) as unknown as TypedDocumentString<UserGreeting_SiteConfigFragment, unknown>;
+export const AddEmailForm_UserFragmentDoc = new TypedDocumentString(`
+    fragment AddEmailForm_user on User {
+  hasPassword
+}
+    `, {"fragmentName":"AddEmailForm_user"}) as unknown as TypedDocumentString<AddEmailForm_UserFragment, unknown>;
+export const AddEmailForm_SiteConfigFragmentDoc = new TypedDocumentString(`
+    fragment AddEmailForm_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+    `, {"fragmentName":"AddEmailForm_siteConfig"}) as unknown as TypedDocumentString<AddEmailForm_SiteConfigFragment, unknown>;
+export const UserEmailList_UserFragmentDoc = new TypedDocumentString(`
+    fragment UserEmailList_user on User {
+  hasPassword
+}
+    `, {"fragmentName":"UserEmailList_user"}) as unknown as TypedDocumentString<UserEmailList_UserFragment, unknown>;
 export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
+  passwordLoginEnabled
 }
     `, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
@@ -2199,6 +2311,13 @@ export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
   id
   minimumPasswordComplexity
 }`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
+export const DeactivateUserDocument = new TypedDocumentString(`
+    mutation DeactivateUser($hsErase: Boolean!, $password: String) {
+  deactivateUser(input: {hsErase: $hsErase, password: $password}) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<DeactivateUserMutation, DeactivateUserMutationVariables>;
 export const FooterDocument = new TypedDocumentString(`
     query Footer {
   siteConfig {
@@ -2243,8 +2362,8 @@ export const EndOAuth2SessionDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>;
 export const RemoveEmailDocument = new TypedDocumentString(`
-    mutation RemoveEmail($id: ID!) {
-  removeEmail(input: {userEmailId: $id}) {
+    mutation RemoveEmail($id: ID!, $password: String) {
+  removeEmail(input: {userEmailId: $id, password: $password}) {
     status
     user {
       id
@@ -2260,8 +2379,10 @@ export const SetDisplayNameDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
 export const AddEmailDocument = new TypedDocumentString(`
-    mutation AddEmail($email: String!, $language: String!) {
-  startEmailAuthentication(input: {email: $email, language: $language}) {
+    mutation AddEmail($email: String!, $password: String, $language: String!) {
+  startEmailAuthentication(
+    input: {email: $email, password: $password, language: $language}
+  ) {
     status
     violations
     authentication {
@@ -2304,6 +2425,9 @@ export const UserProfileDocument = new TypedDocumentString(`
     ... on BrowserSession {
       id
       user {
+        ...AddEmailForm_user
+        ...UserEmailList_user
+        ...AccountDeleteButton_user
         hasPassword
         emails(first: 0) {
           totalCount
@@ -2314,19 +2438,39 @@ export const UserProfileDocument = new TypedDocumentString(`
   siteConfig {
     emailChangeAllowed
     passwordLoginEnabled
+    accountDeactivationAllowed
+    ...AddEmailForm_siteConfig
     ...UserEmailList_siteConfig
-    ...UserEmail_siteConfig
     ...PasswordChange_siteConfig
+    ...AccountDeleteButton_siteConfig
   }
 }
-    fragment PasswordChange_siteConfig on SiteConfig {
+    fragment AccountDeleteButton_user on User {
+  username
+  hasPassword
+  matrix {
+    mxid
+    displayName
+  }
+}
+fragment AccountDeleteButton_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment PasswordChange_siteConfig on SiteConfig {
   passwordChangeAllowed
 }
-fragment UserEmail_siteConfig on SiteConfig {
-  emailChangeAllowed
+fragment AddEmailForm_user on User {
+  hasPassword
+}
+fragment AddEmailForm_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment UserEmailList_user on User {
+  hasPassword
 }
 fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
+  passwordLoginEnabled
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
 export const BrowserSessionListDocument = new TypedDocumentString(`
     query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
@@ -2772,6 +2916,28 @@ fragment OAuth2Session_detail on Oauth2Session {
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockDeactivateUserMutation(
+ *   ({ query, variables }) => {
+ *     const { hsErase, password } = variables;
+ *     return HttpResponse.json({
+ *       data: { deactivateUser }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockDeactivateUserMutation = (resolver: GraphQLResponseResolver<DeactivateUserMutation, DeactivateUserMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<DeactivateUserMutation, DeactivateUserMutationVariables>(
+    'DeactivateUser',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockFooterQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
@@ -2861,7 +3027,7 @@ export const mockEndOAuth2SessionMutation = (resolver: GraphQLResponseResolver<E
  * @example
  * mockRemoveEmailMutation(
  *   ({ query, variables }) => {
- *     const { id } = variables;
+ *     const { id, password } = variables;
  *     return HttpResponse.json({
  *       data: { removeEmail }
  *     })
@@ -2905,7 +3071,7 @@ export const mockSetDisplayNameMutation = (resolver: GraphQLResponseResolver<Set
  * @example
  * mockAddEmailMutation(
  *   ({ query, variables }) => {
- *     const { email, language } = variables;
+ *     const { email, password, language } = variables;
  *     return HttpResponse.json({
  *       data: { startEmailAuthentication }
  *     })

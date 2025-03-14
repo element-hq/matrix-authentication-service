@@ -15,6 +15,9 @@ import * as types from './graphql';
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  fragment AccountDeleteButton_user on User {\n    username\n    hasPassword\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": typeof types.AccountDeleteButton_UserFragmentDoc,
+    "\n  fragment AccountDeleteButton_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": typeof types.AccountDeleteButton_SiteConfigFragmentDoc,
+    "\n  mutation DeactivateUser($hsErase: Boolean!, $password: String) {\n    deactivateUser(input: { hsErase: $hsErase, password: $password }) {\n      status\n    }\n  }\n": typeof types.DeactivateUserDocument,
     "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    passwordChangeAllowed\n  }\n": typeof types.PasswordChange_SiteConfigFragmentDoc,
     "\n  fragment BrowserSession_session on BrowserSession {\n    id\n    createdAt\n    finishedAt\n    ...EndBrowserSessionButton_session\n    userAgent {\n      deviceType\n      name\n      os\n      model\n    }\n    lastActiveAt\n  }\n": typeof types.BrowserSession_SessionFragmentDoc,
     "\n  fragment OAuth2Client_detail on Oauth2Client {\n    id\n    clientId\n    clientName\n    clientUri\n    logoUri\n    tosUri\n    policyUri\n    redirectUris\n  }\n": typeof types.OAuth2Client_DetailFragmentDoc,
@@ -33,16 +36,18 @@ type Documents = {
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n\n    ...EndCompatSessionButton_session\n\n    userAgent {\n      name\n      os\n      model\n    }\n\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": typeof types.CompatSession_DetailFragmentDoc,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": typeof types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n  }\n": typeof types.UserEmail_EmailFragmentDoc,
-    "\n  fragment UserEmail_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n": typeof types.UserEmail_SiteConfigFragmentDoc,
-    "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": typeof types.RemoveEmailDocument,
+    "\n  mutation RemoveEmail($id: ID!, $password: String) {\n    removeEmail(input: { userEmailId: $id, password: $password }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": typeof types.RemoveEmailDocument,
     "\n  fragment UserGreeting_user on User {\n    id\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": typeof types.UserGreeting_UserFragmentDoc,
     "\n  fragment UserGreeting_siteConfig on SiteConfig {\n    displayNameChangeAllowed\n  }\n": typeof types.UserGreeting_SiteConfigFragmentDoc,
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": typeof types.SetDisplayNameDocument,
-    "\n  mutation AddEmail($email: String!, $language: String!) {\n    startEmailAuthentication(input: { email: $email, language: $language }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": typeof types.AddEmailDocument,
+    "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": typeof types.AddEmailForm_UserFragmentDoc,
+    "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": typeof types.AddEmailForm_SiteConfigFragmentDoc,
+    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": typeof types.AddEmailDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": typeof types.UserEmailListDocument,
-    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n": typeof types.UserEmailList_SiteConfigFragmentDoc,
+    "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": typeof types.UserEmailList_UserFragmentDoc,
+    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": typeof types.UserEmailList_SiteConfigFragmentDoc,
     "\n  fragment BrowserSessionsOverview_user on User {\n    id\n\n    browserSessions(first: 0, state: ACTIVE) {\n      totalCount\n    }\n  }\n": typeof types.BrowserSessionsOverview_UserFragmentDoc,
-    "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      ...UserEmailList_siteConfig\n      ...UserEmail_siteConfig\n      ...PasswordChange_siteConfig\n    }\n  }\n": typeof types.UserProfileDocument,
+    "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n": typeof types.UserProfileDocument,
     "\n  query BrowserSessionList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n    $lastActive: DateFilter\n  ) {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n\n        user {\n          id\n\n          browserSessions(\n            first: $first\n            after: $after\n            last: $last\n            before: $before\n            lastActive: $lastActive\n            state: ACTIVE\n          ) {\n            totalCount\n\n            edges {\n              cursor\n              node {\n                id\n                ...BrowserSession_session\n              }\n            }\n\n            pageInfo {\n              hasNextPage\n              hasPreviousPage\n              startCursor\n              endCursor\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.BrowserSessionListDocument,
     "\n  query SessionsOverview {\n    viewer {\n      __typename\n\n      ... on User {\n        id\n        ...BrowserSessionsOverview_user\n      }\n    }\n  }\n": typeof types.SessionsOverviewDocument,
     "\n  query AppSessionsList(\n    $before: String\n    $after: String\n    $first: Int\n    $last: Int\n    $lastActive: DateFilter\n  ) {\n    viewer {\n      __typename\n\n      ... on User {\n        id\n        appSessions(\n          before: $before\n          after: $after\n          first: $first\n          last: $last\n          lastActive: $lastActive\n          state: ACTIVE\n        ) {\n          edges {\n            cursor\n            node {\n              __typename\n              ...CompatSession_session\n              ...OAuth2Session_session\n            }\n          }\n\n          totalCount\n          pageInfo {\n            startCursor\n            endCursor\n            hasNextPage\n            hasPreviousPage\n          }\n        }\n      }\n    }\n  }\n": typeof types.AppSessionsListDocument,
@@ -64,6 +69,9 @@ type Documents = {
     "\n  query SessionDetail($id: ID!) {\n    viewerSession {\n      ... on Node {\n        id\n      }\n    }\n\n    node(id: $id) {\n      __typename\n      id\n      ...CompatSession_detail\n      ...OAuth2Session_detail\n      ...BrowserSession_detail\n    }\n  }\n": typeof types.SessionDetailDocument,
 };
 const documents: Documents = {
+    "\n  fragment AccountDeleteButton_user on User {\n    username\n    hasPassword\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": types.AccountDeleteButton_UserFragmentDoc,
+    "\n  fragment AccountDeleteButton_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": types.AccountDeleteButton_SiteConfigFragmentDoc,
+    "\n  mutation DeactivateUser($hsErase: Boolean!, $password: String) {\n    deactivateUser(input: { hsErase: $hsErase, password: $password }) {\n      status\n    }\n  }\n": types.DeactivateUserDocument,
     "\n  fragment PasswordChange_siteConfig on SiteConfig {\n    passwordChangeAllowed\n  }\n": types.PasswordChange_SiteConfigFragmentDoc,
     "\n  fragment BrowserSession_session on BrowserSession {\n    id\n    createdAt\n    finishedAt\n    ...EndBrowserSessionButton_session\n    userAgent {\n      deviceType\n      name\n      os\n      model\n    }\n    lastActiveAt\n  }\n": types.BrowserSession_SessionFragmentDoc,
     "\n  fragment OAuth2Client_detail on Oauth2Client {\n    id\n    clientId\n    clientName\n    clientUri\n    logoUri\n    tosUri\n    policyUri\n    redirectUris\n  }\n": types.OAuth2Client_DetailFragmentDoc,
@@ -82,16 +90,18 @@ const documents: Documents = {
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n\n    ...EndCompatSessionButton_session\n\n    userAgent {\n      name\n      os\n      model\n    }\n\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.CompatSession_DetailFragmentDoc,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n  }\n": types.UserEmail_EmailFragmentDoc,
-    "\n  fragment UserEmail_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n": types.UserEmail_SiteConfigFragmentDoc,
-    "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
+    "\n  mutation RemoveEmail($id: ID!, $password: String) {\n    removeEmail(input: { userEmailId: $id, password: $password }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
     "\n  fragment UserGreeting_user on User {\n    id\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": types.UserGreeting_UserFragmentDoc,
     "\n  fragment UserGreeting_siteConfig on SiteConfig {\n    displayNameChangeAllowed\n  }\n": types.UserGreeting_SiteConfigFragmentDoc,
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": types.SetDisplayNameDocument,
-    "\n  mutation AddEmail($email: String!, $language: String!) {\n    startEmailAuthentication(input: { email: $email, language: $language }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": types.AddEmailDocument,
+    "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": types.AddEmailForm_UserFragmentDoc,
+    "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": types.AddEmailForm_SiteConfigFragmentDoc,
+    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": types.AddEmailDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": types.UserEmailListDocument,
-    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
+    "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": types.UserEmailList_UserFragmentDoc,
+    "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
     "\n  fragment BrowserSessionsOverview_user on User {\n    id\n\n    browserSessions(first: 0, state: ACTIVE) {\n      totalCount\n    }\n  }\n": types.BrowserSessionsOverview_UserFragmentDoc,
-    "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      ...UserEmailList_siteConfig\n      ...UserEmail_siteConfig\n      ...PasswordChange_siteConfig\n    }\n  }\n": types.UserProfileDocument,
+    "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n": types.UserProfileDocument,
     "\n  query BrowserSessionList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n    $lastActive: DateFilter\n  ) {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n\n        user {\n          id\n\n          browserSessions(\n            first: $first\n            after: $after\n            last: $last\n            before: $before\n            lastActive: $lastActive\n            state: ACTIVE\n          ) {\n            totalCount\n\n            edges {\n              cursor\n              node {\n                id\n                ...BrowserSession_session\n              }\n            }\n\n            pageInfo {\n              hasNextPage\n              hasPreviousPage\n              startCursor\n              endCursor\n            }\n          }\n        }\n      }\n    }\n  }\n": types.BrowserSessionListDocument,
     "\n  query SessionsOverview {\n    viewer {\n      __typename\n\n      ... on User {\n        id\n        ...BrowserSessionsOverview_user\n      }\n    }\n  }\n": types.SessionsOverviewDocument,
     "\n  query AppSessionsList(\n    $before: String\n    $after: String\n    $first: Int\n    $last: Int\n    $lastActive: DateFilter\n  ) {\n    viewer {\n      __typename\n\n      ... on User {\n        id\n        appSessions(\n          before: $before\n          after: $after\n          first: $first\n          last: $last\n          lastActive: $lastActive\n          state: ACTIVE\n        ) {\n          edges {\n            cursor\n            node {\n              __typename\n              ...CompatSession_session\n              ...OAuth2Session_session\n            }\n          }\n\n          totalCount\n          pageInfo {\n            startCursor\n            endCursor\n            hasNextPage\n            hasPreviousPage\n          }\n        }\n      }\n    }\n  }\n": types.AppSessionsListDocument,
@@ -113,6 +123,18 @@ const documents: Documents = {
     "\n  query SessionDetail($id: ID!) {\n    viewerSession {\n      ... on Node {\n        id\n      }\n    }\n\n    node(id: $id) {\n      __typename\n      id\n      ...CompatSession_detail\n      ...OAuth2Session_detail\n      ...BrowserSession_detail\n    }\n  }\n": types.SessionDetailDocument,
 };
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment AccountDeleteButton_user on User {\n    username\n    hasPassword\n    matrix {\n      mxid\n      displayName\n    }\n  }\n"): typeof import('./graphql').AccountDeleteButton_UserFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment AccountDeleteButton_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n"): typeof import('./graphql').AccountDeleteButton_SiteConfigFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeactivateUser($hsErase: Boolean!, $password: String) {\n    deactivateUser(input: { hsErase: $hsErase, password: $password }) {\n      status\n    }\n  }\n"): typeof import('./graphql').DeactivateUserDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -188,11 +210,7 @@ export function graphql(source: "\n  fragment UserEmail_email on UserEmail {\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment UserEmail_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n"): typeof import('./graphql').UserEmail_SiteConfigFragmentDoc;
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation RemoveEmail($id: ID!) {\n    removeEmail(input: { userEmailId: $id }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').RemoveEmailDocument;
+export function graphql(source: "\n  mutation RemoveEmail($id: ID!, $password: String) {\n    removeEmail(input: { userEmailId: $id, password: $password }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').RemoveEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -208,7 +226,15 @@ export function graphql(source: "\n  mutation SetDisplayName($userId: ID!, $disp
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation AddEmail($email: String!, $language: String!) {\n    startEmailAuthentication(input: { email: $email, language: $language }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').AddEmailDocument;
+export function graphql(source: "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n"): typeof import('./graphql').AddEmailForm_UserFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n"): typeof import('./graphql').AddEmailForm_SiteConfigFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').AddEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -216,7 +242,11 @@ export function graphql(source: "\n  query UserEmailList(\n    $first: Int\n    
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n  }\n"): typeof import('./graphql').UserEmailList_SiteConfigFragmentDoc;
+export function graphql(source: "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n"): typeof import('./graphql').UserEmailList_UserFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n"): typeof import('./graphql').UserEmailList_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -224,7 +254,7 @@ export function graphql(source: "\n  fragment BrowserSessionsOverview_user on Us
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      ...UserEmailList_siteConfig\n      ...UserEmail_siteConfig\n      ...PasswordChange_siteConfig\n    }\n  }\n"): typeof import('./graphql').UserProfileDocument;
+export function graphql(source: "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n"): typeof import('./graphql').UserProfileDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

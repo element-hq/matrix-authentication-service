@@ -64,6 +64,7 @@ export const Dialog: React.FC<Props> = ({
         <Portal>
           <Drawer.Overlay className={styles.overlay} />
           <Drawer.Content className={styles.drawer} data-platform={platform}>
+            <Drawer.Handle className={styles.handle} />
             <div className={styles.body}>{children}</div>
           </Drawer.Content>
         </Portal>

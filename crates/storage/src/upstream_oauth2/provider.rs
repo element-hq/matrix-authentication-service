@@ -95,6 +95,9 @@ pub struct UpstreamOAuthProviderParams {
 
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,
+
+    /// The position of the provider in the UI
+    pub ui_order: i32,
 }
 
 /// Filter parameters for listing upstream OAuth 2.0 providers

@@ -36,7 +36,7 @@ pub(crate) async fn get(
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
-    let maybe_session = session_info.load_session(&mut repo).await?;
+    let maybe_session = session_info.load_active_session(&mut repo).await?;
 
     if let Some(session) = maybe_session {
         activity_tracker

@@ -64,6 +64,7 @@ mod activity_tracker;
 mod captcha;
 mod preferred_language;
 mod rate_limit;
+mod session;
 #[cfg(test)]
 mod test_utils;
 

@@ -16,6 +16,7 @@ expression: users
         deactivated: SynapseBool(
             false,
         ),
+        locked: false,
         creation_ts: SecondsTimestamp(
             2018-06-30T21:26:02Z,
         ),

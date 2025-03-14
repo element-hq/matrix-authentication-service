@@ -2463,6 +2463,10 @@
         "password_recovery_enabled": {
           "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
+        },
+        "account_deactivation_allowed": {
+          "description": "Whether users are allowed to delete their own account. Defaults to `true`.",
+          "type": "boolean"
         }
       }
     },

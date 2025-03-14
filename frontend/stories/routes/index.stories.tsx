@@ -7,12 +7,20 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, waitFor, within } from "@storybook/test";
 import i18n from "i18next";
 import { type GraphQLHandler, HttpResponse } from "msw";
-import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
 import {
-  CONFIG_FRAGMENT as USER_EMAIL_CONFIG_FRAGMENT,
-  FRAGMENT as USER_EMAIL_FRAGMENT,
-} from "../../src/components/UserEmail/UserEmail";
-import { CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT } from "../../src/components/UserProfile/UserEmailList";
+  CONFIG_FRAGMENT as ACCOUNT_DELETE_BUTTON_CONFIG_FRAGMENT,
+  USER_FRAGMENT as ACCOUNT_DELETE_BUTTON_USER_FRAGMENT,
+} from "../../src/components/AccountDeleteButton";
+import { CONFIG_FRAGMENT as PASSWORD_CHANGE_CONFIG_FRAGMENT } from "../../src/components/AccountManagementPasswordPreview/AccountManagementPasswordPreview";
+import { FRAGMENT as USER_EMAIL_FRAGMENT } from "../../src/components/UserEmail/UserEmail";
+import {
+  CONFIG_FRAGMENT as ADD_USER_EMAIL_CONFIG_FRAGMENT,
+  USER_FRAGMENT as ADD_USER_EMAIL_USER_FRAGMENT,
+} from "../../src/components/UserProfile/AddEmailForm";
+import {
+  CONFIG_FRAGMENT as USER_EMAIL_LIST_CONFIG_FRAGMENT,
+  USER_FRAGMENT as USER_EMAIL_LIST_USER_FRAGMENT,
+} from "../../src/components/UserProfile/UserEmailList";
 import { makeFragmentData } from "../../src/gql";
 import {
   mockUserEmailListQuery,
@@ -34,12 +42,14 @@ const userProfileHandler = ({
   passwordLoginEnabled,
   passwordChangeAllowed,
   emailTotalCount,
+  accountDeactivationAllowed,
   hasPassword,
 }: {
   emailChangeAllowed: boolean;
   passwordLoginEnabled: boolean;
   passwordChangeAllowed: boolean;
   emailTotalCount: number;
+  accountDeactivationAllowed: boolean;
   hasPassword: boolean;
 }): GraphQLHandler =>
   mockUserProfileQuery(() =>
@@ -48,28 +58,56 @@ const userProfileHandler = ({
         viewerSession: {
           __typename: "BrowserSession",
           id: "session-id",
-          user: {
-            hasPassword,
-            emails: {
-              totalCount: emailTotalCount,
+          user: Object.assign(
+            {
+              hasPassword,
+              emails: {
+                totalCount: emailTotalCount,
+              },
             },
-          },
+            makeFragmentData(
+              {
+                hasPassword,
+              },
+              ADD_USER_EMAIL_USER_FRAGMENT,
+            ),
+            makeFragmentData(
+              {
+                hasPassword,
+              },
+              USER_EMAIL_LIST_USER_FRAGMENT,
+            ),
+            makeFragmentData(
+              {
+                hasPassword,
+                username: "alice",
+                matrix: {
+                  displayName: "Alice",
+                  mxid: "@alice:example.com",
+                },
+              },
+              ACCOUNT_DELETE_BUTTON_USER_FRAGMENT,
+            ),
+          ),
         },
 
         siteConfig: Object.assign(
           {
             emailChangeAllowed,
             passwordLoginEnabled,
+            accountDeactivationAllowed,
           },
           makeFragmentData(
             {
               emailChangeAllowed,
+              passwordLoginEnabled,
             },
-            USER_EMAIL_CONFIG_FRAGMENT,
+            ADD_USER_EMAIL_CONFIG_FRAGMENT,
           ),
           makeFragmentData(
             {
               emailChangeAllowed,
+              passwordLoginEnabled,
             },
             USER_EMAIL_LIST_CONFIG_FRAGMENT,
           ),
@@ -78,6 +116,12 @@ const userProfileHandler = ({
               passwordChangeAllowed,
             },
             PASSWORD_CHANGE_CONFIG_FRAGMENT,
+          ),
+          makeFragmentData(
+            {
+              passwordLoginEnabled,
+            },
+            ACCOUNT_DELETE_BUTTON_CONFIG_FRAGMENT,
           ),
         ),
       },
@@ -133,6 +177,7 @@ export const MultipleEmails: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: true,
           emailTotalCount: 3,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
         threeEmailsHandler,
@@ -151,6 +196,7 @@ export const NoEmails: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 0,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
       ],
@@ -168,6 +214,7 @@ export const MultipleEmailsNoChange: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 3,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
         threeEmailsHandler,
@@ -186,6 +233,7 @@ export const NoEmailChange: Story = {
           passwordChangeAllowed: true,
           emailChangeAllowed: false,
           emailTotalCount: 1,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
       ],
@@ -203,6 +251,7 @@ export const NoPasswordChange: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: true,
           emailTotalCount: 1,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
       ],
@@ -220,6 +269,7 @@ export const NoPasswordLogin: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: true,
           emailTotalCount: 1,
+          accountDeactivationAllowed: true,
           hasPassword: true,
         }),
       ],
@@ -227,8 +277,8 @@ export const NoPasswordLogin: Story = {
   },
 };
 
-export const NoPasswordNoEmailChange: Story = {
-  name: "No password, no email change",
+export const NoPasswordNoEmailChangeNoAccountDeactivation: Story = {
+  name: "No password, no email change, no account deactivation",
   parameters: {
     msw: {
       handlers: [
@@ -237,7 +287,26 @@ export const NoPasswordNoEmailChange: Story = {
           passwordChangeAllowed: false,
           emailChangeAllowed: false,
           emailTotalCount: 0,
+          accountDeactivationAllowed: false,
           hasPassword: false,
+        }),
+      ],
+    },
+  },
+};
+
+export const NoAccountDeactivation: Story = {
+  name: "No account deactivation",
+  parameters: {
+    msw: {
+      handlers: [
+        userProfileHandler({
+          passwordLoginEnabled: true,
+          passwordChangeAllowed: true,
+          emailChangeAllowed: true,
+          emailTotalCount: 1,
+          accountDeactivationAllowed: false,
+          hasPassword: true,
         }),
       ],
     },

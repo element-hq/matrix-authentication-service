@@ -7,7 +7,14 @@
 //!
 //! This module is responsible for writing new records to MAS' database.
 
-use std::{fmt::Display, net::IpAddr};
+use std::{
+    fmt::Display,
+    net::IpAddr,
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
+};
 
 use chrono::{DateTime, Utc};
 use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
@@ -15,7 +22,7 @@ use sqlx::{Executor, PgConnection, query, query_as};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::{Level, error, info, warn};
+use tracing::{Instrument, Level, error, info, warn};
 use uuid::{NonNilUuid, Uuid};
 
 use self::{
@@ -43,6 +50,9 @@ pub enum Error {
 
     #[error("inconsistent database: {0}")]
     Inconsistent(String),
+
+    #[error("bug in syn2mas: write buffers not finished")]
+    WriteBuffersNotFinished,
 
     #[error("{0}")]
     Multiple(MultipleErrors),
@@ -109,18 +119,21 @@ impl WriterConnectionPool {
         match self.connection_rx.recv().await {
             Some(Ok(mut connection)) => {
                 let connection_tx = self.connection_tx.clone();
-                tokio::task::spawn(async move {
-                    let to_return = match task(&mut connection).await {
-                        Ok(()) => Ok(connection),
-                        Err(error) => {
-                            error!("error in writer: {error}");
-                            Err(error)
-                        }
-                    };
-                    // This should always succeed in sending unless we're already shutting
-                    // down for some other reason.
-                    let _: Result<_, _> = connection_tx.send(to_return).await;
-                });
+                tokio::task::spawn(
+                    async move {
+                        let to_return = match task(&mut connection).await {
+                            Ok(()) => Ok(connection),
+                            Err(error) => {
+                                error!("error in writer: {error}");
+                                Err(error)
+                            }
+                        };
+                        // This should always succeed in sending unless we're already shutting
+                        // down for some other reason.
+                        let _: Result<_, _> = connection_tx.send(to_return).await;
+                    }
+                    .instrument(tracing::debug_span!("spawn_with_connection")),
+                );
 
                 Ok(())
             }
@@ -188,12 +201,52 @@ impl WriterConnectionPool {
     }
 }
 
+/// Small utility to make sure `finish()` is called on all write buffers
+/// before committing to the database.
+#[derive(Default)]
+struct FinishChecker {
+    counter: Arc<AtomicU32>,
+}
+
+struct FinishCheckerHandle {
+    counter: Arc<AtomicU32>,
+}
+
+impl FinishChecker {
+    /// Acquire a new handle, for a task that should declare when it has
+    /// finished.
+    pub fn handle(&self) -> FinishCheckerHandle {
+        self.counter.fetch_add(1, Ordering::SeqCst);
+        FinishCheckerHandle {
+            counter: Arc::clone(&self.counter),
+        }
+    }
+
+    /// Check that all handles have been declared as finished.
+    pub fn check_all_finished(self) -> Result<(), Error> {
+        if self.counter.load(Ordering::SeqCst) == 0 {
+            Ok(())
+        } else {
+            Err(Error::WriteBuffersNotFinished)
+        }
+    }
+}
+
+impl FinishCheckerHandle {
+    /// Declare that the task this handle represents has been finished.
+    pub fn declare_finished(self) {
+        self.counter.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
 pub struct MasWriter {
     conn: LockedMasDatabase,
     writer_pool: WriterConnectionPool,
 
     indices_to_restore: Vec<IndexDescription>,
     constraints_to_restore: Vec<ConstraintDescription>,
+
+    write_buffer_finish_checker: FinishChecker,
 }
 
 pub struct MasNewUser {
@@ -201,6 +254,7 @@ pub struct MasNewUser {
     pub username: String,
     pub created_at: DateTime<Utc>,
     pub locked_at: Option<DateTime<Utc>>,
+    pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
     /// Whether the user was a Synapse guest.
     /// Although MAS doesn't support guest access, it's still useful to track
@@ -336,7 +390,7 @@ impl MasWriter {
     ///
     /// - If the database connection experiences an error.
     #[allow(clippy::missing_panics_doc)] // not real
-    #[tracing::instrument(skip_all)]
+    #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase,
         mut writer_connections: Vec<PgConnection>,
@@ -453,6 +507,7 @@ impl MasWriter {
             writer_pool: WriterConnectionPool::new(writer_connections),
             indices_to_restore,
             constraints_to_restore,
+            write_buffer_finish_checker: FinishChecker::default(),
         })
     }
 
@@ -520,6 +575,8 @@ impl MasWriter {
     /// - If the database connection experiences an error.
     #[tracing::instrument(skip_all)]
     pub async fn finish(mut self) -> Result<PgConnection, Error> {
+        self.write_buffer_finish_checker.check_all_finished()?;
+
         // Commit all writer transactions to the database.
         self.writer_pool
             .finish()
@@ -587,6 +644,8 @@ impl MasWriter {
                     let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
                     let mut locked_ats: Vec<Option<DateTime<Utc>>> =
                         Vec::with_capacity(users.len());
+                    let mut deactivated_ats: Vec<Option<DateTime<Utc>>> =
+                        Vec::with_capacity(users.len());
                     let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
                     let mut is_guests: Vec<bool> = Vec::with_capacity(users.len());
                     for MasNewUser {
@@ -594,6 +653,7 @@ impl MasWriter {
                         username,
                         created_at,
                         locked_at,
+                        deactivated_at,
                         can_request_admin,
                         is_guest,
                     } in users
@@ -602,6 +662,7 @@ impl MasWriter {
                         usernames.push(username);
                         created_ats.push(created_at);
                         locked_ats.push(locked_at);
+                        deactivated_ats.push(deactivated_at);
                         can_request_admins.push(can_request_admin);
                         is_guests.push(is_guest);
                     }
@@ -611,17 +672,20 @@ impl MasWriter {
                         INSERT INTO syn2mas__users (
                           user_id, username,
                           created_at, locked_at,
+                          deactivated_at,
                           can_request_admin, is_guest)
                         SELECT * FROM UNNEST(
                           $1::UUID[], $2::TEXT[],
                           $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
-                          $5::BOOL[], $6::BOOL[])
+                          $5::TIMESTAMP WITH TIME ZONE[],
+                          $6::BOOL[], $7::BOOL[])
                         "#,
                         &user_ids[..],
                         &usernames[..],
                         &created_ats[..],
                         // We need to override the typing for arrays of optionals (sqlx limitation)
                         &locked_ats[..] as &[Option<DateTime<Utc>>],
+                        &deactivated_ats[..] as &[Option<DateTime<Utc>>],
                         &can_request_admins[..],
                         &is_guests[..],
                     )
@@ -1033,28 +1097,24 @@ type WriteBufferFlusher<T> =
 
 /// A buffer for writing rows to the MAS database.
 /// Generic over the type of rows.
-///
-/// # Panics
-///
-/// Panics if dropped before `finish()` has been called.
 pub struct MasWriteBuffer<T> {
     rows: Vec<T>,
     flusher: WriteBufferFlusher<T>,
-    finished: bool,
+    finish_checker_handle: FinishCheckerHandle,
 }
 
 impl<T> MasWriteBuffer<T> {
-    pub fn new(flusher: WriteBufferFlusher<T>) -> Self {
+    pub fn new(writer: &MasWriter, flusher: WriteBufferFlusher<T>) -> Self {
         MasWriteBuffer {
             rows: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
             flusher,
-            finished: false,
+            finish_checker_handle: writer.write_buffer_finish_checker.handle(),
         }
     }
 
     pub async fn finish(mut self, writer: &mut MasWriter) -> Result<(), Error> {
-        self.finished = true;
         self.flush(writer).await?;
+        self.finish_checker_handle.declare_finished();
         Ok(())
     }
 
@@ -1074,12 +1134,6 @@ impl<T> MasWriteBuffer<T> {
             self.flush(writer).await?;
         }
         Ok(())
-    }
-}
-
-impl<T> Drop for MasWriteBuffer<T> {
-    fn drop(&mut self) {
-        assert!(self.finished, "MasWriteBuffer dropped but not finished!");
     }
 }
 
@@ -1217,6 +1271,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1241,6 +1296,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1272,6 +1328,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1305,6 +1362,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1339,6 +1397,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1372,6 +1431,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1409,6 +1469,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])
@@ -1458,6 +1519,7 @@ mod test {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 can_request_admin: false,
                 is_guest: false,
             }])

@@ -94,6 +94,7 @@ updates:
       tanstack-router:
         patterns:
           - "@tanstack/react-router"
+          - "@tanstack/react-router-*"
           - "@tanstack/router-*"
       tanstack-query:
         patterns:

@@ -34,14 +34,14 @@ mod macros;
 
 pub use self::{
     context::{
-        ApiDocContext, AppContext, CompatSsoContext, ConsentContext, DeviceConsentContext,
-        DeviceLinkContext, DeviceLinkFormField, EmailRecoveryContext, EmailVerificationContext,
-        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
-        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
-        PostAuthContextInner, ReauthContext, ReauthFormField, RecoveryExpiredContext,
-        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
-        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
-        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        AccountInactiveContext, ApiDocContext, AppContext, CompatSsoContext, ConsentContext,
+        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, EmailRecoveryContext,
+        EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
+        LoginContext, LoginFormField, NotFoundContext, PasswordRegisterContext,
+        PolicyViolationContext, PostAuthContext, PostAuthContextInner, ReauthContext,
+        ReauthFormField, RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
+        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
+        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
@@ -413,6 +413,15 @@ register_templates! {
 
     /// Render the device code consent page
     pub fn render_device_consent(WithLanguage<WithCsrf<WithSession<DeviceConsentContext>>>) { "pages/device_consent.html" }
+
+    /// Render the 'account deactivated' page
+    pub fn render_account_deactivated(WithLanguage<WithCsrf<AccountInactiveContext>>) { "pages/account/deactivated.html" }
+
+    /// Render the 'account locked' page
+    pub fn render_account_locked(WithLanguage<WithCsrf<AccountInactiveContext>>) { "pages/account/locked.html" }
+
+    /// Render the 'account logged out' page
+    pub fn render_account_logged_out(WithLanguage<WithCsrf<AccountInactiveContext>>) { "pages/account/logged_out.html" }
 }
 
 impl Templates {

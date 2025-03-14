@@ -288,7 +288,7 @@ async fn get_requester(
 
         RequestingEntity::OAuth2Session(Box::new((session, user)))
     } else {
-        let maybe_session = session_info.load_session(&mut repo).await?;
+        let maybe_session = session_info.load_active_session(&mut repo).await?;
 
         if let Some(session) = maybe_session.as_ref() {
             activity_tracker

@@ -42,7 +42,6 @@ const InnerProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 export const DummyRouter: React.FC<React.PropsWithChildren> = ({
   children,
 }) => (
-  /** @ts-expect-error: The router we pass doesn't match the "real" router, which is fine for tests */
   <RouterContextProvider router={router}>
     <InnerProvider>{children}</InnerProvider>
   </RouterContextProvider>
