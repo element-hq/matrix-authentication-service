@@ -128,6 +128,9 @@ struct SynapseDeviceListResponse {
 #[derive(Serialize, Deserialize)]
 struct SynapseDevice {
     device_id: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    dehydrated: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -316,6 +319,7 @@ impl HomeserverConnection for SynapseConnection {
             .post(&format!("_synapse/admin/v2/users/{mxid}/devices"))
             .json(&SynapseDevice {
                 device_id: device_id.to_owned(),
+                dehydrated: None,
             })
             .send_traced()
             .await
@@ -410,8 +414,12 @@ impl HomeserverConnection for SynapseConnection {
             .await
             .context("Failed to parse response while querying devices from Synapse")?;
 
-        let existing_devices: HashSet<String> =
-            body.devices.into_iter().map(|d| d.device_id).collect();
+        let existing_devices: HashSet<String> = body
+            .devices
+            .into_iter()
+            .filter(|d| d.dehydrated.is_none())
+            .map(|d| d.device_id)
+            .collect();
 
         // First, delete all the devices that are not needed anymore
         let to_delete = existing_devices.difference(&devices).cloned().collect();
