@@ -143,6 +143,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ExpireInactiveCompatSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveUserSessionsJob>()
+        .register_handler::<mas_storage::queue::PruneStalePolicyDataJob>()
         .add_schedule(
             "cleanup-expired-tokens",
             "0 0 * * * *".parse()?,
@@ -153,6 +154,12 @@ pub async fn init(
             // Run this job every 15 minutes
             "30 */15 * * * *".parse()?,
             mas_storage::queue::ExpireInactiveSessionsJob,
+        )
+        .add_schedule(
+            "prune-stale-policy-data",
+            // Run once a day
+            "0 0 2 * * *".parse()?,
+            mas_storage::queue::PruneStalePolicyDataJob,
         );
 
     task_tracker.spawn(worker.run());

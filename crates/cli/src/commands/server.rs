@@ -25,7 +25,8 @@ use crate::{
     app_state::AppState,
     lifecycle::LifecycleManager,
     util::{
-        database_pool_from_config, homeserver_connection_from_config, mailer_from_config,
+        database_pool_from_config, homeserver_connection_from_config,
+        load_policy_factory_dynamic_data_continuously, mailer_from_config,
         password_manager_from_config, policy_factory_from_config, site_config_from_config,
         templates_from_config, test_mailer_in_background,
     },
@@ -128,6 +129,14 @@ impl Options {
         info!("Loading and compiling the policy module");
         let policy_factory = policy_factory_from_config(&config.policy, &config.matrix).await?;
         let policy_factory = Arc::new(policy_factory);
+
+        load_policy_factory_dynamic_data_continuously(
+            &policy_factory,
+            &pool,
+            shutdown.soft_shutdown_token(),
+            shutdown.task_tracker(),
+        )
+        .await?;
 
         let url_builder = UrlBuilder::new(
             config.http.public_base.clone(),

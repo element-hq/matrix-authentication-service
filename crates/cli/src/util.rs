@@ -19,11 +19,14 @@ use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
 use mas_matrix_synapse::SynapseConnection;
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
+use mas_storage::RepositoryAccess;
+use mas_storage_pg::PgRepository;
 use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
 use sqlx::{
     ConnectOptions, PgConnection, PgPool,
     postgres::{PgConnectOptions, PgPoolOptions},
 };
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{Instrument, log::LevelFilter};
 
 pub async fn password_manager_from_config(
@@ -375,6 +378,66 @@ pub async fn database_connection_from_config_with_options(
         .connect()
         .await
         .context("could not connect to the database")
+}
+
+/// Update the policy factory dynamic data from the database and spawn a task to
+/// periodically update it
+// XXX: this could be put somewhere else?
+pub async fn load_policy_factory_dynamic_data_continuously(
+    policy_factory: &Arc<PolicyFactory>,
+    pool: &PgPool,
+    cancellation_token: CancellationToken,
+    task_tracker: &TaskTracker,
+) -> Result<(), anyhow::Error> {
+    let policy_factory = policy_factory.clone();
+    let pool = pool.clone();
+
+    load_policy_factory_dynamic_data(&policy_factory, &pool).await?;
+
+    task_tracker.spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(60));
+
+        loop {
+            tokio::select! {
+                () = cancellation_token.cancelled() => {
+                    return;
+                }
+                _ = interval.tick() => {}
+            }
+
+            if let Err(err) = load_policy_factory_dynamic_data(&policy_factory, &pool).await {
+                tracing::error!(
+                    error = ?err,
+                    "Failed to load policy factory dynamic data"
+                );
+                cancellation_token.cancel();
+                return;
+            }
+        }
+    });
+
+    Ok(())
+}
+
+/// Update the policy factory dynamic data from the database
+#[tracing::instrument(name = "policy.load_dynamic_data", skip_all, err(Debug))]
+pub async fn load_policy_factory_dynamic_data(
+    policy_factory: &PolicyFactory,
+    pool: &PgPool,
+) -> Result<(), anyhow::Error> {
+    let mut repo = PgRepository::from_pool(pool)
+        .await
+        .context("Failed to acquire database connection")?;
+
+    if let Some(data) = repo.policy_data().get().await? {
+        let id = data.id;
+        let updated = policy_factory.set_dynamic_data(data).await?;
+        if updated {
+            tracing::info!(policy_data.id = %id, "Loaded dynamic policy data from the database");
+        }
+    }
+
+    Ok(())
 }
 
 /// Create a clonable, type-erased [`HomeserverConnection`] from the

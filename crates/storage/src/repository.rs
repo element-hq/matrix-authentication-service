@@ -17,6 +17,7 @@ use crate::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
+    policy_data::PolicyDataRepository,
     queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
@@ -204,6 +205,9 @@ pub trait RepositoryAccess: Send {
     fn queue_schedule<'c>(
         &'c mut self,
     ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`PolicyDataRepository`]
+    fn policy_data<'c>(&'c mut self) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c>;
 }
 
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
@@ -224,6 +228,7 @@ mod impls {
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
             OAuth2SessionRepository,
         },
+        policy_data::PolicyDataRepository,
         queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
         upstream_oauth2::{
             UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
@@ -439,6 +444,12 @@ mod impls {
         ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.queue_schedule(), &mut self.mapper))
         }
+
+        fn policy_data<'c>(
+            &'c mut self,
+        ) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.policy_data(), &mut self.mapper))
+        }
     }
 
     impl<R: RepositoryAccess + ?Sized> RepositoryAccess for Box<R> {
@@ -578,6 +589,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn QueueScheduleRepository<Error = Self::Error> + 'c> {
             (**self).queue_schedule()
+        }
+
+        fn policy_data<'c>(
+            &'c mut self,
+        ) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
+            (**self).policy_data()
         }
     }
 }

@@ -61,6 +61,7 @@ syn2mas = { path = "./crates/syn2mas", version = "=0.14.1" }
 version = "0.14.1"
 features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
+# An `Arc` that can be atomically updated
 [workspace.dependencies.arc-swap]
 version = "1.7.1"
 
