@@ -23,7 +23,7 @@ pem-rfc7468.workspace = true
 pkcs1.workspace = true
 pkcs8.workspace = true
 rand.workspace = true
-rsa = { version = "0.9.7", features = ["std", "pem"] }
+rsa = { version = "0.9.8", features = ["std", "pem"] }
 sec1 = { version = "0.7.3", features = ["std"] }
 spki = { version = "0.7.3", features = ["std"] }
 thiserror.workspace = true

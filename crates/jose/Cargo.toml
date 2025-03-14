@@ -23,7 +23,7 @@ k256 = { version = "0.13.4", features = ["ecdsa"] }
 p256 = { version = "0.13.2", features = ["ecdsa"] }
 p384 = { version = "0.13.1", features = ["ecdsa"] }
 rand.workspace = true
-rsa = "0.9.7"
+rsa = "0.9.8"
 schemars.workspace = true
 sec1 = "0.7.3"
 serde.workspace = true
