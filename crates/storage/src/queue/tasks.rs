@@ -325,6 +325,14 @@ impl InsertableJob for CleanupExpiredTokensJob {
     const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
 }
 
+/// Cleanup old passkey challenges
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupOldPasskeyChallenges;
+
+impl InsertableJob for CleanupOldPasskeyChallenges {
+    const QUEUE_NAME: &'static str = "cleanup-old-passkey-challenges";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user

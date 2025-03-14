@@ -262,6 +262,19 @@ pub trait UserPasskeyRepository: Send + Sync {
         clock: &dyn Clock,
         user_passkey_challenge: UserPasskeyChallenge,
     ) -> Result<UserPasskeyChallenge, Self::Error>;
+
+    /// Cleanup old challenges
+    ///
+    /// Returns the number of challenges that were cleaned up
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock used to get the current time
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_challenges(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(UserPasskeyRepository:
@@ -325,4 +338,6 @@ repository_impl!(UserPasskeyRepository:
         clock: &dyn Clock,
         user_passkey_challenge: UserPasskeyChallenge,
     ) -> Result<UserPasskeyChallenge, Self::Error>;
+
+    async fn cleanup_challenges(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
 );

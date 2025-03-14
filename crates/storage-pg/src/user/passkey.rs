@@ -4,7 +4,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{BrowserSession, Clock, User, UserPasskey, UserPasskeyChallenge};
 use mas_storage::{
     Page, Pagination,
@@ -653,5 +653,30 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
 
         user_passkey_challenge.completed_at = Some(completed_at);
         Ok(user_passkey_challenge)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_passkey.cleanup_challenges",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_challenges(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
+        // Cleanup challenges that were created more than an hour ago
+        let threshold = clock.now() - Duration::microseconds(60 * 60 * 1000 * 1000);
+        let res = sqlx::query!(
+            r#"
+                DELETE FROM user_passkey_challenges
+                WHERE created_at < $1
+            "#,
+            threshold,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(res.rows_affected().try_into().unwrap_or(usize::MAX))
     }
 }
