@@ -15,15 +15,21 @@ use rand::RngCore;
 use ulid::Ulid;
 use url::Url;
 use webauthn_rp::{
-    PublicKeyCredentialCreationOptions, RegistrationServerState,
+    AuthenticatedCredential, DiscoverableAuthentication16, DiscoverableAuthenticationServerState,
+    DiscoverableCredentialRequestOptions, PublicKeyCredentialCreationOptions,
+    RegistrationServerState,
     bin::{Decode, Encode},
     request::{
         DomainOrigin, Port, PublicKeyCredentialDescriptor, RpId, Scheme,
+        auth::AuthenticationVerificationOptions,
         register::{PublicKeyCredentialUserEntity, RegistrationVerificationOptions, UserHandle},
     },
     response::{
         CredentialId,
-        register::{error::RegCeremonyErr, ser_relaxed::RegistrationRelaxed},
+        auth::{error::AuthCeremonyErr, ser_relaxed::AuthenticationRelaxed},
+        register::{
+            DynamicState, StaticState, error::RegCeremonyErr, ser_relaxed::RegistrationRelaxed,
+        },
     },
 };
 
@@ -33,11 +39,23 @@ pub enum WebauthnError {
     #[error(transparent)]
     RegistrationCeremonyError(#[from] RegCeremonyErr),
 
+    #[error(transparent)]
+    AuthenticationCeremonyError(#[from] AuthCeremonyErr),
+
     #[error("The challenge doesn't exist, expired or doesn't belong for this session")]
     InvalidChallenge,
 
     #[error("Credential already exists")]
     Exists,
+
+    #[error("Authenticator did not include the userHandle in the response")]
+    UserHandleMissing,
+
+    #[error("Failed to find a user based on the userHandle")]
+    UserNotFound,
+
+    #[error("Failed to find a passkey based on the credential_id")]
+    PasskeyNotFound,
 
     #[error("The passkey belongs to a different user")]
     UserMismatch,
@@ -262,6 +280,150 @@ impl Webauthn {
         repo.user_passkey()
             .complete_challenge(clock, user_passkey_challenge)
             .await?;
+
+        Ok(user_passkey)
+    }
+
+    /// Creates a passkey authentication challenge
+    ///
+    /// # Returns
+    /// 1. The JSON options to `navigator.credentials.get()` on the frontend
+    /// 2. The created [`UserPasskeyChallenge`]
+    ///
+    /// # Errors
+    /// Various anyhow errors that should be treated as internal errors
+    pub async fn start_passkey_authentication(
+        &self,
+        repo: &mut impl RepositoryAccess,
+        rng: &mut (dyn RngCore + Send),
+        clock: &impl Clock,
+    ) -> Result<(String, UserPasskeyChallenge)> {
+        let options = DiscoverableCredentialRequestOptions::passkey(&self.rpid);
+
+        let (server_state, client_state) = options.start_ceremony()?;
+
+        let user_passkey_challenge = repo
+            .user_passkey()
+            .add_challenge(rng, clock, server_state.encode()?)
+            .await?;
+
+        Ok((
+            serde_json::to_string(&client_state)?,
+            user_passkey_challenge,
+        ))
+    }
+
+    /// Finds the passkey and user based on the challenge response and validates
+    /// that the passkey belongs to the user
+    ///
+    /// # Returns
+    /// 1. The parsed response for use later
+    /// 2. The [`User`] trying to authenticate
+    /// 3. The [`UserPasskey`] used
+    ///
+    /// # Errors
+    /// [`WebauthnError::UserHandleMissing`] if the reponse doesn't contain the
+    /// user handle.
+    ///
+    /// [`WebauthnError::UserNotFound`] if the user wasn't found.
+    ///
+    /// [`WebauthnError::PasskeyNotFound`] if the passkey wasn't found.
+    ///
+    /// [`WebauthnError::UserMismatch`] if the passkey is tied to a different
+    /// user.
+    ///
+    /// The rest of the anyhow errors should be treated as internal errors
+    pub async fn discover_credential(
+        &self,
+        repo: &mut impl RepositoryAccess,
+        response: String,
+    ) -> Result<(DiscoverableAuthentication16, User, UserPasskey)> {
+        let AuthenticationRelaxed::<16, true>(response) = serde_json::from_str(&response)?;
+
+        let credential_id: CredentialId<Vec<u8>> = response.raw_id().into();
+
+        let id_bytes = response.response().user_handle().encode()?;
+        let user_id = Ulid::from_bytes(id_bytes);
+
+        let user = repo
+            .user()
+            .lookup(user_id)
+            .await?
+            .ok_or(WebauthnError::UserNotFound)?;
+
+        let user_passkey = repo
+            .user_passkey()
+            .find(&credential_id)
+            .await?
+            .ok_or(WebauthnError::PasskeyNotFound)?;
+
+        if user_passkey.user_id != user.id {
+            return Err(WebauthnError::UserMismatch.into());
+        }
+
+        Ok((response, user, user_passkey))
+    }
+
+    /// Validates the authentication challenge response
+    ///
+    /// # Errors
+    /// [`WebauthnError::AuthenticationCeremonyError`] if the response from the
+    /// user was invalid.
+    ///
+    /// The rest of the anyhow errors should be treated as internal errors
+    pub async fn finish_passkey_authentication(
+        &self,
+        repo: &mut impl RepositoryAccess,
+        clock: &impl Clock,
+        user_passkey_challenge: UserPasskeyChallenge,
+        response: DiscoverableAuthentication16,
+        user_passkey: UserPasskey,
+    ) -> Result<UserPasskey> {
+        let server_state =
+            DiscoverableAuthenticationServerState::decode(&user_passkey_challenge.state)?;
+
+        let options = AuthenticationVerificationOptions::<DomainOrigin, DomainOrigin> {
+            allowed_origins: &self.get_allowed_origins(),
+            client_data_json_relaxed: true,
+            ..Default::default()
+        };
+
+        let user_handle = UserHandle::decode(user_passkey.user_id.to_bytes())?;
+
+        // Construct the correct type of credential ID...
+        let credential_id = CredentialId::<&[u8]>::from(&user_passkey.credential_id);
+
+        // Convert stored passkey to a usable credential
+        let mut cred = AuthenticatedCredential::new(
+            credential_id,
+            &user_handle,
+            StaticState::decode(&user_passkey.static_state)?,
+            DynamicState::decode(
+                user_passkey
+                    .dynamic_state
+                    .clone()
+                    .try_into()
+                    .map_err(|_| anyhow::Error::msg("Failed to parse dynamic state"))?,
+            )?,
+        )?;
+
+        server_state
+            .verify(&self.rpid, &response, &mut cred, &options)
+            .map_err(WebauthnError::from)?;
+
+        // Update last used date and dynamic state
+        let dynamic_state = cred.dynamic_state().encode()?.to_vec();
+        let user_passkey = repo
+            .user_passkey()
+            .update(clock, user_passkey, dynamic_state)
+            .await?;
+
+        // Ensure that the challenge gets marked as completed if it wasn't already
+        if user_passkey_challenge.completed_at.is_none() {
+            repo.user_passkey()
+                .complete_challenge(clock, user_passkey_challenge)
+                .await?;
+        }
 
         Ok(user_passkey)
     }
