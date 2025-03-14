@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::ExitCode, sync::atomic::Ordering, time::Duration};
+use std::{collections::HashMap, process::ExitCode, time::Duration};
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
@@ -289,13 +289,14 @@ async fn occasional_progress_logger(progress: Progress) {
             }
             ProgressStage::MigratingData {
                 entity,
-                migrated,
+                counter,
                 approx_count,
             } => {
-                let migrated = migrated.load(Ordering::Relaxed);
+                let migrated = counter.migrated();
+                let skipped = counter.skipped();
                 #[allow(clippy::cast_precision_loss)]
-                let percent = (f64::from(migrated) / *approx_count as f64) * 100.0;
-                info!(name: "progress", "migrating {entity}: {migrated}/~{approx_count} (~{percent:.1}%)");
+                let percent = (f64::from(migrated + skipped) / *approx_count as f64) * 100.0;
+                info!(name: "progress", "migrating {entity}: {migrated} ({skipped} skipped) /~{approx_count} (~{percent:.1}%)");
             }
             ProgressStage::RebuildIndex { index_name } => {
                 info!(name: "progress", "still waiting for rebuild of index {index_name}");
