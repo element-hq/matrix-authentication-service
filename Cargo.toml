@@ -80,7 +80,7 @@ version = "0.1.87"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
-version = "1.0.96"
+version = "1.0.97"
 
 # HTTP router
 [workspace.dependencies.axum]
