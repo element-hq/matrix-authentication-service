@@ -48,6 +48,7 @@ use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
 use tower_http::cors::{Any, CorsLayer};
+use webauthn::Webauthn;
 
 use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
 
@@ -337,6 +338,7 @@ where
     Limiter: FromRef<S>,
     reqwest::Client: FromRef<S>,
     Arc<dyn HomeserverConnection>: FromRef<S>,
+    Webauthn: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
@@ -378,6 +380,10 @@ where
         .route(
             mas_router::Login::route(),
             get(self::views::login::get).post(self::views::login::post),
+        )
+        .route(
+            mas_router::PasskeyLogin::route(),
+            get(self::views::login::passkey::get).post(self::views::login::passkey::post),
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(

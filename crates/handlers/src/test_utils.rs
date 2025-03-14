@@ -114,6 +114,7 @@ pub(crate) struct TestState {
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
     pub task_tracker: TaskTracker,
+    pub webauthn: Webauthn,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -257,6 +258,7 @@ impl TestState {
             rng,
             http_client,
             task_tracker,
+            webauthn,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
     }
@@ -550,6 +552,12 @@ impl FromRef<TestState> for Limiter {
 impl FromRef<TestState> for reqwest::Client {
     fn from_ref(input: &TestState) -> Self {
         input.http_client.clone()
+    }
+}
+
+impl FromRef<TestState> for Webauthn {
+    fn from_ref(input: &TestState) -> Self {
+        input.webauthn.clone()
     }
 }
 

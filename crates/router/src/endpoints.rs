@@ -245,6 +245,80 @@ impl From<Option<PostAuthAction>> for Login {
     }
 }
 
+/// `GET|POST /login/passkey`
+#[derive(Default, Debug, Clone)]
+pub struct PasskeyLogin {
+    post_auth_action: Option<PostAuthAction>,
+}
+
+impl Route for PasskeyLogin {
+    type Query = PostAuthAction;
+
+    fn route() -> &'static str {
+        "/login/passkey"
+    }
+
+    fn query(&self) -> Option<&Self::Query> {
+        self.post_auth_action.as_ref()
+    }
+}
+
+impl PasskeyLogin {
+    #[must_use]
+    pub const fn and_then(action: PostAuthAction) -> Self {
+        Self {
+            post_auth_action: Some(action),
+        }
+    }
+
+    #[must_use]
+    pub const fn and_continue_grant(id: Ulid) -> Self {
+        Self {
+            post_auth_action: Some(PostAuthAction::continue_grant(id)),
+        }
+    }
+
+    #[must_use]
+    pub const fn and_continue_device_code_grant(id: Ulid) -> Self {
+        Self {
+            post_auth_action: Some(PostAuthAction::continue_device_code_grant(id)),
+        }
+    }
+
+    #[must_use]
+    pub const fn and_continue_compat_sso_login(id: Ulid) -> Self {
+        Self {
+            post_auth_action: Some(PostAuthAction::continue_compat_sso_login(id)),
+        }
+    }
+
+    #[must_use]
+    pub const fn and_link_upstream(id: Ulid) -> Self {
+        Self {
+            post_auth_action: Some(PostAuthAction::link_upstream(id)),
+        }
+    }
+
+    /// Get a reference to the login's post auth action.
+    #[must_use]
+    pub fn post_auth_action(&self) -> Option<&PostAuthAction> {
+        self.post_auth_action.as_ref()
+    }
+
+    pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
+        match &self.post_auth_action {
+            Some(action) => action.go_next(url_builder),
+            None => url_builder.redirect(&Index),
+        }
+    }
+}
+
+impl From<Option<PostAuthAction>> for PasskeyLogin {
+    fn from(post_auth_action: Option<PostAuthAction>) -> Self {
+        Self { post_auth_action }
+    }
+}
+
 /// `POST /logout`
 #[derive(Default, Debug, Clone)]
 pub struct Logout;
