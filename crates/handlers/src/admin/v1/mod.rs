@@ -26,6 +26,7 @@ mod user_emails;
 mod user_sessions;
 mod users;
 
+#[allow(clippy::too_many_lines)]
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -123,6 +124,10 @@ where
             get_with(
                 self::upstream_oauth_links::list,
                 self::upstream_oauth_links::list_doc,
+            )
+            .post_with(
+                self::upstream_oauth_links::add,
+                self::upstream_oauth_links::add_doc,
             ),
         )
         .api_route(
