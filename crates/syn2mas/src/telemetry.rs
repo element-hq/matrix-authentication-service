@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use opentelemetry::{
     InstrumentationScope,
-    metrics::{Counter, Gauge, Meter},
+    metrics::{Counter, Gauge, Histogram, Meter},
 };
 use opentelemetry_semantic_conventions as semcov;
 
@@ -34,6 +34,14 @@ pub static SKIPPED_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     METER
         .u64_counter("syn2mas.entity.skipped")
         .with_description("Number of entities of this type that have been skipped so far")
+        .build()
+});
+
+pub static WRITER_FLUSH_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
+    METER
+        .u64_histogram("syn2mas.writer.flush_time")
+        .with_description("Time spent flushing the writer")
+        .with_unit("ms")
         .build()
 });
 

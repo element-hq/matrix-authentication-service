@@ -14,10 +14,12 @@ use std::{
         Arc,
         atomic::{AtomicU32, Ordering},
     },
+    time::Instant,
 };
 
 use chrono::{DateTime, Utc};
 use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
+use opentelemetry::KeyValue;
 use sqlx::{Executor, PgConnection, query, query_as};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
@@ -29,7 +31,7 @@ use self::{
     constraint_pausing::{ConstraintDescription, IndexDescription},
     locking::LockedMasDatabase,
 };
-use crate::Progress;
+use crate::{Progress, telemetry::WRITER_FLUSH_TIME};
 
 pub mod checks;
 pub mod locking;
@@ -672,6 +674,7 @@ impl MasWriter {
                         is_guests.push(is_guest);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__users (
@@ -697,6 +700,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing users to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "users")],
+                    );
 
                     Ok(())
                 })
@@ -737,6 +746,7 @@ impl MasWriter {
                 versions.push(MIGRATED_PASSWORD_VERSION.into());
             }
 
+            let start = Instant::now();
             sqlx::query!(
                 r#"
                 INSERT INTO syn2mas__user_passwords
@@ -749,6 +759,12 @@ impl MasWriter {
                 &created_ats[..],
                 &versions[..],
             ).execute(&mut *conn).await.into_database("writing users to MAS")?;
+
+            let elapsed = start.elapsed();
+            WRITER_FLUSH_TIME.record(
+                elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                &[KeyValue::new("entity", "user_passwords")],
+            );
 
             Ok(())
         })).boxed()
@@ -779,6 +795,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 // `confirmed_at` is going to get removed in a future MAS release,
                 // so just populate with `created_at`
                 sqlx::query!(
@@ -792,6 +809,12 @@ impl MasWriter {
                     &emails[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "email_threepids")],
+                );
 
                 Ok(())
             })
@@ -823,6 +846,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 sqlx::query!(
                     r#"
                     INSERT INTO syn2mas__user_unsupported_third_party_ids
@@ -834,6 +858,12 @@ impl MasWriter {
                     &addresses[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "unsupported_threepids")],
+                );
 
                 Ok(())
             })
@@ -868,6 +898,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 sqlx::query!(
                     r#"
                     INSERT INTO syn2mas__upstream_oauth_links
@@ -880,6 +911,12 @@ impl MasWriter {
                     &subjects[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "upstream_oauth_links")],
+                );
 
                 Ok(())
             })
@@ -929,6 +966,7 @@ impl MasWriter {
                         user_agents.push(user_agent);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_sessions (
@@ -958,6 +996,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat sessions to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_sessions")],
+                    );
 
                     Ok(())
                 })
@@ -995,6 +1039,7 @@ impl MasWriter {
                         expires_ats.push(expires_at);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_access_tokens (
@@ -1020,6 +1065,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat access tokens to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_access_tokens")],
+                    );
 
                     Ok(())
                 })
@@ -1056,6 +1107,7 @@ impl MasWriter {
                         created_ats.push(created_at);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_refresh_tokens (
@@ -1080,6 +1132,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat refresh tokens to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_refresh_tokens")],
+                    );
 
                     Ok(())
                 })
