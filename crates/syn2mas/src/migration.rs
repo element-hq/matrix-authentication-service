@@ -17,7 +17,7 @@ use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_storage::Clock;
-use opentelemetry::{KeyValue, metrics::Counter};
+use opentelemetry::KeyValue;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -39,9 +39,9 @@ use crate::{
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
     telemetry::{
-        K_ENTITY, METER, V_ENTITY_DEVICES, V_ENTITY_EXTERNAL_IDS,
-        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS, V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
-        V_ENTITY_THREEPIDS, V_ENTITY_USERS,
+        APPROX_TOTAL_COUNTER, K_ENTITY, MIGRATED_COUNTER, SKIPPED_COUNTER, V_ENTITY_DEVICES,
+        V_ENTITY_EXTERNAL_IDS, V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+        V_ENTITY_REFRESHABLE_TOKEN_PAIRS, V_ENTITY_THREEPIDS, V_ENTITY_USERS,
     },
 };
 
@@ -158,45 +158,33 @@ pub async fn migrate(
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
-    let approx_total_counter = METER
-        .u64_counter("syn2mas.entity.approx_total")
-        .with_description("Approximate number of entities of this type to be migrated")
-        .build();
-    let migrated_otel_counter = METER
-        .u64_counter("syn2mas.entity.migrated")
-        .with_description("Number of entities of this type that have been migrated so far")
-        .build();
-    let skipped_otel_counter = METER
-        .u64_counter("syn2mas.entity.skipped")
-        .with_description("Number of entities of this type that have been skipped so far")
-        .build();
-
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.users as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_USERS)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.devices as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.threepids as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.external_ids as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)],
     );
+
     // assume 1 refreshable access token per refresh token.
     let approx_nonrefreshable_access_tokens = counts.access_tokens - counts.refresh_tokens;
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         approx_nonrefreshable_access_tokens as u64,
         &[KeyValue::new(
             K_ENTITY,
             V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
         )],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.refresh_tokens as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)],
     );
@@ -214,82 +202,31 @@ pub async fn migrate(
     };
 
     let progress_counter = progress.migrating_data(V_ENTITY_USERS, counts.users);
-    let (mas, state) = migrate_users(
-        &mut synapse,
-        mas,
-        state,
-        rng,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) = migrate_users(&mut synapse, mas, state, rng, progress_counter).await?;
 
     let progress_counter = progress.migrating_data(V_ENTITY_THREEPIDS, counts.threepids);
-    let (mas, state) = migrate_threepids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, progress_counter).await?;
 
     let progress_counter = progress.migrating_data(V_ENTITY_EXTERNAL_IDS, counts.external_ids);
-    let (mas, state) = migrate_external_ids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) =
+        migrate_external_ids(&mut synapse, mas, rng, state, progress_counter).await?;
 
     let progress_counter = progress.migrating_data(
         V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
         counts.access_tokens - counts.refresh_tokens,
     );
-    let (mas, state) = migrate_unrefreshable_access_tokens(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) =
+        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
     let progress_counter =
         progress.migrating_data(V_ENTITY_REFRESHABLE_TOKEN_PAIRS, counts.refresh_tokens);
-    let (mas, state) = migrate_refreshable_token_pairs(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) =
+        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
     let progress_counter = progress.migrating_data("devices", counts.devices);
-    let (mas, _state) = migrate_devices(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state, progress_counter).await?;
 
     synapse
         .finish()
@@ -310,8 +247,6 @@ async fn migrate_users(
     mut state: MigrationState,
     rng: &mut impl RngCore,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
@@ -356,7 +291,7 @@ async fn migrate_users(
                 if user.appservice_id.is_some() {
                     flags |= UserFlags::IS_APPSERVICE;
 
-                    skipped_otel_counter.add(1, &otel_kv);
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     progress_counter.increment_skipped();
 
                     // Special case for appservice users: we don't insert them into the database
@@ -391,7 +326,7 @@ async fn migrate_users(
                         .into_mas("writing password")?;
                 }
 
-                migrated_otel_counter.add(1, &otel_kv);
+                MIGRATED_COUNTER.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
 
@@ -437,8 +372,6 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)];
@@ -460,7 +393,7 @@ async fn migrate_threepids(
         // server. We skip just skip them.
         if synapse_user_id.0.ends_with(":vector.im") {
             progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         }
 
@@ -473,7 +406,7 @@ async fn migrate_threepids(
             if state.users.contains_key(username.to_lowercase().as_str()) {
                 tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
                 progress_counter.increment_skipped();
-                skipped_otel_counter.add(1, &otel_kv);
+                SKIPPED_COUNTER.add(1, &otel_kv);
                 continue;
             }
 
@@ -485,7 +418,7 @@ async fn migrate_threepids(
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
             progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -520,7 +453,7 @@ async fn migrate_threepids(
                 .into_mas("writing unsupported threepid")?;
         }
 
-        migrated_otel_counter.add(1, &otel_kv);
+        MIGRATED_COUNTER.add(1, &otel_kv);
         progress_counter.increment_migrated();
     }
 
@@ -552,8 +485,6 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)];
@@ -576,7 +507,7 @@ async fn migrate_external_ids(
             if state.users.contains_key(username.to_lowercase().as_str()) {
                 tracing::warn!(mxid = %synapse_user_id, "External ID found in the database matching an MXID with the wrong casing");
                 progress_counter.increment_skipped();
-                skipped_otel_counter.add(1, &otel_kv);
+                SKIPPED_COUNTER.add(1, &otel_kv);
                 continue;
             }
 
@@ -588,7 +519,7 @@ async fn migrate_external_ids(
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
             progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -619,7 +550,7 @@ async fn migrate_external_ids(
             .await
             .into_mas("failed to write upstream link")?;
 
-        migrated_otel_counter.add(1, &otel_kv);
+        MIGRATED_COUNTER.add(1, &otel_kv);
         progress_counter.increment_migrated();
     }
 
@@ -651,8 +582,6 @@ async fn migrate_devices(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)];
@@ -684,7 +613,7 @@ async fn migrate_devices(
                     if state.users.contains_key(username.to_lowercase().as_str()) {
                         tracing::warn!(mxid = %synapse_user_id, "Device found in the database matching an MXID with the wrong casing");
                         progress_counter.increment_skipped();
-                        skipped_otel_counter.add(1, &otel_kv);
+                        SKIPPED_COUNTER.add(1, &otel_kv);
                         continue;
                     }
 
@@ -696,7 +625,7 @@ async fn migrate_devices(
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 };
 
@@ -754,7 +683,7 @@ async fn migrate_devices(
                     .await
                     .into_mas("writing compat sessions")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
+                MIGRATED_COUNTER.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
 
@@ -800,8 +729,6 @@ async fn migrate_unrefreshable_access_tokens(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(
@@ -838,7 +765,7 @@ async fn migrate_unrefreshable_access_tokens(
                     if state.users.contains_key(username.to_lowercase().as_str()) {
                         tracing::warn!(mxid = %synapse_user_id, "Access token found in the database matching an MXID with the wrong casing");
                         progress_counter.increment_skipped();
-                        skipped_otel_counter.add(1, &otel_kv);
+                        SKIPPED_COUNTER.add(1, &otel_kv);
                         continue;
                     }
 
@@ -850,7 +777,7 @@ async fn migrate_unrefreshable_access_tokens(
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 };
 
@@ -859,7 +786,7 @@ async fn migrate_unrefreshable_access_tokens(
                     || user_infos.flags.is_appservice()
                 {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 }
 
@@ -920,7 +847,7 @@ async fn migrate_unrefreshable_access_tokens(
                     .await
                     .into_mas("writing compat access tokens")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
+                MIGRATED_COUNTER.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
             write_buffer
@@ -969,8 +896,6 @@ async fn migrate_refreshable_token_pairs(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)];
@@ -1000,7 +925,7 @@ async fn migrate_refreshable_token_pairs(
             if state.users.contains_key(username.to_lowercase().as_str()) {
                 tracing::warn!(mxid = %synapse_user_id, "Refresh token found in the database matching an MXID with the wrong casing");
                 progress_counter.increment_skipped();
-                skipped_otel_counter.add(1, &otel_kv);
+                SKIPPED_COUNTER.add(1, &otel_kv);
                 continue;
             }
 
@@ -1012,7 +937,7 @@ async fn migrate_refreshable_token_pairs(
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
             progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -1021,7 +946,7 @@ async fn migrate_refreshable_token_pairs(
             || user_infos.flags.is_appservice()
         {
             progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         }
 
@@ -1066,7 +991,7 @@ async fn migrate_refreshable_token_pairs(
             .await
             .into_mas("writing compat refresh tokens")?;
 
-        migrated_otel_counter.add(1, &otel_kv);
+        MIGRATED_COUNTER.add(1, &otel_kv);
         progress_counter.increment_migrated();
     }
 
