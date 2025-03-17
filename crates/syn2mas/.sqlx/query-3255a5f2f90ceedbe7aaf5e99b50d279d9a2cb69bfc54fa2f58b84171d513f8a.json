@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM syn2mas_restore_indices WHERE name = $1 AND table_name = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3255a5f2f90ceedbe7aaf5e99b50d279d9a2cb69bfc54fa2f58b84171d513f8a"
+}

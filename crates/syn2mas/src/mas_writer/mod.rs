@@ -18,7 +18,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
-use sqlx::{Executor, PgConnection, query, query_as};
+use sqlx::{Executor, PgConnection, query, query_as, query_scalar};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -418,6 +418,10 @@ impl MasWriter {
                     .into_database_with(|| format!("failed to truncate table syn2mas__{table}"))?;
             }
 
+            // For a belt and braces approach, restore all indices/constraints,
+            // then we will pause them again later.
+            // This ensures we reset the database to a sane state, without any special
+            // resumption-specific code that would not be frequently tested.
             indices_to_restore = query_as!(
                 IndexDescription,
                 "SELECT table_name, name, definition FROM syn2mas_restore_indices ORDER BY order_key"
@@ -432,6 +436,9 @@ impl MasWriter {
                 .fetch_all(conn.as_mut())
                 .await
                 .into_database("failed to get syn2mas restore data (constraint descriptions)")?;
+
+            Self::restore_indices(conn.as_mut(), &indices_to_restore, &constraints_to_restore)
+                .await?;
         } else {
             info!("Starting new syn2mas migration");
 
@@ -441,51 +448,50 @@ impl MasWriter {
                 .try_collect::<Vec<_>>()
                 .await
                 .into_database("could not create temporary tables")?;
+        }
 
-            // Pause (temporarily drop) indices and constraints in order to improve
-            // performance of bulk data loading.
-            (indices_to_restore, constraints_to_restore) =
-                Self::pause_indices(conn.as_mut()).await?;
+        // Pause (temporarily drop) indices and constraints in order to improve
+        // performance of bulk data loading.
+        (indices_to_restore, constraints_to_restore) = Self::pause_indices(conn.as_mut()).await?;
 
-            // Persist these index and constraint definitions.
-            for IndexDescription {
-                name,
-                table_name,
-                definition,
-            } in &indices_to_restore
-            {
-                query!(
-                    r#"
+        // Persist these index and constraint definitions.
+        for IndexDescription {
+            name,
+            table_name,
+            definition,
+        } in &indices_to_restore
+        {
+            query!(
+                r#"
                     INSERT INTO syn2mas_restore_indices (name, table_name, definition)
                     VALUES ($1, $2, $3)
                     "#,
-                    name,
-                    table_name,
-                    definition
-                )
-                .execute(conn.as_mut())
-                .await
-                .into_database("failed to save restore data (index)")?;
-            }
-            for ConstraintDescription {
                 name,
                 table_name,
-                definition,
-            } in &constraints_to_restore
-            {
-                query!(
-                    r#"
+                definition
+            )
+            .execute(conn.as_mut())
+            .await
+            .into_database("failed to save restore data (index)")?;
+        }
+        for ConstraintDescription {
+            name,
+            table_name,
+            definition,
+        } in &constraints_to_restore
+        {
+            query!(
+                r#"
                     INSERT INTO syn2mas_restore_constraints (name, table_name, definition)
                     VALUES ($1, $2, $3)
                     "#,
-                    name,
-                    table_name,
-                    definition
-                )
-                .execute(conn.as_mut())
-                .await
-                .into_database("failed to save restore data (index)")?;
-            }
+                name,
+                table_name,
+                definition
+            )
+            .execute(conn.as_mut())
+            .await
+            .into_database("failed to save restore data (index)")?;
         }
 
         query("COMMIT;")
@@ -511,12 +517,29 @@ impl MasWriter {
         })
     }
 
+    /// 'Pause' all relevant indices and constraints, by dropping them and
+    /// writing down their definition so we can recreate them later.
+    ///
+    /// This should be executed within a transaction for atomicity.
     #[tracing::instrument(skip_all)]
     async fn pause_indices(
         conn: &mut PgConnection,
     ) -> Result<(Vec<IndexDescription>, Vec<ConstraintDescription>), Error> {
         let mut indices_to_restore = Vec::new();
         let mut constraints_to_restore = Vec::new();
+
+        let num_unrestored_objects = query_scalar!(
+            r#"SELECT COUNT(1) AS "num_unrestored_objects!" FROM (SELECT 1 FROM syn2mas_restore_indices UNION SELECT 1 FROM syn2mas_restore_constraints)"#
+        )
+            .fetch_one(conn.as_mut())
+            .await
+            .into_database("failed to check syn2mas restore data is empty")?;
+
+        if num_unrestored_objects != 0 {
+            return Err(Error::Inconsistent(format!(
+                "syn2mas restore data is not empty ({num_unrestored_objects} rows)."
+            )));
+        }
 
         for &unprefixed_table in MAS_TABLES_AFFECTED_BY_MIGRATION {
             let table = format!("syn2mas__{unprefixed_table}");
@@ -546,6 +569,9 @@ impl MasWriter {
         Ok((indices_to_restore, constraints_to_restore))
     }
 
+    /// This cannot be executed within a transaction without deadlocking (on
+    /// itself o.O), but the restoration of each individual index or
+    /// constraint is atomic.
     async fn restore_indices(
         conn: &mut LockedMasDatabase,
         indices_to_restore: &[IndexDescription],

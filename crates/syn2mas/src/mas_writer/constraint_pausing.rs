@@ -5,7 +5,7 @@
 
 use std::time::Instant;
 
-use sqlx::PgConnection;
+use sqlx::{Acquire, PgConnection};
 use tracing::{debug, info};
 
 use super::{Error, IntoDatabase};
@@ -117,6 +117,10 @@ pub async fn restore_constraint(
     constraint: &ConstraintDescription,
 ) -> Result<(), Error> {
     let start = Instant::now();
+    let mut txn = conn
+        .begin()
+        .await
+        .into_database("failed to open transaction")?;
 
     let ConstraintDescription {
         name,
@@ -128,10 +132,25 @@ pub async fn restore_constraint(
     sqlx::query(&format!(
         "ALTER TABLE {table_name} ADD CONSTRAINT {name} {definition};"
     ))
-    .execute(conn)
+    .execute(&mut *txn)
     .await
     .into_database_with(|| {
         format!("failed to recreate constraint {name} on {table_name} with {definition}")
+    })?;
+
+    sqlx::query!(
+        "DELETE FROM syn2mas_restore_constraints WHERE name = $1 AND table_name = $2",
+        name,
+        table_name
+    )
+    .execute(&mut *txn)
+    .await
+    .into_database("failed to delete constraint restore data after restoring constraint")?;
+
+    txn.commit().await.into_database_with(|| {
+        format!(
+            "failed to commit recreation of constraint {name} on {table_name} with {definition}"
+        )
     })?;
 
     info!(
@@ -148,6 +167,10 @@ pub async fn restore_constraint(
 #[tracing::instrument(name = "syn2mas.restore_index", skip_all, fields(index.name = index.name))]
 pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) -> Result<(), Error> {
     let start = Instant::now();
+    let mut txn = conn
+        .begin()
+        .await
+        .into_database("failed to open transaction")?;
 
     let IndexDescription {
         name,
@@ -156,11 +179,24 @@ pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) ->
     } = &index;
 
     sqlx::query(&format!("{definition};"))
-        .execute(conn)
+        .execute(&mut *txn)
         .await
         .into_database_with(|| {
             format!("failed to recreate index {name} on {table_name} with {definition}")
         })?;
+
+    sqlx::query!(
+        "DELETE FROM syn2mas_restore_indices WHERE name = $1 AND table_name = $2",
+        name,
+        table_name
+    )
+    .execute(&mut *txn)
+    .await
+    .into_database("failed to delete index restore data after restoring index")?;
+
+    txn.commit().await.into_database_with(|| {
+        format!("failed to commit recreation of index {name} on {table_name} with {definition}")
+    })?;
 
     info!(
         "index {name} rebuilt in {:.1}s",

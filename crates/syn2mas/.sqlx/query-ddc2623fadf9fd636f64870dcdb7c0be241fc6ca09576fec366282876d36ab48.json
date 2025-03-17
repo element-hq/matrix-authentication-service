@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM syn2mas_restore_constraints WHERE name = $1 AND table_name = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ddc2623fadf9fd636f64870dcdb7c0be241fc6ca09576fec366282876d36ab48"
+}
