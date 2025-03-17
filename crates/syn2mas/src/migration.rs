@@ -340,7 +340,9 @@ async fn migrate_users(
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
 
-    let mut rng = rand_chacha::ChaCha8Rng::from_rng(rng).expect("failed to seed rng");
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
             let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
@@ -645,6 +647,8 @@ async fn migrate_devices(
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
@@ -784,6 +788,8 @@ async fn migrate_unrefreshable_access_tokens(
     let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
 
     let now = clock.now();
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
