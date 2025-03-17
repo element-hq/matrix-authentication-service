@@ -128,6 +128,7 @@ pub fn test_site_config() -> SiteConfig {
         access_token_ttl: Duration::try_minutes(5).unwrap(),
         compat_token_ttl: Duration::try_minutes(5).unwrap(),
         server_name: "example.com".to_owned(),
+        public_base: "https://example.com".parse().unwrap(),
         policy_uri: Some("https://example.com/policy".parse().unwrap()),
         tos_uri: Some("https://example.com/tos".parse().unwrap()),
         imprint: None,
@@ -141,6 +142,7 @@ pub fn test_site_config() -> SiteConfig {
         captcha: None,
         minimum_password_complexity: 1,
         session_expiration: None,
+        passkeys_enabled: false,
     }
 }
 

@@ -512,6 +512,12 @@ impl OwnerId for mas_data_model::UpstreamOAuthLink {
     }
 }
 
+impl OwnerId for mas_data_model::UserPasskey {
+    fn owner_id(&self) -> Option<Ulid> {
+        Some(self.user_id)
+    }
+}
+
 /// A dumb wrapper around a `Ulid` to implement `OwnerId` for it.
 pub struct UserId(Ulid);
 

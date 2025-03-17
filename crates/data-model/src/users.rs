@@ -69,6 +69,7 @@ pub struct Authentication {
 pub enum AuthenticationMethod {
     Password { user_password_id: Ulid },
     UpstreamOAuth2 { upstream_oauth2_session_id: Ulid },
+    Passkey { user_passkey_id: Ulid },
     Unknown,
 }
 
@@ -214,6 +215,26 @@ pub struct UserRegistration {
     pub post_auth_action: Option<serde_json::Value>,
     pub ip_address: Option<IpAddr>,
     pub user_agent: Option<UserAgent>,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserPasskey {
+    pub id: Ulid,
+    pub user_id: Ulid,
+    pub credential_id: String,
+    pub name: String,
+    pub data: serde_json::Value,
+    pub last_used_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserPasskeyChallenge {
+    pub id: Ulid,
+    pub user_session_id: Option<Ulid>,
+    pub state: serde_json::Value,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
 }

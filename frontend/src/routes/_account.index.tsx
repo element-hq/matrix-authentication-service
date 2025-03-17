@@ -32,6 +32,7 @@ const QUERY = graphql(/* GraphQL */ `
     siteConfig {
       emailChangeAllowed
       passwordLoginEnabled
+      passkeysEnabled
       accountDeactivationAllowed
       ...AddEmailForm_siteConfig
       ...UserEmailList_siteConfig

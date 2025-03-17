@@ -59,6 +59,7 @@ mod oauth2;
 pub mod passwords;
 pub mod upstream_oauth2;
 mod views;
+pub mod webauthn;
 
 mod activity_tracker;
 mod captcha;
@@ -369,6 +370,10 @@ where
         .route(
             mas_router::Login::route(),
             get(self::views::login::get).post(self::views::login::post),
+        )
+        .route(
+            mas_router::PasskeyLogin::route(),
+            get(self::views::login::passkey::get).post(self::views::login::passkey::post),
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(

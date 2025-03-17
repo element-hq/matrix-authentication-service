@@ -85,6 +85,8 @@ rand.workspace = true
 rand_chacha.workspace = true
 headers.workspace = true
 ulid.workspace = true
+webauthn-rs = { version = "0.5.1", features = ["danger-allow-state-serialisation", "conditional-ui"]}
+webauthn-rs-proto = "0.5.1"
 
 mas-axum-utils.workspace = true
 mas-config.workspace = true

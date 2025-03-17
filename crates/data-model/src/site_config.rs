@@ -49,6 +49,9 @@ pub struct SiteConfig {
     /// The server name, e.g. "matrix.org".
     pub server_name: String,
 
+    /// Public base URL
+    pub public_base: Url,
+
     /// The URL to the privacy policy.
     pub policy_uri: Option<Url>,
 
@@ -87,4 +90,7 @@ pub struct SiteConfig {
     pub minimum_password_complexity: u8,
 
     pub session_expiration: Option<SessionExpirationConfig>,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }

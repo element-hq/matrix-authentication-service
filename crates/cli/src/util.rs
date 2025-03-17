@@ -9,8 +9,8 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Context;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
-    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
-    PolicyConfig, TemplatesConfig,
+    EmailTransportKind, ExperimentalConfig, HomeserverKind, HttpConfig, MatrixConfig,
+    PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
@@ -183,6 +183,7 @@ pub fn site_config_from_config(
     password_config: &PasswordsConfig,
     account_config: &AccountConfig,
     captcha_config: &CaptchaConfig,
+    http_config: &HttpConfig,
 ) -> Result<SiteConfig, anyhow::Error> {
     let captcha = captcha_config_from_config(captcha_config)?;
     let session_expiration = experimental_config
@@ -198,6 +199,7 @@ pub fn site_config_from_config(
         access_token_ttl: experimental_config.access_token_ttl,
         compat_token_ttl: experimental_config.compat_token_ttl,
         server_name: matrix_config.homeserver.clone(),
+        public_base: http_config.public_base.clone(),
         policy_uri: branding_config.policy_uri.clone(),
         tos_uri: branding_config.tos_uri.clone(),
         imprint: branding_config.imprint.clone(),
@@ -214,6 +216,7 @@ pub fn site_config_from_config(
         captcha,
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,
+        passkeys_enabled: experimental_config.passkeys,
     })
 }
 
