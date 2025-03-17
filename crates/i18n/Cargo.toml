@@ -27,4 +27,4 @@ pest_derive = "2.7.15"
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-writeable = "0.5.5"
+writeable = "0.6.1"

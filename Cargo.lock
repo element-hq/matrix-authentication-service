@@ -1871,7 +1871,7 @@ checksum = "0febbeb1118a9ecdee6e4520ead6b54882e843dd0592ad233247dbee84c53db8"
 dependencies = [
  "displaydoc",
  "smallvec",
- "writeable",
+ "writeable 0.5.5",
 ]
 
 [[package]]
@@ -2428,7 +2428,7 @@ dependencies = [
  "icu_locid_transform",
  "icu_provider",
  "tinystr",
- "writeable",
+ "writeable 0.5.5",
  "zerovec",
 ]
 
@@ -2469,7 +2469,7 @@ dependencies = [
  "icu_timezone",
  "smallvec",
  "tinystr",
- "writeable",
+ "writeable 0.5.5",
  "zerovec",
 ]
 
@@ -2490,7 +2490,7 @@ dependencies = [
  "icu_decimal_data",
  "icu_locid_transform",
  "icu_provider",
- "writeable",
+ "writeable 0.5.5",
 ]
 
 [[package]]
@@ -2523,7 +2523,7 @@ dependencies = [
  "num-traits",
  "smallvec",
  "tinystr",
- "writeable",
+ "writeable 0.5.5",
  "zerofrom",
  "zerotrie",
  "zerovec",
@@ -2544,7 +2544,7 @@ dependencies = [
  "displaydoc",
  "litemap",
  "tinystr",
- "writeable",
+ "writeable 0.5.5",
  "zerovec",
 ]
 
@@ -2600,7 +2600,7 @@ checksum = "cb7f36aafd098d6717de34e668a8120822275c1fba22b936e757b7de8a2fd7e4"
 dependencies = [
  "displaydoc",
  "either",
- "writeable",
+ "writeable 0.5.5",
  "yoke",
  "zerofrom",
 ]
@@ -2657,7 +2657,7 @@ dependencies = [
  "icu_provider_macros",
  "stable_deref_trait",
  "tinystr",
- "writeable",
+ "writeable 0.5.5",
  "yoke",
  "zerofrom",
  "zerovec",
@@ -3397,7 +3397,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.12",
- "writeable",
+ "writeable 0.6.1",
 ]
 
 [[package]]
@@ -7685,6 +7685,12 @@ checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
 dependencies = [
  "either",
 ]
+
+[[package]]
+name = "writeable"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
 
 [[package]]
 name = "yansi"
