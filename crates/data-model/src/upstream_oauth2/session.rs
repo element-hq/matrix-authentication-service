@@ -30,6 +30,12 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     },
+    Unlinked {
+        completed_at: DateTime<Utc>,
+        consumed_at: Option<DateTime<Utc>>,
+        unlinked_at: DateTime<Utc>,
+        id_token: Option<String>,
+    },
 }
 
 impl UpstreamOAuthAuthorizationSessionState {
@@ -57,7 +63,9 @@ impl UpstreamOAuthAuthorizationSessionState {
                 extra_callback_parameters,
                 userinfo,
             }),
-            Self::Completed { .. } | Self::Consumed { .. } => Err(InvalidTransitionError),
+            Self::Completed { .. } | Self::Consumed { .. } | Self::Unlinked { .. } => {
+                Err(InvalidTransitionError)
+            }
         }
     }
 
@@ -85,7 +93,9 @@ impl UpstreamOAuthAuthorizationSessionState {
                 extra_callback_parameters,
                 userinfo,
             }),
-            Self::Pending | Self::Consumed { .. } => Err(InvalidTransitionError),
+            Self::Pending | Self::Consumed { .. } | Self::Unlinked { .. } => {
+                Err(InvalidTransitionError)
+            }
         }
     }
 
@@ -98,7 +108,7 @@ impl UpstreamOAuthAuthorizationSessionState {
     #[must_use]
     pub fn link_id(&self) -> Option<Ulid> {
         match self {
-            Self::Pending => None,
+            Self::Pending | Self::Unlinked { .. } => None,
             Self::Completed { link_id, .. } | Self::Consumed { link_id, .. } => Some(*link_id),
         }
     }
@@ -114,9 +124,9 @@ impl UpstreamOAuthAuthorizationSessionState {
     pub fn completed_at(&self) -> Option<DateTime<Utc>> {
         match self {
             Self::Pending => None,
-            Self::Completed { completed_at, .. } | Self::Consumed { completed_at, .. } => {
-                Some(*completed_at)
-            }
+            Self::Completed { completed_at, .. }
+            | Self::Consumed { completed_at, .. }
+            | Self::Unlinked { completed_at, .. } => Some(*completed_at),
         }
     }
 
@@ -130,9 +140,9 @@ impl UpstreamOAuthAuthorizationSessionState {
     pub fn id_token(&self) -> Option<&str> {
         match self {
             Self::Pending => None,
-            Self::Completed { id_token, .. } | Self::Consumed { id_token, .. } => {
-                id_token.as_deref()
-            }
+            Self::Completed { id_token, .. }
+            | Self::Consumed { id_token, .. }
+            | Self::Unlinked { id_token, .. } => id_token.as_deref(),
         }
     }
 
@@ -145,7 +155,7 @@ impl UpstreamOAuthAuthorizationSessionState {
     #[must_use]
     pub fn extra_callback_parameters(&self) -> Option<&serde_json::Value> {
         match self {
-            Self::Pending => None,
+            Self::Pending | Self::Unlinked { .. } => None,
             Self::Completed {
                 extra_callback_parameters,
                 ..
@@ -160,7 +170,7 @@ impl UpstreamOAuthAuthorizationSessionState {
     #[must_use]
     pub fn userinfo(&self) -> Option<&serde_json::Value> {
         match self {
-            Self::Pending => None,
+            Self::Pending | Self::Unlinked { .. } => None,
             Self::Completed { userinfo, .. } | Self::Consumed { userinfo, .. } => userinfo.as_ref(),
         }
     }
@@ -177,6 +187,22 @@ impl UpstreamOAuthAuthorizationSessionState {
         match self {
             Self::Pending | Self::Completed { .. } => None,
             Self::Consumed { consumed_at, .. } => Some(*consumed_at),
+            Self::Unlinked { consumed_at, .. } => *consumed_at,
+        }
+    }
+
+    /// Get the time at which the upstream OAuth 2.0 authorization session was
+    /// unlinked.
+    ///
+    /// Returns `None` if the upstream OAuth 2.0 authorization session state is
+    /// not [`Unlinked`].
+    ///
+    /// [`Unlinked`]: UpstreamOAuthAuthorizationSessionState::Unlinked
+    #[must_use]
+    pub fn unlinked_at(&self) -> Option<DateTime<Utc>> {
+        match self {
+            Self::Pending | Self::Completed { .. } | Self::Consumed { .. } => None,
+            Self::Unlinked { unlinked_at, .. } => Some(*unlinked_at),
         }
     }
 
@@ -205,6 +231,15 @@ impl UpstreamOAuthAuthorizationSessionState {
     #[must_use]
     pub fn is_consumed(&self) -> bool {
         matches!(self, Self::Consumed { .. })
+    }
+
+    /// Returns `true` if the upstream OAuth 2.0 authorization session state is
+    /// [`Unlinked`].
+    ///
+    /// [`Unlinked`]: UpstreamOAuthAuthorizationSessionState::Unlinked
+    #[must_use]
+    pub fn is_unlinked(&self) -> bool {
+        matches!(self, Self::Unlinked { .. })
     }
 }
 

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE upstream_oauth_authorization_sessions SET\n                    upstream_oauth_link_id = NULL,\n                    unlinked_at = $2\n                WHERE upstream_oauth_link_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3ed73cfce8ef6a1108f454e18b1668f64b76975dba07e67d04ed7a52e2e8107f"
+}

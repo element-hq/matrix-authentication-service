@@ -45,6 +45,7 @@ struct SessionLookup {
     completed_at: Option<DateTime<Utc>>,
     consumed_at: Option<DateTime<Utc>>,
     extra_callback_parameters: Option<serde_json::Value>,
+    unlinked_at: Option<DateTime<Utc>>,
 }
 
 impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
@@ -59,14 +60,18 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
             value.userinfo,
             value.completed_at,
             value.consumed_at,
+            value.unlinked_at,
         ) {
-            (None, None, None, None, None, None) => UpstreamOAuthAuthorizationSessionState::Pending,
+            (None, None, None, None, None, None, None) => {
+                UpstreamOAuthAuthorizationSessionState::Pending
+            }
             (
                 Some(link_id),
                 id_token,
                 extra_callback_parameters,
                 userinfo,
                 Some(completed_at),
+                None,
                 None,
             ) => UpstreamOAuthAuthorizationSessionState::Completed {
                 completed_at,
@@ -82,6 +87,7 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
                 userinfo,
                 Some(completed_at),
                 Some(consumed_at),
+                None,
             ) => UpstreamOAuthAuthorizationSessionState::Consumed {
                 completed_at,
                 link_id: link_id.into(),
@@ -90,6 +96,14 @@ impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {
                 userinfo,
                 consumed_at,
             },
+            (_, id_token, _, _, Some(completed_at), consumed_at, Some(unlinked_at)) => {
+                UpstreamOAuthAuthorizationSessionState::Unlinked {
+                    completed_at,
+                    id_token,
+                    consumed_at,
+                    unlinked_at,
+                }
+            }
             _ => {
                 return Err(DatabaseInconsistencyError::on(
                     "upstream_oauth_authorization_sessions",
@@ -142,7 +156,8 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
                     userinfo,
                     created_at,
                     completed_at,
-                    consumed_at
+                    consumed_at,
+                    unlinked_at
                 FROM upstream_oauth_authorization_sessions
                 WHERE upstream_oauth_authorization_session_id = $1
             "#,
