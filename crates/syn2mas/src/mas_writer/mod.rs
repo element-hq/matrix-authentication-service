@@ -31,7 +31,10 @@ use self::{
     constraint_pausing::{ConstraintDescription, IndexDescription},
     locking::LockedMasDatabase,
 };
-use crate::{Progress, telemetry::WRITER_FLUSH_TIME};
+use crate::{
+    Progress,
+    telemetry::{WRITER_FLUSH_TIME, WRITER_WAIT_TIME},
+};
 
 pub mod checks;
 pub mod locking;
@@ -119,8 +122,12 @@ impl WriterConnectionPool {
             + Sync
             + 'static,
     {
+        let start = Instant::now();
         match self.connection_rx.recv().await {
             Some(Ok(mut connection)) => {
+                let elapsed = start.elapsed();
+                WRITER_WAIT_TIME.record(elapsed.as_millis().try_into().unwrap_or(u64::MAX), &[]);
+
                 let connection_tx = self.connection_tx.clone();
                 tokio::task::spawn(
                     async move {

@@ -45,6 +45,14 @@ pub static WRITER_FLUSH_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
         .build()
 });
 
+pub static WRITER_WAIT_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
+    METER
+        .u64_histogram("syn2mas.writer.wait_time")
+        .with_description("Time spent waiting for a writer connection to become available")
+        .with_unit("ms")
+        .build()
+});
+
 /// Attribute key for syn2mas.entity metrics representing what entity.
 pub const K_ENTITY: &str = "entity";
 
