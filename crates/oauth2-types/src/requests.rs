@@ -767,6 +767,10 @@ pub struct IntrospectionResponse {
     #[serde_as(as = "Option<TimestampSeconds>")]
     pub exp: Option<DateTime<Utc>>,
 
+    /// Relative timestamp indicating when the token will expire,
+    /// in seconds from the current instant.
+    pub expires_in: Option<i64>,
+
     /// Timestamp indicating when the token was issued.
     #[serde_as(as = "Option<TimestampSeconds>")]
     pub iat: Option<DateTime<Utc>>,

@@ -151,6 +151,7 @@ const INACTIVE: IntrospectionResponse = IntrospectionResponse {
     username: None,
     token_type: None,
     exp: None,
+    expires_in: None,
     iat: None,
     nbf: None,
     sub: None,
@@ -281,6 +282,9 @@ pub(crate) async fn post(
                 username,
                 token_type: Some(OAuthTokenTypeHint::AccessToken),
                 exp: access_token.expires_at,
+                expires_in: access_token
+                    .expires_at
+                    .map(|expires_at| expires_at.signed_duration_since(clock.now()).num_seconds()),
                 iat: Some(access_token.created_at),
                 nbf: Some(access_token.created_at),
                 sub,
@@ -341,6 +345,7 @@ pub(crate) async fn post(
                 username,
                 token_type: Some(OAuthTokenTypeHint::RefreshToken),
                 exp: None,
+                expires_in: None,
                 iat: Some(refresh_token.created_at),
                 nbf: Some(refresh_token.created_at),
                 sub,
@@ -414,6 +419,9 @@ pub(crate) async fn post(
                 username: Some(user.username),
                 token_type: Some(OAuthTokenTypeHint::AccessToken),
                 exp: access_token.expires_at,
+                expires_in: access_token
+                    .expires_at
+                    .map(|expires_at| expires_at.signed_duration_since(clock.now()).num_seconds()),
                 iat: Some(access_token.created_at),
                 nbf: Some(access_token.created_at),
                 sub: Some(user.sub),
@@ -487,6 +495,7 @@ pub(crate) async fn post(
                 username: Some(user.username),
                 token_type: Some(OAuthTokenTypeHint::RefreshToken),
                 exp: None,
+                expires_in: None,
                 iat: Some(refresh_token.created_at),
                 nbf: Some(refresh_token.created_at),
                 sub: Some(user.sub),
