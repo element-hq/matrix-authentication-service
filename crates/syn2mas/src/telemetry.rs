@@ -53,6 +53,13 @@ pub static WRITER_WAIT_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
         .build()
 });
 
+pub static READER_ENTITY_COUNT: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.reader.entity_count")
+        .with_description("Number of entities read from the reader")
+        .build()
+});
+
 /// Attribute key for syn2mas.entity metrics representing what entity.
 pub const K_ENTITY: &str = "entity";
 
