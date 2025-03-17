@@ -2440,6 +2440,47 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "upstream-oauth-link"
+        ],
+        "summary": "Delete an upstream OAuth 2.0 link",
+        "operationId": "deleteUpstreamOAuthLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Upstream OAuth 2.0 link was deleted"
+          },
+          "404": {
+            "description": "Upstream OAuth 2.0 link was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Upstream OAuth 2.0 Link ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

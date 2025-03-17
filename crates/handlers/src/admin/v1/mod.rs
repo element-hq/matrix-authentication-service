@@ -135,6 +135,10 @@ where
             get_with(
                 self::upstream_oauth_links::get,
                 self::upstream_oauth_links::get_doc,
+            )
+            .delete_with(
+                self::upstream_oauth_links::delete,
+                self::upstream_oauth_links::delete_doc,
             ),
         )
 }
