@@ -65,6 +65,12 @@ impl UpstreamSessions {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+    /// Returns the session IDs in the cookie
+    pub fn session_ids(&self) -> Vec<Ulid> {
+        self.0.iter()
+        .map(|p| p.session)
+        .collect()
+    }
 
     /// Save the upstreams sessions to the cookie jar
     pub fn save<C>(self, cookie_jar: CookieJar, clock: &C) -> CookieJar
@@ -149,7 +155,9 @@ impl UpstreamSessions {
             .position(|p| p.link == Some(link_id))
             .ok_or(UpstreamSessionNotFound)?;
 
-        self.0.remove(pos);
+        // We do not remove the session from the cookie, because it might be used by
+        // in the logout
+        self.0[pos].link = None;
 
         Ok(self)
     }
