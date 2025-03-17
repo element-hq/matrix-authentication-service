@@ -93,7 +93,7 @@ features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Constant-time base64
 [workspace.dependencies.base64ct]
-version = "1.6.0"
+version = "1.7.3"
 
 # Packed bitfields
 [workspace.dependencies.bitflags]

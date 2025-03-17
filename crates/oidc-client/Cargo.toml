@@ -13,7 +13,7 @@ workspace = true
 
 [dependencies]
 async-trait.workspace = true
-base64ct = { version = "1.6.0", features = ["std"] }
+base64ct = { version = "1.7.3", features = ["std"] }
 chrono.workspace = true
 elliptic-curve.workspace = true
 form_urlencoded = "1.2.1"

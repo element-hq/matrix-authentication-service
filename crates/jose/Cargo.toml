@@ -12,7 +12,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-base64ct = { version = "1.6.0", features = ["std"] }
+base64ct = { version = "1.7.3", features = ["std"] }
 chrono.workspace = true
 digest = "0.10.7"
 ecdsa = { version = "0.16.9", features = ["signing", "verifying"] }
