@@ -284,7 +284,7 @@ pub(crate) async fn post(
                 exp: access_token.expires_at,
                 expires_in: access_token
                     .expires_at
-                    .map(|expires_at| expires_at.signed_duration_since(clock.now()).num_seconds()),
+                    .map(|expires_at| expires_at.signed_duration_since(clock.now())),
                 iat: Some(access_token.created_at),
                 nbf: Some(access_token.created_at),
                 sub,
@@ -421,7 +421,7 @@ pub(crate) async fn post(
                 exp: access_token.expires_at,
                 expires_in: access_token
                     .expires_at
-                    .map(|expires_at| expires_at.signed_duration_since(clock.now()).num_seconds()),
+                    .map(|expires_at| expires_at.signed_duration_since(clock.now())),
                 iat: Some(access_token.created_at),
                 nbf: Some(access_token.created_at),
                 sub: Some(user.sub),
