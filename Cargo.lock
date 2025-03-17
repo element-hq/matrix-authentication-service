@@ -85,9 +85,9 @@ dependencies = [
 
 [[package]]
 name = "aide"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ef7da148319b3f1ac7d338f7a144521ee399cd65e4381aa0c17994e74304aa8"
+checksum = "a2477554ebf38aea815a9c4729100cfc32f766876c45b9c9c38ef221b9d1a703"
 dependencies = [
  "aide-macros",
  "axum",
@@ -99,6 +99,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "serde_qs",
  "thiserror 2.0.12",
  "tower-layer",
  "tower-service",
@@ -5595,6 +5596,19 @@ checksum = "af99884400da37c88f5e9146b7f1fd0fbcae8f6eec4e9da38b67d05486f814a6"
 dependencies = [
  "itoa",
  "serde",
+]
+
+[[package]]
+name = "serde_qs"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b417bedc008acbdf6d6b4bc482d29859924114bbe2650b7921fb68a261d0aa6"
+dependencies = [
+ "axum",
+ "futures",
+ "percent-encoding",
+ "serde",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
