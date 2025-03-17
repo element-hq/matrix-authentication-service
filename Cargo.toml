@@ -186,7 +186,7 @@ default-features = false
 
 # Snapshot testing
 [workspace.dependencies.insta]
-version = "1.42.1"
+version = "1.42.2"
 features = ["yaml", "json"]
 
 # Email sending
