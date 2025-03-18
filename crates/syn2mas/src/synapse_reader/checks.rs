@@ -136,7 +136,7 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
     if synapse_config.enable_registration {
         warnings.push(CheckWarning::DisableRegistrationAfterMigration);
     }
-    if synapse_config.user_consent {
+    if synapse_config.user_consent.is_some() {
         warnings.push(CheckWarning::DisableUserConsentAfterMigration);
     }
 
@@ -232,7 +232,7 @@ pub async fn synapse_config_check_against_mas_config(
     }
 
     let mas_branding = BrandingConfig::extract_or_default(mas)?;
-    if synapse.user_consent && mas_branding.tos_uri.is_none() {
+    if synapse.user_consent.is_some() && mas_branding.tos_uri.is_none() {
         warnings.push(CheckWarning::ShouldPortUserConsentAsTerms);
     }
 

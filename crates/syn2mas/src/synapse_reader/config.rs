@@ -36,7 +36,7 @@ pub struct Config {
     pub enable_3pid_changes: bool,
 
     #[serde(default)]
-    pub user_consent: bool,
+    pub user_consent: Option<UserConsentSection>,
 
     #[serde(default)]
     pub registrations_require_3pid: Vec<String>,
@@ -297,3 +297,8 @@ mod test {
         );
     }
 }
+
+/// We don't care about any of the fields in this section,
+/// just whether it's present.
+#[derive(Deserialize)]
+pub struct UserConsentSection {}
