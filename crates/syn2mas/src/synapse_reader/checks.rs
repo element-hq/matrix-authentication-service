@@ -140,7 +140,8 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
         warnings.push(CheckWarning::DisableUserConsentAfterMigration);
     }
 
-    // TODO provide guidance on migrating these
+    // TODO provide guidance on migrating these auth systems
+    // that are not directly supported as upstreams in MAS
     if synapse_config.cas_config.enabled {
         warnings.push(CheckWarning::ExternalAuthSystem("CAS"));
     }
@@ -150,8 +151,6 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
     if synapse_config.jwt_config.enabled {
         warnings.push(CheckWarning::ExternalAuthSystem("JWT"));
     }
-
-    // TODO provide guidance on migrating these
     if synapse_config.password_config.enabled && !synapse_config.password_config.localdb_enabled {
         warnings.push(CheckWarning::ExternalAuthSystem(
             "non-standard password provider plugin",
