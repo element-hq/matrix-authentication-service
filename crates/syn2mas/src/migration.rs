@@ -252,7 +252,19 @@ async fn migrate_users(
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
 
     // HACK(matrix.org): allocate a large buffer
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(50 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(20 * 1024 * 1024);
+
+    let (txi, mut rxi) = tokio::sync::mpsc::channel::<(CompactString, UserInfo)>(20 * 1024 * 1024);
+
+    let server_name = state.server_name.clone();
+    // Accumulating the users state is potentially CPU-intensive, so we spawn a
+    // separate task to do it
+    let state_task = tokio::spawn(async move {
+        while let Some((username, user_info)) = rxi.recv().await {
+            state.users.insert(username, user_info);
+        }
+        state
+    });
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -269,15 +281,14 @@ async fn migrate_users(
                     && user
                         .name
                         .0
-                        .strip_suffix(&format!(":{}", state.server_name))
+                        .strip_suffix(&format!(":{server_name}"))
                         .is_some_and(|localpart| localpart.contains(':'))
                 {
                     tracing::warn!("AS user {} has invalid localpart, ignoring!", user.name.0);
                     continue;
                 }
 
-                let (mas_user, mas_password_opt) =
-                    transform_user(&user, &state.server_name, &mut rng)?;
+                let (mas_user, mas_password_opt) = transform_user(&user, &server_name, &mut rng)?;
 
                 let mut flags = UserFlags::empty();
                 if bool::from(user.admin) {
@@ -297,23 +308,27 @@ async fn migrate_users(
 
                     // Special case for appservice users: we don't insert them into the database
                     // We just record the user's information in the state and continue
-                    state.users.insert(
+                    txi.send((
                         CompactString::new(&mas_user.username),
                         UserInfo {
                             mas_user_id: None,
                             flags,
                         },
-                    );
+                    ))
+                    .await
+                    .map_err(|_| Error::ChannelClosed)?;
                     continue;
                 }
 
-                state.users.insert(
+                txi.send((
                     CompactString::new(&mas_user.username),
                     UserInfo {
                         mas_user_id: Some(mas_user.user_id),
                         flags,
                     },
-                );
+                ))
+                .await
+                .map_err(|_| Error::ChannelClosed)?;
 
                 user_buffer
                     .write(&mut mas, mas_user)
@@ -331,6 +346,9 @@ async fn migrate_users(
                 progress_counter.increment_migrated();
             }
 
+            // Explicitly drop the sender, so that the channel is closed
+            drop(txi);
+
             user_buffer
                 .finish(&mut mas)
                 .await
@@ -340,7 +358,7 @@ async fn migrate_users(
                 .await
                 .into_mas("writing passwords")?;
 
-            Ok((mas, state))
+            Ok(mas)
         }
         .instrument(tracing::info_span!("ingest_task")),
     );
@@ -354,7 +372,8 @@ async fn migrate_users(
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
-    let (mas, state) = task.await.into_join("user write task")??;
+    let mas = task.await.into_join("user write task")??;
+    let state = state_task.await.into_join("user state task")?;
 
     res?;
 
