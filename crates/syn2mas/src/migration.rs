@@ -251,7 +251,8 @@ async fn migrate_users(
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
+    // HACK(matrix.org): allocate a large buffer
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(50 * 1024 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
