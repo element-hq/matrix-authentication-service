@@ -19,6 +19,8 @@ use sqlx::postgres::PgConnectOptions;
 #[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     pub database: DatabaseSection,
+
+    #[serde(default)]
     pub password_config: PasswordSection,
 
     #[serde(default)]
