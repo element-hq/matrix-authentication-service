@@ -434,6 +434,7 @@ upstream_oauth2:
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
       scope: "openid profile email"
+      discovery_mode: insecure
 
       claims_imports:
         localpart:
