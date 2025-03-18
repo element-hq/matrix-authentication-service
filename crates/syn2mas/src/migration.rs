@@ -252,15 +252,15 @@ async fn migrate_users(
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
 
     // HACK(matrix.org): allocate a large buffer
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(20 * 1024 * 1024);
+    let (tx, rx) = flume::bounded::<SynapseUser>(20 * 1024 * 1024);
 
-    let (txi, mut rxi) = tokio::sync::mpsc::channel::<(CompactString, UserInfo)>(20 * 1024 * 1024);
+    let (txi, rxi) = flume::bounded::<(CompactString, UserInfo)>(20 * 1024 * 1024);
 
     let server_name = state.server_name.clone();
     // Accumulating the users state is potentially CPU-intensive, so we spawn a
     // separate task to do it
-    let state_task = tokio::spawn(async move {
-        while let Some((username, user_info)) = rxi.recv().await {
+    let state_task = tokio::task::spawn_blocking(move || {
+        while let Ok((username, user_info)) = rxi.recv() {
             state.users.insert(username, user_info);
         }
         state
@@ -274,7 +274,7 @@ async fn migrate_users(
             let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
             let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
 
-            while let Some(user) = rx.recv().await {
+            while let Ok(user) = rx.recv_async().await {
                 // Handling an edge case: some AS users may have invalid localparts containing
                 // extra `:` characters. These users are ignored and a warning is logged.
                 if user.appservice_id.is_some()
@@ -308,7 +308,7 @@ async fn migrate_users(
 
                     // Special case for appservice users: we don't insert them into the database
                     // We just record the user's information in the state and continue
-                    txi.send((
+                    txi.send_async((
                         CompactString::new(&mas_user.username),
                         UserInfo {
                             mas_user_id: None,
@@ -320,7 +320,7 @@ async fn migrate_users(
                     continue;
                 }
 
-                txi.send((
+                txi.send_async((
                     CompactString::new(&mas_user.username),
                     UserInfo {
                         mas_user_id: Some(mas_user.user_id),
@@ -368,7 +368,7 @@ async fn migrate_users(
     let res = synapse
         .read_users()
         .map_err(|e| e.into_synapse("reading users"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
@@ -606,7 +606,7 @@ async fn migrate_devices(
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, rx) = flume::bounded(10 * 1024 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -615,7 +615,7 @@ async fn migrate_devices(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-            while let Some(device) = rx.recv().await {
+            while let Ok(device) = rx.recv_async().await {
                 let SynapseDevice {
                     user_id: synapse_user_id,
                     device_id,
@@ -722,7 +722,7 @@ async fn migrate_devices(
     let res = synapse
         .read_devices()
         .map_err(|e| e.into_synapse("reading devices"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
@@ -756,7 +756,7 @@ async fn migrate_unrefreshable_access_tokens(
         V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
     )];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, rx) = flume::bounded(10 * 1024 * 1024);
 
     let now = clock.now();
     // create a new RNG seeded from the passed RNG so that we can move it into the
@@ -768,7 +768,7 @@ async fn migrate_unrefreshable_access_tokens(
             let mut deviceless_session_write_buffer =
                 MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-            while let Some(token) = rx.recv().await {
+            while let Ok(token) = rx.recv_async().await {
                 let SynapseAccessToken {
                     user_id: synapse_user_id,
                     device_id,
@@ -889,7 +889,7 @@ async fn migrate_unrefreshable_access_tokens(
     let res = synapse
         .read_unrefreshable_access_tokens()
         .map_err(|e| e.into_synapse("reading tokens"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
