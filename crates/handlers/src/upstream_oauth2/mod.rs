@@ -18,9 +18,9 @@ use url::Url;
 pub(crate) mod authorize;
 pub(crate) mod cache;
 pub(crate) mod callback;
-pub(crate) mod logout;
 mod cookie;
 pub(crate) mod link;
+pub(crate) mod logout;
 mod template;
 
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;

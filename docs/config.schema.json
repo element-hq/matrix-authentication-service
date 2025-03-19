@@ -2094,6 +2094,11 @@
             }
           ]
         },
+        "allow_rp_initiated_logout": {
+          "description": "Whether to allow RP-initiated logout\n\nDefaults to `false`.",
+          "default": false,
+          "type": "boolean"
+        },
         "additional_authorization_parameters": {
           "description": "Additional parameters to include in the authorization request\n\nOrders of the keys are not preserved.",
           "type": "object",

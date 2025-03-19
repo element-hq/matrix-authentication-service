@@ -1492,6 +1492,7 @@ impl TemplateContext for UpstreamRegister {
                 additional_authorization_parameters: Vec::new(),
                 created_at: now,
                 disabled_at: None,
+                allow_rp_initiated_logout: false,
             },
         )]
     }

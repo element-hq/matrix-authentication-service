@@ -67,9 +67,7 @@ impl UpstreamSessions {
     }
     /// Returns the session IDs in the cookie
     pub fn session_ids(&self) -> Vec<Ulid> {
-        self.0.iter()
-        .map(|p| p.session)
-        .collect()
+        self.0.iter().map(|p| p.session).collect()
     }
 
     /// Save the upstreams sessions to the cookie jar

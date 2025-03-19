@@ -536,6 +536,12 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
 
+    /// Whether to allow RP-initiated logout
+    ///
+    /// Defaults to `false`.
+    #[serde(default)]
+    pub allow_rp_initiated_logout: bool,
+
     /// Additional parameters to include in the authorization request
     ///
     /// Orders of the keys are not preserved.

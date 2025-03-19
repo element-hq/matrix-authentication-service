@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\"\n                FROM upstream_oauth_providers\n                WHERE disabled_at IS NULL\n                ORDER BY ui_order ASC, upstream_oauth_provider_id ASC\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    allow_rp_initiated_logout,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\"\n                FROM upstream_oauth_providers\n                WHERE upstream_oauth_provider_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -115,12 +115,19 @@
       },
       {
         "ordinal": 22,
+        "name": "allow_rp_initiated_logout",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 23,
         "name": "additional_parameters: Json<Vec<(String, String)>>",
         "type_info": "Jsonb"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
@@ -145,8 +152,9 @@
       false,
       false,
       true,
+      false,
       true
     ]
   },
-  "hash": "c1e55ffd09181c0d8ddd0df2843690aeae4a20329045ab23639181a0d0903178"
+  "hash": "840415f3e63e8349bd87da5407248df03d648a17ae7bb4acf76d332e03f5dd47"
 }
