@@ -417,7 +417,7 @@ impl HomeserverConnection for SynapseConnection {
         let existing_devices: HashSet<String> = body
             .devices
             .into_iter()
-            .filter(|d| d.dehydrated.is_none())
+            .filter(|d| d.dehydrated != Some(true))
             .map(|d| d.device_id)
             .collect();
 
