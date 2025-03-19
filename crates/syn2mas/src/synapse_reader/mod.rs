@@ -193,7 +193,6 @@ pub struct SynapseUser {
     /// Note that not all numeric user IDs are guests; guests can upgrade their
     /// account!
     pub is_guest: SynapseBool,
-    // TODO do we care about upgrade_ts (users who upgraded from guest accounts to real accounts)
     /// The ID of the appservice that created this user, if any.
     pub appservice_id: Option<String>,
 }
@@ -252,7 +251,6 @@ pub struct SynapseRefreshableTokenPair {
 /// This is a safety measure against other processes changing the data
 /// underneath our feet. It's still not a good idea to run Synapse at the same
 /// time as the migration.
-// TODO not complete!
 const TABLES_TO_LOCK: &[&str] = &[
     "users",
     "user_threepids",
@@ -328,7 +326,6 @@ impl<'conn> SynapseReader<'conn> {
     ///
     /// - An underlying database error whilst committing the transaction.
     pub async fn finish(self) -> Result<(), Error> {
-        // TODO enforce that this is called somehow.
         self.txn.commit().await.into_database("end transaction")?;
         Ok(())
     }

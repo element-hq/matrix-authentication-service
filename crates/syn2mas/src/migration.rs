@@ -713,7 +713,6 @@ async fn migrate_devices(
                         .ok()
                 });
 
-                // TODO skip access tokens for deactivated users
                 write_buffer
                     .write(
                         &mut mas,

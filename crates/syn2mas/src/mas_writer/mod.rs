@@ -1084,10 +1084,7 @@ impl MasWriter {
 }
 
 // How many entries to buffer at once, before writing a batch of rows to the
-// database. TODO tune: didn't see that much difference between 4k and 64k
-// (4k: 13.5~14, 64k: 12.5~13s — streaming the whole way would be better,
-// especially for DB latency, but probably fiiine and also we won't be able to
-// stream to two tables at once...)
+// database.
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
 /// A function that can accept and flush buffers from a `MasWriteBuffer`.
