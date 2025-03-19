@@ -15,10 +15,9 @@ use mas_axum_utils::{
 };
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
+use tracing::warn;
 
 use crate::{BoundActivityTracker, upstream_oauth2::logout::get_rp_initiated_logout_endpoints};
-
-use tracing::warn;
 
 #[tracing::instrument(name = "handlers.views.logout.post", skip_all, err)]
 pub(crate) async fn post(
@@ -42,24 +41,21 @@ pub(crate) async fn post(
                     .record_browser_session(&clock, &session)
                     .await;
 
-                // First, get RP-initiated logout endpoints before actually finishing the session
-                match get_rp_initiated_logout_endpoints(
-                    &url_builder,
-                    &mut repo,
-                    &cookie_jar,
-                ).await {
+                // First, get RP-initiated logout endpoints before actually finishing the
+                // session
+                match get_rp_initiated_logout_endpoints(&url_builder, &mut repo, &cookie_jar).await
+                {
                     Ok(logout_info) => {
                         // If we have any RP-initiated logout endpoints, use the first one
                         if !logout_info.logout_endpoints.is_empty() {
                             upstream_logout_url = Some(logout_info.logout_endpoints.clone());
                         }
-                    },
+                    }
                     Err(e) => {
                         warn!("Failed to get RP-initiated logout endpoints: {}", e);
                         // Continue with logout even if endpoint retrieval fails
                     }
                 }
-                
                 // Now finish the session
                 repo.browser_session().finish(&clock, session).await?;
             }
