@@ -12,9 +12,12 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
+use opentelemetry::KeyValue;
 use sqlx::{Acquire, FromRow, PgConnection, Postgres, Transaction, Type, query};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
+
+use crate::telemetry::READER_ENTITY_COUNT;
 
 pub mod checks;
 pub mod config;
@@ -429,6 +432,7 @@ impl<'conn> SynapseReader<'conn> {
     /// Reads Synapse users, excluding application service users (which do not
     /// need to be migrated), from the database.
     pub fn read_users(&mut self) -> impl Stream<Item = Result<SynapseUser, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "users")];
         sqlx::query_as(
             "
             SELECT
@@ -437,12 +441,14 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse users"))
     }
 
     /// Reads threepids (such as e-mail and phone number associations) from
     /// Synapse.
     pub fn read_threepids(&mut self) -> impl Stream<Item = Result<SynapseThreepid, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "threepids")];
         sqlx::query_as(
             "
             SELECT
@@ -451,6 +457,7 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse threepids"))
     }
 
@@ -458,6 +465,7 @@ impl<'conn> SynapseReader<'conn> {
     pub fn read_user_external_ids(
         &mut self,
     ) -> impl Stream<Item = Result<SynapseExternalId, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "external_ids")];
         sqlx::query_as(
             "
             SELECT
@@ -466,6 +474,7 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse user external IDs"))
     }
 
@@ -473,6 +482,7 @@ impl<'conn> SynapseReader<'conn> {
     /// Does not include so-called 'hidden' devices, which are just a mechanism
     /// for storing various signing keys shared between the real devices.
     pub fn read_devices(&mut self) -> impl Stream<Item = Result<SynapseDevice, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "devices")];
         sqlx::query_as(
             "
             SELECT
@@ -482,6 +492,7 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse devices"))
     }
 
@@ -497,6 +508,7 @@ impl<'conn> SynapseReader<'conn> {
     pub fn read_unrefreshable_access_tokens(
         &mut self,
     ) -> impl Stream<Item = Result<SynapseAccessToken, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "nonrefreshable_access_tokens")];
         sqlx::query_as(
             "
             SELECT
@@ -514,6 +526,7 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse access tokens"))
     }
 
@@ -529,6 +542,7 @@ impl<'conn> SynapseReader<'conn> {
     pub fn read_refreshable_token_pairs(
         &mut self,
     ) -> impl Stream<Item = Result<SynapseRefreshableTokenPair, Error>> + '_ {
+        let kv = [KeyValue::new("entity", "refreshable_token_pairs")];
         sqlx::query_as(
             "
             SELECT
@@ -541,6 +555,7 @@ impl<'conn> SynapseReader<'conn> {
             ",
         )
         .fetch(&mut *self.txn)
+        .inspect_ok(move |_| READER_ENTITY_COUNT.add(1, &kv))
         .map_err(|err| err.into_database("reading Synapse refresh tokens"))
     }
 }

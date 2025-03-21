@@ -14,10 +14,12 @@ use std::{
         Arc,
         atomic::{AtomicU32, Ordering},
     },
+    time::Instant,
 };
 
 use chrono::{DateTime, Utc};
 use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
+use opentelemetry::KeyValue;
 use sqlx::{Executor, PgConnection, query, query_as};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
@@ -28,6 +30,10 @@ use uuid::{NonNilUuid, Uuid};
 use self::{
     constraint_pausing::{ConstraintDescription, IndexDescription},
     locking::LockedMasDatabase,
+};
+use crate::{
+    Progress,
+    telemetry::{WRITER_FLUSH_TIME, WRITER_WAIT_TIME},
 };
 
 pub mod checks;
@@ -116,8 +122,12 @@ impl WriterConnectionPool {
             + Sync
             + 'static,
     {
+        let start = Instant::now();
         match self.connection_rx.recv().await {
             Some(Ok(mut connection)) => {
+                let elapsed = start.elapsed();
+                WRITER_WAIT_TIME.record(elapsed.as_millis().try_into().unwrap_or(u64::MAX), &[]);
+
                 let connection_tx = self.connection_tx.clone();
                 tokio::task::spawn(
                     async move {
@@ -550,16 +560,19 @@ impl MasWriter {
         conn: &mut LockedMasDatabase,
         indices_to_restore: &[IndexDescription],
         constraints_to_restore: &[ConstraintDescription],
+        progress: &Progress,
     ) -> Result<(), Error> {
         // First restore all indices. The order is not important as far as I know.
         // However the indices are needed before constraints.
         for index in indices_to_restore.iter().rev() {
+            progress.rebuild_index(index.name.clone());
             constraint_pausing::restore_index(conn.as_mut(), index).await?;
         }
         // Then restore all constraints.
         // The order here is the reverse of drop order, since some constraints may rely
         // on other constraints to work.
         for constraint in constraints_to_restore.iter().rev() {
+            progress.rebuild_constraint(constraint.name.clone());
             constraint_pausing::restore_constraint(conn.as_mut(), constraint).await?;
         }
         Ok(())
@@ -574,7 +587,7 @@ impl MasWriter {
     ///
     /// - If the database connection experiences an error.
     #[tracing::instrument(skip_all)]
-    pub async fn finish(mut self) -> Result<PgConnection, Error> {
+    pub async fn finish(mut self, progress: &Progress) -> Result<PgConnection, Error> {
         self.write_buffer_finish_checker.check_all_finished()?;
 
         // Commit all writer transactions to the database.
@@ -595,6 +608,7 @@ impl MasWriter {
             &mut self.conn,
             &self.indices_to_restore,
             &self.constraints_to_restore,
+            progress,
         )
         .await?;
 
@@ -667,6 +681,7 @@ impl MasWriter {
                         is_guests.push(is_guest);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__users (
@@ -692,6 +707,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing users to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "users")],
+                    );
 
                     Ok(())
                 })
@@ -732,6 +753,7 @@ impl MasWriter {
                 versions.push(MIGRATED_PASSWORD_VERSION.into());
             }
 
+            let start = Instant::now();
             sqlx::query!(
                 r#"
                 INSERT INTO syn2mas__user_passwords
@@ -744,6 +766,12 @@ impl MasWriter {
                 &created_ats[..],
                 &versions[..],
             ).execute(&mut *conn).await.into_database("writing users to MAS")?;
+
+            let elapsed = start.elapsed();
+            WRITER_FLUSH_TIME.record(
+                elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                &[KeyValue::new("entity", "user_passwords")],
+            );
 
             Ok(())
         })).boxed()
@@ -774,6 +802,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 // `confirmed_at` is going to get removed in a future MAS release,
                 // so just populate with `created_at`
                 sqlx::query!(
@@ -787,6 +816,12 @@ impl MasWriter {
                     &emails[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "email_threepids")],
+                );
 
                 Ok(())
             })
@@ -818,6 +853,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 sqlx::query!(
                     r#"
                     INSERT INTO syn2mas__user_unsupported_third_party_ids
@@ -829,6 +865,12 @@ impl MasWriter {
                     &addresses[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "unsupported_threepids")],
+                );
 
                 Ok(())
             })
@@ -863,6 +905,7 @@ impl MasWriter {
                     created_ats.push(created_at);
                 }
 
+                let start = Instant::now();
                 sqlx::query!(
                     r#"
                     INSERT INTO syn2mas__upstream_oauth_links
@@ -875,6 +918,12 @@ impl MasWriter {
                     &subjects[..],
                     &created_ats[..],
                 ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
+
+                let elapsed = start.elapsed();
+                WRITER_FLUSH_TIME.record(
+                    elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                    &[KeyValue::new("entity", "upstream_oauth_links")],
+                );
 
                 Ok(())
             })
@@ -924,6 +973,7 @@ impl MasWriter {
                         user_agents.push(user_agent);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_sessions (
@@ -953,6 +1003,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat sessions to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_sessions")],
+                    );
 
                     Ok(())
                 })
@@ -990,6 +1046,7 @@ impl MasWriter {
                         expires_ats.push(expires_at);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_access_tokens (
@@ -1015,6 +1072,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat access tokens to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_access_tokens")],
+                    );
 
                     Ok(())
                 })
@@ -1051,6 +1114,7 @@ impl MasWriter {
                         created_ats.push(created_at);
                     }
 
+                    let start = Instant::now();
                     sqlx::query!(
                         r#"
                         INSERT INTO syn2mas__compat_refresh_tokens (
@@ -1075,6 +1139,12 @@ impl MasWriter {
                     .execute(&mut *conn)
                     .await
                     .into_database("writing compat refresh tokens to MAS")?;
+
+                    let elapsed = start.elapsed();
+                    WRITER_FLUSH_TIME.record(
+                        elapsed.as_millis().try_into().unwrap_or(u64::MAX),
+                        &[KeyValue::new("entity", "compat_refresh_tokens")],
+                    );
 
                     Ok(())
                 })
@@ -1145,7 +1215,7 @@ mod test {
     use uuid::{NonNilUuid, Uuid};
 
     use crate::{
-        LockedMasDatabase, MasWriter,
+        LockedMasDatabase, MasWriter, Progress,
         mas_writer::{
             MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
             MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
@@ -1275,7 +1345,10 @@ mod test {
             .await
             .expect("failed to write user");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1309,7 +1382,10 @@ mod test {
             .await
             .expect("failed to write password");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1342,7 +1418,10 @@ mod test {
             .await
             .expect("failed to write e-mail");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1376,7 +1455,10 @@ mod test {
             .await
             .expect("failed to write phone number (unsupported threepid)");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1412,7 +1494,10 @@ mod test {
             .await
             .expect("failed to write link");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1450,7 +1535,10 @@ mod test {
             .await
             .expect("failed to write compat session");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1499,7 +1587,10 @@ mod test {
             .await
             .expect("failed to write access token");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }
@@ -1560,7 +1651,10 @@ mod test {
             .await
             .expect("failed to write refresh token");
 
-        let mut conn = writer.finish().await.expect("failed to finish MasWriter");
+        let mut conn = writer
+            .finish(&Progress::default())
+            .await
+            .expect("failed to finish MasWriter");
 
         assert_db_snapshot!(&mut conn);
     }

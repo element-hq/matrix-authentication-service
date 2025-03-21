@@ -16,7 +16,7 @@ type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
 pub use self::{
     mas_writer::{MasWriter, checks::mas_pre_migration_checks, locking::LockedMasDatabase},
     migration::migrate,
-    progress::{Progress, ProgressStage},
+    progress::{Progress, ProgressCounter, ProgressStage},
     synapse_reader::{
         SynapseReader,
         checks::{

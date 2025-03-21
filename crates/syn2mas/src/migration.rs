@@ -11,44 +11,36 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{
-    pin::pin,
-    sync::{
-        Arc,
-        atomic::{AtomicU32, Ordering},
-    },
-    time::Instant,
-};
+use std::{pin::pin, time::Instant};
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_storage::Clock;
-use opentelemetry::{KeyValue, metrics::Counter};
+use opentelemetry::KeyValue;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tokio_util::sync::PollSender;
 use tracing::{Instrument as _, Level, info};
 use ulid::Ulid;
 use uuid::{NonNilUuid, Uuid};
 
 use crate::{
-    HashMap, RandomState, SynapseReader,
+    HashMap, ProgressCounter, RandomState, SynapseReader,
     mas_writer::{
         self, MasNewCompatAccessToken, MasNewCompatRefreshToken, MasNewCompatSession,
         MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
         MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
-    progress::{Progress, ProgressStage},
+    progress::Progress,
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
     },
     telemetry::{
-        K_ENTITY, METER, V_ENTITY_DEVICES, V_ENTITY_EXTERNAL_IDS,
-        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS, V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
-        V_ENTITY_THREEPIDS, V_ENTITY_USERS,
+        APPROX_TOTAL_COUNTER, K_ENTITY, MIGRATED_COUNTER, SKIPPED_COUNTER, V_ENTITY_DEVICES,
+        V_ENTITY_EXTERNAL_IDS, V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+        V_ENTITY_REFRESHABLE_TOKEN_PAIRS, V_ENTITY_THREEPIDS, V_ENTITY_USERS,
     },
 };
 
@@ -165,41 +157,33 @@ pub async fn migrate(
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
-    let approx_total_counter = METER
-        .u64_counter("syn2mas.entity.approx_total")
-        .with_description("Approximate number of entities of this type to be migrated")
-        .build();
-    let migrated_otel_counter = METER
-        .u64_counter("syn2mas.entity.migrated")
-        .with_description("Number of entities of this type that have been migrated so far")
-        .build();
-
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.users as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_USERS)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.devices as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.threepids as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.external_ids as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)],
     );
+
     // assume 1 refreshable access token per refresh token.
     let approx_nonrefreshable_access_tokens = counts.access_tokens - counts.refresh_tokens;
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         approx_nonrefreshable_access_tokens as u64,
         &[KeyValue::new(
             K_ENTITY,
             V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
         )],
     );
-    approx_total_counter.add(
+    APPROX_TOTAL_COUNTER.record(
         counts.refresh_tokens as u64,
         &[KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)],
     );
@@ -216,110 +200,39 @@ pub async fn migrate(
         provider_id_mapping,
     };
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: V_ENTITY_USERS,
-        migrated: migrated_counter.clone(),
-        approx_count: counts.users as u64,
-    });
-    let (mas, state) = migrate_users(
-        &mut synapse,
-        mas,
-        state,
-        rng,
-        migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(V_ENTITY_USERS, counts.users);
+    let (mas, state) = migrate_users(&mut synapse, mas, state, rng, progress_counter).await?;
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: V_ENTITY_THREEPIDS,
-        migrated: migrated_counter.clone(),
-        approx_count: counts.threepids as u64,
-    });
-    let (mas, state) = migrate_threepids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        &migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(V_ENTITY_THREEPIDS, counts.threepids);
+    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, progress_counter).await?;
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: V_ENTITY_EXTERNAL_IDS,
-        migrated: migrated_counter.clone(),
-        approx_count: counts.external_ids as u64,
-    });
-    let (mas, state) = migrate_external_ids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        &migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(V_ENTITY_EXTERNAL_IDS, counts.external_ids);
+    let (mas, state) =
+        migrate_external_ids(&mut synapse, mas, rng, state, progress_counter).await?;
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
-        migrated: migrated_counter.clone(),
-        approx_count: (counts.access_tokens - counts.refresh_tokens) as u64,
-    });
-    let (mas, state) = migrate_unrefreshable_access_tokens(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(
+        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+        counts.access_tokens - counts.refresh_tokens,
+    );
+    let (mas, state) =
+        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
-        migrated: migrated_counter.clone(),
-        approx_count: counts.refresh_tokens as u64,
-    });
-    let (mas, state) = migrate_refreshable_token_pairs(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        &migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter =
+        progress.migrating_data(V_ENTITY_REFRESHABLE_TOKEN_PAIRS, counts.refresh_tokens);
+    let (mas, state) =
+        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
-    let migrated_counter = Arc::new(AtomicU32::new(0));
-    progress.set_current_stage(ProgressStage::MigratingData {
-        entity: "devices",
-        migrated: migrated_counter.clone(),
-        approx_count: counts.devices as u64,
-    });
-    let (mas, _state) = migrate_devices(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        migrated_counter,
-        migrated_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data("devices", counts.devices);
+    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state, progress_counter).await?;
 
     synapse
         .finish()
         .await
         .into_synapse("failed to close Synapse reader")?;
 
-    mas.finish()
+    mas.finish(progress)
         .await
         .into_mas("failed to finalise MAS database")?;
 
@@ -332,13 +245,25 @@ async fn migrate_users(
     mut mas: MasWriter,
     mut state: MigrationState,
     rng: &mut impl RngCore,
-    progress_counter: Arc<AtomicU32>,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
+    // HACK(matrix.org): allocate a large buffer
+    let (tx, rx) = flume::bounded::<SynapseUser>(20 * 1024 * 1024);
+
+    let (txi, rxi) = flume::bounded::<(CompactString, UserInfo)>(20 * 1024 * 1024);
+
+    let server_name = state.server_name.clone();
+    // Accumulating the users state is potentially CPU-intensive, so we spawn a
+    // separate task to do it
+    let state_task = tokio::task::spawn_blocking(move || {
+        while let Ok((username, user_info)) = rxi.recv() {
+            state.users.insert(username, user_info);
+        }
+        state
+    });
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -348,22 +273,24 @@ async fn migrate_users(
             let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
             let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
 
-            while let Some(user) = rx.recv().await {
+            while let Ok(user) = rx.recv_async().await {
+                // Consume some coop budget to give it a chance to yield
+                tokio::task::coop::consume_budget().await;
+
                 // Handling an edge case: some AS users may have invalid localparts containing
                 // extra `:` characters. These users are ignored and a warning is logged.
                 if user.appservice_id.is_some()
                     && user
                         .name
                         .0
-                        .strip_suffix(&format!(":{}", state.server_name))
+                        .strip_suffix(&format!(":{server_name}"))
                         .is_some_and(|localpart| localpart.contains(':'))
                 {
                     tracing::warn!("AS user {} has invalid localpart, ignoring!", user.name.0);
                     continue;
                 }
 
-                let (mas_user, mas_password_opt) =
-                    transform_user(&user, &state.server_name, &mut rng)?;
+                let (mas_user, mas_password_opt) = transform_user(&user, &server_name, &mut rng)?;
 
                 let mut flags = UserFlags::empty();
                 if bool::from(user.admin) {
@@ -378,25 +305,32 @@ async fn migrate_users(
                 if user.appservice_id.is_some() {
                     flags |= UserFlags::IS_APPSERVICE;
 
+                    SKIPPED_COUNTER.add(1, &otel_kv);
+                    progress_counter.increment_skipped();
+
                     // Special case for appservice users: we don't insert them into the database
                     // We just record the user's information in the state and continue
-                    state.users.insert(
+                    txi.send_async((
                         CompactString::new(&mas_user.username),
                         UserInfo {
                             mas_user_id: None,
                             flags,
                         },
-                    );
+                    ))
+                    .await
+                    .map_err(|_| Error::ChannelClosed)?;
                     continue;
                 }
 
-                state.users.insert(
+                txi.send_async((
                     CompactString::new(&mas_user.username),
                     UserInfo {
                         mas_user_id: Some(mas_user.user_id),
                         flags,
                     },
-                );
+                ))
+                .await
+                .map_err(|_| Error::ChannelClosed)?;
 
                 user_buffer
                     .write(&mut mas, mas_user)
@@ -410,9 +344,12 @@ async fn migrate_users(
                         .into_mas("writing password")?;
                 }
 
-                migrated_otel_counter.add(1, &otel_kv);
-                progress_counter.fetch_add(1, Ordering::Relaxed);
+                MIGRATED_COUNTER.add(1, &otel_kv);
+                progress_counter.increment_migrated();
             }
+
+            // Explicitly drop the sender, so that the channel is closed
+            drop(txi);
 
             user_buffer
                 .finish(&mut mas)
@@ -423,7 +360,7 @@ async fn migrate_users(
                 .await
                 .into_mas("writing passwords")?;
 
-            Ok((mas, state))
+            Ok(mas)
         }
         .instrument(tracing::info_span!("ingest_task")),
     );
@@ -433,11 +370,12 @@ async fn migrate_users(
     let res = synapse
         .read_users()
         .map_err(|e| e.into_synapse("reading users"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
-    let (mas, state) = task.await.into_join("user write task")??;
+    let mas = task.await.into_join("user write task")??;
+    let state = state_task.await.into_join("user state task")?;
 
     res?;
 
@@ -455,8 +393,7 @@ async fn migrate_threepids(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
-    progress_counter: &AtomicU32,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)];
@@ -474,11 +411,27 @@ async fn migrate_threepids(
         } = threepid_res.into_synapse("reading threepid")?;
         let created_at: DateTime<Utc> = added_at.into();
 
+        // HACK(matrix.org): for some reason, m.org has threepids for the :vector.im
+        // server. We skip just skip them.
+        if synapse_user_id.0.ends_with(":vector.im") {
+            progress_counter.increment_skipped();
+            SKIPPED_COUNTER.add(1, &otel_kv);
+            continue;
+        }
+
         let username = synapse_user_id
             .extract_localpart(&state.server_name)
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have casing inconsistencies
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "Threepid found in the database matching an MXID with the wrong casing");
+                progress_counter.increment_skipped();
+                SKIPPED_COUNTER.add(1, &otel_kv);
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_threepids".to_owned(),
                 user: synapse_user_id,
@@ -486,6 +439,8 @@ async fn migrate_threepids(
         };
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
+            progress_counter.increment_skipped();
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -520,8 +475,8 @@ async fn migrate_threepids(
                 .into_mas("writing unsupported threepid")?;
         }
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.fetch_add(1, Ordering::Relaxed);
+        MIGRATED_COUNTER.add(1, &otel_kv);
+        progress_counter.increment_migrated();
     }
 
     email_buffer
@@ -551,8 +506,7 @@ async fn migrate_external_ids(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     state: MigrationState,
-    progress_counter: &AtomicU32,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)];
@@ -571,6 +525,14 @@ async fn migrate_external_ids(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have casing inconsistencies
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "External ID found in the database matching an MXID with the wrong casing");
+                progress_counter.increment_skipped();
+                SKIPPED_COUNTER.add(1, &otel_kv);
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "user_external_ids".to_owned(),
                 user: synapse_user_id,
@@ -578,6 +540,8 @@ async fn migrate_external_ids(
         };
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
+            progress_counter.increment_skipped();
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -608,8 +572,8 @@ async fn migrate_external_ids(
             .await
             .into_mas("failed to write upstream link")?;
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.fetch_add(1, Ordering::Relaxed);
+        MIGRATED_COUNTER.add(1, &otel_kv);
+        progress_counter.increment_migrated();
     }
 
     write_buffer
@@ -639,13 +603,12 @@ async fn migrate_devices(
     mut mas: MasWriter,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-    progress_counter: Arc<AtomicU32>,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, rx) = flume::bounded(10 * 1024 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -654,7 +617,10 @@ async fn migrate_devices(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-            while let Some(device) = rx.recv().await {
+            while let Ok(device) = rx.recv_async().await {
+                // Consume some coop budget to give it a chance to yield
+                tokio::task::coop::consume_budget().await;
+
                 let SynapseDevice {
                     user_id: synapse_user_id,
                     device_id,
@@ -668,6 +634,14 @@ async fn migrate_devices(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    // HACK(matrix.org): we seem to have casing inconsistencies
+                    if state.users.contains_key(username.to_lowercase().as_str()) {
+                        tracing::warn!(mxid = %synapse_user_id, "Device found in the database matching an MXID with the wrong casing");
+                        progress_counter.increment_skipped();
+                        SKIPPED_COUNTER.add(1, &otel_kv);
+                        continue;
+                    }
+
                     return Err(Error::MissingUserFromDependentTable {
                         table: "devices".to_owned(),
                         user: synapse_user_id,
@@ -675,6 +649,8 @@ async fn migrate_devices(
                 };
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
+                    progress_counter.increment_skipped();
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 };
 
@@ -731,8 +707,8 @@ async fn migrate_devices(
                     .await
                     .into_mas("writing compat sessions")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
-                progress_counter.fetch_add(1, Ordering::Relaxed);
+                MIGRATED_COUNTER.add(1, &otel_kv);
+                progress_counter.increment_migrated();
             }
 
             write_buffer
@@ -750,7 +726,7 @@ async fn migrate_devices(
     let res = synapse
         .read_devices()
         .map_err(|e| e.into_synapse("reading devices"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
@@ -769,14 +745,14 @@ async fn migrate_devices(
 /// Migrates unrefreshable access tokens (those without an associated refresh
 /// token). Some of these may be deviceless.
 #[tracing::instrument(skip_all, level = Level::INFO)]
+#[allow(clippy::too_many_arguments)]
 async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-    progress_counter: Arc<AtomicU32>,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(
@@ -784,7 +760,7 @@ async fn migrate_unrefreshable_access_tokens(
         V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
     )];
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, rx) = flume::bounded(10 * 1024 * 1024);
 
     let now = clock.now();
     // create a new RNG seeded from the passed RNG so that we can move it into the
@@ -796,7 +772,10 @@ async fn migrate_unrefreshable_access_tokens(
             let mut deviceless_session_write_buffer =
                 MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
-            while let Some(token) = rx.recv().await {
+            while let Ok(token) = rx.recv_async().await {
+                // Consume some coop budget to give it a chance to yield
+                tokio::task::coop::consume_budget().await;
+
                 let SynapseAccessToken {
                     user_id: synapse_user_id,
                     device_id,
@@ -809,6 +788,14 @@ async fn migrate_unrefreshable_access_tokens(
                     .into_extract_localpart(synapse_user_id.clone())?
                     .to_owned();
                 let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    // HACK(matrix.org): we seem to have casing inconsistencies
+                    if state.users.contains_key(username.to_lowercase().as_str()) {
+                        tracing::warn!(mxid = %synapse_user_id, "Access token found in the database matching an MXID with the wrong casing");
+                        progress_counter.increment_skipped();
+                        SKIPPED_COUNTER.add(1, &otel_kv);
+                        continue;
+                    }
+
                     return Err(Error::MissingUserFromDependentTable {
                         table: "access_tokens".to_owned(),
                         user: synapse_user_id,
@@ -816,6 +803,8 @@ async fn migrate_unrefreshable_access_tokens(
                 };
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
+                    progress_counter.increment_skipped();
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 };
 
@@ -823,6 +812,8 @@ async fn migrate_unrefreshable_access_tokens(
                     || user_infos.flags.is_guest()
                     || user_infos.flags.is_appservice()
                 {
+                    progress_counter.increment_skipped();
+                    SKIPPED_COUNTER.add(1, &otel_kv);
                     continue;
                 }
 
@@ -883,8 +874,8 @@ async fn migrate_unrefreshable_access_tokens(
                     .await
                     .into_mas("writing compat access tokens")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
-                progress_counter.fetch_add(1, Ordering::Relaxed);
+                MIGRATED_COUNTER.add(1, &otel_kv);
+                progress_counter.increment_migrated();
             }
             write_buffer
                 .finish(&mut mas)
@@ -905,7 +896,7 @@ async fn migrate_unrefreshable_access_tokens(
     let res = synapse
         .read_unrefreshable_access_tokens()
         .map_err(|e| e.into_synapse("reading tokens"))
-        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .forward(tx.into_sink().sink_map_err(|_| Error::ChannelClosed))
         .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
         .await;
 
@@ -924,14 +915,14 @@ async fn migrate_unrefreshable_access_tokens(
 /// Migrates (access token, refresh token) pairs.
 /// Does not migrate non-refreshable access tokens.
 #[tracing::instrument(skip_all, level = Level::INFO)]
+#[allow(clippy::too_many_arguments)]
 async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
     clock: &dyn Clock,
     rng: &mut impl RngCore,
     mut state: MigrationState,
-    progress_counter: &AtomicU32,
-    migrated_otel_counter: Counter<u64>,
+    progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)];
@@ -957,6 +948,14 @@ async fn migrate_refreshable_token_pairs(
             .into_extract_localpart(synapse_user_id.clone())?
             .to_owned();
         let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+            // HACK(matrix.org): we seem to have casing inconsistencies
+            if state.users.contains_key(username.to_lowercase().as_str()) {
+                tracing::warn!(mxid = %synapse_user_id, "Refresh token found in the database matching an MXID with the wrong casing");
+                progress_counter.increment_skipped();
+                SKIPPED_COUNTER.add(1, &otel_kv);
+                continue;
+            }
+
             return Err(Error::MissingUserFromDependentTable {
                 table: "refresh_tokens".to_owned(),
                 user: synapse_user_id,
@@ -964,6 +963,8 @@ async fn migrate_refreshable_token_pairs(
         };
 
         let Some(mas_user_id) = user_infos.mas_user_id else {
+            progress_counter.increment_skipped();
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         };
 
@@ -971,6 +972,8 @@ async fn migrate_refreshable_token_pairs(
             || user_infos.flags.is_guest()
             || user_infos.flags.is_appservice()
         {
+            progress_counter.increment_skipped();
+            SKIPPED_COUNTER.add(1, &otel_kv);
             continue;
         }
 
@@ -1015,8 +1018,8 @@ async fn migrate_refreshable_token_pairs(
             .await
             .into_mas("writing compat refresh tokens")?;
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.fetch_add(1, Ordering::Relaxed);
+        MIGRATED_COUNTER.add(1, &otel_kv);
+        progress_counter.increment_migrated();
     }
 
     access_token_write_buffer

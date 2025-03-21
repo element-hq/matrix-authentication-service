@@ -1,6 +1,9 @@
 use std::sync::LazyLock;
 
-use opentelemetry::{InstrumentationScope, metrics::Meter};
+use opentelemetry::{
+    InstrumentationScope,
+    metrics::{Counter, Gauge, Histogram, Meter},
+};
 use opentelemetry_semantic_conventions as semcov;
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
@@ -12,6 +15,50 @@ static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
 
 pub static METER: LazyLock<Meter> =
     LazyLock::new(|| opentelemetry::global::meter_with_scope(SCOPE.clone()));
+
+pub static APPROX_TOTAL_COUNTER: LazyLock<Gauge<u64>> = LazyLock::new(|| {
+    METER
+        .u64_gauge("syn2mas.entity.approx_total")
+        .with_description("Approximate number of entities of this type to be migrated")
+        .build()
+});
+
+pub static MIGRATED_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.entity.migrated")
+        .with_description("Number of entities of this type that have been migrated so far")
+        .build()
+});
+
+pub static SKIPPED_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.entity.skipped")
+        .with_description("Number of entities of this type that have been skipped so far")
+        .build()
+});
+
+pub static WRITER_FLUSH_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
+    METER
+        .u64_histogram("syn2mas.writer.flush_time")
+        .with_description("Time spent flushing the writer")
+        .with_unit("ms")
+        .build()
+});
+
+pub static WRITER_WAIT_TIME: LazyLock<Histogram<u64>> = LazyLock::new(|| {
+    METER
+        .u64_histogram("syn2mas.writer.wait_time")
+        .with_description("Time spent waiting for a writer connection to become available")
+        .with_unit("ms")
+        .build()
+});
+
+pub static READER_ENTITY_COUNT: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.reader.entity_count")
+        .with_description("Number of entities read from the reader")
+        .build()
+});
 
 /// Attribute key for syn2mas.entity metrics representing what entity.
 pub const K_ENTITY: &str = "entity";
