@@ -20,8 +20,6 @@ env:
   SCCACHE_ENDPOINT: https://4f82d842615ee6cdbfb633767c5e6aa3.r2.cloudflarestorage.com
   SCCACHE_REGION: auto
   RUSTC_WRAPPER: "sccache"
-  SCCACHE_ERROR_LOG: /tmp/sccache_log.txt
-  SCCACHE_LOG: debug
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -255,12 +253,6 @@ jobs:
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
         env:
           SQLX_OFFLINE: "1"
-
-      - name: Upload the sccache log
-        uses: actions/upload-artifact@v4.6.1
-        with:
-          name: sccache-log
-          path: /tmp/sccache_log.txt
 
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4.6.1
