@@ -107,6 +107,19 @@ jobs:
       contents: read
 
     steps:
+      - run: |
+          env | while read -r line
+          do
+            var_name=$(echo "$line" | cut -d= -f1)
+  
+            var_value=$(eval echo "\$$var_name")
+  
+            if [ -z "$var_value" ]; then
+              echo "$var_name: EMPTY"
+            else
+              echo "$var_name: NOT EMPTY"
+            fi
+          done
       - name: Checkout the code
         uses: actions/checkout@v4.2.2
 
