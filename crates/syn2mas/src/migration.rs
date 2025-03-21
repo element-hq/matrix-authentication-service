@@ -21,7 +21,6 @@ use opentelemetry::KeyValue;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
-use tokio_util::sync::PollSender;
 use tracing::{Instrument as _, Level, info};
 use ulid::Ulid;
 use uuid::{NonNilUuid, Uuid};
@@ -275,6 +274,9 @@ async fn migrate_users(
             let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
 
             while let Ok(user) = rx.recv_async().await {
+                // Force yielding to the scheduler, else we'll have long tick times
+                tokio::task::yield_now().await;
+
                 // Handling an edge case: some AS users may have invalid localparts containing
                 // extra `:` characters. These users are ignored and a warning is logged.
                 if user.appservice_id.is_some()
@@ -616,6 +618,9 @@ async fn migrate_devices(
             let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
             while let Ok(device) = rx.recv_async().await {
+                // Force yielding to the scheduler, else we'll have long tick times
+                tokio::task::yield_now().await;
+
                 let SynapseDevice {
                     user_id: synapse_user_id,
                     device_id,
@@ -769,6 +774,9 @@ async fn migrate_unrefreshable_access_tokens(
                 MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
             while let Ok(token) = rx.recv_async().await {
+                // Force yielding to the scheduler, else we'll have long tick times
+                tokio::task::yield_now().await;
+
                 let SynapseAccessToken {
                     user_id: synapse_user_id,
                     device_id,
