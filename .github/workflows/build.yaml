@@ -107,6 +107,18 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: |
+            ${{ matrix.target }}
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.8
+
       - run: |
           env | while read -r line
           do
@@ -120,17 +132,6 @@ jobs:
               echo "$var_name: NOT EMPTY"
             fi
           done
-      - name: Checkout the code
-        uses: actions/checkout@v4.2.2
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: |
-            ${{ matrix.target }}
-
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.8
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@v2
