@@ -273,9 +273,14 @@ async fn migrate_users(
             let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
             let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
 
+            let mut i = 0;
             while let Ok(user) = rx.recv_async().await {
-                // Force yielding to the scheduler, else we'll have long tick times
-                tokio::task::yield_now().await;
+                // Force yielding to the scheduler every once in a while, else we'll have long
+                // tick times
+                i += 1;
+                if i % 128 == 0 {
+                    tokio::task::yield_now().await;
+                }
 
                 // Handling an edge case: some AS users may have invalid localparts containing
                 // extra `:` characters. These users are ignored and a warning is logged.
@@ -617,9 +622,14 @@ async fn migrate_devices(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
+            let mut i = 0;
             while let Ok(device) = rx.recv_async().await {
-                // Force yielding to the scheduler, else we'll have long tick times
-                tokio::task::yield_now().await;
+                // Force yielding to the scheduler every once in a while, else we'll have long
+                // tick times
+                i += 1;
+                if i % 128 == 0 {
+                    tokio::task::yield_now().await;
+                }
 
                 let SynapseDevice {
                     user_id: synapse_user_id,
@@ -773,9 +783,14 @@ async fn migrate_unrefreshable_access_tokens(
             let mut deviceless_session_write_buffer =
                 MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
 
+            let mut i = 0;
             while let Ok(token) = rx.recv_async().await {
-                // Force yielding to the scheduler, else we'll have long tick times
-                tokio::task::yield_now().await;
+                // Force yielding to the scheduler every once in a while, else we'll have long
+                // tick times
+                i += 1;
+                if i % 128 == 0 {
+                    tokio::task::yield_now().await;
+                }
 
                 let SynapseAccessToken {
                     user_id: synapse_user_id,
