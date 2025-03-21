@@ -102,6 +102,7 @@ jobs:
     env:
       VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
       SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
+      ACTIONS_CACHE_SERVICE_V2: 1
 
     permissions:
       contents: read
