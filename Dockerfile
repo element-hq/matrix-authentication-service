@@ -114,20 +114,18 @@ ENV VERGEN_GIT_DESCRIBE=${VERGEN_GIT_DESCRIBE}
 
 # Network access: cargo auditable needs it
 RUN --network=default \
+  --mount=type=cache,target=/root/.cargo/registry \
+  --mount=type=cache,target=/app/target \
   cargo auditable build \
-  --locked \
-  --release \
-  --bin mas-cli \
-  --no-default-features \
-  --features docker \
-  --target x86_64-unknown-linux-gnu \
-  --target aarch64-unknown-linux-gnu
-
-# Move the binary to avoid having to guess its name in the next stage
-RUN --network=none \
-  mv "target/x86_64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-amd64
-RUN --network=none \
-  mv "target/aarch64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-arm64
+    --locked \
+    --release \
+    --bin mas-cli \
+    --no-default-features \
+    --features docker \
+    --target x86_64-unknown-linux-gnu \
+    --target aarch64-unknown-linux-gnu \
+  && mv "target/x86_64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-amd64 \
+  && mv "target/aarch64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-arm64
 
 #######################################
 ## Prepare /usr/local/share/mas-cli/ ##
