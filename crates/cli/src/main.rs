@@ -49,8 +49,15 @@ impl sentry::TransportFactory for SentryTransportFactory {
     }
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<ExitCode> {
+fn main() -> anyhow::Result<ExitCode> {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+
+    runtime.block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<ExitCode> {
     // We're splitting the "fallible" part of main in another function to have a
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
