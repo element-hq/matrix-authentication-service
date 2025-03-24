@@ -1849,6 +1849,13 @@ export type DeviceRedirectQueryVariables = Exact<{
 
 export type DeviceRedirectQuery = { __typename?: 'Query', session?: { __typename: 'CompatSession', id: string } | { __typename: 'Oauth2Session', id: string } | null };
 
+export type VerifyEmailQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type VerifyEmailQuery = { __typename?: 'Query', userEmailAuthentication?: { __typename?: 'UserEmailAuthentication', id: string, email: string, completedAt?: string | null } | null };
+
 export type DoVerifyEmailMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   code: Scalars['String']['input'];
@@ -1864,13 +1871,6 @@ export type ResendEmailAuthenticationCodeMutationVariables = Exact<{
 
 
 export type ResendEmailAuthenticationCodeMutation = { __typename?: 'Mutation', resendEmailAuthenticationCode: { __typename?: 'ResendEmailAuthenticationCodePayload', status: ResendEmailAuthenticationCodeStatus } };
-
-export type VerifyEmailQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type VerifyEmailQuery = { __typename?: 'Query', userEmailAuthentication?: { __typename?: 'UserEmailAuthentication', id: string, email: string, completedAt?: string | null } | null };
 
 export type ChangePasswordMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -2705,6 +2705,15 @@ export const DeviceRedirectDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<DeviceRedirectQuery, DeviceRedirectQueryVariables>;
+export const VerifyEmailDocument = new TypedDocumentString(`
+    query VerifyEmail($id: ID!) {
+  userEmailAuthentication(id: $id) {
+    id
+    email
+    completedAt
+  }
+}
+    `) as unknown as TypedDocumentString<VerifyEmailQuery, VerifyEmailQueryVariables>;
 export const DoVerifyEmailDocument = new TypedDocumentString(`
     mutation DoVerifyEmail($id: ID!, $code: String!) {
   completeEmailAuthentication(input: {id: $id, code: $code}) {
@@ -2719,15 +2728,6 @@ export const ResendEmailAuthenticationCodeDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>;
-export const VerifyEmailDocument = new TypedDocumentString(`
-    query VerifyEmail($id: ID!) {
-  userEmailAuthentication(id: $id) {
-    id
-    email
-    completedAt
-  }
-}
-    `) as unknown as TypedDocumentString<VerifyEmailQuery, VerifyEmailQueryVariables>;
 export const ChangePasswordDocument = new TypedDocumentString(`
     mutation ChangePassword($userId: ID!, $oldPassword: String!, $newPassword: String!) {
   setPassword(
@@ -3285,6 +3285,28 @@ export const mockDeviceRedirectQuery = (resolver: GraphQLResponseResolver<Device
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockVerifyEmailQuery(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { userEmailAuthentication }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockVerifyEmailQuery = (resolver: GraphQLResponseResolver<VerifyEmailQuery, VerifyEmailQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<VerifyEmailQuery, VerifyEmailQueryVariables>(
+    'VerifyEmail',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockDoVerifyEmailMutation(
  *   ({ query, variables }) => {
  *     const { id, code } = variables;
@@ -3320,28 +3342,6 @@ export const mockDoVerifyEmailMutation = (resolver: GraphQLResponseResolver<DoVe
 export const mockResendEmailAuthenticationCodeMutation = (resolver: GraphQLResponseResolver<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>, options?: RequestHandlerOptions) =>
   graphql.mutation<ResendEmailAuthenticationCodeMutation, ResendEmailAuthenticationCodeMutationVariables>(
     'ResendEmailAuthenticationCode',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockVerifyEmailQuery(
- *   ({ query, variables }) => {
- *     const { id } = variables;
- *     return HttpResponse.json({
- *       data: { userEmailAuthentication }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockVerifyEmailQuery = (resolver: GraphQLResponseResolver<VerifyEmailQuery, VerifyEmailQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<VerifyEmailQuery, VerifyEmailQueryVariables>(
-    'VerifyEmail',
     resolver,
     options
   )
