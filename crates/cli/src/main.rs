@@ -50,9 +50,17 @@ impl sentry::TransportFactory for SentryTransportFactory {
 }
 
 fn main() -> anyhow::Result<ExitCode> {
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
+    let mut builder = tokio::runtime::Builder::new_multi_thread();
+    builder.enable_all();
+
+    #[cfg(tokio_unstable)]
+    builder
+        .enable_metrics_poll_time_histogram()
+        .metrics_poll_time_histogram_configuration(tokio::runtime::HistogramConfiguration::log(
+            tokio::runtime::LogHistogram::default(),
+        ));
+
+    let runtime = builder.build()?;
 
     runtime.block_on(async_main())
 }
