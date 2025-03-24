@@ -43,6 +43,43 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
     >
       If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.
     </p>
+    <footer
+      class="_legalFooter_eb428f"
+    >
+      <nav>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_eb428f"
+        >
+          •
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_eb428f"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
   </div>
 </DocumentFragment>
 `;
