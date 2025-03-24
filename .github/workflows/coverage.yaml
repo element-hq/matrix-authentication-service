@@ -116,7 +116,7 @@ jobs:
         run: |
           cargo test --no-fail-fast --workspace
         env:
-          RUSTFLAGS: "-Cinstrument-coverage"
+          RUSTFLAGS: "-Cinstrument-coverage --cfg tokio_unstable"
           LLVM_PROFILE_FILE: "cargo-test-%p-%m.profraw"
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
           SQLX_OFFLINE: "1"

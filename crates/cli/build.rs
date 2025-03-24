@@ -6,6 +6,9 @@
 use vergen_gitcl::{Emitter, GitclBuilder, RustcBuilder};
 
 fn main() -> anyhow::Result<()> {
+    // Instruct rustc that we'll be using #[cfg(tokio_unstable)]
+    println!("cargo::rustc-check-cfg=cfg(tokio_unstable)");
+
     // At build time, we override the version through the environment variable
     // VERGEN_GIT_DESCRIBE. In some contexts, it means this variable is set but
     // empty, so we unset it here.
