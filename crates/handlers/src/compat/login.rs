@@ -103,6 +103,14 @@ pub struct RequestBody {
 
     #[serde(default)]
     refresh_token: bool,
+
+    /// ID of the client device.
+    /// If this does not correspond to a known client device, a new device will
+    /// be created. The given device ID must not be the same as a
+    /// cross-signing key ID. The server will auto-generate a device_id if
+    /// this is not specified.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    device_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -310,6 +318,7 @@ pub(crate) async fn post(
                 &homeserver,
                 user,
                 password,
+                input.device_id, // TODO check for validity
             )
             .await?
         }
@@ -446,6 +455,7 @@ async fn user_password_login(
     homeserver: &dyn HomeserverConnection,
     username: String,
     password: String,
+    requested_device_id: Option<String>,
 ) -> Result<(CompatSession, User), RouteError> {
     // Try getting the localpart out of the MXID
     let username = homeserver.localpart(&username).unwrap_or(&username);
@@ -498,9 +508,14 @@ async fn user_password_login(
     // Lock the user sync to make sure we don't get into a race condition
     repo.user().acquire_lock_for_sync(&user).await?;
 
-    // Now that the user credentials have been verified, start a new compat session
-    let device = Device::generate(&mut rng);
     let mxid = homeserver.mxid(&user.username);
+
+    // Now that the user credentials have been verified, start a new compat session
+    let device = if let Some(requested_device_id) = requested_device_id {
+        Device::from(requested_device_id)
+    } else {
+        Device::generate(&mut rng)
+    };
     homeserver
         .create_device(&mxid, device.as_str())
         .await
