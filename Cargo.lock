@@ -1504,12 +1504,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data-encoding"
-version = "2.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "575f75dfd25738df5b91b8e43e14d44bda14637a58fae779fd2b064f8bf3e010"
-
-[[package]]
 name = "deadpool"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3123,8 +3117,8 @@ version = "0.14.1"
 dependencies = [
  "axum",
  "axum-extra",
+ "base64ct",
  "chrono",
- "data-encoding",
  "headers",
  "http",
  "icu_locid",
@@ -4011,8 +4005,8 @@ name = "oauth2-types"
 version = "0.14.1"
 dependencies = [
  "assert_matches",
+ "base64ct",
  "chrono",
- "data-encoding",
  "language-tags",
  "mas-iana",
  "mas-jose",

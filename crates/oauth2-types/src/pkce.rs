@@ -10,7 +10,7 @@
 
 use std::borrow::Cow;
 
-use data_encoding::BASE64URL_NOPAD;
+use base64ct::{Base64UrlUnpadded, Encoding};
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -98,7 +98,7 @@ impl CodeChallengeMethodExt for PkceCodeChallengeMethod {
                 let mut hasher = Sha256::new();
                 hasher.update(verifier.as_bytes());
                 let hash = hasher.finalize();
-                let verifier = BASE64URL_NOPAD.encode(&hash);
+                let verifier = Base64UrlUnpadded::encode_string(&hash);
                 verifier.into()
             }
             _ => return Err(CodeChallengeError::UnknownChallengeMethod),

@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use base64ct::{Base64UrlUnpadded, Encoding};
 use chrono::{DateTime, Duration, Utc};
-use data_encoding::{BASE64URL_NOPAD, DecodeError};
 use mas_storage::Clock;
 use rand::{Rng, RngCore, distributions::Standard, prelude::Distribution as _};
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ pub enum CsrfError {
 
     /// Failed to decode the token
     #[error("could not decode CSRF token")]
-    Decode(#[from] DecodeError),
+    Decode(#[from] base64ct::Error),
 }
 
 /// A CSRF token
@@ -68,7 +68,7 @@ impl CsrfToken {
     /// Get the value to include in HTML forms
     #[must_use]
     pub fn form_value(&self) -> String {
-        BASE64URL_NOPAD.encode(&self.token[..])
+        Base64UrlUnpadded::encode_string(&self.token[..])
     }
 
     /// Verifies that the value got from an HTML form matches this token
@@ -77,7 +77,7 @@ impl CsrfToken {
     ///
     /// Returns an error if the value in the form does not match this token
     pub fn verify_form_value(&self, form_value: &str) -> Result<(), CsrfError> {
-        let form_value = BASE64URL_NOPAD.decode(form_value.as_bytes())?;
+        let form_value = Base64UrlUnpadded::decode_vec(form_value)?;
         if self.token[..] == form_value {
             Ok(())
         } else {

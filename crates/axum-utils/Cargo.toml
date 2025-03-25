@@ -14,8 +14,8 @@ workspace = true
 [dependencies]
 axum.workspace = true
 axum-extra.workspace = true
+base64ct.workspace = true
 chrono.workspace = true
-data-encoding = "2.8.0"
 headers.workspace = true
 http.workspace = true
 icu_locid = "1.5.0"
