@@ -49,8 +49,23 @@ impl sentry::TransportFactory for SentryTransportFactory {
     }
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<ExitCode> {
+fn main() -> anyhow::Result<ExitCode> {
+    let mut builder = tokio::runtime::Builder::new_multi_thread();
+    builder.enable_all();
+
+    #[cfg(tokio_unstable)]
+    builder
+        .enable_metrics_poll_time_histogram()
+        .metrics_poll_time_histogram_configuration(tokio::runtime::HistogramConfiguration::log(
+            tokio::runtime::LogHistogram::default(),
+        ));
+
+    let runtime = builder.build()?;
+
+    runtime.block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<ExitCode> {
     // We're splitting the "fallible" part of main in another function to have a
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
