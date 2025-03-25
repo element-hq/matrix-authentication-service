@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
@@ -25,15 +23,10 @@ import { Route as ClientsIdImport } from './routes/clients.$id'
 import { Route as PasswordRecoveryIndexImport } from './routes/password.recovery.index'
 import { Route as PasswordChangeIndexImport } from './routes/password.change.index'
 import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.index'
+import { Route as PasswordChangeSuccessImport } from './routes/password.change.success'
 import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
 import { Route as EmailsIdInUseImport } from './routes/emails.$id.in-use'
 import { Route as AccountSessionsBrowsersImport } from './routes/_account.sessions.browsers'
-
-// Create Virtual Routes
-
-const PasswordChangeSuccessLazyImport = createFileRoute(
-  '/password/change/success',
-)()
 
 // Create/Update Routes
 
@@ -46,7 +39,7 @@ const ResetCrossSigningRoute = ResetCrossSigningImport.update({
 const AccountRoute = AccountImport.update({
   id: '/_account',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/_account.lazy').then((d) => d.Route))
+} as any)
 
 const ResetCrossSigningIndexRoute = ResetCrossSigningIndexImport.update({
   id: '/',
@@ -58,15 +51,13 @@ const AccountIndexRoute = AccountIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AccountRoute,
-} as any).lazy(() =>
-  import('./routes/_account.index.lazy').then((d) => d.Route),
-)
+} as any)
 
 const SessionsIdRoute = SessionsIdImport.update({
   id: '/sessions/$id',
   path: '/sessions/$id',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/sessions.$id.lazy').then((d) => d.Route))
+} as any)
 
 const ResetCrossSigningSuccessRoute = ResetCrossSigningSuccessImport.update({
   id: '/success',
@@ -92,47 +83,37 @@ const ClientsIdRoute = ClientsIdImport.update({
   id: '/clients/$id',
   path: '/clients/$id',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/clients.$id.lazy').then((d) => d.Route))
+} as any)
 
 const PasswordRecoveryIndexRoute = PasswordRecoveryIndexImport.update({
   id: '/password/recovery/',
   path: '/password/recovery/',
   getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-  import('./routes/password.recovery.index.lazy').then((d) => d.Route),
-)
+} as any)
 
 const PasswordChangeIndexRoute = PasswordChangeIndexImport.update({
   id: '/password/change/',
   path: '/password/change/',
   getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-  import('./routes/password.change.index.lazy').then((d) => d.Route),
-)
+} as any)
 
 const AccountSessionsIndexRoute = AccountSessionsIndexImport.update({
   id: '/sessions/',
   path: '/sessions/',
   getParentRoute: () => AccountRoute,
-} as any).lazy(() =>
-  import('./routes/_account.sessions.index.lazy').then((d) => d.Route),
-)
+} as any)
 
-const PasswordChangeSuccessLazyRoute = PasswordChangeSuccessLazyImport.update({
+const PasswordChangeSuccessRoute = PasswordChangeSuccessImport.update({
   id: '/password/change/success',
   path: '/password/change/success',
   getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-  import('./routes/password.change.success.lazy').then((d) => d.Route),
-)
+} as any)
 
 const EmailsIdVerifyRoute = EmailsIdVerifyImport.update({
   id: '/emails/$id/verify',
   path: '/emails/$id/verify',
   getParentRoute: () => rootRoute,
-} as any).lazy(() =>
-  import('./routes/emails.$id.verify.lazy').then((d) => d.Route),
-)
+} as any)
 
 const EmailsIdInUseRoute = EmailsIdInUseImport.update({
   id: '/emails/$id/in-use',
@@ -144,9 +125,7 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersImport.update({
   id: '/sessions/browsers',
   path: '/sessions/browsers',
   getParentRoute: () => AccountRoute,
-} as any).lazy(() =>
-  import('./routes/_account.sessions.browsers.lazy').then((d) => d.Route),
-)
+} as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -240,7 +219,7 @@ declare module '@tanstack/react-router' {
       id: '/password/change/success'
       path: '/password/change/success'
       fullPath: '/password/change/success'
-      preLoaderRoute: typeof PasswordChangeSuccessLazyImport
+      preLoaderRoute: typeof PasswordChangeSuccessImport
       parentRoute: typeof rootRoute
     }
     '/_account/sessions/': {
@@ -312,7 +291,7 @@ export interface FileRoutesByFullPath {
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
-  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/password/change/success': typeof PasswordChangeSuccessRoute
   '/sessions': typeof AccountSessionsIndexRoute
   '/password/change': typeof PasswordChangeIndexRoute
   '/password/recovery': typeof PasswordRecoveryIndexRoute
@@ -329,7 +308,7 @@ export interface FileRoutesByTo {
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
-  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/password/change/success': typeof PasswordChangeSuccessRoute
   '/sessions': typeof AccountSessionsIndexRoute
   '/password/change': typeof PasswordChangeIndexRoute
   '/password/recovery': typeof PasswordRecoveryIndexRoute
@@ -349,7 +328,7 @@ export interface FileRoutesById {
   '/_account/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
-  '/password/change/success': typeof PasswordChangeSuccessLazyRoute
+  '/password/change/success': typeof PasswordChangeSuccessRoute
   '/_account/sessions/': typeof AccountSessionsIndexRoute
   '/password/change/': typeof PasswordChangeIndexRoute
   '/password/recovery/': typeof PasswordRecoveryIndexRoute
@@ -419,7 +398,7 @@ export interface RootRouteChildren {
   SessionsIdRoute: typeof SessionsIdRoute
   EmailsIdInUseRoute: typeof EmailsIdInUseRoute
   EmailsIdVerifyRoute: typeof EmailsIdVerifyRoute
-  PasswordChangeSuccessLazyRoute: typeof PasswordChangeSuccessLazyRoute
+  PasswordChangeSuccessRoute: typeof PasswordChangeSuccessRoute
   PasswordChangeIndexRoute: typeof PasswordChangeIndexRoute
   PasswordRecoveryIndexRoute: typeof PasswordRecoveryIndexRoute
 }
@@ -432,7 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsIdRoute: SessionsIdRoute,
   EmailsIdInUseRoute: EmailsIdInUseRoute,
   EmailsIdVerifyRoute: EmailsIdVerifyRoute,
-  PasswordChangeSuccessLazyRoute: PasswordChangeSuccessLazyRoute,
+  PasswordChangeSuccessRoute: PasswordChangeSuccessRoute,
   PasswordChangeIndexRoute: PasswordChangeIndexRoute,
   PasswordRecoveryIndexRoute: PasswordRecoveryIndexRoute,
 }
@@ -511,7 +490,7 @@ export const routeTree = rootRoute
       "filePath": "emails.$id.verify.tsx"
     },
     "/password/change/success": {
-      "filePath": "password.change.success.lazy.tsx"
+      "filePath": "password.change.success.tsx"
     },
     "/_account/sessions/": {
       "filePath": "_account.sessions.index.tsx",

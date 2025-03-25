@@ -1,17 +1,17 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import IconCheckCircle from "@vector-im/compound-design-tokens/assets/web/icons/check-circle-solid";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 
-export const Route = createLazyFileRoute("/password/change/success")({
+export const Route = createFileRoute("/password/change/success")({
   component: ChangePasswordSuccess,
 });
 

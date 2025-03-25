@@ -55,9 +55,9 @@ type Documents = {
     "\n  query OAuth2Client($id: ID!) {\n    oauth2Client(id: $id) {\n      ...OAuth2Client_detail\n    }\n  }\n": typeof types.OAuth2ClientDocument,
     "\n  query CurrentViewer {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n  }\n": typeof types.CurrentViewerDocument,
     "\n  query DeviceRedirect($deviceId: String!, $userId: ID!) {\n    session(deviceId: $deviceId, userId: $userId) {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n  }\n": typeof types.DeviceRedirectDocument,
+    "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n": typeof types.VerifyEmailDocument,
     "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    completeEmailAuthentication(input: { id: $id, code: $code }) {\n      status\n    }\n  }\n": typeof types.DoVerifyEmailDocument,
     "\n  mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {\n    resendEmailAuthenticationCode(input: { id: $id, language: $language }) {\n      status\n    }\n  }\n": typeof types.ResendEmailAuthenticationCodeDocument,
-    "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n": typeof types.VerifyEmailDocument,
     "\n  mutation ChangePassword(\n    $userId: ID!\n    $oldPassword: String!\n    $newPassword: String!\n  ) {\n    setPassword(\n      input: {\n        userId: $userId\n        currentPassword: $oldPassword\n        newPassword: $newPassword\n      }\n    ) {\n      status\n    }\n  }\n": typeof types.ChangePasswordDocument,
     "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": typeof types.PasswordChangeDocument,
     "\n  mutation RecoverPassword($ticket: String!, $newPassword: String!) {\n    setPasswordByRecovery(\n      input: { ticket: $ticket, newPassword: $newPassword }\n    ) {\n      status\n    }\n  }\n": typeof types.RecoverPasswordDocument,
@@ -109,9 +109,9 @@ const documents: Documents = {
     "\n  query OAuth2Client($id: ID!) {\n    oauth2Client(id: $id) {\n      ...OAuth2Client_detail\n    }\n  }\n": types.OAuth2ClientDocument,
     "\n  query CurrentViewer {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n  }\n": types.CurrentViewerDocument,
     "\n  query DeviceRedirect($deviceId: String!, $userId: ID!) {\n    session(deviceId: $deviceId, userId: $userId) {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n  }\n": types.DeviceRedirectDocument,
+    "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n": types.VerifyEmailDocument,
     "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    completeEmailAuthentication(input: { id: $id, code: $code }) {\n      status\n    }\n  }\n": types.DoVerifyEmailDocument,
     "\n  mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {\n    resendEmailAuthenticationCode(input: { id: $id, language: $language }) {\n      status\n    }\n  }\n": types.ResendEmailAuthenticationCodeDocument,
-    "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n": types.VerifyEmailDocument,
     "\n  mutation ChangePassword(\n    $userId: ID!\n    $oldPassword: String!\n    $newPassword: String!\n  ) {\n    setPassword(\n      input: {\n        userId: $userId\n        currentPassword: $oldPassword\n        newPassword: $newPassword\n      }\n    ) {\n      status\n    }\n  }\n": types.ChangePasswordDocument,
     "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": types.PasswordChangeDocument,
     "\n  mutation RecoverPassword($ticket: String!, $newPassword: String!) {\n    setPasswordByRecovery(\n      input: { ticket: $ticket, newPassword: $newPassword }\n    ) {\n      status\n    }\n  }\n": types.RecoverPasswordDocument,
@@ -286,15 +286,15 @@ export function graphql(source: "\n  query DeviceRedirect($deviceId: String!, $u
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n"): typeof import('./graphql').VerifyEmailDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    completeEmailAuthentication(input: { id: $id, code: $code }) {\n      status\n    }\n  }\n"): typeof import('./graphql').DoVerifyEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {\n    resendEmailAuthenticationCode(input: { id: $id, language: $language }) {\n      status\n    }\n  }\n"): typeof import('./graphql').ResendEmailAuthenticationCodeDocument;
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query VerifyEmail($id: ID!) {\n    userEmailAuthentication(id: $id) {\n      id\n      email\n      completedAt\n    }\n  }\n"): typeof import('./graphql').VerifyEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

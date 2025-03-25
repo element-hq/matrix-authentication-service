@@ -66,9 +66,12 @@ export default defineConfig((env) => ({
   plugins: [
     codegen(),
 
-    react(),
+    tanStackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
 
-    tanStackRouter(),
+    react(),
 
     codecovVitePlugin({
       enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,

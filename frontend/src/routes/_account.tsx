@@ -4,8 +4,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { queryOptions } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { Outlet, createFileRoute, notFound } from "@tanstack/react-router";
+import { Heading } from "@vector-im/compound-web";
+import { useTranslation } from "react-i18next";
+import Layout from "../components/Layout";
+import NavBar from "../components/NavBar";
+import NavItem from "../components/NavItem";
+import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -24,11 +30,41 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-export const query = queryOptions({
+const query = queryOptions({
   queryKey: ["currentUserGreeting"],
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  component: Account,
 });
+
+function Account(): React.ReactElement {
+  const { t } = useTranslation();
+  const result = useSuspenseQuery(query);
+  const viewer = result.data.viewer;
+  if (viewer?.__typename !== "User") throw notFound();
+  const siteConfig = result.data.siteConfig;
+
+  return (
+    <Layout wide>
+      <div className="flex flex-col gap-10">
+        <Heading size="md" weight="semibold">
+          {t("frontend.account.title")}
+        </Heading>
+
+        <div className="flex flex-col gap-4">
+          <UserGreeting user={viewer} siteConfig={siteConfig} />
+
+          <NavBar>
+            <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
+            <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
+          </NavBar>
+        </div>
+      </div>
+
+      <Outlet />
+    </Layout>
+  );
+}
