@@ -21,9 +21,11 @@ serde_with = { version = "3.12.0", features = ["chrono"] }
 chrono.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+indexmap.workspace = true
 
 mas-iana.workspace = true
 mas-jose.workspace = true
 
 [dev-dependencies]
 assert_matches = "1.5.0"
+insta.workspace = true

@@ -4,9 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use chrono::Duration;
+use indexmap::IndexMap;
 use language_tags::LanguageTag;
 use mas_iana::{
     jose::{JsonWebEncryptionAlg, JsonWebEncryptionEnc, JsonWebSignatureAlg},
@@ -45,18 +46,18 @@ impl<T> Localized<T> {
     }
 
     fn deserialize(
-        map: &mut HashMap<String, HashMap<Option<LanguageTag>, Value>>,
+        map: &mut IndexMap<String, IndexMap<Option<LanguageTag>, Value>>,
         field_name: &'static str,
     ) -> Result<Option<Self>, serde_json::Error>
     where
         T: DeserializeOwned,
     {
-        let Some(map) = map.remove(field_name) else {
+        let Some(map) = map.shift_remove(field_name) else {
             return Ok(None);
         };
 
         let mut non_localized = None;
-        let mut localized = HashMap::with_capacity(map.len() - 1);
+        let mut localized = IndexMap::with_capacity(map.len() - 1);
 
         for (k, v) in map {
             let value = serde_json::from_value(v)?;
@@ -350,8 +351,8 @@ impl<'de> Deserialize<'de> for ClientMetadataLocalizedFields {
     where
         D: serde::Deserializer<'de>,
     {
-        let map = HashMap::<Cow<'de, str>, Value>::deserialize(deserializer)?;
-        let mut new_map: HashMap<String, HashMap<Option<LanguageTag>, Value>> = HashMap::new();
+        let map = IndexMap::<Cow<'de, str>, Value>::deserialize(deserializer)?;
+        let mut new_map: IndexMap<String, IndexMap<Option<LanguageTag>, Value>> = IndexMap::new();
 
         for (k, v) in map {
             let (prefix, lang) = if let Some((prefix, lang)) = k.split_once('#') {
@@ -392,6 +393,8 @@ impl<'de> Deserialize<'de> for ClientMetadataLocalizedFields {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_yaml_snapshot;
+
     use super::*;
 
     #[test]
@@ -464,16 +467,28 @@ mod tests {
         .validate()
         .unwrap();
 
-        assert_eq!(
-            serde_json::to_value(metadata).unwrap(),
-            serde_json::json!({
-                "redirect_uris": ["http://localhost/oidc"],
-                "client_name": "Postbox",
-                "client_name#fr": "Boîte à lettres",
-                "client_uri": "https://localhost/",
-                "client_uri#fr": "https://localhost/fr",
-                "client_uri#de": "https://localhost/de",
-            })
-        );
+        assert_yaml_snapshot!(metadata, @r###"
+        redirect_uris:
+          - "http://localhost/oidc"
+        client_name: Postbox
+        "client_name#fr": Boîte à lettres
+        client_uri: "https://localhost/"
+        "client_uri#fr": "https://localhost/fr"
+        "client_uri#de": "https://localhost/de"
+        "###);
+
+        // Do a roundtrip, we should get the same metadata back with the same order
+        let metadata: ClientMetadata =
+            serde_json::from_value(serde_json::to_value(metadata).unwrap()).unwrap();
+        let metadata = metadata.validate().unwrap();
+        assert_yaml_snapshot!(metadata, @r###"
+        redirect_uris:
+          - "http://localhost/oidc"
+        client_name: Postbox
+        "client_name#fr": Boîte à lettres
+        client_uri: "https://localhost/"
+        "client_uri#fr": "https://localhost/fr"
+        "client_uri#de": "https://localhost/de"
+        "###);
     }
 }

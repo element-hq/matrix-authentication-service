@@ -4009,6 +4009,8 @@ dependencies = [
  "assert_matches",
  "base64ct",
  "chrono",
+ "indexmap 2.8.0",
+ "insta",
  "language-tags",
  "mas-iana",
  "mas-jose",

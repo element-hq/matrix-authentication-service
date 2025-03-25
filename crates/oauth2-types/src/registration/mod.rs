@@ -8,9 +8,10 @@
 //!
 //! [Dynamic Client Registration]: https://openid.net/specs/openid-connect-registration-1_0.html
 
-use std::{collections::HashMap, ops::Deref};
+use std::ops::Deref;
 
 use chrono::{DateTime, Duration, Utc};
+use indexmap::IndexMap;
 use language_tags::LanguageTag;
 use mas_iana::{
     jose::{JsonWebEncryptionAlg, JsonWebEncryptionEnc, JsonWebSignatureAlg},
@@ -58,7 +59,7 @@ pub const DEFAULT_ENCRYPTION_ENC_ALGORITHM: &JsonWebEncryptionEnc =
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Localized<T> {
     non_localized: T,
-    localized: HashMap<LanguageTag, T>,
+    localized: IndexMap<LanguageTag, T>,
 }
 
 impl<T> Localized<T> {
@@ -104,8 +105,8 @@ impl<T> Localized<T> {
     }
 }
 
-impl<T> From<(T, HashMap<LanguageTag, T>)> for Localized<T> {
-    fn from(t: (T, HashMap<LanguageTag, T>)) -> Self {
+impl<T> From<(T, IndexMap<LanguageTag, T>)> for Localized<T> {
+    fn from(t: (T, IndexMap<LanguageTag, T>)) -> Self {
         Localized {
             non_localized: t.0,
             localized: t.1,
