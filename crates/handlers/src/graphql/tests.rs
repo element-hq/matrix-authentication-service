@@ -37,6 +37,7 @@ async fn create_test_client(state: &TestState) -> Client {
             vec![],
             None,
             None,
+            None,
             vec![],
             None,
             None,

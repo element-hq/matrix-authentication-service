@@ -35,6 +35,9 @@ pub struct Client {
     /// Client identifier
     pub client_id: String,
 
+    /// Hash of the client metadata
+    pub metadata_digest: Option<String>,
+
     pub encrypted_client_secret: Option<String>,
 
     pub application_type: Option<ApplicationType>,
@@ -177,6 +180,7 @@ impl Client {
             Self {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 client_id: "client1".to_owned(),
+                metadata_digest: None,
                 encrypted_client_secret: None,
                 application_type: Some(ApplicationType::Web),
                 redirect_uris: vec![
@@ -202,6 +206,7 @@ impl Client {
             Self {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 client_id: "client2".to_owned(),
+                metadata_digest: None,
                 encrypted_client_secret: None,
                 application_type: Some(ApplicationType::Native),
                 redirect_uris: vec![Url::parse("https://client2.example.com/redirect").unwrap()],

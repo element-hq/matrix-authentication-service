@@ -118,8 +118,8 @@ impl<T> From<(T, HashMap<LanguageTag, T>)> for Localized<T> {
 /// All the fields with a default value are accessible via methods.
 ///
 /// [IANA registry]: https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#client-metadata
-#[derive(Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(from = "ClientMetadataSerdeHelper")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(from = "ClientMetadataSerdeHelper", into = "ClientMetadataSerdeHelper")]
 pub struct ClientMetadata {
     /// Array of redirection URIs for use in redirect-based flows such as the
     /// [authorization code flow].

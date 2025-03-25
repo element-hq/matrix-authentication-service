@@ -148,6 +148,10 @@ version = "0.8.0"
 [workspace.dependencies.headers]
 version = "0.4.0"
 
+# Hex encoding and decoding
+[workspace.dependencies.hex]
+version = "0.4.3"
+
 # HTTP request/response
 [workspace.dependencies.http]
 version = "1.3.1"
@@ -277,6 +281,11 @@ version = "0.5.1"
 [workspace.dependencies.schemars]
 version = "0.8.22"
 features = ["url", "chrono", "preserve_order"]
+
+# SHA-2 cryptographic hash algorithm
+[workspace.dependencies.sha2]
+version = "0.10.8"
+features = ["oid"]
 
 # Query builder
 [workspace.dependencies.sea-query]

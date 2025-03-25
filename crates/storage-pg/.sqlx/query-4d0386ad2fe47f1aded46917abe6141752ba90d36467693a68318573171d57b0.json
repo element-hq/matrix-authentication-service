@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO oauth2_clients\n                    ( oauth2_client_id\n                    , metadata_digest\n                    , encrypted_client_secret\n                    , application_type\n                    , redirect_uris\n                    , grant_type_authorization_code\n                    , grant_type_refresh_token\n                    , grant_type_client_credentials\n                    , grant_type_device_code\n                    , client_name\n                    , logo_uri\n                    , client_uri\n                    , policy_uri\n                    , tos_uri\n                    , jwks_uri\n                    , jwks\n                    , id_token_signed_response_alg\n                    , userinfo_signed_response_alg\n                    , token_endpoint_auth_method\n                    , token_endpoint_auth_signing_alg\n                    , initiate_login_uri\n                    , is_static\n                    )\n                VALUES\n                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,\n                    $14, $15, $16, $17, $18, $19, $20, $21, FALSE)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4d0386ad2fe47f1aded46917abe6141752ba90d36467693a68318573171d57b0"
+}
