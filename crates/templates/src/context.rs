@@ -507,6 +507,76 @@ impl LoginContext {
     }
 }
 
+/// Fields of the passkey login form
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PasskeyLoginFormField {
+    /// The id field
+    Id,
+
+    /// The response field
+    Response,
+}
+
+impl FormField for PasskeyLoginFormField {
+    fn keep(&self) -> bool {
+        match self {
+            Self::Id => true,
+            Self::Response => false,
+        }
+    }
+}
+
+/// Context used by the `login/passkey.html` template
+#[derive(Serialize, Default)]
+pub struct PasskeyLoginContext {
+    form: FormState<PasskeyLoginFormField>,
+    next: Option<PostAuthContext>,
+    options: String,
+}
+
+impl TemplateContext for PasskeyLoginContext {
+    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        // TODO: samples with errors
+        vec![PasskeyLoginContext {
+            form: FormState::default(),
+            next: None,
+            options: String::new(),
+        }]
+    }
+}
+
+impl PasskeyLoginContext {
+    /// Set the form state
+    #[must_use]
+    pub fn with_form_state(self, form: FormState<PasskeyLoginFormField>) -> Self {
+        Self { form, ..self }
+    }
+
+    /// Mutably borrow the form state
+    pub fn form_state_mut(&mut self) -> &mut FormState<PasskeyLoginFormField> {
+        &mut self.form
+    }
+
+    /// Add a post authentication action to the context
+    #[must_use]
+    pub fn with_post_action(self, context: PostAuthContext) -> Self {
+        Self {
+            next: Some(context),
+            ..self
+        }
+    }
+
+    /// Set the webauthn options
+    #[must_use]
+    pub fn with_options(self, options: String) -> Self {
+        Self { options, ..self }
+    }
+}
+
 /// Fields of the registration form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

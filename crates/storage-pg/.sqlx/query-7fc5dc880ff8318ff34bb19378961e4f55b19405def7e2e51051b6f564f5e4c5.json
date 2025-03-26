@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT user_passkey_id\n                     , user_id\n                     , credential_id\n                     , name\n                     , transports\n                     , static_state\n                     , dynamic_state\n                     , metadata\n                     , last_used_at\n                     , created_at\n                FROM user_passkeys\n\n                WHERE user_id = $1\n\n                ORDER BY created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_passkey_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "credential_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "transports",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "static_state",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "dynamic_state",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 7,
+        "name": "metadata",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_used_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "7fc5dc880ff8318ff34bb19378961e4f55b19405def7e2e51051b6f564f5e4c5"
+}

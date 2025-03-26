@@ -10,7 +10,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryError};
 
-use crate::{Limiter, graphql::Requester, passwords::PasswordManager};
+use crate::{Limiter, graphql::Requester, passwords::PasswordManager, webauthn::Webauthn};
 
 #[async_trait::async_trait]
 pub trait State {
@@ -23,6 +23,7 @@ pub trait State {
     fn site_config(&self) -> &SiteConfig;
     fn url_builder(&self) -> &UrlBuilder;
     fn limiter(&self) -> &Limiter;
+    fn webauthn(&self) -> &Webauthn;
 }
 
 pub type BoxState = Box<dyn State + Send + Sync + 'static>;

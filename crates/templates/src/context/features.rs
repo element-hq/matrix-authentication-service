@@ -13,6 +13,7 @@ use minijinja::{
 
 /// Site features information.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct SiteFeatures {
     /// Whether local password-based registration is enabled.
     pub password_registration: bool,
@@ -22,6 +23,9 @@ pub struct SiteFeatures {
 
     /// Whether email-based account recovery is enabled.
     pub account_recovery: bool,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }
 
 impl Object for SiteFeatures {
@@ -30,6 +34,7 @@ impl Object for SiteFeatures {
             "password_registration" => Some(Value::from(self.password_registration)),
             "password_login" => Some(Value::from(self.password_login)),
             "account_recovery" => Some(Value::from(self.account_recovery)),
+            "passkeys_enabled" => Some(Value::from(self.passkeys_enabled)),
             _ => None,
         }
     }
@@ -39,6 +44,7 @@ impl Object for SiteFeatures {
             "password_registration",
             "password_login",
             "account_recovery",
+            "passkeys_enabled",
         ])
     }
 }
