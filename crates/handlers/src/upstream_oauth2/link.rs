@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use axum::{
     Form,
@@ -35,6 +35,7 @@ use mas_templates::{
     ToFormState, UpstreamExistingLinkContext, UpstreamRegister, UpstreamSuggestLink,
 };
 use minijinja::Environment;
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::warn;
@@ -45,9 +46,25 @@ use super::{
     template::{AttributeMappingContext, environment},
 };
 use crate::{
-    BoundActivityTracker, PreferredLanguage, SiteConfig, impl_from_error_for_route,
+    BoundActivityTracker, METER, PreferredLanguage, SiteConfig, impl_from_error_for_route,
     views::shared::OptionalPostAuthAction,
 };
+
+static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.upstream_oauth2.login")
+        .with_description("Successful upstream OAuth 2.0 login to existing accounts")
+        .with_unit("{login}")
+        .build()
+});
+static REGISTRATION_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.upstream_oauth2.registration")
+        .with_description("Successful upstream OAuth 2.0 registration")
+        .with_unit("{registration}")
+        .build()
+});
+const PROVIDER: Key = Key::from_static_str("provider");
 
 const DEFAULT_LOCALPART_TEMPLATE: &str = "{{ user.preferred_username }}";
 const DEFAULT_DISPLAYNAME_TEMPLATE: &str = "{{ user.name }}";
@@ -339,6 +356,14 @@ pub(crate) async fn get(
             cookie_jar = cookie_jar.set_session(&session);
 
             repo.save().await?;
+
+            LOGIN_COUNTER.add(
+                1,
+                &[KeyValue::new(
+                    PROVIDER,
+                    upstream_session.provider_id.to_string(),
+                )],
+            );
 
             post_auth_action.go_next(&url_builder).into_response()
         }
@@ -804,6 +829,8 @@ pub(crate) async fn post(
                 )
                     .into_response());
             }
+
+            REGISTRATION_COUNTER.add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
 
             // Now we can create the user
             let user = repo.user().add(&mut rng, &clock, username).await?;
