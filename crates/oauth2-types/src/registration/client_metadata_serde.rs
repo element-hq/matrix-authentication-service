@@ -80,6 +80,13 @@ impl<T> Localized<T> {
             localized,
         }))
     }
+
+    /// Sort the localized keys. This is inteded to ensure a stable
+    /// serialization order when needed.
+    pub(super) fn sort(&mut self) {
+        self.localized
+            .sort_unstable_by(|k1, _v1, k2, _v2| k1.as_str().cmp(k2.as_str()));
+    }
 }
 
 #[serde_as]

@@ -78,7 +78,7 @@ impl core::str::FromStr for ResponseTypeToken {
 ///
 /// [OAuth 2.0 `response_type` value]: https://www.rfc-editor.org/rfc/rfc7591#page-9
 /// [authorization endpoint]: https://www.rfc-editor.org/rfc/rfc6749.html#section-3.1
-#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr)]
+#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, PartialOrd, Ord)]
 pub struct ResponseType(BTreeSet<ResponseTypeToken>);
 
 impl std::ops::Deref for ResponseType {

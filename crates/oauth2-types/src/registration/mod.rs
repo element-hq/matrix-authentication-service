@@ -564,6 +564,51 @@ impl ClientMetadata {
         Ok(VerifiedClientMetadata { inner: self })
     }
 
+    /// Sort the properties. This is inteded to ensure a stable serialization
+    /// order when needed.
+    #[must_use]
+    pub fn sorted(mut self) -> Self {
+        // This sorts all the Vec<T> and Localized<T> fields
+        if let Some(redirect_uris) = &mut self.redirect_uris {
+            redirect_uris.sort();
+        }
+        if let Some(response_types) = &mut self.response_types {
+            response_types.sort();
+        }
+        if let Some(grant_types) = &mut self.grant_types {
+            grant_types.sort();
+        }
+        if let Some(contacts) = &mut self.contacts {
+            contacts.sort();
+        }
+        if let Some(client_name) = &mut self.client_name {
+            client_name.sort();
+        }
+        if let Some(logo_uri) = &mut self.logo_uri {
+            logo_uri.sort();
+        }
+        if let Some(client_uri) = &mut self.client_uri {
+            client_uri.sort();
+        }
+        if let Some(policy_uri) = &mut self.policy_uri {
+            policy_uri.sort();
+        }
+        if let Some(tos_uri) = &mut self.tos_uri {
+            tos_uri.sort();
+        }
+        if let Some(default_acr_values) = &mut self.default_acr_values {
+            default_acr_values.sort();
+        }
+        if let Some(request_uris) = &mut self.request_uris {
+            request_uris.sort();
+        }
+        if let Some(post_logout_redirect_uris) = &mut self.post_logout_redirect_uris {
+            post_logout_redirect_uris.sort();
+        }
+
+        self
+    }
+
     /// Array of the [OAuth 2.0 `response_type` values] that the client can use
     /// at the [authorization endpoint].
     ///

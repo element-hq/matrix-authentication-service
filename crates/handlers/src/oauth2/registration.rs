@@ -206,6 +206,9 @@ pub(crate) async fn post(
     // Propagate any JSON extraction error
     let Json(body) = body?;
 
+    // Sort the properties to ensure a stable serialisation order for hashing
+    let body = body.sorted();
+
     // We need to serialize the body to compute the hash, and to log it
     let body_json = serde_json::to_string(&body)?;
 
@@ -529,9 +532,13 @@ mod tests {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
-                "redirect_uris": ["https://example.com/"],
+                "client_name": "Example",
+                "client_name#en": "Example",
+                "client_name#fr": "Exemple",
+                "client_name#de": "Beispiel",
+                "redirect_uris": ["https://example.com/", "https://example.com/callback"],
                 "response_types": ["code"],
-                "grant_types": ["authorization_code"],
+                "grant_types": ["authorization_code", "urn:ietf:params:oauth:grant-type:device_code"],
                 "token_endpoint_auth_method": "none",
             }));
 
@@ -539,6 +546,25 @@ mod tests {
         response.assert_status(StatusCode::CREATED);
         let response: ClientRegistrationResponse = response.json();
         let client_id = response.client_id;
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        assert_eq!(response.client_id, client_id);
+
+        // Check that the order of some properties doesn't matter
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "client_name": "Example",
+                "client_name#de": "Beispiel",
+                "client_name#fr": "Exemple",
+                "client_name#en": "Example",
+                "redirect_uris": ["https://example.com/callback", "https://example.com/"],
+                "response_types": ["code"],
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code", "authorization_code"],
+                "token_endpoint_auth_method": "none",
+            }));
 
         let response = state.request(request).await;
         response.assert_status(StatusCode::CREATED);
