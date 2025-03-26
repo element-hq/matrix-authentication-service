@@ -22,6 +22,7 @@ use oauth2_types::{
 use psl::Psl;
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Serialize;
+use sha2::Digest as _;
 use thiserror::Error;
 use tracing::info;
 use url::Url;
@@ -50,6 +51,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::LoadError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 impl_from_error_for_route!(mas_keystore::aead::Error);
+impl_from_error_for_route!(serde_json::Error);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -204,7 +206,13 @@ pub(crate) async fn post(
     // Propagate any JSON extraction error
     let Json(body) = body?;
 
-    info!(?body, "Client registration");
+    // Sort the properties to ensure a stable serialisation order for hashing
+    let body = body.sorted();
+
+    // We need to serialize the body to compute the hash, and to log it
+    let body_json = serde_json::to_string(&body)?;
+
+    info!(body = body_json, "Client registration");
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 
@@ -276,34 +284,59 @@ pub(crate) async fn post(
         _ => (None, None),
     };
 
-    let client = repo
-        .oauth2_client()
-        .add(
-            &mut rng,
-            &clock,
-            metadata.redirect_uris().to_vec(),
-            encrypted_client_secret,
-            metadata.application_type.clone(),
-            //&metadata.response_types(),
-            metadata.grant_types().to_vec(),
-            metadata
-                .client_name
-                .clone()
-                .map(Localized::to_non_localized),
-            metadata.logo_uri.clone().map(Localized::to_non_localized),
-            metadata.client_uri.clone().map(Localized::to_non_localized),
-            metadata.policy_uri.clone().map(Localized::to_non_localized),
-            metadata.tos_uri.clone().map(Localized::to_non_localized),
-            metadata.jwks_uri.clone(),
-            metadata.jwks.clone(),
-            // XXX: those might not be right, should be function calls
-            metadata.id_token_signed_response_alg.clone(),
-            metadata.userinfo_signed_response_alg.clone(),
-            metadata.token_endpoint_auth_method.clone(),
-            metadata.token_endpoint_auth_signing_alg.clone(),
-            metadata.initiate_login_uri.clone(),
-        )
-        .await?;
+    // If the client doesn't have a secret, we may be able to deduplicate it. To
+    // do so, we hash the client metadata, and look for it in the database
+    let (digest_hash, existing_client) = if client_secret.is_none() {
+        // XXX: One interesting caveat is that we hash *before* saving to the database.
+        // It means it takes into account fields that we don't care about *yet*.
+        //
+        // This means that if later we start supporting a particular field, we
+        // will still serve the 'old' client_id, without updating the client in the
+        // database
+        let hash = sha2::Sha256::digest(body_json);
+        let hash = hex::encode(hash);
+        let client = repo.oauth2_client().find_by_metadata_digest(&hash).await?;
+        (Some(hash), client)
+    } else {
+        (None, None)
+    };
+
+    let client = if let Some(client) = existing_client {
+        tracing::info!(%client.id, "Reusing existing client");
+        client
+    } else {
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                metadata.redirect_uris().to_vec(),
+                digest_hash,
+                encrypted_client_secret,
+                metadata.application_type.clone(),
+                //&metadata.response_types(),
+                metadata.grant_types().to_vec(),
+                metadata
+                    .client_name
+                    .clone()
+                    .map(Localized::to_non_localized),
+                metadata.logo_uri.clone().map(Localized::to_non_localized),
+                metadata.client_uri.clone().map(Localized::to_non_localized),
+                metadata.policy_uri.clone().map(Localized::to_non_localized),
+                metadata.tos_uri.clone().map(Localized::to_non_localized),
+                metadata.jwks_uri.clone(),
+                metadata.jwks.clone(),
+                // XXX: those might not be right, should be function calls
+                metadata.id_token_signed_response_alg.clone(),
+                metadata.userinfo_signed_response_alg.clone(),
+                metadata.token_endpoint_auth_method.clone(),
+                metadata.token_endpoint_auth_signing_alg.clone(),
+                metadata.initiate_login_uri.clone(),
+            )
+            .await?;
+        tracing::info!(%client.id, "Registered new client");
+        client
+    };
 
     let response = ClientRegistrationResponse {
         client_id: client.client_id.clone(),
@@ -489,5 +522,75 @@ mod tests {
         response.assert_status(StatusCode::CREATED);
         let response: ClientRegistrationResponse = response.json();
         assert!(response.client_secret.is_some());
+    }
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_registration_dedupe(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Post a client registration twice, we should get the same client ID
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "client_name": "Example",
+                "client_name#en": "Example",
+                "client_name#fr": "Exemple",
+                "client_name#de": "Beispiel",
+                "redirect_uris": ["https://example.com/", "https://example.com/callback"],
+                "response_types": ["code"],
+                "grant_types": ["authorization_code", "urn:ietf:params:oauth:grant-type:device_code"],
+                "token_endpoint_auth_method": "none",
+            }));
+
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        let client_id = response.client_id;
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        assert_eq!(response.client_id, client_id);
+
+        // Check that the order of some properties doesn't matter
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "client_name": "Example",
+                "client_name#de": "Beispiel",
+                "client_name#fr": "Exemple",
+                "client_name#en": "Example",
+                "redirect_uris": ["https://example.com/callback", "https://example.com/"],
+                "response_types": ["code"],
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code", "authorization_code"],
+                "token_endpoint_auth_method": "none",
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        assert_eq!(response.client_id, client_id);
+
+        // Doing that with a client that has a client_secret should not deduplicate
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/"],
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+                "token_endpoint_auth_method": "client_secret_basic",
+            }));
+
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        // Sanity check that the client_id is different
+        assert_ne!(response.client_id, client_id);
+        let client_id = response.client_id;
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let response: ClientRegistrationResponse = response.json();
+        assert_ne!(response.client_id, client_id);
     }
 }

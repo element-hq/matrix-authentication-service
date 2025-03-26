@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_client_id\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                FROM oauth2_clients c\n                WHERE is_static = TRUE\n            ",
+  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                FROM oauth2_clients c\n                WHERE is_static = TRUE\n            ",
   "describe": {
     "columns": [
       {
@@ -10,96 +10,101 @@
       },
       {
         "ordinal": 1,
-        "name": "encrypted_client_secret",
+        "name": "metadata_digest",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "application_type",
+        "name": "encrypted_client_secret",
         "type_info": "Text"
       },
       {
         "ordinal": 3,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "redirect_uris",
         "type_info": "TextArray"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "grant_type_authorization_code",
         "type_info": "Bool"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "grant_type_refresh_token",
         "type_info": "Bool"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "grant_type_client_credentials",
         "type_info": "Bool"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "grant_type_device_code",
         "type_info": "Bool"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "client_name",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "logo_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "client_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "policy_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "tos_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "jwks_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "jwks",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "id_token_signed_response_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "userinfo_signed_response_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "token_endpoint_auth_method",
         "type_info": "Text"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "token_endpoint_auth_signing_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "initiate_login_uri",
         "type_info": "Text"
       }
@@ -109,6 +114,7 @@
     },
     "nullable": [
       false,
+      true,
       true,
       true,
       false,
@@ -130,5 +136,5 @@
       true
     ]
   },
-  "hash": "199819516dce285771a75a48a687b285225aeae7a4d1ca91084ae84f25dcbbec"
+  "hash": "fc9925e19000d79c0bb020ea44e13cbb364b3505626d34550e38f6f7397b9d42"
 }

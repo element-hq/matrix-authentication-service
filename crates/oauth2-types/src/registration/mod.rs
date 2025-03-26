@@ -8,9 +8,10 @@
 //!
 //! [Dynamic Client Registration]: https://openid.net/specs/openid-connect-registration-1_0.html
 
-use std::{collections::HashMap, ops::Deref};
+use std::ops::Deref;
 
 use chrono::{DateTime, Duration, Utc};
+use indexmap::IndexMap;
 use language_tags::LanguageTag;
 use mas_iana::{
     jose::{JsonWebEncryptionAlg, JsonWebEncryptionEnc, JsonWebSignatureAlg},
@@ -58,7 +59,7 @@ pub const DEFAULT_ENCRYPTION_ENC_ALGORITHM: &JsonWebEncryptionEnc =
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Localized<T> {
     non_localized: T,
-    localized: HashMap<LanguageTag, T>,
+    localized: IndexMap<LanguageTag, T>,
 }
 
 impl<T> Localized<T> {
@@ -104,8 +105,8 @@ impl<T> Localized<T> {
     }
 }
 
-impl<T> From<(T, HashMap<LanguageTag, T>)> for Localized<T> {
-    fn from(t: (T, HashMap<LanguageTag, T>)) -> Self {
+impl<T> From<(T, IndexMap<LanguageTag, T>)> for Localized<T> {
+    fn from(t: (T, IndexMap<LanguageTag, T>)) -> Self {
         Localized {
             non_localized: t.0,
             localized: t.1,
@@ -118,8 +119,8 @@ impl<T> From<(T, HashMap<LanguageTag, T>)> for Localized<T> {
 /// All the fields with a default value are accessible via methods.
 ///
 /// [IANA registry]: https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#client-metadata
-#[derive(Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(from = "ClientMetadataSerdeHelper")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(from = "ClientMetadataSerdeHelper", into = "ClientMetadataSerdeHelper")]
 pub struct ClientMetadata {
     /// Array of redirection URIs for use in redirect-based flows such as the
     /// [authorization code flow].
@@ -561,6 +562,51 @@ impl ClientMetadata {
         }
 
         Ok(VerifiedClientMetadata { inner: self })
+    }
+
+    /// Sort the properties. This is inteded to ensure a stable serialization
+    /// order when needed.
+    #[must_use]
+    pub fn sorted(mut self) -> Self {
+        // This sorts all the Vec<T> and Localized<T> fields
+        if let Some(redirect_uris) = &mut self.redirect_uris {
+            redirect_uris.sort();
+        }
+        if let Some(response_types) = &mut self.response_types {
+            response_types.sort();
+        }
+        if let Some(grant_types) = &mut self.grant_types {
+            grant_types.sort();
+        }
+        if let Some(contacts) = &mut self.contacts {
+            contacts.sort();
+        }
+        if let Some(client_name) = &mut self.client_name {
+            client_name.sort();
+        }
+        if let Some(logo_uri) = &mut self.logo_uri {
+            logo_uri.sort();
+        }
+        if let Some(client_uri) = &mut self.client_uri {
+            client_uri.sort();
+        }
+        if let Some(policy_uri) = &mut self.policy_uri {
+            policy_uri.sort();
+        }
+        if let Some(tos_uri) = &mut self.tos_uri {
+            tos_uri.sort();
+        }
+        if let Some(default_acr_values) = &mut self.default_acr_values {
+            default_acr_values.sort();
+        }
+        if let Some(request_uris) = &mut self.request_uris {
+            request_uris.sort();
+        }
+        if let Some(post_logout_redirect_uris) = &mut self.post_logout_redirect_uris {
+            post_logout_redirect_uris.sort();
+        }
+
+        self
     }
 
     /// Array of the [OAuth 2.0 `response_type` values] that the client can use

@@ -570,6 +570,7 @@ mod tests {
                 vec!["https://example.com/redirect".parse().unwrap()],
                 None,
                 None,
+                None,
                 vec![GrantType::AuthorizationCode],
                 Some("First client".to_owned()),
                 Some("https://example.com/logo.png".parse().unwrap()),

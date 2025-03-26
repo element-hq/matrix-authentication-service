@@ -45,6 +45,23 @@ pub trait OAuth2ClientRepository: Send + Sync {
         self.lookup(id).await
     }
 
+    /// Find an OAuth2 client by its metadata digest
+    ///
+    /// Returns `None` if the client does not exist
+    ///
+    /// # Parameters
+    ///
+    /// * `digest`: The metadata digest (SHA-256 hash encoded in hex) of the
+    ///   client to find
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_by_metadata_digest(
+        &mut self,
+        digest: &str,
+    ) -> Result<Option<Client>, Self::Error>;
+
     /// Load a batch of OAuth2 clients by their IDs
     ///
     /// Returns a map of client IDs to clients. If a client does not exist, it
@@ -71,6 +88,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// * `rng`: The random number generator to use
     /// * `clock`: The clock used to generate timestamps
     /// * `redirect_uris`: The list of redirect URIs used by this client
+    /// * `metadata_digest`: The hash of the client metadata, if computed
     /// * `encrypted_client_secret`: The encrypted client secret, if any
     /// * `application_type`: The application type of this client
     /// * `grant_types`: The list of grant types this client can use
@@ -101,6 +119,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         redirect_uris: Vec<Url>,
+        metadata_digest: Option<String>,
         encrypted_client_secret: Option<String>,
         application_type: Option<ApplicationType>,
         grant_types: Vec<GrantType>,
@@ -221,6 +240,11 @@ pub trait OAuth2ClientRepository: Send + Sync {
 repository_impl!(OAuth2ClientRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Client>, Self::Error>;
 
+    async fn find_by_metadata_digest(
+        &mut self,
+        digest: &str,
+    ) -> Result<Option<Client>, Self::Error>;
+
     async fn load_batch(
         &mut self,
         ids: BTreeSet<Ulid>,
@@ -231,6 +255,7 @@ repository_impl!(OAuth2ClientRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         redirect_uris: Vec<Url>,
+        metadata_digest: Option<String>,
         encrypted_client_secret: Option<String>,
         application_type: Option<ApplicationType>,
         grant_types: Vec<GrantType>,

@@ -4,9 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use chrono::Duration;
+use indexmap::IndexMap;
 use language_tags::LanguageTag;
 use mas_iana::{
     jose::{JsonWebEncryptionAlg, JsonWebEncryptionEnc, JsonWebSignatureAlg},
@@ -45,18 +46,18 @@ impl<T> Localized<T> {
     }
 
     fn deserialize(
-        map: &mut HashMap<String, HashMap<Option<LanguageTag>, Value>>,
+        map: &mut IndexMap<String, IndexMap<Option<LanguageTag>, Value>>,
         field_name: &'static str,
     ) -> Result<Option<Self>, serde_json::Error>
     where
         T: DeserializeOwned,
     {
-        let Some(map) = map.remove(field_name) else {
+        let Some(map) = map.shift_remove(field_name) else {
             return Ok(None);
         };
 
         let mut non_localized = None;
-        let mut localized = HashMap::with_capacity(map.len() - 1);
+        let mut localized = IndexMap::with_capacity(map.len() - 1);
 
         for (k, v) in map {
             let value = serde_json::from_value(v)?;
@@ -78,6 +79,13 @@ impl<T> Localized<T> {
             non_localized,
             localized,
         }))
+    }
+
+    /// Sort the localized keys. This is inteded to ensure a stable
+    /// serialization order when needed.
+    pub(super) fn sort(&mut self) {
+        self.localized
+            .sort_unstable_by(|k1, _v1, k2, _v2| k1.as_str().cmp(k2.as_str()));
     }
 }
 
@@ -125,48 +133,51 @@ pub struct ClientMetadataSerdeHelper {
 
 impl From<VerifiedClientMetadata> for ClientMetadataSerdeHelper {
     fn from(metadata: VerifiedClientMetadata) -> Self {
-        let VerifiedClientMetadata {
-            inner:
-                ClientMetadata {
-                    redirect_uris,
-                    response_types,
-                    grant_types,
-                    application_type,
-                    contacts,
-                    client_name,
-                    logo_uri,
-                    client_uri,
-                    policy_uri,
-                    tos_uri,
-                    jwks_uri,
-                    jwks,
-                    software_id,
-                    software_version,
-                    sector_identifier_uri,
-                    subject_type,
-                    token_endpoint_auth_method,
-                    token_endpoint_auth_signing_alg,
-                    id_token_signed_response_alg,
-                    id_token_encrypted_response_alg,
-                    id_token_encrypted_response_enc,
-                    userinfo_signed_response_alg,
-                    userinfo_encrypted_response_alg,
-                    userinfo_encrypted_response_enc,
-                    request_object_signing_alg,
-                    request_object_encryption_alg,
-                    request_object_encryption_enc,
-                    default_max_age,
-                    require_auth_time,
-                    default_acr_values,
-                    initiate_login_uri,
-                    request_uris,
-                    require_signed_request_object,
-                    require_pushed_authorization_requests,
-                    introspection_signed_response_alg,
-                    introspection_encrypted_response_alg,
-                    introspection_encrypted_response_enc,
-                    post_logout_redirect_uris,
-                },
+        metadata.inner.into()
+    }
+}
+
+impl From<ClientMetadata> for ClientMetadataSerdeHelper {
+    fn from(metadata: ClientMetadata) -> Self {
+        let ClientMetadata {
+            redirect_uris,
+            response_types,
+            grant_types,
+            application_type,
+            contacts,
+            client_name,
+            logo_uri,
+            client_uri,
+            policy_uri,
+            tos_uri,
+            jwks_uri,
+            jwks,
+            software_id,
+            software_version,
+            sector_identifier_uri,
+            subject_type,
+            token_endpoint_auth_method,
+            token_endpoint_auth_signing_alg,
+            id_token_signed_response_alg,
+            id_token_encrypted_response_alg,
+            id_token_encrypted_response_enc,
+            userinfo_signed_response_alg,
+            userinfo_encrypted_response_alg,
+            userinfo_encrypted_response_enc,
+            request_object_signing_alg,
+            request_object_encryption_alg,
+            request_object_encryption_enc,
+            default_max_age,
+            require_auth_time,
+            default_acr_values,
+            initiate_login_uri,
+            request_uris,
+            require_signed_request_object,
+            require_pushed_authorization_requests,
+            introspection_signed_response_alg,
+            introspection_encrypted_response_alg,
+            introspection_encrypted_response_enc,
+            post_logout_redirect_uris,
         } = metadata;
 
         ClientMetadataSerdeHelper {
@@ -347,8 +358,8 @@ impl<'de> Deserialize<'de> for ClientMetadataLocalizedFields {
     where
         D: serde::Deserializer<'de>,
     {
-        let map = HashMap::<Cow<'de, str>, Value>::deserialize(deserializer)?;
-        let mut new_map: HashMap<String, HashMap<Option<LanguageTag>, Value>> = HashMap::new();
+        let map = IndexMap::<Cow<'de, str>, Value>::deserialize(deserializer)?;
+        let mut new_map: IndexMap<String, IndexMap<Option<LanguageTag>, Value>> = IndexMap::new();
 
         for (k, v) in map {
             let (prefix, lang) = if let Some((prefix, lang)) = k.split_once('#') {
@@ -389,6 +400,8 @@ impl<'de> Deserialize<'de> for ClientMetadataLocalizedFields {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_yaml_snapshot;
+
     use super::*;
 
     #[test]
@@ -461,16 +474,28 @@ mod tests {
         .validate()
         .unwrap();
 
-        assert_eq!(
-            serde_json::to_value(metadata).unwrap(),
-            serde_json::json!({
-                "redirect_uris": ["http://localhost/oidc"],
-                "client_name": "Postbox",
-                "client_name#fr": "Boîte à lettres",
-                "client_uri": "https://localhost/",
-                "client_uri#fr": "https://localhost/fr",
-                "client_uri#de": "https://localhost/de",
-            })
-        );
+        assert_yaml_snapshot!(metadata, @r###"
+        redirect_uris:
+          - "http://localhost/oidc"
+        client_name: Postbox
+        "client_name#fr": Boîte à lettres
+        client_uri: "https://localhost/"
+        "client_uri#fr": "https://localhost/fr"
+        "client_uri#de": "https://localhost/de"
+        "###);
+
+        // Do a roundtrip, we should get the same metadata back with the same order
+        let metadata: ClientMetadata =
+            serde_json::from_value(serde_json::to_value(metadata).unwrap()).unwrap();
+        let metadata = metadata.validate().unwrap();
+        assert_yaml_snapshot!(metadata, @r###"
+        redirect_uris:
+          - "http://localhost/oidc"
+        client_name: Postbox
+        "client_name#fr": Boîte à lettres
+        client_uri: "https://localhost/"
+        "client_uri#fr": "https://localhost/fr"
+        "client_uri#de": "https://localhost/de"
+        "###);
     }
 }
