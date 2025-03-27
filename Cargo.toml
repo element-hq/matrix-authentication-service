@@ -142,7 +142,9 @@ version = "0.3.31"
 
 # Rate-limiting
 [workspace.dependencies.governor]
-version = "0.8.0"
+version = "0.10.0"
+default-features = false
+features = ["std", "dashmap", "quanta"]
 
 # HTTP headers
 [workspace.dependencies.headers]
