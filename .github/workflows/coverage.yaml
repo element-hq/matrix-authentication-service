@@ -102,7 +102,7 @@ jobs:
           components: llvm-tools-preview
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.8
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Install grcov
         uses: taiki-e/install-action@v2
