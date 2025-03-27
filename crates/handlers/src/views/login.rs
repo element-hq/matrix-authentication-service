@@ -187,7 +187,7 @@ pub(crate) async fn post(
         .unwrap_or(&form.username);
 
     // First, lookup the user
-    let Some(user) = repo.user().find_by_username(username).await? else {
+    let Some(user) = get_user_by_email_or_by_username(site_config, &mut repo, username).await? else {
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -335,6 +335,37 @@ pub(crate) async fn post(
     let cookie_jar = cookie_jar.set_session(&user_session);
     let reply = query.go_next(&url_builder);
     Ok((cookie_jar, reply).into_response())
+}
+
+async fn get_user_by_email_or_by_username(
+    site_config: SiteConfig,
+    repo: &mut impl RepositoryAccess,
+    username_or_email: &str,
+) -> Result<Option<mas_data_model::User>, Box<dyn std::error::Error>> {
+    if site_config.login_with_email_allowed && username_or_email.contains('@') {
+        let maybe_user_email = repo
+            .user_email()
+            .find_by_email(username_or_email)
+            .await?;
+
+        if let Some(user_email) = maybe_user_email {
+            let user = repo
+                .user()
+                .lookup(user_email.user_id)
+                .await?;
+
+            if user.is_some() {
+                return Ok(user);
+            }
+        };
+    }
+
+    let user = repo
+        .user()
+        .find_by_username(username_or_email)
+        .await?;
+
+    Ok(user)
 }
 
 fn handle_login_hint(

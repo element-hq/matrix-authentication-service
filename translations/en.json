@@ -10,11 +10,11 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:123:13-33, pages/device_link.html:40:26-46, pages/login.html:62:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:123:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:88:33-59, pages/upstream_oauth2/do_register.html:192:26-52"
+      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:192:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -91,7 +91,7 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:50:37-57, pages/reauth.html:28:35-55, pages/register/password.html:42:33-53"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:42:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
@@ -99,7 +99,11 @@
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:45:35-55, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
+      "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
+    },
+    "username_or_email": "Username or Email Address",
+    "@username_or_email": {
+      "context": "pages/login.html:46:37-66"
     }
   },
   "error": {
@@ -403,11 +407,11 @@
     "login": {
       "call_to_register": "Don't have an account yet?",
       "@call_to_register": {
-        "context": "pages/login.html:84:13-44"
+        "context": "pages/login.html:90:13-44"
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:75:15-67, pages/register/index.html:53:15-67",
+        "context": "pages/login.html:81:15-67, pages/register/index.html:53:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -416,7 +420,7 @@
       },
       "forgot_password": "Forgot password?",
       "@forgot_password": {
-        "context": "pages/login.html:55:35-65",
+        "context": "pages/login.html:61:35-65",
         "description": "On the login page, link to the account recovery process"
       },
       "headline": "Sign in",
@@ -435,7 +439,7 @@
       },
       "no_login_methods": "No login methods available.",
       "@no_login_methods": {
-        "context": "pages/login.html:94:11-42"
+        "context": "pages/login.html:100:11-42"
       }
     },
     "navbar": {

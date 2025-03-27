@@ -1662,6 +1662,10 @@ type SiteConfig implements Node {
   """
   minimumPasswordComplexity: Int!
   """
+  Whether users can log in with their email address.
+  """
+  loginWithEmailAllowed: Boolean!
+  """
   The ID of the site configuration.
   """
   id: ID!
