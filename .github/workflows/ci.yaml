@@ -174,7 +174,7 @@ jobs:
           rustup default stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.8
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - uses: ./.github/actions/build-frontend
 
@@ -217,7 +217,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.8
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Run clippy
         run: |
@@ -243,7 +243,7 @@ jobs:
           tool: cargo-nextest
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.8
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
