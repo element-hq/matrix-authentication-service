@@ -87,4 +87,7 @@ pub struct SiteConfig {
     pub minimum_password_complexity: u8,
 
     pub session_expiration: Option<SessionExpirationConfig>,
+
+    /// Whether users can log in with their email address.
+    pub login_with_email_allowed: bool,
 }
