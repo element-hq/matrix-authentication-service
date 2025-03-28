@@ -638,6 +638,20 @@ pub enum AccessTokenRequest {
     Unsupported,
 }
 
+impl AccessTokenRequest {
+    /// Returns the string representation of the grant type of the request.
+    #[must_use]
+    pub fn grant_type(&self) -> &'static str {
+        match self {
+            Self::AuthorizationCode(_) => "authorization_code",
+            Self::RefreshToken(_) => "refresh_token",
+            Self::ClientCredentials(_) => "client_credentials",
+            Self::DeviceCode(_) => "urn:ietf:params:oauth:grant-type:device_code",
+            Self::Unsupported => "unsupported",
+        }
+    }
+}
+
 /// A successful response from the [Token Endpoint].
 ///
 /// [Token Endpoint]: https://www.rfc-editor.org/rfc/rfc6749#section-3.2

@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use axum::{
     Form,
     extract::{Path, State},
@@ -26,6 +28,7 @@ use mas_storage::{
 };
 use mas_templates::{FormPostContext, Templates};
 use oauth2_types::{errors::ClientErrorCode, requests::AccessTokenRequest};
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
@@ -37,7 +40,18 @@ use super::{
     client_credentials_for_provider,
     template::{AttributeMappingContext, environment},
 };
-use crate::{PreferredLanguage, impl_from_error_for_route, upstream_oauth2::cache::MetadataCache};
+use crate::{
+    METER, PreferredLanguage, impl_from_error_for_route, upstream_oauth2::cache::MetadataCache,
+};
+
+static CALLBACK_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.upstream_oauth2.callback")
+        .with_description("Number of requests to the upstream OAuth2 callback endpoint")
+        .build()
+});
+const PROVIDER: Key = Key::from_static_str("provider");
+const RESULT: Key = Key::from_static_str("result");
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
@@ -216,6 +230,14 @@ pub(crate) async fn handler(
     }
 
     if let Some(error) = params.error {
+        CALLBACK_COUNTER.add(
+            1,
+            &[
+                KeyValue::new(PROVIDER, provider_id.to_string()),
+                KeyValue::new(RESULT, "error"),
+            ],
+        );
+
         return Err(RouteError::ClientError {
             error,
             error_description: params.error_description.clone(),
@@ -255,6 +277,14 @@ pub(crate) async fn handler(
     let Some(code) = params.code else {
         return Err(RouteError::MissingCode);
     };
+
+    CALLBACK_COUNTER.add(
+        1,
+        &[
+            KeyValue::new(PROVIDER, provider_id.to_string()),
+            KeyValue::new(RESULT, "success"),
+        ],
+    );
 
     let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
