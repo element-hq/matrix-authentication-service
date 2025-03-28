@@ -11,6 +11,7 @@ upstream_oauth_links:
     user_id: 00000000-0000-0000-0000-000000000001
 upstream_oauth_providers:
   - additional_parameters: ~
+    allow_rp_initiated_logout: "false"
     authorization_endpoint_override: ~
     brand_name: ~
     claims_imports: "{}"
