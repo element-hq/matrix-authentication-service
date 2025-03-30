@@ -339,6 +339,7 @@ upstream_oauth2:
       human_name: Google
       brand_name: "google"
       issuer: "https://accounts.google.com"
+      token_endpoint_auth_method: "client_secret_post"
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
       scope: "openid profile email"
