@@ -84,11 +84,11 @@ version = "1.0.97"
 
 # HTTP router
 [workspace.dependencies.axum]
-version = "0.8.1"
+version = "0.8.3"
 
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
-version = "0.10.0"
+version = "0.10.1"
 features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Constant-time base64
