@@ -18,7 +18,7 @@ http-body.workspace = true
 hyper = { workspace = true, features = ["server"] }
 hyper-util.workspace = true
 pin-project-lite = "0.2.16"
-socket2 = "0.5.8"
+socket2 = "0.5.9"
 thiserror.workspace = true
 tokio.workspace = true
 tokio-rustls = "0.26.2"
