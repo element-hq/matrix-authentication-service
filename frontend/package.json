@@ -69,7 +69,7 @@
     "graphql": "^16.10.0",
     "happy-dom": "^17.4.4",
     "i18next-parser": "^9.3.0",
-    "knip": "^5.46.2",
+    "knip": "^5.46.4",
     "msw": "^2.7.3",
     "msw-storybook-addon": "^2.0.4",
     "postcss": "^8.5.3",
