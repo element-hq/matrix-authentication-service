@@ -173,7 +173,7 @@ features = ["client", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.10"
+version = "0.1.11"
 features = [
     "client",
     "server",
@@ -216,7 +216,7 @@ features = [
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.8.0"
+version = "2.9.0"
 features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
