@@ -38,6 +38,7 @@ use opentelemetry_semantic_conventions::trace::{GRAPHQL_DOCUMENT, GRAPHQL_OPERAT
 use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaChaRng;
 use sqlx::PgPool;
+use state::has_session_ended;
 use tracing::{Instrument, info_span};
 use ulid::Ulid;
 
@@ -237,7 +238,7 @@ async fn get_requester(
     clock: &impl Clock,
     activity_tracker: &BoundActivityTracker,
     mut repo: BoxRepository,
-    session_info: SessionInfo,
+    session_info: &SessionInfo,
     user_agent: Option<String>,
     token: Option<&str>,
 ) -> Result<Requester, RouteError> {
@@ -328,13 +329,13 @@ pub async fn post(
         .as_ref()
         .map(|TypedHeader(Authorization(bearer))| bearer.token());
     let user_agent = user_agent.map(|TypedHeader(h)| h.to_string());
-    let (session_info, _cookie_jar) = cookie_jar.session_info();
+    let (session_info, mut cookie_jar) = cookie_jar.session_info();
     let requester = get_requester(
         undocumented_oauth2_access,
         &clock,
         &activity_tracker,
         repo,
-        session_info,
+        &session_info,
         user_agent,
         token,
     )
@@ -352,7 +353,12 @@ pub async fn post(
     .data(requester); // XXX: this should probably return another error response?
 
     let span = span_for_graphql_request(&request);
-    let response = schema.execute(request).instrument(span).await;
+    let mut response = schema.execute(request).instrument(span).await;
+
+    if has_session_ended(&mut response) {
+        let session_info = session_info.mark_session_ended();
+        cookie_jar = cookie_jar.update_session_info(&session_info);
+    }
 
     let cache_control = response
         .cache_control
@@ -362,7 +368,7 @@ pub async fn post(
 
     let headers = response.http_headers.clone();
 
-    Ok((headers, cache_control, Json(response)))
+    Ok((headers, cache_control, cookie_jar, Json(response)))
 }
 
 pub async fn get(
@@ -382,13 +388,13 @@ pub async fn get(
         .as_ref()
         .map(|TypedHeader(Authorization(bearer))| bearer.token());
     let user_agent = user_agent.map(|TypedHeader(h)| h.to_string());
-    let (session_info, _cookie_jar) = cookie_jar.session_info();
+    let (session_info, mut cookie_jar) = cookie_jar.session_info();
     let requester = get_requester(
         undocumented_oauth2_access,
         &clock,
         &activity_tracker,
         repo,
-        session_info,
+        &session_info,
         user_agent,
         token,
     )
@@ -398,7 +404,12 @@ pub async fn get(
         async_graphql::http::parse_query_string(&query.unwrap_or_default())?.data(requester);
 
     let span = span_for_graphql_request(&request);
-    let response = schema.execute(request).instrument(span).await;
+    let mut response = schema.execute(request).instrument(span).await;
+
+    if has_session_ended(&mut response) {
+        let session_info = session_info.mark_session_ended();
+        cookie_jar = cookie_jar.update_session_info(&session_info);
+    }
 
     let cache_control = response
         .cache_control
@@ -408,7 +419,7 @@ pub async fn get(
 
     let headers = response.http_headers.clone();
 
-    Ok((headers, cache_control, Json(response)))
+    Ok((headers, cache_control, cookie_jar, Json(response)))
 }
 
 pub async fn playground() -> impl IntoResponse {
