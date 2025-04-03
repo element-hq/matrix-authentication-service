@@ -53,6 +53,9 @@ pub struct SiteConfig {
     /// The exact scorer (including dictionaries and other data tables)
     /// in use is <https://crates.io/crates/zxcvbn>.
     minimum_password_complexity: u8,
+
+    /// Whether users can log in with their email address.
+    login_with_email_allowed: bool,
 }
 
 #[derive(SimpleObject)]
@@ -98,6 +101,7 @@ impl SiteConfig {
             password_registration_enabled: data_model.password_registration_enabled,
             account_deactivation_allowed: data_model.account_deactivation_allowed,
             minimum_password_complexity: data_model.minimum_password_complexity,
+            login_with_email_allowed: data_model.login_with_email_allowed,
         }
     }
 }

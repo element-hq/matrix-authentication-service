@@ -141,6 +141,7 @@ pub fn test_site_config() -> SiteConfig {
         captcha: None,
         minimum_password_complexity: 1,
         session_expiration: None,
+        login_with_email_allowed: true,
     }
 }
 

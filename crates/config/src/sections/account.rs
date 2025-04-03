@@ -66,6 +66,12 @@ pub struct AccountConfig {
     /// `true`.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
     pub account_deactivation_allowed: bool,
+
+    /// Whether users can log in with their email address. Defaults to `false`.
+    ///
+    /// This has no effect if password login is disabled.
+    #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    pub login_with_email_allowed: bool,
 }
 
 impl Default for AccountConfig {
@@ -77,6 +83,7 @@ impl Default for AccountConfig {
             password_change_allowed: default_true(),
             password_recovery_enabled: default_false(),
             account_deactivation_allowed: default_true(),
+            login_with_email_allowed: default_false(),
         }
     }
 }
@@ -90,6 +97,7 @@ impl AccountConfig {
             && is_default_true(&self.password_change_allowed)
             && is_default_false(&self.password_recovery_enabled)
             && is_default_true(&self.account_deactivation_allowed)
+            && is_default_false(&self.login_with_email_allowed)
     }
 }
 

@@ -192,6 +192,43 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.user_email.find_by_email",
+        skip_all,
+        fields(
+            db.query.text,
+            user_email.email = email,
+        ),
+        err,
+    )]
+    async fn find_by_email(&mut self, email: &str) -> Result<Option<UserEmail>, Self::Error> {
+        let res = sqlx::query_as!(
+            UserEmailLookup,
+            r#"
+                SELECT user_email_id
+                     , user_id
+                     , email
+                     , created_at
+                FROM user_emails
+                WHERE email = $1
+            "#,
+            email,
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        if res.len() != 1 {
+            return Ok(None);
+        }
+
+        let Some(user_email) = res.into_iter().next() else {
+            return Ok(None);
+        };
+
+        Ok(Some(user_email.into()))
+    }
+
+    #[tracing::instrument(
         name = "db.user_email.all",
         skip_all,
         fields(
