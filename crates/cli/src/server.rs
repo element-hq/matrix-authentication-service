@@ -5,9 +5,10 @@
 // Please see LICENSE in the repository root for full details.
 
 use std::{
+    fs,
     future::ready,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, ToSocketAddrs},
-    os::unix::net::UnixListener,
+    os::unix::{fs::PermissionsExt, net::UnixListener},
 };
 
 use anyhow::Context;
@@ -329,8 +330,20 @@ pub fn build_listeners(
                 listener.try_into()?
             }
 
-            HttpBindConfig::Unix { socket } => {
+            HttpBindConfig::Unix { socket, mode } => {
                 let listener = UnixListener::bind(socket).context("could not bind socket")?;
+
+                if let Some(mode) = mode {
+                    let mut permissions = fs::metadata(socket)
+                        .context("could not read socket metadata")?
+                        .permissions();
+                    let mode = u32::from_str_radix(mode, 8)
+                        .with_context(|| format!("could not parse mode: {mode}"))?;
+                    permissions.set_mode(mode);
+                    fs::set_permissions(socket, permissions)
+                        .context("could not set socket permissions")?;
+                }
+
                 listener.try_into()?
             }
 
