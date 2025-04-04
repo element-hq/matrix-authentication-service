@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE compat_sso_logins\n                SET\n                    user_session_id = $2,\n                    fulfilled_at = $3\n                WHERE\n                    compat_sso_login_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3f9d76f442c82a1631da931950b83b80c9620e1825ab07ab6c52f3f1a32d2527"
+}

@@ -157,14 +157,10 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
                 })?;
 
                 let state = match (fulfilled_at, exchanged_at) {
-                    (Some(fulfilled_at), None) => CompatSsoLoginState::Fulfilled {
-                        fulfilled_at,
-                        session_id: session.id,
-                    },
                     (Some(fulfilled_at), Some(exchanged_at)) => CompatSsoLoginState::Exchanged {
                         fulfilled_at,
                         exchanged_at,
-                        session_id: session.id,
+                        compat_session_id: session.id,
                     },
                     _ => return Err(DatabaseInconsistencyError::on("compat_sso_logins").row(id)),
                 };

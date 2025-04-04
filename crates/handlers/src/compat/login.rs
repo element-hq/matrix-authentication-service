@@ -170,9 +170,6 @@ pub enum RouteError {
     #[error("user not found")]
     UserNotFound,
 
-    #[error("session not found")]
-    SessionNotFound,
-
     #[error("user has no password")]
     NoPassword,
 
@@ -201,13 +198,11 @@ impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
         let response = match self {
-            Self::Internal(_) | Self::SessionNotFound | Self::ProvisionDeviceFailed(_) => {
-                MatrixError {
-                    errcode: "M_UNKNOWN",
-                    error: "Internal server error",
-                    status: StatusCode::INTERNAL_SERVER_ERROR,
-                }
-            }
+            Self::Internal(_) | Self::ProvisionDeviceFailed(_) => MatrixError {
+                errcode: "M_UNKNOWN",
+                error: "Internal server error",
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+            },
             Self::RateLimited(_) => MatrixError {
                 errcode: "M_LIMIT_EXCEEDED",
                 error: "Too many login attempts",
@@ -323,7 +318,17 @@ pub(crate) async fn post(
             .await?
         }
 
-        (_, Credentials::Token { token }) => token_login(&mut repo, &clock, &token).await?,
+        (_, Credentials::Token { token }) => {
+            token_login(
+                &mut repo,
+                &clock,
+                &token,
+                input.device_id,
+                &homeserver,
+                &mut rng,
+            )
+            .await?
+        }
 
         _ => {
             return Err(RouteError::Unsupported);
@@ -382,6 +387,9 @@ async fn token_login(
     repo: &mut BoxRepository,
     clock: &dyn Clock,
     token: &str,
+    requested_device_id: Option<String>,
+    homeserver: &dyn HomeserverConnection,
+    rng: &mut (dyn RngCore + Send),
 ) -> Result<(CompatSession, User), RouteError> {
     let login = repo
         .compat_sso_login()
@@ -390,7 +398,7 @@ async fn token_login(
         .ok_or(RouteError::InvalidLoginToken)?;
 
     let now = clock.now();
-    let session_id = match login.state {
+    let browser_session_id = match login.state {
         CompatSsoLoginState::Pending => {
             tracing::error!(
                 compat_sso_login.id = %login.id,
@@ -400,25 +408,25 @@ async fn token_login(
         }
         CompatSsoLoginState::Fulfilled {
             fulfilled_at,
-            session_id,
+            browser_session_id,
             ..
         } => {
             if now > fulfilled_at + Duration::microseconds(30 * 1000 * 1000) {
                 return Err(RouteError::LoginTookTooLong);
             }
 
-            session_id
+            browser_session_id
         }
         CompatSsoLoginState::Exchanged {
             exchanged_at,
-            session_id,
+            compat_session_id,
             ..
         } => {
             if now > exchanged_at + Duration::microseconds(30 * 1000 * 1000) {
                 // TODO: log that session out
                 tracing::error!(
                     compat_sso_login.id = %login.id,
-                    compat_session.id = %session_id,
+                    compat_session.id = %compat_session_id,
                     "Login token exchanged a second time more than 30s after"
                 );
             }
@@ -427,22 +435,56 @@ async fn token_login(
         }
     };
 
-    let session = repo
+    let Some(browser_session) = repo.browser_session().lookup(browser_session_id).await? else {
+        tracing::error!(
+            compat_sso_login.id = %login.id,
+            browser_session.id = %browser_session_id,
+            "Attempt to exchange login token but no associated browser session found"
+        );
+        return Err(RouteError::InvalidLoginToken);
+    };
+    if !browser_session.active() || !browser_session.user.is_valid() {
+        tracing::info!(
+            compat_sso_login.id = %login.id,
+            browser_session.id = %browser_session_id,
+            "Attempt to exchange login token but browser session is not active"
+        );
+        return Err(RouteError::InvalidLoginToken);
+    }
+
+    // Lock the user sync to make sure we don't get into a race condition
+    repo.user()
+        .acquire_lock_for_sync(&browser_session.user)
+        .await?;
+
+    let device = if let Some(requested_device_id) = requested_device_id {
+        Device::from(requested_device_id)
+    } else {
+        Device::generate(rng)
+    };
+    let mxid = homeserver.mxid(&browser_session.user.username);
+    homeserver
+        .create_device(&mxid, device.as_str())
+        .await
+        .map_err(RouteError::ProvisionDeviceFailed)?;
+
+    let compat_session = repo
         .compat_session()
-        .lookup(session_id)
-        .await?
-        .ok_or(RouteError::SessionNotFound)?;
+        .add(
+            rng,
+            clock,
+            &browser_session.user,
+            device,
+            Some(&browser_session),
+            false,
+        )
+        .await?;
 
-    let user = repo
-        .user()
-        .lookup(session.user_id)
-        .await?
-        .filter(mas_data_model::User::is_valid)
-        .ok_or(RouteError::UserNotFound)?;
+    repo.compat_sso_login()
+        .exchange(clock, login, &compat_session)
+        .await?;
 
-    repo.compat_sso_login().exchange(clock, login).await?;
-
-    Ok((session, user))
+    Ok((compat_session, browser_session.user))
 }
 
 async fn user_password_login(
@@ -1015,7 +1057,7 @@ mod tests {
         }
         "###);
 
-        let (device, token) = get_login_token(&state, &user).await;
+        let token = get_login_token(&state, &user).await;
 
         // Try to login with the token.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -1026,14 +1068,13 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
-          "access_token": "mct_uihy4bk51gxgUbUTa4XIh92RARTPTj_xADEE4",
-          "device_id": "Yp7FM44zJN",
+          "access_token": "mct_bnkWh1tPmm1MZOpygPaXwygX8PfxEY_hE6do1",
+          "device_id": "O3Ju1MUh3Z",
           "user_id": "@alice:example.com"
         }
-        "###);
-        assert_eq!(body["device_id"], device.to_string());
+        "#);
 
         // Try again with the same token, it should fail.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -1051,7 +1092,7 @@ mod tests {
         "###);
 
         // Try to login, but wait too long before sending the request.
-        let (_device, token) = get_login_token(&state, &user).await;
+        let token = get_login_token(&state, &user).await;
 
         // Advance the clock to make the token expire.
         state
@@ -1079,14 +1120,13 @@ mod tests {
     /// # Panics
     ///
     /// Panics if the repository fails.
-    async fn get_login_token(state: &TestState, user: &User) -> (Device, String) {
+    async fn get_login_token(state: &TestState, user: &User) -> String {
         // XXX: This is a bit manual, but this is what basically the SSO login flow
         // does.
         let mut repo = state.repository().await.unwrap();
 
-        // Generate a device and a token randomly
+        // Generate a token randomly
         let token = Alphanumeric.sample_string(&mut state.rng(), 32);
-        let device = Device::generate(&mut state.rng());
 
         // Start a compat SSO login flow
         let login = repo
@@ -1100,27 +1140,20 @@ mod tests {
             .await
             .unwrap();
 
-        // Complete the flow by fulfilling it with a session
-        let compat_session = repo
-            .compat_session()
-            .add(
-                &mut state.rng(),
-                &state.clock,
-                user,
-                device.clone(),
-                None,
-                false,
-            )
+        // Advance the flow by fulfilling it with a browser session
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, user, None)
             .await
             .unwrap();
-
-        repo.compat_sso_login()
-            .fulfill(&state.clock, login, &compat_session)
+        let _login = repo
+            .compat_sso_login()
+            .fulfill(&state.clock, login, &browser_session)
             .await
             .unwrap();
 
         repo.save().await.unwrap();
 
-        (device, token)
+        token
     }
 }
