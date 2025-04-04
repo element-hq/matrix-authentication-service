@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{CompatSession, CompatSsoLogin, User};
+use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
@@ -168,7 +168,7 @@ pub trait CompatSsoLoginRepository: Send + Sync {
         redirect_uri: Url,
     ) -> Result<CompatSsoLogin, Self::Error>;
 
-    /// Fulfill a compat SSO login by providing a compat session
+    /// Fulfill a compat SSO login by providing a browser session
     ///
     /// Returns the fulfilled compat SSO login
     ///
@@ -176,8 +176,8 @@ pub trait CompatSsoLoginRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate the timestamps
     /// * `compat_sso_login`: The compat SSO login to fulfill
-    /// * `compat_session`: The compat session to associate with the compat SSO
-    ///   login
+    /// * `browser_session`: The browser session to associate with the compat
+    ///   SSO login
     ///
     /// # Errors
     ///
@@ -186,7 +186,7 @@ pub trait CompatSsoLoginRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
-        compat_session: &CompatSession,
+        browser_session: &BrowserSession,
     ) -> Result<CompatSsoLogin, Self::Error>;
 
     /// Mark a compat SSO login as exchanged
@@ -197,6 +197,8 @@ pub trait CompatSsoLoginRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate the timestamps
     /// * `compat_sso_login`: The compat SSO login to mark as exchanged
+    /// * `compat_session`: The compat session created as a result of the
+    ///   exchange
     ///
     /// # Errors
     ///
@@ -205,6 +207,7 @@ pub trait CompatSsoLoginRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
+        compat_session: &CompatSession,
     ) -> Result<CompatSsoLogin, Self::Error>;
 
     /// List [`CompatSsoLogin`] with the given filter and pagination
@@ -262,13 +265,14 @@ repository_impl!(CompatSsoLoginRepository:
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
-        compat_session: &CompatSession,
+        browser_session: &BrowserSession,
     ) -> Result<CompatSsoLogin, Self::Error>;
 
     async fn exchange(
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
+        compat_session: &CompatSession,
     ) -> Result<CompatSsoLogin, Self::Error>;
 
     async fn list(

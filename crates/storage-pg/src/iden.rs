@@ -61,6 +61,7 @@ pub enum CompatSsoLogins {
     RedirectUri,
     LoginToken,
     CompatSessionId,
+    UserSessionId,
     CreatedAt,
     FulfilledAt,
     ExchangedAt,

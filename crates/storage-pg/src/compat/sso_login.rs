@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{CompatSession, CompatSsoLogin, CompatSsoLoginState};
+use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, CompatSsoLoginState};
 use mas_storage::{
     Clock, Page, Pagination,
     compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
@@ -22,7 +22,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
-    iden::{CompatSessions, CompatSsoLogins},
+    iden::{CompatSsoLogins, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -41,7 +41,7 @@ impl<'c> PgCompatSsoLoginRepository<'c> {
     }
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 #[enum_def]
 struct CompatSsoLoginLookup {
     compat_sso_login_id: Uuid,
@@ -50,6 +50,7 @@ struct CompatSsoLoginLookup {
     created_at: DateTime<Utc>,
     fulfilled_at: Option<DateTime<Utc>>,
     exchanged_at: Option<DateTime<Utc>>,
+    user_session_id: Option<Uuid>,
     compat_session_id: Option<Uuid>,
 }
 
@@ -65,17 +66,24 @@ impl TryFrom<CompatSsoLoginLookup> for CompatSsoLogin {
                 .source(e)
         })?;
 
-        let state = match (res.fulfilled_at, res.exchanged_at, res.compat_session_id) {
-            (None, None, None) => CompatSsoLoginState::Pending,
-            (Some(fulfilled_at), None, Some(session_id)) => CompatSsoLoginState::Fulfilled {
-                fulfilled_at,
-                session_id: session_id.into(),
-            },
-            (Some(fulfilled_at), Some(exchanged_at), Some(session_id)) => {
+        let state = match (
+            res.fulfilled_at,
+            res.exchanged_at,
+            res.user_session_id,
+            res.compat_session_id,
+        ) {
+            (None, None, None, None) => CompatSsoLoginState::Pending,
+            (Some(fulfilled_at), None, Some(browser_session_id), None) => {
+                CompatSsoLoginState::Fulfilled {
+                    fulfilled_at,
+                    browser_session_id: browser_session_id.into(),
+                }
+            }
+            (Some(fulfilled_at), Some(exchanged_at), _, Some(compat_session_id)) => {
                 CompatSsoLoginState::Exchanged {
                     fulfilled_at,
                     exchanged_at,
-                    session_id: session_id.into(),
+                    compat_session_id: compat_session_id.into(),
                 }
             }
             _ => return Err(DatabaseInconsistencyError::on("compat_sso_logins").row(id)),
@@ -98,14 +106,14 @@ impl Filter for CompatSsoLoginFilter<'_> {
                 Expr::exists(
                     Query::select()
                         .expr(Expr::cust("1"))
-                        .from(CompatSessions::Table)
+                        .from(UserSessions::Table)
                         .and_where(
-                            Expr::col((CompatSessions::Table, CompatSessions::UserId))
+                            Expr::col((UserSessions::Table, UserSessions::UserId))
                                 .eq(Uuid::from(user.id)),
                         )
                         .and_where(
-                            Expr::col((CompatSsoLogins::Table, CompatSsoLogins::CompatSessionId))
-                                .equals((CompatSessions::Table, CompatSessions::CompatSessionId)),
+                            Expr::col((CompatSsoLogins::Table, CompatSsoLogins::UserSessionId))
+                                .equals((UserSessions::Table, UserSessions::UserSessionId)),
                         )
                         .take(),
                 )
@@ -151,6 +159,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
                      , fulfilled_at
                      , exchanged_at
                      , compat_session_id
+                     , user_session_id
 
                 FROM compat_sso_logins
                 WHERE compat_sso_login_id = $1
@@ -189,6 +198,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
                      , fulfilled_at
                      , exchanged_at
                      , compat_session_id
+                     , user_session_id
 
                 FROM compat_sso_logins
                 WHERE compat_session_id = $1
@@ -226,6 +236,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
                      , fulfilled_at
                      , exchanged_at
                      , compat_session_id
+                     , user_session_id
 
                 FROM compat_sso_logins
                 WHERE login_token = $1
@@ -292,9 +303,8 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         fields(
             db.query.text,
             %compat_sso_login.id,
-            %compat_session.id,
-            compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
-            user.id = %compat_session.user_id,
+            %browser_session.id,
+            user.id = %browser_session.user.id,
         ),
         err,
     )]
@@ -302,24 +312,24 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
-        compat_session: &CompatSession,
+        browser_session: &BrowserSession,
     ) -> Result<CompatSsoLogin, Self::Error> {
         let fulfilled_at = clock.now();
         let compat_sso_login = compat_sso_login
-            .fulfill(fulfilled_at, compat_session)
+            .fulfill(fulfilled_at, browser_session)
             .map_err(DatabaseError::to_invalid_operation)?;
 
         let res = sqlx::query!(
             r#"
                 UPDATE compat_sso_logins
                 SET
-                    compat_session_id = $2,
+                    user_session_id = $2,
                     fulfilled_at = $3
                 WHERE
                     compat_sso_login_id = $1
             "#,
             Uuid::from(compat_sso_login.id),
-            Uuid::from(compat_session.id),
+            Uuid::from(browser_session.id),
             fulfilled_at,
         )
         .traced()
@@ -337,6 +347,8 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         fields(
             db.query.text,
             %compat_sso_login.id,
+            %compat_session.id,
+            compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
         ),
         err,
     )]
@@ -344,22 +356,25 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         &mut self,
         clock: &dyn Clock,
         compat_sso_login: CompatSsoLogin,
+        compat_session: &CompatSession,
     ) -> Result<CompatSsoLogin, Self::Error> {
         let exchanged_at = clock.now();
         let compat_sso_login = compat_sso_login
-            .exchange(exchanged_at)
+            .exchange(exchanged_at, compat_session)
             .map_err(DatabaseError::to_invalid_operation)?;
 
         let res = sqlx::query!(
             r#"
                 UPDATE compat_sso_logins
                 SET
-                    exchanged_at = $2
+                    exchanged_at = $2,
+                    compat_session_id = $3
                 WHERE
                     compat_sso_login_id = $1
             "#,
             Uuid::from(compat_sso_login.id),
             exchanged_at,
+            Uuid::from(compat_session.id),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -391,6 +406,10 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             .expr_as(
                 Expr::col((CompatSsoLogins::Table, CompatSsoLogins::CompatSessionId)),
                 CompatSsoLoginLookupIden::CompatSessionId,
+            )
+            .expr_as(
+                Expr::col((CompatSsoLogins::Table, CompatSsoLogins::UserSessionId)),
+                CompatSsoLoginLookupIden::UserSessionId,
             )
             .expr_as(
                 Expr::col((CompatSsoLogins::Table, CompatSsoLogins::LoginToken)),

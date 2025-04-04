@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE compat_sso_logins\n                SET\n                    exchanged_at = $2,\n                    compat_session_id = $3\n                WHERE\n                    compat_sso_login_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e8e48db74ac1ab5baa1e4b121643cfa33a0bf3328df6e869464fe7f31429b81e"
+}

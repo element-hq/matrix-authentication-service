@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use anyhow::Context;
 use axum::{
@@ -17,12 +17,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::Device;
-use mas_matrix::HomeserverConnection;
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
-    compat::{CompatSessionRepository, CompatSsoLoginRepository},
+    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess, compat::CompatSsoLoginRepository,
 };
 use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
 use serde::{Deserialize, Serialize};
@@ -133,7 +130,6 @@ pub async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
@@ -174,8 +170,10 @@ pub async fn post(
         .await?
         .context("Could not find compat SSO login")?;
 
-    // Bail out if that login session is more than 30min old
-    if clock.now() > login.created_at + Duration::microseconds(30 * 60 * 1000 * 1000) {
+    // Bail out if that login session isn't pending, or is more than 30min old
+    if !login.is_pending()
+        || clock.now() > login.created_at + Duration::microseconds(30 * 60 * 1000 * 1000)
+    {
         let ctx = ErrorContext::new()
             .with_code("compat_sso_login_expired")
             .with_description("This login session expired.".to_owned())
@@ -202,30 +200,10 @@ pub async fn post(
         redirect_uri
     };
 
-    // Lock the user sync to make sure we don't get into a race condition
-    repo.user().acquire_lock_for_sync(&session.user).await?;
-
-    let device = Device::generate(&mut rng);
-    let mxid = homeserver.mxid(&session.user.username);
-    homeserver
-        .create_device(&mxid, device.as_str())
-        .await
-        .context("Failed to provision device")?;
-
-    let compat_session = repo
-        .compat_session()
-        .add(
-            &mut rng,
-            &clock,
-            &session.user,
-            device,
-            Some(&session),
-            false,
-        )
-        .await?;
-
+    // Note that if the login is not Pending,
+    // this fails and aborts the transaction.
     repo.compat_sso_login()
-        .fulfill(&clock, login, &compat_session)
+        .fulfill(&clock, login, &session)
         .await?;
 
     repo.save().await?;

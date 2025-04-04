@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, CompatSession, Device, Session, User};
 
-use crate::{Page, Pagination, repository_impl};
+use crate::{Clock, Page, Pagination, repository_impl};
 
 /// The state of a session
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -188,6 +188,20 @@ pub trait AppSessionRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn count(&mut self, filter: AppSessionFilter<'_>) -> Result<usize, Self::Error>;
+
+    /// Finishes any application sessions that are using the specified device's
+    /// ID.
+    ///
+    /// This is intended for logging in using an existing device ID (i.e.
+    /// replacing a device).
+    ///
+    /// Should be called *before* creating a new session for the device.
+    async fn finish_sessions_to_replace_device(
+        &mut self,
+        clock: &dyn Clock,
+        user: &User,
+        device: &Device,
+    ) -> Result<(), Self::Error>;
 }
 
 repository_impl!(AppSessionRepository:
@@ -198,4 +212,11 @@ repository_impl!(AppSessionRepository:
     ) -> Result<Page<AppSession>, Self::Error>;
 
     async fn count(&mut self, filter: AppSessionFilter<'_>) -> Result<usize, Self::Error>;
+
+    async fn finish_sessions_to_replace_device(
+        &mut self,
+        clock: &dyn Clock,
+        user: &User,
+        device: &Device,
+    ) -> Result<(), Self::Error>;
 );
