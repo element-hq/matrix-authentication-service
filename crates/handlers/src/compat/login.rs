@@ -468,6 +468,10 @@ async fn token_login(
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
 
+    repo.app_session()
+        .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
+        .await?;
+
     let compat_session = repo
         .compat_session()
         .add(
@@ -562,6 +566,10 @@ async fn user_password_login(
         .create_device(&mxid, device.as_str())
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
+
+    repo.app_session()
+        .finish_sessions_to_replace_device(clock, &user, &device)
+        .await?;
 
     let session = repo
         .compat_session()

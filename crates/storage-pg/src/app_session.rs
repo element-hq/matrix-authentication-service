@@ -7,9 +7,11 @@
 //! A module containing PostgreSQL implementation of repositories for sessions
 
 use async_trait::async_trait;
-use mas_data_model::{CompatSession, CompatSessionState, Device, Session, SessionState, UserAgent};
+use mas_data_model::{
+    CompatSession, CompatSessionState, Device, Session, SessionState, User, UserAgent,
+};
 use mas_storage::{
-    Page, Pagination,
+    Clock, Page, Pagination,
     app_session::{AppSession, AppSessionFilter, AppSessionRepository, AppSessionState},
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
@@ -21,6 +23,7 @@ use sea_query::{
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
+use uuid::Uuid;
 
 use crate::{
     DatabaseError, ExecuteExt,
@@ -456,6 +459,54 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         count
             .try_into()
             .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.app_session.finish_sessions_to_replace_device",
+        fields(
+            db.query.text,
+            %user.id,
+            %device_id = device.as_str()
+        ),
+        skip_all,
+        err,
+    )]
+    async fn finish_sessions_to_replace_device(
+        &mut self,
+        clock: &dyn Clock,
+        user: &User,
+        device: &Device,
+    ) -> Result<(), Self::Error> {
+        // TODO need to invoke this from all the oauth2 login sites
+        // TODO CREATE A SECOND SPAN FOR THE SECOND QUERY
+        let finished_at = clock.now();
+        sqlx::query!(
+            "
+                UPDATE compat_sessions SET finished_at = $3 WHERE user_id = $1 AND device_id = $2 AND finished_at IS NULL
+            ",
+            Uuid::from(user.id),
+            device.as_str(),
+            finished_at
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        if let Ok(device_as_scope_token) = device.to_scope_token() {
+            sqlx::query!(
+                "
+                    UPDATE oauth2_sessions SET finished_at = $3 WHERE user_id = $1 AND $2 = ANY(scope_list) AND finished_at IS NULL
+                ",
+                Uuid::from(user.id),
+                device_as_scope_token.as_str(),
+                finished_at
+            )
+            .traced()
+            .execute(&mut *self.conn)
+            .await?;
+        }
+
+        Ok(())
     }
 }
 
