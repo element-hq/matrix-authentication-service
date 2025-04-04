@@ -240,6 +240,7 @@ pub struct UpstreamOAuthProvider {
     pub created_at: DateTime<Utc>,
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,
+    pub allow_rp_initiated_logout: bool,
     pub additional_authorization_parameters: Vec<(String, String)>,
 }
 
