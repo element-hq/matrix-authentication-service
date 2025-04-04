@@ -374,4 +374,53 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             .try_into()
             .map_err(DatabaseError::to_invalid_operation)
     }
+
+    #[tracing::instrument(
+        name = "db.upstream_oauth_link.remove",
+        skip_all,
+        fields(
+            db.query.text,
+            upstream_oauth_link.id,
+            upstream_oauth_link.provider_id,
+            %upstream_oauth_link.subject,
+        ),
+        err,
+    )]
+    async fn remove(
+        &mut self,
+        clock: &dyn Clock,
+        upstream_oauth_link: UpstreamOAuthLink,
+    ) -> Result<(), Self::Error> {
+        // Unlink the authorization sessions first, as they have a foreign key
+        // constraint on the links.
+        sqlx::query!(
+            r#"
+                UPDATE upstream_oauth_authorization_sessions SET
+                    upstream_oauth_link_id = NULL,
+                    unlinked_at = $2
+                WHERE upstream_oauth_link_id = $1
+            "#,
+            Uuid::from(upstream_oauth_link.id),
+            clock.now()
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        // Then delete the link itself
+        let res = sqlx::query!(
+            r#"
+                DELETE FROM upstream_oauth_links
+                WHERE upstream_oauth_link_id = $1
+            "#,
+            Uuid::from(upstream_oauth_link.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(())
+    }
 }
