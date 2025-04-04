@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
 use mas_axum_utils::{
@@ -24,9 +26,21 @@ use oauth2_types::{
     requests::{IntrospectionRequest, IntrospectionResponse},
     scope::ScopeToken,
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
 
-use crate::{ActivityTracker, impl_from_error_for_route};
+use crate::{ActivityTracker, METER, impl_from_error_for_route};
+
+static INTROSPECTION_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.oauth2.introspection_request")
+        .with_description("Number of OAuth 2.0 introspection requests")
+        .with_unit("{request}")
+        .build()
+});
+
+const KIND: Key = Key::from_static_str("kind");
+const ACTIVE: Key = Key::from_static_str("active");
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -118,6 +132,7 @@ impl IntoResponse for RouteError {
                 ),
             )
                 .into_response(),
+
             Self::UnknownToken(_)
             | Self::UnexpectedTokenType
             | Self::InvalidToken(_)
@@ -125,7 +140,12 @@ impl IntoResponse for RouteError {
             | Self::InvalidCompatSession
             | Self::InvalidOAuthSession
             | Self::InvalidTokenFormat(_)
-            | Self::CantEncodeDeviceID(_) => Json(INACTIVE).into_response(),
+            | Self::CantEncodeDeviceID(_) => {
+                INTROSPECTION_COUNTER.add(1, &[KeyValue::new(ACTIVE.clone(), false)]);
+
+                Json(INACTIVE).into_response()
+            }
+
             Self::NotAllowed => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::AccessDenied)),
@@ -275,6 +295,14 @@ pub(crate) async fn post(
                 .record_oauth2_session(&clock, &session, ip)
                 .await;
 
+            INTROSPECTION_COUNTER.add(
+                1,
+                &[
+                    KeyValue::new(KIND, "oauth2_access_token"),
+                    KeyValue::new(ACTIVE, true),
+                ],
+            );
+
             IntrospectionResponse {
                 active: true,
                 scope: Some(session.scope),
@@ -337,6 +365,14 @@ pub(crate) async fn post(
             activity_tracker
                 .record_oauth2_session(&clock, &session, ip)
                 .await;
+
+            INTROSPECTION_COUNTER.add(
+                1,
+                &[
+                    KeyValue::new(KIND, "oauth2_refresh_token"),
+                    KeyValue::new(ACTIVE, true),
+                ],
+            );
 
             IntrospectionResponse {
                 active: true,
@@ -411,6 +447,14 @@ pub(crate) async fn post(
             activity_tracker
                 .record_compat_session(&clock, &session, ip)
                 .await;
+
+            INTROSPECTION_COUNTER.add(
+                1,
+                &[
+                    KeyValue::new(KIND, "compat_access_token"),
+                    KeyValue::new(ACTIVE, true),
+                ],
+            );
 
             IntrospectionResponse {
                 active: true,
@@ -487,6 +531,14 @@ pub(crate) async fn post(
             activity_tracker
                 .record_compat_session(&clock, &session, ip)
                 .await;
+
+            INTROSPECTION_COUNTER.add(
+                1,
+                &[
+                    KeyValue::new(KIND, "compat_refresh_token"),
+                    KeyValue::new(ACTIVE, true),
+                ],
+            );
 
             IntrospectionResponse {
                 active: true,
