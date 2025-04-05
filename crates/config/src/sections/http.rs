@@ -124,6 +124,9 @@ pub enum BindConfig {
         /// Path to the socket
         #[schemars(with = "String")]
         socket: Utf8PathBuf,
+
+        /// Socket file mode
+        mode: Option<String>,
     },
 
     /// Accept connections on file descriptors passed by the parent process.
