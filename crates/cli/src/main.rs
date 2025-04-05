@@ -119,7 +119,10 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         telemetry_config.sentry.dsn.as_deref(),
         sentry::ClientOptions {
             transport: Some(Arc::new(SentryTransportFactory::new())),
-            traces_sample_rate: 1.0,
+            environment: telemetry_config.sentry.environment.clone().map(Into::into),
+            release: Some(VERSION.into()),
+            sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
+            traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
             auto_session_tracking: true,
             session_mode: sentry::SessionMode::Request,
             ..Default::default()

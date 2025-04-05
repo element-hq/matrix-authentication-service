@@ -5,11 +5,15 @@
 // Please see LICENSE in the repository root for full details.
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error as _};
 use serde_with::skip_serializing_none;
 use url::Url;
 
 use super::ConfigurationSection;
+
+fn sample_rate_example() -> f64 {
+    0.5
+}
 
 /// Propagation format for incoming and outgoing requests
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
@@ -116,6 +120,10 @@ fn sentry_dsn_example() -> &'static str {
     "https://public@host:port/1"
 }
 
+fn sentry_environment_example() -> &'static str {
+    "production"
+}
+
 /// Configuration related to the Sentry integration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct SentryConfig {
@@ -123,6 +131,27 @@ pub struct SentryConfig {
     #[schemars(url, example = "sentry_dsn_example")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dsn: Option<String>,
+
+    /// Environment to use when sending events to Sentry
+    ///
+    /// Defaults to `production` if not set.
+    #[schemars(example = "sentry_environment_example")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment: Option<String>,
+
+    /// Sample rate for event submissions
+    ///
+    /// Defaults to `1.0` if not set.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = "sample_rate_example", range(min = 0.0, max = 1.0))]
+    pub sample_rate: Option<f32>,
+
+    /// Sample rate for tracing transactions
+    ///
+    /// Defaults to `0.0` if not set.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = "sample_rate_example", range(min = 0.0, max = 1.0))]
+    pub traces_sample_rate: Option<f32>,
 }
 
 impl SentryConfig {
