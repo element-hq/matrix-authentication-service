@@ -109,10 +109,8 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     // Load the base configuration files
     let figment = opts.figment();
 
-    // Telemetry config could fail to load, but that's probably OK, since the whole
-    // config will be loaded afterwards, and crash if there is a problem.
-    // Falling back to default.
-    let telemetry_config = TelemetryConfig::extract(&figment).unwrap_or_default();
+    let telemetry_config =
+        TelemetryConfig::extract(&figment).context("Failed to load telemetry config")?;
 
     // Setup Sentry
     let sentry = sentry::init((
