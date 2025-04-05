@@ -192,7 +192,7 @@ default-features = false
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.8.0"
+version = "2.9.0"
 features = ["serde"]
 
 # Snapshot testing
