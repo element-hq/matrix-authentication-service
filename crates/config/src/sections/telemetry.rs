@@ -65,6 +65,13 @@ pub struct TracingConfig {
     /// List of propagation formats to use for incoming and outgoing requests
     #[serde(default)]
     pub propagators: Vec<Propagator>,
+
+    /// Sample rate for traces
+    ///
+    /// Defaults to `1.0` if not set.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = "sample_rate_example", range(min = 0.0, max = 1.0))]
+    pub sample_rate: Option<f64>,
 }
 
 impl TracingConfig {

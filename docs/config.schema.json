@@ -1213,6 +1213,16 @@
           "items": {
             "$ref": "#/definitions/Propagator"
           }
+        },
+        "sample_rate": {
+          "description": "Sample rate for traces\n\nDefaults to `1.0` if not set.",
+          "examples": [
+            0.5
+          ],
+          "type": "number",
+          "format": "double",
+          "maximum": 1.0,
+          "minimum": 0.0
         }
       }
     },
