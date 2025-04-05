@@ -238,7 +238,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </ul>
     </section>
     <button
-      aria-controls="radix-:r0:"
+      aria-controls="radix-«r0»"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -503,7 +503,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       </ul>
     </section>
     <button
-      aria-controls="radix-:r3:"
+      aria-controls="radix-«r3»"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
