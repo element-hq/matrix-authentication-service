@@ -102,7 +102,10 @@ fn stdout_tracer_provider() -> SdkTracerProvider {
         .build()
 }
 
-fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<SdkTracerProvider> {
+fn otlp_tracer_provider(
+    endpoint: Option<&Url>,
+    sample_rate: f64,
+) -> anyhow::Result<SdkTracerProvider> {
     let mut exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
         .with_http_client(mas_http::reqwest_client());
@@ -119,17 +122,18 @@ fn otlp_tracer_provider(endpoint: Option<&Url>) -> anyhow::Result<SdkTracerProvi
     let tracer_provider = SdkTracerProvider::builder()
         .with_span_processor(batch_processor)
         .with_resource(resource())
-        .with_sampler(Sampler::AlwaysOn)
+        .with_sampler(Sampler::TraceIdRatioBased(sample_rate))
         .build();
 
     Ok(tracer_provider)
 }
 
 fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
+    let sample_rate = config.sample_rate.unwrap_or(1.0);
     let tracer_provider = match config.exporter {
         TracingExporterKind::None => return Ok(()),
         TracingExporterKind::Stdout => stdout_tracer_provider(),
-        TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref())?,
+        TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref(), sample_rate)?,
     };
     TRACER_PROVIDER
         .set(tracer_provider.clone())
