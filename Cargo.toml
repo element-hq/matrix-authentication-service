@@ -109,7 +109,7 @@ version = "1.1.9"
 
 # Memory optimisation for short strings
 [workspace.dependencies.compact_str]
-version = "0.8.1"
+version = "0.9.0"
 
 # Time utilities
 [workspace.dependencies.chrono]
