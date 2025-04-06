@@ -26,9 +26,9 @@
     }
   },
   "common": {
-    "display_name": "Zobrazované jméno",
+    "display_name": "Zobrazované Jméno",
     "email_address": "E-mailová adresa",
-    "loading": "Načítání...",
+    "loading": "Načítání…",
     "mxid": "Matrix ID",
     "password": "Heslo",
     "password_confirm": "Potvrďte heslo",
@@ -38,6 +38,20 @@
     "unexpected": "Neočekávaná chyba"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Tento účet (<em>%(mxid)s</em>) byl smazán. Pokud to není očekávané, obraťte se na správce serveru.",
+        "heading": "Účet smazán"
+      },
+      "locked": {
+        "description": "Tento účet (<em>%(mxid)s</em>) byl uzamčen. Pokud to není očekávané, obraťte se na správce serveru.",
+        "heading": "Účet uzamčen"
+      },
+      "logged_out": {
+        "description": "Tato relace byla ukončena. Odhlaste se, abyste se mohli znovu přihlásit",
+        "heading": "Relace ukončena"
+      }
+    },
     "add_email": {
       "description": "Zadejte e-mailovou adresu pro obnovení účtu v případě, že k němu ztratíte přístup.",
       "heading": "Přidání e-mailové adresy"
@@ -48,7 +62,7 @@
     },
     "change_password": {
       "change": "Změna hesla",
-      "confirm": "Potvrdit heslo",
+      "confirm": "Potvrďte heslo",
       "current": "Současné heslo",
       "description": "Tím se změní heslo k vašemu účtu.",
       "heading": "Změnit heslo",
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "Ověření CAPTCHA se nezdařilo, zkuste to prosím znovu",
       "denied_policy": "Zamítnuto na základě zásad: %(policy)s",
+      "email_banned": "E-mail je zakázán zásadami serveru",
       "email_domain_banned": "E-mailová doména je zakázána zásadami serveru",
       "email_domain_not_allowed": "E-mailová doména není zásadami serveru povolena",
+      "email_not_allowed": "E-main není povolen zásadami serveru",
       "field_required": "Toto pole je povinné",
       "invalid_credentials": "Neplatné přihlašovací údaje",
       "password_mismatch": "Pole hesla se neshodují",
       "rate_limit_exceeded": "V krátké době jste podali příliš mnoho žádostí. Počkejte prosím několik minut a zkuste to znovu.",
       "username_all_numeric": "Uživatelské jméno se nemůže skládat pouze z čísel",
+      "username_banned": "Uživatelské jméno je zakázáno zásadami serveru",
       "username_invalid_chars": "Uživatelské jméno obsahuje neplatné znaky. Používejte pouze malá písmena, číslice, pomlčky a podtržítka.",
+      "username_not_allowed": "Uživatelské jméno není povoleno zásadami serveru",
       "username_taken": "Toto uživatelské jméno je již obsazeno",
       "username_too_long": "Uživatelské jméno je příliš dlouhé",
       "username_too_short": "Uživatelské jméno je příliš krátké"
@@ -196,10 +214,10 @@
       "edit_profile": "Upravte svůj profil a kontaktní údaje",
       "manage_sessions": "Spravujte svá zařízení a relace",
       "mas_admin": "Spravujte libovolného uživatele ve službě matrix-authentication-service",
-      "send_messages": "Odesílejte nové zprávy vaším jménem",
+      "send_messages": "Odesílání nových zpráv vaším jménem",
       "synapse_admin": "Spravujte domovský server Synapse",
       "view_messages": "Zobrazte své stávající zprávy a data",
-      "view_profile": "Podívejte se na informace o svém profilu a kontaktní údaje"
+      "view_profile": "Zobrazení informací o vašem profilu a kontaktních údajů"
     },
     "upstream_oauth2": {
       "link_mismatch": {
@@ -208,7 +226,7 @@
       "register": {
         "choose_username": {
           "description": "To nelze později změnit.",
-          "heading": "Vyberte si své uživatelské jméno"
+          "heading": "Zvolte své uživatelské jméno"
         },
         "create_account": "Vytvořte nový účet",
         "enforced_by_policy": "Vynuceno zásadami serveru",

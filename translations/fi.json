@@ -38,6 +38,20 @@
     "unexpected": "Odottamaton virhe"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Tämä tili (<em>%(mxid)s</em>) on poistettu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "heading": "Tili poistettu"
+      },
+      "locked": {
+        "description": "Tämä tili (<em>%(mxid)s</em>) on lukittu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "heading": "Tili lukittu"
+      },
+      "logged_out": {
+        "description": "Tämä istunto on lopetettu. Kirjaudu ulos, jotta voit kirjautua takaisin sisään",
+        "heading": "Istunto lopetettu"
+      }
+    },
     "add_email": {
       "description": "Kirjoita sähköpostiosoite, jotta voit palauttaa tilisi, jos menetät pääsysi siihen.",
       "heading": "Lisää sähköpostiosoite"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "CAPTCHA-vahvistus epäonnistui, yritä uudelleen",
       "denied_policy": "Käytäntö hylkäsi pyynnön: %(policy)s",
+      "email_banned": "Palvelinkäytäntö kieltää sähköpostin",
       "email_domain_banned": "Sähköpostin verkkotunnus on kielletty palvelinkäytännössä",
       "email_domain_not_allowed": "Palvelinkäytäntö ei salli sähköpostin verkkotunnusta",
+      "email_not_allowed": "Palvelinkäytäntö ei salli sähköpostia",
       "field_required": "Tämä kenttä on pakollinen",
       "invalid_credentials": "Virheelliset kirjautumistiedot",
       "password_mismatch": "Salasanakentät eivät täsmää",
       "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen.",
       "username_all_numeric": "Käyttäjänimi ei voi koostua pelkästään numeroista",
+      "username_banned": "Palvelinkäytäntö kieltää käyttäjänimen",
       "username_invalid_chars": "Käyttäjänimi sisältää virheellisiä merkkejä. Käytä vain pieniä kirjaimia, numeroita, viivoja ja alaviivoja.",
+      "username_not_allowed": "Palvelinkäytäntö ei salli käyttäjänimeä",
       "username_taken": "Tämä käyttäjänimi on jo käytössä.",
       "username_too_long": "Käyttäjänimi on liian pitkä",
       "username_too_short": "Käyttäjänimi on liian lyhyt"

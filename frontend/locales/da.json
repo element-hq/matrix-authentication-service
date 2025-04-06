@@ -1,0 +1,395 @@
+{
+  "action": {
+    "back": "Tilbage",
+    "cancel": "Annuller",
+    "clear": "Ryd",
+    "close": "Luk",
+    "collapse": "Fold sammen",
+    "confirm": "Bekræft",
+    "continue": "Fortsæt",
+    "edit": "Redigér",
+    "expand": "Udvid",
+    "save": "Gem",
+    "save_and_continue": "Gem og fortsæt",
+    "sign_out": "Log ud",
+    "start_over": "Begynd forfra"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link til tjenestens privatlivspolitik",
+      "link": "Privatlivspolitik"
+    },
+    "terms_and_conditions": {
+      "alt": "Link til servicevilkår",
+      "link": "Vilkår & Betingelser"
+    }
+  },
+  "common": {
+    "add": "Tilføj",
+    "e2ee": "End-to-end kryptering",
+    "error": "Fejl",
+    "loading": "Indlæser...",
+    "next": "Næste",
+    "password": "Adgangskode",
+    "previous": "Forrige",
+    "saved": "Gemt",
+    "saving": "Gemmer..."
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Adgangskode til konto",
+      "contact_info": "Kontaktoplysninger",
+      "delete_account": {
+        "alert_description": "Denne konto vil blive slettet permanent, og du vil ikke længere have adgang til nogen af dine beskeder.",
+        "alert_title": "Du er ved at miste alle dine data",
+        "button": "Slet konto",
+        "dialog_description": "<text>Bekræft, at du ønsker at slette din konto:</text>\n<profile />\n<list>\n<item>Du vil ikke kunne genaktivere din konto</item>\n<item>Du vil ikke længere kunne logge ind</item>\n<item>Ingen vil kunne genbruge dit brugernavn (MXID), heller ikke dig selv</item>\n<item>Du vil forlade alle rum og direkte beskeder, du er i</item>\n<item>Du vil blive fjernet fra identitetsserveren, og ingen vil kunne finde dig med din e-mail eller dit telefonnummer</item>\n</list>\n<text>Dine gamle beskeder vil stadig være synlige for folk, der har modtaget dem. Vil du gerne skjule dine sendte beskeder for folk, der tilmelder sig rum i fremtiden?</text>",
+        "dialog_title": "Vil du slette denne konto?",
+        "erase_checkbox_label": "Ja, skjul alle mine beskeder fra nye deltagere",
+        "incorrect_password": "Forkert adgangskode, prøv venligst igen",
+        "mxid_label": "Bekræft dit Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "Denne værdi stemmer ikke overens med dit Matrix-ID",
+        "password_label": "Indtast din adgangskode for at fortsætte"
+      },
+      "edit_profile": {
+        "display_name_help": "Dette er, hvad andre vil se, uanset hvor du er logget ind.",
+        "display_name_label": "Visningsnavn",
+        "title": "Redigér profil",
+        "username_label": "Brugernavn"
+      },
+      "password": {
+        "change": "Skift adgangskode",
+        "change_disabled": "Adgangskodeændringer er deaktiveret af administratoren.",
+        "label": "Adgangskode"
+      },
+      "sign_out": {
+        "button": "Log ud af kontoen",
+        "dialog": "Vil du logge ud af denne konto?"
+      },
+      "title": "Din konto"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Den indtastede e-mail er ikke tilladt af serverpolitikken.",
+        "title": "E-mail nægtet af politik"
+      },
+      "email_denied_error": "Den indtastede e-mail er ikke tilladt af serverpolitikken",
+      "email_exists_alert": {
+        "text": "Den indtastede e-mail er allerede føjet til denne konto",
+        "title": "E-mailen er allerede i brug"
+      },
+      "email_exists_error": "Den indtastede e-mail er allerede føjet til denne konto",
+      "email_field_help": "Tilføj en alternativ e-mail, du kan bruge til at få adgang til denne konto.",
+      "email_field_label": "Tilføj e-mail",
+      "email_in_use_error": "Den indtastede e-mail er allerede i brug",
+      "email_invalid_alert": {
+        "text": "Den indtastede e-mail er ugyldig",
+        "title": "Ugyldig e-mail"
+      },
+      "email_invalid_error": "Den indtastede e-mail er ugyldig",
+      "incorrect_password_error": "Forkert adgangskode, prøv venligst igen",
+      "password_confirmation": "Bekræft adgangskoden til din konto for at tilføje denne e-mail-adresse"
+    },
+    "app_sessions_list": {
+      "error": "Kunne ikke indlæse appsessioner",
+      "heading": "Apps"
+    },
+    "browser_session_details": {
+      "current_badge": "Nuværende",
+      "session_details_title": "Session"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktiv session",
+      "body:other": "{{count}} aktive sessioner",
+      "heading": "Browsere",
+      "no_active_sessions": {
+        "default": "Du er ikke logget ind på nogen webbrowsere.",
+        "inactive_90_days": "Alle dine sessioner har været aktive i de sidste 90 dage."
+      },
+      "view_all_button": "Se alle"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Klient-information",
+      "name": "Navn",
+      "session_details_title": "Session"
+    },
+    "device_type_icon_label": {
+      "desktop": "Desktop",
+      "mobile": "Mobil",
+      "pc": "Computer",
+      "tablet": "Tablet",
+      "unknown": "Ukendt enhedstype",
+      "web": "Web"
+    },
+    "email_in_use": {
+      "heading": "E-mailadressen {{email}} er allerede i brug."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Er du sikker på, at du vil afslutte denne session?",
+      "text": "Fjern enhed"
+    },
+    "error": {
+      "hideDetails": "Skjul detaljer",
+      "showDetails": "Vis detaljer",
+      "subtitle": "Der opstod en uventet fejl. Prøv venligst igen.",
+      "title": "Noget gik galt"
+    },
+    "error_boundary_title": "Noget gik galt",
+    "errors": {
+      "field_required": "Dette felt er påkrævet",
+      "rate_limit_exceeded": "Du har indsendt for mange anmodninger på kort tid. Vent et par minutter, og prøv igen."
+    },
+    "last_active": {
+      "active_date": "Senest aktiv {{relativeDate}}",
+      "active_now": "Aktiv nu",
+      "inactive_90_days": "Inaktiv i 90+ dage"
+    },
+    "nav": {
+      "devices": "Enheder",
+      "profile": "Profil",
+      "sessions": "Sessioner",
+      "settings": "Indstillinger"
+    },
+    "not_found_alert_title": "Ikke fundet.",
+    "not_logged_in_alert": "Du er ikke logget ind.",
+    "oauth2_client_detail": {
+      "details_title": "Klient-information",
+      "id": "Klient ID",
+      "name": "Navn",
+      "policy": "Politik",
+      "terms": "Brugervilkår"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Navn",
+      "client_title": "Klient-information",
+      "session_details_title": "Session"
+    },
+    "pagination_controls": {
+      "total": "I alt: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Nuværende adgangskode",
+      "failure": {
+        "description": {
+          "account_locked": "Din konto er låst og kan ikke gendannes på nuværende tidspunkt. Hvis dette er sket uventet, bedes du kontakte din serveradministrator.",
+          "expired_recovery_ticket": "Gendannelseslinket er udløbet. Start venligst kontogendannelsesprocessen igen fra begyndelsen.",
+          "invalid_new_password": "Den nye adgangskode, du valgte, er ugyldig. Muligvis fordi den ikke opfylder den konfigurerede sikkerhedspolitik.",
+          "no_current_password": "Du har ikke en aktuel adgangskode.",
+          "no_such_recovery_ticket": "Gendannelseslinket er ugyldigt. Hvis du har kopieret linket fra genoprettelses e-mailen, skal du kontrollere, at det fulde link blev kopieret.",
+          "password_changes_disabled": "Adgangskodeændringer er deaktiveret.",
+          "recovery_ticket_already_used": "Dette genoprettelseslink er allerede blevet brugt. Det kan ikke bruges igen.",
+          "unspecified": "Dette kan være et midlertidigt problem, så prøv igen senere. Hvis problemet fortsætter, skal du kontakte din serveradministrator.",
+          "wrong_password": "Den adgangskode, du har angivet som din nuværende, er forkert. Prøv venligst igen."
+        },
+        "title": "Kunne ikke opdatere adgangskoden"
+      },
+      "new_password_again_label": "Indtast ny adgangskode igen",
+      "new_password_label": "Ny adgangskode",
+      "passwords_match": "Adgangskoderne matcher!",
+      "passwords_no_match": "Adgangskoderne stemmer ikke overens",
+      "subtitle": "Vælg en ny adgangskode til din konto.",
+      "success": {
+        "description": "Din adgangskode er blevet opdateret.",
+        "title": "Adgangskode opdateret"
+      },
+      "title": "Skift din adgangskode"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "For at oprette en ny adgangskode skal du starte forfra og vælge \"Glemt adgangskode\".",
+        "title": "Dette link til at nulstille din adgangskode er allerede blevet brugt"
+      },
+      "expired": {
+        "resend_email": "Gensend e-mail",
+        "subtitle": "Anmod om en ny e-mail, der vil blive sendt til: {{email}}",
+        "title": "Linket til nulstilling af din adgangskode er udløbet"
+      },
+      "subtitle": "Vælg en ny adgangskode til din konto.",
+      "title": "Nulstil din adgangskode"
+    },
+    "password_strength": {
+      "placeholder": "Adgangskodens styrke",
+      "score": {
+        "0": "Ekstremt svag adgangskode",
+        "1": "Meget svag adgangskode",
+        "2": "Svag adgangskode",
+        "3": "Stærk adgangskode",
+        "4": "Meget stærk adgangskode"
+      },
+      "suggestion": {
+        "all_uppercase": "Brug stor skrift, men ikke til alle bogstaver.",
+        "another_word": "Tilføj flere ord, der er mindre almindelige.",
+        "associated_years": "Undgå år, der er forbundet med dig.",
+        "capitalization": "Skriv mere end det første bogstav med stort.",
+        "dates": "Undgå datoer og år, der er forbundet med dig.",
+        "l33t": "Undgå forudsigelige bogstavudskiftninger som '@' for 'a'.",
+        "longer_keyboard_pattern": "Brug længere tastaturmønstre, og skift skriveretning flere gange.",
+        "no_need": "Du kan oprette stærke adgangskoder uden at bruge symboler, tal eller store bogstaver.",
+        "pwned": "Hvis du bruger denne adgangskode et andet sted, bør du ændre den.",
+        "recent_years": "Undgå de seneste år.",
+        "repeated": "Undgå gentagne ord og tegn.",
+        "reverse_words": "Undgå omvendte stavemåder af almindelige ord.",
+        "sequences": "Undgå almindelige tegnsekvenser.",
+        "use_words": "Brug flere ord, men undgå almindelige sætninger."
+      },
+      "too_weak": "Denne adgangskode er for svag",
+      "warning": {
+        "common": "Dette er en almindeligt brugt adgangskode.",
+        "common_names": "Almindelige navne og efternavne er lette at gætte.",
+        "dates": "Datoer er lette at gætte.",
+        "extended_repeat": "Gentagne karaktermønstre som \"abcabcabc\" er nemme at gætte.",
+        "key_pattern": "Korte tastaturmønstre er lette at gætte.",
+        "names_by_themselves": "Enkeltnavne eller efternavne er lette at gætte.",
+        "pwned": "Din adgangskode er blevet afsløret i et sikkerhedsbrud på Internettet.",
+        "recent_years": "De seneste år er nemme at gætte.",
+        "sequences": "Almindelige karaktersekvenser som \"abc\" er nemme at gætte.",
+        "similar_to_common": "Dette svarer til en almindeligt anvendt adgangskode.",
+        "simple_repeat": "Gentagne tegn som \"aaa\" er nemme at gætte.",
+        "straight_row": "Lige rækker af taster på tastaturet er lette at gætte.",
+        "top_hundred": "Dette er en hyppigt brugt adgangskode.",
+        "top_ten": "Dette er en meget brugt adgangskode.",
+        "user_inputs": "Der bør ikke være nogen personlige eller siderelaterede data.",
+        "word_by_itself": "Enkeltord er lette at gætte."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Nulstil identitet",
+      "cancelled": {
+        "description_1": "Du kan nu lukke dette vindue og gå tilbage til appen for at fortsætte.",
+        "description_2": "Hvis du er logget ud overalt og ikke kan huske din gendannelseskode, er du stadig nødt til at nulstille din identitet.",
+        "heading": "Nulstilling af identitet annulleret."
+      },
+      "description": "Hvis du ikke er logget ind på andre enheder, og du har mistet din gendannelsesnøgle, skal du nulstille din identitet for at fortsætte med at bruge appen.",
+      "effect_list": {
+        "negative_1": "Du vil miste din eksisterende beskedhistorik",
+        "negative_2": "Du bliver nødt til at verificere alle dine eksisterende enheder og kontakter påny",
+        "neutral_1": "Du mister enhver meddelelseshistorik, der kun er gemt på serveren",
+        "neutral_2": "Du bliver nødt til at verificere alle dine eksisterende enheder og kontakter påny",
+        "positive_1": "Dine kontooplysninger, kontakter, præferencer og din chatliste gemmes"
+      },
+      "failure": {
+        "description": "Dette kan være et midlertidigt problem, så prøv igen senere. Hvis problemet fortsætter, skal du kontakte din serveradministrator.",
+        "heading": "Kunne ikke tillade nulstilling af kryptoidentitet",
+        "title": "Det lykkedes ikke at tillade kryptoidentitet"
+      },
+      "finish_reset": "Afslut nulstilling",
+      "heading": "Nulstil din identitet, hvis du ikke kan bekræfte på en anden måde",
+      "start_reset": "Start nulstilling",
+      "success": {
+        "description": "Nulstilling af identitet er blevet godkendt i de næste {{minutes}} minutter. Du kan lukke dette vindue og gå tilbage til appen for at fortsætte.",
+        "heading": "Identitetsnulstilling er gennemført. Gå tilbage til appen for at afslutte processen.",
+        "title": "Nulstilling af kryptoidentitet midlertidigt tilladt"
+      },
+      "warning": "Nulstil kun din identitet, hvis du ikke har adgang til en anden enhed, der er logget ind, og du har mistet din gendannelsesnøgle."
+    },
+    "selectable_session": {
+      "label": "Vælg session"
+    },
+    "session": {
+      "client_id_label": "Klient ID",
+      "current": "Nuværende",
+      "current_badge": "Nuværende",
+      "device_id_label": "Enheds-ID",
+      "finished_date": "Færdig <datetime/>",
+      "finished_label": "Færdig",
+      "generic_browser_session": "Browser-session",
+      "id_label": "ID",
+      "ip_label": "IP-adresse",
+      "last_active_label": "Sidst aktiv",
+      "last_auth_label": "Sidste godkendelse",
+      "name_for_platform": "{{name}} til {{platform}}",
+      "scopes_label": "Omfang",
+      "signed_in_date": "Logget ind <datetime/>",
+      "signed_in_label": "Logget ind",
+      "title": "Enhedsoplysninger",
+      "unknown_browser": "Ukendt browser",
+      "unknown_device": "Ukendt enhed",
+      "uri_label": "Type",
+      "user_id_label": "Bruger-ID",
+      "username_label": "Brugernavn"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Gå tilbage",
+        "text": "Denne session eksisterer ikke eller er ikke længere aktiv.",
+        "title": "Kan ikke finde session: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Ukendt rute {{route}}",
+    "unverified_email_alert": {
+      "button": "Kontroller og verificer",
+      "text:one": "Du har {{count}} ubekræftet e-mailadresse.",
+      "text:other": "Du har {{count}} ubekræftede e-mailadresser.",
+      "title": "Ubekræftet e-mail"
+    },
+    "user_email": {
+      "cant_delete_primary": "Vælg en anden primær e-mail for at slette denne.",
+      "delete_button_confirmation_modal": {
+        "action": "Slet e-mail",
+        "body": "Slet denne e-mail?",
+        "incorrect_password": "Forkert adgangskode, prøv igen",
+        "password_confirmation": "Bekræft adgangskoden til din konto for at slette denne e-mail-adresse"
+      },
+      "delete_button_title": "Fjern e-mailadresse",
+      "email": "E-mail",
+      "make_primary_button": "Gør til primær",
+      "not_verified": "Ikke verificeret",
+      "primary_email": "Primær e-mail",
+      "retry_button": "Send koden igen",
+      "unverified": "Uverificeret"
+    },
+    "user_email_list": {
+      "heading": "E-mails",
+      "no_primary_email_alert": "Ingen primær e-mailadresse"
+    },
+    "user_greeting": {
+      "error": "Kunne ikke indlæse brugeren"
+    },
+    "user_name": {
+      "display_name_field_label": "Vist navn"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktiv session",
+      "active_sessions:other": "{{count}} aktive sessioner",
+      "heading": "Hvor du er logget ind",
+      "no_active_sessions": {
+        "default": "Du er ikke logget ind på nogen applikation.",
+        "inactive_90_days": "Alle dine sessioner har været aktive i de sidste 90 dage."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "Koden er udløbet. Anmod om en ny kode.",
+        "title": "Koden er udløbet"
+      },
+      "code_field_error": "Kode ikke genkendt",
+      "code_field_label": "6-cifret kode",
+      "code_field_wrong_shape": "Koden skal være 6 cifre",
+      "email_sent_alert": {
+        "description": "Indtast den nye kode herunder.",
+        "title": "Ny kode sendt"
+      },
+      "enter_code_prompt": "Indtast den 6-cifrede kode, der er sendt til: <email> {{email}} </email>",
+      "heading": "Bekræft din e-mail",
+      "invalid_code_alert": {
+        "description": "Kontroller koden, der er sendt til din e-mail, og opdater felterne herunder for at fortsætte.",
+        "title": "Du har indtastet en forkert kode"
+      },
+      "resend_code": "Send koden igen",
+      "resend_email": "Gensend e-mail",
+      "sent": "Sendt!",
+      "unknown_email": "Ukendt e-mail"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Rediger din profil og dine kontaktoplysninger",
+      "manage_sessions": "Administrer dine enheder og sessioner",
+      "mas_admin": "Administrer enhver bruger på matrix-authentication-service",
+      "send_messages": "Send nye beskeder på dine vegne",
+      "synapse_admin": "Administrer Synapse hjemmeserveren",
+      "view_messages": "Se dine eksisterende beskeder og data",
+      "view_profile": "Se dine profiloplysninger og kontaktoplysninger"
+    }
+  }
+}

@@ -38,6 +38,20 @@
     "unexpected": "Erreur inattendue"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Ce compte (<em>%(mxid)s</em>) a été supprimé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "heading": "Compte supprimé"
+      },
+      "locked": {
+        "description": "Ce compte (<em>%(mxid)s</em>) a été verrouillé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "heading": "Compte bloqué"
+      },
+      "logged_out": {
+        "description": "Cette session est terminée. Déconnectez-vous pour pouvoir vous reconnecter",
+        "heading": "Session terminée"
+      }
+    },
     "add_email": {
       "description": "Entrez une adresse e-mail qui sera utilisée pour récupérer votre compte au cas où vous perdriez l'accès à celui-ci.",
       "heading": "Ajouter une adresse e-mail"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "La vérification du CAPTCHA a échoué, veuillez réessayer",
       "denied_policy": "Refusé par la politique du serveur : %(policy)s",
+      "email_banned": "Cette adresse e-mail est interdite par la politique du serveur",
       "email_domain_banned": "Le domaine de l'adresse e-mail est interdit par la politique du serveur.",
       "email_domain_not_allowed": "Le domaine de l'adresse e-mail n'est pas autorisée par la politique du serveur.",
+      "email_not_allowed": "Cette adresse e-mail n'est pas autorisée par la politique du serveur",
       "field_required": "Ce champ est requis",
       "invalid_credentials": "Identifiants invalides",
       "password_mismatch": "Les champs du mot de passe ne correspondent pas.",
       "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer.",
       "username_all_numeric": "Le nom d'utilisateur ne peut pas être composé uniquement de chiffres",
+      "username_banned": "Ce nom d'utilisateur est interdit par la politique du serveur",
       "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, des tirets et des traits de soulignement.",
+      "username_not_allowed": "Ce nom d'utilisateur n'est pas autorisé par la politique du serveur",
       "username_taken": "Ce nom d'utilisateur est déjà utilisé",
       "username_too_long": "Le nom d'utilisateur est trop long",
       "username_too_short": "Le nom d'utilisateur est trop court"
