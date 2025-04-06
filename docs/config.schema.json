@@ -1945,7 +1945,7 @@
           "type": "string"
         },
         "brand_name": {
-          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`, `github`, etc.\n\nValues supported by the default template are:\n\n- `apple` - `google` - `facebook` - `github` - `gitlab` - `twitter`",
+          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`, `github`, etc.\n\nValues supported by the default template are:\n\n- `apple` - `google` - `facebook` - `github` - `gitlab` - `twitter` - `discord`",
           "type": "string"
         },
         "client_id": {
