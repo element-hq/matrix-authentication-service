@@ -38,6 +38,20 @@
     "unexpected": "Ootamatu viga"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "See kasutajakonto (<em>%(mxid)s</em>) on kustutatud. Kui see nii ei peaks olema, siis palun võta ühendust oma serveri haldajaga.",
+        "heading": "Kasutajakonto on kustutatud"
+      },
+      "locked": {
+        "description": "See kasutajakonto (<em>%(mxid)s</em>) on lukustatud. Kui see nii ei peaks olema, siis palun võta ühendust oma serveri haldajaga.",
+        "heading": "Kasutajakonto on lukustatud"
+      },
+      "logged_out": {
+        "description": "See sessioon on lõppenud. Jätkamaks logi palun välja ja seejärel uuesti sisse",
+        "heading": "Sessioon on lõpetatud"
+      }
+    },
     "add_email": {
       "description": "Selleks, et saaksid vajaduse korral taastada ligipääsu oma kasutajakontole, palun sisesta oma e-posti aadress.",
       "heading": "Lisa e-posti aadress"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "Robotilõksu tehtud kontroll ei luba jätkata. Palun proovi uuesti.",
       "denied_policy": "See on keelatud serveri kasutusjuhendi alusel: %(policy)s",
+      "email_banned": "E-post on serveri reeglite alusel keelatud",
       "email_domain_banned": "E-posti aadressi domeen on serverireeglite alusel keelatud",
       "email_domain_not_allowed": "E-posti aadressi domeen pole serverireeglite alusel lubatud",
+      "email_not_allowed": "E-post pole serveri reeglite alusel lubatud",
       "field_required": "Selle välja täitmine on kohustuslik",
       "invalid_credentials": "Vigased kasutajatunnused",
       "password_mismatch": "Salasõnad ei klapi omavahel",
       "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti.",
       "username_all_numeric": "Kasutajanimi ei tohi koosneda vaid numbritest",
+      "username_banned": "Kasutajanimi on serverireeglite alusel keelatud",
       "username_invalid_chars": "Kasutajanimes on keelatud tähemärke. Palun kasuta vaid väiketähti, numbreid, sidekriipsu ja alakriipsu.",
+      "username_not_allowed": "Kasutajanimi pole serveri reeglite alusel lubatud",
       "username_taken": "Selline kasutajanimi on juba olemas",
       "username_too_long": "Kasutajanimi on liiga pikk",
       "username_too_short": "Kasutajanimi on liiga lühike"
@@ -166,7 +184,7 @@
       },
       "finish": {
         "confirm": "Sisesta uus salasõna uuesti",
-        "description": "Vali uus salasõna oma kasutajakonto jaoks.",
+        "description": "Vali oma kasutajakontole uus salasõna.",
         "heading": "Lähtesta oma salasõna",
         "new": "Uus salasõna",
         "save_and_continue": "Salvesta ja jätka"

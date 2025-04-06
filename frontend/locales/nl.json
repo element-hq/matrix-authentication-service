@@ -5,11 +5,12 @@
     "clear": "Wissen",
     "close": "Sluiten",
     "collapse": "Collapse",
+    "confirm": "Confirm",
     "continue": "Doorgaan",
     "edit": "Bewerken",
     "expand": "Expand",
     "save": "Opslaan",
-    "save_and_continue": "Opslaan en doorgaan",
+    "save_and_continue": "Save and continue",
     "sign_out": "Uitloggen",
     "start_over": "Opnieuw beginnen"
   },
@@ -29,6 +30,7 @@
     "error": "Fout",
     "loading": "Laden...",
     "next": "Volgende",
+    "password": "Password",
     "previous": "Vorige",
     "saved": "Opgeslagen",
     "saving": "Opslaan..."
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Account password",
       "contact_info": "Contact info",
+      "delete_account": {
+        "alert_description": "This account will be permanently erased and you’ll no longer have access to any of your messages.",
+        "alert_title": "You’re about to lose all of your data",
+        "button": "Delete account",
+        "dialog_description": "<text>Confirm that you would like to delete your account:</text>\n<profile />\n<list>\n<item>You will not be able to reactivate your account</item>\n<item>You will no longer be able to sign in</item>\n<item>No one will be able to reuse your username (MXID), including you</item>\n<item>You will leave all rooms and direct messages you are in</item>\n<item>You will be removed from the identity server, and no one will be able to find you with your email or phone number</item>\n</list>\n<text>Your old messages will still be visible to people who received them. Would you like to hide your send messages from people who join rooms in the future?</text>",
+        "dialog_title": "Delete this account?",
+        "erase_checkbox_label": "Yes, hide all my messages from new joiners",
+        "incorrect_password": "Incorrect password, please try again",
+        "mxid_label": "Confirm your Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "This value does not match your Matrix ID",
+        "password_label": "Enter your password to continue"
+      },
       "edit_profile": {
         "display_name_help": "Dit is wat anderen zien wanneer je bent ingelogd.",
         "display_name_label": "Weergavenaam",
@@ -72,7 +86,9 @@
         "text": "Het ingevoerde e-mailadres is ongeldig",
         "title": "Ongeldig e-mailadres"
       },
-      "email_invalid_error": "Het ingevoerde e-mailadres is ongeldig"
+      "email_invalid_error": "Het ingevoerde e-mailadres is ongeldig",
+      "incorrect_password_error": "Incorrect password, please try again",
+      "password_confirmation": "Confirm your account password to add this email address"
     },
     "app_sessions_list": {
       "error": "Kan app-sessies niet laden",
@@ -120,7 +136,7 @@
     },
     "error_boundary_title": "Er is iets misgegaan",
     "errors": {
-      "field_required": "Dit veld is verplicht",
+      "field_required": "This field is required",
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
@@ -167,8 +183,8 @@
         },
         "title": "Failed to update password"
       },
-      "new_password_again_label": "Voer het nieuwe wachtwoord opnieuw in",
-      "new_password_label": "Nieuw wachtwoord",
+      "new_password_again_label": "Enter new password again",
+      "new_password_label": "New password",
       "passwords_match": "Wachtwoorden komen overeen!",
       "passwords_no_match": "Passwords don't match",
       "subtitle": "Choose a new password for your account.",
@@ -252,7 +268,7 @@
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
-        "description": "Dit kan een tijdelijk probleem zijn, probeer het later opnieuw. Als het probleem zich blijft voordoen, neem dan contact op met de serverbeheerder.",
+        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
         "heading": "Failed to allow crypto identity reset",
         "title": "Kan crypto identiteit niet toestaan"
       },
@@ -272,7 +288,7 @@
     "session": {
       "client_id_label": "Client ID",
       "current": "Huidige",
-      "current_badge": "Huidig",
+      "current_badge": "Huidige",
       "device_id_label": "Apparaat-ID",
       "finished_date": "Voltooid op <datetime/>",
       "finished_label": "Voltooid",
@@ -310,7 +326,9 @@
       "cant_delete_primary": "Kies een ander primair e-mailadres om de huidige te verwijderen.",
       "delete_button_confirmation_modal": {
         "action": "E-mailadres verwijderen",
-        "body": "Dit e-mailadres verwijderen?"
+        "body": "Dit e-mailadres verwijderen?",
+        "incorrect_password": "Incorrect password, please try again",
+        "password_confirmation": "Confirm your account password to delete this email address"
       },
       "delete_button_title": "E-mailadres verwijderen",
       "email": "E-mailadres",

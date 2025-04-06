@@ -28,7 +28,7 @@
   "common": {
     "display_name": "Anzeigename",
     "email_address": "E-Mail-Adresse",
-    "loading": "Wird geladen...",
+    "loading": "Lade …",
     "mxid": "Matrix-ID",
     "password": "Passwort",
     "password_confirm": "Passwort wiederholen",
@@ -38,6 +38,20 @@
     "unexpected": "Unerwarteter Fehler"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gelöscht. Wenn dies nicht erwartet wird, wenden Sie sich an Ihren Serveradministrator.",
+        "heading": "Konto gelöscht"
+      },
+      "locked": {
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gesperrt. Wenn dies nicht erwartet wird, wenden Sie sich an Ihren Serveradministrator.",
+        "heading": "Konto gesperrt"
+      },
+      "logged_out": {
+        "description": "Diese Sitzung wurde beendet. Melden Sie sich ab, um sich wieder anmelden zu können.",
+        "heading": "Sitzung beendet"
+      }
+    },
     "add_email": {
       "description": "Geben Sie eine E-Mail-Adresse ein, um Ihr Konto wiederherzustellen, falls Sie den Zugriff darauf verlieren.",
       "heading": "E-Mail-Adresse hinzufügen"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuchen Sie es erneut",
       "denied_policy": "Abgelehnt durch Richtlinie: %(policy)s",
+      "email_banned": "E-Mail ist durch die Serverrichtlinie gesperrt",
       "email_domain_banned": "Die E-Mail-Domain ist durch die Serverrichtlinie gesperrt",
       "email_domain_not_allowed": "Diese E-Mail-Domain ist gemäß der Serverrichtlinie nicht zulässig",
+      "email_not_allowed": "E-Mail ist gemäß der Serverrichtlinie nicht zulässig",
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "invalid_credentials": "Ungültige Anmeldeinformationen",
       "password_mismatch": "Die Passwortfelder stimmen nicht überein",
       "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
       "username_all_numeric": "Der Benutzername darf nicht nur aus Zahlen bestehen",
+      "username_banned": "Der Benutzername ist durch die Serverrichtlinie gesperrt",
       "username_invalid_chars": "Der Benutzername enthält ungültige Zeichen. Verwenden Sie nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche.",
+      "username_not_allowed": "Der Benutzername ist gemäß der Serverrichtlinie nicht zulässig",
       "username_taken": "Dieser Benutzername ist bereits vergeben",
       "username_too_long": "Der Benutzername ist zu lang",
       "username_too_short": "Der Benutzername ist zu kurz"
@@ -166,7 +184,7 @@
       },
       "finish": {
         "confirm": "Neues Passwort erneut eingeben",
-        "description": "Wählen Sie ein neues Passwort für Ihr Konto.",
+        "description": "Wählen Sie ein neues Passwort für Ihren Account.",
         "heading": "Ihr Passwort zurücksetzen",
         "new": "Neues Passwort",
         "save_and_continue": "Speichern und fortfahren"

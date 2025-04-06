@@ -5,12 +5,13 @@
     "clear": "Vymazat",
     "close": "Zavřít",
     "collapse": "Sbalit",
+    "confirm": "Potvrdit",
     "continue": "Pokračovat",
     "edit": "Upravit",
     "expand": "Rozbalit",
     "save": "Uložit",
     "save_and_continue": "Uložit a pokračovat",
-    "sign_out": "Odhlásit se",
+    "sign_out": "Odhlásit",
     "start_over": "Začít znovu"
   },
   "branding": {
@@ -19,8 +20,8 @@
       "link": "Zásady ochrany osobních údajů"
     },
     "terms_and_conditions": {
-      "alt": "Odkaz na podmínky služby",
-      "link": "Podmínky"
+      "alt": "Odkaz na smluvní podmínky služby",
+      "link": "Všeobecné obchodní podmínky"
     }
   },
   "common": {
@@ -29,6 +30,7 @@
     "error": "Chyba",
     "loading": "Načítání…",
     "next": "Další",
+    "password": "Heslo",
     "previous": "Předchozí",
     "saved": "Uloženo",
     "saving": "Ukládání..."
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Heslo účtu",
       "contact_info": "Kontaktní informace",
+      "delete_account": {
+        "alert_description": "Tento účet bude trvale smazán a nebudete mít přístup k žádné ze svých zpráv.",
+        "alert_title": "Přijdete o všechna svá data",
+        "button": "Smazat účet",
+        "dialog_description": "<text>Potvrďte, že chcete smazat svůj účet:</text>\n<profile />\n<list>\n<item>Nebudete moci svůj účet znovu aktivovat</item>\n<item>Nebudete se už moci přihlásit</item>\n<item>Nikdo nebude moci znovu použít vaše uživatelské jméno (MXID), včetně vás</item>\n<item>Opustíte všechny místnosti a přímé zprávy, ve kterých se nacházíte</item>\n<item>Budete odstraněni ze serveru identity a nikdo vás nebude moci najít pomocí vašeho e-mailu nebo telefonního čísla</item>\n</list>\n<text>Vaše staré zprávy budou stále viditelné pro lidi, kteří je obdrželi. Chcete skrýt své odeslané zprávy před lidmi, kteří vstoupí do místnosti v budoucnu?</text>",
+        "dialog_title": "Smazat tento účet?",
+        "erase_checkbox_label": "Ano, skrýt všechny mé zprávy před novými členy",
+        "incorrect_password": "Nesprávné heslo, zkuste to prosím znovu",
+        "mxid_label": "Potvrďte své Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "Tato hodnota neodpovídá vašemu Matrix ID",
+        "password_label": "Zadejte své heslo pro pokračování"
+      },
       "edit_profile": {
         "display_name_help": "Tohle uvidí ostatní, ať už jste přihlášeni kdekoli.",
         "display_name_label": "Zobrazované jméno",
@@ -44,7 +58,7 @@
         "username_label": "Uživatelské jméno"
       },
       "password": {
-        "change": "Změnit heslo",
+        "change": "Změna hesla",
         "change_disabled": "Změny hesla jsou zakázány správcem.",
         "label": "Heslo"
       },
@@ -64,7 +78,7 @@
         "text": "Zadaný e-mail je již přidán do tohoto účtu",
         "title": "E-mail již existuje"
       },
-      "email_exists_error": "Zadaný e-mail je již přidán k tomuto účtu",
+      "email_exists_error": "Zadaný e-mail je již přidán do tohoto účtu",
       "email_field_help": "Přidejte alternativní e-mail, který můžete použít pro přístup k tomuto účtu.",
       "email_field_label": "Přidat e-mail",
       "email_in_use_error": "Zadaný e-mail se již používá",
@@ -72,7 +86,9 @@
         "text": "Zadaný email je neplatný",
         "title": "Neplatný e-mail"
       },
-      "email_invalid_error": "Zadaný e-mail je neplatný"
+      "email_invalid_error": "Zadaný email je neplatný",
+      "incorrect_password_error": "Nesprávné heslo, zkuste to prosím znovu",
+      "password_confirmation": "Potvrďte heslo k účtu při přidání této e-mailové adresy."
     },
     "app_sessions_list": {
       "error": "Nepodařilo se načíst relace aplikace",
@@ -168,7 +184,7 @@
         },
         "title": "Nepodařilo se aktualizovat heslo"
       },
-      "new_password_again_label": "Zadejte znovu nové heslo",
+      "new_password_again_label": "Znovu zadejte nové heslo",
       "new_password_label": "Nové heslo",
       "passwords_match": "Hesla se shodují!",
       "passwords_no_match": "Hesla se neshodují",
@@ -190,7 +206,7 @@
         "title": "Platnost odkazu na obnovení hesla vypršela"
       },
       "subtitle": "Zvolte nové heslo pro svůj účet.",
-      "title": "Obnovte heslo"
+      "title": "Obnovte své heslo"
     },
     "password_strength": {
       "placeholder": "Síla hesla",
@@ -249,11 +265,11 @@
         "negative_1": "Ztratíte svou historii zpráv",
         "negative_2": "Bude nutné znovu ověřit všechna stávající zařízení a kontakty.",
         "neutral_1": "Ztratíte historii zpráv, která je uložena pouze na serveru",
-        "neutral_2": "Budete muset znovu ověřit všechna stávající zařízení a kontakty",
+        "neutral_2": "Bude nutné znovu ověřit všechna stávající zařízení a kontakty.",
         "positive_1": "Podrobnosti o vašem účtu, kontakty, předvolby a seznam chatu budou uchovávány"
       },
       "failure": {
-        "description": "Může se jednat o dočasný problém, proto to zkuste znovu později. Pokud problém přetrvává, obraťte se na správce serveru.",
+        "description": "Může se jednat o dočasný problém, zkuste to prosím znovu později. Pokud problém přetrvává, obraťte se na správce serveru.",
         "heading": "Nepodařilo se povolit obnovení kryptoidentity",
         "title": "Nepodařilo se povolit krypto identitu"
       },
@@ -282,7 +298,7 @@
       "ip_label": "IP adresa",
       "last_active_label": "Naposledy aktivní",
       "last_auth_label": "Poslední ověření",
-      "name_for_platform": "{{name}}pro {{platform}}",
+      "name_for_platform": "{{name}} pro {{platform}}",
       "scopes_label": "Rozsahy",
       "signed_in_date": "Přihlášen <datetime/>",
       "signed_in_label": "Přihlášen",
@@ -312,7 +328,9 @@
       "cant_delete_primary": "Zvolte jiný primární e-mail a odstraňte tento e-mail.",
       "delete_button_confirmation_modal": {
         "action": "Smazat e-mail",
-        "body": "Smazat tento e-mail?"
+        "body": "Smazat tento e-mail?",
+        "incorrect_password": "Nesprávné heslo, zkuste to prosím znovu",
+        "password_confirmation": "Potvrďte heslo k účtu pro smazání této e-mailové adresy"
       },
       "delete_button_title": "Odebrat e-mailovou adresu",
       "email": "E-mail",
@@ -371,10 +389,10 @@
       "edit_profile": "Upravte svůj profil a kontaktní údaje",
       "manage_sessions": "Spravujte svá zařízení a relace",
       "mas_admin": "Spravujte libovolného uživatele ve službě matrix-authentication-service",
-      "send_messages": "Posílejte nové zprávy vaším jménem",
-      "synapse_admin": "Správa domovského serveru Synapse",
-      "view_messages": "Zobrazení stávajících zpráv a dat",
-      "view_profile": "Podívejte se na informace o svém profilu a kontaktní údaje"
+      "send_messages": "Odesílání nových zpráv vaším jménem",
+      "synapse_admin": "Spravujte domovský server Synapse",
+      "view_messages": "Zobrazte své stávající zprávy a data",
+      "view_profile": "Zobrazení informací o vašem profilu a kontaktních údajů"
     }
   }
 }

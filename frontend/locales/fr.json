@@ -5,11 +5,12 @@
     "clear": "Effacer",
     "close": "Fermer",
     "collapse": "Réduire",
+    "confirm": "Confirmer",
     "continue": "Continuer",
     "edit": "Éditer",
     "expand": "Développer",
     "save": "Enregistrer",
-    "save_and_continue": "Enregistrer et continuer",
+    "save_and_continue": "Sauvegarder et continuer",
     "sign_out": "Se déconnecter",
     "start_over": "Recommencer"
   },
@@ -29,6 +30,7 @@
     "error": "Erreur",
     "loading": "Chargement…",
     "next": "Suivant",
+    "password": "Mot de passe",
     "previous": "Précédent",
     "saved": "Sauvegardé",
     "saving": "Enregistrement..."
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Mot de passe du compte",
       "contact_info": "Coordonnées",
+      "delete_account": {
+        "alert_description": "Ce compte sera définitivement supprimé et vous n'aurez plus accès à aucun de vos messages.",
+        "alert_title": "Vous êtes sur le point de perdre toutes vos données",
+        "button": "Supprimer le compte",
+        "dialog_description": "<text>Confirmez que vous souhaitez supprimer votre compte :</text>\n<profile />\n<list>\n<item>Vous ne pourrez pas réactiver votre compte</item>\n<item>Vous ne pourrez plus vous connecter</item>\n<item>Personne ne pourra réutiliser votre nom d'utilisateur (MXID), y compris vous</item>\n<item>Vous quitterez tous les salons et les messages directs dans lesquels vous vous trouvez</item>\n<item>Vous serez retiré du serveur d'identité et personne ne pourra vous trouver avec votre e-mail ou votre numéro de téléphone</item>\n</list>\n<text>Vos anciens messages seront toujours visibles pour les personnes qui les ont reçus. Souhaitez-vous masquer les messages que vous envoyez aux personnes qui rejoindront des salons à l'avenir ?</text>",
+        "dialog_title": "Supprimer ce compte ?",
+        "erase_checkbox_label": "Oui, masquer tous mes messages aux nouveaux arrivants",
+        "incorrect_password": "Mot de passe incorrect, veuillez réessayer",
+        "mxid_label": "Confirmez votre identifiant Matrix ({{ mxid }})",
+        "mxid_mismatch": "Cela ne correspond pas à votre identifiant Matrix",
+        "password_label": "Saisissez votre mot de passe pour continuer"
+      },
       "edit_profile": {
         "display_name_help": "C'est ce que les autres personnes verront là où vous êtes connecté.",
         "display_name_label": "Pseudonyme",
@@ -72,14 +86,16 @@
         "text": "L’adresse e-mail saisie est invalide",
         "title": "Adresse e-mail invalide"
       },
-      "email_invalid_error": "L’adresse e-mail saisie n’est pas valide"
+      "email_invalid_error": "L’adresse e-mail saisie est invalide",
+      "incorrect_password_error": "Mot de passe incorrect, veuillez réessayer",
+      "password_confirmation": "Confirmez le mot de passe de votre compte pour ajouter cette adresse e-mail"
     },
     "app_sessions_list": {
       "error": "Impossible de charger les sessions d'application",
       "heading": "Applications"
     },
     "browser_session_details": {
-      "current_badge": "Cet appareil",
+      "current_badge": "Actuel",
       "session_details_title": "Session"
     },
     "browser_sessions_overview": {
@@ -167,7 +183,7 @@
         },
         "title": "Impossible de mettre à jour le mot de passe"
       },
-      "new_password_again_label": "Saisir à nouveau le nouveau mot de passe",
+      "new_password_again_label": "Entrez de nouveau votre nouveau mot de passe",
       "new_password_label": "Nouveau mot de passe",
       "passwords_match": "Les mots de passe correspondent.",
       "passwords_no_match": "Les mots de passe ne correspondent pas",
@@ -189,7 +205,7 @@
         "title": "Le lien pour réinitialiser votre mot de passe a expiré"
       },
       "subtitle": "Choisissez un nouveau mot de passe pour votre compte.",
-      "title": "Reinitialisez votre mot de passe"
+      "title": "Réinitialiser votre mot de passe"
     },
     "password_strength": {
       "placeholder": "Complexité du mot de passe",
@@ -248,7 +264,7 @@
         "negative_1": "Vous perdrez votre historique de messages existant",
         "negative_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
         "neutral_1": "Vous perdrez l’historique de vos messages",
-        "neutral_2": "Vous devrez vérifier à nouveau tous vos appareils et tous vos contacts",
+        "neutral_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
         "positive_1": "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussion seront conservés"
       },
       "failure": {
@@ -270,9 +286,9 @@
       "label": "Sélectionner une session"
     },
     "session": {
-      "client_id_label": "Identifiant de l'application",
+      "client_id_label": "Client ID",
       "current": "Actuel",
-      "current_badge": "Cet appareil",
+      "current_badge": "Actuel",
       "device_id_label": "ID de l’appareil",
       "finished_date": "Terminé <datetime/>",
       "finished_label": "Terminée",
@@ -310,7 +326,9 @@
       "cant_delete_primary": "Changez d'adresse e-mail principale pour supprimer celle-ci.",
       "delete_button_confirmation_modal": {
         "action": "Supprimer l'adresse e-mail",
-        "body": "Supprimer cette adresse e-mail ?"
+        "body": "Supprimer cette adresse e-mail ?",
+        "incorrect_password": "Mot de passe incorrect, veuillez réessayer",
+        "password_confirmation": "Confirmez le mot de passe de votre compte pour supprimer cette adresse e-mail"
       },
       "delete_button_title": "Supprimer l’adresse e-mail",
       "email": "Adresse e-mail",
@@ -331,8 +349,8 @@
       "display_name_field_label": "Pseudonyme"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}}session active",
-      "active_sessions:other": "{{count}}sessions actives",
+      "active_sessions:one": "{{count}} session active",
+      "active_sessions:other": "{{count}} sessions actives",
       "heading": "Où vous êtes connecté",
       "no_active_sessions": {
         "default": "Vous n'êtes connecté à aucune application.",
@@ -352,12 +370,12 @@
         "title": "Nouveau code envoyé"
       },
       "enter_code_prompt": "Entrez le code à 6 chiffres envoyé à : <email>{{email}}</email>",
-      "heading": "Vérification de votre adresse e-mail",
+      "heading": "Vérifiez votre adresse e-mail",
       "invalid_code_alert": {
         "description": "Vérifiez le code envoyé à votre adresse e-mail et entrez le dans le champ ci-dessous pour continuer.",
         "title": "Vous avez saisi un code erroné"
       },
-      "resend_code": "Renvoyer un code",
+      "resend_code": "Renvoyer le code",
       "resend_email": "Renvoyer l’e-mail",
       "sent": "Envoyé !",
       "unknown_email": "Adresse e-mail inconnue"
@@ -368,7 +386,7 @@
       "edit_profile": "Modifier votre profil et vos coordonnées",
       "manage_sessions": "Gérer vos appareils et vos sessions",
       "mas_admin": "Administrer n'importe quel utilisateur dans matrix-authentication-service",
-      "send_messages": "Envoyer de nouveaux messages en votre nom",
+      "send_messages": "Envoyez de nouveaux messages en votre nom",
       "synapse_admin": "Administrer le serveur d’accueil Synapse",
       "view_messages": "Afficher vos messages et données existants",
       "view_profile": "Voir les informations de votre profil et vos coordonnées"
