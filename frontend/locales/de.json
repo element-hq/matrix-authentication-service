@@ -5,13 +5,14 @@
     "clear": "Löschen",
     "close": "Schließen",
     "collapse": "Zusammenbruch",
-    "continue": "Fortfahren",
+    "confirm": " Bestätigen Sie",
+    "continue": "Weiter",
     "edit": "Bearbeiten",
     "expand": "Erweitern",
     "save": "Speichern",
     "save_and_continue": "Speichern und fortfahren",
     "sign_out": "Abmelden",
-    "start_over": "Neu anfangen"
+    "start_over": "Von vorne anfangen"
   },
   "branding": {
     "privacy_policy": {
@@ -19,8 +20,8 @@
       "link": "Datenschutzerklärung"
     },
     "terms_and_conditions": {
-      "alt": "Link zu den Nutzungsbedingungen des Dienstes",
-      "link": "Nutzungsbedingungen"
+      "alt": "Link zu den Allgemeinen Geschäftsbedingungen des Dienstes",
+      "link": "Allgemeine Geschäftsbedingungen"
     }
   },
   "common": {
@@ -29,6 +30,7 @@
     "error": "Fehler",
     "loading": "Lade …",
     "next": "Weiter",
+    "password": "Passwort",
     "previous": "Zurück",
     "saved": "Gespeichert",
     "saving": "Speichern..."
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Kontokennwort",
       "contact_info": "Kontaktinformation",
+      "delete_account": {
+        "alert_description": "Dieses Konto wird dauerhaft gelöscht und Sie haben keinen Zugriff mehr auf Ihre Nachrichten.",
+        "alert_title": "Sie sind dabei, alle Ihre Daten zu verlieren",
+        "button": "Account löschen",
+        "dialog_description": "<text>Bestätigen Sie, dass Sie Ihr Konto löschen möchten:</text><profile />\n<list>\n<item>Sie können Ihr Konto nicht reaktivieren</item>\n<item>Sie können sich nicht mehr anmelden</item>\n<item>Niemand kann Ihren Benutzernamen (MXID) wieder verwenden, auch Sie nicht.</item>\n<item>Sie verlassen alle Räume und Direktnachrichten, in denen Sie sich befinden</item>\n<item>Sie werden vom Identitätsserver entfernt und niemand kann Sie mit Ihrer E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Ihre alten Nachrichten sind für Empfänger weiterhin sichtbar. Möchten Sie Ihre gesendeten Nachrichten vor zukünftigen Chatroom-Besuchern verbergen?</text>",
+        "dialog_title": "Dieses Konto löschen?",
+        "erase_checkbox_label": "Ja, alle meine Nachrichten vor neuen Mitgliedern verbergen",
+        "incorrect_password": "Falsches Passwort, bitte versuchen Sie es erneut",
+        "mxid_label": "Bestätigen Sie Ihre Matrix-ID ({{ mxid }})",
+        "mxid_mismatch": "Dieser Wert stimmt nicht mit Ihrer Matrix-ID überein",
+        "password_label": "Geben Sie Ihr Passwort ein, um fortzufahren"
+      },
       "edit_profile": {
         "display_name_help": "Dies ist der öffentliche Nutzername.",
         "display_name_label": "Anzeigename",
@@ -72,7 +86,9 @@
         "text": "Die eingegebene E-Mail-Adresse ist ungültig",
         "title": "Ungültige Email-Adresse"
       },
-      "email_invalid_error": "Die eingegebene E-Mail ist ungültig"
+      "email_invalid_error": "Die eingegebene E-Mail-Adresse ist ungültig",
+      "incorrect_password_error": "Falsches Passwort, bitte versuchen Sie es erneut",
+      "password_confirmation": "Bestätigen Sie Ihr Kontopasswort, um diese E-Mail-Adresse hinzuzufügen"
     },
     "app_sessions_list": {
       "error": "App-Sitzungen konnten nicht geladen werden",
@@ -120,8 +136,8 @@
     },
     "error_boundary_title": "Etwas ist schief gelaufen",
     "errors": {
-      "field_required": "Dieses Feld ist erforderlich",
-      "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie ein paar Minuten und versuchen Sie es erneut."
+      "field_required": "Dieses Feld ist ein Pflichtfeld",
+      "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut."
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -137,7 +153,7 @@
     "not_found_alert_title": "Nicht gefunden.",
     "not_logged_in_alert": "Sie sind nicht angemeldet.",
     "oauth2_client_detail": {
-      "details_title": "Geräte Informationen",
+      "details_title": "Geräte Information",
       "id": "Client-ID",
       "name": "Name",
       "policy": "Richtlinie",
@@ -145,7 +161,7 @@
     },
     "oauth2_session_detail": {
       "client_details_name": "Name",
-      "client_title": "Geräte Informationen",
+      "client_title": "Geräte Information",
       "session_details_title": "Sitzung"
     },
     "pagination_controls": {
@@ -167,7 +183,7 @@
         },
         "title": "Aktualisierung des Passworts fehlgeschlagen"
       },
-      "new_password_again_label": "Geben Sie das neue Passwort erneut ein",
+      "new_password_again_label": "Neues Passwort erneut eingeben",
       "new_password_label": "Neues Passwort",
       "passwords_match": "Passwörter stimmen überein!",
       "passwords_no_match": "Passwörter stimmen nicht überein",
@@ -189,7 +205,7 @@
         "title": "Der Link zum Zurücksetzen Ihres Passworts ist abgelaufen"
       },
       "subtitle": "Wählen Sie ein neues Passwort für Ihren Account.",
-      "title": "Passwort zurücksetzen"
+      "title": "Ihr Passwort zurücksetzen"
     },
     "password_strength": {
       "placeholder": "Passwortstärke",
@@ -252,7 +268,7 @@
         "positive_1": "Ihre Kontodaten, Kontakte, Einstellungen und Chat-Liste werden gespeichert"
       },
       "failure": {
-        "description": "Dies könnte ein vorübergehendes Problem sein. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Administrator.",
+        "description": "Dies könnte ein vorübergehendes Problem sein. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Serveradministrator.",
         "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden",
         "title": "Krypto-Identität konnte nicht zugelassen werden"
       },
@@ -270,7 +286,7 @@
       "label": "Sitzung auswählen"
     },
     "session": {
-      "client_id_label": "Geräte ID",
+      "client_id_label": "Client-ID",
       "current": "Aktuell",
       "current_badge": "Aktuell",
       "device_id_label": "Geräte-ID",
@@ -310,7 +326,9 @@
       "cant_delete_primary": "Wählen Sie eine andere primäre E-Mail-Adresse, um diese zu löschen.",
       "delete_button_confirmation_modal": {
         "action": "E-Mail löschen",
-        "body": "Diese E-Mail löschen?"
+        "body": "Diese E-Mail löschen?",
+        "incorrect_password": "Falsches Passwort, bitte versuchen Sie es erneut",
+        "password_confirmation": "Bestätigen Sie Ihr Kontopasswort, um diese E-Mail-Adresse zu löschen"
       },
       "delete_button_title": "E-Mail-Adresse entfernen",
       "email": "E-Mail",
@@ -352,7 +370,7 @@
         "title": "Neuer Code gesendet"
       },
       "enter_code_prompt": "Geben Sie den 6-stelligen Code ein, der an <email>{{email}}</email> gesendet wurde",
-      "heading": "Verifizieren Sie Ihre E-Mail-Adresse",
+      "heading": "Bestätigen Sie Ihre E-Mail-Adresse",
       "invalid_code_alert": {
         "description": "Überprüfen Sie den Code, der an Ihre E-Mail-Adresse gesendet wurde, und aktualisieren Sie die folgenden Felder, um fortzufahren.",
         "title": "Sie haben einen falschen Code eingegeben"
@@ -365,13 +383,13 @@
   },
   "mas": {
     "scope": {
-      "edit_profile": "Profil und Kontaktdaten bearbeiten",
-      "manage_sessions": "Verwalte deine Geräte und Sitzungen",
-      "mas_admin": "Verwalte jeden Benutzer auf dem Matrix-Authentication-Service",
-      "send_messages": "Sende neue Nachrichten in Deinem Namen",
-      "synapse_admin": "Verwalte den Synapse-Homeserver",
-      "view_messages": "Zeige vorhandene Nachrichten und Daten an",
-      "view_profile": "Profil und Ihre Kontaktdaten anzeigen"
+      "edit_profile": "Ihr Profil und Ihre Kontaktdaten bearbeiten",
+      "manage_sessions": "Ihre Geräte und Sitzungen verwalten",
+      "mas_admin": "Beliebige Benutzer verwalten",
+      "send_messages": "Nachrichten in Ihrem Namen senden",
+      "synapse_admin": "Den Synapse-Homeserver verwalten",
+      "view_messages": "Ihre vorhandenen Nachrichten und Daten anzeigen",
+      "view_profile": "Ihre Profilinformationen und Kontaktdaten anzeigen"
     }
   }
 }

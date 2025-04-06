@@ -5,13 +5,14 @@
     "clear": "Limpar",
     "close": "Fechar",
     "collapse": "Fechar",
+    "confirm": "Confirmar",
     "continue": "Continuar",
     "edit": "Editar",
     "expand": "Expandir",
     "save": "Salvar",
     "save_and_continue": "Guardar e Continuar",
     "sign_out": "Sair",
-    "start_over": "Começar de novo"
+    "start_over": "Recomeçar"
   },
   "branding": {
     "privacy_policy": {
@@ -29,6 +30,7 @@
     "error": "Erro",
     "loading": "A carregar...",
     "next": "Seguinte",
+    "password": "Palavra-passe",
     "previous": "Anterior",
     "saved": "Guardado",
     "saving": "A guardar…"
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Palavra-passe da conta",
       "contact_info": "Informações de contacto",
+      "delete_account": {
+        "alert_description": "Esta conta será permanentemente apagada e deixará de ter acesso a todas as suas mensagens.",
+        "alert_title": "Está prestes a perder todos os seus dados",
+        "button": "Eliminar conta",
+        "dialog_description": "<text>Confirme que pretende apagar a sua conta:</text>\n<profile />\n<list>\n<item>Não poderá reativar a sua conta</item>\n<item>Deixará de poder iniciar sessão</item>\n<item>Ninguém poderá reutilizar o seu nome de utilizador (MXID), incluindo você</item>\n<item>Deixará todas as salas e mensagens diretas em que participa</item>\n<item>Será removido do servidor de identidade e ninguém o poderá encontrar com o seu e-mail ou número de telefone</item>\n</list>\n<text>As suas mensagens antigas continuarão visíveis para as pessoas que as receberam. Gostaria de ocultar as suas mensagens enviadas a pessoas que entrem em salas no futuro?</text>",
+        "dialog_title": "Eliminar esta conta?",
+        "erase_checkbox_label": "Sim, ocultar todas as minhas mensagens de novos marceneiros",
+        "incorrect_password": "Palavra-passe incorrecta, tente novamente",
+        "mxid_label": "Confirme seu ID da Matrix ({{ mxid }})",
+        "mxid_mismatch": "Este valor não corresponde ao seu ID da matrix",
+        "password_label": "Introduza a sua palavra-passe para continuar"
+      },
       "edit_profile": {
         "display_name_help": "Isso é o que os outros verão onde quer que você esteja conectado.",
         "display_name_label": "Nome para exibição",
@@ -46,7 +60,7 @@
       "password": {
         "change": "Alterar palavra-passe",
         "change_disabled": "As alterações de palavra-passe são desactivadas pelo administrador.",
-        "label": "Palavra-passe"
+        "label": "Palavra-Passe"
       },
       "sign_out": {
         "button": "Sair da conta",
@@ -72,7 +86,9 @@
         "text": "O e-mail introduzido é inválido",
         "title": "E-mail inválido"
       },
-      "email_invalid_error": "O e-mail introduzido é inválido"
+      "email_invalid_error": "O e-mail introduzido é inválido",
+      "incorrect_password_error": "Palavra-passe incorrecta, tente novamente",
+      "password_confirmation": "Confirme a palavra-passe da sua conta para adicionar este endereço de correio eletrónico"
     },
     "app_sessions_list": {
       "error": "Falha ao carregar sessões do aplicativo",
@@ -121,7 +137,7 @@
     "error_boundary_title": "Algo correu mal",
     "errors": {
       "field_required": "Este campo é obrigatório",
-      "rate_limit_exceeded": "Efectuou demasiados pedidos num curto espaço de tempo. Aguarde alguns minutos e tente novamente."
+      "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente."
     },
     "last_active": {
       "active_date": "Ativo {{relativeDate}}",
@@ -167,7 +183,7 @@
         },
         "title": "Falha na actualização da palavra-passe"
       },
-      "new_password_again_label": "Introduzir novamente a nova palavra-passe",
+      "new_password_again_label": "Introduza novamente a nova palavra-passe",
       "new_password_label": "Nova palavra-passe",
       "passwords_match": "As palavras-passe coincidem!",
       "passwords_no_match": "As palavras-passe não coincidem",
@@ -181,7 +197,7 @@
     "password_reset": {
       "consumed": {
         "subtitle": "Para criar uma nova palavra-passe, comece de novo e selecione \"Esqueci-me da palavra-passe\".",
-        "title": "A ligação para redefinir a sua palavra-passe já foi utilizada"
+        "title": "O link para redefinir sua senha já foi usado"
       },
       "expired": {
         "resend_email": "Reenviar e-mail",
@@ -310,7 +326,9 @@
       "cant_delete_primary": "Escolha um e-mail principal diferente para excluir este.",
       "delete_button_confirmation_modal": {
         "action": "Excluir e-mail",
-        "body": "Excluir este e-mail?"
+        "body": "Excluir este e-mail?",
+        "incorrect_password": "Palavra-passe incorrecta, tente novamente",
+        "password_confirmation": "Confirme a palavra-passe da sua conta para eliminar este endereço de correio eletrónico"
       },
       "delete_button_title": "Remover endereço de e-mail",
       "email": "Email",

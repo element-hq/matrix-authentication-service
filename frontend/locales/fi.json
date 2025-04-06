@@ -5,11 +5,13 @@
     "clear": "Tyhjennä",
     "close": "Sulje",
     "collapse": "Supista",
+    "confirm": "Vahvista",
     "continue": "Jatka",
     "edit": "Muokkaa",
     "expand": "Laajenna",
     "save": "Tallenna",
     "save_and_continue": "Tallenna ja jatka",
+    "sign_out": "Kirjaudu ulos",
     "start_over": "Aloita alusta"
   },
   "branding": {
@@ -28,6 +30,7 @@
     "error": "Virhe",
     "loading": "Ladataan…",
     "next": "Seuraava",
+    "password": "Salasana",
     "previous": "Edellinen",
     "saved": "Tallennettu",
     "saving": "Tallennetaan…"
@@ -36,6 +39,18 @@
     "account": {
       "account_password": "Tilin salasana",
       "contact_info": "Yhteystiedot",
+      "delete_account": {
+        "alert_description": "Tämä tili poistetaan pysyvästi, etkä enää pääse käsiksi viesteihisi.",
+        "alert_title": "Olet menettämässä kaikki tietosi",
+        "button": "Poista tili",
+        "dialog_description": "<text>Vahvista, että haluat poistaa tilisi:</text>\n<profile />\n<list>\n<item>Et voi aktivoida tiliäsi uudelleen</item>\n<item>Et voi enää kirjautua sisään</item>\n<item>Kukaan ei voi käyttää käyttäjänimeäsi (MXID) uudelleen, et edes sinä</item>\n<item>Poistut kaikista huoneista ja keskusteluista, joissa olet</item>\n<item>Sinut poistetaan identiteettipalvelimelta, eikä kukaan voi löytää sinua sähköpostiosoitteellasi tai puhelinnumerollasi</item>\n</list>\n<text>Vanhat viestisi näkyvät edelleen niille, jotka ovat vastaanottaneet ne. Haluatko piilottaa lähetetyt viestit niiltä, jotka liittyvät huoneisiin tulevaisuudessa?</text>",
+        "dialog_title": "Poistetaanko tämä tili?",
+        "erase_checkbox_label": "Kyllä, piilota kaikki viestini uusilta liittyjiltä",
+        "incorrect_password": "Väärä salasana, yritä uudelleen",
+        "mxid_label": "Vahvista Matrix-tunnuksesi ({{ mxid }})",
+        "mxid_mismatch": "Tämä ei täsmää Matrix-tunnuksesi kanssa",
+        "password_label": "Kirjoita salasanasi jatkaaksesi"
+      },
       "edit_profile": {
         "display_name_help": "Muut näkevät tämän kaikkialla, missä olet kirjautuneena sisään.",
         "display_name_label": "Näyttönimi",
@@ -46,6 +61,10 @@
         "change": "Vaihda salasana",
         "change_disabled": "Ylläpitäjä on poistanut salasanan vaihdon käytöstä.",
         "label": "Salasana"
+      },
+      "sign_out": {
+        "button": "Kirjaudu ulos tililtä",
+        "dialog": "Kirjaudutaanko ulos tältä tililtä?"
       },
       "title": "Tilisi"
     },
@@ -67,7 +86,9 @@
         "text": "Syötetty sähköpostiosoite on virheellinen",
         "title": "Virheellinen sähköpostiosoite"
       },
-      "email_invalid_error": "Syötetty sähköpostiosoite on virheellinen"
+      "email_invalid_error": "Syötetty sähköpostiosoite on virheellinen",
+      "incorrect_password_error": "Väärä salasana, yritä uudelleen",
+      "password_confirmation": "Vahvista tilisi salasana lisätäksesi tämän sähköpostiosoitteen"
     },
     "app_sessions_list": {
       "error": "Sovellusten istuntojen lataaminen epäonnistui",
@@ -105,7 +126,7 @@
     },
     "end_session_button": {
       "confirmation_modal_title": "Haluatko varmasti lopettaa tämän istunnon?",
-      "text": "Kirjaudu ulos"
+      "text": "Poista laite"
     },
     "error": {
       "hideDetails": "Piilota tiedot",
@@ -176,7 +197,7 @@
     "password_reset": {
       "consumed": {
         "subtitle": "Jos haluat luoda uuden salasanan, aloita alusta ja valitse \"Unohditko salasanasi?\".",
-        "title": "Salasanan palautuslinkki on jo käytetty"
+        "title": "Linkki salasanasi palauttamiseen on jo käytetty"
       },
       "expired": {
         "resend_email": "Lähetä sähköposti uudelleen",
@@ -271,6 +292,7 @@
       "device_id_label": "Laitteen tunnus",
       "finished_date": "Päättyi <datetime/>",
       "finished_label": "Päättyi",
+      "generic_browser_session": "Selainistunto",
       "id_label": "ID",
       "ip_label": "IP-osoite",
       "last_active_label": "Viimeksi aktiivinen",
@@ -304,7 +326,9 @@
       "cant_delete_primary": "Valitse toinen ensisijainen sähköpostiosoite poistaaksesi tämän.",
       "delete_button_confirmation_modal": {
         "action": "Poista sähköposti",
-        "body": "Poistetaanko tämä sähköposti?"
+        "body": "Poistetaanko tämä sähköposti?",
+        "incorrect_password": "Väärä salasana, yritä uudelleen",
+        "password_confirmation": "Vahvista tilisi salasana poistaaksesi tämän sähköpostiosoitteen"
       },
       "delete_button_title": "Poista sähköpostiosoite",
       "email": "Sähköposti",

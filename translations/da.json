@@ -1,0 +1,263 @@
+{
+  "action": {
+    "back": "Tilbage",
+    "cancel": "Annuller",
+    "continue": "Fortsæt",
+    "create_account": "Opret brugerkonto",
+    "sign_in": "Log ind",
+    "sign_out": "Log ud",
+    "skip": "Spring over",
+    "start_over": "Begynd forfra",
+    "submit": "Indsend"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "OpenID Connect opdagelsesdokument: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link til tjenestens privatlivspolitik",
+      "link": "Privatlivspolitik"
+    },
+    "terms_and_conditions": {
+      "alt": "Link til servicevilkår",
+      "link": "Vilkår & Betingelser"
+    }
+  },
+  "common": {
+    "display_name": "Vist navn",
+    "email_address": "E-mailadresse",
+    "loading": "Indlæser...",
+    "mxid": "Matrix ID",
+    "password": "Adgangskode",
+    "password_confirm": "Bekræft adgangskode",
+    "username": "Brugernavn"
+  },
+  "error": {
+    "unexpected": "Uventet fejl"
+  },
+  "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Denne konto (<em>%(mxid)s</em>) er blevet slettet. Hvis dette ikke er forventet, skal du kontakte din serveradministrator.",
+        "heading": "Konto slettet"
+      },
+      "locked": {
+        "description": "Denne konto (<em>%(mxid)s</em>) er blevet låst. Hvis dette ikke er forventet, skal du kontakte din serveradministrator.",
+        "heading": "Konto låst"
+      },
+      "logged_out": {
+        "description": "Denne session er blevet afsluttet. Log ud for at kunne logge ind igen",
+        "heading": "Sessionen er afsluttet"
+      }
+    },
+    "add_email": {
+      "description": "Indtast en e-mailadresse for at gendanne din konto, hvis du mister adgangen til den.",
+      "heading": "Tilføj en e-mail-adresse"
+    },
+    "back_to_homepage": "Gå tilbage til hjemmesiden",
+    "captcha": {
+      "noscript": "Denne formular er beskyttet af en CAPTCHA som kræver, at JavaScript er aktiveret for at kunne indsende den. Aktivér JavaScript i din browser, og indlæs denne side igen."
+    },
+    "change_password": {
+      "change": "Skift adgangskode",
+      "confirm": "Bekræft adgangskode",
+      "current": "Nuværende adgangskode",
+      "description": "Dette vil ændre adgangskoden på din konto.",
+      "heading": "Skift min adgangskode",
+      "new": "Ny adgangskode"
+    },
+    "choose_display_name": {
+      "description": "Dette er det navn, andre mennesker vil se. Du kan ændre dette når som helst.",
+      "headline": "Vælg dit visningsnavn"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> på <span> %(redirect_uri)s</span> ønsker at få adgang til din konto.",
+      "heading": "Tillad adgang til din konto?",
+      "make_sure_you_trust": "Sørg for, at du stoler på <span> %(client_name)s</span>.",
+      "this_will_allow": "Dette gør det muligt for <span>%(client_name)s</span> at:",
+      "you_may_be_sharing": "Du deler muligvis følsomme oplysninger med dette websted eller denne app."
+    },
+    "device_card": {
+      "access_requested": "Anmodet om adgang",
+      "device_code": "Kode",
+      "generic_device": "Enhed",
+      "ip_address": "IP-adresse"
+    },
+    "device_code_link": {
+      "description": "Tilknyt en enhed",
+      "headline": "Indtast den kode, der bliver vist på din enhed"
+    },
+    "device_consent": {
+      "another_device_access": "En anden enhed ønsker at få adgang til din konto.",
+      "denied": {
+        "description": "Du nægtede adgang til %(client_name)s. Du kan lukke dette vindue.",
+        "heading": "Adgang nægtet"
+      },
+      "granted": {
+        "description": "Du har givet adgang til %(client_name)s. Du kan lukke dette vindue.",
+        "heading": "Adgang givet"
+      }
+    },
+    "email_in_use": {
+      "description": "Hvis du har glemt dine kontooplysninger, kan du gendanne din konto. Du kan også starte forfra og bruge en anden e-mail-adresse.",
+      "title": "E-mailadressen <span> %(email)s </span> er allerede i brug"
+    },
+    "emails": {
+      "greeting": "Hej %(username)s,",
+      "recovery": {
+        "click_button": "Klik på knappen nedenfor for at oprette en ny adgangskode:",
+        "copy_link": "Kopier følgende link, og indsæt det i en browser for at oprette en ny adgangskode:",
+        "create_new_password": "Opret ny adgangskode",
+        "headline": "Du har anmodet om en nulstilling af adgangskoden til din %(server_name)s konto.",
+        "subject": "Nulstil adgangskoden til din konto (%(mxid)s)",
+        "you_can_ignore": "Hvis du ikke har bedt om en ny adgangskode, kan du ignorere denne e-mail. Din nuværende adgangskode vil fortsætte med at fungere."
+      },
+      "verify": {
+        "body_html": "Din kode til bekræftelse af denne e-mail-adresse er: <strong>%(code)s</strong>",
+        "body_text": "Din kode til bekræftelse af denne e-mail-adresse er: %(code)s",
+        "subject": "Din email-bekræftelseskode er: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "CAPTCHA-bekræftelse mislykkedes, forsøg venligst igen",
+      "denied_policy": "Afvist af politik: %(policy)s",
+      "email_banned": "E-mail er forbudt af serverpolitikken",
+      "email_domain_banned": "E-mail domænet er forbudt af serverpolitikken",
+      "email_domain_not_allowed": "E-mail domænet er ikke tilladt af serverpolitikken",
+      "email_not_allowed": "E-mail er ikke tilladt af serverpolitikken",
+      "field_required": "Dette felt er påkrævet",
+      "invalid_credentials": "Ugyldig legitimation",
+      "password_mismatch": "Adgangskoderne stemmer ikke overens",
+      "rate_limit_exceeded": "Du har indsendt for mange anmodninger på kort tid. Vent et par minutter, og prøv igen.",
+      "username_all_numeric": "Brugernavnet kan ikke udelukkende bestå af tal",
+      "username_banned": "Brugernavnet er forbudt af serverpolitikken",
+      "username_invalid_chars": "Brugernavnet indeholder ugyldige tegn. Brug kun små bogstaver, tal, bindestreger og underscores.",
+      "username_not_allowed": "Brugernavnet er ikke tilladt af serverpolitikken",
+      "username_taken": "Dette brugernavn er allerede taget",
+      "username_too_long": "Brugernavnet er for langt",
+      "username_too_short": "Brugernavnet er for kort"
+    },
+    "login": {
+      "call_to_register": "Har du ikke en konto endnu?",
+      "continue_with_provider": "Fortsæt med %(provider)s",
+      "description": "Log ind for at fortsætte:",
+      "forgot_password": "Har du glemt din adgangskode?",
+      "headline": "Log ind",
+      "link": {
+        "description": "Forbinder din <span class=\"break-keep text-links\">%(provider)s</span> konto",
+        "headline": "Log ind for at forbinde"
+      },
+      "no_login_methods": "Ingen tilgængelige login metoder.",
+      "separator": "Eller"
+    },
+    "navbar": {
+      "my_account": "Min konto",
+      "register": "Opret en konto",
+      "signed_in_as": "Logget ind som <span class=\"font-semibold\"> %(username)s</span>."
+    },
+    "not_found": {
+      "description": "Den side, du søgte, eksisterer enten ikke, eller også er den blevet flyttet",
+      "heading": "Siden blev ikke fundet"
+    },
+    "not_you": "Ikke %(username)s?",
+    "or_separator": "Eller",
+    "policy_violation": {
+      "description": "Dette kan være på grund af klienten, der skrev anmodningen, den bruger der er logget ind i øjeblikket, eller selve anmodningen.",
+      "heading": "Godkendelsesanmodningen blev afvist den politik, denne tjeneste benytter",
+      "logged_as": "Logget som <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "For at oprette en ny adgangskode skal du starte forfra og vælge \"Glemt adgangskode“.",
+        "heading": "Dette link til at nulstille din adgangskode er allerede blevet brugt"
+      },
+      "disabled": {
+        "description": "Hvis du har mistet dine legitimationsoplysninger, bedes du kontakte administratoren for at få gendannet din konto.",
+        "heading": "Kontogendannelse er deaktiveret"
+      },
+      "expired": {
+        "description": "Anmod om en ny e-mail, der vil blive sendt til: <span> %(email)s</span>.",
+        "heading": "Linket til nulstilling af din adgangskode er udløbet",
+        "resend_email": "Gensend e-mail"
+      },
+      "finish": {
+        "confirm": "Indtast ny adgangskode igen",
+        "description": "Vælg en ny adgangskode til din konto.",
+        "heading": "Nulstil din adgangskode",
+        "new": "Ny adgangskode",
+        "save_and_continue": "Gem og fortsæt"
+      },
+      "progress": {
+        "change_email": "Prøv med en anden e-mail",
+        "description": "Vi har sendt en e-mail med et link til at nulstille din adgangskode, hvis der er en konto, der bruger <span> %(email)s</span>.",
+        "heading": "Tjek din e-mail",
+        "resend_email": "Gensend e-mail"
+      },
+      "start": {
+        "description": "En e-mail vil blive sendt med et link til nulstilling af din adgangskode.",
+        "heading": "Indtast din e-mail for at fortsætte"
+      }
+    },
+    "register": {
+      "call_to_login": "Har du allerede en konto?",
+      "continue_with_email": "Fortsæt med e-mailadresse",
+      "create_account": {
+        "description": "Vælg et brugernavn for at fortsætte.",
+        "heading": "Opret en konto"
+      },
+      "sign_in_instead": "Log ind i stedet",
+      "terms_of_service": "Jeg accepterer <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Vilkår og betingelser</a>"
+    },
+    "scope": {
+      "edit_profile": "Rediger din profil og dine kontaktoplysninger",
+      "manage_sessions": "Administrer dine enheder og sessioner",
+      "mas_admin": "Administrer enhver bruger på matrix-authentication-service",
+      "send_messages": "Send nye beskeder på dine vegne",
+      "synapse_admin": "Administrer Synapse hjemmeserveren",
+      "view_messages": "Se dine eksisterende beskeder og data",
+      "view_profile": "Se dine profiloplysninger og kontaktoplysninger"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Denne upstream-konto er allerede knyttet til en anden konto."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Dette kan ikke ændres senere.",
+          "heading": "Vælg dit brugernavn"
+        },
+        "create_account": "Opret en ny konto",
+        "enforced_by_policy": "Håndhæves af serverpolitik",
+        "forced_display_name": "Bruger følgende visningsnavn",
+        "forced_email": "Bruger følgende e-mail-adresse",
+        "forced_localpart": "Bruger følgende brugernavn",
+        "import_data": {
+          "description": "Bekræft de oplysninger, der vil blive knyttet til din nye %(server_name)s konto.",
+          "heading": "Importér dine data"
+        },
+        "imported_from_upstream": "Importeret fra din upstream-konto",
+        "imported_from_upstream_with_name": "Importeret fra din %(human_name)s konto",
+        "link_existing": "Forbind til en eksisterende konto",
+        "provider_name": "%(human_name)s konto",
+        "signup_with_upstream": {
+          "heading": "Fortsæt med at tilmelde dig med din %(human_name)s konto"
+        },
+        "suggested_display_name": "Importer visningsnavn",
+        "suggested_email": "Importer e-mailadresse",
+        "use": "Brug"
+      },
+      "suggest_link": {
+        "action": "Link",
+        "heading": "Forbind til din eksisterende konto"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6-cifret kode",
+      "code": "Kode",
+      "description": "Indtast den 6-cifrede kode, der blev sendt til: <em>%(email)s</em>",
+      "headline": "Bekræft din e-mail"
+    }
+  }
+}

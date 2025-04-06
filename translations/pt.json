@@ -38,6 +38,20 @@
     "unexpected": "Erro inesperado"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Esta conta (<em>%(mxid)s</em>) foi eliminada. Se isto não for esperado, contacte o administrador do servidor.",
+        "heading": "Conta eliminada"
+      },
+      "locked": {
+        "description": "Esta conta (<em>%(mxid)s</em>) foi bloqueada. Se isto não for esperado, contacte o administrador do servidor.",
+        "heading": "Conta bloqueada"
+      },
+      "logged_out": {
+        "description": "Esta sessão foi encerrada. Termine a sessão para poder voltar a iniciar sessão",
+        "heading": "Sessão terminada"
+      }
+    },
     "add_email": {
       "description": "Introduza um endereço de e-mail para recuperar a sua conta no caso de perder o acesso à mesma.",
       "heading": "Adicionar um endereço de e-mail"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "A verificação do CAPTCHA falhou, tente novamente",
       "denied_policy": "Negado pela política: %(policy)s",
+      "email_banned": "O correio eletrónico é proibido pela política do servidor",
       "email_domain_banned": "O domínio de correio eletrónico é proibido pela política do servidor",
       "email_domain_not_allowed": "O domínio de correio eletrónico não é permitido pela política do servidor",
+      "email_not_allowed": "O correio eletrónico não é permitido pela política do servidor",
       "field_required": "Este campo é obrigatório",
       "invalid_credentials": "Credenciais inválidas",
       "password_mismatch": "Os campos de palavra-passe não correspondem",
       "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente.",
       "username_all_numeric": "O nome de utilizador não pode ser constituído apenas por números",
+      "username_banned": "O nome de utilizador é proibido pela política do servidor",
       "username_invalid_chars": "O nome de utilizador contém caracteres inválidos. Utilize apenas letras minúsculas, números, traços e sublinhados.",
+      "username_not_allowed": "O nome de utilizador não é permitido pela política do servidor",
       "username_taken": "Este nome de utilizador já foi utilizado",
       "username_too_long": "O nome de utilizador é demasiado longo",
       "username_too_short": "O nome de utilizador é demasiado curto"

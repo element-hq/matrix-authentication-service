@@ -1,10 +1,11 @@
 {
   "action": {
     "back": "Tagasi",
-    "cancel": "Tühista",
+    "cancel": "Katkesta",
     "clear": "Tühjenda",
     "close": "Sulge",
     "collapse": "Ahenda",
+    "confirm": "Kinnita",
     "continue": "Jätka",
     "edit": "Muuda",
     "expand": "Laienda",
@@ -29,6 +30,7 @@
     "error": "Viga",
     "loading": "Laadime…",
     "next": "Edasi",
+    "password": "Salasõna",
     "previous": "Tagasi",
     "saved": "Salvestatud",
     "saving": "Salvestame…"
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Kasutajakonto salasõna",
       "contact_info": "Kontaktinfo",
+      "delete_account": {
+        "alert_description": "Sinu kasutajakonto kustutatakse jäädavalt ja sul kaovad kõik võimalused lugeda oma sõnumeid",
+        "alert_title": "Sa oled kaotamas kõiki oma andmeid",
+        "button": "Kustuta kasutajakonto",
+        "dialog_description": "<text>Palun kinnita, et soovid oma kasutajakonto kustutada:</text>\n<profile />\n<list>\n<item>Sa ei saa seda kasutajakontot hiljem enam uuesti tööle panna</item>\n<item>Sa ei saa selle kasutajakontoga võrku logida</item>\n<item>Mitte keegi ei saa sinu kasutajanime (MXID) pruukida, sealhulgas sina ise</item>\n<item>Sa lahkud kõikidest jututubadest ja otsevestlustest</item>\n<item>Sa lahkud isikutuvastusserverist ning mitte keegi ei saa sind leida e-posti aadressi ja telefoninumbri alusel</item>\n</list>\n<text>Sinu varemsaadetud sõnumid on jätkuvalt nähtavad nende adressaatidele. Aga kas sa tahaksid oma vanad sõnumid peita jututubade tulevaste liitujate eest?</text>",
+        "dialog_title": "Kas kustutame selle kasutajakonto?",
+        "erase_checkbox_label": "Jah, peida minu sõnumid uute liitujate eest",
+        "incorrect_password": "Vale salasõna, palun proovi uuesti",
+        "mxid_label": "Kinnita oma Matrixi kasutajatunnus ({{ mxid }})",
+        "mxid_mismatch": "See väärtus ei vasta sinu Matrixi kasutajatunnusele",
+        "password_label": "Jätkamiseks sisesta oma salasõna"
+      },
       "edit_profile": {
         "display_name_help": "Kui sa oled sisse loginud, siis muud osapooled näevad alljärgnevat teavet",
         "display_name_label": "Kuvatav nimi",
@@ -64,7 +78,7 @@
         "text": "See e-posti aadress on juba antud kasutajakontoga seotud",
         "title": "E-posti aadress on juba kasutusel"
       },
-      "email_exists_error": "Sisestatud e-posti aadress on juba selle kasutajakontoga seotud",
+      "email_exists_error": "See e-posti aadress on juba antud kasutajakontoga seotud",
       "email_field_help": "Ligipääsuks sellele kasutajakontole lisa täiendav e-posti aadress.",
       "email_field_label": "Lisa e-posti aadress",
       "email_in_use_error": "Sisestatud e-posti aadress on juba kasutusel",
@@ -72,14 +86,16 @@
         "text": "Lisatud e-posti aadress on vigane",
         "title": "Vigane e-posti aadress"
       },
-      "email_invalid_error": "Sisestatud e-posti aadress on vigane"
+      "email_invalid_error": "Lisatud e-posti aadress on vigane",
+      "incorrect_password_error": "Vale parool, proovige uuesti",
+      "password_confirmation": "Selle e-posti aadressi lisamiseks kinnitage oma konto salasõnaga"
     },
     "app_sessions_list": {
       "error": "Rakenduse sessioonide laadimine ei õnnestunud",
       "heading": "Rakendused"
     },
     "browser_session_details": {
-      "current_badge": "Praegune sessioon",
+      "current_badge": "Praegune",
       "session_details_title": "Sessioon"
     },
     "browser_sessions_overview": {
@@ -121,7 +137,7 @@
     "error_boundary_title": "Midagi läks viltu",
     "errors": {
       "field_required": "Selle välja täitmine on kohustuslik",
-      "rate_limit_exceeded": "Oled teinud lühikeses ajavahemikus liiga palju päringuid. Palun oota mõned minutid ja proovi siis uuesti."
+      "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti."
     },
     "last_active": {
       "active_date": "Viimati kasutusel {{relativeDate}}",
@@ -152,7 +168,7 @@
       "total": "Kokku: {{totalCount}}"
     },
     "password_change": {
-      "current_password_label": "Praegune salasõna",
+      "current_password_label": "Senine salasõna",
       "failure": {
         "description": {
           "account_locked": "Sinu kasutajakonto on lukustatud ning salasõna taastamist ei ole hetkel võimalik teha. Kui antud olukord tundub sulle kahtlane, siis palun teavita sellest sinu serveri haldajat.",
@@ -167,7 +183,7 @@
         },
         "title": "Salasõna uuendamine ei õnnestunud"
       },
-      "new_password_again_label": "Sisesta uus salasõna veel üks kord",
+      "new_password_again_label": "Sisesta uus salasõna uuesti",
       "new_password_label": "Uus salasõna",
       "passwords_match": "Salasõnad klapivad omavahel!",
       "passwords_no_match": "Salasõnad ei klapi omavahel",
@@ -181,12 +197,12 @@
     "password_reset": {
       "consumed": {
         "subtitle": "Salasõna muutmiseks alusta uuesti ja vali „Unustasin salasõna“.",
-        "title": "Sinu salasõna muutmiseks mõeldud link on juba kasutatud"
+        "title": "Sinu salasõna lähtestamiseks mõeldud link on juba kasutatud"
       },
       "expired": {
         "resend_email": "Saada e-kiri uuesti",
         "subtitle": "Palu uut e-kirja aadressile {{email}}",
-        "title": "Salasõna loomiseks mõeldud link on aegunud"
+        "title": "Sinu salasõna lähtestamiseks mõeldud link on aegunud"
       },
       "subtitle": "Vali oma kasutajakontole uus salasõna.",
       "title": "Lähtesta oma salasõna"
@@ -248,11 +264,11 @@
         "negative_1": "Sa kaotad oma olemasolevate sõnumite ajaloo.",
         "negative_2": "Sa pead kõik oma kasutatavad seadmed ja kontaktid uuesti verifitseerima",
         "neutral_1": "Sa kaotad ligipääsu kõikidele sõnumitele, mis on salvestatud vaid serveris.",
-        "neutral_2": "Sa pead kõik oma olemasolevad seadmed ning kontaktid verifitseerima.",
+        "neutral_2": "Sa pead kõik oma kasutatavad seadmed ja kontaktid uuesti verifitseerima",
         "positive_1": "Sinu kasutajakonto andmed, kontaktid, eelistused ja vestluste loendid jäävad muutmata"
       },
       "failure": {
-        "description": "Tegemist võib olla ajutuse probleemiga, palun proovi mõne aja pärast uuesti. Kui viga on püsiv, siis abi saad oma serveri haldajalt.",
+        "description": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad serveri haldajalt.",
         "heading": "Krüptoidentiteedi lähtestamise lubamine ei õnnestunud",
         "title": "Viga krüptoidentiteedi oleku muutmisel"
       },
@@ -310,7 +326,9 @@
       "cant_delete_primary": "Selle e-posti aadressi kustutamiseks vali uus põhiline e-posti aadress.",
       "delete_button_confirmation_modal": {
         "action": "Kustuta e-posti aadress",
-        "body": "Kas kustutame selle e-posti aadressi?"
+        "body": "Kas kustutame selle e-posti aadressi?",
+        "incorrect_password": "Vale parool, proovige uuesti",
+        "password_confirmation": "Selle e-posti aadressi kustutamiseks kinnitage parooliga"
       },
       "delete_button_title": "Eemalda e-posti aadress",
       "email": "E-posti aadress",
@@ -345,14 +363,14 @@
         "title": "Kood on aegunud"
       },
       "code_field_error": "Kood pole õige",
-      "code_field_label": "6-numbriline kood",
+      "code_field_label": "6-kohaline kood",
       "code_field_wrong_shape": "Kood peab olema 6-numbriline",
       "email_sent_alert": {
         "description": "Sisesta alljärgnevale väljale uus kood.",
         "title": "Uus kood on saadetud"
       },
       "enter_code_prompt": "Sisesta 6-kohaline kood, mis saadeti e-posti aadressile: <email>{{email}}</email>",
-      "heading": "Kinnita oma e-posti aadress",
+      "heading": "Kinnita oma e-posti aadressi õigsust",
       "invalid_code_alert": {
         "description": "Jätkamiseks kirjuta siis kood, mille saatsime sinu e-posti aadressile.",
         "title": "Sa sisestasid vale koodi"
@@ -371,7 +389,7 @@
       "send_messages": "Saata sõnumeid sinu nimel",
       "synapse_admin": "Hallata seda Synapse koduserverit",
       "view_messages": "Vaadata sinu sõnumeid ja andmeid",
-      "view_profile": "Näha sinu profiili teavet ja kontaktandmeid"
+      "view_profile": "Vaadata sinu profiili teavet ja kontaktadmeid"
     }
   }
 }

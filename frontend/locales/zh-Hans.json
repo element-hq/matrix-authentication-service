@@ -5,6 +5,7 @@
     "clear": "清除",
     "close": "关闭",
     "collapse": "Collapse",
+    "confirm": "Confirm",
     "continue": "继续",
     "edit": "编辑",
     "expand": "Expand",
@@ -19,7 +20,7 @@
       "link": "隐私政策"
     },
     "terms_and_conditions": {
-      "alt": "服务条款与条件链接",
+      "alt": "服务条款和条件链接",
       "link": "条款与条件"
     }
   },
@@ -29,6 +30,7 @@
     "error": "错误",
     "loading": "加载中...",
     "next": "下一步",
+    "password": "Password",
     "previous": "上一步",
     "saved": "已保存",
     "saving": "正在保存..."
@@ -37,6 +39,18 @@
     "account": {
       "account_password": "Account password",
       "contact_info": "Contact info",
+      "delete_account": {
+        "alert_description": "This account will be permanently erased and you’ll no longer have access to any of your messages.",
+        "alert_title": "You’re about to lose all of your data",
+        "button": "Delete account",
+        "dialog_description": "<text>Confirm that you would like to delete your account:</text>\n<profile />\n<list>\n<item>You will not be able to reactivate your account</item>\n<item>You will no longer be able to sign in</item>\n<item>No one will be able to reuse your username (MXID), including you</item>\n<item>You will leave all rooms and direct messages you are in</item>\n<item>You will be removed from the identity server, and no one will be able to find you with your email or phone number</item>\n</list>\n<text>Your old messages will still be visible to people who received them. Would you like to hide your send messages from people who join rooms in the future?</text>",
+        "dialog_title": "Delete this account?",
+        "erase_checkbox_label": "Yes, hide all my messages from new joiners",
+        "incorrect_password": "Incorrect password, please try again",
+        "mxid_label": "Confirm your Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "This value does not match your Matrix ID",
+        "password_label": "Enter your password to continue"
+      },
       "edit_profile": {
         "display_name_help": "无论您在哪里登录，其他人都会看到此内容。",
         "display_name_label": "显示名称",
@@ -72,7 +86,9 @@
         "text": "输入的电子邮件地址无效",
         "title": "无效的电子邮件地址"
       },
-      "email_invalid_error": "输入的电子邮件地址无效"
+      "email_invalid_error": "输入的电子邮件地址无效",
+      "incorrect_password_error": "Incorrect password, please try again",
+      "password_confirmation": "Confirm your account password to add this email address"
     },
     "app_sessions_list": {
       "error": "加载应用程序会话失败",
@@ -308,7 +324,9 @@
       "cant_delete_primary": "选择其他主电子邮件地址，删除该电子邮件地址。",
       "delete_button_confirmation_modal": {
         "action": "删除电子邮件地址",
-        "body": "您确定要删除此电子邮件地址吗？"
+        "body": "您确定要删除此电子邮件地址吗？",
+        "incorrect_password": "Incorrect password, please try again",
+        "password_confirmation": "Confirm your account password to delete this email address"
       },
       "delete_button_title": "删除电子邮件地址",
       "email": "电子邮件地址",
@@ -329,7 +347,7 @@
       "display_name_field_label": "显示名称"
     },
     "user_sessions_overview": {
-      "active_sessions:other": "{{count}}个活跃会话",
+      "active_sessions:other": "{{count}}活跃会话",
       "heading": "您登录的位置",
       "no_active_sessions": {
         "default": "您尚未登录任何应用程序。",
@@ -349,7 +367,7 @@
         "title": "新代码已发送"
       },
       "enter_code_prompt": "输入发送至以下地址的6位数代码：<email>{{email}}</email>",
-      "heading": "验证您的电子邮件地址",
+      "heading": "验证邮箱",
       "invalid_code_alert": {
         "description": "检查发送到您电子邮件地址中的代码，并更新以下字段以继续。",
         "title": "您输入了错误的代码"

@@ -28,7 +28,7 @@
   "common": {
     "display_name": "Visningsnamn",
     "email_address": "E-postadress",
-    "loading": "Laddar...",
+    "loading": "Laddar …",
     "mxid": "Matrix ID",
     "password": "Lösenord",
     "password_confirm": "Bekräfta lösenordet",
@@ -38,6 +38,20 @@
     "unexpected": "Oväntat fel"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "This account (<em>%(mxid)s</em>) has been deleted. If this is not expected, contact your server administrator.",
+        "heading": "Account deleted"
+      },
+      "locked": {
+        "description": "This account (<em>%(mxid)s</em>) has been locked. If this is not expected, contact your server administrator.",
+        "heading": "Account locked"
+      },
+      "logged_out": {
+        "description": "This session has been terminated. Sign out to be able to log back in",
+        "heading": "Session terminated"
+      }
+    },
     "add_email": {
       "description": "Ange en e-postadress för att återställa ditt konto om du förlorar åtkomsten till det.",
       "heading": "Lägg till en e-postadress"
@@ -109,14 +123,18 @@
     "errors": {
       "captcha": "CAPTCHA-verifiering misslyckades, försök igen",
       "denied_policy": "Nekad av policy: %(policy)s",
+      "email_banned": "Email is banned by the server policy",
       "email_domain_banned": "E-postdomänen är förbjuden av serverpolicyn",
       "email_domain_not_allowed": "E-postdomänen är inte tillåten enligt serverpolicyn",
+      "email_not_allowed": "Email is not allowed by the server policy",
       "field_required": "Detta fält är obligatoriskt",
       "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
       "password_mismatch": "Lösenordsfälten matchar inte",
       "rate_limit_exceeded": "Du har gjort för många förfrågningar under en kort period. Vänta några minuter och försök igen.",
       "username_all_numeric": "Användarnamn kan inte enbart bestå av siffror",
+      "username_banned": "Username is banned by the server policy",
       "username_invalid_chars": "Användarnamnet innehåller ogiltiga tecken. Använd endast små bokstäver, siffror, streck och understreck.",
+      "username_not_allowed": "Username is not allowed by the server policy",
       "username_taken": "Detta användarnamn är redan upptaget",
       "username_too_long": "Användarnamnet är för långt",
       "username_too_short": "Användarnamnet är för kort"
