@@ -312,18 +312,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.36.0"
+version = "0.37.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.36.0"
+version = "0.37.0"
 features = ["http"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.36.0"
+version = "0.37.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
