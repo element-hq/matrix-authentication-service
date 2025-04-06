@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
@@ -19,6 +21,7 @@ use oauth2_types::{
         VerifiedClientMetadata,
     },
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use psl::Psl;
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Serialize;
@@ -27,7 +30,16 @@ use thiserror::Error;
 use tracing::info;
 use url::Url;
 
-use crate::{BoundActivityTracker, impl_from_error_for_route};
+use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+
+static REGISTRATION_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.oauth2.registration_request")
+        .with_description("Number of OAuth2 registration requests")
+        .with_unit("{request}")
+        .build()
+});
+const RESULT: Key = Key::from_static_str("result");
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -56,6 +68,9 @@ impl_from_error_for_route!(serde_json::Error);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
+
+        REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "denied")]);
+
         let response = match self {
             Self::Internal(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -303,6 +318,7 @@ pub(crate) async fn post(
 
     let client = if let Some(client) = existing_client {
         tracing::info!(%client.id, "Reusing existing client");
+        REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "reused")]);
         client
     } else {
         let client = repo
@@ -335,6 +351,7 @@ pub(crate) async fn post(
             )
             .await?;
         tracing::info!(%client.id, "Registered new client");
+        REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "created")]);
         client
     };
 

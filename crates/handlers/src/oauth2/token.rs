@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
@@ -40,12 +40,23 @@ use oauth2_types::{
     },
     scope,
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
 use tracing::{debug, info};
 use ulid::Ulid;
 
 use super::{generate_id_token, generate_token_pair};
-use crate::{BoundActivityTracker, impl_from_error_for_route};
+use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+
+static TOKEN_REQUEST_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.oauth2.token_request")
+        .with_description("How many OAuth 2.0 token requests have gone through")
+        .with_unit("{request}")
+        .build()
+});
+const GRANT_TYPE: Key = Key::from_static_str("grant_type");
+const RESULT: Key = Key::from_static_str("successful");
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -135,6 +146,8 @@ pub(crate) enum RouteError {
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
+
+        TOKEN_REQUEST_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
 
         let response = match self {
             Self::Internal(_)
@@ -254,6 +267,8 @@ pub(crate) async fn post(
 
     let form = client_authorization.form.ok_or(RouteError::BadRequest)?;
 
+    let grant_type = form.grant_type();
+
     let (reply, repo) = match form {
         AccessTokenRequest::AuthorizationCode(grant) => {
             authorization_code_grant(
@@ -320,6 +335,14 @@ pub(crate) async fn post(
     };
 
     repo.save().await?;
+
+    TOKEN_REQUEST_COUNTER.add(
+        1,
+        &[
+            KeyValue::new(GRANT_TYPE, grant_type),
+            KeyValue::new(RESULT, "success"),
+        ],
+    );
 
     let mut headers = HeaderMap::new();
     headers.typed_insert(CacheControl::new().with_no_store());
