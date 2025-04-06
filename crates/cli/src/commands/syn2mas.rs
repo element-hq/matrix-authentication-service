@@ -130,7 +130,7 @@ impl Options {
             .await
             .context("could not run migrations")?;
 
-        if matches!(&self.subcommand, Subcommand::Migrate { .. }) {
+        if matches!(&self.subcommand, Subcommand::Migrate) {
             // First perform a config sync
             // This is crucial to ensure we register upstream OAuth providers
             // in the MAS database

@@ -386,7 +386,7 @@ impl Options {
                     0 => info!("No active compatibility sessions to end"),
                     1 => info!("Ended 1 active OAuth 2.0 session"),
                     _ => info!("Ended {affected} active OAuth 2.0 sessions"),
-                };
+                }
 
                 let filter = BrowserSessionFilter::new().for_user(&user).active_only();
                 let affected = if dry_run {

@@ -209,7 +209,7 @@ impl RunnableJob for SyncDevicesJob {
             for (compat_session, _) in page.edges {
                 if let Some(ref device) = compat_session.device {
                     devices.insert(device.as_str().to_owned());
-                };
+                }
                 cursor = cursor.after(compat_session.id);
             }
 
