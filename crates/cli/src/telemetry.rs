@@ -145,7 +145,9 @@ fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn otlp_metric_reader(endpoint: Option<&url::Url>) -> anyhow::Result<PeriodicReader> {
+fn otlp_metric_reader(
+    endpoint: Option<&url::Url>,
+) -> anyhow::Result<PeriodicReader<opentelemetry_otlp::MetricExporter>> {
     let mut exporter = opentelemetry_otlp::MetricExporter::builder()
         .with_http()
         .with_http_client(mas_http::reqwest_client());
@@ -160,7 +162,7 @@ fn otlp_metric_reader(endpoint: Option<&url::Url>) -> anyhow::Result<PeriodicRea
     Ok(reader)
 }
 
-fn stdout_metric_reader() -> PeriodicReader {
+fn stdout_metric_reader() -> PeriodicReader<opentelemetry_stdout::MetricExporter> {
     let exporter = opentelemetry_stdout::MetricExporter::builder().build();
     PeriodicReader::builder(exporter, opentelemetry_sdk::runtime::Tokio).build()
 }
