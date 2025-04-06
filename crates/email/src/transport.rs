@@ -144,7 +144,7 @@ impl AsyncTransport for Transport {
             TransportInner::Sendmail(t) => {
                 t.send_raw(envelope, email).await?;
             }
-        };
+        }
 
         Ok(())
     }

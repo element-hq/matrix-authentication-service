@@ -82,7 +82,7 @@ impl FullUserId {
                 expected: expected_server_name.to_owned(),
                 found: server_name.to_owned(),
             });
-        };
+        }
 
         Ok(localpart)
     }

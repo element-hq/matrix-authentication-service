@@ -77,6 +77,13 @@ skip = [
     { name = "itertools", version = "0.12.1" },
     # pad depends on an old version
     { name = "unicode-width", version = "0.1.14" },
+    { name = "zerocopy", version = "0.7.35" },      # hashbrown 0.14.5 depends on this old version
+
+    # We are still mainly using rand 0.8
+    { name = "rand", version = "0.8.5" },
+    { name = "rand_chacha", version = "0.3.1" },
+    { name = "rand_core", version = "0.6.4" },
+    { name = "getrandom", version = "0.2.15" },
 ]
 
 skip-tree = []

@@ -1045,7 +1045,7 @@ impl JobTracker {
                         );
                     }
                 }
-            };
+            }
 
             if blocking {
                 self.last_join_result = self.running_jobs.join_next_with_id().await;

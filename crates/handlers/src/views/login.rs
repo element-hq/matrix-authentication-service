@@ -85,7 +85,7 @@ pub(crate) async fn get(
 
         let reply = query.go_next(&url_builder);
         return Ok((cookie_jar, reply).into_response());
-    };
+    }
 
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
@@ -98,10 +98,10 @@ pub(crate) async fn get(
 
         if let Some(action) = query.post_auth_action {
             destination = destination.and_then(action);
-        };
+        }
 
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
-    };
+    }
 
     render(
         locale,

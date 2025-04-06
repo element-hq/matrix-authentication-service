@@ -345,7 +345,7 @@ impl Algorithm {
 
                 Pbkdf2.verify_password(password.as_ref(), &hashed_password)?;
             }
-        };
+        }
 
         Ok(())
     }

@@ -58,7 +58,7 @@ impl QueryBuilderExt for sea_query::SelectStatement {
                 self.order_by(id_field, sea_query::Order::Desc)
                     .limit((pagination.count + 1) as u64);
             }
-        };
+        }
 
         self
     }

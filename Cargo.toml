@@ -109,7 +109,7 @@ version = "1.1.9"
 
 # Memory optimisation for short strings
 [workspace.dependencies.compact_str]
-version = "0.8.1"
+version = "0.9.0"
 
 # Time utilities
 [workspace.dependencies.chrono]
@@ -119,7 +119,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.34"
+version = "4.5.35"
 features = ["derive"]
 
 # Cron expressions
@@ -192,7 +192,7 @@ default-features = false
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.8.0"
+version = "2.9.0"
 features = ["serde"]
 
 # Snapshot testing
@@ -221,7 +221,7 @@ features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.8.0"
+version = "2.9.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -278,7 +278,7 @@ version = "0.15.1"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.23"
+version = "0.23.25"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
@@ -312,18 +312,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.36.0"
+version = "0.37.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.36.0"
+version = "0.37.0"
 features = ["http"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.36.0"
+version = "0.37.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
@@ -358,7 +358,7 @@ version = "0.2.1"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.44.1"
+version = "1.44.2"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]
@@ -387,37 +387,37 @@ version = "0.3.19"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
-version = "0.28.0"
+version = "0.29.1"
 features = ["trace", "metrics"]
 
 [workspace.dependencies.opentelemetry-http]
-version = "0.28.0"
+version = "0.29.0"
 features = ["reqwest"]
 
 [workspace.dependencies.opentelemetry-jaeger-propagator]
-version = "0.28.0"
+version = "0.29.0"
 
 [workspace.dependencies.opentelemetry-otlp]
-version = "0.28.0"
+version = "0.29.0"
 default-features = false
 features = ["trace", "metrics", "http-proto"]
 
 [workspace.dependencies.opentelemetry-prometheus]
-version = "0.28.0"
+version = "0.29.0"
 
 [workspace.dependencies.opentelemetry-resource-detectors]
-version = "0.7.0"
+version = "0.8.0"
 
 [workspace.dependencies.opentelemetry-semantic-conventions]
-version = "0.28.0"
+version = "0.29.0"
 features = ["semconv_experimental"]
 
 [workspace.dependencies.opentelemetry-stdout]
-version = "0.28.0"
+version = "0.29.0"
 features = ["trace", "metrics"]
 
 [workspace.dependencies.opentelemetry_sdk]
-version = "0.28.0"
+version = "0.29.0"
 features = [
     "experimental_trace_batch_span_processor_with_async_runtime",
     "experimental_metrics_periodicreader_with_async_runtime",
@@ -425,7 +425,7 @@ features = [
 ]
 
 [workspace.dependencies.tracing-opentelemetry]
-version = "0.29.0"
+version = "0.30.0"
 default-features = false
 
 [workspace.dependencies.prometheus]

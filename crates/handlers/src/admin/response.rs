@@ -63,20 +63,20 @@ fn url_with_pagination(base: &str, pagination: Pagination) -> String {
     let mut query = query.to_owned();
 
     if let Some(before) = pagination.before {
-        query += &format!("&page[before]={before}");
+        query = format!("{query}&page[before]={before}");
     }
 
     if let Some(after) = pagination.after {
-        query += &format!("&page[after]={after}");
+        query = format!("{query}&page[after]={after}");
     }
 
     let count = pagination.count;
     match pagination.direction {
         mas_storage::pagination::PaginationDirection::Forward => {
-            query += &format!("&page[first]={count}");
+            query = format!("{query}&page[first]={count}");
         }
         mas_storage::pagination::PaginationDirection::Backward => {
-            query += &format!("&page[last]={count}");
+            query = format!("{query}&page[last]={count}");
         }
     }
 
