@@ -432,6 +432,7 @@ pub struct Provider {
     ///  - `github`
     ///  - `gitlab`
     ///  - `twitter`
+    ///  - `discord`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub brand_name: Option<String>,
 

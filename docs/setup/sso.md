@@ -339,6 +339,7 @@ upstream_oauth2:
       human_name: Google
       brand_name: "google"
       issuer: "https://accounts.google.com"
+      token_endpoint_auth_method: "client_secret_post"
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
       scope: "openid profile email"
@@ -449,6 +450,40 @@ upstream_oauth2:
           set_email_verification: always
         account_name:
           template: "{{ user.preferred_username }}"
+```
+
+### Discord
+
+1. Create a new application in the Discord Developer Portal (see [documentation](https://discord.com/developers/applications))
+2. Add the following "Redirect URI" in the OAuth2 tab under settings: `https://<auth-service-domain>/upstream/callback/<id>`
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01JQK7DK6VFH62NMW4HS9RKD3R
+      human_name: Discord
+      brand_name: "discord"
+      token_endpoint_auth_method: "client_secret_post"
+      issuer: "https://discord.com"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      fetch_userinfo: true
+      userinfo_endpoint: "https://discord.com/api/users/@me"
+      scope: "openid identify email"
+      claims_imports:
+        localpart:
+          action: suggest
+          template: "{{ user.username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.global_name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+        account_name:
+          template: "{{ user.username }}"
 ```
 
 
