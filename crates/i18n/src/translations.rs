@@ -257,7 +257,7 @@ impl Tree {
                 ..
             } => self.inner = tree.inner,
             _ => panic!("Tried to replace the root node"),
-        };
+        }
 
         replaced
     }

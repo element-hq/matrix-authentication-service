@@ -469,7 +469,7 @@ fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, Form
             } else {
                 let mut serializer = serde_json::Serializer::new(&mut json);
                 value.serialize(&mut serializer)?;
-            };
+            }
             let json = String::from_utf8(json)?;
             Ok(format_placeholder!(json, placeholder))
         }

@@ -171,7 +171,7 @@ impl Credentials {
             (_, _) => {
                 return Err(CredentialsVerificationError::AuthenticationMethodMismatch);
             }
-        };
+        }
         Ok(())
     }
 }

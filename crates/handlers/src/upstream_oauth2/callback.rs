@@ -189,7 +189,7 @@ pub(crate) async fn handler(
         }
 
         return Err(RouteError::MissingFormParams);
-    };
+    }
 
     // The `Form` extractor will use the body of the request for POST requests and
     // the query parameters for GET requests. We need to then look at the method do

@@ -58,7 +58,7 @@ pub(crate) async fn get(
 
         // The code isn't valid, set an error on the form
         form_state = form_state.with_error_on_field(DeviceLinkFormField::Code, FieldError::Invalid);
-    };
+    }
 
     // Rendre the form
     let ctx = DeviceLinkContext::new()

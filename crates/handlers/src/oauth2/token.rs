@@ -426,7 +426,7 @@ async fn authorization_code_grant(
         (Some(pkce), Some(verifier)) => {
             pkce.verify(verifier)?;
         }
-    };
+    }
 
     let Some(user_session_id) = session.user_session_id else {
         tracing::warn!("No user session associated with this OAuth2 session");

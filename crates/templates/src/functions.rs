@@ -191,7 +191,7 @@ fn function_add_params_to_url(
         match mode {
             Fragment => uri.set_fragment(Some(&params)),
             Query => uri.set_query(Some(&params)),
-        };
+        }
         uri
     };
 
