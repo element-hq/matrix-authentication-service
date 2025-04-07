@@ -209,21 +209,41 @@ mod tests {
             .unwrap();
         assert!(login.is_pending());
 
+        // Start a browser session for the user
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &clock, &user, None)
+            .await
+            .unwrap();
+
         // Start a compat session for that user
         let device = Device::generate(&mut rng);
         let sso_login_session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device, None, false)
+            .add(
+                &mut rng,
+                &clock,
+                &user,
+                device,
+                Some(&browser_session),
+                false,
+            )
             .await
             .unwrap();
 
         // Associate the login with the session
         let login = repo
             .compat_sso_login()
-            .fulfill(&clock, login, &sso_login_session)
+            .fulfill(&clock, login, &browser_session)
             .await
             .unwrap();
         assert!(login.is_fulfilled());
+        let login = repo
+            .compat_sso_login()
+            .exchange(&clock, login, &sso_login_session)
+            .await
+            .unwrap();
+        assert!(login.is_exchanged());
 
         // Now query the session list with both the unknown and SSO login session type
         // filter
@@ -594,26 +614,33 @@ mod tests {
             .expect("login not found");
         assert_eq!(login_lookup, login);
 
+        // Start a compat session for that user
+        let device = Device::generate(&mut rng);
+        let compat_session = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false)
+            .await
+            .unwrap();
+
         // Exchanging before fulfilling should not work
         // Note: It should also not poison the SQL transaction
         let res = repo
             .compat_sso_login()
-            .exchange(&clock, login.clone())
+            .exchange(&clock, login.clone(), &compat_session)
             .await;
         assert!(res.is_err());
 
-        // Start a compat session for that user
-        let device = Device::generate(&mut rng);
-        let session = repo
-            .compat_session()
-            .add(&mut rng, &clock, &user, device, None, false)
+        // Start a browser session for that user
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &clock, &user, None)
             .await
             .unwrap();
 
         // Associate the login with the session
         let login = repo
             .compat_sso_login()
-            .fulfill(&clock, login, &session)
+            .fulfill(&clock, login, &browser_session)
             .await
             .unwrap();
         assert!(login.is_fulfilled());
@@ -629,14 +656,14 @@ mod tests {
         // Note: It should also not poison the SQL transaction
         let res = repo
             .compat_sso_login()
-            .fulfill(&clock, login.clone(), &session)
+            .fulfill(&clock, login.clone(), &browser_session)
             .await;
         assert!(res.is_err());
 
         // Exchange that login
         let login = repo
             .compat_sso_login()
-            .exchange(&clock, login)
+            .exchange(&clock, login, &compat_session)
             .await
             .unwrap();
         assert!(login.is_exchanged());
@@ -652,7 +679,7 @@ mod tests {
         // Note: It should also not poison the SQL transaction
         let res = repo
             .compat_sso_login()
-            .exchange(&clock, login.clone())
+            .exchange(&clock, login.clone(), &compat_session)
             .await;
         assert!(res.is_err());
 
@@ -660,7 +687,7 @@ mod tests {
         // Note: It should also not poison the SQL transaction
         let res = repo
             .compat_sso_login()
-            .fulfill(&clock, login.clone(), &session)
+            .fulfill(&clock, login.clone(), &browser_session)
             .await;
         assert!(res.is_err());
 
