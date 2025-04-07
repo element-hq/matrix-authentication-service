@@ -264,7 +264,7 @@ version = "0.8.5"
 [workspace.dependencies.rand_chacha]
 version = "0.3.1"
 [workspace.dependencies.rand_core]
-version = "0.6.4"
+version = "0.9.3"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]

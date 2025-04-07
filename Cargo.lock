@@ -3630,7 +3630,7 @@ dependencies = [
  "mas-jose",
  "oauth2-types",
  "opentelemetry",
- "rand_core 0.6.4",
+ "rand_core 0.9.3",
  "serde",
  "serde_json",
  "thiserror 2.0.12",
