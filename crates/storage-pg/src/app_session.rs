@@ -17,11 +17,13 @@ use mas_storage::{
     oauth2::OAuth2SessionFilter,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
+use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use sea_query::{
     Alias, ColumnRef, CommonTableExpression, Expr, PostgresQueryBuilder, Query, UnionType,
 };
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
+use tracing::Instrument;
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -478,7 +480,10 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         device: &Device,
     ) -> Result<(), Self::Error> {
         // TODO need to invoke this from all the oauth2 login sites
-        // TODO CREATE A SECOND SPAN FOR THE SECOND QUERY
+        let span = tracing::info_span!(
+            "db.app_session.finish_sessions_to_replace_device.compat_sessions",
+            { DB_QUERY_TEXT } = tracing::field::Empty,
+        );
         let finished_at = clock.now();
         sqlx::query!(
             "
@@ -488,11 +493,16 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             device.as_str(),
             finished_at
         )
-        .traced()
+        .record(&span)
         .execute(&mut *self.conn)
+        .instrument(span)
         .await?;
 
         if let Ok(device_as_scope_token) = device.to_scope_token() {
+            let span = tracing::info_span!(
+                "db.app_session.finish_sessions_to_replace_device.oauth2_sessions",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
             sqlx::query!(
                 "
                     UPDATE oauth2_sessions SET finished_at = $3 WHERE user_id = $1 AND $2 = ANY(scope_list) AND finished_at IS NULL
@@ -501,8 +511,9 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 device_as_scope_token.as_str(),
                 finished_at
             )
-            .traced()
+            .record(&span)
             .execute(&mut *self.conn)
+            .instrument(span)
             .await?;
         }
 
