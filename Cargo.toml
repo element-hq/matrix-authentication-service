@@ -274,7 +274,7 @@ features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
 # Matrix-related types
 [workspace.dependencies.ruma-common]
-version = "0.15.1"
+version = "0.15.2"
 
 # TLS stack
 [workspace.dependencies.rustls]
