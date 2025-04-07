@@ -3,15 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use mas_axum_utils::cookies::CookieJar;
+use mas_data_model::{AuthenticationMethod, BrowserSession};
 use mas_router::UrlBuilder;
 use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderRepository};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::{error, warn};
+use tracing::error;
 use url::Url;
 
-use super::UpstreamSessionsCookie;
 use crate::impl_from_error_for_route;
 
 #[derive(Serialize, Deserialize)]
@@ -69,7 +68,7 @@ impl From<reqwest::Error> for RouteError {
 pub async fn get_rp_initiated_logout_endpoints<E>(
     url_builder: &UrlBuilder,
     repo: &mut impl RepositoryAccess<Error = E>,
-    cookie_jar: &CookieJar,
+    browser_session: &BrowserSession,
 ) -> Result<UpstreamLogoutInfo, RouteError>
 where
     RouteError: std::convert::From<E>,
@@ -81,68 +80,55 @@ where
         .to_string();
     result.post_logout_redirect_uri = Some(post_logout_redirect_uri.clone());
 
-    let sessions_cookie = UpstreamSessionsCookie::load(cookie_jar);
-    // Standard location for OIDC end session endpoint
-    let session_ids = sessions_cookie.session_ids();
-    if session_ids.is_empty() {
-        return Ok(result);
-    }
-    // We only support the first upstream session
-    let mut provider = None;
-    let mut upstream_session = None;
-    for session_id in session_ids {
-        // Get the session and assign its value, wrapped in Some
-        let session = repo
-            .upstream_oauth_session()
-            .lookup(session_id)
-            .await?
-            .ok_or(RouteError::SessionNotFound)?;
-        // Get the provider and assign its value, wrapped in Some
-        let prov = repo
-            .upstream_oauth_provider()
-            .lookup(session.provider_id)
-            .await?
-            .ok_or(RouteError::ProviderNotFound)?;
+    let upstream_oauth2_session_id = repo
+        .browser_session()
+        .get_last_authentication(browser_session)
+        .await?
+        .ok_or(RouteError::SessionNotFound)
+        .map(|auth| match auth.authentication_method {
+            AuthenticationMethod::UpstreamOAuth2 {
+                upstream_oauth2_session_id,
+            } => Some(upstream_oauth2_session_id),
+            _ => None,
+        })?
+        .ok_or(RouteError::SessionNotFound)?;
 
-        if prov.allow_rp_initiated_logout {
-            upstream_session = Some(session);
-            provider = Some(prov);
-            break;
-        }
-    }
+    // Get the session and assign its value, wrapped in Some
+    let upstream_session = repo
+        .upstream_oauth_session()
+        .lookup(upstream_oauth2_session_id)
+        .await?
+        .ok_or(RouteError::SessionNotFound)?;
+    // Get the provider and assign its value, wrapped in Some
+    let provider = repo
+        .upstream_oauth_provider()
+        .lookup(upstream_session.provider_id)
+        .await?
+        .filter(|provider| provider.allow_rp_initiated_logout)
+        .ok_or(RouteError::ProviderNotFound)?;
 
-    // Check if we found a provider with allow_rp_initiated_logout
-    if let Some(provider) = provider {
-        // Look for end session endpoint
-        // In a real implementation, we'd have end_session_endpoint fields in the
-        // provider For now, we'll try to construct one from the issuer if
-        // available
-        if let Some(issuer) = &provider.issuer {
-            let end_session_endpoint = format!("{issuer}/protocol/openid-connect/logout");
-            let mut logout_url = end_session_endpoint;
-            // Add post_logout_redirect_uri
-            if let Some(post_uri) = &result.post_logout_redirect_uri {
-                if let Ok(mut url) = Url::parse(&logout_url) {
-                    url.query_pairs_mut()
-                        .append_pair("post_logout_redirect_uri", post_uri);
-                    url.query_pairs_mut()
-                        .append_pair("client_id", &provider.client_id);
-                    // Add id_token_hint if available
-                    if let Some(session) = &upstream_session {
-                        if let Some(id_token) = session.id_token() {
-                            url.query_pairs_mut().append_pair("id_token_hint", id_token);
-                        }
-                    }
-                    logout_url = url.to_string();
+    // Look for end session endpoint
+    // In a real implementation, we'd have end_session_endpoint fields in the
+    // provider For now, we'll try to construct one from the issuer if
+    // available
+    if let Some(issuer) = &provider.issuer {
+        let end_session_endpoint = format!("{issuer}/protocol/openid-connect/logout");
+        let mut logout_url = end_session_endpoint;
+        // Add post_logout_redirect_uri
+        if let Some(post_uri) = &result.post_logout_redirect_uri {
+            if let Ok(mut url) = Url::parse(&logout_url) {
+                url.query_pairs_mut()
+                    .append_pair("post_logout_redirect_uri", post_uri);
+                url.query_pairs_mut()
+                    .append_pair("client_id", &provider.client_id);
+                // Add id_token_hint if available
+                if let Some(id_token) = upstream_session.id_token() {
+                    url.query_pairs_mut().append_pair("id_token_hint", id_token);
                 }
+                logout_url = url.to_string();
             }
-            result.logout_endpoints.clone_from(&logout_url);
-        } else {
-            warn!(
-                upstream_oauth_provider.id = %provider.id,
-                "Provider has no issuer defined, cannot construct RP-initiated logout URL"
-            );
         }
+        result.logout_endpoints.clone_from(&logout_url);
     }
     Ok(result)
 }

@@ -43,8 +43,9 @@ pub(crate) async fn post(
 
                 // First, get RP-initiated logout endpoints before actually finishing the
                 // session
-                match get_rp_initiated_logout_endpoints(&url_builder, &mut repo, &cookie_jar).await
-                {
+                // match get_rp_initiated_logout_endpoints(&url_builder, &mut repo,
+                // &cookie_jar).await
+                match get_rp_initiated_logout_endpoints(&url_builder, &mut repo, &session).await {
                     Ok(logout_info) => {
                         // If we have any RP-initiated logout endpoints, use the first one
                         if !logout_info.logout_endpoints.is_empty() {

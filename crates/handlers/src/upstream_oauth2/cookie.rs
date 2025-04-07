@@ -65,10 +65,6 @@ impl UpstreamSessions {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-    /// Returns the session IDs in the cookie
-    pub fn session_ids(&self) -> Vec<Ulid> {
-        self.0.iter().map(|p| p.session).collect()
-    }
 
     /// Save the upstreams sessions to the cookie jar
     pub fn save<C>(self, cookie_jar: CookieJar, clock: &C) -> CookieJar
