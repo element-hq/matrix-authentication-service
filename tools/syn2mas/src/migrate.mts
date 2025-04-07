@@ -84,7 +84,8 @@ export async function migrate(): Promise<void> {
         type: Boolean,
         optional: true,
         defaultValue: false,
-        description: "Skip and print warnings for any guests users found in Synapse, instead of aborting"
+        description:
+          "Skip and print warnings for any guests users found in Synapse, instead of aborting",
       },
       dryRun: {
         type: Boolean,
