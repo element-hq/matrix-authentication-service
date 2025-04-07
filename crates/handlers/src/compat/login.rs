@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use axum::{
     Json,
@@ -27,6 +27,7 @@ use mas_storage::{
     },
     user::{UserPasswordRepository, UserRepository},
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
@@ -35,9 +36,19 @@ use zeroize::Zeroizing;
 
 use super::MatrixError;
 use crate::{
-    BoundActivityTracker, Limiter, RequesterFingerprint, impl_from_error_for_route,
+    BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
     passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
 };
+
+static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.compat.login_request")
+        .with_description("How many compatibility login requests have happened")
+        .with_unit("{request}")
+        .build()
+});
+const TYPE: Key = Key::from_static_str("type");
+const RESULT: Key = Key::from_static_str("result");
 
 #[derive(Debug, Serialize)]
 #[serde(tag = "type")]
@@ -123,6 +134,16 @@ pub enum Credentials {
     Unsupported,
 }
 
+impl Credentials {
+    fn login_type(&self) -> &'static str {
+        match self {
+            Self::Password { .. } => "m.login.password",
+            Self::Token { .. } => "m.login.token",
+            Self::Unsupported => "unsupported",
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Identifier {
@@ -192,6 +213,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
+        LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let response = match self {
             Self::Internal(_) | Self::SessionNotFound | Self::ProvisionDeviceFailed(_) => {
                 MatrixError {
@@ -278,6 +300,7 @@ pub(crate) async fn post(
     WithRejection(Json(input), _): WithRejection<Json<RequestBody>, RouteError>,
 ) -> Result<impl IntoResponse, RouteError> {
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let login_type = input.credentials.login_type();
     let (mut session, user) = match (password_manager.is_enabled(), input.credentials) {
         (
             true,
@@ -359,6 +382,14 @@ pub(crate) async fn post(
     activity_tracker
         .record_compat_session(&clock, &session)
         .await;
+
+    LOGIN_COUNTER.add(
+        1,
+        &[
+            KeyValue::new(TYPE, login_type),
+            KeyValue::new(RESULT, "success"),
+        ],
+    );
 
     Ok(Json(ResponseBody {
         access_token: access_token.token,

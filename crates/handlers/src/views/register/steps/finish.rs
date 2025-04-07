@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use anyhow::Context as _;
 use axum::{
@@ -22,10 +22,21 @@ use mas_storage::{
     user::UserEmailFilter,
 };
 use mas_templates::{RegisterStepsEmailInUseContext, TemplateContext as _, Templates};
+use opentelemetry::metrics::Counter;
 use ulid::Ulid;
 
 use super::super::cookie::UserRegistrationSessions;
-use crate::{BoundActivityTracker, PreferredLanguage, views::shared::OptionalPostAuthAction};
+use crate::{
+    BoundActivityTracker, METER, PreferredLanguage, views::shared::OptionalPostAuthAction,
+};
+
+static PASSWORD_REGISTER_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.user.password_registration")
+        .with_description("Number of password registrations")
+        .with_unit("{registration}")
+        .build()
+});
 
 #[tracing::instrument(
     name = "handlers.views.register.steps.finish.get",
@@ -203,6 +214,8 @@ pub(crate) async fn get(
         repo.browser_session()
             .authenticate_with_password(&mut rng, &clock, &user_session, &user_password)
             .await?;
+
+        PASSWORD_REGISTER_COUNTER.add(1, &[]);
     }
 
     if let Some(terms_url) = registration.terms_url {

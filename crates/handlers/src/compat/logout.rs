@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use axum::{Json, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
@@ -15,10 +17,20 @@ use mas_storage::{
     compat::{CompatAccessTokenRepository, CompatSessionRepository},
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
 
 use super::MatrixError;
-use crate::{BoundActivityTracker, impl_from_error_for_route};
+use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+
+static LOGOUT_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.compat.logout_request")
+        .with_description("How many compatibility logout request have happened")
+        .with_unit("{request}")
+        .build()
+});
+const RESULT: Key = Key::from_static_str("result");
 
 #[derive(Error, Debug)]
 pub enum RouteError {
@@ -40,6 +52,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
+        LOGOUT_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let response = match self {
             Self::Internal(_) => MatrixError {
                 errcode: "M_UNKNOWN",
@@ -112,6 +125,8 @@ pub(crate) async fn post(
     repo.compat_session().finish(&clock, session).await?;
 
     repo.save().await?;
+
+    LOGOUT_COUNTER.add(1, &[KeyValue::new(RESULT, "success")]);
 
     Ok(Json(serde_json::json!({})))
 }

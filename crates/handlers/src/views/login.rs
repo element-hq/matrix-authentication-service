@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use axum::{
     extract::{Form, Query, State},
@@ -30,16 +30,26 @@ use mas_templates::{
     AccountInactiveContext, FieldError, FormError, FormState, LoginContext, LoginFormField,
     PostAuthContext, PostAuthContextInner, TemplateContext, Templates, ToFormState,
 };
+use opentelemetry::{Key, KeyValue, metrics::Counter};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 use super::shared::OptionalPostAuthAction;
 use crate::{
-    BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
+    BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::PasswordManager,
     session::{SessionOrFallback, load_session_or_fallback},
 };
+
+static PASSWORD_LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("mas.user.password_login_attempt")
+        .with_description("Number of password login attempts")
+        .with_unit("{attempt}")
+        .build()
+});
+const RESULT: Key = Key::from_static_str("result");
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct LoginForm {
@@ -156,6 +166,7 @@ pub(crate) async fn post(
     }
 
     if !form_state.is_valid() {
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
             cookie_jar,
@@ -178,6 +189,7 @@ pub(crate) async fn post(
     // First, lookup the user
     let Some(user) = repo.user().find_by_username(username).await? else {
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
             cookie_jar,
@@ -196,6 +208,7 @@ pub(crate) async fn post(
     if let Err(e) = limiter.check_password(requester, &user) {
         tracing::warn!(error = &e as &dyn std::error::Error);
         let form_state = form_state.with_error_on_form(FormError::RateLimitExceeded);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
             cookie_jar,
@@ -215,6 +228,7 @@ pub(crate) async fn post(
         // There is no password for this user, but we don't want to disclose that. Show
         // a generic 'invalid credentials' error instead
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
             cookie_jar,
@@ -257,6 +271,7 @@ pub(crate) async fn post(
         Ok(None) => user_password,
         Err(_) => {
             let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
+            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
             return render(
                 locale,
                 cookie_jar,
@@ -275,6 +290,7 @@ pub(crate) async fn post(
     // Now that we have checked the user password, we now want to show an error if
     // the user is locked or deactivated
     if user.deactivated_at.is_some() {
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
             .with_csrf(csrf_token.form_value())
@@ -284,6 +300,7 @@ pub(crate) async fn post(
     }
 
     if user.locked_at.is_some() {
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
             .with_csrf(csrf_token.form_value())
@@ -308,6 +325,8 @@ pub(crate) async fn post(
         .await?;
 
     repo.save().await?;
+
+    PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "success")]);
 
     activity_tracker
         .record_browser_session(&clock, &user_session)
