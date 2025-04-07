@@ -36,6 +36,7 @@ interface MigrationOptions {
   synapseConfigFile: string;
   masConfigFile: string;
   upstreamProviderMapping: string[];
+  skipGuests?: boolean;
   dryRun?: boolean;
   help?: boolean;
 }
@@ -78,6 +79,12 @@ export async function migrate(): Promise<void> {
         multiple: true,
         description:
           "Mapping of upstream provider IDs to MAS provider IDs. Format: <upstream_provider_id>:<mas_provider_id>",
+      },
+      skipGuests: {
+        type: Boolean,
+        optional: true,
+        defaultValue: false,
+        description: "Skip and print warnings for any guests users found in Synapse, instead of aborting"
       },
       dryRun: {
         type: Boolean,
@@ -201,7 +208,11 @@ export async function migrate(): Promise<void> {
     const executions: Execution[] = [];
 
     if (user.is_guest === 1) {
-      fatal(`Migration of guest users is not supported: ${user.name}`);
+      if (args.skipGuests) {
+        log.warn(`Skipping guest user ${user.name}`);
+      } else {
+        fatal(`Migration of guest users is not supported: ${user.name}`);
+      }
     }
 
     // users => users
