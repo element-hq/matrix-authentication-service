@@ -86,6 +86,7 @@ impl CompatSsoLoginState {
     /// [`Fulfilled`].
     ///
     /// [`Pending`]: CompatSsoLoginState::Pending
+    /// [`Fulfilled`]: CompatSsoLoginState::Fulfilled
     #[must_use]
     pub fn session_id(&self) -> Option<Ulid> {
         match self {
