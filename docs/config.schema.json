@@ -1213,6 +1213,16 @@
           "items": {
             "$ref": "#/definitions/Propagator"
           }
+        },
+        "sample_rate": {
+          "description": "Sample rate for traces\n\nDefaults to `1.0` if not set.",
+          "examples": [
+            0.5
+          ],
+          "type": "number",
+          "format": "double",
+          "maximum": 1.0,
+          "minimum": 0.0
         }
       }
     },
@@ -1333,6 +1343,33 @@
           ],
           "type": "string",
           "format": "uri"
+        },
+        "environment": {
+          "description": "Environment to use when sending events to Sentry\n\nDefaults to `production` if not set.",
+          "examples": [
+            "production"
+          ],
+          "type": "string"
+        },
+        "sample_rate": {
+          "description": "Sample rate for event submissions\n\nDefaults to `1.0` if not set.",
+          "examples": [
+            0.5
+          ],
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        },
+        "traces_sample_rate": {
+          "description": "Sample rate for tracing transactions\n\nDefaults to `0.0` if not set.",
+          "examples": [
+            0.5
+          ],
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
         }
       }
     },

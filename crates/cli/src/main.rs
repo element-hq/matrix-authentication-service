@@ -109,17 +109,18 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     // Load the base configuration files
     let figment = opts.figment();
 
-    // Telemetry config could fail to load, but that's probably OK, since the whole
-    // config will be loaded afterwards, and crash if there is a problem.
-    // Falling back to default.
-    let telemetry_config = TelemetryConfig::extract(&figment).unwrap_or_default();
+    let telemetry_config =
+        TelemetryConfig::extract(&figment).context("Failed to load telemetry config")?;
 
     // Setup Sentry
     let sentry = sentry::init((
         telemetry_config.sentry.dsn.as_deref(),
         sentry::ClientOptions {
             transport: Some(Arc::new(SentryTransportFactory::new())),
-            traces_sample_rate: 1.0,
+            environment: telemetry_config.sentry.environment.clone().map(Into::into),
+            release: Some(VERSION.into()),
+            sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
+            traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
             auto_session_tracking: true,
             session_mode: sentry::SessionMode::Request,
             ..Default::default()
