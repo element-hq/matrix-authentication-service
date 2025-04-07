@@ -107,7 +107,7 @@ pub struct RequestBody {
     /// ID of the client device.
     /// If this does not correspond to a known client device, a new device will
     /// be created. The given device ID must not be the same as a
-    /// cross-signing key ID. The server will auto-generate a device_id if
+    /// cross-signing key ID. The server will auto-generate a `device_id` if
     /// this is not specified.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     device_id: Option<String>,
