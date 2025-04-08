@@ -20,6 +20,7 @@ upstream_oauth_providers:
     disabled_at: ~
     discovery_mode: oidc
     encrypted_client_secret: ~
+    end_session_endpoint_override: ~
     fetch_userinfo: "false"
     human_name: ~
     id_token_signed_response_alg: RS256

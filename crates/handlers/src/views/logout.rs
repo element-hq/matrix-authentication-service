@@ -17,7 +17,9 @@ use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
 use tracing::warn;
 
-use crate::{BoundActivityTracker, upstream_oauth2::logout::get_rp_initiated_logout_endpoints};
+use crate::{
+    BoundActivityTracker, MetadataCache, upstream_oauth2::logout::get_rp_initiated_logout_endpoints,
+};
 
 #[tracing::instrument(name = "handlers.views.logout.post", skip_all, err)]
 pub(crate) async fn post(
@@ -25,6 +27,8 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
+    State(metadata_cache): State<MetadataCache>,
+    State(client): State<reqwest::Client>,
     activity_tracker: BoundActivityTracker,
     Form(form): Form<ProtectedForm<Option<PostAuthAction>>>,
 ) -> Result<impl IntoResponse, FancyError> {
@@ -43,9 +47,15 @@ pub(crate) async fn post(
 
                 // First, get RP-initiated logout endpoints before actually finishing the
                 // session
-                // match get_rp_initiated_logout_endpoints(&url_builder, &mut repo,
-                // &cookie_jar).await
-                match get_rp_initiated_logout_endpoints(&url_builder, &mut repo, &session).await {
+                match get_rp_initiated_logout_endpoints(
+                    &url_builder,
+                    &metadata_cache,
+                    &client,
+                    &mut repo,
+                    &session,
+                )
+                .await
+                {
                     Ok(logout_info) => {
                         // If we have any RP-initiated logout endpoints, use the first one
                         if !logout_info.logout_endpoints.is_empty() {

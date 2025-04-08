@@ -9,9 +9,9 @@ use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderReposi
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
-use url::Url;
 
-use crate::impl_from_error_for_route;
+use super::cache::LazyProviderInfos;
+use crate::{MetadataCache, impl_from_error_for_route};
 
 #[derive(Serialize, Deserialize)]
 struct LogoutToken {
@@ -40,6 +40,7 @@ pub enum RouteError {
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
+impl_from_error_for_route!(mas_oidc_client::error::DiscoveryError);
 
 impl From<reqwest::Error> for RouteError {
     fn from(err: reqwest::Error) -> Self {
@@ -67,6 +68,8 @@ impl From<reqwest::Error> for RouteError {
 /// Returns a `RouteError` if there's an issue accessing the repository
 pub async fn get_rp_initiated_logout_endpoints<E>(
     url_builder: &UrlBuilder,
+    metadata_cache: &MetadataCache,
+    client: &reqwest::Client,
     repo: &mut impl RepositoryAccess<Error = E>,
     browser_session: &BrowserSession,
 ) -> Result<UpstreamLogoutInfo, RouteError>
@@ -74,7 +77,6 @@ where
     RouteError: std::convert::From<E>,
 {
     let mut result: UpstreamLogoutInfo = UpstreamLogoutInfo::default();
-    // Set the post-logout redirect URI to our app's logout completion page
     let post_logout_redirect_uri = url_builder
         .absolute_url_for(&mas_router::Login::default())
         .to_string();
@@ -93,13 +95,12 @@ where
         })?
         .ok_or(RouteError::SessionNotFound)?;
 
-    // Get the session and assign its value, wrapped in Some
     let upstream_session = repo
         .upstream_oauth_session()
         .lookup(upstream_oauth2_session_id)
         .await?
         .ok_or(RouteError::SessionNotFound)?;
-    // Get the provider and assign its value, wrapped in Some
+
     let provider = repo
         .upstream_oauth_provider()
         .lookup(upstream_session.provider_id)
@@ -107,28 +108,26 @@ where
         .filter(|provider| provider.allow_rp_initiated_logout)
         .ok_or(RouteError::ProviderNotFound)?;
 
-    // Look for end session endpoint
-    // In a real implementation, we'd have end_session_endpoint fields in the
-    // provider For now, we'll try to construct one from the issuer if
-    // available
-    if let Some(issuer) = &provider.issuer {
-        let end_session_endpoint = format!("{issuer}/protocol/openid-connect/logout");
-        let mut logout_url = end_session_endpoint;
-        // Add post_logout_redirect_uri
-        if let Some(post_uri) = &result.post_logout_redirect_uri {
-            if let Ok(mut url) = Url::parse(&logout_url) {
-                url.query_pairs_mut()
-                    .append_pair("post_logout_redirect_uri", post_uri);
-                url.query_pairs_mut()
-                    .append_pair("client_id", &provider.client_id);
-                // Add id_token_hint if available
-                if let Some(id_token) = upstream_session.id_token() {
-                    url.query_pairs_mut().append_pair("id_token_hint", id_token);
-                }
-                logout_url = url.to_string();
-            }
+    // Add post_logout_redirect_uri
+    if let Some(post_uri) = &result.post_logout_redirect_uri {
+        let mut lazy_metadata = LazyProviderInfos::new(metadata_cache, &provider, client);
+        let mut end_session_url = lazy_metadata.end_session_endpoint().await?.clone();
+        end_session_url
+            .query_pairs_mut()
+            .append_pair("post_logout_redirect_uri", post_uri);
+        end_session_url
+            .query_pairs_mut()
+            .append_pair("client_id", &provider.client_id);
+        // Add id_token_hint if available
+        if let Some(id_token) = upstream_session.id_token() {
+            end_session_url
+                .query_pairs_mut()
+                .append_pair("id_token_hint", id_token);
         }
-        result.logout_endpoints.clone_from(&logout_url);
+        result
+            .logout_endpoints
+            .clone_from(&end_session_url.to_string());
     }
+
     Ok(result)
 }

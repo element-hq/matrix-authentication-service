@@ -308,6 +308,7 @@ upstream_oauth2:
       authorization_endpoint: "https://github.com/login/oauth/authorize"
       token_endpoint: "https://github.com/login/oauth/access_token"
       userinfo_endpoint: "https://api.github.com/user"
+      end_session_endpoint: "https://github.com/login/oauth/logout"
       scope: "read:user"
       claims_imports:
         subject:

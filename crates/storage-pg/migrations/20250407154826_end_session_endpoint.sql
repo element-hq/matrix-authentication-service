@@ -4,4 +4,5 @@
 -- Please see LICENSE in the repository root for full details.
 
 ALTER TABLE "upstream_oauth_providers"
-    ADD COLUMN "allow_rp_initiated_logout" BOOLEAN NOT NULL DEFAULT FALSE;
+    ADD COLUMN "allow_rp_initiated_logout" BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN "end_session_endpoint_override" TEXT;

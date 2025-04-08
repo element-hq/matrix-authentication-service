@@ -1493,6 +1493,7 @@ impl TemplateContext for UpstreamRegister {
                 created_at: now,
                 disabled_at: None,
                 allow_rp_initiated_logout: false,
+                end_session_endpoint_override: None,
             },
         )]
     }

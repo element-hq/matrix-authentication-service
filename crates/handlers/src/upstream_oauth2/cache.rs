@@ -121,6 +121,18 @@ impl<'a> LazyProviderInfos<'a> {
         Ok(self.load().await?.userinfo_endpoint())
     }
 
+    /// Get the end session endpoint for the provider.
+    ///
+    /// Uses [`UpstreamOAuthProvider.end_session_endpoint_override`] if set,
+    /// otherwise uses the one from discovery.
+    pub async fn end_session_endpoint(&mut self) -> Result<&Url, DiscoveryError> {
+        if let Some(end_session_endpoint) = &self.provider.end_session_endpoint_override {
+            return Ok(end_session_endpoint);
+        }
+
+        Ok(self.load().await?.end_session_endpoint())
+    }
+
     /// Get the PKCE methods supported by the provider.
     ///
     /// If the mode is set to auto, it will use the ones from discovery,
@@ -423,6 +435,7 @@ mod tests {
             disabled_at: None,
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),
             allow_rp_initiated_logout: false,
+            end_session_endpoint_override: None,
             additional_authorization_parameters: Vec::new(),
         };
 

@@ -241,6 +241,7 @@ pub struct UpstreamOAuthProvider {
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,
     pub allow_rp_initiated_logout: bool,
+    pub end_session_endpoint_override: Option<Url>,
     pub additional_authorization_parameters: Vec<(String, String)>,
 }
 
