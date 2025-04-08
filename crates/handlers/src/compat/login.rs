@@ -6,12 +6,8 @@
 
 use std::sync::{Arc, LazyLock};
 
-use axum::{
-    Json,
-    extract::{State, rejection::JsonRejection},
-    response::IntoResponse,
-};
-use axum_extra::{extract::WithRejection, typed_header::TypedHeader};
+use axum::{Json, extract::State, response::IntoResponse};
+use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::sentry::SentryEventID;
@@ -34,7 +30,7 @@ use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
-use super::MatrixError;
+use super::{MatrixError, MatrixJsonBody};
 use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
     passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
@@ -206,9 +202,6 @@ pub enum RouteError {
     #[error("invalid login token")]
     InvalidLoginToken,
 
-    #[error(transparent)]
-    InvalidJsonBody(#[from] JsonRejection),
-
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
 }
@@ -229,26 +222,6 @@ impl IntoResponse for RouteError {
                 errcode: "M_LIMIT_EXCEEDED",
                 error: "Too many login attempts",
                 status: StatusCode::TOO_MANY_REQUESTS,
-            },
-            Self::InvalidJsonBody(JsonRejection::MissingJsonContentType(_)) => MatrixError {
-                errcode: "M_NOT_JSON",
-                error: "Invalid Content-Type header: expected application/json",
-                status: StatusCode::BAD_REQUEST,
-            },
-            Self::InvalidJsonBody(JsonRejection::JsonSyntaxError(_)) => MatrixError {
-                errcode: "M_NOT_JSON",
-                error: "Body is not a valid JSON document",
-                status: StatusCode::BAD_REQUEST,
-            },
-            Self::InvalidJsonBody(JsonRejection::JsonDataError(_)) => MatrixError {
-                errcode: "M_BAD_JSON",
-                error: "JSON fields are not valid",
-                status: StatusCode::BAD_REQUEST,
-            },
-            Self::InvalidJsonBody(_) => MatrixError {
-                errcode: "M_UNKNOWN",
-                error: "Unknown error while parsing JSON body",
-                status: StatusCode::BAD_REQUEST,
             },
             Self::Unsupported => MatrixError {
                 errcode: "M_UNKNOWN",
@@ -300,7 +273,7 @@ pub(crate) async fn post(
     State(limiter): State<Limiter>,
     requester: RequesterFingerprint,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
-    WithRejection(Json(input), _): WithRejection<Json<RequestBody>, RouteError>,
+    MatrixJsonBody(input): MatrixJsonBody<RequestBody>,
 ) -> Result<impl IntoResponse, RouteError> {
     let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
     let login_type = input.credentials.login_type();
@@ -662,12 +635,12 @@ mod tests {
         response.assert_status(StatusCode::BAD_REQUEST);
         let body: serde_json::Value = response.json();
 
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "errcode": "M_NOT_JSON",
-          "error": "Invalid Content-Type header: expected application/json"
+          "error": "Body is not a valid JSON document"
         }
-        "###);
+        "#);
 
         // Missing keys in body
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({}));
@@ -900,6 +873,37 @@ mod tests {
         // The response should be the same as the previous one, so that we don't leak if
         // it's the user that is invalid or the password.
         assert_eq!(body, old_body);
+    }
+
+    /// Test that we can send a login request without a Content-Type header
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_no_content_type(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        user_with_password(&state, "alice", "password").await;
+        // Try without a Content-Type header
+        let mut request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        }));
+        request.headers_mut().remove(hyper::header::CONTENT_TYPE);
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
+          "device_id": "ZGpSvYQqlq",
+          "user_id": "@alice:example.com"
+        }
+        "###);
     }
 
     /// Test that a user can login with a password using the Matrix
