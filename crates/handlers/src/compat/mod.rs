@@ -53,11 +53,8 @@ pub enum MatrixJsonBodyRejection {
     #[error("Failed to read request body")]
     BytesRejection(#[from] BytesRejection),
 
-    #[error("Body is not a valid JSON document")]
-    NotJson(#[source] serde_json::Error),
-
-    #[error("Request body has invalid parameters")]
-    BadJson(#[source] serde_json::Error),
+    #[error("Invalid JSON document")]
+    Json(#[from] serde_json::Error),
 }
 
 impl IntoResponse for MatrixJsonBodyRejection {
@@ -92,15 +89,15 @@ impl IntoResponse for MatrixJsonBodyRejection {
                 status: StatusCode::BAD_REQUEST,
             },
 
-            Self::NotJson(_) => MatrixError {
-                errcode: "M_NOT_JSON",
-                error: "Body is not a valid JSON document",
+            Self::Json(err) if err.is_data() => MatrixError {
+                errcode: "M_BAD_JSON",
+                error: "JSON fields are not valid",
                 status: StatusCode::BAD_REQUEST,
             },
 
-            Self::BadJson(_) => MatrixError {
-                errcode: "M_BAD_JSON",
-                error: "JSON fields are not valid",
+            Self::Json(_) => MatrixError {
+                errcode: "M_NOT_JSON",
+                error: "Body is not a valid JSON document",
                 status: StatusCode::BAD_REQUEST,
             },
         };
@@ -138,11 +135,8 @@ where
 
         let bytes = Bytes::from_request(req, state).await?;
 
-        // We first parse it as a JSON value so that we can distinguish between
-        // invalid JSON documents and invalid requests
-        let value: serde_json::Value =
-            serde_json::from_slice(&bytes).map_err(MatrixJsonBodyRejection::NotJson)?;
-        let value = serde_json::from_value(value).map_err(MatrixJsonBodyRejection::BadJson)?;
+        let value: T = serde_json::from_slice(&bytes)?;
+
         Ok(Self(value))
     }
 }
