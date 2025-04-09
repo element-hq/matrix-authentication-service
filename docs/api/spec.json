@@ -2307,8 +2307,37 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "description": "An existing Upstream OAuth 2.0 link was associated to a user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthLink"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-link",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "provider_id": "02081040G2081040G2081040G2",
+                      "subject": "john-42",
+                      "user_id": "030C1G60R30C1G60R30C1G60R3",
+                      "human_account_name": "john.doe@example.com"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
           "201": {
-            "description": "Upstream OAuth 2.0 link was created",
+            "description": "A new Upstream OAuth 2.0 link was created",
             "content": {
               "application/json": {
                 "schema": {
@@ -2337,7 +2366,7 @@
             }
           },
           "409": {
-            "description": "User already has an upstream link for this provider",
+            "description": "The subject from the provider is already linked to another user",
             "content": {
               "application/json": {
                 "schema": {
@@ -2346,7 +2375,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "User ID 01040G2081040G2081040G2081 already has an upstream link for Upstream Oauth 2.0 Provider ID 01040G2081040G2081040G2081"
+                      "title": "Upstream Oauth 2.0 Provider ID 01040G2081040G2081040G2081 with subject subject1 is already linked to a user"
                     }
                   ]
                 }

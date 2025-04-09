@@ -6,7 +6,7 @@
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
-use mas_storage::{BoxRng, upstream_oauth2::UpstreamOAuthLinkFilter};
+use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use ulid::Ulid;
@@ -14,7 +14,7 @@ use ulid::Ulid;
 use crate::{
     admin::{
         call_context::CallContext,
-        model::{Resource, UpstreamOAuthLink, User},
+        model::{Resource, UpstreamOAuthLink},
         response::{ErrorResponse, SingleResponse},
     },
     impl_from_error_for_route,
@@ -26,8 +26,8 @@ pub enum RouteError {
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 
-    #[error("User ID {0} already has an upstream link for Upstream Oauth 2.0 Provider ID {1}")]
-    LinkAlreadyExists(Ulid, Ulid),
+    #[error("Upstream Oauth 2.0 Provider ID {0} with subject {1} is already linked to a user")]
+    LinkAlreadyExists(Ulid, String),
 
     #[error("User ID {0} not found")]
     UserNotFound(Ulid),
@@ -74,20 +74,25 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .id("addUpstreamOAuthLink")
         .summary("Add an upstream OAuth 2.0 link")
         .tag("upstream-oauth-link")
+        .response_with::<200, Json<SingleResponse<UpstreamOAuthLink>>, _>(|t| {
+            let [sample, ..] = UpstreamOAuthLink::samples();
+            let response = SingleResponse::new_canonical(sample);
+            t.description("An existing Upstream OAuth 2.0 link was associated to a user")
+                .example(response)
+        })
         .response_with::<201, Json<SingleResponse<UpstreamOAuthLink>>, _>(|t| {
             let [sample, ..] = UpstreamOAuthLink::samples();
             let response = SingleResponse::new_canonical(sample);
-            t.description("Upstream OAuth 2.0 link was created")
+            t.description("A new Upstream OAuth 2.0 link was created")
                 .example(response)
         })
         .response_with::<409, RouteError, _>(|t| {
             let [provider_sample, ..] = UpstreamOAuthLink::samples();
-            let [user_sample, ..] = User::samples();
             let response = ErrorResponse::from_error(&RouteError::LinkAlreadyExists(
-                user_sample.id(),
                 provider_sample.id(),
+                String::from("subject1"),
             ));
-            t.description("User already has an upstream link for this provider")
+            t.description("The subject from the provider is already linked to another user")
                 .example(response)
         })
         .response_with::<404, RouteError, _>(|t| {
@@ -119,15 +124,28 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::ProviderNotFound(params.provider_id))?;
 
-    let filter = UpstreamOAuthLinkFilter::new()
-        .for_user(&user)
-        .for_provider(&provider);
-    let count = repo.upstream_oauth_link().count(filter).await?;
+    let maybe_link = repo
+        .upstream_oauth_link()
+        .find_by_subject(&provider, &params.subject)
+        .await?;
+    if let Some(mut link) = maybe_link {
+        if link.user_id.is_some() {
+            return Err(RouteError::LinkAlreadyExists(
+                link.provider_id,
+                link.subject,
+            ));
+        }
 
-    if count > 0 {
-        return Err(RouteError::LinkAlreadyExists(
-            params.user_id,
-            params.provider_id,
+        repo.upstream_oauth_link()
+            .associate_to_user(&link, &user)
+            .await?;
+        link.user_id = Some(user.id);
+
+        repo.save().await?;
+
+        return Ok((
+            StatusCode::OK,
+            Json(SingleResponse::new_canonical(link.into())),
         ));
     }
 
@@ -225,6 +243,77 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_association(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &state.clock,
+                test_utils::oidc_provider_params("provider1"),
+            )
+            .await
+            .unwrap();
+
+        // Existing unfinished link
+        repo.upstream_oauth_link()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                String::from("subject1"),
+                None,
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        let request = Request::post("/api/admin/v1/upstream-oauth-links")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "user_id": alice.id,
+                "provider_id": provider.id,
+                "subject": "subject1"
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "data": {
+            "type": "upstream-oauth-link",
+            "id": "01FSHN9AG09NMZYX8MFYH578R9",
+            "attributes": {
+              "created_at": "2022-01-16T14:40:00Z",
+              "provider_id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+              "subject": "subject1",
+              "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "human_account_name": null
+            },
+            "links": {
+              "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG09NMZYX8MFYH578R9"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG09NMZYX8MFYH578R9"
+          }
+        }
+        "###);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_already_exists(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
@@ -235,6 +324,12 @@ mod tests {
         let alice = repo
             .user()
             .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
             .await
             .unwrap();
 
@@ -270,7 +365,7 @@ mod tests {
         let request = Request::post("/api/admin/v1/upstream-oauth-links")
             .bearer(&token)
             .json(serde_json::json!({
-                "user_id": alice.id,
+                "user_id": bob.id,
                 "provider_id": provider.id,
                 "subject": "subject1"
             }));
@@ -281,7 +376,7 @@ mod tests {
         {
           "errors": [
             {
-              "title": "User ID 01FSHN9AG0MZAA6S4AF7CTV32E already has an upstream link for Upstream Oauth 2.0 Provider ID 01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+              "title": "Upstream Oauth 2.0 Provider ID 01FSHN9AG09NMZYX8MFYH578R9 with subject subject1 is already linked to a user"
             }
           ]
         }
