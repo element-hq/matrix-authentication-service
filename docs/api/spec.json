@@ -2289,6 +2289,117 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "upstream-oauth-link"
+        ],
+        "summary": "Add an upstream OAuth 2.0 link",
+        "operationId": "addUpstreamOAuthLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUpstreamOauthLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "An existing Upstream OAuth 2.0 link was associated to a user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthLink"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-link",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "provider_id": "02081040G2081040G2081040G2",
+                      "subject": "john-42",
+                      "user_id": "030C1G60R30C1G60R30C1G60R3",
+                      "human_account_name": "john.doe@example.com"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new Upstream OAuth 2.0 link was created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthLink"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-link",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "provider_id": "02081040G2081040G2081040G2",
+                      "subject": "john-42",
+                      "user_id": "030C1G60R30C1G60R30C1G60R3",
+                      "human_account_name": "john.doe@example.com"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The subject from the provider is already linked to another user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Upstream Oauth 2.0 Provider ID 01040G2081040G2081040G2081 with subject subject1 is already linked to a user"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or provider was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/admin/v1/upstream-oauth-links/{id}": {
@@ -2339,6 +2450,47 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Upstream OAuth 2.0 link was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Upstream OAuth 2.0 Link ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "upstream-oauth-link"
+        ],
+        "summary": "Delete an upstream OAuth 2.0 link",
+        "operationId": "deleteUpstreamOAuthLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Upstream OAuth 2.0 link was deleted"
           },
           "404": {
             "description": "Upstream OAuth 2.0 link was not found",
@@ -3499,6 +3651,34 @@
           },
           "human_account_name": {
             "description": "A human-readable name of the upstream account",
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AddUpstreamOauthLinkRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/upstream-oauth-links`",
+        "type": "object",
+        "required": [
+          "provider_id",
+          "subject",
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "description": "The ID of the user to which the link should be added.",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "provider_id": {
+            "description": "The ID of the upstream provider to which the link is for.",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "subject": {
+            "description": "The subject (sub) claim of the user on the provider.",
+            "type": "string"
+          },
+          "human_account_name": {
+            "description": "A human readable account name.",
             "type": "string",
             "nullable": true
           }

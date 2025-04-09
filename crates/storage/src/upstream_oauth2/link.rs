@@ -200,6 +200,22 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error>;
+
+    /// Delete a [`UpstreamOAuthLink`]
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock used to generate timestamps
+    /// * `upstream_oauth_link`: The [`UpstreamOAuthLink`] to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn remove(
+        &mut self,
+        clock: &dyn Clock,
+        upstream_oauth_link: UpstreamOAuthLink,
+    ) -> Result<(), Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthLinkRepository:
@@ -233,4 +249,6 @@ repository_impl!(UpstreamOAuthLinkRepository:
     ) -> Result<Page<UpstreamOAuthLink>, Self::Error>;
 
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error>;
+
+    async fn remove(&mut self, clock: &dyn Clock, upstream_oauth_link: UpstreamOAuthLink) -> Result<(), Self::Error>;
 );

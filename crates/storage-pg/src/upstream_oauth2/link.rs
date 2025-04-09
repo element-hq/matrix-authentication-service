@@ -11,10 +11,12 @@ use mas_storage::{
     Clock, Page, Pagination,
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
 };
+use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
+use tracing::Instrument;
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -373,5 +375,64 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         count
             .try_into()
             .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.upstream_oauth_link.remove",
+        skip_all,
+        fields(
+            db.query.text,
+            upstream_oauth_link.id,
+            upstream_oauth_link.provider_id,
+            %upstream_oauth_link.subject,
+        ),
+        err,
+    )]
+    async fn remove(
+        &mut self,
+        clock: &dyn Clock,
+        upstream_oauth_link: UpstreamOAuthLink,
+    ) -> Result<(), Self::Error> {
+        // Unlink the authorization sessions first, as they have a foreign key
+        // constraint on the links.
+        let span = tracing::info_span!(
+            "db.upstream_oauth_link.remove.unlink",
+            { DB_QUERY_TEXT } = tracing::field::Empty
+        );
+        sqlx::query!(
+            r#"
+                UPDATE upstream_oauth_authorization_sessions SET
+                    upstream_oauth_link_id = NULL,
+                    unlinked_at = $2
+                WHERE upstream_oauth_link_id = $1
+            "#,
+            Uuid::from(upstream_oauth_link.id),
+            clock.now()
+        )
+        .record(&span)
+        .execute(&mut *self.conn)
+        .instrument(span)
+        .await?;
+
+        // Then delete the link itself
+        let span = tracing::info_span!(
+            "db.upstream_oauth_link.remove.delete",
+            { DB_QUERY_TEXT } = tracing::field::Empty
+        );
+        let res = sqlx::query!(
+            r#"
+                DELETE FROM upstream_oauth_links
+                WHERE upstream_oauth_link_id = $1
+            "#,
+            Uuid::from(upstream_oauth_link.id),
+        )
+        .record(&span)
+        .execute(&mut *self.conn)
+        .instrument(span)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(())
     }
 }
