@@ -1218,6 +1218,8 @@ export type SiteConfig = Node & {
   id: Scalars['ID']['output'];
   /** Imprint to show in the footer. */
   imprint?: Maybe<Scalars['String']['output']>;
+  /** Whether users can log in with their email address. */
+  loginWithEmailAllowed: Scalars['Boolean']['output'];
   /**
    * Minimum password complexity, from 0 to 4, in terms of a zxcvbn score.
    * The exact scorer (including dictionaries and other data tables)

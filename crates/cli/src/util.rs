@@ -214,6 +214,7 @@ pub fn site_config_from_config(
         captcha,
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,
+        login_with_email_allowed: account_config.login_with_email_allowed,
     })
 }
 

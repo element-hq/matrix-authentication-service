@@ -2504,6 +2504,10 @@
         "account_deactivation_allowed": {
           "description": "Whether users are allowed to delete their own account. Defaults to `true`.",
           "type": "boolean"
+        },
+        "login_with_email_allowed": {
+          "description": "Whether users can log in with their email address. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
+          "type": "boolean"
         }
       }
     },

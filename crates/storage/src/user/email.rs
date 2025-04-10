@@ -93,6 +93,19 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
 
+    /// Lookup an [`UserEmail`] by its email address
+    ///
+    /// Returns `None` if no matching [`UserEmail`] was found or if multiple
+    /// [`UserEmail`] are found
+    ///
+    /// # Parameters
+    /// * `email`: The email address to lookup
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_by_email(&mut self, email: &str) -> Result<Option<UserEmail>, Self::Error>;
+
     /// Get all [`UserEmail`] of a [`User`]
     ///
     /// # Parameters
@@ -298,6 +311,7 @@ pub trait UserEmailRepository: Send + Sync {
 repository_impl!(UserEmailRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserEmail>, Self::Error>;
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
+    async fn find_by_email(&mut self, email: &str) -> Result<Option<UserEmail>, Self::Error>;
 
     async fn all(&mut self, user: &User) -> Result<Vec<UserEmail>, Self::Error>;
     async fn list(
