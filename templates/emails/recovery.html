@@ -41,7 +41,12 @@ Please see LICENSE in the repository root for full details.
         border-radius: 2rem;
         text-decoration: none;
     ">{{ _("mas.emails.recovery.create_new_password") }}</a><br />
-    <br />
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      {{ _("mas.emails.recovery.fallback") }} {{ _("mas.emails.recovery.copy_link") }}
+    </p>
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      <a href="{{ recovery_link }}" target="_blank">{{ recovery_link }}</a>
+    </p>
     {{ _("mas.emails.recovery.you_can_ignore") }}
 </body>
 </html>
