@@ -250,7 +250,7 @@ impl UserRepository for PgUserRepository<'_> {
         let exists = sqlx::query_scalar!(
             r#"
                 SELECT EXISTS(
-                    SELECT 1 FROM users WHERE username = $1
+                    SELECT 1 FROM users WHERE LOWER(username) = LOWER($1)
                 ) AS "exists!"
             "#,
             username
