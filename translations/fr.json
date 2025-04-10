@@ -110,6 +110,7 @@
         "click_button": "Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :",
         "copy_link": "Copiez le lien suivant et collez-le dans un navigateur pour créer un nouveau mot de passe :",
         "create_new_password": "Créer un nouveau mot de passe",
+        "fallback": "Le bouton ne fonctionne pas pour vous ?",
         "headline": "Vous avez demandé la réinitialisation du mot de passe de votre compte %(server_name)s.",
         "subject": "Réinitialisez le mot de passe de votre compte (%(mxid)s)",
         "you_can_ignore": "Si vous n’avez pas demandé à réinitialisation votre mot de passe, vous pouvez ignorer cet e-mail. Votre mot de passe actuel continuera de fonctionner."

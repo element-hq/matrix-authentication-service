@@ -110,6 +110,7 @@
         "click_button": "Klicken Sie auf die Schaltfläche unten, um ein neues Passwort zu erstellen:",
         "copy_link": "Kopieren Sie den folgenden Link und fügen Sie ihn in einen Browser ein, um ein neues Passwort zu erstellen:",
         "create_new_password": "Neues Passwort erstellen",
+        "fallback": "Funktioniert der Button bei Ihnen nicht?",
         "headline": "Sie haben ein Zurücksetzen des Passworts für Ihr %(server_name)s Konto angefordert.",
         "subject": "Setzen Sie Ihr Kontokennwort zurück (%(mxid)s )",
         "you_can_ignore": "Wenn Sie nicht nach einem neuen Passwort gefragt haben, können Sie diese E-Mail ignorieren. Ihr aktuelles Passwort wird weiterhin funktionieren."

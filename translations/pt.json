@@ -110,6 +110,7 @@
         "click_button": "Clique no botão abaixo para criar uma nova senha:",
         "copy_link": "Copie o link a seguir e cole-o em um navegador para criar uma nova senha:",
         "create_new_password": "Criar nova palavra-passe",
+        "fallback": "The button doesn't work for you?",
         "headline": "Você solicitou uma redefinição de senha para sua conta %(server_name)s.",
         "subject": "Repor a palavra-passe da sua conta (%(mxid)s)",
         "you_can_ignore": "Se não pediu uma nova palavra-passe, pode ignorar este e-mail. A sua palavra-passe atual continuará a funcionar."
