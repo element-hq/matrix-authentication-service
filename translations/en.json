@@ -751,8 +751,6 @@
         }
       }
     },
-    "username_or_email": "",
-    "@username_or_email": {},
     "verify_email": {
       "6_digit_code": "6-digit code",
       "@6_digit_code": {
