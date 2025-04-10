@@ -87,7 +87,7 @@ syn2mas.workspace = true
 
 [build-dependencies]
 anyhow.workspace = true
-vergen-gitcl = { version = "1.0.5", features = ["rustc"] }
+vergen-gitcl = { version = "1.0.7", features = ["rustc"] }
 
 [features]
 # Features used for the prebuilt binaries
