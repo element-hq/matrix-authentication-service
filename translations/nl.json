@@ -110,6 +110,7 @@
         "click_button": "Click on the button below to create a new password:",
         "copy_link": "Copy the following link and paste it into a browser to create a new password:",
         "create_new_password": "Create new password",
+        "fallback": "The button doesn't work for you?",
         "headline": "You requested a password reset for your %(server_name)s account.",
         "subject": "Reset your account password (%(mxid)s)",
         "you_can_ignore": "If you didn't ask for a new password, you can ignore this email. Your current password will continue to work."

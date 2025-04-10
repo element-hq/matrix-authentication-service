@@ -110,6 +110,7 @@
         "click_button": "Uue salasõna loomiseks klõpsa alloleval nupul:",
         "copy_link": "Uue salasõna loomiseks kopeeri see link ja aseta ta veebibrauseri aadressireale:",
         "create_new_password": "Loo uus salasõna",
+        "fallback": "The button doesn't work for you?",
         "headline": "Sa soovisid lähtestada oma kasutajakontot serveris %(server_name)s",
         "subject": "Lähtesta oma kasutajakonto salasõna (%(mxid)s)",
         "you_can_ignore": "Kui sa ei soovinud oma salasõna muuta, siis palun eira seda kirja. Sinu senine salasõna jääb kehtima."

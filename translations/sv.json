@@ -110,6 +110,7 @@
         "click_button": "Klicka på knappen nedan för att skapa ett nytt lösenord:",
         "copy_link": "Kopiera följande länk och klistra in den i en webbläsare för att skapa ett nytt lösenord:",
         "create_new_password": "Skapa nytt lösenord",
+        "fallback": "The button doesn't work for you?",
         "headline": "Du begärde en lösenordsåterställning för ditt %(server_name)s konto.",
         "subject": "Återställ ditt kontolösenord (%(mxid)s)",
         "you_can_ignore": "Om du inte har bett om ett nytt lösenord kan du ignorera detta e-postmeddelande. Ditt nuvarande lösenord kommer att fortsätta att fungera."

@@ -110,6 +110,7 @@
         "click_button": "点击下面的按钮创建新密码：",
         "copy_link": "复制以下链接并粘贴到浏览器中以创建新密码：",
         "create_new_password": "创建新密码",
+        "fallback": "The button doesn't work for you?",
         "headline": "您请求重置您在 %(server_name)s 的账户密码。",
         "subject": "重置账户密码 (%(mxid)s)",
         "you_can_ignore": "如果您没有请求重置密码，可以忽略此邮件。您当前的密码仍然有效。"

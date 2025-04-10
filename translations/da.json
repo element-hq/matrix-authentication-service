@@ -110,6 +110,7 @@
         "click_button": "Klik på knappen nedenfor for at oprette en ny adgangskode:",
         "copy_link": "Kopier følgende link, og indsæt det i en browser for at oprette en ny adgangskode:",
         "create_new_password": "Opret ny adgangskode",
+        "fallback": "The button doesn't work for you?",
         "headline": "Du har anmodet om en nulstilling af adgangskoden til din %(server_name)s konto.",
         "subject": "Nulstil adgangskoden til din konto (%(mxid)s)",
         "you_can_ignore": "Hvis du ikke har bedt om en ny adgangskode, kan du ignorere denne e-mail. Din nuværende adgangskode vil fortsætte med at fungere."

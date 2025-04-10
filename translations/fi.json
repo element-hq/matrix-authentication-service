@@ -110,6 +110,7 @@
         "click_button": "Luo uusi salasana napsauttamalla alla olevaa painiketta:",
         "copy_link": "Luo uusi salasana kopioimalla seuraava linkki ja liittämällä se selaimeen:",
         "create_new_password": "Luo uusi salasana",
+        "fallback": "Eikö painike toimi sinulle?",
         "headline": "Pyysit salasanan palautusta %(server_name)s -tilillesi.",
         "subject": "Palauta tilisi salasana (%(mxid)s)",
         "you_can_ignore": "Jos et pyytänyt uutta salasanaa, voit jättää tämän sähköpostiviestin huomiotta. Nykyinen salasanasi toimii edelleen."

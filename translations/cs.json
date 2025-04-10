@@ -110,6 +110,7 @@
         "click_button": "Kliknutím na tlačítko níže vytvoříte nové heslo:",
         "copy_link": "Zkopírujte následující odkaz a vložte jej do prohlížeče a vytvořte nové heslo:",
         "create_new_password": "Vytvořit nové heslo",
+        "fallback": "Nefunguje vám tlačítko?",
         "headline": "Požádali jste o obnovení hesla pro svůj %(server_name)s účet.",
         "subject": "Obnovit heslo k účtu (%(mxid)s)",
         "you_can_ignore": "Pokud jste nepožádali o nové heslo, můžete tento e-mail ignorovat. Vaše aktuální heslo bude i nadále fungovat."
