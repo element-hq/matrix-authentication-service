@@ -175,7 +175,7 @@ impl UserRepository for PgUserRepository<'_> {
                      , deactivated_at
                      , can_request_admin
                 FROM users
-                WHERE username = $1
+                WHERE LOWER(username) = LOWER($1)
             "#,
             username,
         )
