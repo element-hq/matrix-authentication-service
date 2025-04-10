@@ -11,7 +11,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID};
-use mas_data_model::{AuthorizationGrant, BrowserSession, Client, Device};
+use mas_data_model::{AuthorizationGrant, BrowserSession, Client};
 use mas_keystore::Keystore;
 use mas_policy::{EvaluationResult, Policy};
 use mas_router::{PostAuthAction, UrlBuilder};
@@ -149,15 +149,6 @@ pub(crate) async fn get(
             let res = callback_destination.go(&templates, &locale, params).await?;
             Ok((cookie_jar, res).into_response())
         }
-        Err(GrantCompletionError::RequiresReauth) => Ok((
-            cookie_jar,
-            url_builder.redirect(&mas_router::Reauth::and_then(continue_grant)),
-        )
-            .into_response()),
-        Err(GrantCompletionError::RequiresConsent) => {
-            let next = mas_router::Consent(grant_id);
-            Ok((cookie_jar, url_builder.redirect(&next)).into_response())
-        }
         Err(GrantCompletionError::PolicyViolation(grant, res)) => {
             warn!(violation = ?res, "Authorization grant for client {} denied by policy", client.id);
 
@@ -183,12 +174,6 @@ pub enum GrantCompletionError {
 
     #[error("authorization grant is not in a pending state")]
     NotPending,
-
-    #[error("user needs to reauthenticate")]
-    RequiresReauth,
-
-    #[error("client lacks consent")]
-    RequiresConsent,
 
     #[error("denied by the policy")]
     PolicyViolation(AuthorizationGrant, EvaluationResult),
@@ -218,18 +203,6 @@ pub(crate) async fn complete(
         return Err(GrantCompletionError::NotPending);
     }
 
-    // Check if the authentication is fresh enough
-    let authentication = repo
-        .browser_session()
-        .get_last_authentication(browser_session)
-        .await?;
-    let authentication = authentication.filter(|auth| auth.created_at > grant.max_auth_time());
-
-    let Some(valid_authentication) = authentication else {
-        repo.save().await?;
-        return Err(GrantCompletionError::RequiresReauth);
-    };
-
     // Run through the policy
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
@@ -248,23 +221,6 @@ pub(crate) async fn complete(
         return Err(GrantCompletionError::PolicyViolation(grant, res));
     }
 
-    let current_consent = repo
-        .oauth2_client()
-        .get_consent_for_user(client, &browser_session.user)
-        .await?;
-
-    let lacks_consent = grant
-        .scope
-        .difference(&current_consent)
-        .filter(|scope| Device::from_scope_token(scope).is_none())
-        .any(|_| true);
-
-    // Check if the client lacks consent *or* if consent was explicitly asked
-    if lacks_consent || grant.requires_consent {
-        repo.save().await?;
-        return Err(GrantCompletionError::RequiresConsent);
-    }
-
     // All good, let's start the session
     let session = repo
         .oauth2_session()
@@ -281,6 +237,12 @@ pub(crate) async fn complete(
 
     // Did they request an ID token?
     if grant.response_type_id_token {
+        // Fetch the last authentication
+        let last_authentication = repo
+            .browser_session()
+            .get_last_authentication(browser_session)
+            .await?;
+
         params.id_token = Some(generate_id_token(
             rng,
             clock,
@@ -290,7 +252,7 @@ pub(crate) async fn complete(
             Some(&grant),
             browser_session,
             None,
-            Some(&valid_authentication),
+            last_authentication.as_ref(),
         )?);
     }
 

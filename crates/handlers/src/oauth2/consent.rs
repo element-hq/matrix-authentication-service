@@ -15,7 +15,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     sentry::SentryEventID,
 };
-use mas_data_model::{AuthorizationGrantStage, Device};
+use mas_data_model::AuthorizationGrantStage;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -239,28 +239,6 @@ pub(crate) async fn post(
     if !res.valid() {
         return Err(RouteError::PolicyViolation);
     }
-
-    // Do not consent for the "urn:matrix:org.matrix.msc2967.client:device:*" scope
-    let scope_without_device = grant
-        .scope
-        .iter()
-        .filter(|s| Device::from_scope_token(s).is_none())
-        .cloned()
-        .collect();
-
-    repo.oauth2_client()
-        .give_consent_for_user(
-            &mut rng,
-            &clock,
-            &client,
-            &session.user,
-            &scope_without_device,
-        )
-        .await?;
-
-    repo.oauth2_authorization_grant()
-        .give_consent(grant)
-        .await?;
 
     repo.save().await?;
 
