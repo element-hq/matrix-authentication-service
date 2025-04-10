@@ -100,10 +100,6 @@
     "username": "Username",
     "@username": {
       "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
-    },
-    "username_or_email": "Username or Email Address",
-    "@username_or_email": {
-      "context": "pages/login.html:46:37-66"
     }
   },
   "error": {
@@ -440,6 +436,10 @@
       "no_login_methods": "No login methods available.",
       "@no_login_methods": {
         "context": "pages/login.html:100:11-42"
+      },
+      "username_or_email": "Username or Email",
+      "@username_or_email": {
+        "context": "pages/login.html:46:37-69"
       }
     },
     "navbar": {
@@ -751,6 +751,8 @@
         }
       }
     },
+    "username_or_email": "",
+    "@username_or_email": {},
     "verify_email": {
       "6_digit_code": "6-digit code",
       "@6_digit_code": {

@@ -32,8 +32,7 @@
     "mxid": "Matrix-ID",
     "password": "Passwort",
     "password_confirm": "Passwort wiederholen",
-    "username": "Benutzername",
-    "username_or_email": "Benutzername oder E-Mail-Adresse"
+    "username": "Benutzername"
   },
   "error": {
     "unexpected": "Unerwarteter Fehler"

@@ -95,7 +95,8 @@ pub trait UserEmailRepository: Send + Sync {
 
     /// Lookup an [`UserEmail`] by its email address
     ///
-    /// Returns `None` if no matching [`UserEmail`] was found or if multiple [`UserEmail`] are found
+    /// Returns `None` if no matching [`UserEmail`] was found or if multiple
+    /// [`UserEmail`] are found
     ///
     /// # Parameters
     /// * `email`: The email address to lookup
