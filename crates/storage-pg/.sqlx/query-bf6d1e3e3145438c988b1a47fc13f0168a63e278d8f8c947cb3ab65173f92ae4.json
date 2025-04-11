@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , max_age\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , requires_consent\n                     , login_hint\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE authorization_code = $1\n            ",
+  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -55,58 +55,48 @@
       },
       {
         "ordinal": 10,
-        "name": "max_age",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 11,
         "name": "oauth2_client_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 12,
+        "ordinal": 11,
         "name": "authorization_code",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 12,
         "name": "response_type_code",
         "type_info": "Bool"
       },
       {
-        "ordinal": 14,
+        "ordinal": 13,
         "name": "response_type_id_token",
         "type_info": "Bool"
       },
       {
-        "ordinal": 15,
+        "ordinal": 14,
         "name": "code_challenge",
         "type_info": "Text"
       },
       {
-        "ordinal": 16,
+        "ordinal": 15,
         "name": "code_challenge_method",
         "type_info": "Text"
       },
       {
-        "ordinal": 17,
-        "name": "requires_consent",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 18,
+        "ordinal": 16,
         "name": "login_hint",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 17,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -120,17 +110,15 @@
       false,
       false,
       true,
-      true,
       false,
       true,
       false,
       false,
       true,
       true,
-      false,
       true,
       true
     ]
   },
-  "hash": "1d9c478c7a5e3a672610376a290b9a1afaaa6fa2fb137f7307002f058b206dbd"
+  "hash": "bf6d1e3e3145438c988b1a47fc13f0168a63e278d8f8c947cb3ab65173f92ae4"
 }

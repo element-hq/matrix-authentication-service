@@ -60,9 +60,7 @@ impl PostAuthAction {
 
     pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
         match self {
-            Self::ContinueAuthorizationGrant { id } => {
-                url_builder.redirect(&ContinueAuthorizationGrant(*id))
-            }
+            Self::ContinueAuthorizationGrant { id } => url_builder.redirect(&Consent(*id)),
             Self::ContinueDeviceCodeGrant { id } => {
                 url_builder.redirect(&DeviceCodeConsent::new(*id))
             }
@@ -253,66 +251,6 @@ pub struct Logout;
 
 impl SimpleRoute for Logout {
     const PATH: &'static str = "/logout";
-}
-
-/// `GET|POST /reauth`
-#[derive(Default, Debug, Clone)]
-pub struct Reauth {
-    post_auth_action: Option<PostAuthAction>,
-}
-
-impl Reauth {
-    #[must_use]
-    pub fn and_then(action: PostAuthAction) -> Self {
-        Self {
-            post_auth_action: Some(action),
-        }
-    }
-
-    #[must_use]
-    pub fn and_continue_grant(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_grant(data)),
-        }
-    }
-
-    #[must_use]
-    pub fn and_continue_device_code_grant(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_device_code_grant(data)),
-        }
-    }
-
-    /// Get a reference to the reauth's post auth action.
-    #[must_use]
-    pub fn post_auth_action(&self) -> Option<&PostAuthAction> {
-        self.post_auth_action.as_ref()
-    }
-
-    pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
-        match &self.post_auth_action {
-            Some(action) => action.go_next(url_builder),
-            None => url_builder.redirect(&Index),
-        }
-    }
-}
-
-impl Route for Reauth {
-    type Query = PostAuthAction;
-
-    fn route() -> &'static str {
-        "/reauth"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
-    }
-}
-
-impl From<Option<PostAuthAction>> for Reauth {
-    fn from(post_auth_action: Option<PostAuthAction>) -> Self {
-        Self { post_auth_action }
-    }
 }
 
 /// `POST /register`
@@ -579,21 +517,6 @@ pub struct AccountPasswordChange;
 
 impl SimpleRoute for AccountPasswordChange {
     const PATH: &'static str = "/account/password/change";
-}
-
-/// `GET /authorize/{grant_id}`
-#[derive(Debug, Clone)]
-pub struct ContinueAuthorizationGrant(pub Ulid);
-
-impl Route for ContinueAuthorizationGrant {
-    type Query = ();
-    fn route() -> &'static str {
-        "/authorize/{grant_id}"
-    }
-
-    fn path(&self) -> std::borrow::Cow<'static, str> {
-        format!("/authorize/{}", self.0).into()
-    }
 }
 
 /// `GET /consent/{grant_id}`

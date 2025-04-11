@@ -978,9 +978,7 @@ mod tests {
                 }),
                 Some("state".to_owned()),
                 Some("nonce".to_owned()),
-                None,
                 ResponseMode::Query,
-                false,
                 false,
                 None,
             )
@@ -1079,9 +1077,7 @@ mod tests {
                 }),
                 Some("state".to_owned()),
                 Some("nonce".to_owned()),
-                None,
                 ResponseMode::Query,
-                false,
                 false,
                 None,
             )

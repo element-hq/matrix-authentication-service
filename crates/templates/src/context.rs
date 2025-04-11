@@ -381,7 +381,7 @@ impl FormField for LoginFormField {
     }
 }
 
-/// Inner context used in login and reauth screens. See [`PostAuthContext`].
+/// Inner context used in login screen. See [`PostAuthContext`].
 #[derive(Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum PostAuthContextInner {
@@ -420,7 +420,7 @@ pub enum PostAuthContextInner {
     ManageAccount,
 }
 
-/// Context used in login and reauth screens, for the post-auth action to do
+/// Context used in login screen, for the post-auth action to do
 #[derive(Serialize)]
 pub struct PostAuthContext {
     /// The post auth action params from the URL
@@ -730,59 +730,6 @@ impl PolicyViolationContext {
             grant: PolicyViolationGrant::DeviceCode(grant),
             client,
             action,
-        }
-    }
-}
-
-/// Fields of the reauthentication form
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum ReauthFormField {
-    /// The password field
-    Password,
-}
-
-impl FormField for ReauthFormField {
-    fn keep(&self) -> bool {
-        match self {
-            Self::Password => false,
-        }
-    }
-}
-
-/// Context used by the `reauth.html` template
-#[derive(Serialize, Default)]
-pub struct ReauthContext {
-    form: FormState<ReauthFormField>,
-    next: Option<PostAuthContext>,
-}
-
-impl TemplateContext for ReauthContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
-    where
-        Self: Sized,
-    {
-        // TODO: samples with errors
-        vec![ReauthContext {
-            form: FormState::default(),
-            next: None,
-        }]
-    }
-}
-
-impl ReauthContext {
-    /// Add an error on the reauthentication form
-    #[must_use]
-    pub fn with_form_state(self, form: FormState<ReauthFormField>) -> Self {
-        Self { form, ..self }
-    }
-
-    /// Add a post authentication action to the context
-    #[must_use]
-    pub fn with_post_action(self, next: PostAuthContext) -> Self {
-        Self {
-            next: Some(next),
-            ..self
         }
     }
 }

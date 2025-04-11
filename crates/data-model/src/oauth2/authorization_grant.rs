@@ -4,9 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::num::NonZeroU32;
-
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use oauth2_types::{
     pkce::{CodeChallengeError, CodeChallengeMethodExt},
@@ -158,11 +156,9 @@ pub struct AuthorizationGrant {
     pub scope: Scope,
     pub state: Option<String>,
     pub nonce: Option<String>,
-    pub max_age: Option<NonZeroU32>,
     pub response_mode: ResponseMode,
     pub response_type_id_token: bool,
     pub created_at: DateTime<Utc>,
-    pub requires_consent: bool,
     pub login_hint: Option<String>,
 }
 
@@ -174,18 +170,7 @@ impl std::ops::Deref for AuthorizationGrant {
     }
 }
 
-const DEFAULT_MAX_AGE: Duration = Duration::microseconds(3600 * 24 * 365 * 1000 * 1000);
-
 impl AuthorizationGrant {
-    #[must_use]
-    pub fn max_auth_time(&self) -> DateTime<Utc> {
-        let max_age = self
-            .max_age
-            .and_then(|x| Duration::try_seconds(x.get().into()))
-            .unwrap_or(DEFAULT_MAX_AGE);
-        self.created_at - max_age
-    }
-
     #[must_use]
     pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
@@ -274,11 +259,9 @@ impl AuthorizationGrant {
             scope: Scope::from_iter([OPENID, PROFILE]),
             state: Some(Alphanumeric.sample_string(rng, 10)),
             nonce: Some(Alphanumeric.sample_string(rng, 10)),
-            max_age: None,
             response_mode: ResponseMode::Query,
             response_type_id_token: false,
             created_at: now,
-            requires_consent: false,
             login_hint: Some(String::from("mxid:@example-user:example.com")),
         }
     }

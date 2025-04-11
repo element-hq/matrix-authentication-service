@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::num::NonZeroU32;
-
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
@@ -48,13 +46,11 @@ struct GrantLookup {
     nonce: Option<String>,
     redirect_uri: String,
     response_mode: String,
-    max_age: Option<i32>,
     response_type_code: bool,
     response_type_id_token: bool,
     authorization_code: Option<String>,
     code_challenge: Option<String>,
     code_challenge_method: Option<String>,
-    requires_consent: bool,
     login_hint: Option<String>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
@@ -153,25 +149,6 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
                 .source(e)
         })?;
 
-        let max_age = value
-            .max_age
-            .map(u32::try_from)
-            .transpose()
-            .map_err(|e| {
-                DatabaseInconsistencyError::on("oauth2_authorization_grants")
-                    .column("max_age")
-                    .row(id)
-                    .source(e)
-            })?
-            .map(NonZeroU32::try_from)
-            .transpose()
-            .map_err(|e| {
-                DatabaseInconsistencyError::on("oauth2_authorization_grants")
-                    .column("max_age")
-                    .row(id)
-                    .source(e)
-            })?;
-
         Ok(AuthorizationGrant {
             id,
             stage,
@@ -180,12 +157,10 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             scope,
             state: value.state,
             nonce: value.nonce,
-            max_age,
             response_mode,
             redirect_uri,
             created_at: value.created_at,
             response_type_id_token: value.response_type_id_token,
-            requires_consent: value.requires_consent,
             login_hint: value.login_hint,
         })
     }
@@ -216,10 +191,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         code: Option<AuthorizationCode>,
         state: Option<String>,
         nonce: Option<String>,
-        max_age: Option<NonZeroU32>,
         response_mode: ResponseMode,
         response_type_id_token: bool,
-        requires_consent: bool,
         login_hint: Option<String>,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
@@ -230,8 +203,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             .as_ref()
             .and_then(|c| c.pkce.as_ref())
             .map(|p| p.challenge_method.to_string());
-        // TODO: this conversion is a bit ugly
-        let max_age_i32 = max_age.map(|x| i32::try_from(u32::from(x)).unwrap_or(i32::MAX));
         let code_str = code.as_ref().map(|c| &c.code);
 
         let created_at = clock.now();
@@ -247,19 +218,17 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      scope,
                      state,
                      nonce,
-                     max_age,
                      response_mode,
                      code_challenge,
                      code_challenge_method,
                      response_type_code,
                      response_type_id_token,
                      authorization_code,
-                     requires_consent,
                      login_hint,
                      created_at
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -267,14 +236,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             scope.to_string(),
             state,
             nonce,
-            max_age_i32,
             response_mode.to_string(),
             code_challenge,
             code_challenge_method,
             code.is_some(),
             response_type_id_token,
             code_str,
-            requires_consent,
             login_hint,
             created_at,
         )
@@ -291,11 +258,9 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             scope,
             state,
             nonce,
-            max_age,
             response_mode,
             created_at,
             response_type_id_token,
-            requires_consent,
             login_hint,
         })
     }
@@ -323,14 +288,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , redirect_uri
                      , response_mode
                      , nonce
-                     , max_age
                      , oauth2_client_id
                      , authorization_code
                      , response_type_code
                      , response_type_id_token
                      , code_challenge
                      , code_challenge_method
-                     , requires_consent
                      , login_hint
                      , oauth2_session_id
                 FROM
@@ -374,14 +337,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , redirect_uri
                      , response_mode
                      , nonce
-                     , max_age
                      , oauth2_client_id
                      , authorization_code
                      , response_type_code
                      , response_type_id_token
                      , code_challenge
                      , code_challenge_method
-                     , requires_consent
                      , login_hint
                      , oauth2_session_id
                 FROM
@@ -477,39 +438,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         let grant = grant
             .exchange(exchanged_at)
             .map_err(DatabaseError::to_invalid_operation)?;
-
-        Ok(grant)
-    }
-
-    #[tracing::instrument(
-        name = "db.oauth2_authorization_grant.give_consent",
-        skip_all,
-        fields(
-            db.query.text,
-            %grant.id,
-            client.id = %grant.client_id,
-        ),
-        err,
-    )]
-    async fn give_consent(
-        &mut self,
-        mut grant: AuthorizationGrant,
-    ) -> Result<AuthorizationGrant, Self::Error> {
-        sqlx::query!(
-            r#"
-                UPDATE oauth2_authorization_grants AS og
-                SET
-                    requires_consent = 'f'
-                WHERE
-                    og.oauth2_authorization_grant_id = $1
-            "#,
-            Uuid::from(grant.id),
-        )
-        .traced()
-        .execute(&mut *self.conn)
-        .await?;
-
-        grant.requires_consent = false;
 
         Ok(grant)
     }

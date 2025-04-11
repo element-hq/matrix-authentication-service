@@ -38,10 +38,10 @@ pub use self::{
         DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, EmailRecoveryContext,
         EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
         LoginContext, LoginFormField, NotFoundContext, PasswordRegisterContext,
-        PolicyViolationContext, PostAuthContext, PostAuthContextInner, ReauthContext,
-        ReauthFormField, RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        PolicyViolationContext, PostAuthContext, PostAuthContextInner, RecoveryExpiredContext,
+        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
+        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
@@ -372,9 +372,6 @@ register_templates! {
     /// Render the account recovery disabled page
     pub fn render_recovery_disabled(WithLanguage<EmptyContext>) { "pages/recovery/disabled.html" }
 
-    /// Render the re-authentication form
-    pub fn render_reauth(WithLanguage<WithCsrf<WithSession<ReauthContext>>>) { "pages/reauth.html" }
-
     /// Render the form used by the form_post response mode
     pub fn render_form_post<T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
 
@@ -456,7 +453,6 @@ impl Templates {
         check::render_recovery_expired(self, now, rng)?;
         check::render_recovery_consumed(self, now, rng)?;
         check::render_recovery_disabled(self, now, rng)?;
-        check::render_reauth(self, now, rng)?;
         check::render_form_post::<EmptyContext>(self, now, rng)?;
         check::render_error(self, now, rng)?;
         check::render_email_verification_txt(self, now, rng)?;
