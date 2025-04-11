@@ -536,6 +536,13 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
 
+    /// Whether to allow a user logging in via OIDC to match a pre-existing
+    /// account instead of failing. This could be used if switching from
+    /// password logins to OIDC.
+    //Defaults to false.
+    #[serde(default)]
+    pub allow_existing_users: bool,
+
     /// Additional parameters to include in the authorization request
     ///
     /// Orders of the keys are not preserved.
