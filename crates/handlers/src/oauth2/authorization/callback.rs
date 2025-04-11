@@ -101,7 +101,7 @@ impl CallbackDestination {
         })
     }
 
-    pub async fn go<T: Serialize + Send + Sync>(
+    pub fn go<T: Serialize + Send + Sync>(
         self,
         templates: &Templates,
         locale: &DataLocale,

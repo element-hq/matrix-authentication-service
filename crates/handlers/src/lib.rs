@@ -406,12 +406,9 @@ where
             get(self::oauth2::authorization::get),
         )
         .route(
-            mas_router::ContinueAuthorizationGrant::route(),
-            get(self::oauth2::authorization::complete::get),
-        )
-        .route(
             mas_router::Consent::route(),
-            get(self::oauth2::consent::get).post(self::oauth2::consent::post),
+            get(self::oauth2::authorization::consent::get)
+                .post(self::oauth2::authorization::consent::post),
         )
         .route(
             mas_router::CompatLoginSsoComplete::route(),

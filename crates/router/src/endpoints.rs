@@ -60,9 +60,7 @@ impl PostAuthAction {
 
     pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
         match self {
-            Self::ContinueAuthorizationGrant { id } => {
-                url_builder.redirect(&ContinueAuthorizationGrant(*id))
-            }
+            Self::ContinueAuthorizationGrant { id } => url_builder.redirect(&Consent(*id)),
             Self::ContinueDeviceCodeGrant { id } => {
                 url_builder.redirect(&DeviceCodeConsent::new(*id))
             }
@@ -519,21 +517,6 @@ pub struct AccountPasswordChange;
 
 impl SimpleRoute for AccountPasswordChange {
     const PATH: &'static str = "/account/password/change";
-}
-
-/// `GET /authorize/{grant_id}`
-#[derive(Debug, Clone)]
-pub struct ContinueAuthorizationGrant(pub Ulid);
-
-impl Route for ContinueAuthorizationGrant {
-    type Query = ();
-    fn route() -> &'static str {
-        "/authorize/{grant_id}"
-    }
-
-    fn path(&self) -> std::borrow::Cow<'static, str> {
-        format!("/authorize/{}", self.0).into()
-    }
 }
 
 /// `GET /consent/{grant_id}`

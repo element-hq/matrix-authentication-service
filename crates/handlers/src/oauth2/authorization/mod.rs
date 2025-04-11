@@ -31,7 +31,7 @@ use self::callback::CallbackDestination;
 use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
-pub mod complete;
+pub(crate) mod consent;
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -172,80 +172,66 @@ pub(crate) async fn get(
             // Check if the request/request_uri/registration params are used. If so, reply
             // with the right error since we don't support them.
             if params.auth.request.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RequestNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RequestNotSupported),
+                )?);
             }
 
             if params.auth.request_uri.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RequestUriNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RequestUriNotSupported),
+                )?);
             }
 
             // Check if the client asked for a `token` response type, and bail out if it's
             // the case, since we don't support them
             if response_type.has_token() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::UnsupportedResponseType),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::UnsupportedResponseType),
+                )?);
             }
 
             // If the client asked for a `id_token` response type, we must check if it can
             // use the `implicit` grant type
             if response_type.has_id_token() && !client.grant_types.contains(&GrantType::Implicit) {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::UnauthorizedClient),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::UnauthorizedClient),
+                )?);
             }
 
             if params.auth.registration.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RegistrationNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RegistrationNotSupported),
+                )?);
             }
 
             // Fail early if prompt=none; we never let it go through
             if prompt.contains(&Prompt::None) {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::LoginRequired),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::LoginRequired),
+                )?);
             }
 
             let code: Option<AuthorizationCode> = if response_type.has_code() {
                 // Check if it is allowed to use this grant type
                 if !client.grant_types.contains(&GrantType::AuthorizationCode) {
-                    return Ok(callback_destination
-                        .go(
-                            &templates,
-                            &locale,
-                            ClientError::from(ClientErrorCode::UnauthorizedClient),
-                        )
-                        .await?);
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::UnauthorizedClient),
+                    )?);
                 }
 
                 // 32 random alphanumeric characters, about 190bit of entropy
@@ -265,13 +251,11 @@ pub(crate) async fn get(
                 // If the request had PKCE params but no code asked, it should get back with an
                 // error
                 if params.pkce.is_some() {
-                    return Ok(callback_destination
-                        .go(
-                            &templates,
-                            &locale,
-                            ClientError::from(ClientErrorCode::InvalidRequest),
-                        )
-                        .await?);
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::InvalidRequest),
+                    )?);
                 }
 
                 None
@@ -336,13 +320,11 @@ pub(crate) async fn get(
         Ok(r) => r,
         Err(err) => {
             tracing::error!(%err);
-            callback_destination
-                .go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::ServerError),
-                )
-                .await?
+            callback_destination.go(
+                &templates,
+                &locale,
+                ClientError::from(ClientErrorCode::ServerError),
+            )?
         }
     };
 

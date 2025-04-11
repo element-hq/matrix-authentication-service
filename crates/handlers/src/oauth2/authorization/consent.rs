@@ -16,6 +16,7 @@ use mas_axum_utils::{
     sentry::SentryEventID,
 };
 use mas_data_model::AuthorizationGrantStage;
+use mas_keystore::Keystore;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -23,11 +24,14 @@ use mas_storage::{
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};
+use oauth2_types::requests::AuthorizationResponse;
 use thiserror::Error;
 use ulid::Ulid;
 
+use super::callback::CallbackDestination;
 use crate::{
     BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
+    oauth2::generate_id_token,
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
@@ -45,9 +49,6 @@ pub enum RouteError {
     #[error("Authorization grant already used")]
     GrantNotPending,
 
-    #[error("Policy violation")]
-    PolicyViolation,
-
     #[error("Failed to load client")]
     NoSuchClient,
 }
@@ -57,20 +58,24 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::LoadError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 impl_from_error_for_route!(crate::session::SessionLoadError);
+impl_from_error_for_route!(crate::oauth2::IdTokenSignatureError);
+impl_from_error_for_route!(super::callback::IntoCallbackDestinationError);
+impl_from_error_for_route!(super::callback::CallbackDestinationError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let event_id = sentry::capture_error(&self);
         (
-            SentryEventID::from(event_id),
             StatusCode::INTERNAL_SERVER_ERROR,
+            SentryEventID::from(event_id),
+            self.to_string(),
         )
             .into_response()
     }
 }
 
 #[tracing::instrument(
-    name = "handlers.oauth2.consent.get",
+    name = "handlers.oauth2.authorization.consent.get",
     fields(grant.id = %grant_id),
     skip_all,
     err,
@@ -142,17 +147,7 @@ pub(crate) async fn get(
             },
         })
         .await?;
-
-    if res.valid() {
-        let ctx = ConsentContext::new(grant, client)
-            .with_session(session)
-            .with_csrf(csrf_token.form_value())
-            .with_language(locale);
-
-        let content = templates.render_consent(&ctx)?;
-
-        Ok((cookie_jar, Html(content)).into_response())
-    } else {
+    if !res.valid() {
         let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
@@ -160,12 +155,21 @@ pub(crate) async fn get(
 
         let content = templates.render_policy_violation(&ctx)?;
 
-        Ok((cookie_jar, Html(content)).into_response())
+        return Ok((cookie_jar, Html(content)).into_response());
     }
+
+    let ctx = ConsentContext::new(grant, client)
+        .with_session(session)
+        .with_csrf(csrf_token.form_value())
+        .with_language(locale);
+
+    let content = templates.render_consent(&ctx)?;
+
+    Ok((cookie_jar, Html(content)).into_response())
 }
 
 #[tracing::instrument(
-    name = "handlers.oauth2.consent.post",
+    name = "handlers.oauth2.authorization.consent.post",
     fields(grant.id = %grant_id),
     skip_all,
     err,
@@ -175,6 +179,7 @@ pub(crate) async fn post(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(key_store): State<Keystore>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -199,6 +204,8 @@ pub(crate) async fn post(
         SessionOrFallback::Fallback { response } => return Ok(response),
     };
 
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+
     let user_agent = user_agent.map(|ua| ua.to_string());
 
     let grant = repo
@@ -206,15 +213,16 @@ pub(crate) async fn post(
         .lookup(grant_id)
         .await?
         .ok_or(RouteError::GrantNotFound)?;
-    let next = PostAuthAction::continue_grant(grant_id);
+    let callback_destination = CallbackDestination::try_from(&grant)?;
 
-    let Some(session) = maybe_session else {
+    let Some(browser_session) = maybe_session else {
+        let next = PostAuthAction::continue_grant(grant_id);
         let login = mas_router::Login::and_then(next);
         return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
     };
 
     activity_tracker
-        .record_browser_session(&clock, &session)
+        .record_browser_session(&clock, &browser_session)
         .await;
 
     let client = repo
@@ -225,7 +233,7 @@ pub(crate) async fn post(
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
-            user: Some(&session.user),
+            user: Some(&browser_session.user),
             client: &client,
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
@@ -237,10 +245,70 @@ pub(crate) async fn post(
         .await?;
 
     if !res.valid() {
-        return Err(RouteError::PolicyViolation);
+        let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
+            .with_session(browser_session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_policy_violation(&ctx)?;
+
+        return Ok((cookie_jar, Html(content)).into_response());
+    }
+
+    // All good, let's start the session
+    let session = repo
+        .oauth2_session()
+        .add_from_browser_session(
+            &mut rng,
+            &clock,
+            &client,
+            &browser_session,
+            grant.scope.clone(),
+        )
+        .await?;
+
+    let grant = repo
+        .oauth2_authorization_grant()
+        .fulfill(&clock, &session, grant)
+        .await?;
+
+    let mut params = AuthorizationResponse::default();
+
+    // Did they request an ID token?
+    if grant.response_type_id_token {
+        // Fetch the last authentication
+        let last_authentication = repo
+            .browser_session()
+            .get_last_authentication(&browser_session)
+            .await?;
+
+        params.id_token = Some(generate_id_token(
+            &mut rng,
+            &clock,
+            &url_builder,
+            &key_store,
+            &client,
+            Some(&grant),
+            &browser_session,
+            None,
+            last_authentication.as_ref(),
+        )?);
+    }
+
+    // Did they request an auth code?
+    if let Some(code) = grant.code {
+        params.code = Some(code.code);
     }
 
     repo.save().await?;
 
-    Ok((cookie_jar, next.go_next(&url_builder)).into_response())
+    activity_tracker
+        .record_oauth2_session(&clock, &session)
+        .await;
+
+    Ok((
+        cookie_jar,
+        callback_destination.go(&templates, &locale, params)?,
+    )
+        .into_response())
 }
