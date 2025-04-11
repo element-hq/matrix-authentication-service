@@ -45,6 +45,7 @@ Follow the instructions in the [installation guide](installation.md) to install 
 Synapse uses bcrypt as its password hashing scheme while MAS defaults to using the newer argon2id.
 You will have to configure the version 1 scheme as bcrypt for migrated passwords to work.
 It is also recommended that you keep argon2id as version 2 so that once users log in, their hashes will be updated to the newer recommended scheme.
+If you have set a pepper in the Synapses password_config section of your homeserver.yaml then you need to specify this pepper as the secret field for your bcrypt scheme. Otherwise logins with the correct Password will fail.
 
 Example passwords configuration:
 ```yml
@@ -53,6 +54,8 @@ passwords:
   schemes:
   - version: 1
     algorithm: bcrypt
+    # Optional, The secret field is the equivalent to Synapses password_config pepper.
+    secret: secretPepperValue
   - version: 2
     algorithm: argon2id
 ```
