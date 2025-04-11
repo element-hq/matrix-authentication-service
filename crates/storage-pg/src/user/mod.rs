@@ -165,6 +165,9 @@ impl UserRepository for PgUserRepository<'_> {
         err,
     )]
     async fn find_by_username(&mut self, username: &str) -> Result<Option<User>, Self::Error> {
+        // We may have multiple users with the same username, but with a different
+        // casing. In this case, we want to return the one which matches the exact
+        // casing
         let res = sqlx::query_as!(
             UserLookup,
             r#"
@@ -175,17 +178,30 @@ impl UserRepository for PgUserRepository<'_> {
                      , deactivated_at
                      , can_request_admin
                 FROM users
-                WHERE username = $1
+                WHERE LOWER(username) = LOWER($1)
             "#,
             username,
         )
         .traced()
-        .fetch_optional(&mut *self.conn)
+        .fetch_all(&mut *self.conn)
         .await?;
 
-        let Some(res) = res else { return Ok(None) };
-
-        Ok(Some(res.into()))
+        match &res[..] {
+            // Happy path: there is only one user matching the username…
+            [user] => Ok(Some(user.clone().into())),
+            // …or none.
+            [] => Ok(None),
+            list => {
+                // If there are multiple users with the same username, we want to
+                // return the one which matches the exact casing
+                if let Some(user) = list.iter().find(|user| user.username == username) {
+                    Ok(Some(user.clone().into()))
+                } else {
+                    // If none match exactly, we prefer to return nothing
+                    Ok(None)
+                }
+            }
+        }
     }
 
     #[tracing::instrument(
@@ -250,7 +266,7 @@ impl UserRepository for PgUserRepository<'_> {
         let exists = sqlx::query_scalar!(
             r#"
                 SELECT EXISTS(
-                    SELECT 1 FROM users WHERE username = $1
+                    SELECT 1 FROM users WHERE LOWER(username) = LOWER($1)
                 ) AS "exists!"
             "#,
             username

@@ -216,6 +216,50 @@ async fn test_user_repo(pool: PgPool) {
     repo.save().await.unwrap();
 }
 
+/// Test [`UserRepository::find_by_username`] with different casings.
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_repo_find_by_username(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    let alice = repo
+        .user()
+        .add(&mut rng, &clock, "Alice".to_owned())
+        .await
+        .unwrap();
+    let bob1 = repo
+        .user()
+        .add(&mut rng, &clock, "Bob".to_owned())
+        .await
+        .unwrap();
+    let bob2 = repo
+        .user()
+        .add(&mut rng, &clock, "BOB".to_owned())
+        .await
+        .unwrap();
+
+    // This is fine, we can do a case-insensitive search
+    assert_eq!(
+        repo.user().find_by_username("alice").await.unwrap(),
+        Some(alice)
+    );
+
+    // In case there are multiple users with the same username, we should return the
+    // one that matches the exact casing
+    assert_eq!(
+        repo.user().find_by_username("Bob").await.unwrap(),
+        Some(bob1)
+    );
+    assert_eq!(
+        repo.user().find_by_username("BOB").await.unwrap(),
+        Some(bob2)
+    );
+
+    // If none match, we should return None
+    assert!(repo.user().find_by_username("bob").await.unwrap().is_none());
+}
+
 /// Test the user email repository, by trying out most of its methods
 #[sqlx::test(migrator = "crate::MIGRATOR")]
 async fn test_user_email_repo(pool: PgPool) {

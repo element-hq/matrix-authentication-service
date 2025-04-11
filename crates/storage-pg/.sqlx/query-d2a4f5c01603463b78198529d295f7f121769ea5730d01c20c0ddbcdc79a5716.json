@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_id\n                     , username\n                     , created_at\n                     , locked_at\n                     , deactivated_at\n                     , can_request_admin\n                FROM users\n                WHERE username = $1\n            ",
+  "query": "\n                SELECT user_id\n                     , username\n                     , created_at\n                     , locked_at\n                     , deactivated_at\n                     , can_request_admin\n                FROM users\n                WHERE LOWER(username) = LOWER($1)\n            ",
   "describe": {
     "columns": [
       {
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "48213d718a256a12540c0aec595ca3e436be423f2d0c868700c6397745ed0455"
+  "hash": "d2a4f5c01603463b78198529d295f7f121769ea5730d01c20c0ddbcdc79a5716"
 }
