@@ -372,10 +372,6 @@ where
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
-            mas_router::Reauth::route(),
-            get(self::views::reauth::get).post(self::views::reauth::post),
-        )
-        .route(
             mas_router::Register::route(),
             get(self::views::register::get),
         )

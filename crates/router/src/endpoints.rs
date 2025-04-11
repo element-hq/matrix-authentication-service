@@ -255,66 +255,6 @@ impl SimpleRoute for Logout {
     const PATH: &'static str = "/logout";
 }
 
-/// `GET|POST /reauth`
-#[derive(Default, Debug, Clone)]
-pub struct Reauth {
-    post_auth_action: Option<PostAuthAction>,
-}
-
-impl Reauth {
-    #[must_use]
-    pub fn and_then(action: PostAuthAction) -> Self {
-        Self {
-            post_auth_action: Some(action),
-        }
-    }
-
-    #[must_use]
-    pub fn and_continue_grant(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_grant(data)),
-        }
-    }
-
-    #[must_use]
-    pub fn and_continue_device_code_grant(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_device_code_grant(data)),
-        }
-    }
-
-    /// Get a reference to the reauth's post auth action.
-    #[must_use]
-    pub fn post_auth_action(&self) -> Option<&PostAuthAction> {
-        self.post_auth_action.as_ref()
-    }
-
-    pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
-        match &self.post_auth_action {
-            Some(action) => action.go_next(url_builder),
-            None => url_builder.redirect(&Index),
-        }
-    }
-}
-
-impl Route for Reauth {
-    type Query = PostAuthAction;
-
-    fn route() -> &'static str {
-        "/reauth"
-    }
-
-    fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
-    }
-}
-
-impl From<Option<PostAuthAction>> for Reauth {
-    fn from(post_auth_action: Option<PostAuthAction>) -> Self {
-        Self { post_auth_action }
-    }
-}
-
 /// `POST /register`
 #[derive(Default, Debug, Clone)]
 pub struct Register {
