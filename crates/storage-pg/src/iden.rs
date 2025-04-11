@@ -122,6 +122,8 @@ pub enum UpstreamOAuthProviders {
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
+    AllowRpInitiatedLogout,
+    EndSessionEndpointOverride,
 }
 
 #[derive(sea_query::Iden)]
