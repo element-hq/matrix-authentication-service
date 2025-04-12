@@ -91,8 +91,7 @@ upstream_oauth2:
 
       token_endpoint_auth_method: "sign_in_with_apple"
       sign_in_with_apple:
-        private_key: |
-          # Content of the PEM-encoded private key file, TO BE FILLED
+        private_key_file: "<Location of the PEM-encoded private key file>" # TO BE FILLED
         team_id: "<Team ID>" # TO BE FILLED
         key_id: "<Key ID>" # TO BE FILLED
 

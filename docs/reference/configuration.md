@@ -649,10 +649,7 @@ upstream_oauth2:
       # Additional paramaters for the `sign_in_with_apple` authentication method
       # See https://www.oauth.com/oauth2-servers/pkce/authorization-code-flow-with-pkce/
       #sign_in_with_apple:
-      #  private_key: |
-      #    -----BEGIN PRIVATE KEY-----
-      #    ...
-      #    -----END PRIVATE KEY-----
+      #  private_key_file: "<auth-key-file-location>
       #  team_id: "<team-id>"
       #  key_id: "<key-id>"
 

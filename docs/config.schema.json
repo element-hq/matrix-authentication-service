@@ -2158,12 +2158,12 @@
       "type": "object",
       "required": [
         "key_id",
-        "private_key",
+        "private_key_file",
         "team_id"
       ],
       "properties": {
-        "private_key": {
-          "description": "The private key used to sign the `id_token`",
+        "private_key_file": {
+          "description": "The private key file used to sign the `id_token`",
           "type": "string"
         },
         "team_id": {

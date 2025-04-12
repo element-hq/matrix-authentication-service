@@ -57,10 +57,12 @@ enum ProviderCredentialsError {
 
 #[derive(Debug, Deserialize)]
 pub struct SignInWithApple {
-    pub private_key: String,
+    pub private_key_file: String,
     pub team_id: String,
     pub key_id: String,
 }
+
+use std::fs;
 
 fn client_credentials_for_provider(
     provider: &UpstreamOAuthProvider,
@@ -70,7 +72,6 @@ fn client_credentials_for_provider(
 ) -> Result<ClientCredentials, ProviderCredentialsError> {
     let client_id = provider.client_id.clone();
 
-    // Decrypt the client secret
     let client_secret = provider
         .encrypted_client_secret
         .as_deref()
@@ -127,7 +128,11 @@ fn client_credentials_for_provider(
             let params = client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
             let params: SignInWithApple = serde_json::from_str(&params)?;
 
-            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&params.private_key)?;
+            let private_key_pem = fs::read_to_string(&params.private_key_file)
+                .map_err(|_| ProviderCredentialsError::MissingClientSecret)?;
+
+            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&private_key_pem)
+                .map_err(|_| ProviderCredentialsError::MissingClientSecret)?;
 
             ClientCredentials::SignInWithApple {
                 client_id,

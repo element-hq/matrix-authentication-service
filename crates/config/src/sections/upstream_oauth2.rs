@@ -383,8 +383,8 @@ fn signed_response_alg_default() -> JsonWebSignatureAlg {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SignInWithApple {
-    /// The private key used to sign the `id_token`
-    pub private_key: String,
+    /// The private key file used to sign the `id_token`
+    pub private_key_file: String,
 
     /// The Team ID of the Apple Developer Portal
     pub team_id: String,
