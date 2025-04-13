@@ -89,7 +89,7 @@ upstream_oauth2:
       authorization_endpoint: "https://appleid.apple.com/auth/authorize"
       token_endpoint: "https://appleid.apple.com/auth/token"
       human_name: "Apple"
-      client_id: "<Service ID>"
+      client_id: "<Service ID>" # TO BE FILLED
       scope: "openid name email"
       response_mode: "form_post"
       token_endpoint_auth_method: "sign_in_with_apple"
