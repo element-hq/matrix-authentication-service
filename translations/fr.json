@@ -151,7 +151,8 @@
         "headline": "Se connecter pour associer"
       },
       "no_login_methods": "Aucune méthode de connexion n'est disponible.",
-      "separator": "Ou"
+      "separator": "Ou",
+      "username_or_email": "Nom d'utilisateur ou adresse email"
     },
     "navbar": {
       "my_account": "Mon compte",

@@ -87,8 +87,8 @@
         "title": "Vigane e-posti aadress"
       },
       "email_invalid_error": "Lisatud e-posti aadress on vigane",
-      "incorrect_password_error": "Vale parool, proovige uuesti",
-      "password_confirmation": "Selle e-posti aadressi lisamiseks kinnitage oma konto salasõnaga"
+      "incorrect_password_error": "Vale salasõna, palun proovi uuesti",
+      "password_confirmation": "Selle e-posti aadressi lisamiseks kinnita tegevus oma kasutajakonto salasõnaga"
     },
     "app_sessions_list": {
       "error": "Rakenduse sessioonide laadimine ei õnnestunud",
@@ -327,8 +327,8 @@
       "delete_button_confirmation_modal": {
         "action": "Kustuta e-posti aadress",
         "body": "Kas kustutame selle e-posti aadressi?",
-        "incorrect_password": "Vale parool, proovige uuesti",
-        "password_confirmation": "Selle e-posti aadressi kustutamiseks kinnitage parooliga"
+        "incorrect_password": "Vale salasõna, palun proovi uuesti",
+        "password_confirmation": "Selle e-posti aadressi kustutamiseks kinnita tegevus oma salasõnaga"
       },
       "delete_button_title": "Eemalda e-posti aadress",
       "email": "E-posti aadress",

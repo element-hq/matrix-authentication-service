@@ -155,7 +155,7 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn lookup(&mut self, id: Ulid) -> Result<Option<User>, Self::Error>;
 
-    /// Find a [`User`] by its username
+    /// Find a [`User`] by its username, in a case-insensitive manner
     ///
     /// Returns `None` if no [`User`] was found
     ///

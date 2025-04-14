@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT EXISTS(\n                    SELECT 1 FROM users WHERE username = $1\n                ) AS \"exists!\"\n            ",
+  "query": "\n                SELECT EXISTS(\n                    SELECT 1 FROM users WHERE LOWER(username) = LOWER($1)\n                ) AS \"exists!\"\n            ",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "94fd96446b237c87bd6bf741f3c42b37ee751b87b7fcc459602bdf8c46962443"
+  "hash": "7f8335cc94347bc3a15afe7051658659347a1bf71dd62335df046708f19c967e"
 }

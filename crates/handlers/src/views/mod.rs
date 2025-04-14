@@ -8,7 +8,6 @@ pub mod app;
 pub mod index;
 pub mod login;
 pub mod logout;
-pub mod reauth;
 pub mod recovery;
 pub mod register;
 pub mod shared;

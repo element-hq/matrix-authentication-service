@@ -6,20 +6,17 @@
 
 use axum::{
     extract::{Form, State},
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
 };
-use axum_extra::TypedHeader;
 use hyper::StatusCode;
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt, sentry::SentryEventID};
+use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, sentry::SentryEventID};
 use mas_data_model::{AuthorizationCode, Pkce};
-use mas_keystore::Keystore;
-use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng,
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
-use mas_templates::{PolicyViolationContext, TemplateContext, Templates};
+use mas_templates::Templates;
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     pkce,
@@ -29,13 +26,12 @@ use oauth2_types::{
 use rand::{Rng, distributions::Alphanumeric};
 use serde::Deserialize;
 use thiserror::Error;
-use tracing::warn;
 
-use self::{callback::CallbackDestination, complete::GrantCompletionError};
+use self::callback::CallbackDestination;
 use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
-pub mod complete;
+pub(crate) mod consent;
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -134,10 +130,7 @@ pub(crate) async fn get(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
-    State(key_store): State<Keystore>,
     State(url_builder): State<UrlBuilder>,
-    policy: Policy,
-    user_agent: Option<TypedHeader<headers::UserAgent>>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
@@ -166,9 +159,6 @@ pub(crate) async fn get(
 
     // Get the session info from the cookie
     let (session_info, cookie_jar) = cookie_jar.session_info();
-    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-
-    let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 
     // One day, we will have try blocks
     let res: Result<Response, RouteError> = ({
@@ -182,80 +172,66 @@ pub(crate) async fn get(
             // Check if the request/request_uri/registration params are used. If so, reply
             // with the right error since we don't support them.
             if params.auth.request.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RequestNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RequestNotSupported),
+                )?);
             }
 
             if params.auth.request_uri.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RequestUriNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RequestUriNotSupported),
+                )?);
             }
 
             // Check if the client asked for a `token` response type, and bail out if it's
             // the case, since we don't support them
             if response_type.has_token() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::UnsupportedResponseType),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::UnsupportedResponseType),
+                )?);
             }
 
             // If the client asked for a `id_token` response type, we must check if it can
             // use the `implicit` grant type
             if response_type.has_id_token() && !client.grant_types.contains(&GrantType::Implicit) {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::UnauthorizedClient),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::UnauthorizedClient),
+                )?);
             }
 
             if params.auth.registration.is_some() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::RegistrationNotSupported),
-                    )
-                    .await?);
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::RegistrationNotSupported),
+                )?);
             }
 
-            // Fail early if prompt=none and there is no active session
-            if prompt.contains(&Prompt::None) && maybe_session.is_none() {
-                return Ok(callback_destination
-                    .go(
-                        &templates,
-                        &locale,
-                        ClientError::from(ClientErrorCode::LoginRequired),
-                    )
-                    .await?);
+            // Fail early if prompt=none; we never let it go through
+            if prompt.contains(&Prompt::None) {
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::LoginRequired),
+                )?);
             }
 
             let code: Option<AuthorizationCode> = if response_type.has_code() {
                 // Check if it is allowed to use this grant type
                 if !client.grant_types.contains(&GrantType::AuthorizationCode) {
-                    return Ok(callback_destination
-                        .go(
-                            &templates,
-                            &locale,
-                            ClientError::from(ClientErrorCode::UnauthorizedClient),
-                        )
-                        .await?);
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::UnauthorizedClient),
+                    )?);
                 }
 
                 // 32 random alphanumeric characters, about 190bit of entropy
@@ -275,19 +251,15 @@ pub(crate) async fn get(
                 // If the request had PKCE params but no code asked, it should get back with an
                 // error
                 if params.pkce.is_some() {
-                    return Ok(callback_destination
-                        .go(
-                            &templates,
-                            &locale,
-                            ClientError::from(ClientErrorCode::InvalidRequest),
-                        )
-                        .await?);
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::InvalidRequest),
+                    )?);
                 }
 
                 None
             };
-
-            let requires_consent = prompt.contains(&Prompt::Consent);
 
             let grant = repo
                 .oauth2_authorization_grant()
@@ -300,150 +272,42 @@ pub(crate) async fn get(
                     code,
                     params.auth.state.clone(),
                     params.auth.nonce,
-                    params.auth.max_age,
                     response_mode,
                     response_type.has_id_token(),
-                    requires_consent,
                     params.auth.login_hint,
                 )
                 .await?;
             let continue_grant = PostAuthAction::continue_grant(grant.id);
 
             let res = match maybe_session {
-                // Cases where there is no active session, redirect to the relevant page
-                None if prompt.contains(&Prompt::None) => {
-                    // This case should already be handled earlier
-                    unreachable!();
-                }
                 None if prompt.contains(&Prompt::Create) => {
                     // Client asked for a registration, show the registration prompt
                     repo.save().await?;
 
-                    url_builder.redirect(&mas_router::Register::and_then(continue_grant))
+                    url_builder
+                        .redirect(&mas_router::Register::and_then(continue_grant))
                         .into_response()
                 }
+
                 None => {
                     // Other cases where we don't have a session, ask for a login
                     repo.save().await?;
 
-                    url_builder.redirect(&mas_router::Login::and_then(continue_grant))
+                    url_builder
+                        .redirect(&mas_router::Login::and_then(continue_grant))
                         .into_response()
                 }
 
-                // Special case when we already have a session but prompt=login|select_account
-                Some(session)
-                    if prompt.contains(&Prompt::Login)
-                        || prompt.contains(&Prompt::SelectAccount) =>
-                {
-                    // TODO: better pages here
+                Some(user_session) => {
+                    // TODO: better support for prompt=create when we have a session
                     repo.save().await?;
 
-                    activity_tracker.record_browser_session(&clock, &session).await;
-
-                    url_builder.redirect(&mas_router::Reauth::and_then(continue_grant))
+                    activity_tracker
+                        .record_browser_session(&clock, &user_session)
+                        .await;
+                    url_builder
+                        .redirect(&mas_router::Consent(grant.id))
                         .into_response()
-                }
-
-                // Else, we immediately try to complete the authorization grant
-                Some(user_session) if prompt.contains(&Prompt::None) => {
-                    activity_tracker.record_browser_session(&clock, &user_session).await;
-
-                    // With prompt=none, we should get back to the client immediately
-                    match self::complete::complete(
-                        &mut rng,
-                        &clock,
-                        &activity_tracker,
-                        user_agent,
-                        repo,
-                        key_store,
-                        policy,
-                        &url_builder,
-                        grant,
-                        &client,
-                        &user_session,
-                    )
-                    .await
-                    {
-                        Ok(params) => callback_destination.go(&templates, &locale, params).await?,
-                        Err(GrantCompletionError::RequiresConsent) => {
-                            callback_destination
-                                .go(
-                                    &templates,
-                                    &locale,
-                                    ClientError::from(ClientErrorCode::ConsentRequired),
-                                )
-                                .await?
-                        }
-                        Err(GrantCompletionError::RequiresReauth) => {
-                            callback_destination
-                                .go(
-                                    &templates,
-                                    &locale,
-                                    ClientError::from(ClientErrorCode::InteractionRequired),
-                                )
-                                .await?
-                        }
-                        Err(GrantCompletionError::PolicyViolation(_grant, _res)) => {
-                            callback_destination
-                                .go(&templates, &locale, ClientError::from(ClientErrorCode::AccessDenied))
-                                .await?
-                        }
-                        Err(GrantCompletionError::Internal(e)) => {
-                            return Err(RouteError::Internal(e))
-                        }
-                        Err(e @ GrantCompletionError::NotPending) => {
-                            // This should never happen
-                            return Err(RouteError::Internal(Box::new(e)));
-                        }
-                    }
-                }
-                Some(user_session) => {
-                    activity_tracker.record_browser_session(&clock, &user_session).await;
-
-                    let grant_id = grant.id;
-                    // Else, we show the relevant reauth/consent page if necessary
-                    match self::complete::complete(
-                        &mut rng,
-                        &clock,
-                        &activity_tracker,
-                        user_agent,
-                        repo,
-                        key_store,
-                        policy,
-                        &url_builder,
-                        grant,
-                        &client,
-                        &user_session,
-                    )
-                    .await
-                    {
-                        Ok(params) => callback_destination.go(&templates, &locale, params).await?,
-                        Err(GrantCompletionError::RequiresConsent) => {
-                            url_builder.redirect(&mas_router::Consent(grant_id)).into_response()
-                        }
-                        Err(GrantCompletionError::PolicyViolation(grant, res)) => {
-                            warn!(violation = ?res, "Authorization grant for client {} denied by policy", client.id);
-
-                            let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
-                                .with_session(user_session)
-                                .with_csrf(csrf_token.form_value())
-                                .with_language(locale);
-
-                            let content = templates.render_policy_violation(&ctx)?;
-                            Html(content).into_response()
-                        }
-                        Err(GrantCompletionError::RequiresReauth) => {
-                            url_builder.redirect(&mas_router::Reauth::and_then(continue_grant))
-                                .into_response()
-                        }
-                        Err(GrantCompletionError::Internal(e)) => {
-                            return Err(RouteError::Internal(e))
-                        }
-                        Err(e @ GrantCompletionError::NotPending) => {
-                            // This should never happen
-                            return Err(RouteError::Internal(Box::new(e)));
-                        }
-                    }
                 }
             };
 
@@ -456,13 +320,11 @@ pub(crate) async fn get(
         Ok(r) => r,
         Err(err) => {
             tracing::error!(%err);
-            callback_destination
-                .go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::ServerError),
-                )
-                .await?
+            callback_destination.go(
+                &templates,
+                &locale,
+                ClientError::from(ClientErrorCode::ServerError),
+            )?
         }
     };
 

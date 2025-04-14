@@ -372,10 +372,6 @@ where
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
-            mas_router::Reauth::route(),
-            get(self::views::reauth::get).post(self::views::reauth::post),
-        )
-        .route(
             mas_router::Register::route(),
             get(self::views::register::get),
         )
@@ -410,12 +406,9 @@ where
             get(self::oauth2::authorization::get),
         )
         .route(
-            mas_router::ContinueAuthorizationGrant::route(),
-            get(self::oauth2::authorization::complete::get),
-        )
-        .route(
             mas_router::Consent::route(),
-            get(self::oauth2::consent::get).post(self::oauth2::consent::post),
+            get(self::oauth2::authorization::consent::get)
+                .post(self::oauth2::authorization::consent::post),
         )
         .route(
             mas_router::CompatLoginSsoComplete::route(),

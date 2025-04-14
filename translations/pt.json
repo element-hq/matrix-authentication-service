@@ -151,7 +151,8 @@
         "headline": "Faça login para vincular"
       },
       "no_login_methods": "Não há métodos de login disponíveis.",
-      "separator": "Ou"
+      "separator": "Ou",
+      "username_or_email": "Username or Email"
     },
     "navbar": {
       "my_account": "A minha conta",

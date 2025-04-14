@@ -132,7 +132,7 @@ pub(crate) async fn get(
     let request_uri_parameter_supported = Some(false);
 
     let prompt_values_supported = Some({
-        let mut v = vec![Prompt::None, Prompt::Login];
+        let mut v = vec![Prompt::Login];
         // Advertise for prompt=create if password registration is enabled
         // TODO: we may want to be able to forward that to upstream providers if they
         // support it

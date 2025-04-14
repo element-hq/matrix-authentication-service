@@ -151,7 +151,8 @@
         "headline": "Kirjaudu sisään yhdistääksesi tilit"
       },
       "no_login_methods": "Kirjautumistapoja ei ole käytettävissä.",
-      "separator": "Tai"
+      "separator": "Tai",
+      "username_or_email": "Käyttäjänimi tai Sähköpostiosoite"
     },
     "navbar": {
       "my_account": "Oma tili",
