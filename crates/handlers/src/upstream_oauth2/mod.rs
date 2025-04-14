@@ -6,13 +6,11 @@
 
 use std::string::FromUtf8Error;
 
-use camino::Utf8PathBuf;
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderTokenAuthMethod};
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_keystore::{DecryptError, Encrypter, Keystore};
 use mas_oidc_client::types::client_credentials::ClientCredentials;
 use pkcs8::DecodePrivateKey;
-use schemars::JsonSchema;
 use serde::Deserialize;
 use thiserror::Error;
 use url::Url;
@@ -31,12 +29,6 @@ use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
 enum ProviderCredentialsError {
     #[error("Provider doesn't have a client secret")]
     MissingClientSecret,
-
-    #[error("Duplicate private key and private key file for Sign in with Apple")]
-    DuplicatePrivateKey,
-
-    #[error("Missing private key for signing the id_token")]
-    MissingPrivateKey,
 
     #[error("Could not decrypt client secret")]
     DecryptClientSecret {
@@ -63,25 +55,14 @@ enum ProviderCredentialsError {
     },
 }
 
-#[derive(Debug, Deserialize, JsonSchema)]
+#[derive(Debug, Deserialize)]
 pub struct SignInWithApple {
-    /// The private key file used to sign the `id_token`
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
-    pub private_key_file: Option<Utf8PathBuf>,
-
-    /// The private key used to sign the `id_token`
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub private_key: Option<String>,
-
-    /// The Team ID of the Apple Developer Portal
+    pub private_key: String,
     pub team_id: String,
-
-    /// The key ID of the Apple Developer Portal
     pub key_id: String,
 }
 
-async fn client_credentials_for_provider(
+fn client_credentials_for_provider(
     provider: &UpstreamOAuthProvider,
     token_endpoint: &Url,
     keystore: &Keystore,
@@ -89,6 +70,7 @@ async fn client_credentials_for_provider(
 ) -> Result<ClientCredentials, ProviderCredentialsError> {
     let client_id = provider.client_id.clone();
 
+    // Decrypt the client secret
     let client_secret = provider
         .encrypted_client_secret
         .as_deref()
@@ -142,32 +124,10 @@ async fn client_credentials_for_provider(
         },
 
         UpstreamOAuthProviderTokenAuthMethod::SignInWithApple => {
-            let client_secret =
-                client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
+            let params = client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
+            let params: SignInWithApple = serde_json::from_str(&params)?;
 
-            let params: SignInWithApple = serde_json::from_str(&client_secret)
-                .map_err(|inner| ProviderCredentialsError::InvalidClientSecretJson { inner })?;
-
-            if params.private_key.is_none() && params.private_key_file.is_none() {
-                return Err(ProviderCredentialsError::MissingPrivateKey);
-            }
-
-            if params.private_key.is_some() && params.private_key_file.is_some() {
-                return Err(ProviderCredentialsError::DuplicatePrivateKey);
-            }
-
-            let private_key_pem = if let Some(private_key) = params.private_key {
-                private_key
-            } else if let Some(private_key_file) = params.private_key_file {
-                tokio::fs::read_to_string(private_key_file)
-                    .await
-                    .map_err(|_| ProviderCredentialsError::MissingPrivateKey)?
-            } else {
-                unreachable!("already validated above")
-            };
-
-            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&private_key_pem)
-                .map_err(|inner| ProviderCredentialsError::InvalidPrivateKey { inner })?;
+            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&params.private_key)?;
 
             ClientCredentials::SignInWithApple {
                 client_id,
