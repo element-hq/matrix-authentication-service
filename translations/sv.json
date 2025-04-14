@@ -151,7 +151,8 @@
         "headline": "Logga in för att länka"
       },
       "no_login_methods": "Inga inloggningsmetoder tillgängliga.",
-      "separator": "eller"
+      "separator": "eller",
+      "username_or_email": "Username or Email"
     },
     "navbar": {
       "my_account": "Mitt konto",

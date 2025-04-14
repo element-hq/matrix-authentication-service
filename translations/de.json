@@ -151,7 +151,8 @@
         "headline": "Melden Sie sich zum Verbinden an"
       },
       "no_login_methods": "Keine Anmeldemethoden verfügbar.",
-      "separator": "Oder"
+      "separator": "Oder",
+      "username_or_email": "Benutzername oder E-Mail-Adresse"
     },
     "navbar": {
       "my_account": "Mein Konto",

@@ -151,7 +151,8 @@
         "headline": "登录以链接"
       },
       "no_login_methods": "没有可用的登录途径。",
-      "separator": "或"
+      "separator": "或",
+      "username_or_email": "Username or Email"
     },
     "navbar": {
       "my_account": "我的账户",
