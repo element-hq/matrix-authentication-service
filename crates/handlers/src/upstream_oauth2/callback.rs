@@ -294,7 +294,8 @@ pub(crate) async fn handler(
         lazy_metadata.token_endpoint().await?,
         &keystore,
         &encrypter,
-    ).await?;
+    )
+    .await?;
 
     let redirect_uri = url_builder.upstream_oauth_callback(provider.id);
 

@@ -6,13 +6,13 @@
 
 use std::string::FromUtf8Error;
 
+use camino::Utf8PathBuf;
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderTokenAuthMethod};
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_keystore::{DecryptError, Encrypter, Keystore};
 use mas_oidc_client::types::client_credentials::ClientCredentials;
 use pkcs8::DecodePrivateKey;
 use schemars::JsonSchema;
-use camino::Utf8PathBuf;
 use serde::Deserialize;
 use thiserror::Error;
 use url::Url;
@@ -142,7 +142,8 @@ async fn client_credentials_for_provider(
         },
 
         UpstreamOAuthProviderTokenAuthMethod::SignInWithApple => {
-            let client_secret = client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
+            let client_secret =
+                client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
 
             let params: SignInWithApple = serde_json::from_str(&client_secret)
                 .map_err(|inner| ProviderCredentialsError::InvalidClientSecretJson { inner })?;

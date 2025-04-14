@@ -6,11 +6,11 @@
 
 use std::collections::BTreeMap;
 
+use camino::Utf8PathBuf;
 use mas_iana::jose::JsonWebSignatureAlg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
 use serde_with::skip_serializing_none;
-use camino::Utf8PathBuf;
 use ulid::Ulid;
 use url::Url;
 
@@ -390,7 +390,7 @@ pub struct SignInWithApple {
     pub private_key_file: Option<Utf8PathBuf>,
 
     /// The private key used to sign the `id_token`
-    #[serde(skip_serializing_if = "Option::is_none")]  
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub private_key: Option<String>,
 
     /// The Team ID of the Apple Developer Portal
