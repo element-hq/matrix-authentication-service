@@ -6,20 +6,15 @@
 
 use std::{
     collections::{BTreeMap, BTreeSet},
-    str::FromStr,
     string::ToString,
 };
 
 use async_trait::async_trait;
-use mas_data_model::{Client, JwksOrJwksUri, User};
+use mas_data_model::{Client, JwksOrJwksUri};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use mas_storage::{Clock, oauth2::OAuth2ClientRepository};
-use oauth2_types::{
-    oidc::ApplicationType,
-    requests::GrantType,
-    scope::{Scope, ScopeToken},
-};
+use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -696,97 +691,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         res.into_iter()
             .map(|r| r.try_into().map_err(DatabaseError::from))
             .collect()
-    }
-
-    #[tracing::instrument(
-        name = "db.oauth2_client.get_consent_for_user",
-        skip_all,
-        fields(
-            db.query.text,
-            %user.id,
-            %client.id,
-        ),
-        err,
-    )]
-    async fn get_consent_for_user(
-        &mut self,
-        client: &Client,
-        user: &User,
-    ) -> Result<Scope, Self::Error> {
-        let scope_tokens: Vec<String> = sqlx::query_scalar!(
-            r#"
-                SELECT scope_token
-                FROM oauth2_consents
-                WHERE user_id = $1 AND oauth2_client_id = $2
-            "#,
-            Uuid::from(user.id),
-            Uuid::from(client.id),
-        )
-        .fetch_all(&mut *self.conn)
-        .await?;
-
-        let scope: Result<Scope, _> = scope_tokens
-            .into_iter()
-            .map(|s| ScopeToken::from_str(&s))
-            .collect();
-
-        let scope = scope.map_err(|e| {
-            DatabaseInconsistencyError::on("oauth2_consents")
-                .column("scope_token")
-                .source(e)
-        })?;
-
-        Ok(scope)
-    }
-
-    #[tracing::instrument(
-        name = "db.oauth2_client.give_consent_for_user",
-        skip_all,
-        fields(
-            db.query.text,
-            %user.id,
-            %client.id,
-            %scope,
-        ),
-        err,
-    )]
-    async fn give_consent_for_user(
-        &mut self,
-        rng: &mut (dyn RngCore + Send),
-        clock: &dyn Clock,
-        client: &Client,
-        user: &User,
-        scope: &Scope,
-    ) -> Result<(), Self::Error> {
-        let now = clock.now();
-        let (tokens, ids): (Vec<String>, Vec<Uuid>) = scope
-            .iter()
-            .map(|token| {
-                (
-                    token.to_string(),
-                    Uuid::from(Ulid::from_datetime_with_source(now.into(), rng)),
-                )
-            })
-            .unzip();
-
-        sqlx::query!(
-            r#"
-                INSERT INTO oauth2_consents
-                    (oauth2_consent_id, user_id, oauth2_client_id, scope_token, created_at)
-                SELECT id, $2, $3, scope_token, $5 FROM UNNEST($1::uuid[], $4::text[]) u(id, scope_token)
-                ON CONFLICT (user_id, oauth2_client_id, scope_token) DO UPDATE SET refreshed_at = $5
-            "#,
-            &ids,
-            Uuid::from(user.id),
-            Uuid::from(client.id),
-            &tokens,
-            now,
-        )
-        .traced()
-        .execute(&mut *self.conn)
-        .await?;
-
-        Ok(())
     }
 
     #[tracing::instrument(
