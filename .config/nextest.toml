@@ -1,14 +1,2 @@
-[test-groups]
-database = { max-threads = 1 }
-
 [profile.default]
 retries = 1
-
-# sqlx has a problem with nextest, as it uses a process-local semaphore to have
-# tests use different databases. This doesn't work with nextest, as it has a
-# process-per-test model, which is why we need to make sure only one test uses
-# the database at a time.
-# See https://github.com/launchbadge/sqlx/pull/3334
-[[profile.default.overrides]]
-filter = 'package(mas-handlers) or package(mas-storage-pg)'
-test-group = 'database'
