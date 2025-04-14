@@ -398,7 +398,7 @@ pub struct SignInWithApple {
 
     /// The key ID of the Apple Developer Portal
     pub key_id: String,
-    }
+}
 
 /// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
