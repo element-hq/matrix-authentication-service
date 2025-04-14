@@ -152,7 +152,7 @@
       },
       "no_login_methods": "Kirjautumistapoja ei ole käytettävissä.",
       "separator": "Tai",
-      "username_or_email": "Username or Email"
+      "username_or_email": "Käyttäjänimi tai Sähköpostiosoite"
     },
     "navbar": {
       "my_account": "Oma tili",
