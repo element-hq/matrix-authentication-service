@@ -84,18 +84,23 @@ Sign-in with Apple uses special non-standard for authenticating clients, which r
 ```yaml
 upstream_oauth2:
   providers:
-    - client_id: 01JAYS74TCG3BTWKADN5Q4518C
-      client_name: "<Service ID>" # TO BE FILLED
+    - id: 01JAYS74TCG3BTWKADN5Q4518C
+      issuer: "https://appleid.apple.com"
+      human_name: "Apple"
+      brand_name: "apple"
+      client_id: "<Service ID>" # TO BE FILLED
       scope: "openid name email"
       response_mode: "form_post"
-
       token_endpoint_auth_method: "sign_in_with_apple"
       sign_in_with_apple:
-        private_key: |
-          # Content of the PEM-encoded private key file, TO BE FILLED
+      
+        # Only one of the below should be filled for the private key
+        private_key_file: "<Location of the PEM-encoded private key file>" # TO BE FILLED
+        private_key: | # TO BE FILLED
+          # <Contents of the private key>
+        
         team_id: "<Team ID>" # TO BE FILLED
         key_id: "<Key ID>" # TO BE FILLED
-
       claims_imports:
         localpart:
           action: ignore
