@@ -32,6 +32,9 @@ enum ProviderCredentialsError {
     #[error("Provider doesn't have a client secret")]
     MissingClientSecret,
 
+    #[error("Duplicate private key and private key file for Sign in with Apple")]
+    DuplicatePrivateKey,
+
     #[error("Missing private key for signing the id_token")]
     MissingPrivateKey,
 
@@ -58,18 +61,6 @@ enum ProviderCredentialsError {
         #[from]
         inner: pkcs8::Error,
     },
-}
-
-#[derive(Debug, Error)]
-enum AppleCredentialsError {
-    #[error("Missing private key for signing the id_token")]
-    MissingPrivateKey,
-
-    #[error("Duplicate private key for signing the id_token")]
-    DuplicatePrivateKey,
-
-    #[error(transparent)]
-    InvalidPrivateKey(#[from] pkcs8::Error),
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -152,53 +143,39 @@ async fn client_credentials_for_provider(
 
         UpstreamOAuthProviderTokenAuthMethod::SignInWithApple => {
             let client_secret = client_secret.ok_or(ProviderCredentialsError::MissingClientSecret)?;
-        
-            resolve_apple_credentials(client_id, client_secret)
-                .await
-                .map_err(|err| {
-                    match err {
-                        AppleCredentialsError::MissingPrivateKey => ProviderCredentialsError::MissingPrivateKey,
-                        AppleCredentialsError::DuplicatePrivateKey => ProviderCredentialsError::MissingPrivateKey, // maybe define a better one later
-                        AppleCredentialsError::InvalidPrivateKey(inner) => ProviderCredentialsError::InvalidPrivateKey { inner },
-                    }
-                })?
+
+            let params: SignInWithApple = serde_json::from_str(&client_secret)
+                .map_err(|inner| ProviderCredentialsError::InvalidClientSecretJson { inner })?;
+
+            if params.private_key.is_none() && params.private_key_file.is_none() {
+                return Err(ProviderCredentialsError::MissingPrivateKey);
+            }
+
+            if params.private_key.is_some() && params.private_key_file.is_some() {
+                return Err(ProviderCredentialsError::DuplicatePrivateKey);
+            }
+
+            let private_key_pem = if let Some(private_key) = params.private_key {
+                private_key
+            } else if let Some(private_key_file) = params.private_key_file {
+                tokio::fs::read_to_string(private_key_file)
+                    .await
+                    .map_err(|_| ProviderCredentialsError::MissingPrivateKey)?
+            } else {
+                unreachable!("already validated above")
+            };
+
+            let key = elliptic_curve::SecretKey::from_pkcs8_pem(&private_key_pem)
+                .map_err(|inner| ProviderCredentialsError::InvalidPrivateKey { inner })?;
+
+            ClientCredentials::SignInWithApple {
+                client_id,
+                key,
+                key_id: params.key_id,
+                team_id: params.team_id,
+            }
         }
     };
 
     Ok(client_credentials)
-}
-
-async fn resolve_apple_credentials(
-    client_id: String,
-    client_secret: String,
-) -> Result<ClientCredentials, AppleCredentialsError> {
-    let params: SignInWithApple = serde_json::from_str(&client_secret)
-        .map_err(|_| AppleCredentialsError::MissingPrivateKey)?;
-
-    if params.private_key.is_none() && params.private_key_file.is_none() {
-        return Err(AppleCredentialsError::MissingPrivateKey);
-    }
-
-    if params.private_key.is_some() && params.private_key_file.is_some() {
-        return Err(AppleCredentialsError::DuplicatePrivateKey);
-    }
-
-    let private_key_pem = if let Some(private_key) = params.private_key {
-        private_key
-    } else if let Some(private_key_file) = params.private_key_file {
-        tokio::fs::read_to_string(private_key_file)
-            .await
-            .map_err(|_| AppleCredentialsError::MissingPrivateKey)?
-    } else {
-        unreachable!("already validated")
-    };
-
-    let key = elliptic_curve::SecretKey::from_pkcs8_pem(&private_key_pem)?;
-
-    Ok(ClientCredentials::SignInWithApple {
-        client_id,
-        key,
-        key_id: params.key_id,
-        team_id: params.team_id,
-    })
 }
