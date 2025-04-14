@@ -10,6 +10,7 @@ use mas_iana::jose::JsonWebSignatureAlg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
 use serde_with::skip_serializing_none;
+use camino::Utf8PathBuf;
 use ulid::Ulid;
 use url::Url;
 
@@ -384,7 +385,13 @@ fn signed_response_alg_default() -> JsonWebSignatureAlg {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SignInWithApple {
     /// The private key file used to sign the `id_token`
-    pub private_key_file: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<String>")]
+    pub private_key_file: Option<Utf8PathBuf>,
+
+    /// The private key used to sign the `id_token`
+    #[serde(skip_serializing_if = "Option::is_none")]  
+    pub private_key: Option<String>,
 
     /// The Team ID of the Apple Developer Portal
     pub team_id: String,

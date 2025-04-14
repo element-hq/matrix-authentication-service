@@ -2156,25 +2156,50 @@
     },
     "SignInWithApple": {
       "type": "object",
-      "required": [
-        "key_id",
-        "private_key_file",
-        "team_id"
-      ],
-      "properties": {
-        "private_key_file": {
-          "description": "The private key file used to sign the `id_token`",
-          "type": "string"
+      "oneOf": [
+        {
+          "required": [
+            "key_id",
+            "private_key_file",
+            "team_id"
+          ],
+          "properties": {
+            "private_key_file": {
+              "description": "The private key file used to sign the `id_token`",
+              "type": "string"
+            },
+            "team_id": {
+              "description": "The Team ID of the Apple Developer Portal",
+              "type": "string"
+            },
+            "key_id": {
+              "description": "The key ID of the Apple Developer Portal",
+              "type": "string"
+            }
+          }
         },
-        "team_id": {
-          "description": "The Team ID of the Apple Developer Portal",
-          "type": "string"
-        },
-        "key_id": {
-          "description": "The key ID of the Apple Developer Portal",
-          "type": "string"
+        {
+          "required": [
+            "key_id",
+            "private_key",
+            "team_id"
+          ],
+          "properties": {
+            "private_key": {
+              "description": "The private key used to sign the `id_token`",
+              "type": "string"
+            },
+            "team_id": {
+              "description": "The Team ID of the Apple Developer Portal",
+              "type": "string"
+            },
+            "key_id": {
+              "description": "The key ID of the Apple Developer Portal",
+              "type": "string"
+            }
+          }
         }
-      }
+      ]
     },
     "DiscoveryMode": {
       "description": "How to discover the provider's configuration",
