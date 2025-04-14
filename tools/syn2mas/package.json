@@ -1,6 +1,6 @@
 {
   "name": "@vector-im/syn2mas",
-  "version": "0.14.1",
+  "version": "0.15.0-rc.0",
   "description": "A tool to migrate Synapse users and sessions to the Matrix Authentication Service",
   "license": "AGPL-3.0-only",
   "author": "Matrix.org",
