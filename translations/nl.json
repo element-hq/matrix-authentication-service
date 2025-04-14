@@ -151,7 +151,8 @@
         "headline": "Sign in to link"
       },
       "no_login_methods": "No login methods available.",
-      "separator": "Of"
+      "separator": "Of",
+      "username_or_email": "Username or Email"
     },
     "navbar": {
       "my_account": "Mijn account",

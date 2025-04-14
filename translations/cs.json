@@ -151,7 +151,8 @@
         "headline": "Přihlaste se k odkazu"
       },
       "no_login_methods": "Nejsou k dispozici žádné metody přihlášení.",
-      "separator": "Nebo"
+      "separator": "Nebo",
+      "username_or_email": "Uživatelské jméno nebo e-mail"
     },
     "navbar": {
       "my_account": "Můj účet",
