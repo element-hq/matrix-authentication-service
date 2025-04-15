@@ -6,6 +6,7 @@
 
 use std::{collections::HashMap, sync::Arc};
 
+use mas_context::LogContext;
 use mas_data_model::{
     UpstreamOAuthProvider, UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
 };
@@ -197,7 +198,9 @@ impl MetadataCache {
             loop {
                 // Re-fetch the known metadata at the given interval
                 tokio::time::sleep(interval).await;
-                cache.refresh_all(&client).await;
+                LogContext::new("metadata-cache-refresh")
+                    .run(|| cache.refresh_all(&client))
+                    .await;
             }
         }))
     }

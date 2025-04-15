@@ -277,6 +277,9 @@ pub fn build_router(
                 span.record("otel.status_code", "OK");
             }),
         )
+        .layer(mas_context::LogContextLayer::new(|req| {
+            otel_http_method(req).into()
+        }))
         .layer(SentryHttpLayer::new())
         .layer(NewSentryLayer::new_from_top())
         .with_state(state)

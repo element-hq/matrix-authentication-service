@@ -13,6 +13,7 @@ use itertools::Itertools;
 use mas_config::{
     AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
 };
+use mas_context::LogContext;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
@@ -316,11 +317,13 @@ impl Options {
 
         shutdown
             .task_tracker()
-            .spawn(mas_listener::server::run_servers(
-                servers,
-                shutdown.soft_shutdown_token(),
-                shutdown.hard_shutdown_token(),
-            ));
+            .spawn(LogContext::new("run-servers").run(|| {
+                mas_listener::server::run_servers(
+                    servers,
+                    shutdown.soft_shutdown_token(),
+                    shutdown.hard_shutdown_token(),
+                )
+            }));
 
         let exit_code = shutdown.run().await;
 

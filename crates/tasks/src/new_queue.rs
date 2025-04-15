@@ -8,6 +8,7 @@ use std::{collections::HashMap, sync::Arc};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use cron::Schedule;
+use mas_context::LogContext;
 use mas_storage::{
     Clock, RepositoryAccess, RepositoryError,
     queue::{InsertableJob, Job, JobMetadata, Worker},
@@ -337,7 +338,9 @@ impl QueueWorker {
         self.setup_schedules().await?;
 
         while !self.cancellation_token.is_cancelled() {
-            self.run_loop().await?;
+            LogContext::new("worker-run-loop")
+                .run(|| self.run_loop())
+                .await?;
         }
 
         self.shutdown().await?;
@@ -771,16 +774,18 @@ impl JobTracker {
     fn spawn_job(&mut self, state: State, context: JobContext, payload: JobPayload) {
         let factory = self.factories.get(context.queue_name.as_str()).cloned();
         let task = {
+            let log_context = LogContext::new(format!("worker-job-{}", context.queue_name));
             let context = context.clone();
             let span = context.span();
-            async move {
-                // We should never crash, but in case we do, we do that in the task and
-                // don't crash the worker
-                let job = factory.expect("unknown job factory")(payload);
-                tracing::info!("Running job");
-                job.run(&state, context).await
-            }
-            .instrument(span)
+            log_context
+                .run(async move || {
+                    // We should never crash, but in case we do, we do that in the task and
+                    // don't crash the worker
+                    let job = factory.expect("unknown job factory")(payload);
+                    tracing::info!("Running job");
+                    job.run(&state, context).await
+                })
+                .instrument(span)
         };
 
         self.in_flight_jobs.add(

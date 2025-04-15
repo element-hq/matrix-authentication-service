@@ -12,6 +12,7 @@ use mas_config::{
     EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
     PolicyConfig, TemplatesConfig,
 };
+use mas_context::LogContext;
 use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
@@ -109,20 +110,23 @@ pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
     let mailer = mailer.clone();
 
     let span = tracing::info_span!("cli.test_mailer");
-    tokio::spawn(async move {
-        match tokio::time::timeout(timeout, mailer.test_connection()).await {
-            Ok(Ok(())) => {}
-            Ok(Err(err)) => {
-                tracing::warn!(
-                    error = &err as &dyn std::error::Error,
-                    "Could not connect to the mail backend, tasks sending mails may fail!"
-                );
+    tokio::spawn(
+        LogContext::new("mailer-test").run(async move || {
+            match tokio::time::timeout(timeout, mailer.test_connection()).await {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => {
+                    tracing::warn!(
+                        error = &err as &dyn std::error::Error,
+                        "Could not connect to the mail backend, tasks sending mails may fail!"
+                    );
+                }
+                Err(_) => {
+                    tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
+                }
             }
-            Err(_) => {
-                tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
-            }
-        }
-    }.instrument(span));
+        })
+        .instrument(span)
+    );
 }
 
 pub async fn policy_factory_from_config(

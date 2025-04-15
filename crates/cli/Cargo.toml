@@ -66,6 +66,7 @@ sentry-tracing.workspace = true
 sentry-tower.workspace = true
 
 mas-config.workspace = true
+mas-context.workspace = true
 mas-data-model.workspace = true
 mas-email.workspace = true
 mas-handlers.workspace = true
