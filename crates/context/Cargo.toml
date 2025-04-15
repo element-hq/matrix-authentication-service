@@ -1,0 +1,19 @@
+[package]
+name = "mas-context"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+pin-project-lite.workspace = true
+quanta.workspace = true
+tokio.workspace = true
+tower-service.workspace = true
+tower-layer.workspace = true

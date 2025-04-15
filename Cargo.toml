@@ -30,6 +30,7 @@ broken_intra_doc_links = "deny"
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=0.15.0-rc.0" }
 mas-cli = { path = "./crates/cli/", version = "=0.15.0-rc.0" }
 mas-config = { path = "./crates/config/", version = "=0.15.0-rc.0" }
+mas-context = { path = "./crates/context/", version = "=0.15.0-rc.0" }
 mas-data-model = { path = "./crates/data-model/", version = "=0.15.0-rc.0" }
 mas-email = { path = "./crates/email/", version = "=0.15.0-rc.0" }
 mas-graphql = { path = "./crates/graphql/", version = "=0.15.0-rc.0" }
@@ -248,6 +249,10 @@ features = ["std"]
 version = "0.7.0"
 features = ["std"]
 
+# Pin projection
+[workspace.dependencies.pin-project-lite]
+version = "0.2.16"
+
 # PKCS#1 encoding
 [workspace.dependencies.pkcs1]
 version = "0.7.5"
@@ -257,6 +262,10 @@ features = ["std"]
 [workspace.dependencies.pkcs8]
 version = "0.10.2"
 features = ["std", "pkcs5", "encryption"]
+
+# High-precision clock
+[workspace.dependencies.quanta]
+version = "0.12.5"
 
 # Random values
 [workspace.dependencies.rand]
@@ -373,6 +382,14 @@ features = ["rt"]
 [workspace.dependencies.tower]
 version = "0.5.2"
 features = ["util"]
+
+# Tower service trait
+[workspace.dependencies.tower-service]
+version = "0.3.3"
+
+# Tower layer trait
+[workspace.dependencies.tower-layer]
+version = "0.3.3"
 
 # Tower HTTP layers
 [workspace.dependencies.tower-http]

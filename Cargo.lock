@@ -3247,6 +3247,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mas-context"
+version = "0.15.0-rc.0"
+dependencies = [
+ "pin-project-lite",
+ "quanta",
+ "tokio",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
 name = "mas-data-model"
 version = "0.15.0-rc.0"
 dependencies = [

@@ -17,7 +17,7 @@ futures-util.workspace = true
 http-body.workspace = true
 hyper = { workspace = true, features = ["server"] }
 hyper-util.workspace = true
-pin-project-lite = "0.2.16"
+pin-project-lite.workspace = true
 socket2 = "0.5.9"
 thiserror.workspace = true
 tokio.workspace = true
