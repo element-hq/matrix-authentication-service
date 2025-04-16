@@ -195,6 +195,7 @@ upstream_oauth2:
       issuer: "https://<authentik-domain>/application/o/<app-slug>/" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
+      token_endpoint_auth_method: client_secret_basic
       scope: "openid profile email"
       claims_imports:
         localpart:
