@@ -554,6 +554,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
     async fn upsert_static(
         &mut self,
         client_id: Ulid,
+        client_name: Option<String>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,
@@ -581,11 +582,12 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , grant_type_device_code
                     , token_endpoint_auth_method
                     , jwks
+                    , client_name
                     , jwks_uri
                     , is_static
                     )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE)
                 ON CONFLICT (oauth2_client_id)
                 DO
                     UPDATE SET encrypted_client_secret = EXCLUDED.encrypted_client_secret
@@ -596,6 +598,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                              , grant_type_device_code = EXCLUDED.grant_type_device_code
                              , token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method
                              , jwks = EXCLUDED.jwks
+                             , client_name = EXCLUDED.client_name
                              , jwks_uri = EXCLUDED.jwks_uri
                              , is_static = TRUE
             "#,
@@ -608,6 +611,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             true,
             client_auth_method,
             jwks_json,
+            client_name,
             jwks_uri.as_ref().map(Url::as_str),
         )
         .traced()
@@ -633,7 +637,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                 GrantType::RefreshToken,
                 GrantType::ClientCredentials,
             ],
-            client_name: None,
+            client_name,
             logo_uri: None,
             client_uri: None,
             policy_uri: None,
