@@ -13,6 +13,7 @@ use std::{
         Arc,
         atomic::{AtomicU64, Ordering},
     },
+    time::Duration,
 };
 
 use quanta::Instant;
@@ -93,34 +94,53 @@ impl LogContext {
         self.inner.cpu_time.fetch_add(elapsed, Ordering::Relaxed);
         result
     }
+
+    /// Create a snapshot of the log context statistics
+    #[must_use]
+    pub fn stats(&self) -> LogContextStats {
+        let polls = self.inner.polls.load(Ordering::Relaxed);
+        let cpu_time = self.inner.cpu_time.load(Ordering::Relaxed);
+        let cpu_time = Duration::from_nanos(cpu_time);
+        let elapsed = self.inner.start.elapsed();
+        LogContextStats {
+            polls,
+            cpu_time,
+            elapsed,
+        }
+    }
 }
 
 impl std::fmt::Display for LogContext {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        #[expect(clippy::cast_precision_loss)]
-        let elapsed = self.inner.start.elapsed().as_nanos() as f64 / 1_000_000.;
-
-        #[expect(clippy::cast_precision_loss)]
-        let cpu_time_ms = self.inner.cpu_time.load(Ordering::Relaxed) as f64 / 1_000_000.;
-
-        let polls = self.inner.polls.load(Ordering::Relaxed);
         let tag = &self.inner.tag;
         let index = self.inner.index;
-        write!(
-            f,
-            "{tag}-{index} ({polls} polls, CPU: {cpu_time_ms:.3} ms, total: {elapsed:.3} ms)"
-        )
+        write!(f, "{tag}-{index}")
     }
 }
 
-/// A helper which implements `Display` for printing the current log context
+/// A snapshot of a log context statistics
 #[derive(Debug, Clone, Copy)]
-pub struct CurrentLogContext;
+pub struct LogContextStats {
+    /// How many times the context was polled
+    pub polls: u64,
 
-impl std::fmt::Display for CurrentLogContext {
+    /// The approximate CPU time spent in the context
+    pub cpu_time: Duration,
+
+    /// How much time elapsed since the context was created
+    pub elapsed: Duration,
+}
+
+impl std::fmt::Display for LogContextStats {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        CURRENT_LOG_CONTEXT
-            .try_with(|c| c.fmt(f))
-            .unwrap_or_else(|_| "<no context>".fmt(f))
+        let polls = self.polls;
+        #[expect(clippy::cast_precision_loss)]
+        let cpu_time_ms = self.cpu_time.as_nanos() as f64 / 1_000_000.;
+        #[expect(clippy::cast_precision_loss)]
+        let elapsed_ms = self.elapsed.as_nanos() as f64 / 1_000_000.;
+        write!(
+            f,
+            "polls: {polls:>3}, cpu: {cpu_time_ms:>6.3}ms, elapsed: {elapsed_ms:>6.3}ms",
+        )
     }
 }
