@@ -91,8 +91,7 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     let (log_writer, _guard) = tracing_appender::non_blocking(output);
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_writer(log_writer)
-        .with_file(true)
-        .with_line_number(true)
+        .event_format(mas_context::EventFormatter)
         .with_ansi(with_ansi);
     let filter_layer = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))

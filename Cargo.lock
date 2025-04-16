@@ -3251,11 +3251,16 @@ dependencies = [
 name = "mas-context"
 version = "0.15.0-rc.0"
 dependencies = [
+ "console",
+ "opentelemetry",
  "pin-project-lite",
  "quanta",
  "tokio",
  "tower-layer",
  "tower-service",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
 ]
 
 [[package]]

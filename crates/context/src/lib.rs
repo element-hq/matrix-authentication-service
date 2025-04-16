@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+mod fmt;
 mod future;
 mod layer;
 mod service;
@@ -20,6 +21,7 @@ use quanta::Instant;
 use tokio::task_local;
 
 pub use self::{
+    fmt::EventFormatter,
     future::{LogContextFuture, PollRecordingFuture},
     layer::LogContextLayer,
     service::LogContextService,
