@@ -79,6 +79,9 @@ pub struct ClientConfig {
     /// Authentication method used for this client
     client_auth_method: ClientAuthMethodConfig,
 
+    /// Name of the OAuth2 client
+    pub client_name: Option<String>,
+
     /// The client secret, used by the `client_secret_basic`,
     /// `client_secret_post` and `client_secret_jwt` authentication methods
     #[serde(skip_serializing_if = "Option::is_none")]
