@@ -80,6 +80,7 @@ pub struct ClientConfig {
     client_auth_method: ClientAuthMethodConfig,
 
     /// Name of the OAuth2 client
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub client_name: Option<String>,
 
     /// The client secret, used by the `client_secret_basic`,
