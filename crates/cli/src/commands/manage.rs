@@ -67,7 +67,7 @@ enum Subcommand {
     /// Add an email address to the specified user
     AddEmail { username: String, email: String },
 
-    /// [DEPRECATED] Mark email address as verified
+    /// \[DEPRECATED\] Mark email address as verified
     VerifyEmail { username: String, email: String },
 
     /// Set a user password
@@ -255,7 +255,13 @@ impl Options {
                 };
 
                 repo.into_inner().commit().await?;
-                info!(?email, "Email added");
+                info!(
+                    %user.id,
+                    %user.username,
+                    %email.id,
+                    %email.email,
+                    "Email added"
+                );
 
                 Ok(ExitCode::SUCCESS)
             }

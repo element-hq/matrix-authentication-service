@@ -552,7 +552,7 @@ impl UserMutations {
         let user = repo.user().lock(&state.clock(), user).await?;
 
         if deactivate {
-            info!("Scheduling deactivation of user {}", user.id);
+            info!(%user.id, "Scheduling deactivation of user");
             repo.queue_job()
                 .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, deactivate))
                 .await?;

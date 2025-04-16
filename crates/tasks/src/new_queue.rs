@@ -253,7 +253,7 @@ impl QueueWorker {
             .await
             .map_err(QueueRunnerError::CommitTransaction)?;
 
-        tracing::info!("Registered worker");
+        tracing::info!(worker.id = %registration.id, "Registered worker");
         let now = clock.now();
 
         let wakeup_reason = METER
@@ -782,7 +782,12 @@ impl JobTracker {
                     // We should never crash, but in case we do, we do that in the task and
                     // don't crash the worker
                     let job = factory.expect("unknown job factory")(payload);
-                    tracing::info!("Running job");
+                    tracing::info!(
+                        job.id = %context.id,
+                        job.queue.name = %context.queue_name,
+                        job.attempt = %context.attempt,
+                        "Running job"
+                    );
                     job.run(&state, context).await
                 })
                 .instrument(span)

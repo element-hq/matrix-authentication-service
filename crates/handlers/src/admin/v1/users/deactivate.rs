@@ -86,7 +86,7 @@ pub async fn handler(
         user = repo.user().lock(&clock, user).await?;
     }
 
-    info!("Scheduling deactivation of user {}", user.id);
+    info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
         .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
         .await?;
