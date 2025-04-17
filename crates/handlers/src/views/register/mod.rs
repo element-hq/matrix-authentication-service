@@ -20,7 +20,7 @@ mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
 
-#[tracing::instrument(name = "handlers.views.register.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
