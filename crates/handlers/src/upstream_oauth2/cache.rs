@@ -165,7 +165,7 @@ impl MetadataCache {
     ///
     /// This spawns a background task that will refresh the cache at the given
     /// interval.
-    #[tracing::instrument(name = "metadata_cache.warm_up_and_run", skip_all, err)]
+    #[tracing::instrument(name = "metadata_cache.warm_up_and_run", skip_all)]
     pub async fn warm_up_and_run<R: RepositoryAccess>(
         &self,
         client: &reqwest::Client,
@@ -205,7 +205,7 @@ impl MetadataCache {
         }))
     }
 
-    #[tracing::instrument(name = "metadata_cache.fetch", fields(%issuer), skip_all, err)]
+    #[tracing::instrument(name = "metadata_cache.fetch", fields(%issuer), skip_all)]
     async fn fetch(
         &self,
         client: &reqwest::Client,
@@ -237,7 +237,7 @@ impl MetadataCache {
     }
 
     /// Get the metadata for the given issuer.
-    #[tracing::instrument(name = "metadata_cache.get", fields(%issuer), skip_all, err)]
+    #[tracing::instrument(name = "metadata_cache.get", fields(%issuer), skip_all)]
     pub async fn get(
         &self,
         client: &reqwest::Client,
