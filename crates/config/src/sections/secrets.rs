@@ -70,7 +70,7 @@ impl SecretsConfig {
     /// # Errors
     ///
     /// Returns an error when a key could not be imported
-    #[tracing::instrument(name = "secrets.load", skip_all, err(Debug))]
+    #[tracing::instrument(name = "secrets.load", skip_all)]
     pub async fn key_store(&self) -> anyhow::Result<Keystore> {
         let mut keys = Vec::with_capacity(self.keys.len());
         for item in &self.keys {

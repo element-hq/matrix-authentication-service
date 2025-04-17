@@ -62,7 +62,7 @@ fn map_claims_imports(
     }
 }
 
-#[tracing::instrument(name = "config.sync", skip_all, err(Debug))]
+#[tracing::instrument(name = "config.sync", skip_all)]
 pub async fn config_sync(
     upstream_oauth2_config: UpstreamOAuth2Config,
     clients_config: ClientsConfig,

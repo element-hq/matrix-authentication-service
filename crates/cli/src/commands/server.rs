@@ -113,7 +113,8 @@ impl Options {
                 false,
                 false,
             )
-            .await?;
+            .await
+            .context("could not sync the configuration with the database")?;
         }
 
         // Initialize the key store
