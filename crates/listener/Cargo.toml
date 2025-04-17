@@ -27,6 +27,8 @@ tower.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
 
+mas-context.workspace = true
+
 [dev-dependencies]
 anyhow.workspace = true
 rustls-pemfile = "2.2.0"
