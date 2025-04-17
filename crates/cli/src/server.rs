@@ -322,8 +322,8 @@ pub fn build_router(
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
         }))
-        .layer(SentryHttpLayer::new())
         .layer(NewSentryLayer::new_from_top())
+        .layer(SentryHttpLayer::with_transaction())
         .with_state(state)
 }
 
