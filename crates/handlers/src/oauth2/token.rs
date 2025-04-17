@@ -444,14 +444,17 @@ async fn authorization_code_grant(
 
             // Ending the session if the token was already exchanged more than 20s ago
             if now - exchanged_at > Duration::microseconds(20 * 1000 * 1000) {
-                warn!("Ending potentially compromised session");
+                warn!(oauth_session.id = %session_id, "Ending potentially compromised session");
                 let session = repo
                     .oauth2_session()
                     .lookup(session_id)
                     .await?
                     .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
+
+                //if !session.is_finished() {
                 repo.oauth2_session().finish(clock, session).await?;
                 repo.save().await?;
+                //}
             }
 
             return Err(RouteError::InvalidGrant(authz_grant.id));

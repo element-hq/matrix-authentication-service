@@ -13,7 +13,7 @@ use hyper::StatusCode;
 use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    sentry::SentryEventID,
+    record_error,
 };
 use mas_data_model::AuthorizationGrantStage;
 use mas_keystore::Keystore;
@@ -46,11 +46,11 @@ pub enum RouteError {
     #[error("Authorization grant not found")]
     GrantNotFound,
 
-    #[error("Authorization grant already used")]
-    GrantNotPending,
+    #[error("Authorization grant {0} already used")]
+    GrantNotPending(Ulid),
 
-    #[error("Failed to load client")]
-    NoSuchClient,
+    #[error("Failed to load client {0}")]
+    NoSuchClient(Ulid),
 }
 
 impl_from_error_for_route!(mas_templates::TemplateError);
@@ -64,10 +64,10 @@ impl_from_error_for_route!(super::callback::CallbackDestinationError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::NoSuchClient(_));
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            SentryEventID::from(event_id),
+            sentry_event_id,
             self.to_string(),
         )
             .into_response()
@@ -78,7 +78,6 @@ impl IntoResponse for RouteError {
     name = "handlers.oauth2.authorization.consent.get",
     fields(grant.id = %grant_id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -118,10 +117,10 @@ pub(crate) async fn get(
         .oauth2_client()
         .lookup(grant.client_id)
         .await?
-        .ok_or(RouteError::NoSuchClient)?;
+        .ok_or(RouteError::NoSuchClient(grant.client_id))?;
 
     if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
-        return Err(RouteError::GrantNotPending);
+        return Err(RouteError::GrantNotPending(grant.id));
     }
 
     let Some(session) = maybe_session else {
@@ -172,7 +171,6 @@ pub(crate) async fn get(
     name = "handlers.oauth2.authorization.consent.post",
     fields(grant.id = %grant_id),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -229,7 +227,11 @@ pub(crate) async fn post(
         .oauth2_client()
         .lookup(grant.client_id)
         .await?
-        .ok_or(RouteError::NoSuchClient)?;
+        .ok_or(RouteError::NoSuchClient(grant.client_id))?;
+
+    if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
+        return Err(RouteError::GrantNotPending(grant.id));
+    }
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {

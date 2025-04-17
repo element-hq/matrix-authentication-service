@@ -9,7 +9,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, sentry::SentryEventID};
+use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, record_error};
 use mas_data_model::{AuthorizationCode, Pkce};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -53,7 +53,7 @@ pub enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         // TODO: better error pages
         let response = match self {
             RouteError::Internal(e) => {
@@ -75,7 +75,7 @@ impl IntoResponse for RouteError {
                 .into_response(),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -122,7 +122,6 @@ fn resolve_response_mode(
     name = "handlers.oauth2.authorization.get",
     fields(client.id = %params.auth.client_id),
     skip_all,
-    err,
 )]
 #[allow(clippy::too_many_lines)]
 pub(crate) async fn get(
@@ -319,7 +318,7 @@ pub(crate) async fn get(
     let response = match res {
         Ok(r) => r,
         Err(err) => {
-            tracing::error!(%err);
+            tracing::error!(message = &err as &dyn std::error::Error);
             callback_destination.go(
                 &templates,
                 &locale,
