@@ -10,7 +10,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::sentry::SentryEventID;
+use mas_axum_utils::record_error;
 use mas_data_model::{
     CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User, UserAgent,
 };
@@ -210,7 +210,8 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id =
+            record_error!(self, Self::Internal(_) | Self::ProvisionDeviceFailed(_));
         LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let response = match self {
             Self::Internal(_) | Self::ProvisionDeviceFailed(_) => MatrixError {
@@ -257,11 +258,11 @@ impl IntoResponse for RouteError {
             },
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
-#[tracing::instrument(name = "handlers.compat.login.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.compat.login.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
