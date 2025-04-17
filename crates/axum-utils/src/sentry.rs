@@ -46,17 +46,20 @@ macro_rules! record_error {
         Option::<$crate::sentry::SentryEventID>::None
     }};
 
+    ($error:expr) => {{
+        tracing::error!(message = &$error as &dyn std::error::Error);
+
+        // With the `sentry-tracing` integration, Sentry should have
+        // captured an error, so let's extract the last event ID from the
+        // current hub
+        $crate::sentry::SentryEventID::for_last_event()
+    }};
+
     ($error:expr, $pattern:pat) => {
         if let $pattern = $error {
-            tracing::error!(message = &$error as &dyn std::error::Error);
-
-            // With the `sentry-tracing` integration, Sentry should have
-            // captured an error, so let's extract the last event ID from the
-            // current hub
-            $crate::sentry::SentryEventID::for_last_event()
+            record_error!($error)
         } else {
-            tracing::warn!(message = &$error as &dyn std::error::Error);
-            None
+            record_error!($error, !)
         }
     };
 }
