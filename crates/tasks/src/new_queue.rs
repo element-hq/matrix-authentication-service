@@ -348,7 +348,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.setup_schedules", skip_all, err)]
+    #[tracing::instrument(name = "worker.setup_schedules", skip_all)]
     pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
         let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
 
@@ -372,7 +372,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.run_loop", skip_all, err)]
+    #[tracing::instrument(name = "worker.run_loop", skip_all)]
     async fn run_loop(&mut self) -> Result<(), QueueRunnerError> {
         self.wait_until_wakeup().await?;
 
@@ -393,7 +393,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.shutdown", skip_all, err)]
+    #[tracing::instrument(name = "worker.shutdown", skip_all)]
     async fn shutdown(&mut self) -> Result<(), QueueRunnerError> {
         tracing::info!("Shutting down worker");
 
@@ -438,7 +438,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all, err)]
+    #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all)]
     async fn wait_until_wakeup(&mut self) -> Result<(), QueueRunnerError> {
         // This is to make sure we wake up every second to do the maintenance tasks
         // We add a little bit of random jitter to the duration, so that we don't get
@@ -487,7 +487,6 @@ impl QueueWorker {
         name = "worker.tick",
         skip_all,
         fields(worker.id = %self.registration.id),
-        err,
     )]
     async fn tick(&mut self) -> Result<(), QueueRunnerError> {
         tracing::debug!("Tick");
@@ -586,7 +585,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.perform_leader_duties", skip_all, err)]
+    #[tracing::instrument(name = "worker.perform_leader_duties", skip_all)]
     async fn perform_leader_duties(&mut self) -> Result<(), QueueRunnerError> {
         // This should have been checked by the caller, but better safe than sorry
         if !self.am_i_leader {

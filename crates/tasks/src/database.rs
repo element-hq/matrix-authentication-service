@@ -17,7 +17,7 @@ use crate::{
 
 #[async_trait]
 impl RunnableJob for CleanupExpiredTokensJob {
-    #[tracing::instrument(name = "job.cleanup_expired_tokens", skip_all, err)]
+    #[tracing::instrument(name = "job.cleanup_expired_tokens", skip_all)]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();
         let mut repo = state.repository().await.map_err(JobError::retry)?;
@@ -41,7 +41,7 @@ impl RunnableJob for CleanupExpiredTokensJob {
 
 #[async_trait]
 impl RunnableJob for PruneStalePolicyDataJob {
-    #[tracing::instrument(name = "job.prune_stale_policy_data", skip_all, err)]
+    #[tracing::instrument(name = "job.prune_stale_policy_data", skip_all)]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let mut repo = state.repository().await.map_err(JobError::retry)?;
 

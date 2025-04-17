@@ -27,7 +27,6 @@ impl RunnableJob for DeactivateUserJob {
     name = "job.deactivate_user"
         fields(user.id = %self.user_id(), erase = %self.hs_erase()),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();
@@ -118,7 +117,6 @@ impl RunnableJob for ReactivateUserJob {
         name = "job.reactivate_user",
         fields(user.id = %self.user_id()),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();
