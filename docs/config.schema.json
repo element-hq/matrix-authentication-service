@@ -1566,6 +1566,7 @@
           "type": "boolean"
         },
         "schemes": {
+          "description": "The hashing schemes to use for hashing and validating passwords\n\nThe hashing scheme with the highest version number will be used for hashing new passwords.",
           "default": [
             {
               "version": 1,
@@ -1587,6 +1588,7 @@
       }
     },
     "HashingScheme": {
+      "description": "Parameters for a password hashing scheme",
       "type": "object",
       "required": [
         "algorithm",
@@ -1594,12 +1596,18 @@
       ],
       "properties": {
         "version": {
+          "description": "The version of the hashing scheme. They must be unique, and the highest version will be used for hashing new passwords.",
           "type": "integer",
           "format": "uint16",
           "minimum": 0.0
         },
         "algorithm": {
-          "$ref": "#/definitions/Algorithm"
+          "description": "The hashing algorithm to use",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Algorithm"
+            }
+          ]
         },
         "cost": {
           "description": "Cost for the bcrypt algorithm",
@@ -1609,9 +1617,11 @@
           "minimum": 0.0
         },
         "secret": {
+          "description": "An optional secret to use when hashing passwords. This makes it harder to brute-force the passwords in case of a database leak.",
           "type": "string"
         },
         "secret_file": {
+          "description": "Same as `secret`, but read from a file.",
           "type": "string"
         }
       }
