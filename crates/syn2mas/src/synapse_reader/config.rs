@@ -16,7 +16,7 @@ use sqlx::postgres::PgConnectOptions;
 ///
 /// See: <https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html>
 #[derive(Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct Config {
     pub database: DatabaseSection,
 
@@ -239,7 +239,7 @@ mod test {
     #[test]
     fn test_to_sqlx_postgres() {
         #[track_caller]
-        #[allow(clippy::needless_pass_by_value)]
+        #[expect(clippy::needless_pass_by_value)]
         fn assert_eq_options(config: DatabaseSection, uri: &str) {
             let config_connect_options = config
                 .to_sqlx_postgres()

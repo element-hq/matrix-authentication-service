@@ -46,7 +46,7 @@ pub enum Error {
     },
 
     #[error("writer connection pool shut down due to error")]
-    #[allow(clippy::enum_variant_names)]
+    #[expect(clippy::enum_variant_names)]
     WriterConnectionPoolError,
 
     #[error("inconsistent database: {0}")]
@@ -390,7 +390,6 @@ impl MasWriter {
     /// Errors are returned in the following conditions:
     ///
     /// - If the database connection experiences an error.
-    #[allow(clippy::missing_panics_doc)] // not real
     #[tracing::instrument(name = "syn2mas.mas_writer.new", skip_all)]
     pub async fn new(
         mut conn: LockedMasDatabase,
@@ -632,7 +631,6 @@ impl MasWriter {
     /// Errors are returned in the following conditions:
     ///
     /// - If the database writer connection pool had an error.
-    #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub fn write_users(&mut self, users: Vec<MasNewUser>) -> BoxFuture<'_, Result<(), Error>> {
         self.writer_pool
@@ -711,7 +709,6 @@ impl MasWriter {
     /// Errors are returned in the following conditions:
     ///
     /// - If the database writer connection pool had an error.
-    #[allow(clippy::missing_panics_doc)] // not a real panic
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
     pub fn write_passwords(
         &mut self,
