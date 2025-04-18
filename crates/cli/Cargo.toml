@@ -27,6 +27,7 @@ dialoguer = { version = "0.11.0", default-features = false, features = [
 dotenvy = "0.15.7"
 figment.workspace = true
 futures-util.workspace = true
+headers.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 ipnetwork = "0.20.0"
@@ -66,6 +67,7 @@ sentry-tracing.workspace = true
 sentry-tower.workspace = true
 
 mas-config.workspace = true
+mas-context.workspace = true
 mas-data-model.workspace = true
 mas-email.workspace = true
 mas-handlers.workspace = true

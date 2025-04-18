@@ -7,6 +7,7 @@
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::{
     BoxRng,
     queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
@@ -39,11 +40,12 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
-        (status, Json(error)).into_response()
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -67,7 +69,7 @@ This invalidates any existing session, and will ask the homeserver to make them 
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.users.deactivate", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.users.deactivate", skip_all)]
 pub async fn handler(
     CallContext {
         mut repo, clock, ..
@@ -86,7 +88,7 @@ pub async fn handler(
         user = repo.user().lock(&clock, user).await?;
     }
 
-    info!("Scheduling deactivation of user {}", user.id);
+    info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
         .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
         .await?;

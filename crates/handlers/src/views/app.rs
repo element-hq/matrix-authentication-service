@@ -25,7 +25,7 @@ pub struct Params {
     action: Option<mas_router::AccountAction>,
 }
 
-#[tracing::instrument(name = "handlers.views.app.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.app.get", skip_all)]
 pub async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
@@ -74,7 +74,7 @@ pub async fn get(
 /// Like `get`, but allow anonymous access.
 /// Used for a subset of the account management paths.
 /// Needed for e.g. account recovery.
-#[tracing::instrument(name = "handlers.views.app.get_anonymous", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.app.get_anonymous", skip_all)]
 pub async fn get_anonymous(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,

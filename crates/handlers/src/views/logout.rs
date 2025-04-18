@@ -18,7 +18,7 @@ use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
 
-#[tracing::instrument(name = "handlers.views.logout.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.logout.post", skip_all)]
 pub(crate) async fn post(
     clock: BoxClock,
     mut repo: BoxRepository,

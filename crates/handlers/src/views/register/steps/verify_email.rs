@@ -37,7 +37,6 @@ impl ToFormState for CodeForm {
     name = "handlers.views.register.steps.verify_email.get",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -104,7 +103,6 @@ pub(crate) async fn get(
     name = "handlers.views.account_email_verify.post",
     fields(user_email.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     clock: BoxClock,

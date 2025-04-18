@@ -91,8 +91,7 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     let (log_writer, _guard) = tracing_appender::non_blocking(output);
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_writer(log_writer)
-        .with_file(true)
-        .with_line_number(true)
+        .event_format(mas_context::EventFormatter)
         .with_ansi(with_ansi);
     let filter_layer = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))
@@ -129,9 +128,11 @@ async fn try_main() -> anyhow::Result<ExitCode> {
 
     let sentry_layer = sentry.is_enabled().then(|| {
         sentry_tracing::layer().event_filter(|md| {
-            // All the spans in the handlers module send their data to Sentry themselves, so
-            // we only create breadcrumbs for them, instead of full events
-            if md.target().starts_with("mas_handlers::") {
+            // By default, Sentry records all events as breadcrumbs, except errors.
+            //
+            // Because we're emitting error events for 5xx responses, we need to exclude
+            // them and also record them as breadcrumbs.
+            if md.name() == "http.server.response" {
                 EventFilter::Breadcrumb
             } else {
                 sentry_tracing::default_event_filter(md)

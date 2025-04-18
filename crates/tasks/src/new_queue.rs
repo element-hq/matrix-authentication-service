@@ -8,6 +8,7 @@ use std::{collections::HashMap, sync::Arc};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use cron::Schedule;
+use mas_context::LogContext;
 use mas_storage::{
     Clock, RepositoryAccess, RepositoryError,
     queue::{InsertableJob, Job, JobMetadata, Worker},
@@ -183,7 +184,7 @@ fn retry_delay(attempt: usize) -> Duration {
     Duration::milliseconds(2_i64.saturating_pow(attempt) * 5_000)
 }
 
-type JobResult = Result<(), JobError>;
+type JobResult = (std::time::Duration, Result<(), JobError>);
 type JobFactory = Arc<dyn Fn(JobPayload) -> Box<dyn RunnableJob> + Send + Sync>;
 
 struct ScheduleDefinition {
@@ -252,7 +253,7 @@ impl QueueWorker {
             .await
             .map_err(QueueRunnerError::CommitTransaction)?;
 
-        tracing::info!("Registered worker");
+        tracing::info!(worker.id = %registration.id, "Registered worker");
         let now = clock.now();
 
         let wakeup_reason = METER
@@ -337,7 +338,9 @@ impl QueueWorker {
         self.setup_schedules().await?;
 
         while !self.cancellation_token.is_cancelled() {
-            self.run_loop().await?;
+            LogContext::new("worker-run-loop")
+                .run(|| self.run_loop())
+                .await?;
         }
 
         self.shutdown().await?;
@@ -345,7 +348,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.setup_schedules", skip_all, err)]
+    #[tracing::instrument(name = "worker.setup_schedules", skip_all)]
     pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
         let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
 
@@ -369,7 +372,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.run_loop", skip_all, err)]
+    #[tracing::instrument(name = "worker.run_loop", skip_all)]
     async fn run_loop(&mut self) -> Result<(), QueueRunnerError> {
         self.wait_until_wakeup().await?;
 
@@ -390,7 +393,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.shutdown", skip_all, err)]
+    #[tracing::instrument(name = "worker.shutdown", skip_all)]
     async fn shutdown(&mut self) -> Result<(), QueueRunnerError> {
         tracing::info!("Shutting down worker");
 
@@ -435,7 +438,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all, err)]
+    #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all)]
     async fn wait_until_wakeup(&mut self) -> Result<(), QueueRunnerError> {
         // This is to make sure we wake up every second to do the maintenance tasks
         // We add a little bit of random jitter to the duration, so that we don't get
@@ -484,7 +487,6 @@ impl QueueWorker {
         name = "worker.tick",
         skip_all,
         fields(worker.id = %self.registration.id),
-        err,
     )]
     async fn tick(&mut self) -> Result<(), QueueRunnerError> {
         tracing::debug!("Tick");
@@ -583,7 +585,7 @@ impl QueueWorker {
         Ok(())
     }
 
-    #[tracing::instrument(name = "worker.perform_leader_duties", skip_all, err)]
+    #[tracing::instrument(name = "worker.perform_leader_duties", skip_all)]
     async fn perform_leader_duties(&mut self) -> Result<(), QueueRunnerError> {
         // This should have been checked by the caller, but better safe than sorry
         if !self.am_i_leader {
@@ -771,16 +773,86 @@ impl JobTracker {
     fn spawn_job(&mut self, state: State, context: JobContext, payload: JobPayload) {
         let factory = self.factories.get(context.queue_name.as_str()).cloned();
         let task = {
+            let log_context = LogContext::new(format!("job-{}", context.queue_name));
             let context = context.clone();
             let span = context.span();
-            async move {
-                // We should never crash, but in case we do, we do that in the task and
-                // don't crash the worker
-                let job = factory.expect("unknown job factory")(payload);
-                tracing::info!("Running job");
-                job.run(&state, context).await
-            }
-            .instrument(span)
+            log_context
+                .run(async move || {
+                    // We should never crash, but in case we do, we do that in the task and
+                    // don't crash the worker
+                    let job = factory.expect("unknown job factory")(payload);
+                    tracing::info!(
+                        job.id = %context.id,
+                        job.queue.name = %context.queue_name,
+                        job.attempt = %context.attempt,
+                        "Running job"
+                    );
+                    let result = job.run(&state, context.clone()).await;
+
+                    let Some(log_context) = LogContext::current() else {
+                        // This should never happen, but if it does it's fine: we're recovering fine
+                        // from panics in those tasks
+                        panic!("Missing log context, this should never happen");
+                    };
+
+                    let context_stats = log_context.stats();
+
+                    // We log the result here so that it's attached to the right span & log context
+                    match &result {
+                        Ok(()) => {
+                            tracing::info!(
+                                job.id = %context.id,
+                                job.queue.name = %context.queue_name,
+                                job.attempt = %context.attempt,
+                                "Job completed [{context_stats}]"
+                            );
+                        }
+
+                        Err(JobError {
+                            decision: JobErrorDecision::Fail,
+                            error,
+                        }) => {
+                            tracing::error!(
+                                error = &**error as &dyn std::error::Error,
+                                job.id = %context.id,
+                                job.queue.name = %context.queue_name,
+                                job.attempt = %context.attempt,
+                                "Job failed, not retrying [{context_stats}]"
+                            );
+                        }
+
+                        Err(JobError {
+                            decision: JobErrorDecision::Retry,
+                            error,
+                        }) if context.attempt < MAX_ATTEMPTS => {
+                            let delay = retry_delay(context.attempt);
+                            tracing::warn!(
+                                error = &**error as &dyn std::error::Error,
+                                job.id = %context.id,
+                                job.queue.name = %context.queue_name,
+                                job.attempt = %context.attempt,
+                                "Job failed, will retry in {}s [{context_stats}]",
+                                delay.num_seconds()
+                            );
+                        }
+
+                        Err(JobError {
+                            decision: JobErrorDecision::Retry,
+                            error,
+                        }) => {
+                            tracing::error!(
+                                error = &**error as &dyn std::error::Error,
+                                job.id = %context.id,
+                                job.queue.name = %context.queue_name,
+                                job.attempt = %context.attempt,
+                                "Job failed too many times, abandonning [{context_stats}]"
+                            );
+                        }
+                    }
+
+                    (context_stats.elapsed, result)
+                })
+                .instrument(span)
         };
 
         self.in_flight_jobs.add(
@@ -837,15 +909,10 @@ impl JobTracker {
             }
         }
 
-        // XXX: the time measurement isn't accurate, as it would include the
-        // time spent between the task finishing, and us processing the result.
-        // It's fine for now, as it at least gives us an idea of how many tasks
-        // we run, and what their status is
-
         while let Some(result) = self.last_join_result.take() {
             match result {
-                // The job succeeded
-                Ok((id, Ok(()))) => {
+                // The job succeeded. The logging and time measurement is already done in the task
+                Ok((id, (elapsed, Ok(())))) => {
                     let context = self
                         .job_contexts
                         .remove(&id)
@@ -856,22 +923,9 @@ impl JobTracker {
                         &[KeyValue::new("job.queue.name", context.queue_name.clone())],
                     );
 
-                    let elapsed = context
-                        .start
-                        .elapsed()
-                        .as_millis()
-                        .try_into()
-                        .unwrap_or(u64::MAX);
-                    tracing::info!(
-                        job.id = %context.id,
-                        job.queue.name = %context.queue_name,
-                        job.attempt = %context.attempt,
-                        job.elapsed = format!("{elapsed}ms"),
-                        "Job completed"
-                    );
-
+                    let elapsed_ms = elapsed.as_millis().try_into().unwrap_or(u64::MAX);
                     self.job_processing_time.record(
-                        elapsed,
+                        elapsed_ms,
                         &[
                             KeyValue::new("job.queue.name", context.queue_name),
                             KeyValue::new("job.result", "success"),
@@ -883,8 +937,8 @@ impl JobTracker {
                         .await?;
                 }
 
-                // The job failed
-                Ok((id, Err(e))) => {
+                // The job failed. The logging and time measurement is already done in the task
+                Ok((id, (elapsed, Err(e)))) => {
                     let context = self
                         .job_contexts
                         .remove(&id)
@@ -900,26 +954,11 @@ impl JobTracker {
                         .mark_as_failed(clock, context.id, &reason)
                         .await?;
 
-                    let elapsed = context
-                        .start
-                        .elapsed()
-                        .as_millis()
-                        .try_into()
-                        .unwrap_or(u64::MAX);
-
+                    let elapsed_ms = elapsed.as_millis().try_into().unwrap_or(u64::MAX);
                     match e.decision {
                         JobErrorDecision::Fail => {
-                            tracing::error!(
-                                error = &e as &dyn std::error::Error,
-                                job.id = %context.id,
-                                job.queue.name = %context.queue_name,
-                                job.attempt = %context.attempt,
-                                job.elapsed = format!("{elapsed}ms"),
-                                "Job failed, not retrying"
-                            );
-
                             self.job_processing_time.record(
-                                elapsed,
+                                elapsed_ms,
                                 &[
                                     KeyValue::new("job.queue.name", context.queue_name),
                                     KeyValue::new("job.result", "failed"),
@@ -928,50 +967,31 @@ impl JobTracker {
                             );
                         }
 
+                        JobErrorDecision::Retry if context.attempt < MAX_ATTEMPTS => {
+                            self.job_processing_time.record(
+                                elapsed_ms,
+                                &[
+                                    KeyValue::new("job.queue.name", context.queue_name),
+                                    KeyValue::new("job.result", "failed"),
+                                    KeyValue::new("job.decision", "retry"),
+                                ],
+                            );
+
+                            let delay = retry_delay(context.attempt);
+                            repo.queue_job()
+                                .retry(&mut *rng, clock, context.id, delay)
+                                .await?;
+                        }
+
                         JobErrorDecision::Retry => {
-                            if context.attempt < MAX_ATTEMPTS {
-                                let delay = retry_delay(context.attempt);
-                                tracing::warn!(
-                                    error = &e as &dyn std::error::Error,
-                                    job.id = %context.id,
-                                    job.queue.name = %context.queue_name,
-                                    job.attempt = %context.attempt,
-                                    job.elapsed = format!("{elapsed}ms"),
-                                    "Job failed, will retry in {}s",
-                                    delay.num_seconds()
-                                );
-
-                                self.job_processing_time.record(
-                                    elapsed,
-                                    &[
-                                        KeyValue::new("job.queue.name", context.queue_name),
-                                        KeyValue::new("job.result", "failed"),
-                                        KeyValue::new("job.decision", "retry"),
-                                    ],
-                                );
-
-                                repo.queue_job()
-                                    .retry(&mut *rng, clock, context.id, delay)
-                                    .await?;
-                            } else {
-                                tracing::error!(
-                                    error = &e as &dyn std::error::Error,
-                                    job.id = %context.id,
-                                    job.queue.name = %context.queue_name,
-                                    job.attempt = %context.attempt,
-                                    job.elapsed = format!("{elapsed}ms"),
-                                    "Job failed too many times, abandonning"
-                                );
-
-                                self.job_processing_time.record(
-                                    elapsed,
-                                    &[
-                                        KeyValue::new("job.queue.name", context.queue_name),
-                                        KeyValue::new("job.result", "failed"),
-                                        KeyValue::new("job.decision", "abandon"),
-                                    ],
-                                );
-                            }
+                            self.job_processing_time.record(
+                                elapsed_ms,
+                                &[
+                                    KeyValue::new("job.queue.name", context.queue_name),
+                                    KeyValue::new("job.result", "failed"),
+                                    KeyValue::new("job.decision", "abandon"),
+                                ],
+                            );
                         }
                     }
                 }
@@ -989,6 +1009,8 @@ impl JobTracker {
                         &[KeyValue::new("job.queue.name", context.queue_name.clone())],
                     );
 
+                    // This measurement is not accurate as it includes the time processing the jobs,
+                    // but it's fine, it's only for panicked tasks
                     let elapsed = context
                         .start
                         .elapsed()
@@ -1003,7 +1025,7 @@ impl JobTracker {
 
                     if context.attempt < MAX_ATTEMPTS {
                         let delay = retry_delay(context.attempt);
-                        tracing::warn!(
+                        tracing::error!(
                             error = &e as &dyn std::error::Error,
                             job.id = %context.id,
                             job.queue.name = %context.queue_name,

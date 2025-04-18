@@ -111,7 +111,6 @@ impl Mailer {
             email.to = %to,
             email.language = %context.language(),
         ),
-        err,
     )]
     pub async fn send_verification_email(
         &self,
@@ -137,7 +136,6 @@ impl Mailer {
             user.id = %context.user().id,
             user_recovery_session.id = %context.session().id,
         ),
-        err,
     )]
     pub async fn send_recovery_email(
         &self,
@@ -154,7 +152,7 @@ impl Mailer {
     /// # Errors
     ///
     /// Returns an error if the connection failed
-    #[tracing::instrument(name = "email.test_connection", skip_all, err)]
+    #[tracing::instrument(name = "email.test_connection", skip_all)]
     pub async fn test_connection(&self) -> Result<(), crate::transport::Error> {
         self.transport.test_connection().await
     }

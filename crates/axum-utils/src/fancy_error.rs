@@ -54,12 +54,13 @@ impl<E: std::fmt::Debug + std::fmt::Display> From<E> for FancyError {
 
 impl IntoResponse for FancyError {
     fn into_response(self) -> Response {
+        tracing::error!(message = %self.context);
         let error = format!("{}", self.context);
-        let event_id = sentry::capture_message(&error, sentry::Level::Error);
+        let event_id = SentryEventID::for_last_event();
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             TypedHeader(ContentType::text()),
-            SentryEventID::from(event_id),
+            event_id,
             Extension(self.context),
             error,
         )

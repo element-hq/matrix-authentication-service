@@ -24,7 +24,7 @@ pub struct Params {
     code: Option<String>,
 }
 
-#[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all)]
 pub(crate) async fn get(
     clock: BoxClock,
     mut repo: BoxRepository,

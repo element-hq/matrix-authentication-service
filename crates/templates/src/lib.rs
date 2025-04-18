@@ -138,7 +138,6 @@ impl Templates {
         name = "templates.load",
         skip_all,
         fields(%path),
-        err,
     )]
     pub async fn load(
         path: Utf8PathBuf,
@@ -258,7 +257,6 @@ impl Templates {
         name = "templates.reload",
         skip_all,
         fields(path = %self.path),
-        err,
     )]
     pub async fn reload(&self) -> Result<(), TemplateLoadingError> {
         let (translator, environment) = Self::load_(

@@ -8,7 +8,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    sentry::SentryEventID,
+    record_error,
 };
 use mas_data_model::TokenType;
 use mas_iana::oauth::OAuthTokenTypeHint;
@@ -22,6 +22,7 @@ use oauth2_types::{
     requests::RevocationRequest,
 };
 use thiserror::Error;
+use ulid::Ulid;
 
 use crate::{BoundActivityTracker, impl_from_error_for_route};
 
@@ -39,8 +40,19 @@ pub(crate) enum RouteError {
     #[error("client not allowed")]
     ClientNotAllowed,
 
-    #[error("could not verify client credentials")]
-    ClientCredentialsVerification(#[from] CredentialsVerificationError),
+    #[error("invalid client credentials for client {client_id}")]
+    InvalidClientCredentials {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
+
+    #[error("could not verify client credentials for client {client_id}")]
+    ClientCredentialsVerification {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
 
     #[error("client is unauthorized")]
     UnauthorizedClient,
@@ -54,9 +66,9 @@ pub(crate) enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let response = match self {
-            Self::Internal(_) => (
+            Self::Internal(_) | Self::ClientCredentialsVerification { .. } => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ClientError::from(ClientErrorCode::ServerError)),
             )
@@ -68,7 +80,7 @@ impl IntoResponse for RouteError {
             )
                 .into_response(),
 
-            Self::ClientNotFound | Self::ClientCredentialsVerification(_) => (
+            Self::ClientNotFound | Self::InvalidClientCredentials { .. } => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::InvalidClient)),
             )
@@ -90,7 +102,7 @@ impl IntoResponse for RouteError {
             Self::UnknownToken => StatusCode::OK.into_response(),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -106,7 +118,6 @@ impl From<mas_data_model::TokenFormatError> for RouteError {
     name = "handlers.oauth2.revoke.post",
     fields(client.id = client_authorization.client_id()),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     clock: BoxClock,
@@ -131,7 +142,20 @@ pub(crate) async fn post(
     client_authorization
         .credentials
         .verify(&http_client, &encrypter, method, &client)
-        .await?;
+        .await
+        .map_err(|err| {
+            if err.is_internal() {
+                RouteError::ClientCredentialsVerification {
+                    client_id: client.id,
+                    source: err,
+                }
+            } else {
+                RouteError::InvalidClientCredentials {
+                    client_id: client.id,
+                    source: err,
+                }
+            }
+        })?;
 
     let Some(form) = client_authorization.form else {
         return Err(RouteError::BadRequest);

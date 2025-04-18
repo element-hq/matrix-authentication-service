@@ -7,6 +7,7 @@ use std::sync::Arc;
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_policy::PolicyFactory;
 use mas_storage::BoxRng;
 use schemars::JsonSchema;
@@ -36,11 +37,12 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             RouteError::InvalidPolicyData(_) => StatusCode::BAD_REQUEST,
             RouteError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
-        (status, Json(error)).into_response()
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -79,7 +81,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.policy_data.set", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.policy_data.set", skip_all)]
 pub async fn handler(
     CallContext {
         mut repo, clock, ..

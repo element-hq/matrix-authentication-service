@@ -42,7 +42,6 @@ static PASSWORD_REGISTER_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     name = "handlers.views.register.steps.finish.get",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,

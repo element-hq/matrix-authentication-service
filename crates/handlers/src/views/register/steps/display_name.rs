@@ -49,7 +49,6 @@ impl ToFormState for DisplayNameForm {
     name = "handlers.views.register.steps.display_name.get",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -100,7 +99,6 @@ pub(crate) async fn get(
     name = "handlers.views.register.steps.display_name.post",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,

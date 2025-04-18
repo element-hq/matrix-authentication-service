@@ -41,6 +41,7 @@ pub(crate) struct ConsentForm {
     action: Action,
 }
 
+#[tracing::instrument(name = "handlers.oauth2.device.consent.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -136,6 +137,7 @@ pub(crate) async fn get(
     Ok((cookie_jar, Html(rendered)).into_response())
 }
 
+#[tracing::instrument(name = "handlers.oauth2.device.consent.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,

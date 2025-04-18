@@ -8,6 +8,7 @@ use std::str::FromStr as _;
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::{
     BoxRng,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
@@ -52,13 +53,14 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::EmailAlreadyInUse(_) => StatusCode::CONFLICT,
             Self::EmailNotValid { .. } => StatusCode::BAD_REQUEST,
             Self::UserNotFound(_) => StatusCode::NOT_FOUND,
         };
-        (status, Json(error)).into_response()
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -106,7 +108,7 @@ Note that this endpoint ignores any policy which would normally prevent the emai
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.user_emails.add", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.user_emails.add", skip_all)]
 pub async fn handler(
     CallContext {
         mut repo, clock, ..

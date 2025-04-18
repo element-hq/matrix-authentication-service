@@ -18,6 +18,7 @@ use hyper_util::{
     server::conn::auto::Connection,
     service::TowerToHyperService,
 };
+use mas_context::LogContext;
 use pin_project_lite::pin_project;
 use thiserror::Error;
 use tokio_rustls::rustls::ServerConfig;
@@ -107,12 +108,6 @@ impl<S> Server<S> {
 #[derive(Debug, Error)]
 #[non_exhaustive]
 enum AcceptError {
-    #[error("failed to accept connection from the underlying socket")]
-    Socket {
-        #[source]
-        source: std::io::Error,
-    },
-
     #[error("failed to complete the TLS handshake")]
     TlsHandshake {
         #[source]
@@ -133,10 +128,6 @@ enum AcceptError {
 }
 
 impl AcceptError {
-    fn socket(source: std::io::Error) -> Self {
-        Self::Socket { source }
-    }
-
     fn tls_handshake(source: std::io::Error) -> Self {
         Self::TlsHandshake { source }
     }
@@ -164,7 +155,6 @@ impl AcceptError {
         network.peer.address,
         network.peer.port,
     ),
-    err,
 )]
 async fn accept<S, B>(
     maybe_proxy_acceptor: &MaybeProxyAcceptor,
@@ -357,12 +347,16 @@ pub async fn run_servers<S, B>(
             // Poll on the JoinSet to collect connections to serve
             res = accept_tasks.join_next(), if !accept_tasks.is_empty() => {
                 match res {
-                    Some(Ok(Ok(connection))) => {
-                        tracing::trace!("Accepted connection");
-                        let conn = AbortableConnection::new(connection, soft_shutdown_token.child_token());
-                        connection_tasks.spawn(conn);
+                    Some(Ok(Some(connection))) => {
+                        let token = soft_shutdown_token.child_token();
+                        connection_tasks.spawn(LogContext::new("http-serve").run(async move || {
+                            tracing::debug!("Accepted connection");
+                            if let Err(e) = AbortableConnection::new(connection, token).await {
+                                tracing::warn!(error = &*e as &dyn std::error::Error, "Failed to serve connection");
+                            }
+                        }));
                     },
-                    Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
+                    Some(Ok(None)) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
                     Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                     None => tracing::error!("Join set was polled even though it was empty"),
                 }
@@ -371,8 +365,7 @@ pub async fn run_servers<S, B>(
             // Poll on the JoinSet to collect finished connections
             res = connection_tasks.join_next(), if !connection_tasks.is_empty() => {
                 match res {
-                    Some(Ok(Ok(()))) => tracing::trace!("Connection finished"),
-                    Some(Ok(Err(e))) => tracing::error!(error = &*e as &dyn std::error::Error, "Error while serving connection"),
+                    Some(Ok(())) => { /* Connection finished, any errors should be logged in in the spawned task */ },
                     Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                     None => tracing::error!("Join set was polled even though it was empty"),
                 }
@@ -385,11 +378,23 @@ pub async fn run_servers<S, B>(
                 // Spawn the connection in the set, so we don't have to wait for the handshake to
                 // accept the next connection. This allows us to keep track of active connections
                 // and waiting on them for a graceful shutdown
-                accept_tasks.spawn(async move {
-                    let (maybe_proxy_acceptor, maybe_tls_acceptor, service, peer_addr, stream) = res
-                        .map_err(AcceptError::socket)?;
-                    accept(&maybe_proxy_acceptor, &maybe_tls_acceptor, peer_addr, stream, service).await
-                });
+                accept_tasks.spawn(LogContext::new("http-accept").run(async move || {
+                    let (maybe_proxy_acceptor, maybe_tls_acceptor, service, peer_addr, stream) = match res {
+                        Ok(res) => res,
+                        Err(e) => {
+                            tracing::warn!(error = &e as &dyn std::error::Error, "Failed to accept connection from the underlying socket");
+                            return None;
+                        }
+                    };
+
+                    match accept(&maybe_proxy_acceptor, &maybe_tls_acceptor, peer_addr, stream, service).await {
+                        Ok(connection) => Some(connection),
+                        Err(e) => {
+                            tracing::warn!(error = &e as &dyn std::error::Error, "Failed to accept connection");
+                            None
+                        }
+                    }
+                }));
             },
         };
     }
@@ -409,12 +414,16 @@ pub async fn run_servers<S, B>(
                 // Poll on the JoinSet to collect connections to serve
                 res = accept_tasks.join_next(), if !accept_tasks.is_empty() => {
                     match res {
-                        Some(Ok(Ok(connection))) => {
-                            tracing::trace!("Accepted connection");
-                            let conn = AbortableConnection::new(connection, soft_shutdown_token.child_token());
-                            connection_tasks.spawn(conn);
+                        Some(Ok(Some(connection))) => {
+                            let token = soft_shutdown_token.child_token();
+                            connection_tasks.spawn(LogContext::new("http-serve").run(async || {
+                                tracing::debug!("Accepted connection");
+                                if let Err(e) = AbortableConnection::new(connection, token).await {
+                                    tracing::warn!(error = &*e as &dyn std::error::Error, "Failed to serve connection");
+                                }
+                            }));
                         }
-                        Some(Ok(Err(_e))) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
+                        Some(Ok(None)) => { /* Connection did not finish handshake, error should be logged in `accept` */ },
                         Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                         None => tracing::error!("Join set was polled even though it was empty"),
                     }
@@ -423,8 +432,7 @@ pub async fn run_servers<S, B>(
                 // Poll on the JoinSet to collect finished connections
                 res = connection_tasks.join_next(), if !connection_tasks.is_empty() => {
                     match res {
-                        Some(Ok(Ok(()))) => tracing::trace!("Connection finished"),
-                        Some(Ok(Err(e))) => tracing::error!(error = &*e as &dyn std::error::Error, "Error while serving connection"),
+                        Some(Ok(())) => { /* Connection finished, any errors should be logged in in the spawned task */ },
                         Some(Err(e)) => tracing::error!(error = &e as &dyn std::error::Error, "Join error"),
                         None => tracing::error!("Join set was polled even though it was empty"),
                     }

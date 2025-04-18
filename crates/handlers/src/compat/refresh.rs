@@ -7,7 +7,7 @@
 use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::sentry::SentryEventID;
+use mas_axum_utils::record_error;
 use mas_data_model::{SiteConfig, TokenFormatError, TokenType};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng, Clock,
@@ -16,6 +16,7 @@ use mas_storage::{
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationMilliSeconds, serde_as};
 use thiserror::Error;
+use ulid::Ulid;
 
 use super::MatrixError;
 use crate::{BoundActivityTracker, impl_from_error_for_route};
@@ -31,45 +32,49 @@ pub enum RouteError {
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 
     #[error("invalid token")]
-    InvalidToken,
+    InvalidToken(#[from] TokenFormatError),
 
-    #[error("refresh token already consumed")]
-    RefreshTokenConsumed,
+    #[error("unknown token")]
+    UnknownToken,
 
-    #[error("invalid session")]
-    InvalidSession,
+    #[error("invalid token type {0}, expected a compat refresh token")]
+    InvalidTokenType(TokenType),
 
-    #[error("unknown session")]
-    UnknownSession,
+    #[error("refresh token already consumed {0}")]
+    RefreshTokenConsumed(Ulid),
+
+    #[error("invalid compat session {0}")]
+    InvalidSession(Ulid),
+
+    #[error("unknown comapt session {0}")]
+    UnknownSession(Ulid),
 }
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::UnknownSession(_));
         let response = match self {
-            Self::Internal(_) | Self::UnknownSession => MatrixError {
+            Self::Internal(_) | Self::UnknownSession(_) => MatrixError {
                 errcode: "M_UNKNOWN",
                 error: "Internal error",
                 status: StatusCode::INTERNAL_SERVER_ERROR,
             },
-            Self::InvalidToken | Self::InvalidSession | Self::RefreshTokenConsumed => MatrixError {
+            Self::InvalidToken(_)
+            | Self::UnknownToken
+            | Self::InvalidTokenType(_)
+            | Self::InvalidSession(_)
+            | Self::RefreshTokenConsumed(_) => MatrixError {
                 errcode: "M_UNKNOWN_TOKEN",
                 error: "Invalid refresh token",
                 status: StatusCode::UNAUTHORIZED,
             },
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
-
-impl From<TokenFormatError> for RouteError {
-    fn from(_e: TokenFormatError) -> Self {
-        Self::InvalidToken
-    }
-}
 
 #[serde_as]
 #[derive(Debug, Serialize)]
@@ -80,7 +85,7 @@ pub struct ResponseBody {
     expires_in_ms: Duration,
 }
 
-#[tracing::instrument(name = "handlers.compat.refresh.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.compat.refresh.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -92,27 +97,27 @@ pub(crate) async fn post(
     let token_type = TokenType::check(&input.refresh_token)?;
 
     if token_type != TokenType::CompatRefreshToken {
-        return Err(RouteError::InvalidToken);
+        return Err(RouteError::InvalidTokenType(token_type));
     }
 
     let refresh_token = repo
         .compat_refresh_token()
         .find_by_token(&input.refresh_token)
         .await?
-        .ok_or(RouteError::InvalidToken)?;
+        .ok_or(RouteError::UnknownToken)?;
 
     if !refresh_token.is_valid() {
-        return Err(RouteError::RefreshTokenConsumed);
+        return Err(RouteError::RefreshTokenConsumed(refresh_token.id));
     }
 
     let session = repo
         .compat_session()
         .lookup(refresh_token.session_id)
         .await?
-        .ok_or(RouteError::UnknownSession)?;
+        .ok_or(RouteError::UnknownSession(refresh_token.session_id))?;
 
     if !session.is_valid() {
-        return Err(RouteError::InvalidSession);
+        return Err(RouteError::InvalidSession(refresh_token.session_id));
     }
 
     activity_tracker

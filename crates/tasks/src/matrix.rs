@@ -36,7 +36,6 @@ impl RunnableJob for ProvisionUserJob {
         name = "job.provision_user"
         fields(user.id = %self.user_id()),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();
@@ -103,7 +102,6 @@ impl RunnableJob for ProvisionDeviceJob {
             device.id = %self.device_id(),
         ),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let mut repo = state.repository().await.map_err(JobError::retry)?;
@@ -140,7 +138,6 @@ impl RunnableJob for DeleteDeviceJob {
             device.id = %self.device_id(),
         ),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let mut rng = state.rng();
@@ -172,7 +169,6 @@ impl RunnableJob for SyncDevicesJob {
         name = "job.sync_devices",
         fields(user.id = %self.user_id()),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let matrix = state.matrix_connection();

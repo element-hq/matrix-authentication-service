@@ -66,7 +66,7 @@ pub struct QueryParams {
     action: OptionalPostAuthAction,
 }
 
-#[tracing::instrument(name = "handlers.views.password_register.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.password_register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -118,7 +118,7 @@ pub(crate) async fn get(
     Ok((cookie_jar, Html(content)).into_response())
 }
 
-#[tracing::instrument(name = "handlers.views.password_register.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.password_register.post", skip_all)]
 #[allow(clippy::too_many_lines, clippy::too_many_arguments)]
 pub(crate) async fn post(
     mut rng: BoxRng,

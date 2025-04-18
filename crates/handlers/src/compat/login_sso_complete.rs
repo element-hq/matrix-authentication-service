@@ -48,7 +48,6 @@ pub struct Params {
     name = "handlers.compat.login_sso_complete.get",
     fields(compat_sso_login.id = %id),
     skip_all,
-    err,
 )]
 pub async fn get(
     PreferredLanguage(locale): PreferredLanguage,
@@ -121,7 +120,6 @@ pub async fn get(
     name = "handlers.compat.login_sso_complete.post",
     fields(compat_sso_login.id = %id),
     skip_all,
-    err,
 )]
 pub async fn post(
     mut rng: BoxRng,
