@@ -300,6 +300,8 @@ pub async fn config_sync(
                         fetch_userinfo: provider.fetch_userinfo,
                         userinfo_signed_response_alg: provider.userinfo_signed_response_alg,
                         response_mode,
+                        allow_rp_initiated_logout: provider.allow_rp_initiated_logout,
+                        end_session_endpoint_override: provider.end_session_endpoint,
                         additional_authorization_parameters: provider
                             .additional_authorization_parameters
                             .into_iter()

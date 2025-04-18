@@ -69,6 +69,8 @@ struct ProviderLookup {
     discovery_mode: String,
     pkce_mode: String,
     response_mode: Option<String>,
+    allow_rp_initiated_logout: bool,
+    end_session_endpoint_override: Option<String>,
     additional_parameters: Option<Json<Vec<(String, String)>>>,
 }
 
@@ -193,6 +195,17 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             .map(|Json(x)| x)
             .unwrap_or_default();
 
+        let end_session_endpoint_override = value
+            .end_session_endpoint_override
+            .map(|x| x.parse())
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("upstream_oauth_providers")
+                    .column("end_session_endpoint_override")
+                    .row(id)
+                    .source(e)
+            })?;
+
         Ok(UpstreamOAuthProvider {
             id,
             issuer: value.issuer,
@@ -216,6 +229,8 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             discovery_mode,
             pkce_mode,
             response_mode,
+            allow_rp_initiated_logout: value.allow_rp_initiated_logout,
+            end_session_endpoint_override,
             additional_authorization_parameters,
         })
     }
@@ -274,6 +289,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_rp_initiated_logout,
+                    end_session_endpoint_override,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>"
                 FROM upstream_oauth_providers
                 WHERE upstream_oauth_provider_id = $1
@@ -336,9 +353,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 discovery_mode,
                 pkce_mode,
                 response_mode,
+                allow_rp_initiated_logout,
+                end_session_endpoint_override,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
         "#,
             Uuid::from(id),
             params.issuer.as_deref(),
@@ -375,6 +394,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
             params.response_mode.as_ref().map(ToString::to_string),
+            params.allow_rp_initiated_logout,
+            params
+                .end_session_endpoint_override
+                .as_ref()
+                .map(ToString::to_string),
             created_at,
         )
         .traced()
@@ -404,6 +428,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
             response_mode: params.response_mode,
+            allow_rp_initiated_logout: params.allow_rp_initiated_logout,
+            end_session_endpoint_override: params.end_session_endpoint_override,
             additional_authorization_parameters: params.additional_authorization_parameters,
         })
     }
@@ -516,12 +542,14 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_rp_initiated_logout,
+                    end_session_endpoint_override,
                     additional_parameters,
                     ui_order,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                           $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                          $21, $22, $23)
+                          $21, $22, $23, $24, $25)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -545,6 +573,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         discovery_mode = EXCLUDED.discovery_mode,
                         pkce_mode = EXCLUDED.pkce_mode,
                         response_mode = EXCLUDED.response_mode,
+                        allow_rp_initiated_logout = EXCLUDED.allow_rp_initiated_logout,
+                        end_session_endpoint_override = EXCLUDED.end_session_endpoint_override,
                         additional_parameters = EXCLUDED.additional_parameters,
                         ui_order = EXCLUDED.ui_order
                 RETURNING created_at
@@ -584,6 +614,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
             params.response_mode.as_ref().map(ToString::to_string),
+            params.allow_rp_initiated_logout,
+            params
+                .end_session_endpoint_override
+                .as_ref()
+                .map(ToString::to_string),
             Json(&params.additional_authorization_parameters) as _,
             params.ui_order,
             created_at,
@@ -615,6 +650,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
             response_mode: params.response_mode,
+            allow_rp_initiated_logout: params.allow_rp_initiated_logout,
+            end_session_endpoint_override: params.end_session_endpoint_override,
             additional_authorization_parameters: params.additional_authorization_parameters,
         })
     }
@@ -822,6 +859,20 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             .expr_as(
                 Expr::col((
                     UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::AllowRpInitiatedLogout,
+                )),
+                ProviderLookupIden::AllowRpInitiatedLogout,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::EndSessionEndpointOverride,
+                )),
+                ProviderLookupIden::EndSessionEndpointOverride,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
                     UpstreamOAuthProviders::AdditionalParameters,
                 )),
                 ProviderLookupIden::AdditionalParameters,
@@ -918,6 +969,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_rp_initiated_logout,
+                    end_session_endpoint_override,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>"
                 FROM upstream_oauth_providers
                 WHERE disabled_at IS NULL
