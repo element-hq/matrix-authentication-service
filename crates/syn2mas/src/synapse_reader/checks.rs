@@ -157,7 +157,7 @@ pub fn synapse_config_check(synapse_config: &Config) -> (Vec<CheckWarning>, Vec<
         ));
     }
 
-    if synapse_config.enable_3pid_changes {
+    if synapse_config.enable_3pid_changes == Some(true) {
         errors.push(CheckError::ThreepidChangesEnabled);
     }
 
