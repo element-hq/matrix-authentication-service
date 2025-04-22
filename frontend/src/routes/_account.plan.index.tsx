@@ -4,7 +4,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { graphql } from "../gql";
+import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
@@ -23,22 +23,28 @@ const QUERY = graphql(/* GraphQL */ `
 `);
 
 const query = queryOptions({
-  queryKey: ["siteConfig"],
-  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
+    queryKey: ["siteConfig"],
+    queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/_account/plan/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  component: Plan,
+    loader: ({ context }) => context.queryClient.ensureQueryData(query),
+    component: Plan,
 });
 
 function Plan(): React.ReactElement {
-  const siteConfig = result.data.siteConfig;
+    const result = useSuspenseQuery(query);
+    const siteConfig = result.data.siteConfig;
+    const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
 
-  return (
-    <iframe
-      src={siteConfig.planManagementIframeUri}
-      style={{ height: "calc(100vh - 350px)" }}
-    />
-  );
+    if (!planManagementIframeUri) {
+        return (<div />);
+    }
+
+    return (
+        <iframe
+            src={planManagementIframeUri}
+            style={{ height: "calc(100vh - 400px)" }}
+        />
+    );
 }

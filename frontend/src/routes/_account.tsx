@@ -12,8 +12,9 @@ import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
 import NavItem from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
-import { graphql } from "../gql";
+import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
+import { CONFIG_FRAGMENT } from "./_account.plan.index";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -48,6 +49,8 @@ function Account(): React.ReactElement {
   if (viewer?.__typename !== "User") throw notFound();
   const siteConfig = result.data.siteConfig;
 
+  const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
+
   return (
     <Layout wide>
       <div className="flex flex-col gap-10">
@@ -61,7 +64,7 @@ function Account(): React.ReactElement {
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
             <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
-            {siteConfig.planManagementIframeUri && (
+            {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
             )}
           </NavBar>
