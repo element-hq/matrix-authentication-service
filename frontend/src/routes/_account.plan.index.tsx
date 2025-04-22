@@ -7,6 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 
 export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment PlanManagement_siteConfig on SiteConfig {
@@ -23,28 +24,49 @@ const QUERY = graphql(/* GraphQL */ `
 `);
 
 const query = queryOptions({
-  queryKey: ["siteConfig"],
-  queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
+    queryKey: ["siteConfig"],
+    queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/_account/plan/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  component: Plan,
+    loader: ({ context }) => context.queryClient.ensureQueryData(query),
+    component: Plan,
 });
 
 function Plan(): React.ReactElement {
-  const result = useSuspenseQuery(query);
-  const siteConfig = result.data.siteConfig;
-  const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
+    const result = useSuspenseQuery(query);
+    const siteConfig = result.data.siteConfig;
+    const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
 
-  if (!planManagementIframeUri) {
-    return <div />;
-  }
+    if (!planManagementIframeUri) {
+        return <div />;
+    }
 
-  return (
-    <iframe
-      src={planManagementIframeUri}
-      style={{ height: "calc(100vh - 400px)" }}
-    />
-  );
+    const ref = useRef<HTMLIFrameElement>(null);
+    const [height, setHeight] = useState('0px');
+
+    // Poll the size of the iframe content and set the height
+    // This will only work where the iframe is served from the same origin
+    const doHeight = () => {
+        setHeight(ref.current?.contentWindow?.document.body.scrollHeight + 'px');
+    };
+    useEffect(() => {
+        doHeight();
+
+        const interval = setInterval(() => {
+            doHeight();
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <iframe
+            ref={ref}
+            onLoad={doHeight}
+            src={planManagementIframeUri}
+            scrolling="no"
+            height={height}
+        />
+    );
 }
