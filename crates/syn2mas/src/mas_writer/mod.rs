@@ -250,6 +250,13 @@ pub struct MasWriter {
     write_buffer_finish_checker: FinishChecker,
 }
 
+trait WriteBatch: Sized {
+    fn write_batch(
+        conn: &mut PgConnection,
+        batch: Vec<Self>,
+    ) -> impl Future<Output = Result<(), Error>>;
+}
+
 pub struct MasNewUser {
     pub user_id: NonNilUuid,
     pub username: String,
