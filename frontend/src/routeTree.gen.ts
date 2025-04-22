@@ -23,6 +23,7 @@ import { Route as ClientsIdImport } from './routes/clients.$id'
 import { Route as PasswordRecoveryIndexImport } from './routes/password.recovery.index'
 import { Route as PasswordChangeIndexImport } from './routes/password.change.index'
 import { Route as AccountSessionsIndexImport } from './routes/_account.sessions.index'
+import { Route as AccountPlanIndexImport } from './routes/_account.plan.index'
 import { Route as PasswordChangeSuccessImport } from './routes/password.change.success'
 import { Route as EmailsIdVerifyImport } from './routes/emails.$id.verify'
 import { Route as EmailsIdInUseImport } from './routes/emails.$id.in-use'
@@ -100,6 +101,12 @@ const PasswordChangeIndexRoute = PasswordChangeIndexImport.update({
 const AccountSessionsIndexRoute = AccountSessionsIndexImport.update({
   id: '/sessions/',
   path: '/sessions/',
+  getParentRoute: () => AccountRoute,
+} as any)
+
+const AccountPlanIndexRoute = AccountPlanIndexImport.update({
+  id: '/plan/',
+  path: '/plan/',
   getParentRoute: () => AccountRoute,
 } as any)
 
@@ -222,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PasswordChangeSuccessImport
       parentRoute: typeof rootRoute
     }
+    '/_account/plan/': {
+      id: '/_account/plan/'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof AccountPlanIndexImport
+      parentRoute: typeof AccountImport
+    }
     '/_account/sessions/': {
       id: '/_account/sessions/'
       path: '/sessions'
@@ -251,12 +265,14 @@ declare module '@tanstack/react-router' {
 interface AccountRouteChildren {
   AccountIndexRoute: typeof AccountIndexRoute
   AccountSessionsBrowsersRoute: typeof AccountSessionsBrowsersRoute
+  AccountPlanIndexRoute: typeof AccountPlanIndexRoute
   AccountSessionsIndexRoute: typeof AccountSessionsIndexRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountIndexRoute: AccountIndexRoute,
   AccountSessionsBrowsersRoute: AccountSessionsBrowsersRoute,
+  AccountPlanIndexRoute: AccountPlanIndexRoute,
   AccountSessionsIndexRoute: AccountSessionsIndexRoute,
 }
 
@@ -292,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessRoute
+  '/plan': typeof AccountPlanIndexRoute
   '/sessions': typeof AccountSessionsIndexRoute
   '/password/change': typeof PasswordChangeIndexRoute
   '/password/recovery': typeof PasswordRecoveryIndexRoute
@@ -309,6 +326,7 @@ export interface FileRoutesByTo {
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessRoute
+  '/plan': typeof AccountPlanIndexRoute
   '/sessions': typeof AccountSessionsIndexRoute
   '/password/change': typeof PasswordChangeIndexRoute
   '/password/recovery': typeof PasswordRecoveryIndexRoute
@@ -329,6 +347,7 @@ export interface FileRoutesById {
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessRoute
+  '/_account/plan/': typeof AccountPlanIndexRoute
   '/_account/sessions/': typeof AccountSessionsIndexRoute
   '/password/change/': typeof PasswordChangeIndexRoute
   '/password/recovery/': typeof PasswordRecoveryIndexRoute
@@ -350,6 +369,7 @@ export interface FileRouteTypes {
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
+    | '/plan'
     | '/sessions'
     | '/password/change'
     | '/password/recovery'
@@ -366,6 +386,7 @@ export interface FileRouteTypes {
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
+    | '/plan'
     | '/sessions'
     | '/password/change'
     | '/password/recovery'
@@ -384,6 +405,7 @@ export interface FileRouteTypes {
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
+    | '/_account/plan/'
     | '/_account/sessions/'
     | '/password/change/'
     | '/password/recovery/'
@@ -443,6 +465,7 @@ export const routeTree = rootRoute
       "children": [
         "/_account/",
         "/_account/sessions/browsers",
+        "/_account/plan/",
         "/_account/sessions/"
       ]
     },
@@ -491,6 +514,10 @@ export const routeTree = rootRoute
     },
     "/password/change/success": {
       "filePath": "password.change.success.tsx"
+    },
+    "/_account/plan/": {
+      "filePath": "_account.plan.index.tsx",
+      "parent": "/_account"
     },
     "/_account/sessions/": {
       "filePath": "_account.sessions.index.tsx",

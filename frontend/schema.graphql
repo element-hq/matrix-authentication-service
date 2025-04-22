@@ -1665,6 +1665,7 @@ type SiteConfig implements Node {
   Whether users can log in with their email address.
   """
   loginWithEmailAllowed: Boolean!
+  planManagementIframeUri: Url
   """
   The ID of the site configuration.
   """

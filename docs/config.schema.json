@@ -2539,6 +2539,11 @@
               "$ref": "#/definitions/InactiveSessionExpirationConfig"
             }
           ]
+        },
+        "plan_management_iframe_uri": {
+          "description": "Experimental feature to show a plan management tab and iframe",
+          "type": "string",
+          "format": "uri"
         }
       }
     },

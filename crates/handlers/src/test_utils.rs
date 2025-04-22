@@ -142,6 +142,7 @@ pub fn test_site_config() -> SiteConfig {
         minimum_password_complexity: 1,
         session_expiration: None,
         login_with_email_allowed: true,
+        plan_management_iframe_uri: None,
     }
 }
 

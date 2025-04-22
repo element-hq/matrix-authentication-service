@@ -56,6 +56,8 @@ pub struct SiteConfig {
 
     /// Whether users can log in with their email address.
     login_with_email_allowed: bool,
+
+    plan_management_iframe_uri: Option<Url>,
 }
 
 #[derive(SimpleObject)]
@@ -102,6 +104,7 @@ impl SiteConfig {
             account_deactivation_allowed: data_model.account_deactivation_allowed,
             minimum_password_complexity: data_model.minimum_password_complexity,
             login_with_email_allowed: data_model.login_with_email_allowed,
+            plan_management_iframe_uri: data_model.plan_management_iframe_uri.clone(),
         }
     }
 }
