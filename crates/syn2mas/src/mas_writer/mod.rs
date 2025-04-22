@@ -341,6 +341,44 @@ pub struct MasNewUserPassword {
     pub created_at: DateTime<Utc>,
 }
 
+impl WriteBatch for MasNewUserPassword {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        let mut user_password_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut user_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut hashed_passwords: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+        let mut versions: Vec<i32> = Vec::with_capacity(batch.len());
+        for MasNewUserPassword {
+            user_password_id,
+            user_id,
+            hashed_password,
+            created_at,
+        } in batch
+        {
+            user_password_ids.push(user_password_id);
+            user_ids.push(user_id.get());
+            hashed_passwords.push(hashed_password);
+            created_ats.push(created_at);
+            versions.push(MIGRATED_PASSWORD_VERSION.into());
+        }
+
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__user_passwords
+            (user_password_id, user_id, hashed_password, created_at, version)
+            SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $5::INTEGER[])
+            "#,
+            &user_password_ids[..],
+            &user_ids[..],
+            &hashed_passwords[..],
+            &created_ats[..],
+            &versions[..],
+        ).execute(&mut *conn).await.into_database("writing users to MAS")?;
+
+        Ok(())
+    }
+}
+
 pub struct MasNewEmailThreepid {
     pub user_email_id: Uuid,
     pub user_id: NonNilUuid,
@@ -727,41 +765,15 @@ impl MasWriter {
         &mut self,
         passwords: Vec<MasNewUserPassword>,
     ) -> BoxFuture<'_, Result<(), Error>> {
-        self.writer_pool.spawn_with_connection(move |conn| Box::pin(async move {
-            let mut user_password_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
-            let mut user_ids: Vec<Uuid> = Vec::with_capacity(passwords.len());
-            let mut hashed_passwords: Vec<String> = Vec::with_capacity(passwords.len());
-            let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(passwords.len());
-            let mut versions: Vec<i32> = Vec::with_capacity(passwords.len());
-            for MasNewUserPassword {
-                user_password_id,
-                user_id,
-                hashed_password,
-                created_at,
-            } in passwords
-            {
-                user_password_ids.push(user_password_id);
-                user_ids.push(user_id.get());
-                hashed_passwords.push(hashed_password);
-                created_ats.push(created_at);
-                versions.push(MIGRATED_PASSWORD_VERSION.into());
-            }
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    MasNewUserPassword::write_batch(conn, passwords).await?;
 
-            sqlx::query!(
-                r#"
-                INSERT INTO syn2mas__user_passwords
-                (user_password_id, user_id, hashed_password, created_at, version)
-                SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $5::INTEGER[])
-                "#,
-                &user_password_ids[..],
-                &user_ids[..],
-                &hashed_passwords[..],
-                &created_ats[..],
-                &versions[..],
-            ).execute(&mut *conn).await.into_database("writing users to MAS")?;
-
-            Ok(())
-        })).boxed()
+                    Ok(())
+                })
+            })
+            .boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
