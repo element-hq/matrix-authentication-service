@@ -386,6 +386,44 @@ pub struct MasNewEmailThreepid {
     pub created_at: DateTime<Utc>,
 }
 
+impl WriteBatch for MasNewEmailThreepid {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        let mut user_email_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut user_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut emails: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+
+        for MasNewEmailThreepid {
+            user_email_id,
+            user_id,
+            email,
+            created_at,
+        } in batch
+        {
+            user_email_ids.push(user_email_id);
+            user_ids.push(user_id.get());
+            emails.push(email);
+            created_ats.push(created_at);
+        }
+
+        // `confirmed_at` is going to get removed in a future MAS release,
+        // so just populate with `created_at`
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__user_emails
+            (user_email_id, user_id, email, created_at, confirmed_at)
+            SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[])
+            "#,
+            &user_email_ids[..],
+            &user_ids[..],
+            &emails[..],
+            &created_ats[..],
+        ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
+
+        Ok(())
+    }
+}
+
 pub struct MasNewUnsupportedThreepid {
     pub user_id: NonNilUuid,
     pub medium: String,
@@ -781,43 +819,15 @@ impl MasWriter {
         &mut self,
         threepids: Vec<MasNewEmailThreepid>,
     ) -> BoxFuture<'_, Result<(), Error>> {
-        self.writer_pool.spawn_with_connection(move |conn| {
-            Box::pin(async move {
-                let mut user_email_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
-                let mut user_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
-                let mut emails: Vec<String> = Vec::with_capacity(threepids.len());
-                let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(threepids.len());
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    MasNewEmailThreepid::write_batch(conn, threepids).await?;
 
-                for MasNewEmailThreepid {
-                    user_email_id,
-                    user_id,
-                    email,
-                    created_at,
-                } in threepids
-                {
-                    user_email_ids.push(user_email_id);
-                    user_ids.push(user_id.get());
-                    emails.push(email);
-                    created_ats.push(created_at);
-                }
-
-                // `confirmed_at` is going to get removed in a future MAS release,
-                // so just populate with `created_at`
-                sqlx::query!(
-                    r#"
-                    INSERT INTO syn2mas__user_emails
-                    (user_email_id, user_id, email, created_at, confirmed_at)
-                    SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[])
-                    "#,
-                    &user_email_ids[..],
-                    &user_ids[..],
-                    &emails[..],
-                    &created_ats[..],
-                ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
-
-                Ok(())
+                    Ok(())
+                })
             })
-        }).boxed()
+            .boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
