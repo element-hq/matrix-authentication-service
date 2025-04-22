@@ -607,6 +607,59 @@ pub struct MasNewCompatAccessToken {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
+impl WriteBatch for MasNewCompatAccessToken {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        let mut token_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut session_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut access_tokens: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+        let mut expires_ats: Vec<Option<DateTime<Utc>>> = Vec::with_capacity(batch.len());
+
+        for MasNewCompatAccessToken {
+            token_id,
+            session_id,
+            access_token,
+            created_at,
+            expires_at,
+        } in batch
+        {
+            token_ids.push(token_id);
+            session_ids.push(session_id);
+            access_tokens.push(access_token);
+            created_ats.push(created_at);
+            expires_ats.push(expires_at);
+        }
+
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__compat_access_tokens (
+              compat_access_token_id,
+              compat_session_id,
+              access_token,
+              created_at,
+              expires_at)
+            SELECT * FROM UNNEST(
+              $1::UUID[],
+              $2::UUID[],
+              $3::TEXT[],
+              $4::TIMESTAMP WITH TIME ZONE[],
+              $5::TIMESTAMP WITH TIME ZONE[])
+            "#,
+            &token_ids[..],
+            &session_ids[..],
+            &access_tokens[..],
+            &created_ats[..],
+            // We need to override the typing for arrays of optionals (sqlx limitation)
+            &expires_ats[..] as &[Option<DateTime<Utc>>],
+        )
+        .execute(&mut *conn)
+        .await
+        .into_database("writing compat access tokens to MAS")?;
+
+        Ok(())
+    }
+}
+
 pub struct MasNewCompatRefreshToken {
     pub refresh_token_id: Uuid,
     pub session_id: Uuid,
@@ -1034,53 +1087,7 @@ impl MasWriter {
         self.writer_pool
             .spawn_with_connection(move |conn| {
                 Box::pin(async move {
-                    let mut token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
-                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
-                    let mut access_tokens: Vec<String> = Vec::with_capacity(tokens.len());
-                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(tokens.len());
-                    let mut expires_ats: Vec<Option<DateTime<Utc>>> =
-                        Vec::with_capacity(tokens.len());
-
-                    for MasNewCompatAccessToken {
-                        token_id,
-                        session_id,
-                        access_token,
-                        created_at,
-                        expires_at,
-                    } in tokens
-                    {
-                        token_ids.push(token_id);
-                        session_ids.push(session_id);
-                        access_tokens.push(access_token);
-                        created_ats.push(created_at);
-                        expires_ats.push(expires_at);
-                    }
-
-                    sqlx::query!(
-                        r#"
-                        INSERT INTO syn2mas__compat_access_tokens (
-                          compat_access_token_id,
-                          compat_session_id,
-                          access_token,
-                          created_at,
-                          expires_at)
-                        SELECT * FROM UNNEST(
-                          $1::UUID[],
-                          $2::UUID[],
-                          $3::TEXT[],
-                          $4::TIMESTAMP WITH TIME ZONE[],
-                          $5::TIMESTAMP WITH TIME ZONE[])
-                        "#,
-                        &token_ids[..],
-                        &session_ids[..],
-                        &access_tokens[..],
-                        &created_ats[..],
-                        // We need to override the typing for arrays of optionals (sqlx limitation)
-                        &expires_ats[..] as &[Option<DateTime<Utc>>],
-                    )
-                    .execute(&mut *conn)
-                    .await
-                    .into_database("writing compat access tokens to MAS")?;
+                    MasNewCompatAccessToken::write_batch(conn, tokens).await?;
 
                     Ok(())
                 })
