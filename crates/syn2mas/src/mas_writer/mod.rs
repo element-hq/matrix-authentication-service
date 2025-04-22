@@ -270,6 +270,70 @@ pub struct MasNewUser {
     pub is_guest: bool,
 }
 
+impl WriteBatch for MasNewUser {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows
+        // in one statement without having to change the statement
+        // SQL thus altering the query plan. See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
+        // In the future we could consider using sqlx's support for `PgCopyIn` / the
+        // `COPY FROM STDIN` statement, which is allegedly the best
+        // for insert performance, but is less simple to encode.
+        let mut user_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut usernames: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+        let mut locked_ats: Vec<Option<DateTime<Utc>>> = Vec::with_capacity(batch.len());
+        let mut deactivated_ats: Vec<Option<DateTime<Utc>>> = Vec::with_capacity(batch.len());
+        let mut can_request_admins: Vec<bool> = Vec::with_capacity(batch.len());
+        let mut is_guests: Vec<bool> = Vec::with_capacity(batch.len());
+        for MasNewUser {
+            user_id,
+            username,
+            created_at,
+            locked_at,
+            deactivated_at,
+            can_request_admin,
+            is_guest,
+        } in batch
+        {
+            user_ids.push(user_id.get());
+            usernames.push(username);
+            created_ats.push(created_at);
+            locked_ats.push(locked_at);
+            deactivated_ats.push(deactivated_at);
+            can_request_admins.push(can_request_admin);
+            is_guests.push(is_guest);
+        }
+
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__users (
+              user_id, username,
+              created_at, locked_at,
+              deactivated_at,
+              can_request_admin, is_guest)
+            SELECT * FROM UNNEST(
+              $1::UUID[], $2::TEXT[],
+              $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
+              $5::TIMESTAMP WITH TIME ZONE[],
+              $6::BOOL[], $7::BOOL[])
+            "#,
+            &user_ids[..],
+            &usernames[..],
+            &created_ats[..],
+            // We need to override the typing for arrays of optionals (sqlx limitation)
+            &locked_ats[..] as &[Option<DateTime<Utc>>],
+            &deactivated_ats[..] as &[Option<DateTime<Utc>>],
+            &can_request_admins[..],
+            &is_guests[..],
+        )
+        .execute(&mut *conn)
+        .await
+        .into_database("writing users to MAS")?;
+
+        Ok(())
+    }
+}
+
 pub struct MasNewUserPassword {
     pub user_password_id: Uuid,
     pub user_id: NonNilUuid,
@@ -643,65 +707,7 @@ impl MasWriter {
         self.writer_pool
             .spawn_with_connection(move |conn| {
                 Box::pin(async move {
-                    // `UNNEST` is a fast way to do bulk inserts, as it lets us send multiple rows
-                    // in one statement without having to change the statement
-                    // SQL thus altering the query plan. See <https://github.com/launchbadge/sqlx/blob/main/FAQ.md#how-can-i-bind-an-array-to-a-values-clause-how-can-i-do-bulk-inserts>.
-                    // In the future we could consider using sqlx's support for `PgCopyIn` / the
-                    // `COPY FROM STDIN` statement, which is allegedly the best
-                    // for insert performance, but is less simple to encode.
-                    let mut user_ids: Vec<Uuid> = Vec::with_capacity(users.len());
-                    let mut usernames: Vec<String> = Vec::with_capacity(users.len());
-                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(users.len());
-                    let mut locked_ats: Vec<Option<DateTime<Utc>>> =
-                        Vec::with_capacity(users.len());
-                    let mut deactivated_ats: Vec<Option<DateTime<Utc>>> =
-                        Vec::with_capacity(users.len());
-                    let mut can_request_admins: Vec<bool> = Vec::with_capacity(users.len());
-                    let mut is_guests: Vec<bool> = Vec::with_capacity(users.len());
-                    for MasNewUser {
-                        user_id,
-                        username,
-                        created_at,
-                        locked_at,
-                        deactivated_at,
-                        can_request_admin,
-                        is_guest,
-                    } in users
-                    {
-                        user_ids.push(user_id.get());
-                        usernames.push(username);
-                        created_ats.push(created_at);
-                        locked_ats.push(locked_at);
-                        deactivated_ats.push(deactivated_at);
-                        can_request_admins.push(can_request_admin);
-                        is_guests.push(is_guest);
-                    }
-
-                    sqlx::query!(
-                        r#"
-                        INSERT INTO syn2mas__users (
-                          user_id, username,
-                          created_at, locked_at,
-                          deactivated_at,
-                          can_request_admin, is_guest)
-                        SELECT * FROM UNNEST(
-                          $1::UUID[], $2::TEXT[],
-                          $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],
-                          $5::TIMESTAMP WITH TIME ZONE[],
-                          $6::BOOL[], $7::BOOL[])
-                        "#,
-                        &user_ids[..],
-                        &usernames[..],
-                        &created_ats[..],
-                        // We need to override the typing for arrays of optionals (sqlx limitation)
-                        &locked_ats[..] as &[Option<DateTime<Utc>>],
-                        &deactivated_ats[..] as &[Option<DateTime<Utc>>],
-                        &can_request_admins[..],
-                        &is_guests[..],
-                    )
-                    .execute(&mut *conn)
-                    .await
-                    .into_database("writing users to MAS")?;
+                    MasNewUser::write_batch(conn, users).await?;
 
                     Ok(())
                 })
