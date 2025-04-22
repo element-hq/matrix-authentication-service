@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO syn2mas__compat_refresh_tokens (\n              compat_refresh_token_id,\n              compat_session_id,\n              compat_access_token_id,\n              refresh_token,\n              created_at)\n            SELECT * FROM UNNEST(\n              $1::UUID[],\n              $2::UUID[],\n              $3::UUID[],\n              $4::TEXT[],\n              $5::TIMESTAMP WITH TIME ZONE[])\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "UuidArray",
+        "UuidArray",
+        "TextArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1d1004d0fb5939fbf30c1986b80b986b1b4864a778525d0b8b0ad6678aef3e9f"
+}

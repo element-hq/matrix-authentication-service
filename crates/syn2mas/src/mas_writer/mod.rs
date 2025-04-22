@@ -668,6 +668,58 @@ pub struct MasNewCompatRefreshToken {
     pub created_at: DateTime<Utc>,
 }
 
+impl WriteBatch for MasNewCompatRefreshToken {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        let mut refresh_token_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut session_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut access_token_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut refresh_tokens: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+
+        for MasNewCompatRefreshToken {
+            refresh_token_id,
+            session_id,
+            access_token_id,
+            refresh_token,
+            created_at,
+        } in batch
+        {
+            refresh_token_ids.push(refresh_token_id);
+            session_ids.push(session_id);
+            access_token_ids.push(access_token_id);
+            refresh_tokens.push(refresh_token);
+            created_ats.push(created_at);
+        }
+
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__compat_refresh_tokens (
+              compat_refresh_token_id,
+              compat_session_id,
+              compat_access_token_id,
+              refresh_token,
+              created_at)
+            SELECT * FROM UNNEST(
+              $1::UUID[],
+              $2::UUID[],
+              $3::UUID[],
+              $4::TEXT[],
+              $5::TIMESTAMP WITH TIME ZONE[])
+            "#,
+            &refresh_token_ids[..],
+            &session_ids[..],
+            &access_token_ids[..],
+            &refresh_tokens[..],
+            &created_ats[..],
+        )
+        .execute(&mut *conn)
+        .await
+        .into_database("writing compat refresh tokens to MAS")?;
+
+        Ok(())
+    }
+}
+
 /// The 'version' of the password hashing scheme used for passwords when they
 /// are migrated from Synapse to MAS.
 /// This is version 1, as in the previous syn2mas script.
@@ -1103,52 +1155,7 @@ impl MasWriter {
         self.writer_pool
             .spawn_with_connection(move |conn| {
                 Box::pin(async move {
-                    let mut refresh_token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
-                    let mut session_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
-                    let mut access_token_ids: Vec<Uuid> = Vec::with_capacity(tokens.len());
-                    let mut refresh_tokens: Vec<String> = Vec::with_capacity(tokens.len());
-                    let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(tokens.len());
-
-                    for MasNewCompatRefreshToken {
-                        refresh_token_id,
-                        session_id,
-                        access_token_id,
-                        refresh_token,
-                        created_at,
-                    } in tokens
-                    {
-                        refresh_token_ids.push(refresh_token_id);
-                        session_ids.push(session_id);
-                        access_token_ids.push(access_token_id);
-                        refresh_tokens.push(refresh_token);
-                        created_ats.push(created_at);
-                    }
-
-                    sqlx::query!(
-                        r#"
-                        INSERT INTO syn2mas__compat_refresh_tokens (
-                          compat_refresh_token_id,
-                          compat_session_id,
-                          compat_access_token_id,
-                          refresh_token,
-                          created_at)
-                        SELECT * FROM UNNEST(
-                          $1::UUID[],
-                          $2::UUID[],
-                          $3::UUID[],
-                          $4::TEXT[],
-                          $5::TIMESTAMP WITH TIME ZONE[])
-                        "#,
-                        &refresh_token_ids[..],
-                        &session_ids[..],
-                        &access_token_ids[..],
-                        &refresh_tokens[..],
-                        &created_ats[..],
-                    )
-                    .execute(&mut *conn)
-                    .await
-                    .into_database("writing compat refresh tokens to MAS")?;
-
+                    MasNewCompatRefreshToken::write_batch(conn, tokens).await?;
                     Ok(())
                 })
             })
