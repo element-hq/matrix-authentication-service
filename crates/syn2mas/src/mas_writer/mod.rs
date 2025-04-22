@@ -431,6 +431,45 @@ pub struct MasNewUnsupportedThreepid {
     pub created_at: DateTime<Utc>,
 }
 
+impl WriteBatch for MasNewUnsupportedThreepid {
+    async fn write_batch(conn: &mut PgConnection, batch: Vec<Self>) -> Result<(), Error> {
+        let mut user_ids: Vec<Uuid> = Vec::with_capacity(batch.len());
+        let mut mediums: Vec<String> = Vec::with_capacity(batch.len());
+        let mut addresses: Vec<String> = Vec::with_capacity(batch.len());
+        let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(batch.len());
+
+        for MasNewUnsupportedThreepid {
+            user_id,
+            medium,
+            address,
+            created_at,
+        } in batch
+        {
+            user_ids.push(user_id.get());
+            mediums.push(medium);
+            addresses.push(address);
+            created_ats.push(created_at);
+        }
+
+        sqlx::query!(
+            r#"
+            INSERT INTO syn2mas__user_unsupported_third_party_ids
+            (user_id, medium, address, created_at)
+            SELECT * FROM UNNEST($1::UUID[], $2::TEXT[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[])
+            "#,
+            &user_ids[..],
+            &mediums[..],
+            &addresses[..],
+            &created_ats[..],
+        )
+        .execute(&mut *conn)
+        .await
+        .into_database("writing unsupported threepids to MAS")?;
+
+        Ok(())
+    }
+}
+
 pub struct MasNewUpstreamOauthLink {
     pub link_id: Uuid,
     pub user_id: NonNilUuid,
@@ -835,41 +874,15 @@ impl MasWriter {
         &mut self,
         threepids: Vec<MasNewUnsupportedThreepid>,
     ) -> BoxFuture<'_, Result<(), Error>> {
-        self.writer_pool.spawn_with_connection(move |conn| {
-            Box::pin(async move {
-                let mut user_ids: Vec<Uuid> = Vec::with_capacity(threepids.len());
-                let mut mediums: Vec<String> = Vec::with_capacity(threepids.len());
-                let mut addresses: Vec<String> = Vec::with_capacity(threepids.len());
-                let mut created_ats: Vec<DateTime<Utc>> = Vec::with_capacity(threepids.len());
+        self.writer_pool
+            .spawn_with_connection(move |conn| {
+                Box::pin(async move {
+                    MasNewUnsupportedThreepid::write_batch(conn, threepids).await?;
 
-                for MasNewUnsupportedThreepid {
-                    user_id,
-                    medium,
-                    address,
-                    created_at,
-                } in threepids
-                {
-                    user_ids.push(user_id.get());
-                    mediums.push(medium);
-                    addresses.push(address);
-                    created_ats.push(created_at);
-                }
-
-                sqlx::query!(
-                    r#"
-                    INSERT INTO syn2mas__user_unsupported_third_party_ids
-                    (user_id, medium, address, created_at)
-                    SELECT * FROM UNNEST($1::UUID[], $2::TEXT[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[])
-                    "#,
-                    &user_ids[..],
-                    &mediums[..],
-                    &addresses[..],
-                    &created_ats[..],
-                ).execute(&mut *conn).await.into_database("writing unsupported threepids to MAS")?;
-
-                Ok(())
+                    Ok(())
+                })
             })
-        }).boxed()
+            .boxed()
     }
 
     #[tracing::instrument(skip_all, level = Level::DEBUG)]
