@@ -583,10 +583,6 @@ email:
   # Send emails by calling a local sendmail binary
   #transport: sendmail
   #command: /usr/sbin/sendmail
-
-  # Send emails through the AWS SESv2 API
-  # This uses the AWS SDK, so the usual AWS environment variables are supported
-  #transport: aws_ses
 ```
 
 ### `upstream_oauth2`
