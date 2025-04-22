@@ -231,18 +231,17 @@ impl Options {
 
                 // TODO this dry-run flag should be set to false in real circumstances !!!
                 let reader = SynapseReader::new(&mut syn_conn, true).await?;
-                let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
-                for _ in 0..NUM_WRITER_CONNECTIONS {
-                    writer_mas_connections.push(
+                let writer_mas_connections =
+                    futures_util::future::try_join_all((0..NUM_WRITER_CONNECTIONS).map(|_| {
                         database_connection_from_config_with_options(
                             &config,
                             &DatabaseConnectOptions {
                                 log_slow_statements: false,
                             },
                         )
-                        .await?,
-                    );
-                }
+                    }))
+                    .instrument(tracing::info_span!("syn2mas.mas_writer_connections"))
+                    .await?;
                 let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
 
                 let clock = SystemClock::default();
@@ -256,7 +255,6 @@ impl Options {
                     tokio::spawn(occasional_progress_logger(progress.clone()));
 
                 let mas_matrix = MatrixConfig::extract(figment)?;
-                eprintln!("\n\n");
                 syn2mas::migrate(
                     reader,
                     writer,
