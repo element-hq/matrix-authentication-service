@@ -220,8 +220,8 @@ async fn migrate_users(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
-            let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
+            let mut user_buffer = MasWriteBuffer::new(&mas);
+            let mut password_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(user) = rx.recv().await {
                 // Handling an edge case: some AS users may have invalid localparts containing
@@ -342,9 +342,8 @@ async fn migrate_threepids(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut email_buffer = MasWriteBuffer::new(&mas, MasWriter::write_email_threepids);
-            let mut unsupported_buffer =
-                MasWriteBuffer::new(&mas, MasWriter::write_unsupported_threepids);
+            let mut email_buffer = MasWriteBuffer::new(&mas);
+            let mut unsupported_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(threepid) = rx.recv().await {
                 let SynapseThreepid {
@@ -457,7 +456,7 @@ async fn migrate_external_ids(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_upstream_oauth_links);
+            let mut write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(extid) = rx.recv().await {
                 let SynapseExternalId {
@@ -569,7 +568,7 @@ async fn migrate_devices(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+            let mut write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(device) = rx.recv().await {
                 let SynapseDevice {
@@ -704,9 +703,8 @@ async fn migrate_unrefreshable_access_tokens(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
-            let mut deviceless_session_write_buffer =
-                MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+            let mut write_buffer = MasWriteBuffer::new(&mas);
+            let mut deviceless_session_write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(token) = rx.recv().await {
                 let SynapseAccessToken {
@@ -855,10 +853,8 @@ async fn migrate_refreshable_token_pairs(
     let now = clock.now();
     let task = tokio::spawn(
         async move {
-            let mut access_token_write_buffer =
-                MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
-            let mut refresh_token_write_buffer =
-                MasWriteBuffer::new(&mas, MasWriter::write_compat_refresh_tokens);
+            let mut access_token_write_buffer = MasWriteBuffer::new(&mas);
+            let mut refresh_token_write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(token) = rx.recv().await {
                 let SynapseRefreshableTokenPair {

@@ -114,7 +114,6 @@ impl WriterConnectionPool {
     where
         F: for<'conn> FnOnce(&'conn mut PgConnection) -> BoxFuture<'conn, Result<(), Error>>
             + Send
-            + Sync
             + 'static,
     {
         match self.connection_rx.recv().await {
@@ -250,11 +249,11 @@ pub struct MasWriter {
     write_buffer_finish_checker: FinishChecker,
 }
 
-trait WriteBatch: Sized {
+pub trait WriteBatch: Send + Sync + Sized + 'static {
     fn write_batch(
         conn: &mut PgConnection,
         batch: Vec<Self>,
-    ) -> impl Future<Output = Result<(), Error>>;
+    ) -> impl Future<Output = Result<(), Error>> + Send;
 }
 
 pub struct MasNewUser {
@@ -1167,24 +1166,20 @@ impl MasWriter {
 // database.
 const WRITE_BUFFER_BATCH_SIZE: usize = 4096;
 
-/// A function that can accept and flush buffers from a `MasWriteBuffer`.
-/// Intended uses are the methods on `MasWriter` such as `write_users`.
-type WriteBufferFlusher<T> =
-    for<'a> fn(&'a mut MasWriter, Vec<T>) -> BoxFuture<'a, Result<(), Error>>;
-
 /// A buffer for writing rows to the MAS database.
 /// Generic over the type of rows.
 pub struct MasWriteBuffer<T> {
     rows: Vec<T>,
-    flusher: WriteBufferFlusher<T>,
     finish_checker_handle: FinishCheckerHandle,
 }
 
-impl<T> MasWriteBuffer<T> {
-    pub fn new(writer: &MasWriter, flusher: WriteBufferFlusher<T>) -> Self {
+impl<T> MasWriteBuffer<T>
+where
+    T: WriteBatch,
+{
+    pub fn new(writer: &MasWriter) -> Self {
         MasWriteBuffer {
             rows: Vec::with_capacity(WRITE_BUFFER_BATCH_SIZE),
-            flusher,
             finish_checker_handle: writer.write_buffer_finish_checker.handle(),
         }
     }
@@ -1201,7 +1196,11 @@ impl<T> MasWriteBuffer<T> {
         }
         let rows = std::mem::take(&mut self.rows);
         self.rows.reserve_exact(WRITE_BUFFER_BATCH_SIZE);
-        (self.flusher)(writer, rows).await?;
+        writer
+            .writer_pool
+            .spawn_with_connection(move |conn| T::write_batch(conn, rows).boxed())
+            .boxed()
+            .await?;
         Ok(())
     }
 
