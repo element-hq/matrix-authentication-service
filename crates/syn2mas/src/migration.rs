@@ -212,6 +212,7 @@ async fn migrate_users(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(100 * 1024);
 
@@ -318,7 +319,9 @@ async fn migrate_users(
     res?;
 
     info!(
-        "users migrated in {:.1}s",
+        "{} users migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -334,6 +337,7 @@ async fn migrate_threepids(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseThreepid>(100 * 1024);
 
@@ -432,7 +436,9 @@ async fn migrate_threepids(
     res?;
 
     info!(
-        "third-party IDs migrated in {:.1}s",
+        "{} third-party IDs migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -448,6 +454,7 @@ async fn migrate_external_ids(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseExternalId>(100 * 1024);
 
@@ -536,7 +543,9 @@ async fn migrate_external_ids(
     res?;
 
     info!(
-        "upstream links (external IDs) migrated in {:.1}s",
+        "{} upstream links (external IDs) migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -560,6 +569,7 @@ async fn migrate_devices(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
@@ -675,7 +685,9 @@ async fn migrate_devices(
     res?;
 
     info!(
-        "devices migrated in {:.1}s",
+        "{} devices migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -694,6 +706,7 @@ async fn migrate_unrefreshable_access_tokens(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
@@ -825,7 +838,9 @@ async fn migrate_unrefreshable_access_tokens(
     res?;
 
     info!(
-        "non-refreshable access tokens migrated in {:.1}s",
+        "{} non-refreshable access tokens migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -844,6 +859,7 @@ async fn migrate_refreshable_token_pairs(
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
+    let progress_counter_ = progress_counter.clone();
 
     let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseRefreshableTokenPair>(100 * 1024);
 
@@ -966,7 +982,9 @@ async fn migrate_refreshable_token_pairs(
     res?;
 
     info!(
-        "refreshable token pairs migrated in {:.1}s",
+        "{} refreshable token pairs migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
