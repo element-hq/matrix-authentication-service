@@ -213,7 +213,7 @@ async fn migrate_users(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -335,7 +335,7 @@ async fn migrate_threepids(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseThreepid>(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseThreepid>(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -449,7 +449,7 @@ async fn migrate_external_ids(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseExternalId>(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseExternalId>(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -561,7 +561,7 @@ async fn migrate_devices(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
@@ -695,7 +695,7 @@ async fn migrate_unrefreshable_access_tokens(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
     let now = clock.now();
     // create a new RNG seeded from the passed RNG so that we can move it into the
@@ -845,7 +845,7 @@ async fn migrate_refreshable_token_pairs(
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseRefreshableTokenPair>(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseRefreshableTokenPair>(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
