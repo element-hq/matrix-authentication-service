@@ -262,13 +262,13 @@ impl Options {
     }
 }
 
-/// Logs progress every 30 seconds, as a lightweight alternative to a progress
-/// bar. For most deployments, the migration will not take 30 seconds so this
+/// Logs progress every 5 seconds, as a lightweight alternative to a progress
+/// bar. For most deployments, the migration will not take 5 seconds so this
 /// will not be relevant. In other cases, this will give the operator an idea of
 /// what's going on.
 async fn occasional_progress_logger(progress: Progress) {
     loop {
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
         match &**progress.get_current_stage() {
             ProgressStage::SettingUp => {
                 info!(name: "progress", "still setting up");
