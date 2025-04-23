@@ -10,7 +10,7 @@ use std::{io::IsTerminal, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
 use clap::Parser;
-use mas_config::{ConfigurationSection, TelemetryConfig};
+use mas_config::{ConfigurationSectionExt, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
     EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
@@ -110,7 +110,7 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     let figment = opts.figment();
 
     let telemetry_config =
-        TelemetryConfig::extract(&figment).context("Failed to load telemetry config")?;
+        TelemetryConfig::extract_or_default(&figment).context("Failed to load telemetry config")?;
 
     // Setup Sentry
     let sentry = sentry::init((
