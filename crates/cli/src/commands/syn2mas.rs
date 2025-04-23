@@ -40,7 +40,7 @@ pub(super) struct Options {
     /// Path to the Synapse configuration (in YAML format).
     /// May be specified multiple times if multiple Synapse configuration files
     /// are in use.
-    #[clap(long = "synapse-config")]
+    #[clap(long = "synapse-config", global = true)]
     synapse_configuration_files: Vec<Utf8PathBuf>,
 
     /// Override the Synapse database URI.
@@ -60,7 +60,7 @@ pub(super) struct Options {
     /// environment variables `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`,
     /// `PGPASSWORD`, etc. It is valid to specify the URL `postgresql:` and
     /// configure all values through those environment variables.
-    #[clap(long = "synapse-database-uri")]
+    #[clap(long = "synapse-database-uri", global = true)]
     synapse_database_uri: Option<PgConnectOptions>,
 }
 
