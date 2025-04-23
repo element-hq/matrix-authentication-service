@@ -106,20 +106,3 @@ updates:
       browser-logos:
         patterns:
           - "@browser-logos/*"
-
-  - package-ecosystem: "npm"
-    directory: "/tools/syn2mas/"
-    labels:
-      - "A-Dependencies"
-      - "Z-Deps-Syn2Mas"
-    schedule:
-      interval: "weekly"
-    ignore:
-      # Ignore @types/node until we can upgrade to Node 20
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-    groups:
-      production:
-        dependency-type: "production"
-      development:
-        dependency-type: "development"

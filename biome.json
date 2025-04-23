@@ -21,7 +21,6 @@
       "frontend/.storybook/locales.ts",
       "frontend/.storybook/public/mockServiceWorker.js",
       "frontend/locales/*.json",
-      "tools/syn2mas/package.json",
       "**/coverage/**",
       "**/dist/**"
     ]
