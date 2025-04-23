@@ -74,6 +74,11 @@ pub enum CheckError {
     SynapseMissingOAuthProvider { provider: String, num_users: i64 },
 
     #[error(
+        "Synapse database has {num_users} mapping entries from a previously-configured MAS instance. If this is from a previous migration attempt, run the following SQL query against the Synapse database: `DELETE FROM user_external_ids WHERE auth_provider = 'oauth-delegated';` and then run the migration again."
+    )]
+    ExistingOAuthDelegated { num_users: i64 },
+
+    #[error(
         "Synapse config contains an OpenID Connect or OAuth2 provider '{provider}' (issuer: {issuer:?}) used by {num_users} users which must also be configured in the MAS configuration as an upstream provider."
     )]
     MasMissingOAuthProvider {
@@ -292,6 +297,14 @@ pub async fn synapse_database_check(
         let syn_oauth2 = synapse.all_oidc_providers();
         let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(mas)?;
         for row in oauth_provider_user_counts {
+            // This is a special case of a previous migration attempt to MAS
+            if row.auth_provider == "oauth-delegated" {
+                errors.push(CheckError::ExistingOAuthDelegated {
+                    num_users: row.num_users,
+                });
+                continue;
+            }
+
             let matching_syn = syn_oauth2.get(&row.auth_provider);
 
             let Some(matching_syn) = matching_syn else {
