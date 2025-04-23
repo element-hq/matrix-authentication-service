@@ -1,6 +1,89 @@
-use std::sync::{Arc, atomic::AtomicU32};
+// Copyright 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+// Please see LICENSE in the repository root for full details.
+
+use std::sync::{Arc, LazyLock, atomic::AtomicU32};
 
 use arc_swap::ArcSwap;
+use opentelemetry::{
+    KeyValue,
+    metrics::{Counter, Gauge},
+};
+
+use crate::telemetry::METER;
+
+/// A gauge that tracks the approximate number of entities of a given type
+/// that will be migrated.
+pub static APPROX_TOTAL_GAUGE: LazyLock<Gauge<u64>> = LazyLock::new(|| {
+    METER
+        .u64_gauge("syn2mas.entity.approx_total")
+        .with_description("Approximate number of entities of this type to be migrated")
+        .build()
+});
+
+/// A counter that tracks the number of entities of a given type that have
+/// been migrated so far.
+pub static MIGRATED_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.entity.migrated")
+        .with_description("Number of entities of this type that have been migrated so far")
+        .build()
+});
+
+/// A counter that tracks the number of entities of a given type that have
+/// been skipped so far.
+pub static SKIPPED_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
+    METER
+        .u64_counter("syn2mas.entity.skipped")
+        .with_description("Number of entities of this type that have been skipped so far")
+        .build()
+});
+
+/// Enum representing the different types of entities that syn2mas can migrate.
+#[derive(Debug, Clone, Copy)]
+pub enum EntityType {
+    /// Represents users
+    Users,
+
+    /// Represents devices
+    Devices,
+
+    /// Represents third-party IDs
+    ThreePids,
+
+    /// Represents external IDs
+    ExternalIds,
+
+    /// Represents non-refreshable access tokens
+    NonRefreshableAccessTokens,
+
+    /// Represents refreshable access tokens
+    RefreshableTokens,
+}
+
+impl std::fmt::Display for EntityType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+impl EntityType {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Users => "users",
+            Self::Devices => "devices",
+            Self::ThreePids => "threepids",
+            Self::ExternalIds => "external_ids",
+            Self::NonRefreshableAccessTokens => "nonrefreshable_access_tokens",
+            Self::RefreshableTokens => "refreshable_tokens",
+        }
+    }
+
+    pub fn as_kv(self) -> KeyValue {
+        KeyValue::new("entity", self.name())
+    }
+}
 
 /// Tracker for the progress of the migration
 ///
@@ -11,25 +94,37 @@ pub struct Progress {
     current_stage: Arc<ArcSwap<ProgressStage>>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct ProgressCounter {
     inner: Arc<ProgressCounterInner>,
 }
 
-#[derive(Default)]
 struct ProgressCounterInner {
+    kv: [KeyValue; 1],
     migrated: AtomicU32,
     skipped: AtomicU32,
 }
 
 impl ProgressCounter {
+    fn new(entity: EntityType) -> Self {
+        Self {
+            inner: Arc::new(ProgressCounterInner {
+                kv: [entity.as_kv()],
+                migrated: AtomicU32::new(0),
+                skipped: AtomicU32::new(0),
+            }),
+        }
+    }
+
     pub fn increment_migrated(&self) {
+        MIGRATED_COUNTER.add(1, &self.inner.kv);
         self.inner
             .migrated
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
 
     pub fn increment_skipped(&self) {
+        SKIPPED_COUNTER.add(1, &self.inner.kv);
         self.inner
             .skipped
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -52,8 +147,9 @@ impl ProgressCounter {
 
 impl Progress {
     #[must_use]
-    pub fn migrating_data(&self, entity: &'static str, approx_count: usize) -> ProgressCounter {
-        let counter = ProgressCounter::default();
+    pub fn migrating_data(&self, entity: EntityType, approx_count: usize) -> ProgressCounter {
+        let counter = ProgressCounter::new(entity);
+        APPROX_TOTAL_GAUGE.record(approx_count as u64, &[entity.as_kv()]);
         self.set_current_stage(ProgressStage::MigratingData {
             entity,
             counter: counter.clone(),
@@ -99,7 +195,7 @@ impl Default for Progress {
 pub enum ProgressStage {
     SettingUp,
     MigratingData {
-        entity: &'static str,
+        entity: EntityType,
         counter: ProgressCounter,
         approx_count: u64,
     },

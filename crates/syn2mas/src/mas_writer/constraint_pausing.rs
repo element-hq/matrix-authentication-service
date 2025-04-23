@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
@@ -123,7 +123,6 @@ pub async fn restore_constraint(
         table_name,
         definition,
     } = &constraint;
-    info!("rebuilding constraint {name}");
 
     sqlx::query(&format!(
         "ALTER TABLE {table_name} ADD CONSTRAINT {name} {definition};"

@@ -3,12 +3,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+mod oidc;
+
 use std::collections::BTreeMap;
 
 use camino::Utf8PathBuf;
+use chrono::{DateTime, Utc};
 use figment::providers::{Format, Yaml};
+use mas_config::{PasswordAlgorithm, PasswordHashingScheme};
+use rand::Rng;
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
+use tracing::warn;
+use url::Url;
+
+pub use self::oidc::OidcProvider;
 
 /// The root of a Synapse configuration.
 /// This struct only includes fields which the Synapse-to-MAS migration is
@@ -16,12 +25,14 @@ use sqlx::postgres::PgConnectOptions;
 ///
 /// See: <https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html>
 #[derive(Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct Config {
     pub database: DatabaseSection,
 
     #[serde(default)]
     pub password_config: PasswordSection,
+
+    pub bcrypt_rounds: Option<u32>,
 
     #[serde(default)]
     pub allow_guest_access: bool,
@@ -31,11 +42,16 @@ pub struct Config {
 
     #[serde(default)]
     pub enable_registration_captcha: bool,
+    pub recaptcha_public_key: Option<String>,
+    pub recaptcha_private_key: Option<String>,
 
     /// Normally this defaults to true, but when MAS integration is enabled in
     /// Synapse it defaults to false.
     #[serde(default)]
-    pub enable_3pid_changes: bool,
+    pub enable_3pid_changes: Option<bool>,
+
+    #[serde(default = "default_true")]
+    enable_set_display_name: bool,
 
     #[serde(default)]
     pub user_consent: Option<UserConsentSection>,
@@ -67,6 +83,8 @@ pub struct Config {
     pub oidc_providers: Vec<OidcProvider>,
 
     pub server_name: String,
+
+    pub public_baseurl: Option<Url>,
 }
 
 impl Config {
@@ -100,20 +118,96 @@ impl Config {
         let mut out = BTreeMap::new();
 
         if let Some(provider) = &self.oidc_config {
-            if provider.issuer.is_some() {
+            if provider.has_required_fields() {
+                let mut provider = provider.clone();
                 // The legacy configuration has an implied IdP ID of `oidc`.
-                out.insert("oidc".to_owned(), provider.clone());
+                let idp_id = provider.idp_id.take().unwrap_or("oidc".to_owned());
+                provider.idp_id = Some(idp_id.clone());
+                out.insert(idp_id, provider);
             }
         }
 
         for provider in &self.oidc_providers {
-            if let Some(idp_id) = &provider.idp_id {
+            let mut provider = provider.clone();
+            let idp_id = match provider.idp_id.take() {
+                None => "oidc".to_owned(),
+                Some(idp_id) if idp_id == "oidc" => idp_id,
                 // Synapse internally prefixes the IdP IDs with `oidc-`.
-                out.insert(format!("oidc-{idp_id}"), provider.clone());
-            }
+                Some(idp_id) => format!("oidc-{idp_id}"),
+            };
+            provider.idp_id = Some(idp_id.clone());
+            out.insert(idp_id, provider);
         }
 
         out
+    }
+
+    /// Adjust a MAS configuration to match this Synapse configuration.
+    #[must_use]
+    pub fn adjust_mas_config(
+        self,
+        mut mas_config: mas_config::RootConfig,
+        rng: &mut impl Rng,
+        now: DateTime<Utc>,
+    ) -> mas_config::RootConfig {
+        let providers = self.all_oidc_providers();
+        for provider in providers.into_values() {
+            let Some(mas_provider_config) = provider.into_mas_config(rng, now) else {
+                // TODO: better log message
+                warn!("Could not convert OIDC provider to MAS config");
+                continue;
+            };
+
+            mas_config
+                .upstream_oauth2
+                .providers
+                .push(mas_provider_config);
+        }
+
+        // TODO: manage when the option is not set
+        if let Some(enable_3pid_changes) = self.enable_3pid_changes {
+            mas_config.account.email_change_allowed = enable_3pid_changes;
+        }
+        mas_config.account.displayname_change_allowed = self.enable_set_display_name;
+        if self.password_config.enabled {
+            mas_config.passwords.enabled = true;
+            mas_config.passwords.schemes = vec![
+                // This is the password hashing scheme synapse uses
+                PasswordHashingScheme {
+                    version: 1,
+                    algorithm: PasswordAlgorithm::Bcrypt,
+                    cost: self.bcrypt_rounds,
+                    secret: self.password_config.pepper,
+                    secret_file: None,
+                },
+                // Use the default algorithm MAS uses as a second hashing scheme, so that users
+                // will get their password hash upgraded to a more modern algorithm over time
+                PasswordHashingScheme {
+                    version: 2,
+                    algorithm: PasswordAlgorithm::default(),
+                    cost: None,
+                    secret: None,
+                    secret_file: None,
+                },
+            ];
+
+            mas_config.account.password_registration_enabled = self.enable_registration;
+        } else {
+            mas_config.passwords.enabled = false;
+        }
+
+        if self.enable_registration_captcha {
+            mas_config.captcha.service = Some(mas_config::CaptchaServiceKind::RecaptchaV2);
+            mas_config.captcha.site_key = self.recaptcha_public_key;
+            mas_config.captcha.secret_key = self.recaptcha_private_key;
+        }
+
+        mas_config.matrix.homeserver = self.server_name;
+        if let Some(public_baseurl) = self.public_baseurl {
+            mas_config.matrix.endpoint = public_baseurl;
+        }
+
+        mas_config
     }
 }
 
@@ -215,17 +309,6 @@ pub struct EnableableSection {
     pub enabled: bool,
 }
 
-#[derive(Clone, Deserialize)]
-pub struct OidcProvider {
-    /// At least for `oidc_config`, if the dict is present but left empty then
-    /// the config should be ignored, so this field must be optional.
-    pub issuer: Option<String>,
-
-    /// Required, except for the old `oidc_config` where this is implied to be
-    /// "oidc".
-    pub idp_id: Option<String>,
-}
-
 fn default_true() -> bool {
     true
 }
@@ -239,7 +322,7 @@ mod test {
     #[test]
     fn test_to_sqlx_postgres() {
         #[track_caller]
-        #[allow(clippy::needless_pass_by_value)]
+        #[expect(clippy::needless_pass_by_value)]
         fn assert_eq_options(config: DatabaseSection, uri: &str) {
             let config_connect_options = config
                 .to_sqlx_postgres()

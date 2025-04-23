@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO syn2mas__compat_sessions (\n              compat_session_id, user_id,\n              device_id, human_name,\n              created_at, is_synapse_admin,\n              last_active_at, last_active_ip,\n              user_agent)\n            SELECT * FROM UNNEST(\n              $1::UUID[], $2::UUID[],\n              $3::TEXT[], $4::TEXT[],\n              $5::TIMESTAMP WITH TIME ZONE[], $6::BOOLEAN[],\n              $7::TIMESTAMP WITH TIME ZONE[], $8::INET[],\n              $9::TEXT[])\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "UuidArray",
+        "TextArray",
+        "TextArray",
+        "TimestamptzArray",
+        "BoolArray",
+        "TimestamptzArray",
+        "InetArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "09db58b250c20ab9d1701653165233e5c9aabfdae1f0ee9b77c909b2bb2f3e25"
+}
