@@ -203,7 +203,3 @@ Start up the homeserver again with the new configuration.
 ### Start up MAS
 
 Start up MAS.
-
-### Update or serve the .well-known
-
-The `.well-known/matrix/client` needs to be served as described [here](./well-known.md).
