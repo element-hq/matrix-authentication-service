@@ -15,7 +15,7 @@ use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::
 use syn2mas::{
     LockedMasDatabase, MasWriter, Progress, ProgressStage, SynapseReader, synapse_config,
 };
-use tracing::{Instrument, error, info, info_span, warn};
+use tracing::{Instrument, error, info, info_span};
 
 use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
 
@@ -31,15 +31,6 @@ const EXIT_CODE_CHECK_WARNINGS: u8 = 11;
 pub(super) struct Options {
     #[command(subcommand)]
     subcommand: Subcommand,
-
-    /// This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. It is
-    /// only suitable for TESTING. If you want to use this tool anyway,
-    /// please pass this argument.
-    ///
-    /// If you want to migrate from Synapse to MAS today, please use the
-    /// Node.js-based tool in the MAS repository.
-    #[clap(long = "i-swear-i-am-just-testing-in-a-staging-environment")]
-    experimental_accepted: bool,
 
     /// Path to the Synapse configuration (in YAML format).
     /// May be specified multiple times if multiple Synapse configuration files
@@ -85,14 +76,6 @@ impl Options {
     #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
-        warn!(
-            "This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING."
-        );
-        if !self.experimental_accepted {
-            error!("Please agree that you can only use this tool for testing.");
-            return Ok(ExitCode::FAILURE);
-        }
-
         if self.synapse_configuration_files.is_empty() {
             error!("Please specify the path to the Synapse configuration file(s).");
             return Ok(ExitCode::FAILURE);
