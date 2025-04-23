@@ -1,0 +1,395 @@
+{
+  "action": {
+    "back": "Tilbake",
+    "cancel": "Avbryt",
+    "clear": "Tøm",
+    "close": "Lukk",
+    "collapse": "Skjul",
+    "confirm": "Bekreft",
+    "continue": "Fortsett",
+    "edit": "Rediger",
+    "expand": "Utvid",
+    "save": "Lagre",
+    "save_and_continue": "Lagre og fortsett",
+    "sign_out": "Logg ut",
+    "start_over": "Begynn på nytt"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Lenke til tjenestens personvernerklæring",
+      "link": "Personvernerklæring"
+    },
+    "terms_and_conditions": {
+      "alt": "Lenke til tjenestens vilkår og betingelser",
+      "link": "Vilkår og betingelser"
+    }
+  },
+  "common": {
+    "add": "Legg til",
+    "e2ee": "Ende-til-ende-kryptering",
+    "error": "Feil",
+    "loading": "Laster inn...",
+    "next": "Neste",
+    "password": "Passord",
+    "previous": "Forrige",
+    "saved": "Lagret",
+    "saving": "Lagrer…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Passord for konto",
+      "contact_info": "Kontaktopplysninger",
+      "delete_account": {
+        "alert_description": "Denne kontoen vil bli slettet permanent, og du vil ikke lenger ha tilgang til noen av meldingene dine.",
+        "alert_title": "Du er i ferd med å miste alle dataene dine",
+        "button": "Slett konto",
+        "dialog_description": "<text>Bekreft at du ønsker å slette kontoen din:</text>\n<profile />\n<list>\n<item>Du vil ikke kunne aktivere kontoen din på nytt</item>\n<item>Du vil ikke lenger kunne logge på</item>\n<item>Ingen vil kunne gjenbruke brukernavnet ditt (MXID), heller ikke du</item>\n<item>Du vil forlate alle rom og direktemeldinger du er en del av</item>\n<item>Du vil bli fjernet fra identitetsserveren, og ingen vil kunne finne deg med e-postadressen eller telefonnummeret ditt</item>\n</list>\n<text>Dine gamle meldinger vil fortsatt være synlige for personer som har mottatt dem. Ønsker du å skjule dine sendte meldinger for personer som blir med i rommene i fremtiden?</text>",
+        "dialog_title": "Slett denne kontoen?",
+        "erase_checkbox_label": "Ja, skjul alle meldingene mine for nye medlemmer",
+        "incorrect_password": "Feil passord, prøv igjen",
+        "mxid_label": "Bekreft din Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "Denne verdien samsvarer ikke med din Matrix ID",
+        "password_label": "Skriv inn passordet ditt for å fortsette"
+      },
+      "edit_profile": {
+        "display_name_help": "Dette er det andre vil se uansett hvor du er logget inn.",
+        "display_name_label": "Visningsnavn",
+        "title": "Rediger profil",
+        "username_label": "Brukernavn"
+      },
+      "password": {
+        "change": "Endre passord",
+        "change_disabled": "Endring av passord er deaktivert av administrator.",
+        "label": "Passord"
+      },
+      "sign_out": {
+        "button": "Logg av konto",
+        "dialog": "Logg ut av denne kontoen?"
+      },
+      "title": "Din konto"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Den angitte e-postadressen er ikke tillatt av serverpolicyen.",
+        "title": "E-post avvist av policy"
+      },
+      "email_denied_error": "Den angitte e-postadressen er ikke tillatt av serverpolicyen",
+      "email_exists_alert": {
+        "text": "Den angitte e-postadressen er allerede lagt til denne kontoen",
+        "title": "E-posten finnes allerede"
+      },
+      "email_exists_error": "Den angitte e-postadressen er allerede lagt til denne kontoen",
+      "email_field_help": "Legg til en alternativ e-postadresse du kan bruke for å få tilgang til denne kontoen.",
+      "email_field_label": "Legg til e-post",
+      "email_in_use_error": "Den angitte e-postadressen er allerede i bruk",
+      "email_invalid_alert": {
+        "text": "Den angitte e-postadressen er ugyldig",
+        "title": "Ugyldig e-post"
+      },
+      "email_invalid_error": "Den angitte e-postadressen er ugyldig",
+      "incorrect_password_error": "Feil passord, prøv igjen",
+      "password_confirmation": "Bekreft passordet ditt for å legge til denne e-postadressen"
+    },
+    "app_sessions_list": {
+      "error": "Kunne ikke laste inn appsesjoner",
+      "heading": "Applikasjoner"
+    },
+    "browser_session_details": {
+      "current_badge": "Nåværende",
+      "session_details_title": "Sesjon"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktiv sesjon",
+      "body:other": "{{count}} aktive sesjoner",
+      "heading": "Nettlesere",
+      "no_active_sessions": {
+        "default": "Du er ikke logget inn på noen nettlesere.",
+        "inactive_90_days": "Alle sesjonene dine har vært aktive de siste 90 dagene."
+      },
+      "view_all_button": "Vis alle"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Klient informasjon",
+      "name": "Navn",
+      "session_details_title": "Sesjon"
+    },
+    "device_type_icon_label": {
+      "desktop": "Skrivebord",
+      "mobile": "Mobil",
+      "pc": "Datamaskin",
+      "tablet": "Nettbrett",
+      "unknown": "Ukjent enhetstype",
+      "web": "Web"
+    },
+    "email_in_use": {
+      "heading": "E-postadressen {{email}} er allerede i bruk."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Er du sikker på at du vil avslutte denne sesjonen?",
+      "text": "Fjern enheten"
+    },
+    "error": {
+      "hideDetails": "Skjul detaljer",
+      "showDetails": "Vis detaljer",
+      "subtitle": "Det oppstod en uventet feil. Vennligst prøv igjen.",
+      "title": "Noe gikk galt"
+    },
+    "error_boundary_title": "Noe gikk galt",
+    "errors": {
+      "field_required": "Dette feltet er obligatorisk",
+      "rate_limit_exceeded": "Du har kommet med for mange forespørsler på kort tid. Vent noen minutter og prøv igjen."
+    },
+    "last_active": {
+      "active_date": "Aktiv {{relativeDate}}",
+      "active_now": "Aktiv nå",
+      "inactive_90_days": "Inaktiv i 90+ dager"
+    },
+    "nav": {
+      "devices": "Enheter",
+      "profile": "Profil",
+      "sessions": "Sesjoner",
+      "settings": "Innstillinger"
+    },
+    "not_found_alert_title": "Ikke funnet.",
+    "not_logged_in_alert": "Du er ikke innlogget.",
+    "oauth2_client_detail": {
+      "details_title": "Klient informasjon",
+      "id": "Klient-ID",
+      "name": "Navn",
+      "policy": "Retningslinjer",
+      "terms": "Vilkår for bruk"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Navn",
+      "client_title": "Klient informasjon",
+      "session_details_title": "Sesjon"
+    },
+    "pagination_controls": {
+      "total": "Totalt: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Nåværende passord",
+      "failure": {
+        "description": {
+          "account_locked": "Kontoen din er låst og kan ikke gjenopprettes på dette tidspunktet. Hvis dette ikke er forventet, kan du kontakte serveradministratoren din.",
+          "expired_recovery_ticket": "Gjenopprettingslenken er utløpt. Start kontogjenopprettingsprosessen på nytt.",
+          "invalid_new_password": "Det nye passordet du valgte er ugyldig. Det kan hende at den ikke oppfyller den gjeldende sikkerhetspolicyen.",
+          "no_current_password": "Du har ikke et gjeldende passord.",
+          "no_such_recovery_ticket": "Gjenopprettingslenken er ugyldig. Hvis du kopierte lenken fra gjenopprettingseposten, vennligst sjekk at hele lenken ble kopiert.",
+          "password_changes_disabled": "Endring av passord er deaktivert.",
+          "recovery_ticket_already_used": "Gjenopprettingslenken er allerede brukt. Den kan ikke brukes igjen.",
+          "unspecified": "Dette kan være et midlertidig problem, så prøv igjen senere. Hvis problemet vedvarer, vennligst kontakt serveradministratoren din.",
+          "wrong_password": "Passordet du oppga som ditt nåværende passord er feil. Prøv igjen."
+        },
+        "title": "Kunne ikke oppdatere passordet"
+      },
+      "new_password_again_label": "Skriv inn nytt passord igjen",
+      "new_password_label": "Nytt passord",
+      "passwords_match": "Passordene stemmer overens!",
+      "passwords_no_match": "Passord stemmer ikke overens",
+      "subtitle": "Velg et nytt passord for kontoen din.",
+      "success": {
+        "description": "Passordet ditt har blitt oppdatert.",
+        "title": "Passord oppdatert"
+      },
+      "title": "Bytt passordet ditt"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "For å opprette et nytt passord, start på nytt og velg «Glemt passord».",
+        "title": "Lenken for å tilbakestille passordet ditt har allerede blitt brukt"
+      },
+      "expired": {
+        "resend_email": "Send e-post på nytt",
+        "subtitle": "Be om en ny e-post som vil bli sendt til: {{email}}",
+        "title": "Lenken for å tilbakestille passordet ditt er utløpt"
+      },
+      "subtitle": "Velg et nytt passord for kontoen din.",
+      "title": "Tilbakestill passordet ditt"
+    },
+    "password_strength": {
+      "placeholder": "Passordstyrke",
+      "score": {
+        "0": "Ekstremt svakt passord",
+        "1": "Veldig svakt passord",
+        "2": "Svakt passord",
+        "3": "Sterkt passord",
+        "4": "Veldig sterkt passord"
+      },
+      "suggestion": {
+        "all_uppercase": "Bruk store bokstaver, men ikke for alle bokstaver.",
+        "another_word": "Legg til flere ord som er mindre vanlige.",
+        "associated_years": "Unngå år som er knyttet til deg",
+        "capitalization": "Bruk stor bokstav på mer enn den første bokstaven.",
+        "dates": "Unngå datoer og år som er knyttet til deg",
+        "l33t": "Unngå forutsigbare bokstavbytter som \"@\" i stedet for \"a\".",
+        "longer_keyboard_pattern": "Bruk lengre tastaturmønstre og endre skriveretning flere ganger.",
+        "no_need": "Du kan lage sterke passord uten å bruke symboler, tall eller store bokstaver.",
+        "pwned": "Hvis du bruker dette passordet andre steder, bør du endre det.",
+        "recent_years": "Unngå nylige år",
+        "repeated": "Unngå gjentatte ord og tegn.",
+        "reverse_words": "Unngå omvendt staving av vanlige ord.",
+        "sequences": "Unngå vanlige tegnsekvenser.",
+        "use_words": "Bruk flere ord, men unngå vanlige fraser."
+      },
+      "too_weak": "Dette passordet er for svakt",
+      "warning": {
+        "common": "Dette er et ofte brukt passord.",
+        "common_names": "Vanlige navn og etternavn er lette å gjette seg til.",
+        "dates": "Datoer er enkle å gjette seg til.",
+        "extended_repeat": "Gjentatte tegnmønstre som \"abcabcabc\" er lette å gjette seg til.",
+        "key_pattern": "Korte tastaturmønstre er enkle å gjette.",
+        "names_by_themselves": "Enkeltnavn eller etternavn er lette å gjette.",
+        "pwned": "Passordet ditt ble eksponert ved et datainnbrudd på Internett.",
+        "recent_years": "De siste årene er enkle å gjette seg til.",
+        "sequences": "Vanlige tegnsekvenser som «abc» er enkle å gjette.",
+        "similar_to_common": "Dette ligner på et ofte brukt passord.",
+        "simple_repeat": "Gjentatte tegn som \"aaa\" er lette å gjette.",
+        "straight_row": "Rette tasterader på tastaturet er enkle å gjette seg til.",
+        "top_hundred": "Dette er et ofte brukt passord.",
+        "top_ten": "Dette er et mye brukt passord.",
+        "user_inputs": "Det skal ikke være noen personlige eller siderelaterte data.",
+        "word_by_itself": "Enkeltord er lette å gjette."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Tilbakestill identitet",
+      "cancelled": {
+        "description_1": "Du kan lukke dette vinduet og gå tilbake til appen for å fortsette.",
+        "description_2": "Hvis du er logget av overalt og ikke husker gjenopprettingskoden, må du fortsatt tilbakestille identiteten din.",
+        "heading": "Tilbakestilling av identitet kansellert."
+      },
+      "description": "Hvis du ikke er logget på andre enheter, og du har mistet gjenopprettingsnøkkelen, må du tilbakestille identiteten din for å fortsette å bruke appen.",
+      "effect_list": {
+        "negative_1": "Du vil miste din eksisterende meldingshistorikk",
+        "negative_2": "Du må bekrefte alle eksisterende enheter og kontakter på nytt",
+        "neutral_1": "Du vil miste all meldingshistorikk som bare er lagret på serveren",
+        "neutral_2": "Du må bekrefte alle eksisterende enheter og kontakter på nytt",
+        "positive_1": "Dine kontodetaljer, kontakter, preferanser og chatteliste vil bli beholdt"
+      },
+      "failure": {
+        "description": "Dette kan være et midlertidig problem, så prøv igjen senere. Hvis problemet vedvarer, vennligst kontakt serveradministratoren din.",
+        "heading": "Kunne ikke tillate tilbakestilling av kryptoidentitet",
+        "title": "Kunne ikke tillate kryptoidentitet"
+      },
+      "finish_reset": "Fullfør tilbakestillingen",
+      "heading": "Tilbakestill identiteten din i tilfelle du ikke kan bekrefte på en annen måte",
+      "start_reset": "Start tilbakestilling",
+      "success": {
+        "description": "Tilbakestillingen av identiteten er godkjent for de neste {{minutes}} minuttene. Du kan lukke dette vinduet og gå tilbake til appen for å fortsette.",
+        "heading": "Identitet tilbakestilt. Gå tilbake til appen for å fullføre prosessen.",
+        "title": "Tilbakestilling av kryptoidentitet midlertidig tillatt"
+      },
+      "warning": "Tilbakestill identiteten din bare hvis du ikke har tilgang til en annen pålogget enhet og du har mistet gjenopprettingsnøkkelen."
+    },
+    "selectable_session": {
+      "label": "Velg sesjon"
+    },
+    "session": {
+      "client_id_label": "Klient-ID",
+      "current": "Nåværende",
+      "current_badge": "Nåværende",
+      "device_id_label": "Enhets-ID",
+      "finished_date": "Fullført <datetime/>",
+      "finished_label": "Fullført",
+      "generic_browser_session": "Nettlesersesjon",
+      "id_label": "ID",
+      "ip_label": "IP-adresse",
+      "last_active_label": "Sist aktiv",
+      "last_auth_label": "Siste autentisering",
+      "name_for_platform": "{{name}} for {{platform}}",
+      "scopes_label": "Omfang",
+      "signed_in_date": "Logget på <datetime/>",
+      "signed_in_label": "Logget på",
+      "title": "Detaljer om enheten",
+      "unknown_browser": "Ukjent nettleser",
+      "unknown_device": "Ukjent enhet",
+      "uri_label": "Uri",
+      "user_id_label": "Bruker ID",
+      "username_label": "Brukernavn"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Gå tilbake",
+        "text": "Denne sesjonen finnes ikke, eller er ikke lenger aktiv.",
+        "title": "Finner ikke sesjonen: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Ukjent rute {{route}}",
+    "unverified_email_alert": {
+      "button": "Gjennomgå og verifiser",
+      "text:one": "Du har {{count}} ubekreftet e-postadresse.",
+      "text:other": "Du har {{count}} ubekreftede e-postadresser.",
+      "title": "Ubekreftet e-post"
+    },
+    "user_email": {
+      "cant_delete_primary": "Velg en annen primær e-postadresse for å slette denne.",
+      "delete_button_confirmation_modal": {
+        "action": "Slett e-post",
+        "body": "Vil du slette denne e-posten?",
+        "incorrect_password": "Feil passord, prøv igjen",
+        "password_confirmation": "Bekreft kontopassordet ditt for å slette denne e-postadressen"
+      },
+      "delete_button_title": "Fjern e-postadresse",
+      "email": "E-post",
+      "make_primary_button": "Gjøre til primær",
+      "not_verified": "Ikke verifisert",
+      "primary_email": "Primær e-postadresse",
+      "retry_button": "Send kode på nytt",
+      "unverified": "Ikke verifisert"
+    },
+    "user_email_list": {
+      "heading": "E-poster",
+      "no_primary_email_alert": "Ingen primær e-postadresse"
+    },
+    "user_greeting": {
+      "error": "Kunne ikke laste inn bruker"
+    },
+    "user_name": {
+      "display_name_field_label": "Visningsnavn"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktiv sesjon",
+      "active_sessions:other": "{{count}} aktive sesjoner",
+      "heading": "Hvor du er logget inn",
+      "no_active_sessions": {
+        "default": "Du er ikke logget på noen applikasjoner.",
+        "inactive_90_days": "Alle sesjonene dine har vært aktive de siste 90 dagene."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "Koden er utløpt. Be om en ny kode.",
+        "title": "Koden er utløpt"
+      },
+      "code_field_error": "Kode ikke gjenkjent",
+      "code_field_label": "6-sifret kode",
+      "code_field_wrong_shape": "Koden må være 6 sifre",
+      "email_sent_alert": {
+        "description": "Skriv inn den nye koden nedenfor.",
+        "title": "Ny kode sendt"
+      },
+      "enter_code_prompt": "Skriv inn den 6-sifrede koden sendt til: <email>{{email}}</email>",
+      "heading": "Bekreft e-postadressen din",
+      "invalid_code_alert": {
+        "description": "Sjekk koden som er sendt til e-posten din, og oppdater feltene nedenfor for å fortsette.",
+        "title": "Du skrev inn feil kode"
+      },
+      "resend_code": "Send kode på nytt",
+      "resend_email": "Send e-post på nytt",
+      "sent": "Sendt!",
+      "unknown_email": "Ukjent e-postadresse"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Rediger din profil og kontaktdetaljer",
+      "manage_sessions": "Administrer enhetene og sesjonene dine",
+      "mas_admin": "Administrer alle brukere på matrix-authentication-service",
+      "send_messages": "Send nye meldinger på dine vegne",
+      "synapse_admin": "Administrer Synapse-hjemmeserveren",
+      "view_messages": "Se dine eksisterende meldinger og data",
+      "view_profile": "Se din profilinformasjon og kontaktdetaljer"
+    }
+  }
+}

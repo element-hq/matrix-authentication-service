@@ -1,0 +1,265 @@
+{
+  "action": {
+    "back": "Vissza",
+    "cancel": "Mégse",
+    "continue": "Folytatás",
+    "create_account": "Fiók létrehozása",
+    "sign_in": "Bejelentkezés",
+    "sign_out": "Kijelentkezés",
+    "skip": "Kihagyás",
+    "start_over": "Újrakezdés",
+    "submit": "Elküldés"
+  },
+  "app": {
+    "human_name": "Matrix hitelesítési szolgáltatás",
+    "name": "matrix-authentication-service",
+    "technical_description": "OpenID Connect felfedezési dokumentum: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Hivatkozás a szolgáltatás adatvédelmi irányelveire",
+      "link": "Adatvédelmi irányelvek"
+    },
+    "terms_and_conditions": {
+      "alt": "Hivatkozás a szolgáltatási feltételekre",
+      "link": "Szolgáltatási feltételek"
+    }
+  },
+  "common": {
+    "display_name": "Megjelenítési név",
+    "email_address": "E-mail-cím",
+    "loading": "Betöltés…",
+    "mxid": "Matrix-azonosító",
+    "password": "Jelszó",
+    "password_confirm": "Jelszó megerősítése",
+    "username": "Felhasználói név"
+  },
+  "error": {
+    "unexpected": "Váratlan hiba"
+  },
+  "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Ez a fiók (<em>%(mxid)s</em>) törölve lett. Ha erre nem számított, vegye fel a kapcsolatot a kiszolgáló rendszergazdájával.",
+        "heading": "Fiók törölve"
+      },
+      "locked": {
+        "description": "Ez a fiók (<em>%(mxid)s</em>) zárolva lett. Ha erre nem számított, vegye fel a kapcsolatot a kiszolgáló rendszergazdájával.",
+        "heading": "Fiók zárolva"
+      },
+      "logged_out": {
+        "description": "Ez a munkamenet véget ért. Jelentkezzen ki, hogy újra bejelentkezhessen.",
+        "heading": "Munkamenet befejezve"
+      }
+    },
+    "add_email": {
+      "description": "Adjon meg egy e-mail-címet a fiókja helyreállításához, arra az esetre, ha elveszítené a hozzáférését.",
+      "heading": "E-mail-cím hozzáadása"
+    },
+    "back_to_homepage": "Vissza a kezdőlaphoz",
+    "captcha": {
+      "noscript": "Ezt az űrlapot CAPTCHA védi, és az elküldéséhez engedélyezni kell a JavaScriptet. Engedélyezze a böngészőben a JavaScriptet, és töltse újra az oldalt."
+    },
+    "change_password": {
+      "change": "Jelszó módosítása",
+      "confirm": "Jelszó megerősítése",
+      "current": "Jelenlegi jelszó",
+      "description": "Ez módosítja a fiókja jelszavát.",
+      "heading": "Saját jelszó módosítása",
+      "new": "Új jelszó"
+    },
+    "choose_display_name": {
+      "description": "Ez az a név, melyet a többi ember látni fog. Ezt bármikor módosíthatja.",
+      "headline": "Válasszon megjelenítési nevet"
+    },
+    "consent": {
+      "client_wants_access": "A(z) <span>%(client_name)s</span> (itt: <span>%(redirect_uri)s</span>) hozzá akar férni a fiókjához.",
+      "heading": "Engedélyezi a hozzáférést a fiókjához?",
+      "make_sure_you_trust": "Győződjön meg arról, hogy megbízik a(z) <span>%(client_name)s</span> kliensben.",
+      "this_will_allow": "Ez lehetővé teszi, hogy a(z) <span>%(client_name)s</span> a következőket tegye:",
+      "you_may_be_sharing": "Bizalmas információkat oszthat meg ezzel az oldallal vagy alkalmazással."
+    },
+    "device_card": {
+      "access_requested": "Hozzáférés kérve",
+      "device_code": "Kód",
+      "generic_device": "Eszköz",
+      "ip_address": "IP-cím"
+    },
+    "device_code_link": {
+      "description": "Eszköz összekapcsolása",
+      "headline": "Adja meg az eszközén megjelenített kódot"
+    },
+    "device_consent": {
+      "another_device_access": "Egy másik eszköz akarja elérni a fiókját.",
+      "denied": {
+        "description": "Elutasította a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
+        "heading": "Hozzáférés megtagadva"
+      },
+      "granted": {
+        "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
+        "heading": "Hozzáférés megadva"
+      }
+    },
+    "email_in_use": {
+      "description": "Ha elfelejtette a fiókja hitelesítő adatait, akkor helyreállíthatja a fiókját. Újra is kezdheti egy másik e-mail-címmel.",
+      "title": "A(z) <span>%(email)s</span> e-mail-cím már használatban van"
+    },
+    "emails": {
+      "greeting": "Kedves %(username)s!",
+      "recovery": {
+        "click_button": "Kattintson a lenti gombra az új jelszava létrehozásához:",
+        "copy_link": "Másolja a következő hivatkozást, és illessze be a böngészőbe egy új jelszó létrehozásához:",
+        "create_new_password": "Új jelszó létrehozása",
+        "fallback": "A gomb nem működik?",
+        "headline": "Jelszóvisszaállítást kért a(z) %(client_name)s fiókjához.",
+        "subject": "Fiókjelszó visszaállítása (%(mxid)s)",
+        "you_can_ignore": "Ha nem kért új jelszót, akkor figyelmen kívül hagyhatja ezt a levelet. A jelenlegi jelszava továbbra is működni fog."
+      },
+      "verify": {
+        "body_html": "Az ellenőrzőkódja az e-mail-címe megerősítéséhez: <strong>%(code)s</strong>",
+        "body_text": "Az ellenőrzőkódja az e-mail-címe megerősítéséhez: %(code)s",
+        "subject": "Az e-mail-elleőrzőkódja: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "A CAPTCHA ellenőrzés sikertelen, próbálja újra",
+      "denied_policy": "Házirend alapján elutasítva: %(policy)s",
+      "email_banned": "Az e-mail-címet a kiszolgáló-házirend tiltja",
+      "email_domain_banned": "Az e-mail-tartományt a kiszolgáló-házirend tiltja",
+      "email_domain_not_allowed": "Az e-mail-tartományt nem engedélyezi a kiszolgáló-házirend",
+      "email_not_allowed": "Az e-mail-címet nem engedélyezi a kiszolgáló-házirend",
+      "field_required": "Ez a mező kötelező",
+      "invalid_credentials": "Érvénytelen hitelesítő adatok",
+      "password_mismatch": "A jelszómezők nem egyeznek",
+      "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra.",
+      "username_all_numeric": "A felhasználónév nem állhat pusztán számokból",
+      "username_banned": "A felhasználónevet a kiszolgáló-házirend tiltja",
+      "username_invalid_chars": "A felhasználónév érvénytelen karaktereket tartalmaz. Csak kisbetűket, számokat, kötőjeleket és aláhúzásokat használjon.",
+      "username_not_allowed": "A felhasználónevet nem engedélyezi a kiszolgáló-házirend",
+      "username_taken": "A felhasználónév már foglalt",
+      "username_too_long": "A felhasználónév túl hosszú",
+      "username_too_short": "A felhasználónév túl rövid"
+    },
+    "login": {
+      "call_to_register": "Még nincs fiókja?",
+      "continue_with_provider": "Folytatás ezzel a szolgáltatóval: %(provider)s",
+      "description": "Jelentkezzen be a folytatáshoz:",
+      "forgot_password": "Elfelejtette a jelszavát?",
+      "headline": "Bejelentkezés",
+      "link": {
+        "description": "A(z) <span class=\"break-keep text-links\">%(provider)s</span> fiókjának összekötése",
+        "headline": "Bejelentkezés az összekötéshez"
+      },
+      "no_login_methods": "Nem érhetőek el bejelentkezési módok.",
+      "separator": "vagy",
+      "username_or_email": "Felhasználónév vagy e-mail-cím"
+    },
+    "navbar": {
+      "my_account": "Saját fiók",
+      "register": "Fiók létrehozása",
+      "signed_in_as": "Bejelentkezve mint <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "A keresett oldal nem létezik vagy áthelyezték",
+      "heading": "Az oldal nem található"
+    },
+    "not_you": "Nem %(username)s?",
+    "or_separator": "vagy",
+    "policy_violation": {
+      "description": "Ez a kérést feladó kliens, a jelenleg bejelentkezett felhasználó, vagy maga a kérés miatt is lehet.",
+      "heading": "Az engedélyezési kérés a szolgáltatás által betartatott házirend alapján elutasítva",
+      "logged_as": "Bejelentkezve mint <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Új jelszó létrehozásához kezdje elölről, és válassza a „Elfelejtett jelszó” lehetőséget.",
+        "heading": "A jelszóhelyreállítási hivatkozás már fel lett használva"
+      },
+      "disabled": {
+        "description": "Ha elvesztette a hitelesítő adatait, akkor a fiókja visszaszerzéséhez lépjen kapcsolatba a rendszergazdával.",
+        "heading": "A fiókhelyreállítás le van tiltva"
+      },
+      "expired": {
+        "description": "Új e-mail kérése, amely ide lesz küldve: <span>%(email)s</span>.",
+        "heading": "A jelszóvisszaállítási hivatkozás lejárt",
+        "resend_email": "Levél újraküldése"
+      },
+      "finish": {
+        "confirm": "Adja meg a jelszót újból",
+        "description": "Válasszon egy új jelszót a fiókjához.",
+        "heading": "Jelszó visszaállítása",
+        "new": "Új jelszó",
+        "save_and_continue": "Mentés és folytatás"
+      },
+      "progress": {
+        "change_email": "Próbálkozás másik e-mail-címmel",
+        "description": "Egy jelszóvisszaállítási hivatkozást tartalmazó levelet küldtünk, ha van fiókja a(z) <span>%(email)s</span> címmel.",
+        "heading": "Nézze meg a leveleit",
+        "resend_email": "Levél újraküldése"
+      },
+      "start": {
+        "description": "Egy jelszóvisszaállítási hivatkozást tartalmazó levél lesz küldve.",
+        "heading": "A folytatáshoz adja meg az e-mail-címét"
+      }
+    },
+    "register": {
+      "call_to_login": "Már van fiókja?",
+      "continue_with_email": "Folytatás az e-mail-címével",
+      "create_account": {
+        "description": "A folytatáshoz válasszon felhasználónevet.",
+        "heading": "Fiók létrehozása"
+      },
+      "sign_in_instead": "Bejelentkezés",
+      "terms_of_service": "Elfogadom a <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Szolgáltatási feltételeket</a>"
+    },
+    "scope": {
+      "edit_profile": "Profil és elérhetőségek szerkesztése",
+      "manage_sessions": "Eszközök és munkamenetek kezelése",
+      "mas_admin": "Bármely felhasználó kezelése a matrix-authentication-service szolgáltatásban",
+      "send_messages": "Új üzenetek küldése az Ön nevében",
+      "synapse_admin": "A Synapse Matrix-kiszolgáló kezelése",
+      "view_messages": "Meglévő üzenetek és adatok megtekintése",
+      "view_profile": "Saját profilinformációk és kapcsolati részletek megtekintése"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Ez a forrásfiók már egy másik fiókkal van összekötve."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Ez később nem változtatható meg.",
+          "heading": "Válasszon felhasználónevet"
+        },
+        "create_account": "Új fiók létrehozása",
+        "enforced_by_policy": "Kiszolgáló-házirend által betartatva",
+        "forced_display_name": "A következő megjelenítési nevet fogja használni",
+        "forced_email": "A következő e-mail-címet fogja használni",
+        "forced_localpart": "A következő felhasználónevet fogja használni",
+        "import_data": {
+          "description": "Erősítse meg az információkat, melyek a(z) %(server_name)s fiókjához lesznek kapcsolva.",
+          "heading": "Saját adatok importálása"
+        },
+        "imported_from_upstream": "Importálva a forrásfiókjából",
+        "imported_from_upstream_with_name": "Importálva a(z) %(human_name)s fiókjából",
+        "link_existing": "Hivatkozás egy meglévő fiókra",
+        "provider_name": "%(human_name)s fiók",
+        "signup_with_upstream": {
+          "heading": "Folytassa a regisztrációt a(z) %(human_name)s fiókjával"
+        },
+        "suggested_display_name": "Megjelenítési név importálása",
+        "suggested_email": "E-mail-cím importálása",
+        "use": "Használat"
+      },
+      "suggest_link": {
+        "action": "Hivatkozás",
+        "heading": "Meglévő fiók összekötése"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6 számjegyű kód",
+      "code": "Kód",
+      "description": "Adja meg az ide küldött 6 számjegyű kódot: <em>%(email)s</em>",
+      "headline": "E-mail-cím ellenőrzése"
+    }
+  }
+}
