@@ -54,7 +54,8 @@ struct LogContextInner {
     /// The number of [`Future::poll`] recorded
     polls: AtomicU64,
 
-    /// An approximation of the total CPU time spent in the context, in nanoseconds
+    /// An approximation of the total CPU time spent in the context, in
+    /// nanoseconds
     cpu_time: AtomicU64,
 }
 
