@@ -270,7 +270,7 @@ jobs:
             type=sha
 
       - name: Setup Cosign
-        uses: sigstore/cosign-installer@v3.8.1
+        uses: sigstore/cosign-installer@v3.8.2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.10.0

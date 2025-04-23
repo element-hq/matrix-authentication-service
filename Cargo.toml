@@ -124,7 +124,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.36"
+version = "4.5.37"
 features = ["derive"]
 
 # Cron expressions
@@ -309,7 +309,7 @@ features = ["oid"]
 
 # Query builder
 [workspace.dependencies.sea-query]
-version = "0.32.3"
+version = "0.32.4"
 features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder

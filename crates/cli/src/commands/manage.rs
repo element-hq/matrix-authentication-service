@@ -67,7 +67,7 @@ enum Subcommand {
     /// Add an email address to the specified user
     AddEmail { username: String, email: String },
 
-    /// \[DEPRECATED\] Mark email address as verified
+    /// (DEPRECATED) Mark email address as verified
     VerifyEmail { username: String, email: String },
 
     /// Set a user password
