@@ -146,7 +146,8 @@ impl Options {
                 // Not a dry run — we do want to create the providers in the database
                 false,
             )
-            .await?;
+            .await
+            .context("could not sync the configuration with the database")?;
         }
 
         let Either::Left(mut mas_connection) = LockedMasDatabase::try_new(mas_connection)

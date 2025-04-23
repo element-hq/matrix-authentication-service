@@ -12,7 +12,7 @@ use axum::{
 use hyper::StatusCode;
 use mas_axum_utils::{
     jwt::JwtResponse,
-    sentry::SentryEventID,
+    record_error,
     user_authorization::{AuthorizationVerificationError, UserAuthorization},
 };
 use mas_jose::{
@@ -25,6 +25,7 @@ use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepositor
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use thiserror::Error;
+use ulid::Ulid;
 
 use crate::{BoundActivityTracker, impl_from_error_for_route};
 
@@ -59,11 +60,11 @@ pub enum RouteError {
     #[error("no suitable key found for signing")]
     InvalidSigningKey,
 
-    #[error("failed to load client")]
-    NoSuchClient,
+    #[error("failed to load client {0}")]
+    NoSuchClient(Ulid),
 
-    #[error("failed to load user")]
-    NoSuchUser,
+    #[error("failed to load user {0}")]
+    NoSuchUser(Ulid),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -72,9 +73,18 @@ impl_from_error_for_route!(mas_jose::jwt::JwtSignatureError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(
+            self,
+            Self::Internal(_)
+                | Self::InvalidSigningKey
+                | Self::NoSuchClient(_)
+                | Self::NoSuchUser(_)
+        );
         let response = match self {
-            Self::Internal(_) | Self::InvalidSigningKey | Self::NoSuchClient | Self::NoSuchUser => {
+            Self::Internal(_)
+            | Self::InvalidSigningKey
+            | Self::NoSuchClient(_)
+            | Self::NoSuchUser(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
             }
             Self::AuthorizationVerificationError(_) | Self::Unauthorized => {
@@ -82,11 +92,11 @@ impl IntoResponse for RouteError {
             }
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
-#[tracing::instrument(name = "handlers.oauth2.userinfo.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.oauth2.userinfo.get", skip_all)]
 pub async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -116,7 +126,7 @@ pub async fn get(
         .user()
         .lookup(user_id)
         .await?
-        .ok_or(RouteError::NoSuchUser)?;
+        .ok_or(RouteError::NoSuchUser(user_id))?;
 
     let user_info = UserInfo {
         sub: user.sub.clone(),
@@ -127,7 +137,7 @@ pub async fn get(
         .oauth2_client()
         .lookup(session.client_id)
         .await?
-        .ok_or(RouteError::NoSuchClient)?;
+        .ok_or(RouteError::NoSuchClient(session.client_id))?;
 
     repo.save().await?;
 

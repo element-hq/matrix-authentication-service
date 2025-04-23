@@ -143,7 +143,8 @@ impl Options {
                     prune,
                     dry_run,
                 )
-                .await?;
+                .await
+                .context("could not sync the configuration with the database")?;
             }
         }
 

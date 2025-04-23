@@ -28,6 +28,8 @@ use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
 use thiserror::Error;
 
+use crate::record_error;
+
 static JWT_BEARER_CLIENT_ASSERTION: &str = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
 #[derive(Deserialize)]
@@ -97,7 +99,7 @@ impl Credentials {
     /// # Errors
     ///
     /// Returns an error if the credentials are invalid.
-    #[tracing::instrument(skip_all, err)]
+    #[tracing::instrument(skip_all)]
     pub async fn verify(
         &self,
         http_client: &reqwest::Client,
@@ -144,7 +146,7 @@ impl Credentials {
 
                 let jwks = fetch_jwks(http_client, jwks)
                     .await
-                    .map_err(|_| CredentialsVerificationError::JwksFetchFailed)?;
+                    .map_err(CredentialsVerificationError::JwksFetchFailed)?;
 
                 jwt.verify_with_jwks(&jwks)
                     .map_err(|_| CredentialsVerificationError::InvalidAssertionSignature)?;
@@ -214,7 +216,18 @@ pub enum CredentialsVerificationError {
     InvalidAssertionSignature,
 
     #[error("failed to fetch jwks")]
-    JwksFetchFailed,
+    JwksFetchFailed(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
+}
+
+impl CredentialsVerificationError {
+    /// Returns true if the error is an internal error, not caused by the client
+    #[must_use]
+    pub fn is_internal(&self) -> bool {
+        matches!(
+            self,
+            Self::DecryptionError | Self::InvalidClientConfig | Self::JwksFetchFailed(_)
+        )
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -231,23 +244,40 @@ impl<F> ClientAuthorization<F> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ClientAuthorizationError {
+    #[error("Invalid Authorization header")]
     InvalidHeader,
-    BadForm(FailedToDeserializeForm),
+
+    #[error("Could not deserialize request body")]
+    BadForm(#[source] FailedToDeserializeForm),
+
+    #[error("client_id in form ({form:?}) does not match credential ({credential:?})")]
     ClientIdMismatch { credential: String, form: String },
+
+    #[error("Unsupported client_assertion_type: {client_assertion_type}")]
     UnsupportedClientAssertion { client_assertion_type: String },
+
+    #[error("No credentials were presented")]
     MissingCredentials,
+
+    #[error("Invalid request")]
     InvalidRequest,
+
+    #[error("Invalid client_assertion")]
     InvalidAssertion,
+
+    #[error(transparent)]
     Internal(Box<dyn std::error::Error>),
 }
 
 impl IntoResponse for ClientAuthorizationError {
     fn into_response(self) -> axum::response::Response {
-        match self {
+        let sentry_event_id = record_error!(self, Self::Internal(_));
+        match &self {
             ClientAuthorizationError::InvalidHeader => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(ClientError::new(
                     ClientErrorCode::InvalidRequest,
                     "Invalid Authorization header",
@@ -256,39 +286,34 @@ impl IntoResponse for ClientAuthorizationError {
 
             ClientAuthorizationError::BadForm(err) => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(
                     ClientError::from(ClientErrorCode::InvalidRequest)
                         .with_description(format!("{err}")),
                 ),
             ),
 
-            ClientAuthorizationError::ClientIdMismatch { form, credential } => {
-                let description = format!(
-                    "client_id in form ({form:?}) does not match credential ({credential:?})"
-                );
-
-                (
-                    StatusCode::BAD_REQUEST,
-                    Json(
-                        ClientError::from(ClientErrorCode::InvalidGrant)
-                            .with_description(description),
-                    ),
-                )
-            }
-
-            ClientAuthorizationError::UnsupportedClientAssertion {
-                client_assertion_type,
-            } => (
+            ClientAuthorizationError::ClientIdMismatch { .. } => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(
-                    ClientError::from(ClientErrorCode::InvalidRequest).with_description(format!(
-                        "Unsupported client_assertion_type: {client_assertion_type}",
-                    )),
+                    ClientError::from(ClientErrorCode::InvalidGrant)
+                        .with_description(format!("{self}")),
+                ),
+            ),
+
+            ClientAuthorizationError::UnsupportedClientAssertion { .. } => (
+                StatusCode::BAD_REQUEST,
+                sentry_event_id,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidRequest)
+                        .with_description(format!("{self}")),
                 ),
             ),
 
             ClientAuthorizationError::MissingCredentials => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(ClientError::new(
                     ClientErrorCode::InvalidRequest,
                     "No credentials were presented",
@@ -297,11 +322,13 @@ impl IntoResponse for ClientAuthorizationError {
 
             ClientAuthorizationError::InvalidRequest => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(ClientError::from(ClientErrorCode::InvalidRequest)),
             ),
 
             ClientAuthorizationError::InvalidAssertion => (
                 StatusCode::BAD_REQUEST,
+                sentry_event_id,
                 Json(ClientError::new(
                     ClientErrorCode::InvalidRequest,
                     "Invalid client_assertion",
@@ -310,6 +337,7 @@ impl IntoResponse for ClientAuthorizationError {
 
             ClientAuthorizationError::Internal(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
+                sentry_event_id,
                 Json(
                     ClientError::from(ClientErrorCode::ServerError)
                         .with_description(format!("{e}")),

@@ -156,7 +156,6 @@ impl Form {
         skip_all,
         name = "captcha.verify",
         fields(captcha.hostname, captcha.challenge_ts, captcha.service),
-        err
     )]
     pub async fn verify(
         &self,

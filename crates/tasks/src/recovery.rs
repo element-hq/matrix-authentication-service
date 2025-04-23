@@ -32,7 +32,6 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
             user_recovery_session.email,
         ),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();

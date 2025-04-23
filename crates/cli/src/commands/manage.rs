@@ -255,7 +255,13 @@ impl Options {
                 };
 
                 repo.into_inner().commit().await?;
-                info!(?email, "Email added");
+                info!(
+                    %user.id,
+                    %user.username,
+                    %email.id,
+                    %email.email,
+                    "Email added"
+                );
 
                 Ok(ExitCode::SUCCESS)
             }

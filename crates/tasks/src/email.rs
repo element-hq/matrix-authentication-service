@@ -23,7 +23,6 @@ impl RunnableJob for VerifyEmailJob {
         name = "job.verify_email",
         fields(user_email.id = %self.user_email_id()),
         skip_all,
-        err,
     )]
     async fn run(&self, _state: &State, _context: JobContext) -> Result<(), JobError> {
         // This job was for the old email verification flow, which has been replaced.
@@ -39,7 +38,6 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
         name = "job.send_email_authentication_code",
         fields(user_email_authentication.id = %self.user_email_authentication_id()),
         skip_all,
-        err,
     )]
     async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
         let clock = state.clock();

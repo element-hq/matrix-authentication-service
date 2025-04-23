@@ -12,6 +12,7 @@ use mas_config::{
     EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
     PolicyConfig, TemplatesConfig,
 };
+use mas_context::LogContext;
 use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
@@ -21,7 +22,7 @@ use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_storage::RepositoryAccess;
 use mas_storage_pg::PgRepository;
-use mas_templates::{SiteConfigExt, TemplateLoadingError, Templates};
+use mas_templates::{SiteConfigExt, Templates};
 use sqlx::{
     ConnectOptions, Executor, PgConnection, PgPool,
     postgres::{PgConnectOptions, PgPoolOptions},
@@ -109,20 +110,23 @@ pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
     let mailer = mailer.clone();
 
     let span = tracing::info_span!("cli.test_mailer");
-    tokio::spawn(async move {
-        match tokio::time::timeout(timeout, mailer.test_connection()).await {
-            Ok(Ok(())) => {}
-            Ok(Err(err)) => {
-                tracing::warn!(
-                    error = &err as &dyn std::error::Error,
-                    "Could not connect to the mail backend, tasks sending mails may fail!"
-                );
+    tokio::spawn(
+        LogContext::new("mailer-test").run(async move || {
+            match tokio::time::timeout(timeout, mailer.test_connection()).await {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => {
+                    tracing::warn!(
+                        error = &err as &dyn std::error::Error,
+                        "Could not connect to the mail backend, tasks sending mails may fail!"
+                    );
+                }
+                Err(_) => {
+                    tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
+                }
             }
-            Err(_) => {
-                tracing::warn!("Timed out while testing the mail backend connection, tasks sending mails may fail!");
-            }
-        }
-    }.instrument(span));
+        })
+        .instrument(span)
+    );
 }
 
 pub async fn policy_factory_from_config(
@@ -222,7 +226,7 @@ pub async fn templates_from_config(
     config: &TemplatesConfig,
     site_config: &SiteConfig,
     url_builder: &UrlBuilder,
-) -> Result<Templates, TemplateLoadingError> {
+) -> Result<Templates, anyhow::Error> {
     Templates::load(
         config.path.clone(),
         url_builder.clone(),
@@ -232,6 +236,7 @@ pub async fn templates_from_config(
         site_config.templates_features(),
     )
     .await
+    .with_context(|| format!("Failed to load the templates at {}", config.path))
 }
 
 fn database_connect_options_from_config(
@@ -331,7 +336,7 @@ fn database_connect_options_from_config(
 }
 
 /// Create a database connection pool from the configuration
-#[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
+#[tracing::instrument(name = "db.connect", skip_all)]
 pub async fn database_pool_from_config(config: &DatabaseConfig) -> Result<PgPool, anyhow::Error> {
     let options = database_connect_options_from_config(config, &DatabaseConnectOptions::default())?;
     PgPoolOptions::new()
@@ -367,7 +372,7 @@ impl Default for DatabaseConnectOptions {
 }
 
 /// Create a single database connection from the configuration
-#[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
+#[tracing::instrument(name = "db.connect", skip_all)]
 pub async fn database_connection_from_config(
     config: &DatabaseConfig,
 ) -> Result<PgConnection, anyhow::Error> {
@@ -379,7 +384,7 @@ pub async fn database_connection_from_config(
 
 /// Create a single database connection from the configuration,
 /// with specific options.
-#[tracing::instrument(name = "db.connect", skip_all, err(Debug))]
+#[tracing::instrument(name = "db.connect", skip_all)]
 pub async fn database_connection_from_config_with_options(
     config: &DatabaseConfig,
     options: &DatabaseConnectOptions,
@@ -430,7 +435,7 @@ pub async fn load_policy_factory_dynamic_data_continuously(
 }
 
 /// Update the policy factory dynamic data from the database
-#[tracing::instrument(name = "policy.load_dynamic_data", skip_all, err(Debug))]
+#[tracing::instrument(name = "policy.load_dynamic_data", skip_all)]
 pub async fn load_policy_factory_dynamic_data(
     policy_factory: &PolicyFactory,
     pool: &PgPool,

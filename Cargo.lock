@@ -3159,12 +3159,14 @@ dependencies = [
  "dotenvy",
  "figment",
  "futures-util",
+ "headers",
  "http-body-util",
  "hyper",
  "ipnetwork",
  "itertools 0.14.0",
  "listenfd",
  "mas-config",
+ "mas-context",
  "mas-data-model",
  "mas-email",
  "mas-handlers",
@@ -3247,6 +3249,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mas-context"
+version = "0.15.0"
+dependencies = [
+ "console",
+ "opentelemetry",
+ "pin-project-lite",
+ "quanta",
+ "tokio",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "mas-data-model"
 version = "0.15.0"
 dependencies = [
@@ -3306,6 +3324,7 @@ dependencies = [
  "lettre",
  "mas-axum-utils",
  "mas-config",
+ "mas-context",
  "mas-data-model",
  "mas-http",
  "mas-i18n",
@@ -3504,6 +3523,7 @@ dependencies = [
  "http-body",
  "hyper",
  "hyper-util",
+ "mas-context",
  "pin-project-lite",
  "rustls-pemfile",
  "socket2",
@@ -3674,6 +3694,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "cron",
+ "mas-context",
  "mas-data-model",
  "mas-email",
  "mas-i18n",

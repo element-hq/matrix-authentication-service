@@ -14,7 +14,7 @@ use axum::{
     response::IntoResponse,
 };
 use hyper::{StatusCode, header};
-use mas_axum_utils::sentry::SentryEventID;
+use mas_axum_utils::record_error;
 use serde::{Serialize, de::DeserializeOwned};
 use thiserror::Error;
 
@@ -59,7 +59,7 @@ pub enum MatrixJsonBodyRejection {
 
 impl IntoResponse for MatrixJsonBodyRejection {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, !);
         let response = match self {
             Self::InvalidContentType | Self::ContentTypeNotJson(_) => MatrixError {
                 errcode: "M_NOT_JSON",
@@ -102,7 +102,7 @@ impl IntoResponse for MatrixJsonBodyRejection {
             },
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 

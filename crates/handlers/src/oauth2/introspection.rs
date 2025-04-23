@@ -10,7 +10,7 @@ use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    sentry::SentryEventID,
+    record_error,
 };
 use mas_data_model::{Device, TokenFormatError, TokenType};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
@@ -28,6 +28,7 @@ use oauth2_types::{
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
+use ulid::Ulid;
 
 use crate::{ActivityTracker, METER, impl_from_error_for_route};
 
@@ -53,8 +54,8 @@ pub enum RouteError {
     ClientNotFound,
 
     /// The client is not allowed to introspect.
-    #[error("client is not allowed to introspect")]
-    NotAllowed,
+    #[error("client {0} is not allowed to introspect")]
+    NotAllowed(Ulid),
 
     /// The token type is not the one expected.
     #[error("unexpected token type")]
@@ -73,30 +74,30 @@ pub enum RouteError {
     InvalidToken(TokenType),
 
     /// The OAuth session is not valid.
-    #[error("invalid oauth session")]
-    InvalidOAuthSession,
+    #[error("invalid oauth session {0}")]
+    InvalidOAuthSession(Ulid),
 
     /// The OAuth session could not be found in the database.
-    #[error("unknown oauth session")]
-    CantLoadOAuthSession,
+    #[error("unknown oauth session {0}")]
+    CantLoadOAuthSession(Ulid),
 
     /// The compat session is not valid.
-    #[error("invalid compat session")]
-    InvalidCompatSession,
+    #[error("invalid compat session {0}")]
+    InvalidCompatSession(Ulid),
 
     /// The compat session could not be found in the database.
-    #[error("unknown compat session")]
-    CantLoadCompatSession,
+    #[error("unknown compat session {0}")]
+    CantLoadCompatSession(Ulid),
 
     /// The Device ID in the compat session can't be encoded as a scope
     #[error("device ID contains characters that are not allowed in a scope")]
     CantEncodeDeviceID(#[from] mas_data_model::ToScopeTokenError),
 
-    #[error("invalid user")]
-    InvalidUser,
+    #[error("invalid user {0}")]
+    InvalidUser(Ulid),
 
-    #[error("unknown user")]
-    CantLoadUser,
+    #[error("unknown user {0}")]
+    CantLoadUser(Ulid),
 
     #[error("bad request")]
     BadRequest,
@@ -107,12 +108,19 @@ pub enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(
+            self,
+            Self::Internal(_)
+                | Self::CantLoadCompatSession(_)
+                | Self::CantLoadOAuthSession(_)
+                | Self::CantLoadUser(_)
+        );
+
         let response = match self {
             e @ (Self::Internal(_)
-            | Self::CantLoadCompatSession
-            | Self::CantLoadOAuthSession
-            | Self::CantLoadUser) => (
+            | Self::CantLoadCompatSession(_)
+            | Self::CantLoadOAuthSession(_)
+            | Self::CantLoadUser(_)) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
                     ClientError::from(ClientErrorCode::ServerError).with_description(e.to_string()),
@@ -136,9 +144,9 @@ impl IntoResponse for RouteError {
             Self::UnknownToken(_)
             | Self::UnexpectedTokenType
             | Self::InvalidToken(_)
-            | Self::InvalidUser
-            | Self::InvalidCompatSession
-            | Self::InvalidOAuthSession
+            | Self::InvalidUser(_)
+            | Self::InvalidCompatSession(_)
+            | Self::InvalidOAuthSession(_)
             | Self::InvalidTokenFormat(_)
             | Self::CantEncodeDeviceID(_) => {
                 INTROSPECTION_COUNTER.add(1, &[KeyValue::new(ACTIVE.clone(), false)]);
@@ -146,11 +154,12 @@ impl IntoResponse for RouteError {
                 Json(INACTIVE).into_response()
             }
 
-            Self::NotAllowed => (
+            Self::NotAllowed(_) => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::AccessDenied)),
             )
                 .into_response(),
+
             Self::BadRequest => (
                 StatusCode::BAD_REQUEST,
                 Json(ClientError::from(ClientErrorCode::InvalidRequest)),
@@ -158,7 +167,7 @@ impl IntoResponse for RouteError {
                 .into_response(),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -188,7 +197,6 @@ const SYNAPSE_ADMIN_SCOPE: ScopeToken = ScopeToken::from_static("urn:synapse:adm
     name = "handlers.oauth2.introspection.post",
     fields(client.id = client_authorization.client_id()),
     skip_all,
-    err,
 )]
 #[allow(clippy::too_many_lines)]
 pub(crate) async fn post(
@@ -208,7 +216,7 @@ pub(crate) async fn post(
 
     let method = match &client.token_endpoint_auth_method {
         None | Some(OAuthClientAuthenticationMethod::None) => {
-            return Err(RouteError::NotAllowed);
+            return Err(RouteError::NotAllowed(client.id));
         }
         Some(c) => c,
     };
@@ -259,10 +267,10 @@ pub(crate) async fn post(
                 .oauth2_session()
                 .lookup(access_token.session_id)
                 .await?
-                .ok_or(RouteError::InvalidOAuthSession)?;
+                .ok_or(RouteError::CantLoadOAuthSession(access_token.session_id))?;
 
             if !session.is_valid() {
-                return Err(RouteError::InvalidOAuthSession);
+                return Err(RouteError::InvalidOAuthSession(session.id));
             }
 
             // If this is the first time we're using this token, mark it as used
@@ -280,10 +288,10 @@ pub(crate) async fn post(
                     .user()
                     .lookup(user_id)
                     .await?
-                    .ok_or(RouteError::CantLoadUser)?;
+                    .ok_or(RouteError::CantLoadUser(user_id))?;
 
                 if !user.is_valid() {
-                    return Err(RouteError::InvalidUser);
+                    return Err(RouteError::InvalidUser(user.id));
                 }
 
                 (Some(user.sub), Some(user.username))
@@ -338,10 +346,10 @@ pub(crate) async fn post(
                 .oauth2_session()
                 .lookup(refresh_token.session_id)
                 .await?
-                .ok_or(RouteError::CantLoadOAuthSession)?;
+                .ok_or(RouteError::CantLoadOAuthSession(refresh_token.session_id))?;
 
             if !session.is_valid() {
-                return Err(RouteError::InvalidOAuthSession);
+                return Err(RouteError::InvalidOAuthSession(session.id));
             }
 
             // The session might not have a user on it (for Client Credentials grants for
@@ -351,10 +359,10 @@ pub(crate) async fn post(
                     .user()
                     .lookup(user_id)
                     .await?
-                    .ok_or(RouteError::CantLoadUser)?;
+                    .ok_or(RouteError::CantLoadUser(user_id))?;
 
                 if !user.is_valid() {
-                    return Err(RouteError::InvalidUser);
+                    return Err(RouteError::InvalidUser(user.id));
                 }
 
                 (Some(user.sub), Some(user.username))
@@ -407,20 +415,20 @@ pub(crate) async fn post(
                 .compat_session()
                 .lookup(access_token.session_id)
                 .await?
-                .ok_or(RouteError::CantLoadCompatSession)?;
+                .ok_or(RouteError::CantLoadCompatSession(access_token.session_id))?;
 
             if !session.is_valid() {
-                return Err(RouteError::InvalidCompatSession);
+                return Err(RouteError::InvalidCompatSession(session.id));
             }
 
             let user = repo
                 .user()
                 .lookup(session.user_id)
                 .await?
-                .ok_or(RouteError::CantLoadUser)?;
+                .ok_or(RouteError::CantLoadUser(session.user_id))?;
 
             if !user.is_valid() {
-                return Err(RouteError::InvalidUser)?;
+                return Err(RouteError::InvalidUser(user.id))?;
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.
@@ -491,20 +499,20 @@ pub(crate) async fn post(
                 .compat_session()
                 .lookup(refresh_token.session_id)
                 .await?
-                .ok_or(RouteError::CantLoadCompatSession)?;
+                .ok_or(RouteError::CantLoadCompatSession(refresh_token.session_id))?;
 
             if !session.is_valid() {
-                return Err(RouteError::InvalidCompatSession);
+                return Err(RouteError::InvalidCompatSession(session.id));
             }
 
             let user = repo
                 .user()
                 .lookup(session.user_id)
                 .await?
-                .ok_or(RouteError::CantLoadUser)?;
+                .ok_or(RouteError::CantLoadUser(session.user_id))?;
 
             if !user.is_valid() {
-                return Err(RouteError::InvalidUser)?;
+                return Err(RouteError::InvalidUser(user.id))?;
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.

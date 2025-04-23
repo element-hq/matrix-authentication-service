@@ -19,7 +19,7 @@ use crate::{
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
-#[tracing::instrument(name = "handlers.views.index.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.index.get", skip_all)]
 pub async fn get(
     mut rng: BoxRng,
     clock: BoxClock,

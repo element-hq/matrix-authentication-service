@@ -15,6 +15,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_data_model::{Session, User};
 use mas_storage::{BoxClock, BoxRepository, RepositoryError};
 use ulid::Ulid;
@@ -69,27 +70,35 @@ pub enum Rejection {
     MissingScope,
 }
 
-impl Rejection {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            Self::InvalidAuthorizationHeader | Self::MissingAuthorizationHeader => {
-                StatusCode::BAD_REQUEST
-            }
-            Self::UnknownAccessToken
-            | Self::TokenExpired
-            | Self::SessionRevoked
-            | Self::UserLocked
-            | Self::MissingScope => StatusCode::UNAUTHORIZED,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
 impl IntoResponse for Rejection {
     fn into_response(self) -> Response {
         let response = ErrorResponse::from_error(&self);
-        let status = self.status_code();
-        (status, Json(response)).into_response()
+        let sentry_event_id = record_error!(
+            self,
+            Self::RepositorySetup(_)
+                | Self::Repository(_)
+                | Self::LoadSession(_)
+                | Self::LoadUser(_)
+        );
+
+        let status = match &self {
+            Rejection::InvalidAuthorizationHeader | Rejection::MissingAuthorizationHeader => {
+                StatusCode::BAD_REQUEST
+            }
+
+            Rejection::UnknownAccessToken
+            | Rejection::TokenExpired
+            | Rejection::SessionRevoked
+            | Rejection::UserLocked
+            | Rejection::MissingScope => StatusCode::UNAUTHORIZED,
+
+            Rejection::RepositorySetup(_)
+            | Rejection::Repository(_)
+            | Rejection::LoadSession(_)
+            | Rejection::LoadUser(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+
+        (status, sentry_event_id, Json(response)).into_response()
     }
 }
 

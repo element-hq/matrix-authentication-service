@@ -11,6 +11,7 @@ use axum::{
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::{Page, compat::CompatSessionFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -113,12 +114,14 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let status = match self {
+        let sentry_event_id = record_error!(self, RouteError::Internal(_));
+        let status = match &self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserNotFound(_) | Self::UserSessionNotFound(_) => StatusCode::NOT_FOUND,
             Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
         };
-        (status, Json(error)).into_response()
+
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -153,7 +156,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.compat_sessions.list", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.compat_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     Pagination(pagination): Pagination,

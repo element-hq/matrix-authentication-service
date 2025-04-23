@@ -8,6 +8,7 @@ use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Instant};
 
 use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
+use mas_context::LogContext;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
@@ -92,35 +93,36 @@ impl AppState {
         let http_client = self.http_client.clone();
 
         tokio::spawn(
-            async move {
-                let conn = match pool.acquire().await {
-                    Ok(conn) => conn,
-                    Err(e) => {
+            LogContext::new("metadata-cache-warmup")
+                .run(async move || {
+                    let conn = match pool.acquire().await {
+                        Ok(conn) => conn,
+                        Err(e) => {
+                            tracing::error!(
+                                error = &e as &dyn std::error::Error,
+                                "Failed to acquire a database connection"
+                            );
+                            return;
+                        }
+                    };
+
+                    let mut repo = PgRepository::from_conn(conn);
+
+                    if let Err(e) = metadata_cache
+                        .warm_up_and_run(
+                            &http_client,
+                            std::time::Duration::from_secs(60 * 15),
+                            &mut repo,
+                        )
+                        .await
+                    {
                         tracing::error!(
                             error = &e as &dyn std::error::Error,
-                            "Failed to acquire a database connection"
+                            "Failed to warm up the metadata cache"
                         );
-                        return;
                     }
-                };
-
-                let mut repo = PgRepository::from_conn(conn);
-
-                if let Err(e) = metadata_cache
-                    .warm_up_and_run(
-                        &http_client,
-                        std::time::Duration::from_secs(60 * 15),
-                        &mut repo,
-                    )
-                    .await
-                {
-                    tracing::error!(
-                        error = &e as &dyn std::error::Error,
-                        "Failed to warm up the metadata cache"
-                    );
-                }
-            }
-            .instrument(tracing::info_span!("metadata_cache.background_warmup")),
+                })
+                .instrument(tracing::info_span!("metadata_cache.background_warmup")),
         );
     }
 }
