@@ -1,0 +1,395 @@
+{
+  "action": {
+    "back": "Vissza",
+    "cancel": "Mégse",
+    "clear": "Törlés",
+    "close": "Bezárás",
+    "collapse": "Összecsukás",
+    "confirm": "Megerősítés",
+    "continue": "Folytatás",
+    "edit": "Szerkesztés",
+    "expand": "Kibontás",
+    "save": "Mentés",
+    "save_and_continue": "Mentés és folytatás",
+    "sign_out": "Kijelentkezés",
+    "start_over": "Újrakezdés"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Hivatkozás a szolgáltatás adatvédelmi irányelveire",
+      "link": "Adatvédelmi irányelvek"
+    },
+    "terms_and_conditions": {
+      "alt": "Hivatkozás a szolgáltatási feltételekre",
+      "link": "Szolgáltatási feltételek"
+    }
+  },
+  "common": {
+    "add": "Hozzáadás",
+    "e2ee": "Végpontok közti titkosítás",
+    "error": "Hiba",
+    "loading": "Betöltés…",
+    "next": "Következő",
+    "password": "Jelszó",
+    "previous": "Előző",
+    "saved": "Mentve",
+    "saving": "Mentés…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Fiók jelszava",
+      "contact_info": "Kapcsolati információ",
+      "delete_account": {
+        "alert_description": "Ez a fiók véglegesen törölve lesz, és többé nem fog hozzáférni az üzeneteihez.",
+        "alert_title": "Hamarosan elveszíti az összes adatát",
+        "button": "Fiók törlése",
+        "dialog_description": "<text>Erősítse meg, hogy törölné a fiókját:</text>\n<profile />\n<list>\n<item>Nem fogja tudni újraaktiválni a fiókját</item>\n<item>Többé nem fog tudni bejelentkezni</item>\n<item>Senki sem fogja tudni használni a felhasználónevét (MXID), Önt is beleértve</item>\n<item>Elhagyja az összes szobáját és a közvetlen üzeneteit</item>\n<item>El lesz távolítva az azonosítási kiszolgálóról, és senki sem fogja tudni megtalálni az e-mail-címe vagy telefonszáma alapján</item>\n</list>\n<text>A régi üzenetei továbbra is láthatóak lesznek azok számára, akik megkapták azokat. Elrejti az elküldött üzeneteit azok elől, akik a jövőben csatlakoznak a szobákhoz?</text>",
+        "dialog_title": "Törli ezt a fiókot?",
+        "erase_checkbox_label": "Igen, az összes üzenet elrejtése az új érkezők elől",
+        "incorrect_password": "Helytelen jelszó, próbálja újra",
+        "mxid_label": "Erősítse meg a Matrix-azonosítóját ({{ mxid }})",
+        "mxid_mismatch": "Ez az érték nem egyezik a Matrix-azonosítójával",
+        "password_label": "A folytatáshoz adja meg a jelszavát"
+      },
+      "edit_profile": {
+        "display_name_help": "Ez az, amit mások látni fognak, ha be van jelentkezve.",
+        "display_name_label": "Megjelenítési név",
+        "title": "Profil szerkesztése",
+        "username_label": "Felhasználói név"
+      },
+      "password": {
+        "change": "Jelszó módosítása",
+        "change_disabled": "A jelszóváltoztatást letiltotta a rendszergazda.",
+        "label": "Jelszó"
+      },
+      "sign_out": {
+        "button": "Kijelentkezés a fiókból",
+        "dialog": "Kijelentkezik ebből a fiókból?"
+      },
+      "title": "Saját fiók"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "A megadott e-mail-címet nem engedélyezi a kiszolgáló házirendje.",
+        "title": "E-mail-cím házirend alapján elutasítva"
+      },
+      "email_denied_error": "A megadott e-mail-címet nem engedélyezi a kiszolgáló házirendje",
+      "email_exists_alert": {
+        "text": "A megadott e-mail-cím már hozzá lett adva ehhez a fiókhoz",
+        "title": "Az e-mail-cím már létezik"
+      },
+      "email_exists_error": "A megadott e-mail-cím már hozzá lett adva ehhez a fiókhoz",
+      "email_field_help": "Alternatív e-mail-cím hozzáadása, mellyel hozzáférhet ehhez a fiókhoz.",
+      "email_field_label": "E-mail-cím hozzáadása",
+      "email_in_use_error": "A megadott e-mail-cím már használatban van",
+      "email_invalid_alert": {
+        "text": "A megadott e-mail-cím érvénytelen",
+        "title": "Érvénytelen e-mail-cím"
+      },
+      "email_invalid_error": "A megadott e-mail-cím érvénytelen",
+      "incorrect_password_error": "Helytelen jelszó, próbálja újra",
+      "password_confirmation": "Erősítse meg a fiókja jelszavát az e-mail-cím hozzáadásához"
+    },
+    "app_sessions_list": {
+      "error": "Az alkalmazás munkameneteinek betöltése sikertelen",
+      "heading": "Alkalmazások"
+    },
+    "browser_session_details": {
+      "current_badge": "Jelenlegi",
+      "session_details_title": "Munkamenet"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktív munkamenet",
+      "body:other": "{{count}} aktív munkamenet",
+      "heading": "Böngészők",
+      "no_active_sessions": {
+        "default": "Még egyetlen webböngészőben sem jelentkezett be.",
+        "inactive_90_days": "Az összes munkamenete aktív volt az elmúlt 90 napban."
+      },
+      "view_all_button": "Összes megtekintése"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Kliensinformációk",
+      "name": "Név",
+      "session_details_title": "Munkamenet"
+    },
+    "device_type_icon_label": {
+      "desktop": "Asztali számítógép",
+      "mobile": "Mobil",
+      "pc": "Számítógép",
+      "tablet": "Táblagép",
+      "unknown": "Ismeretlen eszköztípus",
+      "web": "Web"
+    },
+    "email_in_use": {
+      "heading": "A(z) {{email}} e-mail-cím már használatban van."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Biztos, hogy befejezi a munkamenetet?",
+      "text": "Eszköz eltávolítása"
+    },
+    "error": {
+      "hideDetails": "Részletek elrejtése",
+      "showDetails": "Részletek megjelenítése",
+      "subtitle": "Váratlan hiba történt. Próbálja újra.",
+      "title": "Valamilyen hiba történt"
+    },
+    "error_boundary_title": "Valamilyen hiba történt",
+    "errors": {
+      "field_required": "Ez a mező kötelező",
+      "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra."
+    },
+    "last_active": {
+      "active_date": "{{relativeDate}} aktív",
+      "active_now": "Jelenleg aktív",
+      "inactive_90_days": "90+ napja inaktív"
+    },
+    "nav": {
+      "devices": "Eszközök",
+      "profile": "Profil",
+      "sessions": "Munkamenetek",
+      "settings": "Beállítások"
+    },
+    "not_found_alert_title": "Nem található.",
+    "not_logged_in_alert": "Nincs bejelentkezve.",
+    "oauth2_client_detail": {
+      "details_title": "Kliensinformációk",
+      "id": "Kliensazonosító",
+      "name": "Név",
+      "policy": "Házirend",
+      "terms": "Szolgáltatás feltételei"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Név",
+      "client_title": "Kliensinformációk",
+      "session_details_title": "Munkamenet"
+    },
+    "pagination_controls": {
+      "total": "Összesen: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Jelenlegi jelszó",
+      "failure": {
+        "description": {
+          "account_locked": "A fiókja zárolva van, és jelenleg nem állítható helyre. Ha erre nem számított, akkor lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+          "expired_recovery_ticket": "A helyreállítási hivatkozás lejárt. Kezdje az elejéről a fiókja helyreállítási folyamatát.",
+          "invalid_new_password": "A választott új jelszó érvénytelen; lehet, hogy nem felel meg a beállított biztonsági házirendnek.",
+          "no_current_password": "Nincs jelenlegi jelszava.",
+          "no_such_recovery_ticket": "A helyreállítási hivatkozás érvénytelen. Ha a helyreállítási üzenetből másolta ki a hivatkozást, akkor ellenőrizze, hogy a teljes hivatkozást átmásolta-e.",
+          "password_changes_disabled": "A jelszómódosítás le van tiltva.",
+          "recovery_ticket_already_used": "A helyreállítási hivatkozás már fel lett használva. Többé nem használható.",
+          "unspecified": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+          "wrong_password": "A jelenlegi jelszóként megadott jelszó helytelen. Próbálja újra."
+        },
+        "title": "A jelszó frissítése sikertelen"
+      },
+      "new_password_again_label": "Adja meg a jelszót újból",
+      "new_password_label": "Új jelszó",
+      "passwords_match": "A jelszavak megegyeznek!",
+      "passwords_no_match": "A jelszavak nem egyeznek",
+      "subtitle": "Válasszon egy új jelszót a fiókjához.",
+      "success": {
+        "description": "A jelszava sikeresen frissült.",
+        "title": "Jelszó frissítve"
+      },
+      "title": "Jelszó módosítása"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "Új jelszó létrehozásához kezdje elölről, és válassza a „Elfelejtett jelszó” lehetőséget.",
+        "title": "A jelszóhelyreállítási hivatkozás már fel lett használva"
+      },
+      "expired": {
+        "resend_email": "Levél újraküldése",
+        "subtitle": "Új levél kérése, amely ide lesz elküldve: {{email}}",
+        "title": "A jelszóvisszaállítási hivatkozás lejárt"
+      },
+      "subtitle": "Válasszon egy új jelszót a fiókjához.",
+      "title": "Jelszó visszaállítása"
+    },
+    "password_strength": {
+      "placeholder": "Jelszó erőssége",
+      "score": {
+        "0": "Rendkívül gyenge jelszó",
+        "1": "Nagyon gyenge jelszó",
+        "2": "Gyenge jelszó",
+        "3": "Erős jelszó",
+        "4": "Nagyon erős jelszó"
+      },
+      "suggestion": {
+        "all_uppercase": "Használjon nagybetűket, de nem mindnél.",
+        "another_word": "Adjon hozzá néhány kevésbé gyakori szót.",
+        "associated_years": "Kerülje az Önhöz köthető éveket.",
+        "capitalization": "Ne csak az első betű legyen nagybetűs.",
+        "dates": "Kerülje az Önhöz köthető dátumokat és éveket.",
+        "l33t": "Kerülje a kiszámítható betűhelyettesítéseket, mint az „a” helyetti „@”.",
+        "longer_keyboard_pattern": "Használjon hosszabb billentyűzetmintát, és többször módosítsa a gépelési irányt.",
+        "no_need": "Anélkül is hozhat létre erős jelszavakat, hogy szimbólumokat, számokat vagy nagybetűket használna.",
+        "pwned": "Ha máshol is használja ezt a jelszót, akkor változtassa meg.",
+        "recent_years": "Kerülje a közelmúltbeli éveket.",
+        "repeated": "Kerülje az ismétlődő szavakat és karaktereket.",
+        "reverse_words": "Kerülje a gyakori szavak fordított betűzését.",
+        "sequences": "Kerülje a gyakori karaktersorozatokat.",
+        "use_words": "Használjon több szót, de kerülje a gyakori kifejezéseket."
+      },
+      "too_weak": "Ez a jelszó túl gyenge",
+      "warning": {
+        "common": "Ez egy gyakran használt jelszó.",
+        "common_names": "A gyakori nevek és vezetéknevek könnyen kitalálhatóak.",
+        "dates": "A dátumok könnyen kitalálhatóak.",
+        "extended_repeat": "Az ismétlődő karaktersorozatok, mint az „abcabcabc” könnyen kitalálhatóak.",
+        "key_pattern": "A rövid billentyűzetminták könnyen kitalálhatóak.",
+        "names_by_themselves": "Az egy nevet vagy vezetéknevet tartalmazó jelszók könnyen kitalálhatók.",
+        "pwned": "A jelszava egy adatvédelmi incidensben kikerült az internetre.",
+        "recent_years": "A közelmúltbeli évek könnyen kitalálhatóak.",
+        "sequences": "A gyakori karaktersorozatok, mint az „abc”, könnyen kitalálhatóak.",
+        "similar_to_common": "Ez hasonlít egy gyakran használt jelszóhoz.",
+        "simple_repeat": "Az ismétlődő karakterek, mint az „aaa” könnyen kitalálhatóak.",
+        "straight_row": "A billentyűzeten szereplő karaktersorok könnyen kitalálhatóak.",
+        "top_hundred": "Ez egy gyakran használt jelszó.",
+        "top_ten": "Ez egy nagyon gyakran használt jelszó.",
+        "user_inputs": "Ne legyen benne személyes, vagy az oldallal kapcsolatos adat.",
+        "word_by_itself": "Az egy szavas jelszavak könnyen kitalálhatóak."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Személyazonosság visszaállítása",
+      "cancelled": {
+        "description_1": "A folytatáshoz bezárhatja ezt az ablakot, és visszatérhet az alkalmazáshoz.",
+        "description_2": "Ha mindenhonnan kijelentkezett, és nem emlékszik a helyreállítási kódjára, akkor vissza kell állítania a személyazonosságát.",
+        "heading": "Személyazonosság visszaállítása megszakítva."
+      },
+      "description": "Ha nincs bejelentkezve egyetlen más eszközön sem, és elvesztette a helyreállítási kulcsát, akkor az alkalmazás használatának folytatásához alaphelyzetbe kell állítania a személyazonosságát.",
+      "effect_list": {
+        "negative_1": "El fogja veszíteni a meglévő üzenetelőzményeit",
+        "negative_2": "Újból ellenőriznie kell az összes meglévő eszközét és kapcsolatát",
+        "neutral_1": "El fogja veszíteni a csak a kiszolgálón tárolt üzenetelőzményeit",
+        "neutral_2": "Újból ellenőriznie kell az összes meglévő eszközét és kapcsolatát",
+        "positive_1": "A fiókja részletei, a névjegyei, a beállításai és a csevegéslistája meg lesz tartva"
+      },
+      "failure": {
+        "description": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+        "heading": "A kriptográfiai személyazonossága alaphelyzetbe állításának engedélyezése sikertelen",
+        "title": "A kriptográfiai személyazonosságának engedélyezése sikertelen"
+      },
+      "finish_reset": "Alaphelyzetbe állítás befejezése",
+      "heading": "Állítsa alaphelyzetbe a személyazonosságát, ha semmilyen más módon nem tudja megerősíteni",
+      "start_reset": "Alaphelyzetbe állítás elkezdése",
+      "success": {
+        "description": "A személyazonosság alaphelyzetbe állítása engedélyezve a következő {{minutes}} percre. A folytatáshoz bezárhatja azt az ablakot, és visszatérhet az alkalmazáshoz.",
+        "heading": "Személyazonosság sikeresen alaphelyzetbe állítva. A folyamat befejezéséhez térjen vissza az alkalmazáshoz.",
+        "title": "A kriptográfiai személyazonossága alaphelyzetbe állítása ideiglenesen engedélyezve"
+      },
+      "warning": "Csak akkor állítsa alaphelyzetbe a személyazonosságát, ha nem fér hozzá más bejelentkezett eszközhöz, és elveszítette a helyreállítási kulcsát."
+    },
+    "selectable_session": {
+      "label": "Munkamenet kiválasztása"
+    },
+    "session": {
+      "client_id_label": "Kliensazonosító",
+      "current": "Jelenlegi",
+      "current_badge": "Jelenlegi",
+      "device_id_label": "Eszközazonosító",
+      "finished_date": "Befejezve: <datetime/>",
+      "finished_label": "Befejezve",
+      "generic_browser_session": "Böngésző-munkamenet",
+      "id_label": "Azonosító",
+      "ip_label": "IP-cím",
+      "last_active_label": "Legutóbb aktív",
+      "last_auth_label": "Legutóbbi hitelesítés",
+      "name_for_platform": "{{name}} erre: {{platform}}",
+      "scopes_label": "Hatókörök",
+      "signed_in_date": "Bejelentkezve: <datetime/>",
+      "signed_in_label": "Bejelentkezve",
+      "title": "Eszköz részletei",
+      "unknown_browser": "Ismeretlen böngésző",
+      "unknown_device": "Ismeretlen eszköz",
+      "uri_label": "URI",
+      "user_id_label": "Felhasználóazonosító",
+      "username_label": "Felhasználónév"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Vissza",
+        "text": "Ez a munkamenet nem létezik, vagy már nem aktív.",
+        "title": "A munkamenet nem található: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Ismeretlen útvonal: {{route}}",
+    "unverified_email_alert": {
+      "button": "Áttekintés és ellenőrzés",
+      "text:one": "{{count}} nem ellenőrzött e-mail-címe van.",
+      "text:other": "{{count}} nem ellenőrzött e-mail-címe van.",
+      "title": "Nem megerősített e-mail-cím"
+    },
+    "user_email": {
+      "cant_delete_primary": "Válasszon egy másik elsődleges e-mail-címet, hogy törölhesse ezt.",
+      "delete_button_confirmation_modal": {
+        "action": "E-mail-cím törlése",
+        "body": "Törli ezt az e-mail-címet?",
+        "incorrect_password": "Helytelen jelszó, próbálja újra",
+        "password_confirmation": "Erősítse meg a fiókja jelszavát az e-mail-cím törléséhez"
+      },
+      "delete_button_title": "E-mail-cím eltávolítása",
+      "email": "E-mail",
+      "make_primary_button": "Elsődlegessé tétel",
+      "not_verified": "Nincs ellenőrizve",
+      "primary_email": "Elsődleges e-mail-cím",
+      "retry_button": "Kód újraküldése",
+      "unverified": "Ellenőrizetlen"
+    },
+    "user_email_list": {
+      "heading": "Levelek",
+      "no_primary_email_alert": "Nincs elsődleges e-mail-cím"
+    },
+    "user_greeting": {
+      "error": "A felhasználó betöltése sikertelen"
+    },
+    "user_name": {
+      "display_name_field_label": "Megjelenítési név"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktív munkamenet",
+      "active_sessions:other": "{{count}} aktív munkamenet",
+      "heading": "Hol jelentkezett be",
+      "no_active_sessions": {
+        "default": "Egyetlen alkalmazásba sincs bejelentkezve.",
+        "inactive_90_days": "Az összes munkamenete aktív volt az elmúlt 90 napban."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "A kód lejárt. Kérjen egy újat.",
+        "title": "A kód lejárt"
+      },
+      "code_field_error": "A kód nem ismerhető fel",
+      "code_field_label": "6 számjegyű kód",
+      "code_field_wrong_shape": "A kódnak 6 számjegyűnek kell lennie",
+      "email_sent_alert": {
+        "description": "Adja meg alább az új kódot.",
+        "title": "Új kód küldve"
+      },
+      "enter_code_prompt": "Adja meg az ide küldött 6 számjegyű kódot: <email>{{email}}</email>",
+      "heading": "E-mail-cím ellenőrzése",
+      "invalid_code_alert": {
+        "description": "A folytatáshoz ellenőrizze az e-mail-címére küldött kódot, és frissítse a lenti mezőket.",
+        "title": "Hibás kódot adott meg"
+      },
+      "resend_code": "Kód újraküldése",
+      "resend_email": "Levél újraküldése",
+      "sent": "Elküldve!",
+      "unknown_email": "Ismeretlen e-mail-cím"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Profil és elérhetőségek szerkesztése",
+      "manage_sessions": "Eszközök és munkamenetek kezelése",
+      "mas_admin": "Bármely felhasználó kezelése a matrix-authentication-service szolgáltatásban",
+      "send_messages": "Új üzenetek küldése az Ön nevében",
+      "synapse_admin": "A Synapse Matrix-kiszolgáló kezelése",
+      "view_messages": "Meglévő üzenetek és adatok megtekintése",
+      "view_profile": "Saját profilinformációk és kapcsolati részletek megtekintése"
+    }
+  }
+}
