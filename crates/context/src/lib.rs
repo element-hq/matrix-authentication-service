@@ -54,7 +54,7 @@ struct LogContextInner {
     /// The number of [`Future::poll`] recorded
     polls: AtomicU64,
 
-    /// An approximation of the total CPU time spent in the context
+    /// An approximation of the total CPU time spent in the context, in nanoseconds
     cpu_time: AtomicU64,
 }
 
@@ -142,7 +142,7 @@ impl std::fmt::Display for LogContextStats {
         let elapsed_ms = self.elapsed.as_nanos() as f64 / 1_000_000.;
         write!(
             f,
-            "polls: {polls:>3}, cpu: {cpu_time_ms:>6.3}ms, elapsed: {elapsed_ms:>6.3}ms",
+            "polls: {polls}, cpu: {cpu_time_ms:.1}ms, elapsed: {elapsed_ms:.1}ms",
         )
     }
 }
