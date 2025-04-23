@@ -11,7 +11,7 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSection, RootConfig, SyncConfig};
-use mas_storage::SystemClock;
+use mas_storage::{Clock as _, SystemClock};
 use mas_storage_pg::MIGRATOR;
 use rand::SeedableRng;
 use tokio::io::AsyncWriteExt;
@@ -46,6 +46,10 @@ enum Subcommand {
         /// If not specified, the config will be written to stdout
         #[clap(short, long)]
         output: Option<Utf8PathBuf>,
+
+        /// Existing Synapse configuration used to generate the MAS config
+        #[arg(short, long, action = clap::ArgAction::Append)]
+        synapse_config: Vec<Utf8PathBuf>,
     },
 
     /// Sync the clients and providers from the config file to the database
@@ -88,14 +92,24 @@ impl Options {
                 info!("Configuration file looks good");
             }
 
-            SC::Generate { output } => {
+            SC::Generate {
+                output,
+                synapse_config,
+            } => {
                 let _span = info_span!("cli.config.generate").entered();
+                let clock = SystemClock::default();
 
                 // XXX: we should disallow SeedableRng::from_entropy
-                let rng = rand_chacha::ChaChaRng::from_entropy();
-                let config = RootConfig::generate(rng).await?;
-                let config = serde_yaml::to_string(&config)?;
+                let mut rng = rand_chacha::ChaChaRng::from_entropy();
+                let mut config = RootConfig::generate(&mut rng).await?;
 
+                if !synapse_config.is_empty() {
+                    info!("Adjusting MAS config to match Synapse config from {synapse_config:?}");
+                    let synapse_config = syn2mas::synapse_config::Config::load(&synapse_config)?;
+                    config = synapse_config.adjust_mas_config(config, &mut rng, clock.now());
+                }
+
+                let config = serde_yaml::to_string(&config)?;
                 if let Some(output) = output {
                     info!("Writing configuration to {output:?}");
                     let mut file = tokio::fs::File::create(output).await?;
