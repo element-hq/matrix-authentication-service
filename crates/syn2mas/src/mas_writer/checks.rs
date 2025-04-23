@@ -16,10 +16,12 @@ use super::{MAS_TABLES_AFFECTED_BY_MIGRATION, is_syn2mas_in_progress, locking::L
 
 #[derive(Debug, Error, ContextInto)]
 pub enum Error {
-    #[error("the MAS database is not empty: rows found in at least `{table}`")]
+    #[error(
+        "The MAS database is not empty: rows found in at least `{table}`. Please drop and recreate the database, then try again."
+    )]
     MasDatabaseNotEmpty { table: &'static str },
 
-    #[error("query against {table} failed — is this actually a MAS database?")]
+    #[error("Query against {table} failed — is this actually a MAS database?")]
     MaybeNotMas {
         #[source]
         source: sqlx::Error,
@@ -29,7 +31,7 @@ pub enum Error {
     #[error(transparent)]
     Sqlx(#[from] sqlx::Error),
 
-    #[error("unable to check if syn2mas is already in progress")]
+    #[error("Unable to check if syn2mas is already in progress")]
     UnableToCheckInProgress(#[source] super::Error),
 }
 
