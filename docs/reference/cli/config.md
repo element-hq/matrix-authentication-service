@@ -26,7 +26,7 @@ clients:
   # ...
 ```
 
-## `config generate`
+## `config generate [--synapse-config <synapse-config>] [--output <output>]`
 
 Generate a sample configuration file.
 It generates random signing keys (`.secrets.keys`) and the cookie encryption secret (`.secrets.encryption`).
@@ -37,6 +37,10 @@ INFO generate: mas_config::oauth2: Generating keys...
 INFO generate:rsa: mas_config::oauth2: Done generating RSA key
 INFO generate:ecdsa: mas_config::oauth2: Done generating ECDSA key
 ```
+
+The `--synapse-config` option can be used to migrate over configuration options from an existing Synapse configuration.
+
+The `--output` option can be used to specify the output file. If not specified, the output will be written to stdout.
 
 ## `config sync [--prune] [--dry-run]`
 
