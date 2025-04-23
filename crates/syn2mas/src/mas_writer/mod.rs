@@ -242,6 +242,7 @@ impl FinishCheckerHandle {
 pub struct MasWriter {
     conn: LockedMasDatabase,
     writer_pool: WriterConnectionPool,
+    dry_run: bool,
 
     indices_to_restore: Vec<IndexDescription>,
     constraints_to_restore: Vec<ConstraintDescription>,
@@ -793,6 +794,7 @@ impl MasWriter {
     pub async fn new(
         mut conn: LockedMasDatabase,
         mut writer_connections: Vec<PgConnection>,
+        dry_run: bool,
     ) -> Result<Self, Error> {
         // Given that we don't have any concurrent transactions here,
         // the READ COMMITTED isolation level is sufficient.
@@ -902,7 +904,7 @@ impl MasWriter {
 
         Ok(Self {
             conn,
-
+            dry_run,
             writer_pool: WriterConnectionPool::new(writer_connections),
             indices_to_restore,
             constraints_to_restore,
@@ -987,7 +989,6 @@ impl MasWriter {
 
         // Now all the data has been migrated, finish off by restoring indices and
         // constraints!
-
         query("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;")
             .execute(self.conn.as_mut())
             .await
@@ -1008,6 +1009,28 @@ impl MasWriter {
             .try_collect::<Vec<_>>()
             .await
             .into_database("could not revert temporary tables")?;
+
+        // If we're in dry-run mode, truncate all the tables we've written to
+        if self.dry_run {
+            warn!("Migration ran in dry-run mode, deleting all imported data");
+            let tables = MAS_TABLES_AFFECTED_BY_MIGRATION
+                .iter()
+                .map(|table| format!("\"{table}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            // Note that we do that with CASCADE, because we do that *after*
+            // restoring the FK constraints.
+            //
+            // The alternative would be to list all the tables we have FK to
+            // those tables, which would be a hassle, or to do that after
+            // restoring the constraints, which would mean we wouldn't validate
+            // that we've done valid FKs in dry-run mode.
+            query(&format!("TRUNCATE TABLE {tables} CASCADE;"))
+                .execute(self.conn.as_mut())
+                .await
+                .into_database_with(|| "failed to truncate all tables")?;
+        }
 
         query("COMMIT;")
             .execute(self.conn.as_mut())
@@ -1193,7 +1216,7 @@ mod test {
             .await
             .expect("failed to lock MAS database")
             .expect_left("MAS database is already locked");
-        MasWriter::new(locked_main_conn, writer_conns)
+        MasWriter::new(locked_main_conn, writer_conns, false)
             .await
             .expect("failed to construct MasWriter")
     }

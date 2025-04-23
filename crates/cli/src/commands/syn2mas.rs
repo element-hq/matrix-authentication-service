@@ -70,8 +70,17 @@ enum Subcommand {
     ///
     /// It is OK for Synapse to be online during these checks.
     Check,
+
     /// Perform a migration. Synapse must be offline during this process.
-    Migrate,
+    Migrate {
+        /// Perform a dry-run migration, which is safe to run with Synapse
+        /// running, and will restore the MAS database to an empty state.
+        ///
+        /// This still *does* write to the MAS database, making it more
+        /// realistic compared to the final migration.
+        #[clap(long)]
+        dry_run: bool,
+    },
 }
 
 /// The number of parallel writing transactions active against the MAS database.
@@ -118,11 +127,10 @@ impl Options {
             .await
             .context("could not run migrations")?;
 
-        if matches!(&self.subcommand, Subcommand::Migrate) {
+        if matches!(&self.subcommand, Subcommand::Migrate { .. }) {
             // First perform a config sync
             // This is crucial to ensure we register upstream OAuth providers
             // in the MAS database
-            //
             let config = SyncConfig::extract(figment)?;
             let clock = SystemClock::default();
             let encrypter = config.secrets.encrypter();
@@ -201,7 +209,8 @@ impl Options {
 
                 Ok(ExitCode::SUCCESS)
             }
-            Subcommand::Migrate => {
+
+            Subcommand::Migrate { dry_run } => {
                 let provider_id_mappings: HashMap<String, Uuid> = {
                     let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)?;
 
@@ -217,8 +226,7 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
-                // TODO this dry-run flag should be set to false in real circumstances !!!
-                let reader = SynapseReader::new(&mut syn_conn, true).await?;
+                let reader = SynapseReader::new(&mut syn_conn, dry_run).await?;
                 let writer_mas_connections =
                     futures_util::future::try_join_all((0..NUM_WRITER_CONNECTIONS).map(|_| {
                         database_connection_from_config_with_options(
@@ -230,7 +238,8 @@ impl Options {
                     }))
                     .instrument(tracing::info_span!("syn2mas.mas_writer_connections"))
                     .await?;
-                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                let writer =
+                    MasWriter::new(mas_connection, writer_mas_connections, dry_run).await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
