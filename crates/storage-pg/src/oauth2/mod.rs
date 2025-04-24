@@ -24,7 +24,7 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{AuthorizationCode, UserAgent};
+    use mas_data_model::AuthorizationCode;
     use mas_storage::{
         Clock, Pagination,
         clock::MockClock,
@@ -351,7 +351,7 @@ mod tests {
         assert!(session.user_agent.is_none());
         let session = repo
             .oauth2_session()
-            .record_user_agent(session, UserAgent::parse("Mozilla/5.0".to_owned()))
+            .record_user_agent(session, "Mozilla/5.0".to_owned())
             .await
             .unwrap();
         assert_eq!(session.user_agent.as_deref(), Some("Mozilla/5.0"));

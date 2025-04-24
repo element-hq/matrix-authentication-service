@@ -7,7 +7,7 @@
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{UserAgent, UserEmail, UserRecoverySession, UserRecoveryTicket};
+use mas_data_model::{UserEmail, UserRecoverySession, UserRecoveryTicket};
 use rand_core::RngCore;
 use ulid::Ulid;
 
@@ -59,7 +59,7 @@ pub trait UserRecoveryRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         email: String,
-        user_agent: UserAgent,
+        user_agent: String,
         ip_address: Option<IpAddr>,
         locale: String,
     ) -> Result<UserRecoverySession, Self::Error>;
@@ -131,7 +131,7 @@ repository_impl!(UserRecoveryRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         email: String,
-        user_agent: UserAgent,
+        user_agent: String,
         ip_address: Option<IpAddr>,
         locale: String,
     ) -> Result<UserRecoverySession, Self::Error>;

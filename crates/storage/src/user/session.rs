@@ -9,7 +9,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Authentication, BrowserSession, Password, UpstreamOAuthAuthorizationSession, User, UserAgent,
+    Authentication, BrowserSession, Password, UpstreamOAuthAuthorizationSession, User,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -151,7 +151,7 @@ pub trait BrowserSessionRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
     ) -> Result<BrowserSession, Self::Error>;
 
     /// Finish a [`BrowserSession`]
@@ -296,7 +296,7 @@ repository_impl!(BrowserSessionRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
     ) -> Result<BrowserSession, Self::Error>;
     async fn finish(
         &mut self,

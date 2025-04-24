@@ -7,9 +7,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{
-    UserAgent, UserEmailAuthentication, UserRegistration, UserRegistrationPassword,
-};
+use mas_data_model::{UserEmailAuthentication, UserRegistration, UserRegistrationPassword};
 use mas_storage::{Clock, user::UserRegistrationRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -53,7 +51,6 @@ impl TryFrom<UserRegistrationLookup> for UserRegistration {
 
     fn try_from(value: UserRegistrationLookup) -> Result<Self, Self::Error> {
         let id = Ulid::from(value.user_registration_id);
-        let user_agent = value.user_agent.map(UserAgent::parse);
 
         let password = match (value.hashed_password, value.hashed_password_version) {
             (Some(hashed_password), Some(version)) => {
@@ -91,7 +88,7 @@ impl TryFrom<UserRegistrationLookup> for UserRegistration {
         Ok(UserRegistration {
             id,
             ip_address: value.ip_address,
-            user_agent,
+            user_agent: value.user_agent,
             post_auth_action: value.post_auth_action,
             username: value.username,
             display_name: value.display_name,
@@ -162,7 +159,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
         post_auth_action: Option<serde_json::Value>,
     ) -> Result<UserRegistration, Self::Error> {
         let created_at = clock.now();
@@ -394,7 +391,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
 mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
-    use mas_data_model::{UserAgent, UserRegistrationPassword};
+    use mas_data_model::UserRegistrationPassword;
     use mas_storage::{Clock, clock::MockClock};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
@@ -487,16 +484,13 @@ mod tests {
                 &clock,
                 "alice".to_owned(),
                 Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
-                Some(UserAgent::parse("Mozilla/5.0".to_owned())),
+                Some("Mozilla/5.0".to_owned()),
                 Some(serde_json::json!({"action": "continue_compat_sso_login", "id": "01FSHN9AG0MKGTBNZ16RDR3PVY"})),
             )
             .await
             .unwrap();
 
-        assert_eq!(
-            registration.user_agent,
-            Some(UserAgent::parse("Mozilla/5.0".to_owned()))
-        );
+        assert_eq!(registration.user_agent, Some("Mozilla/5.0".to_owned()));
         assert_eq!(
             registration.ip_address,
             Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))

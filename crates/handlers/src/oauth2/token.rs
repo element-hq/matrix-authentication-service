@@ -16,7 +16,7 @@ use mas_axum_utils::{
     record_error,
 };
 use mas_data_model::{
-    AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType, UserAgent,
+    AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType,
 };
 use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
@@ -285,7 +285,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     client_authorization: ClientAuthorization<AccessTokenRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let client = client_authorization
         .credentials
         .fetch(&mut repo)
@@ -415,7 +415,7 @@ async fn authorization_code_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::AuthorizationCode) {
@@ -596,7 +596,7 @@ async fn refresh_token_grant(
     client: &Client,
     site_config: &SiteConfig,
     mut repo: BoxRepository,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::RefreshToken) {
@@ -749,7 +749,7 @@ async fn client_credentials_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     mut policy: Policy,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::ClientCredentials) {
@@ -771,7 +771,7 @@ async fn client_credentials_grant(
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
-                user_agent: user_agent.clone().map(|ua| ua.raw),
+                user_agent: user_agent.clone(),
             },
         })
         .await?;
@@ -828,7 +828,7 @@ async fn device_code_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::DeviceCode) {

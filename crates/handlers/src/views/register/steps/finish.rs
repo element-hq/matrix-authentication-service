@@ -13,7 +13,6 @@ use axum::{
 use axum_extra::TypedHeader;
 use chrono::Duration;
 use mas_axum_utils::{FancyError, SessionInfoExt as _, cookies::CookieJar};
-use mas_data_model::UserAgent;
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -56,7 +55,7 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
 ) -> Result<Response, FancyError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let registration = repo
         .user_registration()
         .lookup(id)

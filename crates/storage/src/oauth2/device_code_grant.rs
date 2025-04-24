@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_data_model::{BrowserSession, Client, DeviceCodeGrant, Session, UserAgent};
+use mas_data_model::{BrowserSession, Client, DeviceCodeGrant, Session};
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -36,7 +36,7 @@ pub struct OAuth2DeviceCodeGrantParams<'a> {
     pub ip_address: Option<IpAddr>,
 
     /// The user agent from which the request was made
-    pub user_agent: Option<UserAgent>,
+    pub user_agent: Option<String>,
 }
 
 /// An [`OAuth2DeviceCodeGrantRepository`] helps interacting with

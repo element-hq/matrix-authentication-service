@@ -6,7 +6,7 @@
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{UserAgent, UserEmailAuthentication, UserRegistration};
+use mas_data_model::{UserEmailAuthentication, UserRegistration};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
@@ -56,7 +56,7 @@ pub trait UserRegistrationRepository: Send + Sync {
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
         post_auth_action: Option<serde_json::Value>,
     ) -> Result<UserRegistration, Self::Error>;
 
@@ -166,7 +166,7 @@ repository_impl!(UserRegistrationRepository:
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
         post_auth_action: Option<serde_json::Value>,
     ) -> Result<UserRegistration, Self::Error>;
     async fn set_display_name(

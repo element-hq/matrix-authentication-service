@@ -13,7 +13,6 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::UserAgent;
 use mas_keystore::Encrypter;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2DeviceCodeGrantParams};
@@ -137,7 +136,7 @@ pub(crate) async fn post(
 
     let expires_in = Duration::microseconds(20 * 60 * 1000 * 1000);
 
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let ip_address = activity_tracker.ip();
 
     let device_code = Alphanumeric.sample_string(&mut rng, 32);
