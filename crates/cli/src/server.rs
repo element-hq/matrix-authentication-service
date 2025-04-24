@@ -184,12 +184,10 @@ async fn log_response_middleware(
 
     let response = next.run(request).await;
 
-    let Some(log_context) = LogContext::current() else {
+    let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
         tracing::error!("Missing log context for request, this is a bug!");
         return response;
     };
-
-    let stats = log_context.stats();
 
     let status_code = response.status();
     match status_code.as_u16() {

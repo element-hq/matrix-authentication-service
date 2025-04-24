@@ -76,9 +76,12 @@ impl LogContext {
         }
     }
 
-    /// Get a copy of the current log context, if any
-    pub fn current() -> Option<Self> {
-        CURRENT_LOG_CONTEXT.try_with(Self::clone).ok()
+    /// Run a closure with the current log context, if any
+    pub fn maybe_with<F, R>(f: F) -> Option<R>
+    where
+        F: FnOnce(&Self) -> R,
+    {
+        CURRENT_LOG_CONTEXT.try_with(f).ok()
     }
 
     /// Run the async function `f` with the given log context. It will wrap the

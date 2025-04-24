@@ -789,13 +789,13 @@ impl JobTracker {
                     );
                     let result = job.run(&state, context.clone()).await;
 
-                    let Some(log_context) = LogContext::current() else {
+                    let Some(context_stats) =
+                        LogContext::maybe_with(mas_context::LogContext::stats)
+                    else {
                         // This should never happen, but if it does it's fine: we're recovering fine
                         // from panics in those tasks
                         panic!("Missing log context, this should never happen");
                     };
-
-                    let context_stats = log_context.stats();
 
                     // We log the result here so that it's attached to the right span & log context
                     match &result {

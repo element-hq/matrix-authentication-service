@@ -113,13 +113,14 @@ where
             write!(&mut writer, "{} ", style.apply_to(metadata.name()))?;
         }
 
-        if let Some(log_context) = LogContext::current() {
+        LogContext::maybe_with(|log_context| {
             let log_context = Style::new()
                 .bold()
                 .force_styling(ansi)
                 .apply_to(log_context);
-            write!(&mut writer, "{log_context} - ")?;
-        }
+            write!(&mut writer, "{log_context} - ")
+        })
+        .transpose()?;
 
         let field_fromatter = DefaultFields::new();
         field_fromatter.format_fields(writer.by_ref(), event)?;
