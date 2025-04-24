@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
+  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , locale\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE authorization_code = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -90,13 +90,18 @@
       },
       {
         "ordinal": 17,
+        "name": "locale",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -117,8 +122,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "bf6d1e3e3145438c988b1a47fc13f0168a63e278d8f8c947cb3ab65173f92ae4"
+  "hash": "8ef27901b96b73826a431ad6c5fabecc18c36d8cdba8db3b47953855fa5c9035"
 }

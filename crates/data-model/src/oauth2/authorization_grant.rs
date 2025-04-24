@@ -160,6 +160,7 @@ pub struct AuthorizationGrant {
     pub response_type_id_token: bool,
     pub created_at: DateTime<Utc>,
     pub login_hint: Option<String>,
+    pub locale: Option<String>,
 }
 
 impl std::ops::Deref for AuthorizationGrant {
@@ -263,6 +264,7 @@ impl AuthorizationGrant {
             response_type_id_token: false,
             created_at: now,
             login_hint: Some(String::from("mxid:@example-user:example.com")),
+            locale: Some(String::from("fr")),
         }
     }
 }

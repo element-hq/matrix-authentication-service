@@ -1042,6 +1042,7 @@ mod tests {
                 ResponseMode::Query,
                 false,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -1140,6 +1141,7 @@ mod tests {
                 Some("nonce".to_owned()),
                 ResponseMode::Query,
                 false,
+                None,
                 None,
             )
             .await
