@@ -168,7 +168,7 @@ impl OAuth2SessionMutations {
         for scope in &*session.scope {
             if let Some(device) = Device::from_scope_token(scope) {
                 homeserver
-                    .create_device(&mxid, device.as_str())
+                    .create_device(&mxid, device.as_str(), None)
                     .await
                     .context("Failed to provision device")?;
             }

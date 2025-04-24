@@ -107,10 +107,27 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(!users.contains_key(&mxid))
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
+    async fn create_device(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        _initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
         let mut users = self.users.write().await;
         let user = users.get_mut(mxid).context("User not found")?;
         user.devices.insert(device_id.to_owned());
+        Ok(())
+    }
+
+    async fn update_device_display_name(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        _display_name: &str,
+    ) -> Result<(), anyhow::Error> {
+        let mut users = self.users.write().await;
+        let user = users.get_mut(mxid).context("User not found")?;
+        user.devices.get(device_id).context("Device not found")?;
         Ok(())
     }
 
@@ -191,7 +208,7 @@ mod tests {
         assert_eq!(conn.mxid("test"), mxid);
 
         assert!(conn.query_user(mxid).await.is_err());
-        assert!(conn.create_device(mxid, device).await.is_err());
+        assert!(conn.create_device(mxid, device, None).await.is_err());
         assert!(conn.delete_device(mxid, device).await.is_err());
 
         let request = ProvisionRequest::new("@test:example.org", "test")
@@ -222,9 +239,9 @@ mod tests {
         assert!(conn.delete_device(mxid, device).await.is_ok());
 
         // Create the device
-        assert!(conn.create_device(mxid, device).await.is_ok());
+        assert!(conn.create_device(mxid, device, None).await.is_ok());
         // Create the same device again
-        assert!(conn.create_device(mxid, device).await.is_ok());
+        assert!(conn.create_device(mxid, device, None).await.is_ok());
 
         // XXX: there is no API to query devices yet in the trait
         // Delete the device

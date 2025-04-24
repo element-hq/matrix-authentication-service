@@ -467,7 +467,7 @@ async fn token_login(
     };
     let mxid = homeserver.mxid(&browser_session.user.username);
     homeserver
-        .create_device(&mxid, device.as_str())
+        .create_device(&mxid, device.as_str(), None)
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
 
@@ -566,7 +566,7 @@ async fn user_password_login(
         Device::generate(&mut rng)
     };
     homeserver
-        .create_device(&mxid, device.as_str())
+        .create_device(&mxid, device.as_str(), None)
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
 

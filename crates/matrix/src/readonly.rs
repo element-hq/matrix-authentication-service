@@ -40,8 +40,22 @@ impl<C: HomeserverConnection> HomeserverConnection for ReadOnlyHomeserverConnect
         self.inner.is_localpart_available(localpart).await
     }
 
-    async fn create_device(&self, _mxid: &str, _device_id: &str) -> Result<(), anyhow::Error> {
+    async fn create_device(
+        &self,
+        _mxid: &str,
+        _device_id: &str,
+        _initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
         anyhow::bail!("Device creation is not supported in read-only mode");
+    }
+
+    async fn update_device_display_name(
+        &self,
+        _mxid: &str,
+        _device_id: &str,
+        _display_name: &str,
+    ) -> Result<(), anyhow::Error> {
+        anyhow::bail!("Device display name update is not supported in read-only mode");
     }
 
     async fn delete_device(&self, _mxid: &str, _device_id: &str) -> Result<(), anyhow::Error> {

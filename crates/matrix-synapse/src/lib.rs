@@ -134,6 +134,11 @@ struct SynapseDevice {
 }
 
 #[derive(Serialize)]
+struct SynapseUpdateDeviceRequest<'a> {
+    display_name: Option<&'a str>,
+}
+
+#[derive(Serialize)]
 struct SynapseDeleteDevicesRequest {
     devices: Vec<String>,
 }
@@ -312,11 +317,16 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+    async fn create_device(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
+        let encoded_mxid = urlencoding::encode(mxid);
 
         let response = self
-            .post(&format!("_synapse/admin/v2/users/{mxid}/devices"))
+            .post(&format!("_synapse/admin/v2/users/{encoded_mxid}/devices"))
             .json(&SynapseDevice {
                 device_id: device_id.to_owned(),
                 dehydrated: None,
@@ -333,6 +343,56 @@ impl HomeserverConnection for SynapseConnection {
         if response.status() != StatusCode::CREATED {
             bail!(
                 "Unexpected HTTP code while creating device in Synapse: {}",
+                response.status()
+            );
+        }
+
+        // It's annoying, but the POST endpoint doesn't let us set the display name
+        // of the device, so we have to do it manually.
+        if let Some(display_name) = initial_display_name {
+            self.update_device_display_name(mxid, device_id, display_name)
+                .await?;
+        }
+
+        Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "homeserver.update_device_display_name",
+        skip_all,
+        fields(
+            matrix.homeserver = self.homeserver,
+            matrix.mxid = mxid,
+            matrix.device_id = device_id,
+        ),
+        err(Debug),
+    )]
+    async fn update_device_display_name(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        display_name: &str,
+    ) -> Result<(), anyhow::Error> {
+        let device_id = urlencoding::encode(device_id);
+        let response = self
+            .put(&format!(
+                "_synapse/admin/v2/users/{mxid}/devices/{device_id}"
+            ))
+            .json(&SynapseUpdateDeviceRequest {
+                display_name: Some(display_name),
+            })
+            .send_traced()
+            .await
+            .context("Failed to update device display name in Synapse")?;
+
+        let response = response
+            .error_for_synapse_error()
+            .await
+            .context("Unexpected HTTP response while updating device display name in Synapse")?;
+
+        if response.status() != StatusCode::OK {
+            bail!(
+                "Unexpected HTTP code while updating device display name in Synapse: {}",
                 response.status()
             );
         }
@@ -448,7 +508,7 @@ impl HomeserverConnection for SynapseConnection {
         // Then, create the devices that are missing. There is no batching API to do
         // this, so we do this sequentially, which is fine as the API is idempotent.
         for device_id in devices.difference(&existing_devices) {
-            self.create_device(mxid, device_id).await?;
+            self.create_device(mxid, device_id, None).await?;
         }
 
         Ok(())
