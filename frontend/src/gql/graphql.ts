@@ -238,6 +238,8 @@ export type CompatSession = CreationEvent & Node & {
   deviceId?: Maybe<Scalars['String']['output']>;
   /** When the session ended. */
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** A human-provided name for the session. */
+  humanName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** The last time the session was active. */
@@ -1650,7 +1652,7 @@ export type BrowserSession_SessionFragment = (
 export type OAuth2Client_DetailFragment = { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null, tosUri?: string | null, policyUri?: string | null, redirectUris: Array<string> } & { ' $fragmentName'?: 'OAuth2Client_DetailFragment' };
 
 export type CompatSession_SessionFragment = (
-  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
   & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
 
@@ -1704,7 +1706,7 @@ export type BrowserSession_DetailFragment = (
 ) & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
 
 export type CompatSession_DetailFragment = (
-  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
   & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
 
@@ -2056,6 +2058,7 @@ export const CompatSession_SessionFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2183,6 +2186,7 @@ export const CompatSession_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2587,6 +2591,7 @@ export const AppSessionsListDocument = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2880,6 +2885,7 @@ fragment CompatSession_detail on CompatSession {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name

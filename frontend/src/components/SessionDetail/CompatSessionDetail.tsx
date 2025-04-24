@@ -23,6 +23,7 @@ export const FRAGMENT = graphql(/* GraphQL */ `
     finishedAt
     lastActiveIp
     lastActiveAt
+    humanName
 
     ...EndCompatSessionButton_session
 
@@ -62,11 +63,11 @@ const CompatSessionDetail: React.FC<Props> = ({ session }) => {
     ? simplifyUrl(data.ssoLogin.redirectUri)
     : data.deviceId || data.id;
 
+  const sessionName = data.humanName ?? `${clientName}: ${deviceName}`;
+
   return (
     <div className="flex flex-col gap-10">
-      <SessionHeader to="/sessions">
-        {clientName}: {deviceName}
-      </SessionHeader>
+      <SessionHeader to="/sessions">{sessionName}</SessionHeader>
       <Info.DataSection>
         <Info.DataSectionHeader>
           {t("frontend.session.title")}
@@ -141,10 +142,12 @@ const CompatSessionDetail: React.FC<Props> = ({ session }) => {
             </Info.DataLabel>
             <Info.DataValue>{deviceName}</Info.DataValue>
           </Info.Data>
-          <Info.Data>
-            <Info.DataLabel>{t("frontend.session.uri_label")}</Info.DataLabel>
-            <Info.DataValue>{data.ssoLogin?.redirectUri}</Info.DataValue>
-          </Info.Data>
+          {data.ssoLogin && (
+            <Info.Data>
+              <Info.DataLabel>{t("frontend.session.uri_label")}</Info.DataLabel>
+              <Info.DataValue>{data.ssoLogin?.redirectUri}</Info.DataValue>
+            </Info.Data>
+          )}
         </Info.DataList>
       </Info.DataSection>
 

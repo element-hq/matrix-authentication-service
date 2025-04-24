@@ -165,6 +165,11 @@ impl CompatSession {
     pub async fn last_active_at(&self) -> Option<DateTime<Utc>> {
         self.session.last_active_at
     }
+
+    /// A human-provided name for the session.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.session.human_name.as_deref()
+    }
 }
 
 /// A compat SSO login represents a login done through the legacy Matrix login

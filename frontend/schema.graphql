@@ -370,6 +370,10 @@ type CompatSession implements Node & CreationEvent {
   The last time the session was active.
   """
   lastActiveAt: DateTime
+  """
+  A human-provided name for the session.
+  """
+  humanName: String
 }
 
 type CompatSessionConnection {
