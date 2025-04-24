@@ -4,8 +4,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use serde::Serialize;
 use woothee::{parser::Parser, woothee::VALUE_UNKNOWN};
+
+static CUSTOM_USER_AGENT_REGEX: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r"^(?P<name>[^/]+)/(?P<version>[^ ]+) \((?P<segments>.+)\)$").unwrap()
+});
+
+static ELECTRON_USER_AGENT_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r"(?m)\w+/[\w.]+").unwrap());
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -37,10 +46,7 @@ impl std::ops::Deref for UserAgent {
 
 impl UserAgent {
     fn parse_custom(user_agent: &str) -> Option<(&str, &str, &str, &str, Option<&str>)> {
-        let regex = regex::Regex::new(r"^(?P<name>[^/]+)/(?P<version>[^ ]+) \((?P<segments>.+)\)$")
-            .unwrap();
-
-        let captures = regex.captures(user_agent)?;
+        let captures = CUSTOM_USER_AGENT_REGEX.captures(user_agent)?;
         let name = captures.name("name")?.as_str();
         let version = captures.name("version")?.as_str();
         let segments: Vec<&str> = captures
@@ -73,9 +79,8 @@ impl UserAgent {
     }
 
     fn parse_electron(user_agent: &str) -> Option<(&str, &str)> {
-        let regex = regex::Regex::new(r"(?m)\w+/[\w.]+").unwrap();
         let omit_keys = ["Mozilla", "AppleWebKit", "Chrome", "Electron", "Safari"];
-        return regex
+        return ELECTRON_USER_AGENT_REGEX
             .find_iter(user_agent)
             .map(|caps| caps.as_str().split_once('/').unwrap())
             .find(|pair| !omit_keys.contains(&pair.0));
