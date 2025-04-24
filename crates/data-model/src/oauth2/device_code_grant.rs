@@ -11,7 +11,7 @@ use oauth2_types::scope::Scope;
 use serde::Serialize;
 use ulid::Ulid;
 
-use crate::{BrowserSession, InvalidTransitionError, Session, UserAgent};
+use crate::{BrowserSession, InvalidTransitionError, Session};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case", tag = "state")]
@@ -192,7 +192,7 @@ pub struct DeviceCodeGrant {
     pub ip_address: Option<IpAddr>,
 
     /// The user agent used to request this device code grant.
-    pub user_agent: Option<UserAgent>,
+    pub user_agent: Option<String>,
 }
 
 impl std::ops::Deref for DeviceCodeGrant {

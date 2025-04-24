@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     BrowserSession, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device,
-    User, UserAgent,
+    User,
 };
 use mas_storage::{
     Clock, Page, Pagination,
@@ -77,7 +77,7 @@ impl From<CompatSessionLookup> for CompatSession {
             human_name: value.human_name,
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         }
@@ -126,7 +126,7 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
             user_session_id: value.user_session_id.map(Ulid::from),
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         };
@@ -598,7 +598,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     async fn record_user_agent(
         &mut self,
         mut compat_session: CompatSession,
-        user_agent: UserAgent,
+        user_agent: String,
     ) -> Result<CompatSession, Self::Error> {
         let res = sqlx::query!(
             r#"

@@ -81,7 +81,11 @@ impl BrowserSession {
 
     /// The user-agent with which the session was created.
     pub async fn user_agent(&self) -> Option<UserAgent> {
-        self.0.user_agent.clone().map(UserAgent::from)
+        self.0
+            .user_agent
+            .clone()
+            .map(mas_data_model::UserAgent::parse)
+            .map(UserAgent::from)
     }
 
     /// The last IP address used by the session.

@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Session, SessionState, User, UserAgent};
+use mas_data_model::{BrowserSession, Client, Session, SessionState, User};
 use mas_storage::{
     Clock, Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
@@ -87,7 +87,7 @@ impl TryFrom<OAuthSessionLookup> for Session {
             user_id: value.user_id.map(Ulid::from),
             user_session_id: value.user_session_id.map(Ulid::from),
             scope,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         })
@@ -490,14 +490,14 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             %session.id,
             %session.scope,
             client.id = %session.client_id,
-            session.user_agent = %user_agent.raw,
+            session.user_agent = user_agent,
         ),
         err,
     )]
     async fn record_user_agent(
         &mut self,
         mut session: Session,
-        user_agent: UserAgent,
+        user_agent: String,
     ) -> Result<Session, Self::Error> {
         let res = sqlx::query!(
             r#"

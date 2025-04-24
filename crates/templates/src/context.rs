@@ -22,7 +22,7 @@ use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserAgent, UserEmailAuthentication,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
     UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
@@ -808,7 +808,7 @@ impl TemplateContext for EmailRecoveryContext {
             let session = UserRecoverySession {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "hello@example.com".to_owned(),
-                user_agent: UserAgent::parse("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/536.30.1 (KHTML, like Gecko) Version/6.0.5 Safari/536.30.1".to_owned()),
+                user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/536.30.1 (KHTML, like Gecko) Version/6.0.5 Safari/536.30.1".to_owned(),
                 ip_address: Some(IpAddr::from([192_u8, 0, 2, 1])),
                 locale: "en".to_owned(),
                 created_at: now,
@@ -1106,7 +1106,7 @@ impl TemplateContext for RecoveryProgressContext {
         let session = UserRecoverySession {
             id: Ulid::from_datetime_with_source(now.into(), rng),
             email: "name@mail.com".to_owned(),
-            user_agent: UserAgent::parse("Mozilla/5.0".to_owned()),
+            user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
             locale: "en".to_owned(),
             created_at: now,
@@ -1148,7 +1148,7 @@ impl TemplateContext for RecoveryExpiredContext {
         let session = UserRecoverySession {
             id: Ulid::from_datetime_with_source(now.into(), rng),
             email: "name@mail.com".to_owned(),
-            user_agent: UserAgent::parse("Mozilla/5.0".to_owned()),
+            user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
             locale: "en".to_owned(),
             created_at: now,
@@ -1529,7 +1529,7 @@ impl TemplateContext for DeviceConsentContext {
                     created_at: now - Duration::try_minutes(5).unwrap(),
                     expires_at: now + Duration::try_minutes(25).unwrap(),
                     ip_address: Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
-                    user_agent: Some(UserAgent::parse("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned())),
+                    user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
                 };
                 Self { grant, client }
             })

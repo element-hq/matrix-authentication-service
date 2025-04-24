@@ -19,7 +19,6 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     record_error,
 };
-use mas_data_model::UserAgent;
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -233,7 +232,7 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Path(link_id): Path<Ulid>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
     let (session_id, post_auth_action) = sessions_cookie
         .lookup_link(link_id)
@@ -502,7 +501,7 @@ pub(crate) async fn get(
                                 email: None,
                                 requester: mas_policy::Requester {
                                     ip_address: activity_tracker.ip(),
-                                    user_agent: user_agent.clone().map(|ua| ua.raw),
+                                    user_agent: user_agent.clone(),
                                 },
                             })
                             .await?;
@@ -568,7 +567,7 @@ pub(crate) async fn post(
     Path(link_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<FormData>>,
 ) -> Result<Response, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
@@ -786,7 +785,7 @@ pub(crate) async fn post(
                         email: email.as_deref(),
                         requester: mas_policy::Requester {
                             ip_address: activity_tracker.ip(),
-                            user_agent: user_agent.clone().map(|ua| ua.raw),
+                            user_agent: user_agent.clone(),
                         },
                     })
                     .await?;

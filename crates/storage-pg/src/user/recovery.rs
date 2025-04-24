@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::{UserAgent, UserEmail, UserRecoverySession, UserRecoveryTicket};
+use mas_data_model::{UserEmail, UserRecoverySession, UserRecoveryTicket};
 use mas_storage::{Clock, user::UserRecoveryRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -45,7 +45,7 @@ impl From<UserRecoverySessionRow> for UserRecoverySession {
         UserRecoverySession {
             id: row.user_recovery_session_id.into(),
             email: row.email,
-            user_agent: UserAgent::parse(row.user_agent),
+            user_agent: row.user_agent,
             ip_address: row.ip_address,
             locale: row.locale,
             created_at: row.created_at,
@@ -127,7 +127,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
             db.query.text,
             user_recovery_session.id,
             user_recovery_session.email = email,
-            user_recovery_session.user_agent = &*user_agent,
+            user_recovery_session.user_agent = user_agent,
             user_recovery_session.ip_address = ip_address.map(|ip| ip.to_string()),
         )
     )]
@@ -136,7 +136,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         email: String,
-        user_agent: UserAgent,
+        user_agent: String,
         ip_address: Option<IpAddr>,
         locale: String,
     ) -> Result<UserRecoverySession, Self::Error> {
