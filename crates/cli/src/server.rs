@@ -293,6 +293,7 @@ pub fn build_router(
     router = router.fallback(mas_handlers::fallback);
 
     router
+        .layer(axum::middleware::from_fn(log_response_middleware))
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((
                 name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
@@ -318,12 +319,16 @@ pub fn build_router(
                 span.record("otel.status_code", "OK");
             }),
         )
-        .layer(axum::middleware::from_fn(log_response_middleware))
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
         }))
-        .layer(NewSentryLayer::new_from_top())
+        // Careful about the order here: the `NewSentryLayer` must be around the
+        // `SentryHttpLayer`. axum makes new layers wrap the existing ones,
+        // which is the other way around compared to `tower::ServiceBuilder`.
+        // So even if the Sentry docs has an example that does
+        // 'NewSentryHttpLayer then SentryHttpLayer', we must do the opposite.
         .layer(SentryHttpLayer::with_transaction())
+        .layer(NewSentryLayer::new_from_top())
         .with_state(state)
 }
 
