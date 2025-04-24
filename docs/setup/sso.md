@@ -308,11 +308,13 @@ upstream_oauth2:
       discovery_mode: disabled
       fetch_userinfo: true
       token_endpoint_auth_method: "client_secret_post"
+      allow_rp_initiated_logout: false
       client_id: "<client-id>" # TO BE FILLED
       client_secret: "<client-secret>" # TO BE FILLED
       authorization_endpoint: "https://github.com/login/oauth/authorize"
       token_endpoint: "https://github.com/login/oauth/access_token"
       userinfo_endpoint: "https://api.github.com/user"
+      end_session_endpoint: "https://github.com/login/oauth/logout"
       scope: "read:user"
       claims_imports:
         subject:

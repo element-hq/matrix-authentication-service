@@ -2108,6 +2108,16 @@
             }
           ]
         },
+        "allow_rp_initiated_logout": {
+          "description": "Whether to allow RP-initiated logout\n\nDefaults to `false`.",
+          "default": false,
+          "type": "boolean"
+        },
+        "end_session_endpoint": {
+          "description": "The URL to use when ending a session onto the upstream provider\n\nDefaults to the `end_session_endpoint` provided through discovery",
+          "type": "string",
+          "format": "uri"
+        },
         "additional_authorization_parameters": {
           "description": "Additional parameters to include in the authorization request\n\nOrders of the keys are not preserved.",
           "type": "object",

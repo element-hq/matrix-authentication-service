@@ -149,7 +149,9 @@ impl UpstreamSessions {
             .position(|p| p.link == Some(link_id))
             .ok_or(UpstreamSessionNotFound)?;
 
-        self.0.remove(pos);
+        // We do not remove the session from the cookie, because it might be used by
+        // in the logout
+        self.0[pos].link = None;
 
         Ok(self)
     }

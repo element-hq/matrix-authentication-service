@@ -968,6 +968,15 @@ impl VerifiedProviderMetadata {
         }
     }
 
+    /// URL of the authorization server's end session endpoint.
+    #[must_use]
+    pub fn end_session_endpoint(&self) -> &Url {
+        match &self.end_session_endpoint {
+            Some(u) => u,
+            None => unreachable!(),
+        }
+    }
+
     /// URL of the authorization server's JWK Set document.
     #[must_use]
     pub fn jwks_uri(&self) -> &Url {

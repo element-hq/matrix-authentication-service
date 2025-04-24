@@ -93,6 +93,13 @@ pub struct UpstreamOAuthProviderParams {
     /// What response mode it should ask
     pub response_mode: Option<UpstreamOAuthProviderResponseMode>,
 
+    /// Whether to allow RP-initiated logout
+    pub allow_rp_initiated_logout: bool,
+
+    /// The URL to use as the `end_session` endpoint. If `None`, the URL will be
+    /// discovered
+    pub end_session_endpoint_override: Option<Url>,
+
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,
 

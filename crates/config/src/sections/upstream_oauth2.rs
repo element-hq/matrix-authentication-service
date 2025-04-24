@@ -560,6 +560,18 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
 
+    /// Whether to allow RP-initiated logout
+    ///
+    /// Defaults to `false`.
+    #[serde(default)]
+    pub allow_rp_initiated_logout: bool,
+
+    /// The URL to use when ending a session onto the upstream provider
+    ///
+    /// Defaults to the `end_session_endpoint` provided through discovery
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_session_endpoint: Option<Url>,
+
     /// Additional parameters to include in the authorization request
     ///
     /// Orders of the keys are not preserved.

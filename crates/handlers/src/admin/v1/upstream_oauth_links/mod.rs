@@ -46,6 +46,8 @@ mod test_utils {
             token_endpoint_override: None,
             userinfo_endpoint_override: None,
             jwks_uri_override: None,
+            allow_rp_initiated_logout: false,
+            end_session_endpoint_override: None,
             additional_authorization_parameters: Vec::new(),
             ui_order: 0,
         }

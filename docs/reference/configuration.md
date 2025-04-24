@@ -709,6 +709,10 @@ upstream_oauth2:
       # the response parameters in the request body
       #response_mode: query
 
+      # Whether to perform a logout request on the provider when logging out from MAS.
+      # Default to false.
+      # allow_rp_initiated_logout: false
+
       # Additional parameters to include in the authorization request
       #additional_authorization_parameters:
       #  foo: "bar"
