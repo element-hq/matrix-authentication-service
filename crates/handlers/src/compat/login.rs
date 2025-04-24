@@ -484,6 +484,7 @@ async fn token_login(
             device,
             Some(&browser_session),
             false,
+            None,
         )
         .await?;
 
@@ -576,7 +577,7 @@ async fn user_password_login(
 
     let session = repo
         .compat_session()
-        .add(&mut rng, clock, &user, device, None, false)
+        .add(&mut rng, clock, &user, device, None, false, None)
         .await?;
 
     Ok((session, user))

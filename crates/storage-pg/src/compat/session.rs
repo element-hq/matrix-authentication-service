@@ -305,6 +305,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
@@ -314,8 +315,9 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             r#"
                 INSERT INTO compat_sessions
                     (compat_session_id, user_id, device_id,
-                     user_session_id, created_at, is_synapse_admin)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                     user_session_id, created_at, is_synapse_admin,
+                     human_name)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             Uuid::from(id),
             Uuid::from(user.id),
@@ -323,6 +325,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             browser_session.map(|s| Uuid::from(s.id)),
             created_at,
             is_synapse_admin,
+            human_name.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -333,7 +336,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             state: CompatSessionState::default(),
             user_id: user.id,
             device: Some(device),
-            human_name: None,
+            human_name,
             user_session_id: browser_session.map(|s| s.id),
             created_at,
             is_synapse_admin,

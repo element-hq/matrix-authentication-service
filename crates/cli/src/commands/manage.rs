@@ -305,7 +305,7 @@ impl Options {
 
                 let compat_session = repo
                     .compat_session()
-                    .add(&mut rng, &clock, &user, device, None, admin)
+                    .add(&mut rng, &clock, &user, device, None, admin, None)
                     .await?;
 
                 let token = TokenType::CompatAccessToken.generate(&mut rng);

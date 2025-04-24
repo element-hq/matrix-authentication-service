@@ -251,7 +251,7 @@ mod tests {
 
         let device = Device::generate(&mut rng);
         repo.compat_session()
-            .add(&mut rng, &state.clock, &alice, device, None, false)
+            .add(&mut rng, &state.clock, &alice, device, None, false, None)
             .await
             .unwrap();
         let device = Device::generate(&mut rng);
@@ -260,7 +260,7 @@ mod tests {
 
         let session = repo
             .compat_session()
-            .add(&mut rng, &state.clock, &bob, device, None, false)
+            .add(&mut rng, &state.clock, &bob, device, None, false, None)
             .await
             .unwrap();
         state.clock.advance(Duration::minutes(1));

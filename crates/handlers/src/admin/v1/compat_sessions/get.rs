@@ -107,7 +107,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let session = repo
             .compat_session()
-            .add(&mut rng, &state.clock, &user, device, None, false)
+            .add(&mut rng, &state.clock, &user, device, None, false, None)
             .await
             .unwrap();
         repo.save().await.unwrap();

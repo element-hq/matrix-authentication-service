@@ -571,7 +571,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let compat_session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device.clone(), None, false)
+            .add(&mut rng, &clock, &user, device.clone(), None, false, None)
             .await
             .unwrap();
 

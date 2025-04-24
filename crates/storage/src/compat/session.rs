@@ -215,10 +215,13 @@ pub trait CompatSessionRepository: Send + Sync {
     /// * `device`: The device ID of this session
     /// * `browser_session`: The browser session which created this session
     /// * `is_synapse_admin`: Whether the session is a synapse admin session
+    /// * `human_name`: The human-readable name of the session provided by the
+    ///   client or the user
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -227,6 +230,7 @@ pub trait CompatSessionRepository: Send + Sync {
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     /// End a compat session
@@ -337,6 +341,7 @@ repository_impl!(CompatSessionRepository:
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     async fn finish(
