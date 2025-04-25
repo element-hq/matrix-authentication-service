@@ -110,6 +110,54 @@ impl EndOAuth2SessionPayload {
     }
 }
 
+/// The input of the `setOauth2SessionName` mutation.
+#[derive(InputObject)]
+pub struct SetOAuth2SessionNameInput {
+    /// The ID of the session to set the name of.
+    oauth2_session_id: ID,
+
+    /// The new name of the session.
+    human_name: String,
+}
+
+/// The payload of the `setOauth2SessionName` mutation.
+pub enum SetOAuth2SessionNamePayload {
+    /// The session was not found.
+    NotFound,
+
+    /// The session was updated.
+    Updated(mas_data_model::Session),
+}
+
+/// The status of the `setOauth2SessionName` mutation.
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug)]
+enum SetOAuth2SessionNameStatus {
+    /// The session was updated.
+    Updated,
+
+    /// The session was not found.
+    NotFound,
+}
+
+#[Object]
+impl SetOAuth2SessionNamePayload {
+    /// The status of the mutation.
+    async fn status(&self) -> SetOAuth2SessionNameStatus {
+        match self {
+            Self::Updated(_) => SetOAuth2SessionNameStatus::Updated,
+            Self::NotFound => SetOAuth2SessionNameStatus::NotFound,
+        }
+    }
+
+    /// The session that was updated.
+    async fn oauth2_session(&self) -> Option<OAuth2Session> {
+        match self {
+            Self::Updated(session) => Some(OAuth2Session(session.clone())),
+            Self::NotFound => None,
+        }
+    }
+}
+
 #[Object]
 impl OAuth2SessionMutations {
     /// Create a new arbitrary OAuth 2.0 Session.
@@ -246,5 +294,55 @@ impl OAuth2SessionMutations {
         repo.save().await?;
 
         Ok(EndOAuth2SessionPayload::Ended(session))
+    }
+
+    async fn set_oauth2_session_name(
+        &self,
+        ctx: &Context<'_>,
+        input: SetOAuth2SessionNameInput,
+    ) -> Result<SetOAuth2SessionNamePayload, async_graphql::Error> {
+        let state = ctx.state();
+        let oauth2_session_id = NodeType::OAuth2Session.extract_ulid(&input.oauth2_session_id)?;
+        let requester = ctx.requester();
+
+        let mut repo = state.repository().await?;
+        let homeserver = state.homeserver_connection();
+
+        let session = repo.oauth2_session().lookup(oauth2_session_id).await?;
+        let Some(session) = session else {
+            return Ok(SetOAuth2SessionNamePayload::NotFound);
+        };
+
+        if !requester.is_owner_or_admin(&session) {
+            return Ok(SetOAuth2SessionNamePayload::NotFound);
+        }
+
+        let user_id = session.user_id.context("Session has no user")?;
+
+        let user = repo
+            .user()
+            .lookup(user_id)
+            .await?
+            .context("User not found")?;
+
+        let session = repo
+            .oauth2_session()
+            .set_human_name(session, Some(input.human_name.clone()))
+            .await?;
+
+        // Update the device on the homeserver side
+        let mxid = homeserver.mxid(&user.username);
+        for scope in &*session.scope {
+            if let Some(device) = Device::from_scope_token(scope) {
+                homeserver
+                    .update_device_display_name(&mxid, device.as_str(), &input.human_name)
+                    .await
+                    .context("Failed to provision device")?;
+            }
+        }
+
+        repo.save().await?;
+
+        Ok(SetOAuth2SessionNamePayload::Updated(session))
     }
 }

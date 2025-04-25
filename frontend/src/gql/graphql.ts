@@ -582,8 +582,10 @@ export type Mutation = {
    * administrators.
    */
   setCanRequestAdmin: SetCanRequestAdminPayload;
+  setCompatSessionName: SetCompatSessionNamePayload;
   /** Set the display name of a user */
   setDisplayName: SetDisplayNamePayload;
+  setOauth2SessionName: SetOAuth2SessionNamePayload;
   /**
    * Set the password for a user.
    *
@@ -692,8 +694,20 @@ export type MutationSetCanRequestAdminArgs = {
 
 
 /** The mutations root of the GraphQL interface. */
+export type MutationSetCompatSessionNameArgs = {
+  input: SetCompatSessionNameInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
 export type MutationSetDisplayNameArgs = {
   input: SetDisplayNameInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetOauth2SessionNameArgs = {
+  input: SetOAuth2SessionNameInput;
 };
 
 
@@ -1086,6 +1100,29 @@ export type SetCanRequestAdminPayload = {
   user?: Maybe<User>;
 };
 
+/** The input of the `setCompatSessionName` mutation. */
+export type SetCompatSessionNameInput = {
+  /** The ID of the session to set the name of. */
+  compatSessionId: Scalars['ID']['input'];
+  /** The new name of the session. */
+  humanName: Scalars['String']['input'];
+};
+
+export type SetCompatSessionNamePayload = {
+  __typename?: 'SetCompatSessionNamePayload';
+  /** The session that was updated. */
+  oauth2Session?: Maybe<CompatSession>;
+  /** The status of the mutation. */
+  status: SetCompatSessionNameStatus;
+};
+
+/** The status of the `setCompatSessionName` mutation. */
+export type SetCompatSessionNameStatus =
+  /** The session was not found. */
+  | 'NOT_FOUND'
+  /** The session was updated. */
+  | 'UPDATED';
+
 /** The input for the `addEmail` mutation */
 export type SetDisplayNameInput = {
   /** The display name to set. If `None`, the display name will be removed. */
@@ -1109,6 +1146,29 @@ export type SetDisplayNameStatus =
   | 'INVALID'
   /** The display name was set */
   | 'SET';
+
+/** The input of the `setOauth2SessionName` mutation. */
+export type SetOAuth2SessionNameInput = {
+  /** The new name of the session. */
+  humanName: Scalars['String']['input'];
+  /** The ID of the session to set the name of. */
+  oauth2SessionId: Scalars['ID']['input'];
+};
+
+export type SetOAuth2SessionNamePayload = {
+  __typename?: 'SetOAuth2SessionNamePayload';
+  /** The session that was updated. */
+  oauth2Session?: Maybe<Oauth2Session>;
+  /** The status of the mutation. */
+  status: SetOAuth2SessionNameStatus;
+};
+
+/** The status of the `setOauth2SessionName` mutation. */
+export type SetOAuth2SessionNameStatus =
+  /** The session was not found. */
+  | 'NOT_FOUND'
+  /** The session was updated. */
+  | 'UPDATED';
 
 /** The input for the `setPasswordByRecovery` mutation. */
 export type SetPasswordByRecoveryInput = {

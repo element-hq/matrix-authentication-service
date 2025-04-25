@@ -64,6 +64,54 @@ impl EndCompatSessionPayload {
     }
 }
 
+/// The input of the `setCompatSessionName` mutation.
+#[derive(InputObject)]
+pub struct SetCompatSessionNameInput {
+    /// The ID of the session to set the name of.
+    compat_session_id: ID,
+
+    /// The new name of the session.
+    human_name: String,
+}
+
+/// The payload of the `setCompatSessionName` mutation.
+pub enum SetCompatSessionNamePayload {
+    /// The session was not found.
+    NotFound,
+
+    /// The session was updated.
+    Updated(mas_data_model::CompatSession),
+}
+
+/// The status of the `setCompatSessionName` mutation.
+#[derive(Enum, Copy, Clone, PartialEq, Eq, Debug)]
+enum SetCompatSessionNameStatus {
+    /// The session was updated.
+    Updated,
+
+    /// The session was not found.
+    NotFound,
+}
+
+#[Object]
+impl SetCompatSessionNamePayload {
+    /// The status of the mutation.
+    async fn status(&self) -> SetCompatSessionNameStatus {
+        match self {
+            Self::Updated(_) => SetCompatSessionNameStatus::Updated,
+            Self::NotFound => SetCompatSessionNameStatus::NotFound,
+        }
+    }
+
+    /// The session that was updated.
+    async fn oauth2_session(&self) -> Option<CompatSession> {
+        match self {
+            Self::Updated(session) => Some(CompatSession::new(session.clone())),
+            Self::NotFound => None,
+        }
+    }
+}
+
 #[Object]
 impl CompatSessionMutations {
     async fn end_compat_session(
@@ -104,5 +152,51 @@ impl CompatSessionMutations {
         repo.save().await?;
 
         Ok(EndCompatSessionPayload::Ended(Box::new(session)))
+    }
+
+    async fn set_compat_session_name(
+        &self,
+        ctx: &Context<'_>,
+        input: SetCompatSessionNameInput,
+    ) -> Result<SetCompatSessionNamePayload, async_graphql::Error> {
+        let state = ctx.state();
+        let compat_session_id = NodeType::CompatSession.extract_ulid(&input.compat_session_id)?;
+        let requester = ctx.requester();
+
+        let mut repo = state.repository().await?;
+        let homeserver = state.homeserver_connection();
+
+        let session = repo.compat_session().lookup(compat_session_id).await?;
+        let Some(session) = session else {
+            return Ok(SetCompatSessionNamePayload::NotFound);
+        };
+
+        if !requester.is_owner_or_admin(&session) {
+            return Ok(SetCompatSessionNamePayload::NotFound);
+        }
+
+        let user = repo
+            .user()
+            .lookup(session.user_id)
+            .await?
+            .context("User not found")?;
+
+        let session = repo
+            .compat_session()
+            .set_human_name(session, Some(input.human_name.clone()))
+            .await?;
+
+        // Update the device on the homeserver side
+        let mxid = homeserver.mxid(&user.username);
+        if let Some(device) = session.device.as_ref() {
+            homeserver
+                .update_device_display_name(&mxid, device.as_str(), &input.human_name)
+                .await
+                .context("Failed to provision device")?;
+        }
+
+        repo.save().await?;
+
+        Ok(SetCompatSessionNamePayload::Updated(session))
     }
 }
