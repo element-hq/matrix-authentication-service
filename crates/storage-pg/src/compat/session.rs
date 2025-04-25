@@ -622,4 +622,38 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
 
         Ok(compat_session)
     }
+
+    #[tracing::instrument(
+        name = "repository.compat_session.set_human_name",
+        skip(self),
+        fields(
+            compat_session.id = %compat_session.id,
+            compat_session.human_name = ?human_name,
+        ),
+        err,
+    )]
+    async fn set_human_name(
+        &mut self,
+        mut compat_session: CompatSession,
+        human_name: Option<String>,
+    ) -> Result<CompatSession, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+            UPDATE compat_sessions
+            SET human_name = $2
+            WHERE compat_session_id = $1
+        "#,
+            Uuid::from(compat_session.id),
+            human_name.as_deref(),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        compat_session.human_name = human_name;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(compat_session)
+    }
 }

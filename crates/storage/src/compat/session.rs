@@ -328,6 +328,22 @@ pub trait CompatSessionRepository: Send + Sync {
         compat_session: CompatSession,
         user_agent: String,
     ) -> Result<CompatSession, Self::Error>;
+
+    /// Set the human name of a compat session
+    ///
+    /// # Parameters
+    ///
+    /// * `compat_session`: The compat session to set the human name for
+    /// * `human_name`: The human name to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
+    ) -> Result<CompatSession, Self::Error>;
 }
 
 repository_impl!(CompatSessionRepository:
@@ -373,5 +389,11 @@ repository_impl!(CompatSessionRepository:
         &mut self,
         compat_session: CompatSession,
         user_agent: String,
+    ) -> Result<CompatSession, Self::Error>;
+
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 );

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE compat_sessions\n            SET human_name = $2\n            WHERE compat_session_id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eb095f64bec5ac885683a8c6708320760971317c4519fae7af9d44e2be50985d"
+}

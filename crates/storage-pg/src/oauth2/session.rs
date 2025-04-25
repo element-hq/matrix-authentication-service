@@ -526,4 +526,38 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
 
         Ok(session)
     }
+
+    #[tracing::instrument(
+        name = "repository.oauth2_session.set_human_name",
+        skip(self),
+        fields(
+            client.id = %session.client_id,
+            session.human_name = ?human_name,
+        ),
+        err,
+    )]
+    async fn set_human_name(
+        &mut self,
+        mut session: Session,
+        human_name: Option<String>,
+    ) -> Result<Session, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE oauth2_sessions
+                SET human_name = $2
+                WHERE oauth2_session_id = $1
+            "#,
+            Uuid::from(session.id),
+            human_name.as_deref(),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        session.human_name = human_name;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(session)
+    }
 }
