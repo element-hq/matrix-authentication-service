@@ -203,6 +203,7 @@ where
     Encrypter: FromRef<S>,
     reqwest::Client: FromRef<S>,
     SiteConfig: FromRef<S>,
+    Templates: FromRef<S>,
     Arc<dyn HomeserverConnection>: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,

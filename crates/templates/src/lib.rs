@@ -35,13 +35,13 @@ mod macros;
 pub use self::{
     context::{
         AccountInactiveContext, ApiDocContext, AppContext, CompatSsoContext, ConsentContext,
-        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, EmailRecoveryContext,
-        EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
-        LoginContext, LoginFormField, NotFoundContext, PasswordRegisterContext,
-        PolicyViolationContext, PostAuthContext, PostAuthContextInner, RecoveryExpiredContext,
-        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
-        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
-        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, DeviceNameContext,
+        EmailRecoveryContext, EmailVerificationContext, EmptyContext, ErrorContext,
+        FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
+        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
+        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
+        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
+        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
@@ -417,6 +417,9 @@ register_templates! {
 
     /// Render the 'account logged out' page
     pub fn render_account_logged_out(WithLanguage<WithCsrf<AccountInactiveContext>>) { "pages/account/logged_out.html" }
+
+    /// Render the automatic device name for OAuth 2.0 client
+    pub fn render_device_name(WithLanguage<DeviceNameContext>) { "device_name.txt" }
 }
 
 impl Templates {
@@ -459,6 +462,7 @@ impl Templates {
         check::render_upstream_oauth2_link_mismatch(self, now, rng)?;
         check::render_upstream_oauth2_suggest_link(self, now, rng)?;
         check::render_upstream_oauth2_do_register(self, now, rng)?;
+        check::render_device_name(self, now, rng)?;
         Ok(())
     }
 }

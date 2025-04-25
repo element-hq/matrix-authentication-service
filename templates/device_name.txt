@@ -1,0 +1,28 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{%- set _ = translator(lang) -%}
+
+{%- set client_name = client.client_name or client.client_id -%}
+{%- set user_agent = raw_user_agent | parse_user_agent() -%}
+
+{%- set device_name -%}
+  {%- if user_agent.model -%}
+    {{- user_agent.model -}}
+  {%- elif user_agent.name -%}
+    {%- if user_agent.os -%}
+      {{- _("mas.device_display_name.name_for_platform", name=user_agent.name, platform=user_agent.os) -}}
+    {%- else -%}
+      {{- user_agent.name -}}
+    {%- endif -%}
+  {%- else -%}
+    {{- _("mas.device_display_name.unknown_device") -}}
+  {%- endif -%}
+{%- endset -%}
+
+{{- _("mas.device_display_name.client_on_device", client_name=client_name, device_name=device_name) -}}

@@ -1564,6 +1564,39 @@ impl TemplateContext for AccountInactiveContext {
     }
 }
 
+/// Context used by the `device_name.txt` template
+#[derive(Serialize)]
+pub struct DeviceNameContext {
+    client: Client,
+    raw_user_agent: String,
+}
+
+impl DeviceNameContext {
+    /// Constructs a new context with a client and user agent
+    #[must_use]
+    pub fn new(client: Client, user_agent: Option<String>) -> Self {
+        Self {
+            client,
+            raw_user_agent: user_agent.unwrap_or_default(),
+        }
+    }
+}
+
+impl TemplateContext for DeviceNameContext {
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        Client::samples(now, rng)
+            .into_iter()
+            .map(|client| DeviceNameContext {
+                client,
+                raw_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned(),
+            })
+            .collect()
+    }
+}
+
 /// Context used by the `form_post.html` template
 #[derive(Serialize)]
 pub struct FormPostContext<T> {
