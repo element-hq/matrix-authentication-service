@@ -776,6 +776,8 @@ export type Oauth2Session = CreationEvent & Node & {
   createdAt: Scalars['DateTime']['output'];
   /** When the session ended. */
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The user-provided name for this session. */
+  humanName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** The last time the session was active. */

@@ -1064,6 +1064,10 @@ type Oauth2Session implements Node & CreationEvent {
   The last time the session was active.
   """
   lastActiveAt: DateTime
+  """
+  The user-provided name for this session.
+  """
+  humanName: String
 }
 
 type Oauth2SessionConnection {
