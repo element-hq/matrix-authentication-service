@@ -16,6 +16,7 @@ export const FRAGMENT = graphql(/* GraphQL */ `
     finishedAt
     lastActiveIp
     lastActiveAt
+    humanName
 
     ...EndOAuth2SessionButton_session
 
@@ -72,6 +73,7 @@ const OAuth2Session: React.FC<Props> = ({ session }) => {
   const clientName = data.client.clientName || data.client.clientId;
 
   const deviceName =
+    data.humanName ??
     data.userAgent?.model ??
     (data.userAgent?.name
       ? data.userAgent?.os

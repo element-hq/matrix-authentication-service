@@ -1669,7 +1669,7 @@ export type FooterQuery = { __typename?: 'Query', siteConfig: (
   ) };
 
 export type OAuth2Session_SessionFragment = (
-  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
 
@@ -1713,7 +1713,7 @@ export type CompatSession_DetailFragment = (
 ) & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
 
 export type OAuth2Session_DetailFragment = (
-  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 
@@ -2119,6 +2119,7 @@ export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2221,6 +2222,7 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2613,6 +2615,7 @@ fragment OAuth2Session_session on Oauth2Session {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2906,6 +2909,7 @@ fragment OAuth2Session_detail on Oauth2Session {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
