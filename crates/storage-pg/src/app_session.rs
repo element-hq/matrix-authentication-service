@@ -192,6 +192,7 @@ impl TryFrom<AppSessionLookup> for AppSession {
                     user_agent,
                     last_active_at,
                     last_active_ip,
+                    human_name,
                 };
 
                 Ok(AppSession::OAuth2(Box::new(session)))
@@ -299,7 +300,10 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 AppSessionLookupIden::ScopeList,
             )
             .expr_as(Expr::cust("NULL"), AppSessionLookupIden::DeviceId)
-            .expr_as(Expr::cust("NULL"), AppSessionLookupIden::HumanName)
+            .expr_as(
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::HumanName)),
+                AppSessionLookupIden::HumanName,
+            )
             .expr_as(
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::CreatedAt)),
                 AppSessionLookupIden::CreatedAt,
