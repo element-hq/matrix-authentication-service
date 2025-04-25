@@ -1767,10 +1767,26 @@ export type BrowserSession_DetailFragment = (
   & { ' $fragmentRefs'?: { 'EndBrowserSessionButton_SessionFragment': EndBrowserSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
 
+export type SetCompatSessionNameMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+  displayName: Scalars['String']['input'];
+}>;
+
+
+export type SetCompatSessionNameMutation = { __typename?: 'Mutation', setCompatSessionName: { __typename?: 'SetCompatSessionNamePayload', status: SetCompatSessionNameStatus } };
+
 export type CompatSession_DetailFragment = (
   { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
   & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
+
+export type SetOAuth2SessionNameMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+  displayName: Scalars['String']['input'];
+}>;
+
+
+export type SetOAuth2SessionNameMutation = { __typename?: 'Mutation', setOauth2SessionName: { __typename?: 'SetOAuth2SessionNamePayload', status: SetOAuth2SessionNameStatus } };
 
 export type OAuth2Session_DetailFragment = (
   { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
@@ -2431,6 +2447,24 @@ export const EndOAuth2SessionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>;
+export const SetCompatSessionNameDocument = new TypedDocumentString(`
+    mutation SetCompatSessionName($sessionId: ID!, $displayName: String!) {
+  setCompatSessionName(
+    input: {compatSessionId: $sessionId, humanName: $displayName}
+  ) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>;
+export const SetOAuth2SessionNameDocument = new TypedDocumentString(`
+    mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {
+  setOauth2SessionName(
+    input: {oauth2SessionId: $sessionId, humanName: $displayName}
+  ) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>;
 export const RemoveEmailDocument = new TypedDocumentString(`
     mutation RemoveEmail($id: ID!, $password: String) {
   removeEmail(input: {userEmailId: $id, password: $password}) {
@@ -3090,6 +3124,50 @@ export const mockEndCompatSessionMutation = (resolver: GraphQLResponseResolver<E
 export const mockEndOAuth2SessionMutation = (resolver: GraphQLResponseResolver<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>, options?: RequestHandlerOptions) =>
   graphql.mutation<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>(
     'EndOAuth2Session',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetCompatSessionNameMutation(
+ *   ({ query, variables }) => {
+ *     const { sessionId, displayName } = variables;
+ *     return HttpResponse.json({
+ *       data: { setCompatSessionName }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetCompatSessionNameMutation = (resolver: GraphQLResponseResolver<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>(
+    'SetCompatSessionName',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetOAuth2SessionNameMutation(
+ *   ({ query, variables }) => {
+ *     const { sessionId, displayName } = variables;
+ *     return HttpResponse.json({
+ *       data: { setOauth2SessionName }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetOAuth2SessionNameMutation = (resolver: GraphQLResponseResolver<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>(
+    'SetOAuth2SessionName',
     resolver,
     options
   )

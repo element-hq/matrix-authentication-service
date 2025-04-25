@@ -33,7 +33,9 @@ type Documents = {
     "\n  fragment EndOAuth2SessionButton_session on Oauth2Session {\n    id\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": typeof types.EndOAuth2SessionButton_SessionFragmentDoc,
     "\n  mutation EndOAuth2Session($id: ID!) {\n    endOauth2Session(input: { oauth2SessionId: $id }) {\n      status\n      oauth2Session {\n        id\n      }\n    }\n  }\n": typeof types.EndOAuth2SessionDocument,
     "\n  fragment BrowserSession_detail on BrowserSession {\n    id\n    createdAt\n    finishedAt\n    ...EndBrowserSessionButton_session\n    userAgent {\n      name\n      model\n      os\n    }\n    lastActiveIp\n    lastActiveAt\n    lastAuthentication {\n      id\n      createdAt\n    }\n    user {\n      id\n      username\n    }\n  }\n": typeof types.BrowserSession_DetailFragmentDoc,
+    "\n  mutation SetCompatSessionName($sessionId: ID!, $displayName: String!) {\n    setCompatSessionName(input: { compatSessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n": typeof types.SetCompatSessionNameDocument,
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndCompatSessionButton_session\n\n    userAgent {\n      name\n      os\n      model\n    }\n\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": typeof types.CompatSession_DetailFragmentDoc,
+    "\n  mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {\n    setOauth2SessionName(input: { oauth2SessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n": typeof types.SetOAuth2SessionNameDocument,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": typeof types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n  }\n": typeof types.UserEmail_EmailFragmentDoc,
     "\n  mutation RemoveEmail($id: ID!, $password: String) {\n    removeEmail(input: { userEmailId: $id, password: $password }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": typeof types.RemoveEmailDocument,
@@ -87,7 +89,9 @@ const documents: Documents = {
     "\n  fragment EndOAuth2SessionButton_session on Oauth2Session {\n    id\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": types.EndOAuth2SessionButton_SessionFragmentDoc,
     "\n  mutation EndOAuth2Session($id: ID!) {\n    endOauth2Session(input: { oauth2SessionId: $id }) {\n      status\n      oauth2Session {\n        id\n      }\n    }\n  }\n": types.EndOAuth2SessionDocument,
     "\n  fragment BrowserSession_detail on BrowserSession {\n    id\n    createdAt\n    finishedAt\n    ...EndBrowserSessionButton_session\n    userAgent {\n      name\n      model\n      os\n    }\n    lastActiveIp\n    lastActiveAt\n    lastAuthentication {\n      id\n      createdAt\n    }\n    user {\n      id\n      username\n    }\n  }\n": types.BrowserSession_DetailFragmentDoc,
+    "\n  mutation SetCompatSessionName($sessionId: ID!, $displayName: String!) {\n    setCompatSessionName(input: { compatSessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n": types.SetCompatSessionNameDocument,
     "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndCompatSessionButton_session\n\n    userAgent {\n      name\n      os\n      model\n    }\n\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.CompatSession_DetailFragmentDoc,
+    "\n  mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {\n    setOauth2SessionName(input: { oauth2SessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n": types.SetOAuth2SessionNameDocument,
     "\n  fragment OAuth2Session_detail on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      clientUri\n      logoUri\n    }\n  }\n": types.OAuth2Session_DetailFragmentDoc,
     "\n  fragment UserEmail_email on UserEmail {\n    id\n    email\n  }\n": types.UserEmail_EmailFragmentDoc,
     "\n  mutation RemoveEmail($id: ID!, $password: String) {\n    removeEmail(input: { userEmailId: $id, password: $password }) {\n      status\n\n      user {\n        id\n      }\n    }\n  }\n": types.RemoveEmailDocument,
@@ -198,7 +202,15 @@ export function graphql(source: "\n  fragment BrowserSession_detail on BrowserSe
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation SetCompatSessionName($sessionId: ID!, $displayName: String!) {\n    setCompatSessionName(input: { compatSessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n"): typeof import('./graphql').SetCompatSessionNameDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  fragment CompatSession_detail on CompatSession {\n    id\n    createdAt\n    deviceId\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndCompatSessionButton_session\n\n    userAgent {\n      name\n      os\n      model\n    }\n\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n"): typeof import('./graphql').CompatSession_DetailFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {\n    setOauth2SessionName(input: { oauth2SessionId: $sessionId, humanName: $displayName }) {\n      status\n    }\n  }\n"): typeof import('./graphql').SetOAuth2SessionNameDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

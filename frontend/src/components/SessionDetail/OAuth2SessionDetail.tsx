@@ -4,16 +4,27 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../../gql";
+import { graphqlRequest } from "../../graphql";
 import { getDeviceIdFromScope } from "../../utils/deviceIdFromScope";
 import DateTime from "../DateTime";
 import ClientAvatar from "../Session/ClientAvatar";
 import EndOAuth2SessionButton from "../Session/EndOAuth2SessionButton";
 import LastActive from "../Session/LastActive";
+import EditSessionName from "./EditSessionName";
 import SessionHeader from "./SessionHeader";
 import * as Info from "./SessionInfo";
+
+const SET_SESSION_NAME_MUTATION = graphql(/* GraphQL */ `
+  mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {
+    setOauth2SessionName(input: { oauth2SessionId: $sessionId, humanName: $displayName }) {
+      status
+    }
+  }
+`);
 
 export const FRAGMENT = graphql(/* GraphQL */ `
   fragment OAuth2Session_detail on Oauth2Session {
@@ -50,6 +61,19 @@ type Props = {
 const OAuth2SessionDetail: React.FC<Props> = ({ session }) => {
   const data = useFragment(FRAGMENT, session);
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const setDisplayName = useMutation({
+    mutationFn: (displayName: string) =>
+      graphqlRequest({
+        query: SET_SESSION_NAME_MUTATION,
+        variables: { sessionId: data.id, displayName },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessionDetail", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
+    },
+  });
 
   const deviceId = getDeviceIdFromScope(data.scope);
   const clientName = data.client.clientName || data.client.clientId;
@@ -70,7 +94,9 @@ const OAuth2SessionDetail: React.FC<Props> = ({ session }) => {
     <div className="flex flex-col gap-10">
       <SessionHeader to="/sessions">
         {clientName}: {deviceName}
+        <EditSessionName mutation={setDisplayName} deviceName={deviceName} />
       </SessionHeader>
+
       <Info.DataSection>
         <Info.DataSectionHeader>
           {t("frontend.session.title")}

@@ -27,9 +27,38 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       <h3
         class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
       >
-        element.io
-        : 
-        Unknown device
+        element.io: Unknown device
+        <button
+          aria-controls="radix-«r0»"
+          aria-expanded="false"
+          aria-haspopup="dialog"
+          aria-labelledby="«r3»"
+          class="_icon-button_m2erp_8"
+          data-state="closed"
+          role="button"
+          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          tabindex="0"
+          type="button"
+        >
+          <div
+            class="_indicator-icon_zr2a0_17"
+            style="--cpd-icon-button-size: 100%;"
+          >
+            <svg
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.213l1.414-5.657a1 1 0 0 1 .263-.465zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.771 3.771-.943z"
+                fill-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
       </h3>
     </header>
     <section
@@ -238,7 +267,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </ul>
     </section>
     <button
-      aria-controls="radix-«r0»"
+      aria-controls="radix-«r8»"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -294,9 +323,38 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       <h3
         class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
       >
-        abcd1234
-        : 
-        Unknown device
+        abcd1234: Unknown device
+        <button
+          aria-controls="radix-«rc»"
+          aria-expanded="false"
+          aria-haspopup="dialog"
+          aria-labelledby="«rf»"
+          class="_icon-button_m2erp_8"
+          data-state="closed"
+          role="button"
+          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          tabindex="0"
+          type="button"
+        >
+          <div
+            class="_indicator-icon_zr2a0_17"
+            style="--cpd-icon-button-size: 100%;"
+          >
+            <svg
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.213l1.414-5.657a1 1 0 0 1 .263-.465zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.771 3.771-.943z"
+                fill-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
       </h3>
     </header>
     <section
@@ -488,22 +546,10 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
             Unknown device
           </p>
         </li>
-        <li
-          class="flex flex-col min-w-0"
-        >
-          <h5
-            class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 text-secondary"
-          >
-            Uri
-          </h5>
-          <p
-            class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-ellipsis overflow-hidden"
-          />
-        </li>
       </ul>
     </section>
     <button
-      aria-controls="radix-«r3»"
+      aria-controls="radix-«rk»"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -559,9 +605,38 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       <h3
         class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
       >
-        element.io
-        : 
-        Unknown device
+        element.io: Unknown device
+        <button
+          aria-controls="radix-«ro»"
+          aria-expanded="false"
+          aria-haspopup="dialog"
+          aria-labelledby="«rr»"
+          class="_icon-button_m2erp_8"
+          data-state="closed"
+          role="button"
+          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          tabindex="0"
+          type="button"
+        >
+          <div
+            class="_indicator-icon_zr2a0_17"
+            style="--cpd-icon-button-size: 100%;"
+          >
+            <svg
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.213l1.414-5.657a1 1 0 0 1 .263-.465zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.771 3.771-.943z"
+                fill-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </button>
       </h3>
     </header>
     <section
