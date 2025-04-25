@@ -331,7 +331,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -349,7 +349,8 @@ mod tests {
                 "scope": "urn:mas:admin",
                 "user_agent": null,
                 "last_active_at": null,
-                "last_active_ip": null
+                "last_active_ip": null,
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/oauth2-sessions/01FSHN9AG0MKGTBNZ16RDR3PVY"
@@ -362,6 +363,6 @@ mod tests {
             "last": "/api/admin/v1/oauth2-sessions?page[last]=10"
           }
         }
-        "###);
+        "#);
     }
 }

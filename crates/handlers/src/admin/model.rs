@@ -184,6 +184,9 @@ pub struct CompatSession {
 
     /// The time this session was finished
     pub finished_at: Option<DateTime<Utc>>,
+
+    /// The user-provided name, if any
+    pub human_name: Option<String>,
 }
 
 impl
@@ -210,6 +213,7 @@ impl
             last_active_at: session.last_active_at,
             last_active_ip: session.last_active_ip,
             finished_at,
+            human_name: session.human_name,
         }
     }
 }
@@ -237,6 +241,7 @@ impl CompatSession {
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some([1, 2, 3, 4].into()),
                 finished_at: None,
+                human_name: Some("Laptop".to_owned()),
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -249,6 +254,7 @@ impl CompatSession {
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some([1, 2, 3, 4].into()),
                 finished_at: Some(DateTime::default()),
+                human_name: None,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -261,6 +267,7 @@ impl CompatSession {
                 last_active_at: None,
                 last_active_ip: None,
                 finished_at: None,
+                human_name: None,
             },
         ]
     }
@@ -301,6 +308,9 @@ pub struct OAuth2Session {
 
     /// The last IP address used by the session
     last_active_ip: Option<IpAddr>,
+
+    /// The user-provided name, if any
+    human_name: Option<String>,
 }
 
 impl From<mas_data_model::Session> for OAuth2Session {
@@ -316,6 +326,7 @@ impl From<mas_data_model::Session> for OAuth2Session {
             user_agent: session.user_agent,
             last_active_at: session.last_active_at,
             last_active_ip: session.last_active_ip,
+            human_name: session.human_name,
         }
     }
 }
@@ -335,6 +346,7 @@ impl OAuth2Session {
                 user_agent: Some("Mozilla/5.0".to_owned()),
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some("127.0.0.1".parse().unwrap()),
+                human_name: Some("Laptop".to_owned()),
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -347,6 +359,7 @@ impl OAuth2Session {
                 user_agent: None,
                 last_active_at: None,
                 last_active_ip: None,
+                human_name: None,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -359,6 +372,7 @@ impl OAuth2Session {
                 user_agent: Some("Mozilla/5.0".to_owned()),
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some("127.0.0.1".parse().unwrap()),
+                human_name: None,
             },
         ]
     }
