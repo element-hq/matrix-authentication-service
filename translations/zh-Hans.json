@@ -236,7 +236,7 @@
         "forced_email": "将使用以下电子邮件地址",
         "forced_localpart": "将使用以下用户名",
         "import_data": {
-          "description": "确认将链接到新%(server_name)s 账户的信息。",
+          "description": "确认将链接到新 %(server_name)s 账户的信息。",
           "heading": "导入数据"
         },
         "imported_from_upstream": "从上游账户导入",
