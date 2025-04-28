@@ -25,8 +25,8 @@ use crate::{
 /// database automatically.
 ///
 /// The [`ActivityRecord`] structure plus the key in the [`HashMap`] takes less
-/// than 100 bytes, so this should allocate around a megabyte of memory.
-static MAX_PENDING_RECORDS: usize = 10_000;
+/// than 100 bytes, so this should allocate around 100kB of memory.
+static MAX_PENDING_RECORDS: usize = 1000;
 
 const TYPE: Key = Key::from_static_str("type");
 const SESSION_KIND: Key = Key::from_static_str("session_kind");
