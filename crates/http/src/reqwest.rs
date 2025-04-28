@@ -98,7 +98,6 @@ pub fn client() -> reqwest::Client {
         .user_agent(USER_AGENT)
         .timeout(Duration::from_secs(60))
         .connect_timeout(Duration::from_secs(30))
-        .read_timeout(Duration::from_secs(30))
         .build()
         .expect("failed to create HTTP client")
 }

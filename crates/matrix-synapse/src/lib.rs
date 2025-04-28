@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Duration};
 
 use anyhow::{Context, bail};
 use error::SynapseResponseExt;
@@ -476,6 +476,8 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post(&format!("_synapse/admin/v1/deactivate/{mxid}"))
             .json(&SynapseDeactivateUserRequest { erase })
+            // Deactivation can take a while, so we set a longer timeout
+            .timeout(Duration::from_secs(60 * 5))
             .send_traced()
             .await
             .context("Failed to deactivate user in Synapse")?;
