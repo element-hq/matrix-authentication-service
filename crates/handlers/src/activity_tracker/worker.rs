@@ -7,7 +7,7 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use chrono::{DateTime, Utc};
-use mas_storage::{RepositoryAccess, user::BrowserSessionRepository};
+use mas_storage::{RepositoryAccess, RepositoryError, user::BrowserSessionRepository};
 use opentelemetry::{
     Key, KeyValue,
     metrics::{Counter, Histogram},
@@ -193,18 +193,22 @@ impl Worker {
             Err(e) => {
                 self.flush_time_histogram
                     .record(duration_ms, &[KeyValue::new(RESULT, "failure")]);
-                tracing::error!("Failed to flush activity tracker: {}", e);
+                tracing::error!(
+                    error = &e as &dyn std::error::Error,
+                    "Failed to flush activity tracker"
+                );
             }
         }
     }
 
     /// Fallible part of [`Self::flush`].
     #[tracing::instrument(name = "activity_tracker.flush", skip(self))]
-    async fn try_flush(&mut self) -> Result<(), anyhow::Error> {
+    async fn try_flush(&mut self) -> Result<(), RepositoryError> {
         let pending_records = &self.pending_records;
 
         let mut repo = mas_storage_pg::PgRepository::from_pool(&self.pool)
-            .await?
+            .await
+            .map_err(RepositoryError::from_error)?
             .boxed();
 
         let mut browser_sessions = Vec::new();
