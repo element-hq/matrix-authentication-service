@@ -549,13 +549,16 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     )]
     async fn record_batch_activity(
         &mut self,
-        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+        mut activities: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error> {
-        let mut ids = Vec::with_capacity(activity.len());
-        let mut last_activities = Vec::with_capacity(activity.len());
-        let mut ips = Vec::with_capacity(activity.len());
+        // Sort the activity by ID, so that when batching the updates, Postgres
+        // locks the rows in a stable order, preventing deadlocks
+        activities.sort_unstable();
+        let mut ids = Vec::with_capacity(activities.len());
+        let mut last_activities = Vec::with_capacity(activities.len());
+        let mut ips = Vec::with_capacity(activities.len());
 
-        for (id, last_activity, ip) in activity {
+        for (id, last_activity, ip) in activities {
             ids.push(Uuid::from(id));
             last_activities.push(last_activity);
             ips.push(ip);
