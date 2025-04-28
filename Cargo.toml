@@ -332,7 +332,7 @@ features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
 version = "0.37.0"
-features = ["http"]
+features = ["http", "axum-matched-path"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
