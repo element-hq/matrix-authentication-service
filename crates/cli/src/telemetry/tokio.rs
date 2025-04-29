@@ -42,23 +42,6 @@ pub fn observe(metrics: RuntimeMetrics) {
             .build();
     }
 
-    {
-        let metrics = metrics.clone();
-        METER
-            .u64_observable_gauge("tokio_runtime.global_queue_depth")
-            .with_description(
-                "The number of tasks currently scheduled in the runtime’s global queue",
-            )
-            .with_unit("{task}")
-            .with_callback(move |instrument| {
-                instrument.observe(
-                    metrics.global_queue_depth().try_into().unwrap_or(u64::MAX),
-                    &[],
-                );
-            })
-            .build();
-    }
-
     #[cfg(tokio_unstable)]
     {
         let metrics = metrics.clone();
