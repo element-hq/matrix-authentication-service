@@ -9,7 +9,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{
-    FancyError,
+    InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -47,14 +47,15 @@ pub(crate) async fn get(
     mut repo: BoxRepository,
     Path(id): Path<Ulid>,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let registration = repo
         .user_registration()
         .lookup(id)
         .await?
-        .context("Could not find user registration")?;
+        .context("Could not find user registration")
+        .map_err(InternalError::from_anyhow)?;
 
     // If the registration is completed, we can go to the registration destination
     // XXX: this might not be the right thing to do? Maybe an error page would be
@@ -76,16 +77,18 @@ pub(crate) async fn get(
 
     let email_authentication_id = registration
         .email_authentication_id
-        .context("No email authentication started for this registration")?;
+        .context("No email authentication started for this registration")
+        .map_err(InternalError::from_anyhow)?;
     let email_authentication = repo
         .user_email()
         .lookup_authentication(email_authentication_id)
         .await?
-        .context("Could not find email authentication")?;
+        .context("Could not find email authentication")
+        .map_err(InternalError::from_anyhow)?;
 
     if email_authentication.completed_at.is_some() {
         // XXX: display a better error here
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Email authentication already completed"
         )));
     }
@@ -115,14 +118,15 @@ pub(crate) async fn post(
     State(url_builder): State<UrlBuilder>,
     Path(id): Path<Ulid>,
     Form(form): Form<ProtectedForm<CodeForm>>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let registration = repo
         .user_registration()
         .lookup(id)
         .await?
-        .context("Could not find user registration")?;
+        .context("Could not find user registration")
+        .map_err(InternalError::from_anyhow)?;
 
     // If the registration is completed, we can go to the registration destination
     // XXX: this might not be the right thing to do? Maybe an error page would be
@@ -142,16 +146,18 @@ pub(crate) async fn post(
 
     let email_authentication_id = registration
         .email_authentication_id
-        .context("No email authentication started for this registration")?;
+        .context("No email authentication started for this registration")
+        .map_err(InternalError::from_anyhow)?;
     let email_authentication = repo
         .user_email()
         .lookup_authentication(email_authentication_id)
         .await?
-        .context("Could not find email authentication")?;
+        .context("Could not find email authentication")
+        .map_err(InternalError::from_anyhow)?;
 
     if email_authentication.completed_at.is_some() {
         // XXX: display a better error here
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Email authentication already completed"
         )));
     }

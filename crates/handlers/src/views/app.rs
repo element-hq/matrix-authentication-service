@@ -8,7 +8,7 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse},
 };
-use mas_axum_utils::{FancyError, cookies::CookieJar};
+use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{AppContext, TemplateContext, Templates};
@@ -36,7 +36,7 @@ pub async fn get(
     clock: BoxClock,
     mut rng: BoxRng,
     cookie_jar: CookieJar,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -79,7 +79,7 @@ pub async fn get_anonymous(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let ctx = AppContext::from_url_builder(&url_builder).with_language(locale);
     let content = templates.render_app(&ctx)?;
 

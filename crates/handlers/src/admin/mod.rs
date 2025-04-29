@@ -19,7 +19,7 @@ use axum::{
 };
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
-use mas_axum_utils::FancyError;
+use mas_axum_utils::InternalError;
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -180,7 +180,7 @@ where
 async fn swagger(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, FancyError> {
+) -> Result<Html<String>, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger(&ctx)?;
     Ok(Html(res))
@@ -189,7 +189,7 @@ async fn swagger(
 async fn swagger_callback(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, FancyError> {
+) -> Result<Html<String>, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger_callback(&ctx)?;
     Ok(Html(res))

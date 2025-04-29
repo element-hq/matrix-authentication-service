@@ -15,55 +15,91 @@ use mas_templates::ErrorContext;
 
 use crate::sentry::SentryEventID;
 
-pub struct FancyError {
-    context: ErrorContext,
+fn build_context(mut err: &dyn std::error::Error) -> ErrorContext {
+    let description = err.to_string();
+    let mut details = Vec::new();
+    while let Some(source) = err.source() {
+        err = source;
+        details.push(err.to_string());
+    }
+
+    ErrorContext::new()
+        .with_description(description)
+        .with_details(details.join("\n"))
 }
 
-impl FancyError {
-    #[must_use]
-    pub fn new(context: ErrorContext) -> Self {
-        Self { context }
+pub struct GenericError {
+    error: Box<dyn std::error::Error + 'static>,
+    code: StatusCode,
+}
+
+impl IntoResponse for GenericError {
+    fn into_response(self) -> Response {
+        tracing::warn!(message = &*self.error);
+        let context = build_context(&*self.error);
+        let context_text = format!("{context}");
+
+        (
+            self.code,
+            TypedHeader(ContentType::text()),
+            Extension(context),
+            context_text,
+        )
+            .into_response()
     }
 }
 
-impl std::fmt::Display for FancyError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let code = self.context.code().unwrap_or("Internal error");
-        match (self.context.description(), self.context.details()) {
-            (Some(description), Some(details)) => {
-                write!(f, "{code}: {description} ({details})")
-            }
-            (Some(message), None) | (None, Some(message)) => {
-                write!(f, "{code}: {message}")
-            }
-            (None, None) => {
-                write!(f, "{code}")
-            }
+impl GenericError {
+    pub fn new(code: StatusCode, err: impl std::error::Error + 'static) -> Self {
+        Self {
+            error: Box::new(err),
+            code,
         }
     }
 }
 
-impl<E: std::fmt::Debug + std::fmt::Display> From<E> for FancyError {
-    fn from(err: E) -> Self {
-        let context = ErrorContext::new()
-            .with_description(format!("{err}"))
-            .with_details(format!("{err:?}"));
-        FancyError { context }
-    }
+pub struct InternalError {
+    error: Box<dyn std::error::Error + 'static>,
 }
 
-impl IntoResponse for FancyError {
+impl IntoResponse for InternalError {
     fn into_response(self) -> Response {
-        tracing::error!(message = %self.context);
-        let error = format!("{}", self.context);
+        tracing::error!(message = &*self.error);
         let event_id = SentryEventID::for_last_event();
+        let context = build_context(&*self.error);
+        let context_text = format!("{context}");
+
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             TypedHeader(ContentType::text()),
             event_id,
-            Extension(self.context),
-            error,
+            Extension(context),
+            context_text,
         )
             .into_response()
+    }
+}
+
+impl<E: std::error::Error + 'static> From<E> for InternalError {
+    fn from(err: E) -> Self {
+        Self {
+            error: Box::new(err),
+        }
+    }
+}
+
+impl InternalError {
+    /// Create a new error from a boxed error
+    #[must_use]
+    pub fn new(error: Box<dyn std::error::Error + 'static>) -> Self {
+        Self { error }
+    }
+
+    /// Create a new error from an [`anyhow::Error`]
+    #[must_use]
+    pub fn from_anyhow(err: anyhow::Error) -> Self {
+        Self {
+            error: err.into_boxed_dyn_error(),
+        }
     }
 }

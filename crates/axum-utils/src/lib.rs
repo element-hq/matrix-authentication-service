@@ -22,6 +22,6 @@ pub use axum;
 
 pub use self::{
     error_wrapper::ErrorWrapper,
-    fancy_error::FancyError,
+    fancy_error::{GenericError, InternalError},
     session::{SessionInfo, SessionInfoExt},
 };

@@ -96,7 +96,10 @@ impl PasswordManager {
     /// # Errors
     ///
     /// Returns an error if the password manager is disabled
-    pub fn is_password_complex_enough(&self, password: &str) -> Result<bool, anyhow::Error> {
+    pub fn is_password_complex_enough(
+        &self,
+        password: &str,
+    ) -> Result<bool, PasswordManagerDisabledError> {
         let inner = self.get_inner()?;
         let score = zxcvbn(password, &[]);
         Ok(u8::from(score.score()) >= inner.minimum_complexity)
