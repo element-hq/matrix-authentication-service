@@ -8,7 +8,7 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse, Response},
 };
-use mas_axum_utils::{FancyError, cookies::CookieJar, csrf::CsrfExt};
+use mas_axum_utils::{InternalError, cookies::CookieJar, csrf::CsrfExt};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
 use mas_templates::{IndexContext, TemplateContext, Templates};
@@ -29,7 +29,7 @@ pub async fn get(
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     PreferredLanguage(locale): PreferredLanguage,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )

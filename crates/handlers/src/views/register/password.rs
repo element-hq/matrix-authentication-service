@@ -14,7 +14,7 @@ use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
 };
@@ -77,7 +77,7 @@ pub(crate) async fn get(
     mut repo: BoxRepository,
     Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
@@ -140,7 +140,7 @@ pub(crate) async fn post(
     Query(query): Query<OptionalPostAuthAction>,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<RegisterForm>>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
 
     let ip_address = activity_tracker.ip();
@@ -179,7 +179,11 @@ pub(crate) async fn post(
         } else if repo.user().exists(&form.username).await? {
             // The user already exists in the database
             state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
-        } else if !homeserver.is_localpart_available(&form.username).await? {
+        } else if !homeserver
+            .is_localpart_available(&form.username)
+            .await
+            .map_err(InternalError::from_anyhow)?
+        {
             // The user already exists on the homeserver
             tracing::warn!(
                 username = &form.username,
@@ -361,7 +365,10 @@ pub(crate) async fn post(
 
     // Hash the password
     let password = Zeroizing::new(form.password.into_bytes());
-    let (version, hashed_password) = password_manager.hash(&mut rng, password).await?;
+    let (version, hashed_password) = password_manager
+        .hash(&mut rng, password)
+        .await
+        .map_err(InternalError::from_anyhow)?;
 
     // Add the password to the registration
     let registration = repo
@@ -390,8 +397,11 @@ async fn render(
     repo: &mut impl RepositoryAccess,
     templates: &Templates,
     captcha_config: Option<CaptchaConfig>,
-) -> Result<String, FancyError> {
-    let next = action.load_context(repo).await?;
+) -> Result<String, InternalError> {
+    let next = action
+        .load_context(repo)
+        .await
+        .map_err(InternalError::from_anyhow)?;
     let ctx = if let Some(next) = next {
         ctx.with_post_action(next)
     } else {

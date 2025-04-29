@@ -14,7 +14,7 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use lettre::Address;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -46,7 +46,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     PreferredLanguage(locale): PreferredLanguage,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     if !site_config.account_recovery_allowed {
         let context = EmptyContext.with_language(locale);
         let rendered = templates.render_recovery_disabled(&context)?;
@@ -86,7 +86,7 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<StartRecoveryForm>>,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     if !site_config.account_recovery_allowed {
         let context = EmptyContext.with_language(locale);
         let rendered = templates.render_recovery_disabled(&context)?;

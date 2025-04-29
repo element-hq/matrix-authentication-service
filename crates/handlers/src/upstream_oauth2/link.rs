@@ -14,7 +14,7 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    GenericError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
     record_error,
@@ -138,12 +138,13 @@ impl IntoResponse for RouteError {
                 | Self::UserNotFound(_)
                 | Self::HomeserverConnection(_)
         );
-        let response = match self {
-            Self::LinkNotFound => (StatusCode::NOT_FOUND, "Link not found").into_response(),
-            Self::Internal(e) => FancyError::from(e).into_response(),
-            e => FancyError::from(e).into_response(),
+
+        let status_code = match self {
+            Self::LinkNotFound => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
+        let response = GenericError::new(status_code, self);
         (sentry_event_id, response).into_response()
     }
 }

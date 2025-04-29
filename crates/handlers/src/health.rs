@@ -5,11 +5,11 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::{extract::State, response::IntoResponse};
-use mas_axum_utils::FancyError;
+use mas_axum_utils::InternalError;
 use sqlx::PgPool;
 use tracing::{Instrument, info_span};
 
-pub async fn get(State(pool): State<PgPool>) -> Result<impl IntoResponse, FancyError> {
+pub async fn get(State(pool): State<PgPool>) -> Result<impl IntoResponse, InternalError> {
     let mut conn = pool.acquire().await?;
 
     sqlx::query("SELECT $1")

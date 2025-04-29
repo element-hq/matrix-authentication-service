@@ -35,7 +35,7 @@ use hyper::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
     },
 };
-use mas_axum_utils::{FancyError, cookies::CookieJar};
+use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
@@ -437,16 +437,14 @@ where
         )
         .layer(AndThenLayer::new(
             async move |response: axum::response::Response| {
-                if response.status().is_server_error() {
-                    // Error responses should have an ErrorContext attached to them
-                    let ext = response.extensions().get::<ErrorContext>();
-                    if let Some(ctx) = ext {
-                        if let Ok(res) = templates.render_error(ctx) {
-                            let (mut parts, _original_body) = response.into_parts();
-                            parts.headers.remove(CONTENT_TYPE);
-                            parts.headers.remove(CONTENT_LENGTH);
-                            return Ok((parts, Html(res)).into_response());
-                        }
+                // Error responses should have an ErrorContext attached to them
+                let ext = response.extensions().get::<ErrorContext>();
+                if let Some(ctx) = ext {
+                    if let Ok(res) = templates.render_error(ctx) {
+                        let (mut parts, _original_body) = response.into_parts();
+                        parts.headers.remove(CONTENT_TYPE);
+                        parts.headers.remove(CONTENT_LENGTH);
+                        return Ok((parts, Html(res)).into_response());
                     }
                 }
 
@@ -466,7 +464,7 @@ pub async fn fallback(
     method: Method,
     version: Version,
     PreferredLanguage(locale): PreferredLanguage,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let ctx = NotFoundContext::new(&method, version, &uri).with_language(locale);
     // XXX: this should look at the Accept header and return JSON if requested
 

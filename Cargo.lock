@@ -3116,6 +3116,7 @@ dependencies = [
 name = "mas-axum-utils"
 version = "0.15.0"
 dependencies = [
+ "anyhow",
  "axum",
  "axum-extra",
  "base64ct",

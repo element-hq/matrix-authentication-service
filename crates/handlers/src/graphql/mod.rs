@@ -26,7 +26,7 @@ use futures_util::TryStreamExt;
 use headers::{Authorization, ContentType, HeaderValue, authorization::Bearer};
 use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
-    FancyError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
+    InternalError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
 };
 use mas_data_model::{BrowserSession, Session, SiteConfig, User};
 use mas_matrix::HomeserverConnection;
@@ -383,7 +383,7 @@ pub async fn get(
     authorization: Option<TypedHeader<Authorization<Bearer>>>,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     RawQuery(query): RawQuery,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let token = authorization
         .as_ref()
         .map(|TypedHeader(Authorization(bearer))| bearer.token());

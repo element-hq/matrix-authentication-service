@@ -12,6 +12,7 @@ publish = false
 workspace = true
 
 [dependencies]
+anyhow.workspace = true
 axum.workspace = true
 axum-extra.workspace = true
 base64ct.workspace = true
