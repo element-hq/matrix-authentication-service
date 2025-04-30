@@ -100,6 +100,11 @@
         "heading": "Adgang givet"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "Hvis du har glemt dine kontooplysninger, kan du gendanne din konto. Du kan også starte forfra og bruge en anden e-mail-adresse.",
       "title": "E-mailadressen <span> %(email)s </span> er allerede i brug"

@@ -100,6 +100,11 @@
         "heading": "Доступ предоставлен"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "Если вы забыли учетные данные, вы можете восстановить свою учётную запись. Вы также можете начать сначала и использовать другой адрес электронной почты.",
       "title": "Адрес электронной почты <span>%(email)s</span> уже используется"

@@ -100,6 +100,11 @@
         "heading": "Přístup udělen"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "Pokud jste zapomněli přihlašovací údaje k účtu, můžete svůj účet obnovit. Můžete také začít znovu a použít jinou e-mailovou adresu.",
       "title": "E-mailová adresa <span>%(email)s</span> se již používá"

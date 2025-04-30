@@ -100,6 +100,11 @@
         "heading": "Åtkomst beviljad"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "Om du har glömt dina kontouppgifter kan du återställa ditt konto. Du kan också börja om och använda en annan e-postadress.",
       "title": "E-postadressen <span>%(email)s</span> är redan i bruk"

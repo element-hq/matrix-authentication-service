@@ -100,6 +100,11 @@
         "heading": "Accès accordé"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s sur %(device_name)s",
+      "name_for_platform": "%(name)s pour %(platform)s",
+      "unknown_device": "Appareil inconnu"
+    },
     "email_in_use": {
       "description": "Si vous avez oublié vos identifiants de compte, vous pouvez récupérer votre compte. Vous pouvez également recommencer l'enregistrement et utiliser une adresse e-mail différente.",
       "title": "L’adresse e-mail <span>%(email)s</span> est déjà utilisée"
