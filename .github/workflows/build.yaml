@@ -23,7 +23,6 @@ env:
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
   IMAGE: ghcr.io/element-hq/matrix-authentication-service
-  IMAGE_SYN2MAS: ghcr.io/element-hq/matrix-authentication-service/syn2mas
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
   DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
@@ -253,22 +252,6 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
-      - name: Docker meta (syn2mas)
-        id: meta-syn2mas
-        uses: docker/metadata-action@v5.7.0
-        with:
-          images: "${{ env.IMAGE_SYN2MAS }}"
-          bake-target: docker-metadata-action-syn2mas
-          flavor: |
-            latest=auto
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-
       - name: Setup Cosign
         uses: sigstore/cosign-installer@v3.8.2
 
@@ -294,7 +277,6 @@ jobs:
             ./docker-bake.hcl
             cwd://${{ steps.meta.outputs.bake-file }}
             cwd://${{ steps.meta-debug.outputs.bake-file }}
-            cwd://${{ steps.meta-syn2mas.outputs.bake-file }}
           set: |
             base.output=type=image,push=true
             base.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache
@@ -318,43 +300,11 @@ jobs:
         env:
           REGULAR_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).regular.digest }}
           DEBUG_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).debug.digest }}
-          SYN2MAS_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).syn2mas.digest }}
 
         run: |-
           cosign sign --yes \
             "$IMAGE@$REGULAR_DIGEST" \
             "$IMAGE@$DEBUG_DIGEST" \
-            "$IMAGE_SYN2MAS@$SYN2MAS_DIGEST"
-
-  syn2mas:
-    name: Release syn2mas on NPM
-    runs-on: ubuntu-24.04
-    if: github.event_name != 'pull_request'
-
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4.2.2
-
-      - name: Install Node
-        uses: actions/setup-node@v4.4.0
-        with:
-          node-version-file: ./tools/syn2mas/.nvmrc
-
-      - name: Install Node dependencies
-        working-directory: ./tools/syn2mas
-        run: npm ci
-
-      - name: Publish
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          package: ./tools/syn2mas
-          token: ${{ secrets.NPM_TOKEN }}
-          provenance: true
-          dry-run: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
   release:
     name: Release
@@ -363,7 +313,6 @@ jobs:
     needs:
       - assemble-archives
       - build-image
-      - syn2mas
     steps:
       - name: Download the artifacts from the previous job
         uses: actions/download-artifact@v4
@@ -400,18 +349,6 @@ jobs:
               - Tags:
                 ```
                 ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
-                ') }}
-                ```
-
-            `syn2mas` migration tool:
-
-              - Digest:
-                ```
-                ${{ env.IMAGE_SYN2MAS }}@${{ fromJSON(needs.build-image.outputs.metadata).syn2mas.digest }}
-                ```
-              - Tags:
-                ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).syn2mas.tags, '
                 ') }}
                 ```
 

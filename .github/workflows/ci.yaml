@@ -311,34 +311,6 @@ jobs:
             --archive-file nextest-archive.tar.zst \
             --partition count:${{ matrix.partition }}/3
 
-  syn2mas:
-    name: Check syn2mas
-    runs-on: ubuntu-24.04
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4.2.2
-
-      - name: Install Node
-        uses: actions/setup-node@v4.4.0
-        with:
-          node-version-file: ./tools/syn2mas/.nvmrc
-
-      - name: Install Node dependencies
-        working-directory: ./tools/syn2mas
-        run: npm ci
-
-      - name: Lint
-        working-directory: ./tools/syn2mas
-        run: npm run lint
-
-      - name: Build
-        working-directory: ./tools/syn2mas
-        run: npm run build
-
   tests-done:
     name: Tests done
     if: ${{ always() }}
@@ -352,7 +324,6 @@ jobs:
       - clippy
       - check-schema
       - test
-      - syn2mas
     runs-on: ubuntu-24.04
 
     steps:

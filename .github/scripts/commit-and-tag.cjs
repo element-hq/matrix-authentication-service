@@ -13,12 +13,7 @@ module.exports = async ({ github, context }) => {
   const parent = context.sha;
   if (!version) throw new Error("VERSION is not defined");
 
-  const files = [
-    "Cargo.toml",
-    "Cargo.lock",
-    "tools/syn2mas/package.json",
-    "tools/syn2mas/package-lock.json",
-  ];
+  const files = ["Cargo.toml", "Cargo.lock"];
 
   /** @type {{path: string, mode: "100644", type: "blob", sha: string}[]} */
   const tree = [];
