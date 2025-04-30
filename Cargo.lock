@@ -3106,7 +3106,7 @@ dependencies = [
 
 [[package]]
 name = "mas-axum-utils"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3140,7 +3140,7 @@ dependencies = [
 
 [[package]]
 name = "mas-cli"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3213,7 +3213,7 @@ dependencies = [
 
 [[package]]
 name = "mas-config"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -3243,7 +3243,7 @@ dependencies = [
 
 [[package]]
 name = "mas-context"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "console",
  "opentelemetry",
@@ -3259,7 +3259,7 @@ dependencies = [
 
 [[package]]
 name = "mas-data-model"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3280,7 +3280,7 @@ dependencies = [
 
 [[package]]
 name = "mas-email"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "async-trait",
  "lettre",
@@ -3291,7 +3291,7 @@ dependencies = [
 
 [[package]]
 name = "mas-handlers"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "aide",
  "anyhow",
@@ -3369,7 +3369,7 @@ dependencies = [
 
 [[package]]
 name = "mas-http"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "futures-util",
  "headers",
@@ -3390,7 +3390,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "camino",
  "icu_calendar",
@@ -3412,7 +3412,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n-scan"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "camino",
  "clap",
@@ -3426,7 +3426,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "schemars",
  "serde",
@@ -3434,7 +3434,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana-codegen"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3450,7 +3450,7 @@ dependencies = [
 
 [[package]]
 name = "mas-jose"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3480,7 +3480,7 @@ dependencies = [
 
 [[package]]
 name = "mas-keystore"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "aead",
  "base64ct",
@@ -3508,7 +3508,7 @@ dependencies = [
 
 [[package]]
 name = "mas-listener"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3533,7 +3533,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3543,7 +3543,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix-synapse"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3560,7 +3560,7 @@ dependencies = [
 
 [[package]]
 name = "mas-oidc-client"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -3596,7 +3596,7 @@ dependencies = [
 
 [[package]]
 name = "mas-policy"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3613,7 +3613,7 @@ dependencies = [
 
 [[package]]
 name = "mas-router"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "axum",
  "serde",
@@ -3624,7 +3624,7 @@ dependencies = [
 
 [[package]]
 name = "mas-spa"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "camino",
  "serde",
@@ -3633,7 +3633,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3655,7 +3655,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage-pg"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3681,7 +3681,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tasks"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3713,7 +3713,7 @@ dependencies = [
 
 [[package]]
 name = "mas-templates"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3743,7 +3743,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tower"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "http",
  "opentelemetry",
@@ -4013,7 +4013,7 @@ dependencies = [
 
 [[package]]
 name = "oauth2-types"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "assert_matches",
  "base64ct",
@@ -6164,7 +6164,7 @@ dependencies = [
 
 [[package]]
 name = "syn2mas"
-version = "0.15.0"
+version = "0.16.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
