@@ -157,6 +157,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     async fn upsert_static(
         &mut self,
         client_id: Ulid,
+        client_name: Option<String>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,
@@ -237,6 +238,7 @@ repository_impl!(OAuth2ClientRepository:
     async fn upsert_static(
         &mut self,
         client_id: Ulid,
+        client_name: Option<String>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,

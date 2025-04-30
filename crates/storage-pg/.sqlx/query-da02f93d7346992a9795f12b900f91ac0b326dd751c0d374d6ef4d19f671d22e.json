@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO oauth2_clients\n                    ( oauth2_client_id\n                    , encrypted_client_secret\n                    , redirect_uris\n                    , grant_type_authorization_code\n                    , grant_type_refresh_token\n                    , grant_type_client_credentials\n                    , grant_type_device_code\n                    , token_endpoint_auth_method\n                    , jwks\n                    , client_name\n                    , jwks_uri\n                    , is_static\n                    )\n                VALUES\n                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE)\n                ON CONFLICT (oauth2_client_id)\n                DO\n                    UPDATE SET encrypted_client_secret = EXCLUDED.encrypted_client_secret\n                             , redirect_uris = EXCLUDED.redirect_uris\n                             , grant_type_authorization_code = EXCLUDED.grant_type_authorization_code\n                             , grant_type_refresh_token = EXCLUDED.grant_type_refresh_token\n                             , grant_type_client_credentials = EXCLUDED.grant_type_client_credentials\n                             , grant_type_device_code = EXCLUDED.grant_type_device_code\n                             , token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method\n                             , jwks = EXCLUDED.jwks\n                             , client_name = EXCLUDED.client_name\n                             , jwks_uri = EXCLUDED.jwks_uri\n                             , is_static = TRUE\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "da02f93d7346992a9795f12b900f91ac0b326dd751c0d374d6ef4d19f671d22e"
+}

@@ -239,6 +239,10 @@
             }
           ]
         },
+        "client_name": {
+          "description": "Name of the `OAuth2` client",
+          "type": "string"
+        },
         "client_secret": {
           "description": "The client secret, used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods",
           "type": "string"
