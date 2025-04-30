@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { makeFragmentData } from "../../gql";
 import { mockLocale } from "../../test-utils/mockLocale";
 
+import { TooltipProvider } from "@vector-im/compound-web";
 import render from "../../test-utils/render";
 import OAuth2SessionDetail, { FRAGMENT } from "./OAuth2SessionDetail";
 
@@ -39,7 +40,9 @@ describe("<OAuth2SessionDetail>", () => {
     const data = makeFragmentData(baseSession, FRAGMENT);
 
     const { asFragment, getByText, queryByText } = render(
-      <OAuth2SessionDetail session={data} />,
+      <TooltipProvider>
+        <OAuth2SessionDetail session={data} />
+      </TooltipProvider>,
     );
 
     expect(asFragment()).toMatchSnapshot();
@@ -57,7 +60,9 @@ describe("<OAuth2SessionDetail>", () => {
     );
 
     const { asFragment, getByText, queryByText } = render(
-      <OAuth2SessionDetail session={data} />,
+      <TooltipProvider>
+        <OAuth2SessionDetail session={data} />
+      </TooltipProvider>,
     );
 
     expect(asFragment()).toMatchSnapshot();

@@ -107,7 +107,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let session = repo
             .compat_session()
-            .add(&mut rng, &state.clock, &user, device, None, false)
+            .add(&mut rng, &state.clock, &user, device, None, false, None)
             .await
             .unwrap();
         repo.save().await.unwrap();
@@ -119,7 +119,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "compat-session",
@@ -133,7 +133,8 @@ mod tests {
               "user_agent": null,
               "last_active_at": null,
               "last_active_ip": null,
-              "finished_at": null
+              "finished_at": null,
+              "human_name": null
             },
             "links": {
               "self": "/api/admin/v1/compat-sessions/01FSHN9AG0QHEHKX2JNQ2A2D07"
@@ -143,7 +144,7 @@ mod tests {
             "self": "/api/admin/v1/compat-sessions/01FSHN9AG0QHEHKX2JNQ2A2D07"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

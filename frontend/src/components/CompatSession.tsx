@@ -22,6 +22,7 @@ export const FRAGMENT = graphql(/* GraphQL */ `
     finishedAt
     lastActiveIp
     lastActiveAt
+    humanName
     ...EndCompatSessionButton_session
     userAgent {
       name
@@ -42,9 +43,11 @@ const CompatSession: React.FC<{
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, session);
 
-  const clientName = data.ssoLogin?.redirectUri
-    ? simplifyUrl(data.ssoLogin.redirectUri)
-    : undefined;
+  const clientName =
+    data.humanName ??
+    (data.ssoLogin?.redirectUri
+      ? simplifyUrl(data.ssoLogin.redirectUri)
+      : undefined);
 
   const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 

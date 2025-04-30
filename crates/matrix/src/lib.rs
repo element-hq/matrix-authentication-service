@@ -254,7 +254,31 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the device could
     /// not be created.
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error>;
+    async fn create_device(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error>;
+
+    /// Update the display name of a device for a user on the homeserver.
+    ///
+    /// # Parameters
+    ///
+    /// * `mxid` - The Matrix ID of the user to update a device for.
+    /// * `device_id` - The device ID to update.
+    /// * `display_name` - The new display name to set
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the homeserver is unreachable or the device could
+    /// not be updated.
+    async fn update_device_display_name(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        display_name: &str,
+    ) -> Result<(), anyhow::Error>;
 
     /// Delete a device for a user on the homeserver.
     ///
@@ -364,8 +388,26 @@ impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
-        (**self).create_device(mxid, device_id).await
+    async fn create_device(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
+        (**self)
+            .create_device(mxid, device_id, initial_display_name)
+            .await
+    }
+
+    async fn update_device_display_name(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        display_name: &str,
+    ) -> Result<(), anyhow::Error> {
+        (**self)
+            .update_device_display_name(mxid, device_id, display_name)
+            .await
     }
 
     async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
@@ -420,8 +462,26 @@ impl<T: HomeserverConnection + ?Sized> HomeserverConnection for Arc<T> {
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
-        (**self).create_device(mxid, device_id).await
+    async fn create_device(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        initial_display_name: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
+        (**self)
+            .create_device(mxid, device_id, initial_display_name)
+            .await
+    }
+
+    async fn update_device_display_name(
+        &self,
+        mxid: &str,
+        device_id: &str,
+        display_name: &str,
+    ) -> Result<(), anyhow::Error> {
+        (**self)
+            .update_device_display_name(mxid, device_id, display_name)
+            .await
     }
 
     async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {

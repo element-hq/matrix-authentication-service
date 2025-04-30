@@ -215,10 +215,13 @@ pub trait CompatSessionRepository: Send + Sync {
     /// * `device`: The device ID of this session
     /// * `browser_session`: The browser session which created this session
     /// * `is_synapse_admin`: Whether the session is a synapse admin session
+    /// * `human_name`: The human-readable name of the session provided by the
+    ///   client or the user
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -227,6 +230,7 @@ pub trait CompatSessionRepository: Send + Sync {
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     /// End a compat session
@@ -324,6 +328,22 @@ pub trait CompatSessionRepository: Send + Sync {
         compat_session: CompatSession,
         user_agent: String,
     ) -> Result<CompatSession, Self::Error>;
+
+    /// Set the human name of a compat session
+    ///
+    /// # Parameters
+    ///
+    /// * `compat_session`: The compat session to set the human name for
+    /// * `human_name`: The human name to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
+    ) -> Result<CompatSession, Self::Error>;
 }
 
 repository_impl!(CompatSessionRepository:
@@ -337,6 +357,7 @@ repository_impl!(CompatSessionRepository:
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     async fn finish(
@@ -368,5 +389,11 @@ repository_impl!(CompatSessionRepository:
         &mut self,
         compat_session: CompatSession,
         user_agent: String,
+    ) -> Result<CompatSession, Self::Error>;
+
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 );

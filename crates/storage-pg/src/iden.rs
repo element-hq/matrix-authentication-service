@@ -83,6 +83,7 @@ pub enum OAuth2Sessions {
     UserAgent,
     LastActiveAt,
     LastActiveIp,
+    HumanName,
 }
 
 #[derive(sea_query::Iden)]

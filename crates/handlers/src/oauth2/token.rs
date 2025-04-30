@@ -18,6 +18,7 @@ use mas_axum_utils::{
 use mas_data_model::{
     AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType,
 };
+use mas_i18n::DataLocale;
 use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_oidc_client::types::scope::ScopeToken;
@@ -31,6 +32,7 @@ use mas_storage::{
     },
     user::BrowserSessionRepository,
 };
+use mas_templates::{DeviceNameContext, TemplateContext, Templates};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     pkce::CodeChallengeError,
@@ -261,6 +263,8 @@ impl IntoResponse for RouteError {
     }
 }
 
+impl_from_error_for_route!(mas_i18n::DataError);
+impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 impl_from_error_for_route!(super::IdTokenSignatureError);
@@ -281,6 +285,7 @@ pub(crate) async fn post(
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(encrypter): State<Encrypter>,
+    State(templates): State<Templates>,
     policy: Policy,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     client_authorization: ClientAuthorization<AccessTokenRequest>,
@@ -334,6 +339,7 @@ pub(crate) async fn post(
                 &site_config,
                 repo,
                 &homeserver,
+                &templates,
                 user_agent,
             )
             .await?
@@ -415,6 +421,7 @@ async fn authorization_code_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
+    templates: &Templates,
     user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
@@ -481,6 +488,11 @@ async fn authorization_code_grant(
         .lookup(session_id)
         .await?
         .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
+
+    // Generate a device name
+    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
+    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
+    let device_name = templates.render_device_name(&ctx)?;
 
     if let Some(user_agent) = user_agent {
         session = repo
@@ -567,7 +579,7 @@ async fn authorization_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str())
+                .create_device(&mxid, device.as_str(), Some(&device_name))
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -943,7 +955,7 @@ async fn device_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str())
+                .create_device(&mxid, device.as_str(), None)
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -1041,6 +1053,7 @@ mod tests {
                 Some("nonce".to_owned()),
                 ResponseMode::Query,
                 false,
+                None,
                 None,
             )
             .await
@@ -1140,6 +1153,7 @@ mod tests {
                 Some("nonce".to_owned()),
                 ResponseMode::Query,
                 false,
+                None,
                 None,
             )
             .await

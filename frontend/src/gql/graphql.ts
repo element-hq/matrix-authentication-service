@@ -238,6 +238,8 @@ export type CompatSession = CreationEvent & Node & {
   deviceId?: Maybe<Scalars['String']['output']>;
   /** When the session ended. */
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** A human-provided name for the session. */
+  humanName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** The last time the session was active. */
@@ -580,8 +582,10 @@ export type Mutation = {
    * administrators.
    */
   setCanRequestAdmin: SetCanRequestAdminPayload;
+  setCompatSessionName: SetCompatSessionNamePayload;
   /** Set the display name of a user */
   setDisplayName: SetDisplayNamePayload;
+  setOauth2SessionName: SetOAuth2SessionNamePayload;
   /**
    * Set the password for a user.
    *
@@ -690,8 +694,20 @@ export type MutationSetCanRequestAdminArgs = {
 
 
 /** The mutations root of the GraphQL interface. */
+export type MutationSetCompatSessionNameArgs = {
+  input: SetCompatSessionNameInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
 export type MutationSetDisplayNameArgs = {
   input: SetDisplayNameInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationSetOauth2SessionNameArgs = {
+  input: SetOAuth2SessionNameInput;
 };
 
 
@@ -774,6 +790,8 @@ export type Oauth2Session = CreationEvent & Node & {
   createdAt: Scalars['DateTime']['output'];
   /** When the session ended. */
   finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The user-provided name for this session. */
+  humanName?: Maybe<Scalars['String']['output']>;
   /** ID of the object. */
   id: Scalars['ID']['output'];
   /** The last time the session was active. */
@@ -1082,6 +1100,29 @@ export type SetCanRequestAdminPayload = {
   user?: Maybe<User>;
 };
 
+/** The input of the `setCompatSessionName` mutation. */
+export type SetCompatSessionNameInput = {
+  /** The ID of the session to set the name of. */
+  compatSessionId: Scalars['ID']['input'];
+  /** The new name of the session. */
+  humanName: Scalars['String']['input'];
+};
+
+export type SetCompatSessionNamePayload = {
+  __typename?: 'SetCompatSessionNamePayload';
+  /** The session that was updated. */
+  oauth2Session?: Maybe<CompatSession>;
+  /** The status of the mutation. */
+  status: SetCompatSessionNameStatus;
+};
+
+/** The status of the `setCompatSessionName` mutation. */
+export type SetCompatSessionNameStatus =
+  /** The session was not found. */
+  | 'NOT_FOUND'
+  /** The session was updated. */
+  | 'UPDATED';
+
 /** The input for the `addEmail` mutation */
 export type SetDisplayNameInput = {
   /** The display name to set. If `None`, the display name will be removed. */
@@ -1105,6 +1146,29 @@ export type SetDisplayNameStatus =
   | 'INVALID'
   /** The display name was set */
   | 'SET';
+
+/** The input of the `setOauth2SessionName` mutation. */
+export type SetOAuth2SessionNameInput = {
+  /** The new name of the session. */
+  humanName: Scalars['String']['input'];
+  /** The ID of the session to set the name of. */
+  oauth2SessionId: Scalars['ID']['input'];
+};
+
+export type SetOAuth2SessionNamePayload = {
+  __typename?: 'SetOAuth2SessionNamePayload';
+  /** The session that was updated. */
+  oauth2Session?: Maybe<Oauth2Session>;
+  /** The status of the mutation. */
+  status: SetOAuth2SessionNameStatus;
+};
+
+/** The status of the `setOauth2SessionName` mutation. */
+export type SetOAuth2SessionNameStatus =
+  /** The session was not found. */
+  | 'NOT_FOUND'
+  /** The session was updated. */
+  | 'UPDATED';
 
 /** The input for the `setPasswordByRecovery` mutation. */
 export type SetPasswordByRecoveryInput = {
@@ -1650,7 +1714,7 @@ export type BrowserSession_SessionFragment = (
 export type OAuth2Client_DetailFragment = { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null, tosUri?: string | null, policyUri?: string | null, redirectUris: Array<string> } & { ' $fragmentName'?: 'OAuth2Client_DetailFragment' };
 
 export type CompatSession_SessionFragment = (
-  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
   & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'CompatSession_SessionFragment' };
 
@@ -1665,7 +1729,7 @@ export type FooterQuery = { __typename?: 'Query', siteConfig: (
   ) };
 
 export type OAuth2Session_SessionFragment = (
-  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
 
@@ -1703,13 +1767,29 @@ export type BrowserSession_DetailFragment = (
   & { ' $fragmentRefs'?: { 'EndBrowserSessionButton_SessionFragment': EndBrowserSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'BrowserSession_DetailFragment' };
 
+export type SetCompatSessionNameMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+  displayName: Scalars['String']['input'];
+}>;
+
+
+export type SetCompatSessionNameMutation = { __typename?: 'Mutation', setCompatSessionName: { __typename?: 'SetCompatSessionNamePayload', status: SetCompatSessionNameStatus } };
+
 export type CompatSession_DetailFragment = (
-  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
+  { __typename?: 'CompatSession', id: string, createdAt: string, deviceId?: string | null, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null } | null, ssoLogin?: { __typename?: 'CompatSsoLogin', id: string, redirectUri: string } | null }
   & { ' $fragmentRefs'?: { 'EndCompatSessionButton_SessionFragment': EndCompatSessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'CompatSession_DetailFragment' };
 
+export type SetOAuth2SessionNameMutationVariables = Exact<{
+  sessionId: Scalars['ID']['input'];
+  displayName: Scalars['String']['input'];
+}>;
+
+
+export type SetOAuth2SessionNameMutation = { __typename?: 'Mutation', setOauth2SessionName: { __typename?: 'SetOAuth2SessionNamePayload', status: SetOAuth2SessionNameStatus } };
+
 export type OAuth2Session_DetailFragment = (
-  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
+  { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, clientUri?: string | null, logoUri?: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_DetailFragment' };
 
@@ -2056,6 +2136,7 @@ export const CompatSession_SessionFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2114,6 +2195,7 @@ export const OAuth2Session_SessionFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2183,6 +2265,7 @@ export const CompatSession_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2215,6 +2298,7 @@ export const OAuth2Session_DetailFragmentDoc = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2363,6 +2447,24 @@ export const EndOAuth2SessionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>;
+export const SetCompatSessionNameDocument = new TypedDocumentString(`
+    mutation SetCompatSessionName($sessionId: ID!, $displayName: String!) {
+  setCompatSessionName(
+    input: {compatSessionId: $sessionId, humanName: $displayName}
+  ) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>;
+export const SetOAuth2SessionNameDocument = new TypedDocumentString(`
+    mutation SetOAuth2SessionName($sessionId: ID!, $displayName: String!) {
+  setOauth2SessionName(
+    input: {oauth2SessionId: $sessionId, humanName: $displayName}
+  ) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>;
 export const RemoveEmailDocument = new TypedDocumentString(`
     mutation RemoveEmail($id: ID!, $password: String) {
   removeEmail(input: {userEmailId: $id, password: $password}) {
@@ -2587,6 +2689,7 @@ export const AppSessionsListDocument = new TypedDocumentString(`
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2606,6 +2709,7 @@ fragment OAuth2Session_session on Oauth2Session {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -2880,6 +2984,7 @@ fragment CompatSession_detail on CompatSession {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndCompatSessionButton_session
   userAgent {
     name
@@ -2898,6 +3003,7 @@ fragment OAuth2Session_detail on Oauth2Session {
   finishedAt
   lastActiveIp
   lastActiveAt
+  humanName
   ...EndOAuth2SessionButton_session
   userAgent {
     name
@@ -3018,6 +3124,50 @@ export const mockEndCompatSessionMutation = (resolver: GraphQLResponseResolver<E
 export const mockEndOAuth2SessionMutation = (resolver: GraphQLResponseResolver<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>, options?: RequestHandlerOptions) =>
   graphql.mutation<EndOAuth2SessionMutation, EndOAuth2SessionMutationVariables>(
     'EndOAuth2Session',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetCompatSessionNameMutation(
+ *   ({ query, variables }) => {
+ *     const { sessionId, displayName } = variables;
+ *     return HttpResponse.json({
+ *       data: { setCompatSessionName }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetCompatSessionNameMutation = (resolver: GraphQLResponseResolver<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetCompatSessionNameMutation, SetCompatSessionNameMutationVariables>(
+    'SetCompatSessionName',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockSetOAuth2SessionNameMutation(
+ *   ({ query, variables }) => {
+ *     const { sessionId, displayName } = variables;
+ *     return HttpResponse.json({
+ *       data: { setOauth2SessionName }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSetOAuth2SessionNameMutation = (resolver: GraphQLResponseResolver<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<SetOAuth2SessionNameMutation, SetOAuth2SessionNameMutationVariables>(
+    'SetOAuth2SessionName',
     resolver,
     options
   )

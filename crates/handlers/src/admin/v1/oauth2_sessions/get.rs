@@ -110,7 +110,7 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
         assert_eq!(body["data"]["type"], "oauth2-session");
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "oauth2-session",
@@ -124,7 +124,8 @@ mod tests {
               "scope": "urn:mas:admin",
               "user_agent": null,
               "last_active_at": null,
-              "last_active_ip": null
+              "last_active_ip": null,
+              "human_name": null
             },
             "links": {
               "self": "/api/admin/v1/oauth2-sessions/01FSHN9AG0MKGTBNZ16RDR3PVY"
@@ -134,7 +135,7 @@ mod tests {
             "self": "/api/admin/v1/oauth2-sessions/01FSHN9AG0MKGTBNZ16RDR3PVY"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

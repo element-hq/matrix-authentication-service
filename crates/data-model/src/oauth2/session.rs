@@ -83,6 +83,7 @@ pub struct Session {
     pub user_agent: Option<String>,
     pub last_active_at: Option<DateTime<Utc>>,
     pub last_active_ip: Option<IpAddr>,
+    pub human_name: Option<String>,
 }
 
 impl std::ops::Deref for Session {

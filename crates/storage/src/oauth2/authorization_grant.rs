@@ -39,6 +39,8 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// * `response_type_id_token`: Whether the `id_token` `response_type` was
     ///   requested
     /// * `login_hint`: The login_hint the client sent, if set
+    /// * `locale`: The locale the detected when the user asked for the
+    ///   authorization grant
     ///
     /// # Errors
     ///
@@ -57,6 +59,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         response_mode: ResponseMode,
         response_type_id_token: bool,
         login_hint: Option<String>,
+        locale: Option<String>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     /// Lookup an authorization grant by its ID
@@ -140,6 +143,7 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         response_mode: ResponseMode,
         response_type_id_token: bool,
         login_hint: Option<String>,
+        locale: Option<String>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AuthorizationGrant>, Self::Error>;

@@ -128,6 +128,11 @@ impl OAuth2Session {
     pub async fn last_active_at(&self) -> Option<DateTime<Utc>> {
         self.0.last_active_at
     }
+
+    /// The user-provided name for this session.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.0.human_name.as_deref()
+    }
 }
 
 /// The application type advertised by the client.

@@ -55,6 +55,7 @@ struct OAuthSessionLookup {
     user_agent: Option<String>,
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
+    human_name: Option<String>,
 }
 
 impl TryFrom<OAuthSessionLookup> for Session {
@@ -90,6 +91,7 @@ impl TryFrom<OAuthSessionLookup> for Session {
             user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
+            human_name: value.human_name,
         })
     }
 }
@@ -195,6 +197,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
                      , user_agent
                      , last_active_at
                      , last_active_ip as "last_active_ip: IpAddr"
+                     , human_name
                 FROM oauth2_sessions
 
                 WHERE oauth2_session_id = $1
@@ -270,6 +273,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             user_agent: None,
             last_active_at: None,
             last_active_ip: None,
+            human_name: None,
         })
     }
 
@@ -391,6 +395,10 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             .expr_as(
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::LastActiveIp)),
                 OAuthSessionLookupIden::LastActiveIp,
+            )
+            .expr_as(
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::HumanName)),
+                OAuthSessionLookupIden::HumanName,
             )
             .from(OAuth2Sessions::Table)
             .apply_filter(filter)
@@ -516,6 +524,40 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         .await?;
 
         session.user_agent = Some(user_agent);
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(session)
+    }
+
+    #[tracing::instrument(
+        name = "repository.oauth2_session.set_human_name",
+        skip(self),
+        fields(
+            client.id = %session.client_id,
+            session.human_name = ?human_name,
+        ),
+        err,
+    )]
+    async fn set_human_name(
+        &mut self,
+        mut session: Session,
+        human_name: Option<String>,
+    ) -> Result<Session, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE oauth2_sessions
+                SET human_name = $2
+                WHERE oauth2_session_id = $1
+            "#,
+            Uuid::from(session.id),
+            human_name.as_deref(),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        session.human_name = human_name;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 

@@ -138,6 +138,7 @@ mod tests {
                 ResponseMode::Query,
                 true,
                 None,
+                None,
             )
             .await
             .unwrap();

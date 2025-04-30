@@ -116,6 +116,9 @@ pub struct RequestBody {
     /// this is not specified.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     device_id: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    initial_device_display_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -309,18 +312,20 @@ pub(crate) async fn post(
                 user,
                 password,
                 input.device_id, // TODO check for validity
+                input.initial_device_display_name,
             )
             .await?
         }
 
         (_, Credentials::Token { token }) => {
             token_login(
-                &mut repo,
+                &mut rng,
                 &clock,
+                &mut repo,
+                &homeserver,
                 &token,
                 input.device_id,
-                &homeserver,
-                &mut rng,
+                input.initial_device_display_name,
             )
             .await?
         }
@@ -387,12 +392,13 @@ pub(crate) async fn post(
 }
 
 async fn token_login(
-    repo: &mut BoxRepository,
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
+    repo: &mut BoxRepository,
+    homeserver: &dyn HomeserverConnection,
     token: &str,
     requested_device_id: Option<String>,
-    homeserver: &dyn HomeserverConnection,
-    rng: &mut (dyn RngCore + Send),
+    initial_device_display_name: Option<String>,
 ) -> Result<(CompatSession, User), RouteError> {
     let login = repo
         .compat_sso_login()
@@ -467,7 +473,11 @@ async fn token_login(
     };
     let mxid = homeserver.mxid(&browser_session.user.username);
     homeserver
-        .create_device(&mxid, device.as_str())
+        .create_device(
+            &mxid,
+            device.as_str(),
+            initial_device_display_name.as_deref(),
+        )
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
 
@@ -484,6 +494,7 @@ async fn token_login(
             device,
             Some(&browser_session),
             false,
+            initial_device_display_name,
         )
         .await?;
 
@@ -505,6 +516,7 @@ async fn user_password_login(
     username: String,
     password: String,
     requested_device_id: Option<String>,
+    initial_device_display_name: Option<String>,
 ) -> Result<(CompatSession, User), RouteError> {
     // Try getting the localpart out of the MXID
     let username = homeserver.localpart(&username).unwrap_or(&username);
@@ -566,7 +578,11 @@ async fn user_password_login(
         Device::generate(&mut rng)
     };
     homeserver
-        .create_device(&mxid, device.as_str())
+        .create_device(
+            &mxid,
+            device.as_str(),
+            initial_device_display_name.as_deref(),
+        )
         .await
         .map_err(RouteError::ProvisionDeviceFailed)?;
 
@@ -576,7 +592,15 @@ async fn user_password_login(
 
     let session = repo
         .compat_session()
-        .add(&mut rng, clock, &user, device, None, false)
+        .add(
+            &mut rng,
+            clock,
+            &user,
+            device,
+            None,
+            false,
+            initial_device_display_name,
+        )
         .await?;
 
     Ok((session, user))

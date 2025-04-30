@@ -52,6 +52,7 @@ struct GrantLookup {
     code_challenge: Option<String>,
     code_challenge_method: Option<String>,
     login_hint: Option<String>,
+    locale: Option<String>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
 }
@@ -162,6 +163,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             created_at: value.created_at,
             response_type_id_token: value.response_type_id_token,
             login_hint: value.login_hint,
+            locale: value.locale,
         })
     }
 }
@@ -194,6 +196,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         response_mode: ResponseMode,
         response_type_id_token: bool,
         login_hint: Option<String>,
+        locale: Option<String>,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
             .as_ref()
@@ -225,10 +228,11 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      response_type_id_token,
                      authorization_code,
                      login_hint,
+                     locale,
                      created_at
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -243,6 +247,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             response_type_id_token,
             code_str,
             login_hint,
+            locale,
             created_at,
         )
         .traced()
@@ -262,6 +267,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             created_at,
             response_type_id_token,
             login_hint,
+            locale,
         })
     }
 
@@ -295,6 +301,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , code_challenge
                      , code_challenge_method
                      , login_hint
+                     , locale
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants
@@ -344,6 +351,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , code_challenge
                      , code_challenge_method
                      , login_hint
+                     , locale
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants
