@@ -137,14 +137,14 @@ You do not need to stop Synapse to run this command.
 mas-cli syn2mas check --config mas_config.yaml --synapse-config homeserver.yaml
 ```
 
-This will output a list of errors and warnings, or tell you that the check completed with no errors or warnings.
+This may output a list of errors and warnings.
 
 If you have any errors, you must resolve them before starting the migration.
 
 If you have any warnings, please read and understand them, and possibly resolve them.
 Resolving warnings is not strictly required before starting the migration.
 
-### Do a dry-run of the import to test
+### Run the migration in test mode (dry-run)
 
 MAS can perform a dry-run of the import, which is safe to run without stopping Synapse.
 It will perform a full data migration but then empty the MAS database at the end to roll back.
@@ -202,4 +202,4 @@ Start up the homeserver again with the new configuration.
 
 ### Start up MAS
 
-Start up MAS.
+Now you can start MAS.
