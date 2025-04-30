@@ -5,7 +5,7 @@
     "continue": "Continuar",
     "create_account": "Criar conta",
     "sign_in": "Iniciar sessão",
-    "sign_out": "Sair",
+    "sign_out": "Terminar sessão",
     "skip": "Saltar",
     "start_over": "Recomeçar",
     "submit": "Enviar"
@@ -27,10 +27,10 @@
   },
   "common": {
     "display_name": "Nome para exibição",
-    "email_address": "Endereço de email",
+    "email_address": "Endereço de e-mail",
     "loading": "A carregar...",
     "mxid": "ID Matrix",
-    "password": "Palavra-Passe",
+    "password": "Palavra-passe",
     "password_confirm": "Confirmar palavra-passe",
     "username": "Nome de utilizador"
   },
@@ -100,6 +100,11 @@
         "heading": "Acesso concedido"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "Se se esqueceu das suas credenciais de conta, pode recuperar a sua conta. Também pode começar de novo e utilizar um endereço de correio eletrónico diferente.",
       "title": "O endereço de correio eletrónico <span>%(email)s</span> já está a ser utilizado"
@@ -110,7 +115,7 @@
         "click_button": "Clique no botão abaixo para criar uma nova senha:",
         "copy_link": "Copie o link a seguir e cole-o em um navegador para criar uma nova senha:",
         "create_new_password": "Criar nova palavra-passe",
-        "fallback": "The button doesn't work for you?",
+        "fallback": "O botão não funciona?",
         "headline": "Você solicitou uma redefinição de senha para sua conta %(server_name)s.",
         "subject": "Repor a palavra-passe da sua conta (%(mxid)s)",
         "you_can_ignore": "Se não pediu uma nova palavra-passe, pode ignorar este e-mail. A sua palavra-passe atual continuará a funcionar."
@@ -131,7 +136,7 @@
       "field_required": "Este campo é obrigatório",
       "invalid_credentials": "Credenciais inválidas",
       "password_mismatch": "Os campos de palavra-passe não correspondem",
-      "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente.",
+      "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente.",
       "username_all_numeric": "O nome de utilizador não pode ser constituído apenas por números",
       "username_banned": "O nome de utilizador é proibido pela política do servidor",
       "username_invalid_chars": "O nome de utilizador contém caracteres inválidos. Utilize apenas letras minúsculas, números, traços e sublinhados.",
@@ -152,7 +157,7 @@
       },
       "no_login_methods": "Não há métodos de login disponíveis.",
       "separator": "Ou",
-      "username_or_email": "Username or Email"
+      "username_or_email": "Nome de utilizador ou e-mail"
     },
     "navbar": {
       "my_account": "A minha conta",
@@ -246,9 +251,9 @@
         "signup_with_upstream": {
           "heading": "Continue a inscrever-se com a sua conta %(human_name)s"
         },
-        "suggested_display_name": "Importar nome para exibição",
+        "suggested_display_name": "Importar nome de exibição",
         "suggested_email": "Importar endereço de e-mail",
-        "use": "Usar"
+        "use": "Utilizar"
       },
       "suggest_link": {
         "action": "Link",

@@ -300,6 +300,11 @@
       "last_auth_label": "Poslední ověření",
       "name_for_platform": "{{name}} pro {{platform}}",
       "scopes_label": "Rozsahy",
+      "set_device_name": {
+        "help": "Set a name that will help you identify this device.",
+        "label": "Device name",
+        "title": "Edit device name"
+      },
       "signed_in_date": "Přihlášen <datetime/>",
       "signed_in_label": "Přihlášen",
       "title": "Podrobnosti o zařízení",

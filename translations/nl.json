@@ -100,6 +100,11 @@
         "heading": "Access granted"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
+    },
     "email_in_use": {
       "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
       "title": "The email address <span>%(email)s</span> is already in use"

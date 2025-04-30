@@ -100,6 +100,11 @@
         "heading": "Zugriff gewährt"
       }
     },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s auf %(device_name)s",
+      "name_for_platform": "%(name)s für %(platform)s",
+      "unknown_device": "Unbekanntes Gerät"
+    },
     "email_in_use": {
       "description": "Wenn Sie Ihre Kontoinformationen vergessen haben, können Sie Ihr Konto wiederherstellen. Sie können auch von vorne beginnen und eine andere E-Mail-Adresse verwenden.",
       "title": "Die E-Mail-Adresse <span> %(email)s </span> wird bereits verwendet"
