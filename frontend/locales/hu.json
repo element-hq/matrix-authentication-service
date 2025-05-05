@@ -197,12 +197,12 @@
     "password_reset": {
       "consumed": {
         "subtitle": "Új jelszó létrehozásához kezdje elölről, és válassza a „Elfelejtett jelszó” lehetőséget.",
-        "title": "A jelszóhelyreállítási hivatkozás már fel lett használva"
+        "title": "A jelszó-visszaállítási hivatkozás már fel lett használva"
       },
       "expired": {
         "resend_email": "Levél újraküldése",
         "subtitle": "Új levél kérése, amely ide lesz elküldve: {{email}}",
-        "title": "A jelszóvisszaállítási hivatkozás lejárt"
+        "title": "A jelszó-visszaállítási hivatkozás lejárt"
       },
       "subtitle": "Válasszon egy új jelszót a fiókjához.",
       "title": "Jelszó visszaállítása"
@@ -253,11 +253,11 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Személyazonosság visszaállítása",
+      "button": "Személyazonosság alaphelyzetbe állítása",
       "cancelled": {
         "description_1": "A folytatáshoz bezárhatja ezt az ablakot, és visszatérhet az alkalmazáshoz.",
-        "description_2": "Ha mindenhonnan kijelentkezett, és nem emlékszik a helyreállítási kódjára, akkor vissza kell állítania a személyazonosságát.",
-        "heading": "Személyazonosság visszaállítása megszakítva."
+        "description_2": "Ha mindenhonnan kijelentkezett, és nem emlékszik a helyreállítási kódjára, akkor alaphelyzetbe kell állítania a személyazonosságát.",
+        "heading": "Személyazonosság alaphelyzetbe állítása megszakítva."
       },
       "description": "Ha nincs bejelentkezve egyetlen más eszközön sem, és elvesztette a helyreállítási kulcsát, akkor az alkalmazás használatának folytatásához alaphelyzetbe kell állítania a személyazonosságát.",
       "effect_list": {
@@ -299,6 +299,11 @@
       "last_auth_label": "Legutóbbi hitelesítés",
       "name_for_platform": "{{name}} erre: {{platform}}",
       "scopes_label": "Hatókörök",
+      "set_device_name": {
+        "help": "Set a name that will help you identify this device.",
+        "label": "Device name",
+        "title": "Edit device name"
+      },
       "signed_in_date": "Bejelentkezve: <datetime/>",
       "signed_in_label": "Bejelentkezve",
       "title": "Eszköz részletei",
