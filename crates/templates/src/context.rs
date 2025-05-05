@@ -105,13 +105,17 @@ pub trait TemplateContext: Serialize {
     ///
     /// This is then used to check for template validity in unit tests and in
     /// the CLI (`cargo run -- templates check`)
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized;
 }
 
 impl TemplateContext for () {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -144,15 +148,19 @@ impl<T> std::ops::Deref for WithLanguage<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
-        T::sample(now, rng)
-            .into_iter()
-            .map(|inner| WithLanguage {
-                lang: "en".into(),
-                inner,
+        locales
+            .iter()
+            .flat_map(|locale| {
+                T::sample(now, rng, locales)
+                    .into_iter()
+                    .map(move |inner| WithLanguage {
+                        lang: locale.to_string(),
+                        inner,
+                    })
             })
             .collect()
     }
@@ -168,11 +176,11 @@ pub struct WithCsrf<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
-        T::sample(now, rng)
+        T::sample(now, rng, locales)
             .into_iter()
             .map(|inner| WithCsrf {
                 csrf_token: "fake_csrf_token".into(),
@@ -192,14 +200,14 @@ pub struct WithSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithSession<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
         BrowserSession::samples(now, rng)
             .into_iter()
             .flat_map(|session| {
-                T::sample(now, rng)
+                T::sample(now, rng, locales)
                     .into_iter()
                     .map(move |inner| WithSession {
                         current_session: session.clone(),
@@ -220,7 +228,7 @@ pub struct WithOptionalSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -229,7 +237,7 @@ impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
             .map(Some) // Wrap all samples in an Option
             .chain(std::iter::once(None)) // Add the "None" option
             .flat_map(|session| {
-                T::sample(now, rng)
+                T::sample(now, rng, locales)
                     .into_iter()
                     .map(move |inner| WithOptionalSession {
                         current_session: session.clone(),
@@ -257,7 +265,11 @@ impl Serialize for EmptyContext {
 }
 
 impl TemplateContext for EmptyContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -281,7 +293,11 @@ impl IndexContext {
 }
 
 impl TemplateContext for IndexContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -323,7 +339,11 @@ impl AppContext {
 }
 
 impl TemplateContext for AppContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -352,7 +372,11 @@ impl ApiDocContext {
 }
 
 impl TemplateContext for ApiDocContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -440,7 +464,11 @@ pub struct LoginContext {
 }
 
 impl TemplateContext for LoginContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -544,7 +572,11 @@ pub struct RegisterContext {
 }
 
 impl TemplateContext for RegisterContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -583,7 +615,11 @@ pub struct PasswordRegisterContext {
 }
 
 impl TemplateContext for PasswordRegisterContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -621,7 +657,7 @@ pub struct ConsentContext {
 }
 
 impl TemplateContext for ConsentContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -673,7 +709,7 @@ pub struct PolicyViolationContext {
 }
 
 impl TemplateContext for PolicyViolationContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -742,7 +778,7 @@ pub struct CompatSsoContext {
 }
 
 impl TemplateContext for CompatSsoContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -800,7 +836,7 @@ impl EmailRecoveryContext {
 }
 
 impl TemplateContext for EmailRecoveryContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -861,7 +897,7 @@ impl EmailVerificationContext {
 }
 
 impl TemplateContext for EmailVerificationContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -927,7 +963,7 @@ impl RegisterStepsVerifyEmailContext {
 }
 
 impl TemplateContext for RegisterStepsVerifyEmailContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -963,7 +999,11 @@ impl RegisterStepsEmailInUseContext {
 }
 
 impl TemplateContext for RegisterStepsEmailInUseContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1014,7 +1054,11 @@ impl RegisterStepsDisplayNameContext {
 }
 
 impl TemplateContext for RegisterStepsDisplayNameContext {
-    fn sample(_now: chrono::DateTime<chrono::Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<chrono::Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1061,7 +1105,11 @@ impl RecoveryStartContext {
 }
 
 impl TemplateContext for RecoveryStartContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1099,7 +1147,7 @@ impl RecoveryProgressContext {
 }
 
 impl TemplateContext for RecoveryProgressContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1141,7 +1189,7 @@ impl RecoveryExpiredContext {
 }
 
 impl TemplateContext for RecoveryExpiredContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1202,7 +1250,7 @@ impl RecoveryFinishContext {
 }
 
 impl TemplateContext for RecoveryFinishContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1245,7 +1293,7 @@ impl UpstreamExistingLinkContext {
 }
 
 impl TemplateContext for UpstreamExistingLinkContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1277,7 +1325,7 @@ impl UpstreamSuggestLink {
 }
 
 impl TemplateContext for UpstreamSuggestLink {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1402,7 +1450,7 @@ impl UpstreamRegister {
 }
 
 impl TemplateContext for UpstreamRegister {
-    fn sample(now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, _rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1482,7 +1530,11 @@ impl DeviceLinkContext {
 }
 
 impl TemplateContext for DeviceLinkContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1512,7 +1564,7 @@ impl DeviceConsentContext {
 }
 
 impl TemplateContext for DeviceConsentContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1553,7 +1605,7 @@ impl AccountInactiveContext {
 }
 
 impl TemplateContext for AccountInactiveContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1583,7 +1635,7 @@ impl DeviceNameContext {
 }
 
 impl TemplateContext for DeviceNameContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1605,11 +1657,11 @@ pub struct FormPostContext<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self>
+    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
-        let sample_params = T::sample(now, rng);
+        let sample_params = T::sample(now, rng, locales);
         sample_params
             .into_iter()
             .map(|params| FormPostContext {
@@ -1678,7 +1730,11 @@ impl std::fmt::Display for ErrorContext {
 }
 
 impl TemplateContext for ErrorContext {
-    fn sample(_now: chrono::DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
     where
         Self: Sized,
     {
@@ -1768,7 +1824,7 @@ impl NotFoundContext {
 }
 
 impl TemplateContext for NotFoundContext {
-    fn sample(_now: DateTime<Utc>, _rng: &mut impl Rng) -> Vec<Self>
+    fn sample(_now: DateTime<Utc>, _rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
     where
         Self: Sized,
     {
