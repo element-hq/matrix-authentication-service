@@ -238,13 +238,21 @@ impl DatabaseSection {
     /// environment variables) as Synapse normally runs, then the connection
     /// options may not be valid.
     ///
-    /// Returns `None` if this database configuration is not configured for
-    /// Postgres.
-    #[must_use]
-    pub fn to_sqlx_postgres(&self) -> Option<PgConnectOptions> {
+    /// # Errors
+    ///
+    /// Returns an error if this database configuration is invalid or
+    /// unsupported.
+    pub fn to_sqlx_postgres(&self) -> Result<PgConnectOptions, anyhow::Error> {
         if self.name != SYNAPSE_DATABASE_DRIVER_NAME_PSYCOPG2 {
-            return None;
+            anyhow::bail!("syn2mas does not support the {} database driver", self.name);
         }
+
+        if self.args.database.is_some() && self.args.dbname.is_some() {
+            anyhow::bail!(
+                "Only one of `database` and `dbname` may be specified in the Synapse database configuration, not both."
+            );
+        }
+
         let mut opts = PgConnectOptions::new().application_name("syn2mas-synapse");
 
         if let Some(host) = &self.args.host {
@@ -256,6 +264,9 @@ impl DatabaseSection {
         if let Some(dbname) = &self.args.dbname {
             opts = opts.database(dbname);
         }
+        if let Some(database) = &self.args.database {
+            opts = opts.database(database);
+        }
         if let Some(user) = &self.args.user {
             opts = opts.username(user);
         }
@@ -263,7 +274,7 @@ impl DatabaseSection {
             opts = opts.password(password);
         }
 
-        Some(opts)
+        Ok(opts)
     }
 }
 
@@ -275,6 +286,8 @@ pub struct DatabaseArgsSuboption {
     pub user: Option<String>,
     pub password: Option<String>,
     pub dbname: Option<String>,
+    // This is a deperecated way of specifying the database name.
+    pub database: Option<String>,
     pub host: Option<String>,
     pub port: Option<u16>,
 }
@@ -357,7 +370,24 @@ mod test {
                 args: DatabaseArgsSuboption::default(),
             }
             .to_sqlx_postgres()
-            .is_none()
+            .is_err()
+        );
+
+        // Only one of `database` and `dbname` may be specified
+        assert!(
+            DatabaseSection {
+                name: "psycopg2".to_owned(),
+                args: DatabaseArgsSuboption {
+                    user: Some("synapse_user".to_owned()),
+                    password: Some("verysecret".to_owned()),
+                    dbname: Some("synapse_db".to_owned()),
+                    database: Some("synapse_db".to_owned()),
+                    host: Some("synapse-db.example.com".to_owned()),
+                    port: Some(42),
+                },
+            }
+            .to_sqlx_postgres()
+            .is_err()
         );
 
         assert_eq_options(
@@ -374,6 +404,7 @@ mod test {
                     user: Some("synapse_user".to_owned()),
                     password: Some("verysecret".to_owned()),
                     dbname: Some("synapse_db".to_owned()),
+                    database: None,
                     host: Some("synapse-db.example.com".to_owned()),
                     port: Some(42),
                 },
