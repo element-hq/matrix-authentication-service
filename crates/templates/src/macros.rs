@@ -75,7 +75,7 @@ macro_rules! register_templates {
                 /// # Errors
                 ///
                 /// Returns an error if the template fails to render with any of the sample.
-                pub fn $name
+                pub(crate) fn $name
                     $(< $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ >)?
                     (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng)
                 -> anyhow::Result<()> {
