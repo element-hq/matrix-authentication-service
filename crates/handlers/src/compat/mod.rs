@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -22,6 +22,7 @@ pub(crate) mod login;
 pub(crate) mod login_sso_complete;
 pub(crate) mod login_sso_redirect;
 pub(crate) mod logout;
+pub(crate) mod logout_all;
 pub(crate) mod refresh;
 
 #[derive(Debug, Serialize)]
@@ -138,5 +139,31 @@ where
         let value: T = serde_json::from_slice(&bytes)?;
 
         Ok(Self(value))
+    }
+}
+
+impl<T, S> axum::extract::OptionalFromRequest<S> for MatrixJsonBody<T>
+where
+    T: DeserializeOwned,
+    S: Send + Sync,
+{
+    type Rejection = MatrixJsonBodyRejection;
+
+    async fn from_request(req: Request, state: &S) -> Result<Option<Self>, Self::Rejection> {
+        if req.headers().contains_key(header::CONTENT_TYPE) {
+            // If there is a Content-Type header, handle it as normal
+            let result = <Self as axum::extract::FromRequest<S>>::from_request(req, state).await?;
+            return Ok(Some(result));
+        }
+
+        // Else, we poke at the body, and deserialize it only if it's JSON
+        let bytes = <Bytes as axum::extract::FromRequest<S>>::from_request(req, state).await?;
+        if bytes.is_empty() {
+            return Ok(None);
+        }
+
+        let value: T = serde_json::from_slice(&bytes)?;
+
+        Ok(Some(Self(value)))
     }
 }

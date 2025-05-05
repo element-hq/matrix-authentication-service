@@ -548,6 +548,13 @@ impl SimpleRoute for CompatLogout {
     const PATH: &'static str = "/_matrix/client/{version}/logout";
 }
 
+/// `POST /_matrix/client/v3/logout/all`
+pub struct CompatLogoutAll;
+
+impl SimpleRoute for CompatLogoutAll {
+    const PATH: &'static str = "/_matrix/client/{version}/logout/all";
+}
+
 /// `POST /_matrix/client/v3/refresh`
 pub struct CompatRefresh;
 
