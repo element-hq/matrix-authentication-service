@@ -101,9 +101,9 @@
       }
     },
     "device_display_name": {
-      "client_on_device": "%(client_name)s on %(device_name)s",
-      "name_for_platform": "%(name)s for %(platform)s",
-      "unknown_device": "Unknown device"
+      "client_on_device": "%(client_name)s %(device_name)s:lla",
+      "name_for_platform": "%(name)s %(platform)s:lle",
+      "unknown_device": "Tuntematon laite"
     },
     "email_in_use": {
       "description": "Jos olet unohtanut tilisi tunnistetiedot, voit palauttaa tilisi. Voit myös aloittaa alusta ja käyttää toista sähköpostiosoitetta.",
