@@ -345,8 +345,8 @@ impl Translator {
 
     /// Get a list of available locales.
     #[must_use]
-    pub fn available_locales(&self) -> Vec<&DataLocale> {
-        self.translations.keys().collect()
+    pub fn available_locales(&self) -> Vec<DataLocale> {
+        self.translations.keys().cloned().collect()
     }
 
     /// Check if a locale is available.

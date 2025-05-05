@@ -6,6 +6,7 @@
 
 use std::sync::Arc;
 
+use mas_i18n::DataLocale;
 use minijinja::{
     Value,
     value::{Enumerator, Object},
@@ -60,11 +61,12 @@ impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
     fn sample(
         now: chrono::DateTime<chrono::prelude::Utc>,
         rng: &mut impl rand::prelude::Rng,
+        locales: &[DataLocale],
     ) -> Vec<Self>
     where
         Self: Sized,
     {
-        let inner = T::sample(now, rng);
+        let inner = T::sample(now, rng, locales);
         inner
             .into_iter()
             .map(|inner| Self::new(None, inner))

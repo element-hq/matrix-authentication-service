@@ -7,7 +7,7 @@
       {
         "file": "file.json",
         "pattern": "translations/en.json",
-        "features": ["arb_metadata", "plural_object"]
+        "features": ["arb_metadata", "plural_object", "filter_untranslated"]
       },
       {
         "file": "frontend.json",
