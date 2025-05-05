@@ -101,9 +101,9 @@
       }
     },
     "device_display_name": {
-      "client_on_device": "%(client_name)s on %(device_name)s",
-      "name_for_platform": "%(name)s for %(platform)s",
-      "unknown_device": "Unknown device"
+      "client_on_device": "%(client_name)s на %(device_name)s",
+      "name_for_platform": "%(name)s для %(platform)s",
+      "unknown_device": "Невідомий пристрій"
     },
     "email_in_use": {
       "description": "Якщо ви забули облікові дані облікового запису, ви можете відновити свій обліковий запис. Ви також можете почати спочатку і використовувати іншу адресу електронної пошти.",

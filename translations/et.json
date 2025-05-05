@@ -101,9 +101,9 @@
       }
     },
     "device_display_name": {
-      "client_on_device": "%(client_name)s on %(device_name)s",
-      "name_for_platform": "%(name)s for %(platform)s",
-      "unknown_device": "Unknown device"
+      "client_on_device": "%(client_name)s seadmes %(device_name)s",
+      "name_for_platform": "%(name)s platvormil %(platform)s",
+      "unknown_device": "Tundmatu seade"
     },
     "email_in_use": {
       "description": "Kui sa oled unustanud oma konto kasutajanime ja/või salasõna, siis on sul võimalik taastada ligipääs oma kasutajakontole. Lisaks saad uue e-posti aadressi abil alustada nullist.",

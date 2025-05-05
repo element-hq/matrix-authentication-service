@@ -100,11 +100,6 @@
         "heading": "Acesso concedido"
       }
     },
-    "device_display_name": {
-      "client_on_device": "%(client_name)s on %(device_name)s",
-      "name_for_platform": "%(name)s for %(platform)s",
-      "unknown_device": "Unknown device"
-    },
     "email_in_use": {
       "description": "Se se esqueceu das suas credenciais de conta, pode recuperar a sua conta. Também pode começar de novo e utilizar um endereço de correio eletrónico diferente.",
       "title": "O endereço de correio eletrónico <span>%(email)s</span> já está a ser utilizado"

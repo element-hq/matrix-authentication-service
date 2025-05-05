@@ -111,7 +111,7 @@
         "copy_link": "Másolja a következő hivatkozást, és illessze be a böngészőbe egy új jelszó létrehozásához:",
         "create_new_password": "Új jelszó létrehozása",
         "fallback": "A gomb nem működik?",
-        "headline": "Jelszóvisszaállítást kért a(z) %(client_name)s fiókjához.",
+        "headline": "Jelszóvisszaállítást kért a(z) %(server_name)s fiókjához.",
         "subject": "Fiókjelszó visszaállítása (%(mxid)s)",
         "you_can_ignore": "Ha nem kért új jelszót, akkor figyelmen kívül hagyhatja ezt a levelet. A jelenlegi jelszava továbbra is működni fog."
       },

@@ -301,9 +301,9 @@
       "name_for_platform": "{{name}} для {{platform}}",
       "scopes_label": "Області застосування (Scopes)",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
-        "label": "Device name",
-        "title": "Edit device name"
+        "help": "Вкажіть назву, яка допоможе вам ідентифікувати цей пристрій.",
+        "label": "Назва пристрою",
+        "title": "Змінити назву пристрою"
       },
       "signed_in_date": "Вхід виконано <datetime/>",
       "signed_in_label": "Вхід виконано",
