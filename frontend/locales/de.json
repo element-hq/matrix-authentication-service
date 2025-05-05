@@ -300,7 +300,7 @@
       "name_for_platform": "{{name}} für {{platform}}",
       "scopes_label": "Berechtigungsumfang",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
+        "help": "Geben Sie einen Namen ein, der Ihnen hilft, dieses Gerät zu identifizieren.",
         "label": "Gerätename",
         "title": "Gerätename bearbeiten"
       },

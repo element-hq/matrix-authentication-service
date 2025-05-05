@@ -456,12 +456,20 @@ impl Templates {
         check::render_recovery_disabled(self, now, rng)?;
         check::render_form_post::<EmptyContext>(self, now, rng)?;
         check::render_error(self, now, rng)?;
+        check::render_email_recovery_txt(self, now, rng)?;
+        check::render_email_recovery_html(self, now, rng)?;
+        check::render_email_recovery_subject(self, now, rng)?;
         check::render_email_verification_txt(self, now, rng)?;
         check::render_email_verification_html(self, now, rng)?;
         check::render_email_verification_subject(self, now, rng)?;
         check::render_upstream_oauth2_link_mismatch(self, now, rng)?;
         check::render_upstream_oauth2_suggest_link(self, now, rng)?;
         check::render_upstream_oauth2_do_register(self, now, rng)?;
+        check::render_device_link(self, now, rng)?;
+        check::render_device_consent(self, now, rng)?;
+        check::render_account_deactivated(self, now, rng)?;
+        check::render_account_locked(self, now, rng)?;
+        check::render_account_logged_out(self, now, rng)?;
         check::render_device_name(self, now, rng)?;
         Ok(())
     }
