@@ -105,7 +105,7 @@ impl Options {
             synapse_config
                 .database
                 .to_sqlx_postgres()
-                .context("Synapse configuration does not use Postgres, cannot migrate.")?
+                .context("Synapse database configuration is invalid, cannot migrate.")?
         };
         let mut syn_conn = PgConnection::connect_with(&syn_connection_options)
             .await

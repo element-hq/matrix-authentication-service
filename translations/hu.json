@@ -11,7 +11,7 @@
     "submit": "Elküldés"
   },
   "app": {
-    "human_name": "Matrix hitelesítési szolgáltatás",
+    "human_name": "Matrix Authentication Service",
     "name": "matrix-authentication-service",
     "technical_description": "OpenID Connect felfedezési dokumentum: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
   },
@@ -70,7 +70,7 @@
     },
     "choose_display_name": {
       "description": "Ez az a név, melyet a többi ember látni fog. Ezt bármikor módosíthatja.",
-      "headline": "Válasszon megjelenítési nevet"
+      "headline": "Válasszon megjelenítési név"
     },
     "consent": {
       "client_wants_access": "A(z) <span>%(client_name)s</span> (itt: <span>%(redirect_uri)s</span>) hozzá akar férni a fiókjához.",
@@ -99,6 +99,11 @@
         "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megadva"
       }
+    },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s on %(device_name)s",
+      "name_for_platform": "%(name)s for %(platform)s",
+      "unknown_device": "Unknown device"
     },
     "email_in_use": {
       "description": "Ha elfelejtette a fiókja hitelesítő adatait, akkor helyreállíthatja a fiókját. Újra is kezdheti egy másik e-mail-címmel.",
@@ -151,7 +156,7 @@
         "headline": "Bejelentkezés az összekötéshez"
       },
       "no_login_methods": "Nem érhetőek el bejelentkezési módok.",
-      "separator": "vagy",
+      "separator": "Vagy",
       "username_or_email": "Felhasználónév vagy e-mail-cím"
     },
     "navbar": {
@@ -164,7 +169,7 @@
       "heading": "Az oldal nem található"
     },
     "not_you": "Nem %(username)s?",
-    "or_separator": "vagy",
+    "or_separator": "Vagy",
     "policy_violation": {
       "description": "Ez a kérést feladó kliens, a jelenleg bejelentkezett felhasználó, vagy maga a kérés miatt is lehet.",
       "heading": "Az engedélyezési kérés a szolgáltatás által betartatott házirend alapján elutasítva",
@@ -173,7 +178,7 @@
     "recovery": {
       "consumed": {
         "description": "Új jelszó létrehozásához kezdje elölről, és válassza a „Elfelejtett jelszó” lehetőséget.",
-        "heading": "A jelszóhelyreállítási hivatkozás már fel lett használva"
+        "heading": "A jelszó-visszaállítási hivatkozás már fel lett használva"
       },
       "disabled": {
         "description": "Ha elvesztette a hitelesítő adatait, akkor a fiókja visszaszerzéséhez lépjen kapcsolatba a rendszergazdával.",
@@ -181,7 +186,7 @@
       },
       "expired": {
         "description": "Új e-mail kérése, amely ide lesz küldve: <span>%(email)s</span>.",
-        "heading": "A jelszóvisszaállítási hivatkozás lejárt",
+        "heading": "A jelszó-visszaállítási hivatkozás lejárt",
         "resend_email": "Levél újraküldése"
       },
       "finish": {
@@ -193,12 +198,12 @@
       },
       "progress": {
         "change_email": "Próbálkozás másik e-mail-címmel",
-        "description": "Egy jelszóvisszaállítási hivatkozást tartalmazó levelet küldtünk, ha van fiókja a(z) <span>%(email)s</span> címmel.",
+        "description": "Egy jelszó-visszaállítási hivatkozást tartalmazó levelet küldtünk, ha van fiókja a(z) <span>%(email)s</span> címmel.",
         "heading": "Nézze meg a leveleit",
         "resend_email": "Levél újraküldése"
       },
       "start": {
-        "description": "Egy jelszóvisszaállítási hivatkozást tartalmazó levél lesz küldve.",
+        "description": "Egy jelszó-visszaállítási hivatkozást tartalmazó levél lesz küldve.",
         "heading": "A folytatáshoz adja meg az e-mail-címét"
       }
     },
@@ -232,7 +237,7 @@
         },
         "create_account": "Új fiók létrehozása",
         "enforced_by_policy": "Kiszolgáló-házirend által betartatva",
-        "forced_display_name": "A következő megjelenítési nevet fogja használni",
+        "forced_display_name": "A következő megjelenítési név fogja használni",
         "forced_email": "A következő e-mail-címet fogja használni",
         "forced_localpart": "A következő felhasználónevet fogja használni",
         "import_data": {
