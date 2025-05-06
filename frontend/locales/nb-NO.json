@@ -299,6 +299,11 @@
       "last_auth_label": "Siste autentisering",
       "name_for_platform": "{{name}} for {{platform}}",
       "scopes_label": "Omfang",
+      "set_device_name": {
+        "help": "Angi et navn som hjelper deg med å identifisere denne enheten.",
+        "label": "Navn på enhet",
+        "title": "Rediger navnet på enheten"
+      },
       "signed_in_date": "Logget på <datetime/>",
       "signed_in_label": "Logget på",
       "title": "Detaljer om enheten",

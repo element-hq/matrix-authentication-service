@@ -101,9 +101,9 @@
       }
     },
     "device_display_name": {
-      "client_on_device": "%(client_name)s on %(device_name)s",
-      "name_for_platform": "%(name)s for %(platform)s",
-      "unknown_device": "Unknown device"
+      "client_on_device": "%(client_name)s ezen: %(device_name)s",
+      "name_for_platform": "%(name)s ehhez: %(platform)s",
+      "unknown_device": "Ismeretlen eszköz"
     },
     "email_in_use": {
       "description": "Ha elfelejtette a fiókja hitelesítő adatait, akkor helyreállíthatja a fiókját. Újra is kezdheti egy másik e-mail-címmel.",
@@ -116,7 +116,7 @@
         "copy_link": "Másolja a következő hivatkozást, és illessze be a böngészőbe egy új jelszó létrehozásához:",
         "create_new_password": "Új jelszó létrehozása",
         "fallback": "A gomb nem működik?",
-        "headline": "Jelszóvisszaállítást kért a(z) %(server_name)s fiókjához.",
+        "headline": "Jelszó-visszaállítást kért a(z) %(server_name)s fiókjához.",
         "subject": "Fiókjelszó visszaállítása (%(mxid)s)",
         "you_can_ignore": "Ha nem kért új jelszót, akkor figyelmen kívül hagyhatja ezt a levelet. A jelenlegi jelszava továbbra is működni fog."
       },
