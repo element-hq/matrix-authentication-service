@@ -1485,6 +1485,7 @@ impl TemplateContext for UpstreamRegister {
                 pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
                 response_mode: None,
                 additional_authorization_parameters: Vec::new(),
+                forward_login_hint: false,
                 created_at: now,
                 disabled_at: None,
             },

@@ -565,4 +565,11 @@ pub struct Provider {
     /// Orders of the keys are not preserved.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub additional_authorization_parameters: BTreeMap<String, String>,
+
+    /// Whether the login_hint should be forwarded to the provider in the
+    /// authorization request.
+    ///
+    /// Defaults to `false`.
+    #[serde(default)]
+    pub forward_login_hint: bool,
 }

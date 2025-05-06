@@ -94,9 +94,16 @@ pub(crate) async fn get(
 
     // Forward the raw login hint upstream for the provider to handle however it
     // sees fit
-    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
-        if let Some(grant) = repo.oauth2_authorization_grant().lookup(*id).await? {
-            data.login_hint = grant.login_hint;
+    if provider.forward_login_hint {
+        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
+            if let Some(login_hint) = repo
+                .oauth2_authorization_grant()
+                .lookup(*id)
+                .await?
+                .and_then(|grant| grant.login_hint)
+            {
+                data = data.with_login_hint(login_hint);
+            }
         }
     }
 

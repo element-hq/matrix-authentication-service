@@ -2118,6 +2118,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "forward_login_mode": {
+          "description": " Whether the login_hint should be forwarded to the provider in the authorization request.",
+          "default": false,
+          "type": "boolean"
         }
       }
     },

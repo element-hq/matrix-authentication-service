@@ -983,6 +983,7 @@ mod tests {
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
                     additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
                     ui_order: 0,
                 },
             )
