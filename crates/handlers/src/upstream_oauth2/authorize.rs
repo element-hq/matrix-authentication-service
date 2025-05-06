@@ -92,7 +92,8 @@ pub(crate) async fn get(
         data = data.with_response_mode(response_mode.into());
     }
 
-    // Forward the raw login hint upstream for the provider to handle however it sees fit
+    // Forward the raw login hint upstream for the provider to handle however it
+    // sees fit
     if let Some(post_auth_action) = &query.post_auth_action {
         if let PostAuthAction::ContinueAuthorizationGrant { id } = post_auth_action {
             if let Some(grant) = repo.oauth2_authorization_grant().lookup(*id).await? {
