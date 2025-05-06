@@ -12,7 +12,7 @@ use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, record_error};
 use mas_data_model::UpstreamOAuthProvider;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
-use mas_router::UrlBuilder;
+use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
@@ -90,6 +90,15 @@ pub(crate) async fn get(
 
     if let Some(response_mode) = provider.response_mode {
         data = data.with_response_mode(response_mode.into());
+    }
+
+    // Forward the raw login hint upstream for the provider to handle however it sees fit
+    if let Some(post_auth_action) = &query.post_auth_action {
+        if let PostAuthAction::ContinueAuthorizationGrant { id } = post_auth_action {
+            if let Some(grant) = repo.oauth2_authorization_grant().lookup(*id).await? {
+                data.login_hint = grant.login_hint;
+            }
+        }
     }
 
     let data = if let Some(methods) = lazy_metadata.pkce_methods().await? {
