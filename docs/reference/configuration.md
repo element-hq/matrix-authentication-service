@@ -712,6 +712,10 @@ upstream_oauth2:
       # Additional parameters to include in the authorization request
       #additional_authorization_parameters:
       #  foo: "bar"
+      
+      # Whether the `login_hint` should be forwarded to the provider in the
+      # authorization request.
+      #forward_login_hint: false
 
       # How user attributes should be mapped
       #
