@@ -566,7 +566,7 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub additional_authorization_parameters: BTreeMap<String, String>,
 
-    /// Whether the login_hint should be forwarded to the provider in the
+    /// Whether the `login_hint` should be forwarded to the provider in the
     /// authorization request.
     ///
     /// Defaults to `false`.
