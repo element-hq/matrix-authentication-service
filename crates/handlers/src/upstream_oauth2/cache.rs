@@ -426,6 +426,7 @@ mod tests {
             disabled_at: None,
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),
             additional_authorization_parameters: Vec::new(),
+            forward_login_hint: false,
         };
 
         // Without any override, it should just use discovery

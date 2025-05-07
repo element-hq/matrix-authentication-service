@@ -304,6 +304,7 @@ pub async fn config_sync(
                             .additional_authorization_parameters
                             .into_iter()
                             .collect(),
+                        forward_login_hint: provider.forward_login_hint,
                         ui_order,
                     },
                 )

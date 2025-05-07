@@ -241,6 +241,7 @@ pub struct UpstreamOAuthProvider {
     pub disabled_at: Option<DateTime<Utc>>,
     pub claims_imports: ClaimsImports,
     pub additional_authorization_parameters: Vec<(String, String)>,
+    pub forward_login_hint: bool,
 }
 
 impl PartialOrd for UpstreamOAuthProvider {

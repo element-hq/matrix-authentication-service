@@ -119,6 +119,7 @@ pub enum UpstreamOAuthProviders {
     PkceMode,
     ResponseMode,
     AdditionalParameters,
+    ForwardLoginHint,
     JwksUriOverride,
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
