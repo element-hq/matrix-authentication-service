@@ -425,6 +425,7 @@ mod tests {
             created_at: clock.now(),
             disabled_at: None,
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+            allow_existing_users: false,
             additional_authorization_parameters: Vec::new(),
         };
 
