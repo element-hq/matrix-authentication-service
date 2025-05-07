@@ -20,8 +20,7 @@ use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
 use mas_matrix_synapse::SynapseConnection;
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
-use mas_storage::RepositoryAccess;
-use mas_storage_pg::PgRepository;
+use mas_storage::{BoxRepositoryFactory, RepositoryAccess, RepositoryFactory};
 use mas_templates::{SiteConfigExt, Templates};
 use sqlx::{
     ConnectOptions, Executor, PgConnection, PgPool,
@@ -400,14 +399,13 @@ pub async fn database_connection_from_config_with_options(
 // XXX: this could be put somewhere else?
 pub async fn load_policy_factory_dynamic_data_continuously(
     policy_factory: &Arc<PolicyFactory>,
-    pool: &PgPool,
+    repository_factory: BoxRepositoryFactory,
     cancellation_token: CancellationToken,
     task_tracker: &TaskTracker,
 ) -> Result<(), anyhow::Error> {
     let policy_factory = policy_factory.clone();
-    let pool = pool.clone();
 
-    load_policy_factory_dynamic_data(&policy_factory, &pool).await?;
+    load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await?;
 
     task_tracker.spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(60));
@@ -420,7 +418,9 @@ pub async fn load_policy_factory_dynamic_data_continuously(
                 _ = interval.tick() => {}
             }
 
-            if let Err(err) = load_policy_factory_dynamic_data(&policy_factory, &pool).await {
+            if let Err(err) =
+                load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await
+            {
                 tracing::error!(
                     error = ?err,
                     "Failed to load policy factory dynamic data"
@@ -438,9 +438,10 @@ pub async fn load_policy_factory_dynamic_data_continuously(
 #[tracing::instrument(name = "policy.load_dynamic_data", skip_all)]
 pub async fn load_policy_factory_dynamic_data(
     policy_factory: &PolicyFactory,
-    pool: &PgPool,
+    repository_factory: &(dyn RepositoryFactory + Send + Sync),
 ) -> Result<(), anyhow::Error> {
-    let mut repo = PgRepository::from_pool(pool)
+    let mut repo = repository_factory
+        .create()
         .await
         .context("Failed to acquire database connection")?;
 

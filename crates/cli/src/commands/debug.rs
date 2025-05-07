@@ -11,6 +11,7 @@ use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PolicyConfig,
 };
+use mas_storage_pg::PgRepositoryFactory;
 use tracing::{info, info_span};
 
 use crate::util::{
@@ -48,7 +49,8 @@ impl Options {
                 if with_dynamic_data {
                     let database_config = DatabaseConfig::extract(figment)?;
                     let pool = database_pool_from_config(&database_config).await?;
-                    load_policy_factory_dynamic_data(&policy_factory, &pool).await?;
+                    let repository_factory = PgRepositoryFactory::new(pool.clone());
+                    load_policy_factory_dynamic_data(&policy_factory, &repository_factory).await?;
                 }
 
                 let _instance = policy_factory.instantiate().await?;

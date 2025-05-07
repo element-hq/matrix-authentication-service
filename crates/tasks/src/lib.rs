@@ -10,8 +10,8 @@ use mas_data_model::SiteConfig;
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, RepositoryError, SystemClock};
-use mas_storage_pg::PgRepository;
+use mas_storage::{BoxClock, BoxRepository, RepositoryError, RepositoryFactory, SystemClock};
+use mas_storage_pg::PgRepositoryFactory;
 use new_queue::QueueRunnerError;
 use opentelemetry::metrics::Meter;
 use rand::SeedableRng;
@@ -37,7 +37,7 @@ static METER: LazyLock<Meter> = LazyLock::new(|| {
 
 #[derive(Clone)]
 struct State {
-    pool: Pool<Postgres>,
+    repository_factory: PgRepositoryFactory,
     mailer: Mailer,
     clock: SystemClock,
     homeserver: Arc<dyn HomeserverConnection>,
@@ -47,7 +47,7 @@ struct State {
 
 impl State {
     pub fn new(
-        pool: Pool<Postgres>,
+        repository_factory: PgRepositoryFactory,
         clock: SystemClock,
         mailer: Mailer,
         homeserver: impl HomeserverConnection + 'static,
@@ -55,7 +55,7 @@ impl State {
         site_config: SiteConfig,
     ) -> Self {
         Self {
-            pool,
+            repository_factory,
             mailer,
             clock,
             homeserver: Arc::new(homeserver),
@@ -64,8 +64,8 @@ impl State {
         }
     }
 
-    pub fn pool(&self) -> &Pool<Postgres> {
-        &self.pool
+    pub fn pool(&self) -> Pool<Postgres> {
+        self.repository_factory.pool()
     }
 
     pub fn clock(&self) -> BoxClock {
@@ -83,12 +83,7 @@ impl State {
     }
 
     pub async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
-        let repo = PgRepository::from_pool(self.pool())
-            .await
-            .map_err(RepositoryError::from_error)?
-            .boxed();
-
-        Ok(repo)
+        self.repository_factory.create().await
     }
 
     pub fn matrix_connection(&self) -> &dyn HomeserverConnection {
@@ -110,7 +105,7 @@ impl State {
 ///
 /// This function can fail if the database connection fails.
 pub async fn init(
-    pool: &Pool<Postgres>,
+    repository_factory: PgRepositoryFactory,
     mailer: &Mailer,
     homeserver: impl HomeserverConnection + 'static,
     url_builder: UrlBuilder,
@@ -119,7 +114,7 @@ pub async fn init(
     task_tracker: &TaskTracker,
 ) -> Result<(), QueueRunnerError> {
     let state = State::new(
-        pool.clone(),
+        repository_factory,
         SystemClock::default(),
         mailer.clone(),
         homeserver,

@@ -10,6 +10,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
 use mas_router::UrlBuilder;
+use mas_storage_pg::PgRepositoryFactory;
 use tracing::{info, info_span};
 
 use crate::{
@@ -63,7 +64,7 @@ impl Options {
 
         info!("Starting task scheduler");
         mas_tasks::init(
-            &pool,
+            PgRepositoryFactory::new(pool.clone()),
             &mailer,
             conn,
             url_builder,

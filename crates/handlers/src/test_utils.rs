@@ -34,8 +34,11 @@ use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_matrix::{HomeserverConnection, MockHomeserverConnection};
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::{SimpleRoute, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng, clock::MockClock};
-use mas_storage_pg::{DatabaseError, PgRepository};
+use mas_storage::{
+    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, RepositoryError, RepositoryFactory,
+    clock::MockClock,
+};
+use mas_storage_pg::PgRepositoryFactory;
 use mas_templates::{SiteConfigExt, Templates};
 use oauth2_types::{registration::ClientRegistrationResponse, requests::AccessTokenResponse};
 use rand::SeedableRng;
@@ -92,7 +95,7 @@ pub(crate) async fn policy_factory(
 
 #[derive(Clone)]
 pub(crate) struct TestState {
-    pub pool: PgPool,
+    pub repository_factory: PgRepositoryFactory,
     pub templates: Templates,
     pub key_store: Keystore,
     pub cookie_manager: CookieManager,
@@ -209,7 +212,7 @@ impl TestState {
         let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
 
         let graphql_state = TestGraphQLState {
-            pool: pool.clone(),
+            repository_factory: PgRepositoryFactory::new(pool.clone()).boxed(),
             policy_factory: Arc::clone(&policy_factory),
             homeserver_connection: Arc::clone(&homeserver_connection),
             site_config: site_config.clone(),
@@ -224,14 +227,14 @@ impl TestState {
         let graphql_schema = graphql::schema_builder().data(state).finish();
 
         let activity_tracker = ActivityTracker::new(
-            pool.clone(),
+            PgRepositoryFactory::new(pool.clone()).boxed(),
             std::time::Duration::from_secs(60),
             &task_tracker,
             shutdown_token.child_token(),
         );
 
         Ok(Self {
-            pool,
+            repository_factory: PgRepositoryFactory::new(pool),
             templates,
             key_store,
             cookie_manager,
@@ -256,7 +259,7 @@ impl TestState {
     /// Reset the test utils to a fresh state, with the same configuration.
     pub async fn reset(self) -> Self {
         let site_config = self.site_config.clone();
-        let pool = self.pool.clone();
+        let pool = self.repository_factory.pool();
         let task_tracker = self.task_tracker.clone();
 
         // This should trigger the cancellation drop guard
@@ -351,9 +354,8 @@ impl TestState {
         access_token
     }
 
-    pub async fn repository(&self) -> Result<BoxRepository, DatabaseError> {
-        let repo = PgRepository::from_pool(&self.pool).await?;
-        Ok(repo.boxed())
+    pub async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
+        self.repository_factory.create().await
     }
 
     /// Returns a new random number generator.
@@ -393,7 +395,7 @@ impl TestState {
 }
 
 struct TestGraphQLState {
-    pool: PgPool,
+    repository_factory: BoxRepositoryFactory,
     homeserver_connection: Arc<MockHomeserverConnection>,
     site_config: SiteConfig,
     policy_factory: Arc<PolicyFactory>,
@@ -407,11 +409,7 @@ struct TestGraphQLState {
 #[async_trait::async_trait]
 impl graphql::State for TestGraphQLState {
     async fn repository(&self) -> Result<BoxRepository, mas_storage::RepositoryError> {
-        let repo = PgRepository::from_pool(&self.pool)
-            .await
-            .map_err(mas_storage::RepositoryError::from_error)?;
-
-        Ok(repo.boxed())
+        self.repository_factory.create().await
     }
 
     async fn policy(&self) -> Result<Policy, InstantiateError> {
@@ -451,7 +449,7 @@ impl graphql::State for TestGraphQLState {
 
 impl FromRef<TestState> for PgPool {
     fn from_ref(input: &TestState) -> Self {
-        input.pool.clone()
+        input.repository_factory.pool()
     }
 }
 
@@ -598,14 +596,14 @@ impl FromRequestParts<TestState> for BoxRng {
 }
 
 impl FromRequestParts<TestState> for BoxRepository {
-    type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
+    type Rejection = ErrorWrapper<RepositoryError>;
 
     async fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &TestState,
     ) -> Result<Self, Self::Rejection> {
-        let repo = PgRepository::from_pool(&state.pool).await?;
-        Ok(repo.boxed())
+        let repo = state.repository_factory.create().await?;
+        Ok(repo)
     }
 }
 
