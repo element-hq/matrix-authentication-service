@@ -67,7 +67,7 @@ clients:
       # The Swagger UI callback in the hosted documentation
       - https://element-hq.github.io/matrix-authentication-service/api/oauth2-redirect.html
       # The Swagger UI callback hosted by the service
-      - https://mas.example.com/api/doc/oauth2-redirect
+      - https://mas.example.com/api/doc/oauth2-callback
 ```
 
 Then, in Swagger UI, click on the "Authorize" button.
