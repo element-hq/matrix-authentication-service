@@ -291,7 +291,7 @@ version = "0.15.2"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.26"
+version = "0.23.27"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
