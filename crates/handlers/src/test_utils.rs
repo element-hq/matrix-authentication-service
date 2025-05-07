@@ -453,6 +453,12 @@ impl FromRef<TestState> for PgPool {
     }
 }
 
+impl FromRef<TestState> for BoxRepositoryFactory {
+    fn from_ref(input: &TestState) -> Self {
+        input.repository_factory.clone().boxed()
+    }
+}
+
 impl FromRef<TestState> for graphql::Schema {
     fn from_ref(input: &TestState) -> Self {
         input.graphql_schema.clone()

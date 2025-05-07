@@ -42,7 +42,7 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Route, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng};
 use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
@@ -265,6 +265,7 @@ where
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     Limiter: FromRef<S>,
+    BoxRepositoryFactory: FromRef<S>,
     BoundActivityTracker: FromRequestParts<S>,
     RequesterFingerprint: FromRequestParts<S>,
     BoxRepository: FromRequestParts<S>,
