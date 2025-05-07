@@ -255,8 +255,6 @@ fn build_authorization_request(
         (None, None)
     };
 
-    scope.insert(OPENID);
-
     let auth_request = FullAuthorizationRequest {
         inner: AuthorizationRequest {
             response_type: OAuthAuthorizationEndpointResponseType::Code.into(),
