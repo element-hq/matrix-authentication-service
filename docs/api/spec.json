@@ -2527,21 +2527,26 @@
         "type": "oauth2",
         "flows": {
           "clientCredentials": {
-            "refreshUrl": "/oauth2/token",
-            "tokenUrl": "/oauth2/token",
+            "refreshUrl": "./oauth2/token",
+            "tokenUrl": "./oauth2/token",
             "scopes": {
               "urn:mas:admin": "Grant access to the admin API"
             }
           },
           "authorizationCode": {
-            "authorizationUrl": "/authorize",
-            "tokenUrl": "/oauth2/token",
-            "refreshUrl": "/oauth2/token",
+            "authorizationUrl": "./authorize",
+            "tokenUrl": "./oauth2/token",
+            "refreshUrl": "./oauth2/token",
             "scopes": {
               "urn:mas:admin": "Grant access to the admin API"
             }
           }
         }
+      },
+      "token": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An access token with access to the admin API"
       }
     },
     "schemas": {
@@ -3723,6 +3728,11 @@
   "security": [
     {
       "oauth2": [
+        "urn:mas:admin"
+      ]
+    },
+    {
+      "bearer": [
         "urn:mas:admin"
       ]
     }
