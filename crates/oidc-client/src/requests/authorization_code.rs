@@ -191,7 +191,7 @@ pub struct AuthorizationValidationData {
     pub state: String,
 
     /// A string to mitigate replay attacks.
-    pub nonce: String,
+    pub nonce: Option<String>,
 
     /// The URI where the end-user will be redirected after authorization.
     pub redirect_uri: Url,
@@ -216,7 +216,7 @@ fn build_authorization_request(
 ) -> Result<(FullAuthorizationRequest, AuthorizationValidationData), AuthorizationError> {
     let AuthorizationRequestData {
         client_id,
-        mut scope,
+        scope,
         redirect_uri,
         code_challenge_methods_supported,
         display,
@@ -229,9 +229,13 @@ fn build_authorization_request(
         response_mode,
     } = authorization_data;
 
+    let is_openid = scope.contains(&OPENID);
+
     // Generate a random CSRF "state" token and a nonce.
     let state = Alphanumeric.sample_string(rng, 16);
-    let nonce = Alphanumeric.sample_string(rng, 16);
+
+    // Generate a random nonce if we're in 'OpenID Connect' mode
+    let nonce = is_openid.then(|| Alphanumeric.sample_string(rng, 16));
 
     // Use PKCE, whenever possible.
     let (pkce, code_challenge_verifier) = if code_challenge_methods_supported
@@ -263,7 +267,7 @@ fn build_authorization_request(
             scope,
             state: Some(state.clone()),
             response_mode,
-            nonce: Some(nonce.clone()),
+            nonce: nonce.clone(),
             display,
             prompt,
             max_age,
@@ -440,10 +444,12 @@ pub async fn access_token_with_authorization_code(
             .extract_optional_with_options(&mut claims, TokenHash::new(signing_alg, &code))
             .map_err(IdTokenError::from)?;
 
-        // Nonce must match.
-        claims::NONCE
-            .extract_required_with_options(&mut claims, validation_data.nonce.as_str())
-            .map_err(IdTokenError::from)?;
+        // Nonce must match if we have one.
+        if let Some(nonce) = validation_data.nonce.as_deref() {
+            claims::NONCE
+                .extract_required_with_options(&mut claims, nonce)
+                .map_err(IdTokenError::from)?;
+        }
 
         Some(id_token.into_owned())
     } else {

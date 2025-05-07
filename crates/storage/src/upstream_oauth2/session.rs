@@ -48,7 +48,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     ///   upstream OAuth provider
     /// * `code_challenge_verifier`: the code challenge verifier used in this
     ///   session, if PKCE is being used
-    /// * `nonce`: the `nonce` used in this session
+    /// * `nonce`: the `nonce` used in this session if in OIDC mode
     ///
     /// # Errors
     ///
@@ -60,7 +60,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state: String,
         code_challenge_verifier: Option<String>,
-        nonce: String,
+        nonce: Option<String>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     /// Mark a session as completed and associate the given link
@@ -122,7 +122,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state: String,
         code_challenge_verifier: Option<String>,
-        nonce: String,
+        nonce: Option<String>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     async fn complete_with_link(

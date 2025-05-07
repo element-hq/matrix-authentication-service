@@ -998,7 +998,7 @@ mod tests {
                 &provider,
                 "state".to_owned(),
                 None,
-                "nonce".to_owned(),
+                None,
             )
             .await
             .unwrap();

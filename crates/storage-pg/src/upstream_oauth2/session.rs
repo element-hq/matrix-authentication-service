@@ -38,7 +38,7 @@ struct SessionLookup {
     upstream_oauth_link_id: Option<Uuid>,
     state: String,
     code_challenge_verifier: Option<String>,
-    nonce: String,
+    nonce: Option<String>,
     id_token: Option<String>,
     userinfo: Option<serde_json::Value>,
     created_at: DateTime<Utc>,
@@ -191,7 +191,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state_str: String,
         code_challenge_verifier: Option<String>,
-        nonce: String,
+        nonce: Option<String>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);

@@ -186,7 +186,7 @@ async fn pass_access_token_with_authorization_code() {
     let redirect_uri = Url::parse(REDIRECT_URI).unwrap();
     let validation_data = AuthorizationValidationData {
         state: "some_state".to_owned(),
-        nonce: NONCE.to_owned(),
+        nonce: Some(NONCE.to_owned()),
         redirect_uri,
         code_challenge_verifier: Some(CODE_VERIFIER.to_owned()),
     };
@@ -244,7 +244,7 @@ async fn fail_access_token_with_authorization_code_wrong_nonce() {
     let redirect_uri = Url::parse(REDIRECT_URI).unwrap();
     let validation_data = AuthorizationValidationData {
         state: "some_state".to_owned(),
-        nonce: "wrong_nonce".to_owned(),
+        nonce: Some("wrong_nonce".to_owned()),
         redirect_uri,
         code_challenge_verifier: Some(CODE_VERIFIER.to_owned()),
     };
@@ -306,7 +306,7 @@ async fn fail_access_token_with_authorization_code_no_id_token() {
     let nonce = "some_nonce".to_owned();
     let validation_data = AuthorizationValidationData {
         state: "some_state".to_owned(),
-        nonce: nonce.clone(),
+        nonce: Some(nonce.clone()),
         redirect_uri,
         code_challenge_verifier: Some(CODE_VERIFIER.to_owned()),
     };
