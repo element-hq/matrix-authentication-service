@@ -371,7 +371,7 @@ version = "0.2.1"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.44.2"
+version = "1.45.0"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]
