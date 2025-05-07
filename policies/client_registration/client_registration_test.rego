@@ -212,7 +212,7 @@ test_web_redirect_uri if {
 	client_registration.allow with input.client_metadata as {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
-		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback"],
+		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback", "https://example.com/callback?query=value"],
 	}
 }
 
@@ -286,6 +286,14 @@ test_web_redirect_uri_localhost_not_allowed if {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["http://[::1]:1234/callback"],
+	}
+}
+
+test_web_redirect_uri_with_query if {
+	client_registration.allow with input.client_metadata as {
+		"application_type": "web",
+		"client_uri": "https://example.com/",
+		"redirect_uris": ["https://example.com/callback?query=value", "https://example.com?query=value"],
 	}
 }
 
