@@ -20,7 +20,7 @@ icu_locid_transform = { version = "1.5.0", features = ["compiled_data", "std"] }
 icu_plurals = { version = "1.5.0", features = ["compiled_data", "std"] }
 icu_provider = { version = "1.5.0", features = ["std", "sync"] }
 icu_provider_adapters = { version = "1.5.0", features = ["std"] }
-icu_experimental = { version = "0.1.0", features = ["compiled_data", "std"] }
+icu_experimental = { version = "0.2.0", features = ["compiled_data", "std"] }
 pad = "0.1.6"
 pest = "2.8.0"
 pest_derive = "2.8.0"
