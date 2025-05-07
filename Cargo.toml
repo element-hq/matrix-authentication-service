@@ -226,7 +226,7 @@ features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.9.0"
+version = "2.10.2"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
