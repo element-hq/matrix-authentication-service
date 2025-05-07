@@ -356,10 +356,12 @@ pub(crate) async fn handler(
             )
             .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
-        // Nonce must match.
-        mas_jose::claims::NONCE
-            .extract_required_with_options(&mut claims, session.nonce.as_str())
-            .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        // Nonce must match if present.
+        if let Some(nonce) = session.nonce.as_deref() {
+            mas_jose::claims::NONCE
+                .extract_required_with_options(&mut claims, nonce)
+                .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        }
 
         context = context.with_id_token_claims(claims);
     }

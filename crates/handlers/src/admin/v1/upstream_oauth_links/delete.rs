@@ -108,14 +108,7 @@ mod tests {
         // Pretend it was linked by an authorization session
         let session = repo
             .upstream_oauth_session()
-            .add(
-                &mut rng,
-                &state.clock,
-                &provider,
-                String::new(),
-                None,
-                String::new(),
-            )
+            .add(&mut rng, &state.clock, &provider, String::new(), None, None)
             .await
             .unwrap();
 

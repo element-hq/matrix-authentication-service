@@ -400,6 +400,14 @@ pub struct SignInWithApple {
     pub key_id: String,
 }
 
+fn default_scope() -> String {
+    "openid".to_owned()
+}
+
+fn is_default_scope(scope: &str) -> bool {
+    scope == default_scope()
+}
+
 /// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -495,6 +503,9 @@ pub struct Provider {
     pub id_token_signed_response_alg: JsonWebSignatureAlg,
 
     /// The scopes to request from the provider
+    ///
+    /// Defaults to `openid`.
+    #[serde(default = "default_scope", skip_serializing_if = "is_default_scope")]
     pub scope: String,
 
     /// How to discover the provider's configuration

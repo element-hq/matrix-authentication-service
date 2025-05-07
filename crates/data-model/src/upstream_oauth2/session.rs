@@ -250,7 +250,7 @@ pub struct UpstreamOAuthAuthorizationSession {
     pub provider_id: Ulid,
     pub state_str: String,
     pub code_challenge_verifier: Option<String>,
-    pub nonce: String,
+    pub nonce: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
