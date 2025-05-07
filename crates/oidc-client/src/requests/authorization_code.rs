@@ -191,7 +191,8 @@ pub struct AuthorizationValidationData {
     pub state: String,
 
     /// A string to mitigate replay attacks.
-    /// Used when the `openid` scope is set (and therefore we are using OpenID Connect).
+    /// Used when the `openid` scope is set (and therefore we are using OpenID
+    /// Connect).
     pub nonce: Option<String>,
 
     /// The URI where the end-user will be redirected after authorization.
