@@ -13,7 +13,10 @@ use clap::Parser;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
-    EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
+    EnvFilter, Layer, Registry,
+    filter::{LevelFilter, filter_fn},
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
 };
 
 mod app_state;
@@ -97,6 +100,10 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .or_else(|_| EnvFilter::try_new("info"))
         .context("could not setup logging filter")?;
 
+    // Suppress the following warning from the Jaeger propagator:
+    //   Invalid jaeger header format header_value=""
+    let suppress_layer = filter_fn(|metadata| metadata.name() != "JaegerPropagator.InvalidHeader");
+
     // Setup the rustls crypto provider
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
@@ -151,6 +158,7 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     });
 
     let subscriber = Registry::default()
+        .with(suppress_layer)
         .with(sentry_layer)
         .with(telemetry_layer)
         .with(filter_layer)
