@@ -19,8 +19,8 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, SystemClock};
-use mas_storage_pg::PgRepository;
+use mas_storage::{BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, SystemClock, RepositoryFactory};
+use mas_storage_pg::PgRepositoryFactory;
 use mas_templates::Templates;
 use opentelemetry::{KeyValue, metrics::Histogram};
 use rand::SeedableRng;
@@ -31,7 +31,7 @@ use crate::telemetry::METER;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: PgPool,
+    pub repository_factory: PgRepositoryFactory,
     pub templates: Templates,
     pub key_store: Keystore,
     pub cookie_manager: CookieManager,
@@ -53,7 +53,7 @@ pub struct AppState {
 impl AppState {
     /// Init the metrics for the app state.
     pub fn init_metrics(&mut self) {
-        let pool = self.pool.clone();
+        let pool = self.repository_factory.pool();
         METER
             .i64_observable_up_down_counter("db.connections.usage")
             .with_description("The number of connections that are currently in `state` described by the state attribute.")
@@ -66,7 +66,7 @@ impl AppState {
             })
             .build();
 
-        let pool = self.pool.clone();
+        let pool = self.repository_factory.pool();
         METER
             .i64_observable_up_down_counter("db.connections.max")
             .with_description("The maximum number of open connections allowed.")
@@ -88,14 +88,14 @@ impl AppState {
 
     /// Init the metadata cache in the background
     pub fn init_metadata_cache(&self) {
-        let pool = self.pool.clone();
+        let factory = self.repository_factory.clone();
         let metadata_cache = self.metadata_cache.clone();
         let http_client = self.http_client.clone();
 
         tokio::spawn(
             LogContext::new("metadata-cache-warmup")
                 .run(async move || {
-                    let conn = match pool.acquire().await {
+                    let mut repo = match factory.create().await {
                         Ok(conn) => conn,
                         Err(e) => {
                             tracing::error!(
@@ -105,8 +105,6 @@ impl AppState {
                             return;
                         }
                     };
-
-                    let mut repo = PgRepository::from_conn(conn);
 
                     if let Err(e) = metadata_cache
                         .warm_up_and_run(
@@ -127,9 +125,17 @@ impl AppState {
     }
 }
 
+// XXX(quenting): we only use this for the healthcheck endpoint, checking the db
+// should be part of the repository
 impl FromRef<AppState> for PgPool {
     fn from_ref(input: &AppState) -> Self {
-        input.pool.clone()
+        input.repository_factory.pool()
+    }
+}
+
+impl FromRef<AppState> for BoxRepositoryFactory {
+    fn from_ref(input: &AppState) -> Self {
+        input.repository_factory.clone().boxed()
     }
 }
 
@@ -359,14 +365,14 @@ impl FromRequestParts<AppState> for RequesterFingerprint {
 }
 
 impl FromRequestParts<AppState> for BoxRepository {
-    type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
+    type Rejection = ErrorWrapper<mas_storage::RepositoryError>;
 
     async fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         let start = Instant::now();
-        let repo = PgRepository::from_pool(&state.pool).await?;
+        let repo = state.repository_factory.create().await?;
 
         // Measure the time it took to create the connection
         let duration = start.elapsed();
@@ -376,6 +382,6 @@ impl FromRequestParts<AppState> for BoxRepository {
             histogram.record(duration_ms, &[]);
         }
 
-        Ok(repo.boxed())
+        Ok(repo)
     }
 }

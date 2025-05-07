@@ -18,7 +18,7 @@ use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
-use mas_storage_pg::MIGRATOR;
+use mas_storage_pg::{PgRepositoryFactory, MIGRATOR};
 use sqlx::migrate::Migrate;
 use tracing::{Instrument, info, info_span, warn};
 
@@ -226,7 +226,7 @@ impl Options {
 
         let state = {
             let mut s = AppState {
-                pool,
+                repository_factory: PgRepositoryFactory::new(pool),
                 templates,
                 key_store,
                 cookie_manager,
