@@ -102,9 +102,13 @@ fn oauth_security_scheme(url_builder: Option<&UrlBuilder>) -> SecurityScheme {
             url_builder.oauth_token_endpoint().to_string(),
         )
     } else {
+        // This is a dirty fix for Swagger UI: when it joins the URLs with the
+        // base URL, if the path starts with a slash, it will go to the root of
+        // the domain instead of the API root.
+        // It works if we make it explicitly relative
         (
-            OAuth2AuthorizationEndpoint::PATH.to_owned(),
-            OAuth2TokenEndpoint::PATH.to_owned(),
+            format!(".{}", OAuth2AuthorizationEndpoint::PATH),
+            format!(".{}", OAuth2TokenEndpoint::PATH),
         )
     };
 
