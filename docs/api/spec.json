@@ -2542,6 +2542,11 @@
             }
           }
         }
+      },
+      "token": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An access token with access to the admin API"
       }
     },
     "schemas": {
@@ -3723,6 +3728,11 @@
   "security": [
     {
       "oauth2": [
+        "urn:mas:admin"
+      ]
+    },
+    {
+      "bearer": [
         "urn:mas:admin"
       ]
     }

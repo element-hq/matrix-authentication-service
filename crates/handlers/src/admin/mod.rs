@@ -81,35 +81,57 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ),
             ..Default::default()
         })
+        .security_scheme("oauth2", oauth_security_scheme(None))
         .security_scheme(
-            "oauth2",
-            SecurityScheme::OAuth2 {
-                flows: OAuth2Flows {
-                    client_credentials: Some(OAuth2Flow::ClientCredentials {
-                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                        scopes: IndexMap::from([(
-                            "urn:mas:admin".to_owned(),
-                            "Grant access to the admin API".to_owned(),
-                        )]),
-                    }),
-                    authorization_code: Some(OAuth2Flow::AuthorizationCode {
-                        authorization_url: OAuth2AuthorizationEndpoint::PATH.to_owned(),
-                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                        scopes: IndexMap::from([(
-                            "urn:mas:admin".to_owned(),
-                            "Grant access to the admin API".to_owned(),
-                        )]),
-                    }),
-                    implicit: None,
-                    password: None,
-                },
-                description: None,
+            "token",
+            SecurityScheme::Http {
+                scheme: "bearer".to_owned(),
+                bearer_format: None,
+                description: Some("An access token with access to the admin API".to_owned()),
                 extensions: IndexMap::default(),
             },
         )
         .security_requirement_scopes("oauth2", ["urn:mas:admin"])
+        .security_requirement_scopes("bearer", ["urn:mas:admin"])
+}
+
+fn oauth_security_scheme(url_builder: Option<&UrlBuilder>) -> SecurityScheme {
+    let (authorization_url, token_url) = if let Some(url_builder) = url_builder {
+        (
+            url_builder.oauth_authorization_endpoint().to_string(),
+            url_builder.oauth_token_endpoint().to_string(),
+        )
+    } else {
+        (
+            OAuth2AuthorizationEndpoint::PATH.to_owned(),
+            OAuth2TokenEndpoint::PATH.to_owned(),
+        )
+    };
+
+    let scopes = IndexMap::from([(
+        "urn:mas:admin".to_owned(),
+        "Grant access to the admin API".to_owned(),
+    )]);
+
+    SecurityScheme::OAuth2 {
+        flows: OAuth2Flows {
+            client_credentials: Some(OAuth2Flow::ClientCredentials {
+                refresh_url: Some(token_url.clone()),
+                token_url: token_url.clone(),
+                scopes: scopes.clone(),
+            }),
+            authorization_code: Some(OAuth2Flow::AuthorizationCode {
+                authorization_url,
+                refresh_url: Some(token_url.clone()),
+                token_url,
+                scopes,
+            }),
+            implicit: None,
+            password: None,
+        },
+        description: None,
+        extensions: IndexMap::default(),
+    }
 }
 
 pub fn router<S>() -> (OpenApi, Router<S>)
@@ -146,10 +168,13 @@ where
                 move |State(url_builder): State<UrlBuilder>| {
                     // Let's set the servers to the HTTP base URL
                     let mut api = api.clone();
-                    api.servers = vec![Server {
-                        url: url_builder.http_base().to_string(),
-                        ..Server::default()
-                    }];
+
+                    let _ = TransformOpenApi::new(&mut api)
+                        .server(Server {
+                            url: url_builder.http_base().to_string(),
+                            ..Server::default()
+                        })
+                        .security_scheme("oauth2", oauth_security_scheme(Some(&url_builder)));
 
                     std::future::ready(Json(api))
                 }
