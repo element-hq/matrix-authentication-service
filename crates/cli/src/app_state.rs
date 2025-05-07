@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Instant};
+use std::{convert::Infallible, net::IpAddr, sync::Arc};
 
 use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
@@ -19,10 +19,12 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, SystemClock, RepositoryFactory};
+use mas_storage::{
+    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, RepositoryFactory, SystemClock,
+};
 use mas_storage_pg::PgRepositoryFactory;
 use mas_templates::Templates;
-use opentelemetry::{KeyValue, metrics::Histogram};
+use opentelemetry::KeyValue;
 use rand::SeedableRng;
 use sqlx::PgPool;
 use tracing::Instrument;
@@ -47,7 +49,6 @@ pub struct AppState {
     pub activity_tracker: ActivityTracker,
     pub trusted_proxies: Vec<IpNetwork>,
     pub limiter: Limiter,
-    pub conn_acquisition_histogram: Option<Histogram<u64>>,
 }
 
 impl AppState {
@@ -76,14 +77,6 @@ impl AppState {
                 instrument.observe(i64::from(max_conn), &[]);
             })
             .build();
-
-        // Track the connection acquisition time
-        let histogram = METER
-            .u64_histogram("db.client.connections.create_time")
-            .with_description("The time it took to create a new connection.")
-            .with_unit("ms")
-            .build();
-        self.conn_acquisition_histogram = Some(histogram);
     }
 
     /// Init the metadata cache in the background
@@ -371,17 +364,7 @@ impl FromRequestParts<AppState> for BoxRepository {
         _parts: &mut axum::http::request::Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let start = Instant::now();
         let repo = state.repository_factory.create().await?;
-
-        // Measure the time it took to create the connection
-        let duration = start.elapsed();
-        let duration_ms = duration.as_millis().try_into().unwrap_or(u64::MAX);
-
-        if let Some(histogram) = &state.conn_acquisition_histogram {
-            histogram.record(duration_ms, &[]);
-        }
-
         Ok(repo)
     }
 }

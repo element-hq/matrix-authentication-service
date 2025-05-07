@@ -175,6 +175,7 @@ pub(crate) mod iden;
 pub(crate) mod pagination;
 pub(crate) mod policy_data;
 pub(crate) mod repository;
+pub(crate) mod telemetry;
 pub(crate) mod tracing;
 
 pub(crate) use self::errors::DatabaseInconsistencyError;

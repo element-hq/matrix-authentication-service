@@ -18,7 +18,7 @@ use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
-use mas_storage_pg::{PgRepositoryFactory, MIGRATOR};
+use mas_storage_pg::{MIGRATOR, PgRepositoryFactory};
 use sqlx::migrate::Migrate;
 use tracing::{Instrument, info, info_span, warn};
 
@@ -242,7 +242,6 @@ impl Options {
                 activity_tracker,
                 trusted_proxies,
                 limiter,
-                conn_acquisition_histogram: None,
             };
             s.init_metrics();
             s.init_metadata_cache();

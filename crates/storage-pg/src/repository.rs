@@ -48,6 +48,7 @@ use crate::{
         job::PgQueueJobRepository, schedule::PgQueueScheduleRepository,
         worker::PgQueueWorkerRepository,
     },
+    telemetry::DB_CLIENT_CONNECTIONS_CREATE_TIME_HISTOGRAM,
     upstream_oauth2::{
         PgUpstreamOAuthLinkRepository, PgUpstreamOAuthProviderRepository,
         PgUpstreamOAuthSessionRepository,
@@ -89,10 +90,18 @@ impl PgRepositoryFactory {
 #[async_trait]
 impl RepositoryFactory for PgRepositoryFactory {
     async fn create(&self) -> Result<BoxRepository, RepositoryError> {
-        Ok(PgRepository::from_pool(&self.pool)
+        let start = std::time::Instant::now();
+        let repo = PgRepository::from_pool(&self.pool)
             .await
             .map_err(RepositoryError::from_error)?
-            .boxed())
+            .boxed();
+
+        // Measure the time it took to create the connection
+        let duration = start.elapsed();
+        let duration_ms = duration.as_millis().try_into().unwrap_or(u64::MAX);
+        DB_CLIENT_CONNECTIONS_CREATE_TIME_HISTOGRAM.record(duration_ms, &[]);
+
+        Ok(repo)
     }
 }
 

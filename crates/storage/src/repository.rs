@@ -31,7 +31,8 @@ use crate::{
 };
 
 /// A [`RepositoryFactory`] is a factory that can create a [`BoxRepository`]
-// XXX(quenting): this could be generic over the repository type, but it's annoying to make it dyn-safe
+// XXX(quenting): this could be generic over the repository type, but it's annoying to make it
+// dyn-safe
 #[async_trait]
 pub trait RepositoryFactory {
     /// Create a new [`BoxRepository`]
