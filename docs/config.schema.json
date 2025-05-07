@@ -1974,7 +1974,6 @@
       "required": [
         "client_id",
         "id",
-        "scope",
         "token_endpoint_auth_method"
       ],
       "properties": {
@@ -2044,7 +2043,7 @@
           ]
         },
         "scope": {
-          "description": "The scopes to request from the provider",
+          "description": "The scopes to request from the provider\n\nDefaults to `openid`.",
           "type": "string"
         },
         "discovery_mode": {
