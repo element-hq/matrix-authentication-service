@@ -189,12 +189,6 @@ test_redirect_uris if {
 		"redirect_uris": [],
 	}
 
-	# HTTPS redirect_uri with non-standard port
-	client_registration.allow with input.client_metadata as {
-		"client_uri": "https://example.com/",
-		"redirect_uris": ["https://example.com:8443/callback"],
-	}
-
 	# Not required for the client_credentials grant
 	client_registration.allow with input.client_metadata as {
 		"grant_types": ["client_credentials"],
@@ -219,6 +213,13 @@ test_web_redirect_uri if {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback", "https://example.com/callback?query=value"],
+	}
+
+	# HTTPS redirect_uri with non-standard port
+	client_registration.allow with input.client_metadata as {
+		"application_type": "web",
+		"client_uri": "https://example.com/",
+		"redirect_uris": ["https://example.com:8443/callback"],
 	}
 }
 
