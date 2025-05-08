@@ -264,14 +264,14 @@ impl Object for TranslateFunc {
 
         let (message, _locale) = if let Some(count) = kwargs.get("count")? {
             self.translator
-                .plural_with_fallback(self.lang.clone(), key, count)
+                .plural_with_fallback(self.lang, key, count)
                 .ok_or(Error::new(
                     ErrorKind::InvalidOperation,
                     "Missing translation",
                 ))?
         } else {
             self.translator
-                .message_with_fallback(self.lang.clone(), key)
+                .message_with_fallback(self.lang, key)
                 .ok_or(Error::new(
                     ErrorKind::InvalidOperation,
                     "Missing translation",
@@ -364,7 +364,7 @@ impl Object for TranslateFunc {
 
                 Ok(Value::from(
                     self.translator
-                        .short_time(&self.lang, &TimeAdapter(time))
+                        .short_time(&self.lang, time_like_to_time(time))
                         .map_err(|_e| {
                             Error::new(ErrorKind::InvalidOperation, "Failed to format time")
                         })?,
@@ -379,32 +379,20 @@ impl Object for TranslateFunc {
     }
 }
 
-/// An adapter to make a [`Timelike`] implement [`IsoTimeInput`]
-///
-/// [`Timelike`]: chrono::Timelike
-/// [`IsoTimeInput`]: mas_i18n::icu_datetime::input::IsoTimeInput
-struct TimeAdapter<T>(T);
-
-impl<T: chrono::Timelike> mas_i18n::icu_datetime::input::IsoTimeInput for TimeAdapter<T> {
-    fn hour(&self) -> Option<mas_i18n::icu_calendar::types::IsoHour> {
-        let hour: usize = chrono::Timelike::hour(&self.0).try_into().ok()?;
-        hour.try_into().ok()
-    }
-
-    fn minute(&self) -> Option<mas_i18n::icu_calendar::types::IsoMinute> {
-        let minute: usize = chrono::Timelike::minute(&self.0).try_into().ok()?;
-        minute.try_into().ok()
-    }
-
-    fn second(&self) -> Option<mas_i18n::icu_calendar::types::IsoSecond> {
-        let second: usize = chrono::Timelike::second(&self.0).try_into().ok()?;
-        second.try_into().ok()
-    }
-
-    fn nanosecond(&self) -> Option<mas_i18n::icu_calendar::types::NanoSecond> {
-        let nanosecond: usize = chrono::Timelike::nanosecond(&self.0).try_into().ok()?;
-        nanosecond.try_into().ok()
-    }
+fn time_like_to_time(time: impl chrono::Timelike) -> mas_i18n::icu_datetime::input::Time {
+    mas_i18n::icu_datetime::input::Time::try_new(
+        time.hour()
+            .try_into()
+            .expect("chrono::Timelike::hour() out of range"),
+        time.minute()
+            .try_into()
+            .expect("chrono::Timelike::minute() out of range"),
+        time.second()
+            .try_into()
+            .expect("chrono::Timelike::second() out of range"),
+        time.nanosecond(),
+    )
+    .expect("chrono::Timelike returned invalid time components")
 }
 
 struct IncludeAsset {

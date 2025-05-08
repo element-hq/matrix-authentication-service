@@ -263,7 +263,7 @@ impl IntoResponse for RouteError {
     }
 }
 
-impl_from_error_for_route!(mas_i18n::DataError);
+impl_from_error_for_route!(mas_i18n::ParseError);
 impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::EvaluationError);

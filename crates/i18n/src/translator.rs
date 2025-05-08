@@ -10,36 +10,38 @@ use camino::{Utf8Path, Utf8PathBuf};
 use icu_experimental::relativetime::{
     RelativeTimeFormatter, RelativeTimeFormatterOptions, options::Numeric,
 };
-use icu_locid::{Locale, ParserError};
-use icu_locid_transform::fallback::{
-    LocaleFallbackPriority, LocaleFallbackSupplement, LocaleFallbacker, LocaleFallbackerWithConfig,
+use icu_locale::{
+    Locale,
+    fallback::{LocaleFallbackPriority, LocaleFallbacker, LocaleFallbackerWithConfig},
 };
-use icu_plurals::{PluralRules, PluralsError};
+use icu_plurals::PluralRules;
 use icu_provider::{
-    DataError, DataErrorKind, DataKey, DataLocale, DataRequest, DataRequestMetadata, data_key,
-    fallback::LocaleFallbackConfig,
+    DataError, DataErrorKind, DataIdentifierBorrowed, DataLocale, DataMarker, DataRequest,
+    DataRequestMetadata, data_marker, fallback::LocaleFallbackConfig,
 };
 use icu_provider_adapters::fallback::LocaleFallbackProvider;
 use thiserror::Error;
-use writeable::Writeable;
 
 use crate::{sprintf::Message, translations::TranslationTree};
 
-/// Fake data key for errors
-const DATA_KEY: DataKey = data_key!("mas/translations@1");
+data_marker!(
+    /// Fake data key for errors
+    MasTranslationV1,
+    &'static str,
+);
 
 const FALLBACKER: LocaleFallbackerWithConfig<'static> = LocaleFallbacker::new().for_config({
-    let mut config = LocaleFallbackConfig::const_default();
-    config.priority = LocaleFallbackPriority::Collation;
-    config.fallback_supplement = Some(LocaleFallbackSupplement::Collation);
+    let mut config = LocaleFallbackConfig::default();
+    config.priority = LocaleFallbackPriority::Language;
     config
 });
 
 /// Construct a [`DataRequest`] for the given locale
 pub fn data_request_for_locale(locale: &DataLocale) -> DataRequest<'_> {
+    let id = DataIdentifierBorrowed::for_locale(locale);
     let mut metadata = DataRequestMetadata::default();
     metadata.silent = true;
-    DataRequest { locale, metadata }
+    DataRequest { id, metadata }
 }
 
 /// Error type for loading translations
@@ -70,7 +72,7 @@ pub enum LoadError {
     InvalidLocale {
         path: Utf8PathBuf,
         #[source]
-        source: ParserError,
+        source: icu_locale::ParseError,
     },
 
     #[error("Invalid file name {path:?}")]
@@ -81,7 +83,6 @@ pub enum LoadError {
 #[derive(Debug)]
 pub struct Translator {
     translations: HashMap<DataLocale, TranslationTree>,
-    plural_provider: LocaleFallbackProvider<icu_plurals::provider::Baked>,
     default_locale: DataLocale,
 }
 
@@ -89,17 +90,10 @@ impl Translator {
     /// Create a new translator from a set of translations.
     #[must_use]
     pub fn new(translations: HashMap<DataLocale, TranslationTree>) -> Self {
-        let fallbacker = LocaleFallbacker::new().static_to_owned();
-        let plural_provider = LocaleFallbackProvider::new_with_fallbacker(
-            icu_plurals::provider::Baked,
-            fallbacker.clone(),
-        );
-
         Self {
             translations,
-            plural_provider,
             // TODO: make this configurable
-            default_locale: icu_locid::locale!("en").into(),
+            default_locale: icu_locale::locale!("en").into(),
         }
     }
 
@@ -186,9 +180,9 @@ impl Translator {
             }
 
             // Try the defaut locale if we hit the `und` locale
-            if locale.is_und() {
+            if locale.is_unknown() {
                 let message = self.message(&self.default_locale, key).ok()?;
-                return Some((message, self.default_locale.clone()));
+                return Some((message, self.default_locale));
             }
 
             iter.step();
@@ -209,14 +203,13 @@ impl Translator {
     pub fn message(&self, locale: &DataLocale, key: &str) -> Result<&Message, DataError> {
         let request = data_request_for_locale(locale);
 
-        let tree = self
-            .translations
-            .get(locale)
-            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+        let tree = self.translations.get(locale).ok_or_else(|| {
+            DataErrorKind::IdentifierNotFound.with_req(MasTranslationV1::INFO, request)
+        })?;
 
-        let message = tree
-            .message(key)
-            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+        let message = tree.message(key).ok_or_else(|| {
+            DataErrorKind::IdentifierNotFound.with_req(MasTranslationV1::INFO, request)
+        })?;
 
         Ok(message)
     }
@@ -248,7 +241,7 @@ impl Translator {
             }
 
             // Stop if we hit the `und` locale
-            if locale.is_und() {
+            if locale.is_unknown() {
                 return None;
             }
 
@@ -273,20 +266,24 @@ impl Translator {
         locale: &DataLocale,
         key: &str,
         count: usize,
-    ) -> Result<&Message, PluralsError> {
-        let plurals = PluralRules::try_new_cardinal_unstable(&self.plural_provider, locale)?;
+    ) -> Result<&Message, DataError> {
+        let fallbacker = LocaleFallbacker::new().static_to_owned();
+        let plural_provider =
+            LocaleFallbackProvider::new(icu_plurals::provider::Baked, fallbacker.clone());
+
+        let plurals =
+            PluralRules::try_new_cardinal_unstable(&plural_provider, locale.into_locale().into())?;
         let category = plurals.category_for(count);
 
         let request = data_request_for_locale(locale);
 
-        let tree = self
-            .translations
-            .get(locale)
-            .ok_or_else(|| DataErrorKind::MissingLocale.with_req(DATA_KEY, request))?;
+        let tree = self.translations.get(locale).ok_or_else(|| {
+            DataErrorKind::IdentifierNotFound.with_req(MasTranslationV1::INFO, request)
+        })?;
 
-        let message = tree
-            .pluralize(key, category)
-            .ok_or_else(|| DataErrorKind::MissingDataKey.with_req(DATA_KEY, request))?;
+        let message = tree.pluralize(key, category).ok_or_else(|| {
+            DataErrorKind::IdentifierNotFound.with_req(MasTranslationV1::INFO, request)
+        })?;
 
         Ok(message)
     }
@@ -302,21 +299,17 @@ impl Translator {
     /// # Errors
     ///
     /// Returns an error if the requested locale is not found.
-    pub fn relative_date(
-        &self,
-        locale: &DataLocale,
-        days: i64,
-    ) -> Result<String, icu_experimental::relativetime::RelativeTimeError> {
+    pub fn relative_date(&self, locale: &DataLocale, days: i64) -> Result<String, DataError> {
         // TODO: this is not using the fallbacker
         let formatter = RelativeTimeFormatter::try_new_long_day(
-            locale,
+            locale.into_locale().into(),
             RelativeTimeFormatterOptions {
                 numeric: Numeric::Auto,
             },
         )?;
 
         let date = formatter.format(days.into());
-        Ok(date.write_to_string().into_owned())
+        Ok(date.to_string())
     }
 
     /// Format time
@@ -329,18 +322,19 @@ impl Translator {
     /// # Errors
     ///
     /// Returns an error if the requested locale is not found.
-    pub fn short_time<T: icu_datetime::input::IsoTimeInput>(
+    pub fn short_time(
         &self,
         locale: &DataLocale,
-        time: &T,
-    ) -> Result<String, icu_datetime::DateTimeError> {
+        time: icu_datetime::input::Time,
+    ) -> Result<String, icu_datetime::DateTimeFormatterLoadError> {
         // TODO: this is not using the fallbacker
-        let formatter = icu_datetime::TimeFormatter::try_new_with_length(
-            locale,
-            icu_datetime::options::length::Time::Short,
+        let formatter = icu_datetime::NoCalendarFormatter::try_new(
+            locale.into_locale().into(),
+            icu_datetime::fieldsets::T::short(),
         )?;
+        let time = formatter.format(&time);
 
-        Ok(formatter.format_to_string(time))
+        Ok(time.to_string())
     }
 
     /// Get a list of available locales.
@@ -366,7 +360,7 @@ impl Translator {
             let mut fallbacker = FALLBACKER.fallback_for(locale);
 
             loop {
-                if fallbacker.get().is_und() {
+                if fallbacker.get().is_unknown() {
                     break;
                 }
 
@@ -377,14 +371,14 @@ impl Translator {
             }
         }
 
-        self.default_locale.clone()
+        self.default_locale
     }
 }
 
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use icu_locid::locale;
+    use icu_locale::locale;
 
     use crate::{sprintf::arg_list, translator::Translator};
 

@@ -102,7 +102,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
 
                 info!("Sending recovery email to {}", mailbox);
                 let context = EmailRecoveryContext::new(user, session.clone(), url)
-                    .with_language(lang.clone());
+                    .with_language(lang);
 
                 // XXX: we only log if the email fails to send, to avoid stopping the loop
                 if let Err(e) = mailer.send_recovery_email(mailbox, &context).await {

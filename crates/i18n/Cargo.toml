@@ -13,18 +13,17 @@ workspace = true
 
 [dependencies]
 camino.workspace = true
-icu_calendar = { version = "1.5.2", features = ["compiled_data", "std"] }
-icu_datetime = { version = "1.5.1", features = ["compiled_data", "std"] }
-icu_locid = { version = "1.5.0", features = ["std"] }
-icu_locid_transform = { version = "1.5.0", features = ["compiled_data", "std"] }
-icu_plurals = { version = "1.5.0", features = ["compiled_data", "std"] }
-icu_provider = { version = "1.5.0", features = ["std", "sync"] }
-icu_provider_adapters = { version = "1.5.0", features = ["std"] }
-icu_experimental = { version = "0.1.0", features = ["compiled_data", "std"] }
+icu_calendar = "2.0.0"
+icu_datetime = "2.0.0"
+icu_experimental = "0.3.0"
+icu_locale = "2.0.0"
+icu_plurals = "2.0.0"
+icu_provider = "2.0.0"
+icu_provider_adapters = "2.0.0"
+icu_time = "2.0.0"
 pad = "0.1.6"
 pest = "2.8.0"
 pest_derive = "2.8.0"
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-writeable = "0.5.5"

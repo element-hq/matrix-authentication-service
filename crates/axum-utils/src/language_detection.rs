@@ -8,7 +8,7 @@ use std::cmp::Reverse;
 
 use headers::{Error, Header};
 use http::{HeaderName, HeaderValue, header::ACCEPT_LANGUAGE};
-use icu_locid::Locale;
+use icu_locale::Locale;
 
 #[derive(PartialEq, Eq, Debug)]
 struct AcceptLanguagePart {
@@ -90,7 +90,7 @@ impl Header for AcceptLanguage {
                     b"*" => None,
                     locale => {
                         let locale =
-                            Locale::try_from_bytes(locale).map_err(|_e| Error::invalid())?;
+                            Locale::try_from_utf8(locale).map_err(|_e| Error::invalid())?;
                         Some(locale)
                     }
                 };
@@ -156,7 +156,7 @@ impl Header for AcceptLanguage {
 mod tests {
     use headers::HeaderMapExt;
     use http::{HeaderMap, HeaderValue, header::ACCEPT_LANGUAGE};
-    use icu_locid::locale;
+    use icu_locale::locale;
 
     use super::*;
 
