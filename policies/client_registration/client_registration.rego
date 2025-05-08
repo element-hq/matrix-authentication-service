@@ -31,9 +31,6 @@ secure_url(x) if {
 	url.host != "127.0.0.1"
 	url.host != "0.0.0.0"
 	url.host != "[::1]"
-
-	# Must be standard port for HTTPS
-	url.port == ""
 }
 
 host_matches_client_uri(_) if {
