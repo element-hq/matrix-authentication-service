@@ -44,7 +44,6 @@ const CompatSession: React.FC<{
   const data = useFragment(FRAGMENT, session);
 
   const clientName =
-    data.humanName ??
     (data.ssoLogin?.redirectUri
       ? simplifyUrl(data.ssoLogin.redirectUri)
       : undefined);
@@ -52,6 +51,7 @@ const CompatSession: React.FC<{
   const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 
   const deviceName =
+    data.humanName ??
     data.userAgent?.model ??
     (data.userAgent?.name
       ? data.userAgent?.os
