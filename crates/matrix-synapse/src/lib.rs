@@ -179,10 +179,10 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
 
         let response = self
-            .get(&format!("_synapse/admin/v2/users/{mxid}"))
+            .get(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .send_traced()
             .await
             .context("Failed to query user from Synapse")?;
@@ -293,9 +293,9 @@ impl HomeserverConnection for SynapseConnection {
                 );
             });
 
-        let mxid = urlencoding::encode(request.mxid());
+        let encoded_mxid = urlencoding::encode(request.mxid());
         let response = self
-            .put(&format!("_synapse/admin/v2/users/{mxid}"))
+            .put(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .json(&body)
             .send_traced()
             .await
@@ -379,10 +379,11 @@ impl HomeserverConnection for SynapseConnection {
         device_id: &str,
         display_name: &str,
     ) -> Result<(), anyhow::Error> {
+        let encoded_mxid = urlencoding::encode(mxid);
         let device_id = urlencoding::encode(device_id);
         let response = self
             .put(&format!(
-                "_synapse/admin/v2/users/{mxid}/devices/{device_id}"
+                "_synapse/admin/v2/users/{encoded_mxid}/devices/{device_id}"
             ))
             .json(&SynapseUpdateDeviceRequest {
                 display_name: Some(display_name),
@@ -417,12 +418,12 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
-        let device_id = urlencoding::encode(device_id);
+        let encoded_mxid = urlencoding::encode(mxid);
+        let encoded_device_id = urlencoding::encode(device_id);
 
         let response = self
             .delete(&format!(
-                "_synapse/admin/v2/users/{mxid}/devices/{device_id}"
+                "_synapse/admin/v2/users/{encoded_mxid}/devices/{encoded_device_id}"
             ))
             .send_traced()
             .await
@@ -458,10 +459,10 @@ impl HomeserverConnection for SynapseConnection {
         devices: HashSet<String>,
     ) -> Result<(), anyhow::Error> {
         // Get the list of current devices
-        let mxid_url = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
 
         let response = self
-            .get(&format!("_synapse/admin/v2/users/{mxid_url}/devices"))
+            .get(&format!("_synapse/admin/v2/users/{encoded_mxid}/devices"))
             .send_traced()
             .await
             .context("Failed to query devices from Synapse")?;
@@ -492,7 +493,7 @@ impl HomeserverConnection for SynapseConnection {
 
         let response = self
             .post(&format!(
-                "_synapse/admin/v2/users/{mxid_url}/delete_devices"
+                "_synapse/admin/v2/users/{encoded_mxid}/delete_devices"
             ))
             .json(&SynapseDeleteDevicesRequest { devices: to_delete })
             .send_traced()
@@ -531,10 +532,10 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
 
         let response = self
-            .post(&format!("_synapse/admin/v1/deactivate/{mxid}"))
+            .post(&format!("_synapse/admin/v1/deactivate/{encoded_mxid}"))
             .json(&SynapseDeactivateUserRequest { erase })
             // Deactivation can take a while, so we set a longer timeout
             .timeout(Duration::from_secs(60 * 5))
@@ -567,9 +568,9 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
         let response = self
-            .put(&format!("_synapse/admin/v2/users/{mxid}"))
+            .put(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .json(&SynapseUser {
                 deactivated: Some(false),
                 ..SynapseUser::default()
@@ -600,9 +601,11 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
         let response = self
-            .put(&format!("_matrix/client/v3/profile/{mxid}/displayname"))
+            .put(&format!(
+                "_matrix/client/v3/profile/{encoded_mxid}/displayname"
+            ))
             .json(&SetDisplayNameRequest { displayname })
             .send_traced()
             .await
@@ -646,11 +649,11 @@ impl HomeserverConnection for SynapseConnection {
         err(Debug),
     )]
     async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        let mxid = urlencoding::encode(mxid);
+        let encoded_mxid = urlencoding::encode(mxid);
 
         let response = self
             .post(&format!(
-                "_synapse/admin/v1/users/{mxid}/_allow_cross_signing_replacement_without_uia"
+                "_synapse/admin/v1/users/{encoded_mxid}/_allow_cross_signing_replacement_without_uia"
             ))
             .json(&SynapseAllowCrossSigningResetRequest {})
             .send_traced()
