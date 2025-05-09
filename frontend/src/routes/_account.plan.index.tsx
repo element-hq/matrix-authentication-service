@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
 
 export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment PlanManagement_siteConfig on SiteConfig {
@@ -43,18 +43,19 @@ function Plan(): React.ReactElement {
   }
 
   const ref = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState('0px');
+  const [height, setHeight] = useState("0px");
 
   // Poll the size of the iframe content and set the height
   // This will only work where the iframe is served from the same origin
-  const doHeight = () => {
-    const height = ref.current?.contentWindow?.document.body.parentElement?.scrollHeight;
+  const doHeight = useCallback(() => {
+    const height =
+      ref.current?.contentWindow?.document.body.parentElement?.scrollHeight;
     if (height) {
-      setHeight(height + 'px');
+      setHeight(`${height}px`);
     } else {
-      setHeight('500px');
+      setHeight("500px");
     }
-  };
+  }, []);
   useEffect(() => {
     doHeight();
 
@@ -63,10 +64,11 @@ function Plan(): React.ReactElement {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [doHeight]);
 
   return (
     <iframe
+      title="asd"
       ref={ref}
       onLoad={doHeight}
       src={planManagementIframeUri}
