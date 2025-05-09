@@ -299,6 +299,11 @@
       "last_auth_label": "Viimeisin todennus",
       "name_for_platform": "{{name}} {{platform}}:lle",
       "scopes_label": "Vaikutusalue",
+      "set_device_name": {
+        "help": "Aseta nimi, jonka avulla tunnistat tämän laitteen.",
+        "label": "Laitteen nimi",
+        "title": "Muokkaa laitteen nimeä"
+      },
       "signed_in_date": "Kirjautunut sisään <datetime/>",
       "signed_in_label": "Kirjautunut sisään",
       "title": "Laitteen tiedot",

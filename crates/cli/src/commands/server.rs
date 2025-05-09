@@ -13,11 +13,12 @@ use itertools::Itertools;
 use mas_config::{
     AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
 };
+use mas_context::LogContext;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
 use mas_storage::SystemClock;
-use mas_storage_pg::MIGRATOR;
+use mas_storage_pg::{MIGRATOR, PgRepositoryFactory};
 use sqlx::migrate::Migrate;
 use tracing::{Instrument, info, info_span, warn};
 
@@ -112,7 +113,8 @@ impl Options {
                 false,
                 false,
             )
-            .await?;
+            .await
+            .context("could not sync the configuration with the database")?;
         }
 
         // Initialize the key store
@@ -132,7 +134,7 @@ impl Options {
 
         load_policy_factory_dynamic_data_continuously(
             &policy_factory,
-            &pool,
+            PgRepositoryFactory::new(pool.clone()).boxed(),
             shutdown.soft_shutdown_token(),
             shutdown.task_tracker(),
         )
@@ -170,7 +172,7 @@ impl Options {
 
             info!("Starting task worker");
             mas_tasks::init(
-                &pool,
+                PgRepositoryFactory::new(pool.clone()),
                 &mailer,
                 homeserver_connection.clone(),
                 url_builder.clone(),
@@ -191,7 +193,7 @@ impl Options {
         // Initialize the activity tracker
         // Activity is flushed every minute
         let activity_tracker = ActivityTracker::new(
-            pool.clone(),
+            PgRepositoryFactory::new(pool.clone()).boxed(),
             Duration::from_secs(60),
             shutdown.task_tracker(),
             shutdown.soft_shutdown_token(),
@@ -213,7 +215,7 @@ impl Options {
         limiter.start();
 
         let graphql_schema = mas_handlers::graphql_schema(
-            &pool,
+            PgRepositoryFactory::new(pool.clone()).boxed(),
             &policy_factory,
             homeserver_connection.clone(),
             site_config.clone(),
@@ -224,7 +226,7 @@ impl Options {
 
         let state = {
             let mut s = AppState {
-                pool,
+                repository_factory: PgRepositoryFactory::new(pool),
                 templates,
                 key_store,
                 cookie_manager,
@@ -240,7 +242,6 @@ impl Options {
                 activity_tracker,
                 trusted_proxies,
                 limiter,
-                conn_acquisition_histogram: None,
             };
             s.init_metrics();
             s.init_metadata_cache();
@@ -316,11 +317,13 @@ impl Options {
 
         shutdown
             .task_tracker()
-            .spawn(mas_listener::server::run_servers(
-                servers,
-                shutdown.soft_shutdown_token(),
-                shutdown.hard_shutdown_token(),
-            ));
+            .spawn(LogContext::new("run-servers").run(|| {
+                mas_listener::server::run_servers(
+                    servers,
+                    shutdown.soft_shutdown_token(),
+                    shutdown.hard_shutdown_token(),
+                )
+            }));
 
         let exit_code = shutdown.run().await;
 

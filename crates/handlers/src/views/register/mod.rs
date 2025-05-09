@@ -7,7 +7,7 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse, Response},
 };
-use mas_axum_utils::{FancyError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
+use mas_axum_utils::{InternalError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
 use mas_data_model::SiteConfig;
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng};
@@ -20,7 +20,7 @@ mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
 
-#[tracing::instrument(name = "handlers.views.register.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -32,7 +32,7 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
@@ -76,7 +76,10 @@ pub(crate) async fn get(
     }
 
     let mut ctx = RegisterContext::new(providers);
-    let post_action = query.load_context(&mut repo).await?;
+    let post_action = query
+        .load_context(&mut repo)
+        .await
+        .map_err(InternalError::from_anyhow)?;
     if let Some(action) = post_action {
         ctx = ctx.with_post_action(action);
     }

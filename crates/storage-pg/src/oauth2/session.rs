@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Session, SessionState, User, UserAgent};
+use mas_data_model::{BrowserSession, Client, Session, SessionState, User};
 use mas_storage::{
     Clock, Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
@@ -55,6 +55,7 @@ struct OAuthSessionLookup {
     user_agent: Option<String>,
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
+    human_name: Option<String>,
 }
 
 impl TryFrom<OAuthSessionLookup> for Session {
@@ -87,9 +88,10 @@ impl TryFrom<OAuthSessionLookup> for Session {
             user_id: value.user_id.map(Ulid::from),
             user_session_id: value.user_session_id.map(Ulid::from),
             scope,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
+            human_name: value.human_name,
         })
     }
 }
@@ -195,6 +197,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
                      , user_agent
                      , last_active_at
                      , last_active_ip as "last_active_ip: IpAddr"
+                     , human_name
                 FROM oauth2_sessions
 
                 WHERE oauth2_session_id = $1
@@ -270,6 +273,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             user_agent: None,
             last_active_at: None,
             last_active_ip: None,
+            human_name: None,
         })
     }
 
@@ -392,6 +396,10 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::LastActiveIp)),
                 OAuthSessionLookupIden::LastActiveIp,
             )
+            .expr_as(
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::HumanName)),
+                OAuthSessionLookupIden::HumanName,
+            )
             .from(OAuth2Sessions::Table)
             .apply_filter(filter)
             .generate_pagination(
@@ -445,13 +453,16 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
     )]
     async fn record_batch_activity(
         &mut self,
-        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+        mut activities: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error> {
-        let mut ids = Vec::with_capacity(activity.len());
-        let mut last_activities = Vec::with_capacity(activity.len());
-        let mut ips = Vec::with_capacity(activity.len());
+        // Sort the activity by ID, so that when batching the updates, Postgres
+        // locks the rows in a stable order, preventing deadlocks
+        activities.sort_unstable();
+        let mut ids = Vec::with_capacity(activities.len());
+        let mut last_activities = Vec::with_capacity(activities.len());
+        let mut ips = Vec::with_capacity(activities.len());
 
-        for (id, last_activity, ip) in activity {
+        for (id, last_activity, ip) in activities {
             ids.push(Uuid::from(id));
             last_activities.push(last_activity);
             ips.push(ip);
@@ -490,14 +501,14 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             %session.id,
             %session.scope,
             client.id = %session.client_id,
-            session.user_agent = %user_agent.raw,
+            session.user_agent = user_agent,
         ),
         err,
     )]
     async fn record_user_agent(
         &mut self,
         mut session: Session,
-        user_agent: UserAgent,
+        user_agent: String,
     ) -> Result<Session, Self::Error> {
         let res = sqlx::query!(
             r#"
@@ -513,6 +524,40 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         .await?;
 
         session.user_agent = Some(user_agent);
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(session)
+    }
+
+    #[tracing::instrument(
+        name = "repository.oauth2_session.set_human_name",
+        skip(self),
+        fields(
+            client.id = %session.client_id,
+            session.human_name = ?human_name,
+        ),
+        err,
+    )]
+    async fn set_human_name(
+        &mut self,
+        mut session: Session,
+        human_name: Option<String>,
+    ) -> Result<Session, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE oauth2_sessions
+                SET human_name = $2
+                WHERE oauth2_session_id = $1
+            "#,
+            Uuid::from(session.id),
+            human_name.as_deref(),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        session.human_name = human_name;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 

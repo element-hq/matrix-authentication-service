@@ -560,7 +560,7 @@ telemetry:
     dsn: https://public@host:port/1
 ```
 
-### `email`
+## `email`
 
 Settings related to sending emails
 
@@ -583,19 +583,15 @@ email:
   # Send emails by calling a local sendmail binary
   #transport: sendmail
   #command: /usr/sbin/sendmail
-
-  # Send emails through the AWS SESv2 API
-  # This uses the AWS SDK, so the usual AWS environment variables are supported
-  #transport: aws_ses
 ```
 
-### `upstream_oauth2`
+## `upstream_oauth2`
 
 Settings related to upstream OAuth 2.0/OIDC providers.
 Additions and modifications within this section are synced with the database on server startup.
 Removed entries are only removed with the [`config sync --prune`](./cli/config.md#config-sync---prune---dry-run) command.
 
-#### `upstream_oauth2.providers`
+### `upstream_oauth2.providers`
 
 A list of upstream OAuth 2.0/OIDC providers to use to authenticate users.
 
@@ -716,6 +712,10 @@ upstream_oauth2:
       # Additional parameters to include in the authorization request
       #additional_authorization_parameters:
       #  foo: "bar"
+      
+      # Whether the `login_hint` should be forwarded to the provider in the
+      # authorization request.
+      #forward_login_hint: false
 
       # How user attributes should be mapped
       #

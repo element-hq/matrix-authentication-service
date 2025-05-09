@@ -9,7 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use hyper::StatusCode;
-use mas_axum_utils::sentry::SentryEventID;
+use mas_axum_utils::record_error;
 use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
 use mas_storage::{BoxClock, BoxRepository, BoxRng, compat::CompatSsoLoginRepository};
 use rand::distributions::{Alphanumeric, DistString};
@@ -43,17 +43,16 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            SentryEventID::from(event_id),
-            format!("{self}"),
-        )
-            .into_response()
+        let sentry_event_id = record_error!(self, Self::Internal(_));
+        let status_code = match &self {
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::MissingRedirectUrl | Self::InvalidRedirectUrl => StatusCode::BAD_REQUEST,
+        };
+        (status_code, sentry_event_id, format!("{self}")).into_response()
     }
 }
 
-#[tracing::instrument(name = "handlers.compat.login_sso_redirect.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.compat.login_sso_redirect.get", skip_all)]
 pub async fn get(
     mut rng: BoxRng,
     clock: BoxClock,

@@ -4,10 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Instant};
+use std::{convert::Infallible, net::IpAddr, sync::Arc};
 
 use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
+use mas_context::LogContext;
 use mas_data_model::SiteConfig;
 use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
@@ -18,10 +19,12 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, SystemClock};
-use mas_storage_pg::PgRepository;
+use mas_storage::{
+    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, RepositoryFactory, SystemClock,
+};
+use mas_storage_pg::PgRepositoryFactory;
 use mas_templates::Templates;
-use opentelemetry::{KeyValue, metrics::Histogram};
+use opentelemetry::KeyValue;
 use rand::SeedableRng;
 use sqlx::PgPool;
 use tracing::Instrument;
@@ -30,7 +33,7 @@ use crate::telemetry::METER;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: PgPool,
+    pub repository_factory: PgRepositoryFactory,
     pub templates: Templates,
     pub key_store: Keystore,
     pub cookie_manager: CookieManager,
@@ -46,13 +49,12 @@ pub struct AppState {
     pub activity_tracker: ActivityTracker,
     pub trusted_proxies: Vec<IpNetwork>,
     pub limiter: Limiter,
-    pub conn_acquisition_histogram: Option<Histogram<u64>>,
 }
 
 impl AppState {
     /// Init the metrics for the app state.
     pub fn init_metrics(&mut self) {
-        let pool = self.pool.clone();
+        let pool = self.repository_factory.pool();
         METER
             .i64_observable_up_down_counter("db.connections.usage")
             .with_description("The number of connections that are currently in `state` described by the state attribute.")
@@ -65,7 +67,7 @@ impl AppState {
             })
             .build();
 
-        let pool = self.pool.clone();
+        let pool = self.repository_factory.pool();
         METER
             .i64_observable_up_down_counter("db.connections.max")
             .with_description("The maximum number of open connections allowed.")
@@ -75,59 +77,58 @@ impl AppState {
                 instrument.observe(i64::from(max_conn), &[]);
             })
             .build();
-
-        // Track the connection acquisition time
-        let histogram = METER
-            .u64_histogram("db.client.connections.create_time")
-            .with_description("The time it took to create a new connection.")
-            .with_unit("ms")
-            .build();
-        self.conn_acquisition_histogram = Some(histogram);
     }
 
     /// Init the metadata cache in the background
     pub fn init_metadata_cache(&self) {
-        let pool = self.pool.clone();
+        let factory = self.repository_factory.clone();
         let metadata_cache = self.metadata_cache.clone();
         let http_client = self.http_client.clone();
 
         tokio::spawn(
-            async move {
-                let conn = match pool.acquire().await {
-                    Ok(conn) => conn,
-                    Err(e) => {
+            LogContext::new("metadata-cache-warmup")
+                .run(async move || {
+                    let mut repo = match factory.create().await {
+                        Ok(conn) => conn,
+                        Err(e) => {
+                            tracing::error!(
+                                error = &e as &dyn std::error::Error,
+                                "Failed to acquire a database connection"
+                            );
+                            return;
+                        }
+                    };
+
+                    if let Err(e) = metadata_cache
+                        .warm_up_and_run(
+                            &http_client,
+                            std::time::Duration::from_secs(60 * 15),
+                            &mut repo,
+                        )
+                        .await
+                    {
                         tracing::error!(
                             error = &e as &dyn std::error::Error,
-                            "Failed to acquire a database connection"
+                            "Failed to warm up the metadata cache"
                         );
-                        return;
                     }
-                };
-
-                let mut repo = PgRepository::from_conn(conn);
-
-                if let Err(e) = metadata_cache
-                    .warm_up_and_run(
-                        &http_client,
-                        std::time::Duration::from_secs(60 * 15),
-                        &mut repo,
-                    )
-                    .await
-                {
-                    tracing::error!(
-                        error = &e as &dyn std::error::Error,
-                        "Failed to warm up the metadata cache"
-                    );
-                }
-            }
-            .instrument(tracing::info_span!("metadata_cache.background_warmup")),
+                })
+                .instrument(tracing::info_span!("metadata_cache.background_warmup")),
         );
     }
 }
 
+// XXX(quenting): we only use this for the healthcheck endpoint, checking the db
+// should be part of the repository
 impl FromRef<AppState> for PgPool {
     fn from_ref(input: &AppState) -> Self {
-        input.pool.clone()
+        input.repository_factory.pool()
+    }
+}
+
+impl FromRef<AppState> for BoxRepositoryFactory {
+    fn from_ref(input: &AppState) -> Self {
+        input.repository_factory.clone().boxed()
     }
 }
 
@@ -357,23 +358,13 @@ impl FromRequestParts<AppState> for RequesterFingerprint {
 }
 
 impl FromRequestParts<AppState> for BoxRepository {
-    type Rejection = ErrorWrapper<mas_storage_pg::DatabaseError>;
+    type Rejection = ErrorWrapper<mas_storage::RepositoryError>;
 
     async fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let start = Instant::now();
-        let repo = PgRepository::from_pool(&state.pool).await?;
-
-        // Measure the time it took to create the connection
-        let duration = start.elapsed();
-        let duration_ms = duration.as_millis().try_into().unwrap_or(u64::MAX);
-
-        if let Some(histogram) = &state.conn_acquisition_histogram {
-            histogram.record(duration_ms, &[]);
-        }
-
-        Ok(repo.boxed())
+        let repo = state.repository_factory.create().await?;
+        Ok(repo)
     }
 }

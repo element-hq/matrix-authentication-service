@@ -1,0 +1,270 @@
+{
+  "action": {
+    "back": "Tilbake",
+    "cancel": "Avbryt",
+    "continue": "Fortsett",
+    "create_account": "Opprett konto",
+    "sign_in": "Logg inn",
+    "sign_out": "Logg ut",
+    "skip": "Hopp over",
+    "start_over": "Begynn på nytt",
+    "submit": "Send"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "OpenID Connect oppdagelsesdokument: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Lenke til tjenestens personvernerklæring",
+      "link": "Personvernerklæring"
+    },
+    "terms_and_conditions": {
+      "alt": "Lenke til tjenestens vilkår og betingelser",
+      "link": "Vilkår og betingelser"
+    }
+  },
+  "common": {
+    "display_name": "Visningsnavn",
+    "email_address": "E-postadresse",
+    "loading": "Laster inn...",
+    "mxid": "Matrix ID",
+    "password": "Passord",
+    "password_confirm": "Bekreft passord",
+    "username": "Brukernavn"
+  },
+  "error": {
+    "unexpected": "Uventet feil"
+  },
+  "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Denne kontoen (<em>%(mxid)s</em>) har blitt slettet. Hvis dette ikke er forventet, må du kontakte serveradministratoren.",
+        "heading": "Konto slettet"
+      },
+      "locked": {
+        "description": "Denne kontoen (<em>%(mxid)s</em> ) har blitt låst. Hvis dette ikke er forventet, kontakt serveradministratoren din.",
+        "heading": "Konto låst"
+      },
+      "logged_out": {
+        "description": "Denne økten har blitt avsluttet. Logg ut for å kunne logge inn igjen",
+        "heading": "Sesjonen er avsluttet"
+      }
+    },
+    "add_email": {
+      "description": "Skriv inn en e-postadresse for å gjenopprette kontoen din i tilfelle du mister tilgangen til den.",
+      "heading": "Legg til en e-postadresse"
+    },
+    "back_to_homepage": "Gå tilbake til hjemmesiden",
+    "captcha": {
+      "noscript": "Dette skjemaet er beskyttet av en CAPTCHA og krever at JavaScript er aktivert for å kunne sendes inn. Aktiver JavaScript i nettleseren din og last inn denne siden på nytt."
+    },
+    "change_password": {
+      "change": "Endre passord",
+      "confirm": "Bekreft passord",
+      "current": "Nåværende passord",
+      "description": "Dette vil endre passordet på kontoen din.",
+      "heading": "Endre passordet mitt",
+      "new": "Nytt passord"
+    },
+    "choose_display_name": {
+      "description": "Dette er navnet andre vil se. Du kan endre dette når som helst.",
+      "headline": "Velg visningsnavnet ditt"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> ønsker å få tilgang til kontoen din.",
+      "heading": "Vil du gi tilgang til kontoen din?",
+      "make_sure_you_trust": "Vær sikker på at du stoler på <span>%(client_name)s</span>.",
+      "this_will_allow": "Dette vil tillate <span> %(client_name)s </span> å:",
+      "you_may_be_sharing": "Det kan hende du deler sensitiv informasjon med denne siden eller appen."
+    },
+    "device_card": {
+      "access_requested": "Tilgang forespurt",
+      "device_code": "Kode",
+      "generic_device": "Enhet",
+      "ip_address": "IP adresse"
+    },
+    "device_code_link": {
+      "description": "Koble til en enhet",
+      "headline": "Skriv inn koden som vises på enheten din"
+    },
+    "device_consent": {
+      "another_device_access": "En annen enhet vil ha tilgang til kontoen din.",
+      "denied": {
+        "description": "Du nektet tilgang til %(client_name)s. Du kan lukke dette vinduet.",
+        "heading": "Tilgang nektet"
+      },
+      "granted": {
+        "description": "Du har gitt tilgang til %(client_name)s. Du kan lukke dette vinduet.",
+        "heading": "Tilgang gitt"
+      }
+    },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s på %(device_name)s",
+      "name_for_platform": "%(name)s til %(platform)s",
+      "unknown_device": "Ukjent enhet"
+    },
+    "email_in_use": {
+      "description": "Hvis du har glemt kontolegitimasjonen din, kan du gjenopprette kontoen din. Du kan også starte på nytt og bruke en annen e-postadresse.",
+      "title": "E-postadressen <span> %(email)s </span> er allerede i bruk"
+    },
+    "emails": {
+      "greeting": "Hallo %(username)s,",
+      "recovery": {
+        "click_button": "Klikk på knappen nedenfor for å opprette et nytt passord:",
+        "copy_link": "Kopier følgende lenke og lim den inn i en nettleser for å opprette et nytt passord:",
+        "create_new_password": "Opprett nytt passord",
+        "fallback": "Fungerer ikke knappen for deg?",
+        "headline": "Du har bedt om tilbakestilling av passord for %(server_name)s kontoen din.",
+        "subject": "Tilbakestill kontopassordet ditt (%(mxid)s)",
+        "you_can_ignore": "Hvis du ikke ba om et nytt passord, kan du ignorere denne e-posten. Ditt nåværende passord vil fortsette å fungere."
+      },
+      "verify": {
+        "body_html": "Verifiseringskoden for å bekrefte denne e-postadressen er: <strong>%(code)s</strong>",
+        "body_text": "Verifiseringskoden for å bekrefte denne e-postadressen er: %(code)s",
+        "subject": "Verifiseringskoden for e-posten din er: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "CAPTCHA-verifisering mislyktes. Prøv igjen",
+      "denied_policy": "Avvist av policy: %(policy)s",
+      "email_banned": "E-post er utestengt av serverpolicyen",
+      "email_domain_banned": "E-postdomenet er utestengt av serverpolicyen",
+      "email_domain_not_allowed": "E-postdomene er ikke tillatt av serverpolicyen",
+      "email_not_allowed": "E-post er ikke tillatt av serverpolicyen",
+      "field_required": "Dette feltet er obligatorisk",
+      "invalid_credentials": "Ugyldig legitimasjon",
+      "password_mismatch": "Passordfeltene stemmer ikke overens",
+      "rate_limit_exceeded": "Du har kommet med for mange forespørsler på kort tid. Vent noen minutter og prøv igjen.",
+      "username_all_numeric": "Brukernavn kan ikke bare bestå av tall",
+      "username_banned": "Brukernavn er utestengt av serverpolicyen",
+      "username_invalid_chars": "Brukernavnet inneholder ugyldige tegn. Bruk bare små bokstaver, tall, bindestrek og understrek.",
+      "username_not_allowed": "Brukernavnet er ikke tillatt av serverpolicyen",
+      "username_taken": "Dette brukernavnet er allerede tatt",
+      "username_too_long": "Brukernavnet er for langt",
+      "username_too_short": "Brukernavnet er for kort"
+    },
+    "login": {
+      "call_to_register": "Har du ikke en konto ennå?",
+      "continue_with_provider": "Fortsett med %(provider)s",
+      "description": "Logg på for å fortsette:",
+      "forgot_password": "Glemt passordet?",
+      "headline": "Logg inn",
+      "link": {
+        "description": "Kobler din <span class=\"break-keep text-links\">%(provider)s</span> konto",
+        "headline": "Logg inn for å koble"
+      },
+      "no_login_methods": "Ingen påloggingsmetoder tilgjengelig.",
+      "separator": "Eller",
+      "username_or_email": "Brukernavn eller e-postadresse"
+    },
+    "navbar": {
+      "my_account": "Min konto",
+      "register": "Opprett en konto",
+      "signed_in_as": "Logget på som <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Siden du lette etter eksisterer ikke eller har blitt flyttet",
+      "heading": "Side ikke funnet"
+    },
+    "not_you": "Ikke %(username)s?",
+    "or_separator": "Eller",
+    "policy_violation": {
+      "description": "Dette kan skyldes klienten som har opprettet forespørselen, den påloggede brukeren eller selve forespørselen.",
+      "heading": "Autorisasjonsforespørselen ble avvist av policyen som håndheves av denne tjenesten",
+      "logged_as": "Logget inn som <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "For å opprette et nytt passord, start på nytt og velg «Glemt passord».",
+        "heading": "Lenken for å tilbakestille passordet ditt har allerede blitt brukt"
+      },
+      "disabled": {
+        "description": "Hvis du har mistet legitimasjonen din, vennligst kontakt administratoren for å gjenopprette kontoen din.",
+        "heading": "Muligheten for kontogjenoppretting er skrudd av"
+      },
+      "expired": {
+        "description": "Be om en ny e-post som vil bli sendt til: <span>%(email)s</span>.",
+        "heading": "Lenken for å tilbakestille passordet ditt er utløpt",
+        "resend_email": "Send e-post på nytt"
+      },
+      "finish": {
+        "confirm": "Skriv inn nytt passord igjen",
+        "description": "Velg et nytt passord for kontoen din.",
+        "heading": "Tilbakestill passordet ditt",
+        "new": "Nytt passord",
+        "save_and_continue": "Lagre og fortsett"
+      },
+      "progress": {
+        "change_email": "Prøv en annen e-postadresse",
+        "description": "Vi sendte en e-post med en lenke for å tilbakestille passordet ditt hvis det er en konto som bruker <span> %(email)s</span>.",
+        "heading": "Sjekk e-posten din",
+        "resend_email": "Send e-post på nytt"
+      },
+      "start": {
+        "description": "En e-post vil bli sendt med en lenke for å tilbakestille passordet ditt.",
+        "heading": "Skriv inn e-postadressen din for å fortsette"
+      }
+    },
+    "register": {
+      "call_to_login": "Har du allerede en konto?",
+      "continue_with_email": "Fortsett med e-postadresse",
+      "create_account": {
+        "description": "Velg et brukernavn for å fortsette.",
+        "heading": "Opprett en konto"
+      },
+      "sign_in_instead": "Logg på i stedet",
+      "terms_of_service": "Jeg godtar <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">vilkårene og betingelsene</a>"
+    },
+    "scope": {
+      "edit_profile": "Rediger din profil og kontaktdetaljer",
+      "manage_sessions": "Administrer enhetene og sesjonene dine",
+      "mas_admin": "Administrer alle brukere på matrix-authentication-service",
+      "send_messages": "Send nye meldinger på dine vegne",
+      "synapse_admin": "Administrer Synapse-hjemmeserveren",
+      "view_messages": "Se dine eksisterende meldinger og data",
+      "view_profile": "Se din profilinformasjon og kontaktdetaljer"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Denne oppstrømskontoen er allerede knyttet til en annen konto."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Dette kan ikke endres senere.",
+          "heading": "Velg ditt brukernavn"
+        },
+        "create_account": "Opprett en ny konto",
+        "enforced_by_policy": "Håndhevet av serverpolicy",
+        "forced_display_name": "Vil bruke følgende visningsnavn",
+        "forced_email": "Vil bruke følgende e-postadresse",
+        "forced_localpart": "Vil bruke følgende brukernavn",
+        "import_data": {
+          "description": "Bekreft informasjonen som vil bli knyttet til din nye %(server_name)s konto.",
+          "heading": "Importer dataene dine"
+        },
+        "imported_from_upstream": "Importert fra oppstrømskontoen din",
+        "imported_from_upstream_with_name": "Importert fra %(human_name)s kontoen din",
+        "link_existing": "Koble til en eksisterende konto",
+        "provider_name": "%(human_name)s konto",
+        "signup_with_upstream": {
+          "heading": "Fortsett å registrere deg med din %(human_name)s konto"
+        },
+        "suggested_display_name": "Importer visningsnavn",
+        "suggested_email": "Importer e-postadresse",
+        "use": "Bruk"
+      },
+      "suggest_link": {
+        "action": "Lenke",
+        "heading": "Koble til din eksisterende konto"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6-sifret kode",
+      "code": "Kode",
+      "description": "Skriv inn den 6-sifrede koden sendt til: <em>%(email)s</em>",
+      "headline": "Bekreft e-postadressen din"
+    }
+  }
+}

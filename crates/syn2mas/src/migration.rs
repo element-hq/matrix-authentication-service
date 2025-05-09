@@ -11,13 +11,12 @@
 //! This module does not implement any of the safety checks that should be run
 //! *before* the migration.
 
-use std::{pin::pin, time::Instant};
+use std::time::Instant;
 
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_storage::Clock;
-use opentelemetry::{KeyValue, metrics::Counter};
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -33,15 +32,10 @@ use crate::{
         MasNewEmailThreepid, MasNewUnsupportedThreepid, MasNewUpstreamOauthLink, MasNewUser,
         MasNewUserPassword, MasWriteBuffer, MasWriter,
     },
-    progress::Progress,
+    progress::{EntityType, Progress},
     synapse_reader::{
         self, ExtractLocalpartError, FullUserId, SynapseAccessToken, SynapseDevice,
         SynapseExternalId, SynapseRefreshableTokenPair, SynapseThreepid, SynapseUser,
-    },
-    telemetry::{
-        K_ENTITY, METER, V_ENTITY_DEVICES, V_ENTITY_EXTERNAL_IDS,
-        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS, V_ENTITY_REFRESHABLE_TOKEN_PAIRS,
-        V_ENTITY_THREEPIDS, V_ENTITY_USERS,
     },
 };
 
@@ -146,7 +140,7 @@ struct MigrationState {
 ///
 /// - An underlying database access error, either to MAS or to Synapse.
 /// - Invalid data in the Synapse database.
-#[allow(clippy::implicit_hasher, clippy::too_many_lines)]
+#[expect(clippy::implicit_hasher)]
 pub async fn migrate(
     mut synapse: SynapseReader<'_>,
     mas: MasWriter,
@@ -157,49 +151,6 @@ pub async fn migrate(
     progress: &Progress,
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
-
-    let approx_total_counter = METER
-        .u64_counter("syn2mas.entity.approx_total")
-        .with_description("Approximate number of entities of this type to be migrated")
-        .build();
-    let migrated_otel_counter = METER
-        .u64_counter("syn2mas.entity.migrated")
-        .with_description("Number of entities of this type that have been migrated so far")
-        .build();
-    let skipped_otel_counter = METER
-        .u64_counter("syn2mas.entity.skipped")
-        .with_description("Number of entities of this type that have been skipped so far")
-        .build();
-
-    approx_total_counter.add(
-        counts.users as u64,
-        &[KeyValue::new(K_ENTITY, V_ENTITY_USERS)],
-    );
-    approx_total_counter.add(
-        counts.devices as u64,
-        &[KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)],
-    );
-    approx_total_counter.add(
-        counts.threepids as u64,
-        &[KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)],
-    );
-    approx_total_counter.add(
-        counts.external_ids as u64,
-        &[KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)],
-    );
-    // assume 1 refreshable access token per refresh token.
-    let approx_nonrefreshable_access_tokens = counts.access_tokens - counts.refresh_tokens;
-    approx_total_counter.add(
-        approx_nonrefreshable_access_tokens as u64,
-        &[KeyValue::new(
-            K_ENTITY,
-            V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
-        )],
-    );
-    approx_total_counter.add(
-        counts.refresh_tokens as u64,
-        &[KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)],
-    );
 
     let state = MigrationState {
         server_name,
@@ -213,83 +164,32 @@ pub async fn migrate(
         provider_id_mapping,
     };
 
-    let progress_counter = progress.migrating_data(V_ENTITY_USERS, counts.users);
-    let (mas, state) = migrate_users(
-        &mut synapse,
-        mas,
-        state,
-        rng,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(EntityType::Users, counts.users);
+    let (mas, state) = migrate_users(&mut synapse, mas, state, rng, progress_counter).await?;
 
-    let progress_counter = progress.migrating_data(V_ENTITY_THREEPIDS, counts.threepids);
-    let (mas, state) = migrate_threepids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(EntityType::ThreePids, counts.threepids);
+    let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, progress_counter).await?;
 
-    let progress_counter = progress.migrating_data(V_ENTITY_EXTERNAL_IDS, counts.external_ids);
-    let (mas, state) = migrate_external_ids(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(EntityType::ExternalIds, counts.external_ids);
+    let (mas, state) =
+        migrate_external_ids(&mut synapse, mas, rng, state, progress_counter).await?;
 
     let progress_counter = progress.migrating_data(
-        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
+        EntityType::NonRefreshableAccessTokens,
         counts.access_tokens - counts.refresh_tokens,
     );
-    let (mas, state) = migrate_unrefreshable_access_tokens(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let (mas, state) =
+        migrate_unrefreshable_access_tokens(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
     let progress_counter =
-        progress.migrating_data(V_ENTITY_REFRESHABLE_TOKEN_PAIRS, counts.refresh_tokens);
-    let (mas, state) = migrate_refreshable_token_pairs(
-        &mut synapse,
-        mas,
-        clock,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+        progress.migrating_data(EntityType::RefreshableTokens, counts.refresh_tokens);
+    let (mas, state) =
+        migrate_refreshable_token_pairs(&mut synapse, mas, clock, rng, state, progress_counter)
+            .await?;
 
-    let progress_counter = progress.migrating_data("devices", counts.devices);
-    let (mas, _state) = migrate_devices(
-        &mut synapse,
-        mas,
-        rng,
-        state,
-        progress_counter,
-        migrated_otel_counter.clone(),
-        skipped_otel_counter.clone(),
-    )
-    .await?;
+    let progress_counter = progress.migrating_data(EntityType::Devices, counts.devices);
+    let (mas, _state) = migrate_devices(&mut synapse, mas, rng, state, progress_counter).await?;
 
     synapse
         .finish()
@@ -310,21 +210,19 @@ async fn migrate_users(
     mut state: MigrationState,
     rng: &mut impl RngCore,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_USERS)];
+    let progress_counter_ = progress_counter.clone();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseUser>(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut user_buffer = MasWriteBuffer::new(&mas, MasWriter::write_users);
-            let mut password_buffer = MasWriteBuffer::new(&mas, MasWriter::write_passwords);
+            let mut user_buffer = MasWriteBuffer::new(&mas);
+            let mut password_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(user) = rx.recv().await {
                 // Handling an edge case: some AS users may have invalid localparts containing
@@ -356,7 +254,6 @@ async fn migrate_users(
                 if user.appservice_id.is_some() {
                     flags |= UserFlags::IS_APPSERVICE;
 
-                    skipped_otel_counter.add(1, &otel_kv);
                     progress_counter.increment_skipped();
 
                     // Special case for appservice users: we don't insert them into the database
@@ -391,7 +288,6 @@ async fn migrate_users(
                         .into_mas("writing password")?;
                 }
 
-                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
 
@@ -423,7 +319,9 @@ async fn migrate_users(
     res?;
 
     info!(
-        "users migrated in {:.1}s",
+        "{} users migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -437,98 +335,116 @@ async fn migrate_threepids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_THREEPIDS)];
+    let progress_counter_ = progress_counter.clone();
 
-    let mut email_buffer = MasWriteBuffer::new(&mas, MasWriter::write_email_threepids);
-    let mut unsupported_buffer = MasWriteBuffer::new(&mas, MasWriter::write_unsupported_threepids);
-    let mut users_stream = pin!(synapse.read_threepids());
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseThreepid>(100 * 1024);
 
-    while let Some(threepid_res) = users_stream.next().await {
-        let SynapseThreepid {
-            user_id: synapse_user_id,
-            medium,
-            address,
-            added_at,
-        } = threepid_res.into_synapse("reading threepid")?;
-        let created_at: DateTime<Utc> = added_at.into();
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let task = tokio::spawn(
+        async move {
+            let mut email_buffer = MasWriteBuffer::new(&mas);
+            let mut unsupported_buffer = MasWriteBuffer::new(&mas);
 
-        let username = synapse_user_id
-            .extract_localpart(&state.server_name)
-            .into_extract_localpart(synapse_user_id.clone())?
-            .to_owned();
-        let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            return Err(Error::MissingUserFromDependentTable {
-                table: "user_threepids".to_owned(),
-                user: synapse_user_id,
-            });
-        };
+            while let Some(threepid) = rx.recv().await {
+                let SynapseThreepid {
+                    user_id: synapse_user_id,
+                    medium,
+                    address,
+                    added_at,
+                } = threepid;
+                let created_at: DateTime<Utc> = added_at.into();
 
-        let Some(mas_user_id) = user_infos.mas_user_id else {
-            progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
-            continue;
-        };
+                let username = synapse_user_id
+                    .extract_localpart(&state.server_name)
+                    .into_extract_localpart(synapse_user_id.clone())?
+                    .to_owned();
+                let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    return Err(Error::MissingUserFromDependentTable {
+                        table: "user_threepids".to_owned(),
+                        user: synapse_user_id,
+                    });
+                };
 
-        if medium == "email" {
+                let Some(mas_user_id) = user_infos.mas_user_id else {
+                    progress_counter.increment_skipped();
+                    continue;
+                };
+
+                if medium == "email" {
+                    email_buffer
+                        .write(
+                            &mut mas,
+                            MasNewEmailThreepid {
+                                user_id: mas_user_id,
+                                user_email_id: Uuid::from(Ulid::from_datetime_with_source(
+                                    created_at.into(),
+                                    &mut rng,
+                                )),
+                                email: address,
+                                created_at,
+                            },
+                        )
+                        .await
+                        .into_mas("writing email")?;
+                } else {
+                    unsupported_buffer
+                        .write(
+                            &mut mas,
+                            MasNewUnsupportedThreepid {
+                                user_id: mas_user_id,
+                                medium,
+                                address,
+                                created_at,
+                            },
+                        )
+                        .await
+                        .into_mas("writing unsupported threepid")?;
+                }
+
+                progress_counter.increment_migrated();
+            }
+
             email_buffer
-                .write(
-                    &mut mas,
-                    MasNewEmailThreepid {
-                        user_id: mas_user_id,
-                        user_email_id: Uuid::from(Ulid::from_datetime_with_source(
-                            created_at.into(),
-                            rng,
-                        )),
-                        email: address,
-                        created_at,
-                    },
-                )
+                .finish(&mut mas)
                 .await
-                .into_mas("writing email")?;
-        } else {
+                .into_mas("writing email threepids")?;
             unsupported_buffer
-                .write(
-                    &mut mas,
-                    MasNewUnsupportedThreepid {
-                        user_id: mas_user_id,
-                        medium,
-                        address,
-                        created_at,
-                    },
-                )
+                .finish(&mut mas)
                 .await
-                .into_mas("writing unsupported threepid")?;
+                .into_mas("writing unsupported threepids")?;
+
+            Ok((mas, state))
         }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.increment_migrated();
-    }
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
+        .read_threepids()
+        .map_err(|e| e.into_synapse("reading threepids"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
 
-    email_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing email threepids")?;
-    unsupported_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing unsupported threepids")?;
+    let (mas, state) = task.await.into_join("threepid write task")??;
+
+    res?;
 
     info!(
-        "third-party IDs migrated in {:.1}s",
+        "{} third-party IDs migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
     Ok((mas, state))
 }
 
-/// # Parameters
-///
-/// - `provider_id_mapping`: mapping from Synapse `auth_provider` ID to UUID of
-///   the upstream provider in MAS.
 #[tracing::instrument(skip_all, level = Level::INFO)]
 async fn migrate_external_ids(
     synapse: &mut SynapseReader<'_>,
@@ -536,76 +452,100 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_EXTERNAL_IDS)];
+    let progress_counter_ = progress_counter.clone();
 
-    let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_upstream_oauth_links);
-    let mut extids_stream = pin!(synapse.read_user_external_ids());
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseExternalId>(100 * 1024);
 
-    while let Some(extid_res) = extids_stream.next().await {
-        let SynapseExternalId {
-            user_id: synapse_user_id,
-            auth_provider,
-            external_id: subject,
-        } = extid_res.into_synapse("reading external ID")?;
-        let username = synapse_user_id
-            .extract_localpart(&state.server_name)
-            .into_extract_localpart(synapse_user_id.clone())?
-            .to_owned();
-        let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            return Err(Error::MissingUserFromDependentTable {
-                table: "user_external_ids".to_owned(),
-                user: synapse_user_id,
-            });
-        };
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let task = tokio::spawn(
+        async move {
+            let mut write_buffer = MasWriteBuffer::new(&mas);
 
-        let Some(mas_user_id) = user_infos.mas_user_id else {
-            progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
-            continue;
-        };
+            while let Some(extid) = rx.recv().await {
+                let SynapseExternalId {
+                    user_id: synapse_user_id,
+                    auth_provider,
+                    external_id: subject,
+                } = extid;
+                let username = synapse_user_id
+                    .extract_localpart(&state.server_name)
+                    .into_extract_localpart(synapse_user_id.clone())?
+                    .to_owned();
+                let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    return Err(Error::MissingUserFromDependentTable {
+                        table: "user_external_ids".to_owned(),
+                        user: synapse_user_id,
+                    });
+                };
 
-        let Some(&upstream_provider_id) = state.provider_id_mapping.get(&auth_provider) else {
-            return Err(Error::MissingAuthProviderMapping {
-                synapse_id: auth_provider,
-                user: synapse_user_id,
-            });
-        };
+                let Some(mas_user_id) = user_infos.mas_user_id else {
+                    progress_counter.increment_skipped();
+                    continue;
+                };
 
-        // To save having to store user creation times, extract it from the ULID
-        // This gives millisecond precision — good enough.
-        let user_created_ts = Ulid::from(mas_user_id.get()).datetime();
+                let Some(&upstream_provider_id) = state.provider_id_mapping.get(&auth_provider)
+                else {
+                    return Err(Error::MissingAuthProviderMapping {
+                        synapse_id: auth_provider,
+                        user: synapse_user_id,
+                    });
+                };
 
-        let link_id: Uuid = Ulid::from_datetime_with_source(user_created_ts, rng).into();
+                // To save having to store user creation times, extract it from the ULID
+                // This gives millisecond precision — good enough.
+                let user_created_ts = Ulid::from(mas_user_id.get()).datetime();
 
-        write_buffer
-            .write(
-                &mut mas,
-                MasNewUpstreamOauthLink {
-                    link_id,
-                    user_id: mas_user_id,
-                    upstream_provider_id,
-                    subject,
-                    created_at: user_created_ts.into(),
-                },
-            )
-            .await
-            .into_mas("failed to write upstream link")?;
+                let link_id: Uuid =
+                    Ulid::from_datetime_with_source(user_created_ts, &mut rng).into();
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.increment_migrated();
-    }
+                write_buffer
+                    .write(
+                        &mut mas,
+                        MasNewUpstreamOauthLink {
+                            link_id,
+                            user_id: mas_user_id,
+                            upstream_provider_id,
+                            subject,
+                            created_at: user_created_ts.into(),
+                        },
+                    )
+                    .await
+                    .into_mas("failed to write upstream link")?;
 
-    write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing upstream links")?;
+                progress_counter.increment_migrated();
+            }
+
+            write_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing upstream links")?;
+
+            Ok((mas, state))
+        }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
+
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
+        .read_user_external_ids()
+        .map_err(|e| e.into_synapse("reading external ID"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
+
+    let (mas, state) = task.await.into_join("external IDs write task")??;
+
+    res?;
 
     info!(
-        "upstream links (external IDs) migrated in {:.1}s",
+        "{} upstream links (external IDs) migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -627,20 +567,18 @@ async fn migrate_devices(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_DEVICES)];
+    let progress_counter_ = progress_counter.clone();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+            let mut write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(device) = rx.recv().await {
                 let SynapseDevice {
@@ -664,7 +602,6 @@ async fn migrate_devices(
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
                     continue;
                 };
 
@@ -721,7 +658,6 @@ async fn migrate_devices(
                     .await
                     .into_mas("writing compat sessions")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
 
@@ -749,7 +685,9 @@ async fn migrate_devices(
     res?;
 
     info!(
-        "devices migrated in {:.1}s",
+        "{} devices migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -759,7 +697,6 @@ async fn migrate_devices(
 /// Migrates unrefreshable access tokens (those without an associated refresh
 /// token). Some of these may be deviceless.
 #[tracing::instrument(skip_all, level = Level::INFO)]
-#[allow(clippy::too_many_arguments)]
 async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
@@ -767,16 +704,11 @@ async fn migrate_unrefreshable_access_tokens(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(
-        K_ENTITY,
-        V_ENTITY_NONREFRESHABLE_ACCESS_TOKENS,
-    )];
+    let progress_counter_ = progress_counter.clone();
 
-    let (tx, mut rx) = tokio::sync::mpsc::channel(10 * 1024 * 1024);
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100 * 1024);
 
     let now = clock.now();
     // create a new RNG seeded from the passed RNG so that we can move it into the
@@ -784,9 +716,8 @@ async fn migrate_unrefreshable_access_tokens(
     let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
     let task = tokio::spawn(
         async move {
-            let mut write_buffer = MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
-            let mut deviceless_session_write_buffer =
-                MasWriteBuffer::new(&mas, MasWriter::write_compat_sessions);
+            let mut write_buffer = MasWriteBuffer::new(&mas);
+            let mut deviceless_session_write_buffer = MasWriteBuffer::new(&mas);
 
             while let Some(token) = rx.recv().await {
                 let SynapseAccessToken {
@@ -809,7 +740,6 @@ async fn migrate_unrefreshable_access_tokens(
 
                 let Some(mas_user_id) = user_infos.mas_user_id else {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
                     continue;
                 };
 
@@ -818,7 +748,6 @@ async fn migrate_unrefreshable_access_tokens(
                     || user_infos.flags.is_appservice()
                 {
                     progress_counter.increment_skipped();
-                    skipped_otel_counter.add(1, &otel_kv);
                     continue;
                 }
 
@@ -879,7 +808,6 @@ async fn migrate_unrefreshable_access_tokens(
                     .await
                     .into_mas("writing compat access tokens")?;
 
-                migrated_otel_counter.add(1, &otel_kv);
                 progress_counter.increment_migrated();
             }
             write_buffer
@@ -910,7 +838,9 @@ async fn migrate_unrefreshable_access_tokens(
     res?;
 
     info!(
-        "non-refreshable access tokens migrated in {:.1}s",
+        "{} non-refreshable access tokens migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 
@@ -920,7 +850,6 @@ async fn migrate_unrefreshable_access_tokens(
 /// Migrates (access token, refresh token) pairs.
 /// Does not migrate non-refreshable access tokens.
 #[tracing::instrument(skip_all, level = Level::INFO)]
-#[allow(clippy::too_many_arguments)]
 async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
@@ -928,111 +857,134 @@ async fn migrate_refreshable_token_pairs(
     rng: &mut impl RngCore,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
-    migrated_otel_counter: Counter<u64>,
-    skipped_otel_counter: Counter<u64>,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
-    let otel_kv = [KeyValue::new(K_ENTITY, V_ENTITY_REFRESHABLE_TOKEN_PAIRS)];
+    let progress_counter_ = progress_counter.clone();
 
-    let mut token_stream = pin!(synapse.read_refreshable_token_pairs());
-    let mut access_token_write_buffer =
-        MasWriteBuffer::new(&mas, MasWriter::write_compat_access_tokens);
-    let mut refresh_token_write_buffer =
-        MasWriteBuffer::new(&mas, MasWriter::write_compat_refresh_tokens);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<SynapseRefreshableTokenPair>(100 * 1024);
 
-    while let Some(token_res) = token_stream.next().await {
-        let SynapseRefreshableTokenPair {
-            user_id: synapse_user_id,
-            device_id,
-            access_token,
-            refresh_token,
-            valid_until_ms,
-            last_validated,
-        } = token_res.into_synapse("reading Synapse refresh token")?;
+    // create a new RNG seeded from the passed RNG so that we can move it into the
+    // spawned task
+    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let now = clock.now();
+    let task = tokio::spawn(
+        async move {
+            let mut access_token_write_buffer = MasWriteBuffer::new(&mas);
+            let mut refresh_token_write_buffer = MasWriteBuffer::new(&mas);
 
-        let username = synapse_user_id
-            .extract_localpart(&state.server_name)
-            .into_extract_localpart(synapse_user_id.clone())?
-            .to_owned();
-        let Some(user_infos) = state.users.get(username.as_str()).copied() else {
-            return Err(Error::MissingUserFromDependentTable {
-                table: "refresh_tokens".to_owned(),
-                user: synapse_user_id,
-            });
-        };
-
-        let Some(mas_user_id) = user_infos.mas_user_id else {
-            progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
-            continue;
-        };
-
-        if user_infos.flags.is_deactivated()
-            || user_infos.flags.is_guest()
-            || user_infos.flags.is_appservice()
-        {
-            progress_counter.increment_skipped();
-            skipped_otel_counter.add(1, &otel_kv);
-            continue;
-        }
-
-        // It's not always accurate, but last_validated is *often* the creation time of
-        // the device If we don't have one, then use the current time as a
-        // fallback.
-        let created_at = last_validated.map_or_else(|| clock.now(), DateTime::from);
-
-        // Use the existing device_id if this is the second token for a device
-        let session_id = *state
-            .devices_to_compat_sessions
-            .entry((mas_user_id, CompactString::new(&device_id)))
-            .or_insert_with(|| Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng)));
-
-        let access_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
-        let refresh_token_id = Uuid::from(Ulid::from_datetime_with_source(created_at.into(), rng));
-
-        access_token_write_buffer
-            .write(
-                &mut mas,
-                MasNewCompatAccessToken {
-                    token_id: access_token_id,
-                    session_id,
+            while let Some(token) = rx.recv().await {
+                let SynapseRefreshableTokenPair {
+                    user_id: synapse_user_id,
+                    device_id,
                     access_token,
-                    created_at,
-                    expires_at: valid_until_ms.map(DateTime::from),
-                },
-            )
-            .await
-            .into_mas("writing compat access tokens")?;
-        refresh_token_write_buffer
-            .write(
-                &mut mas,
-                MasNewCompatRefreshToken {
-                    refresh_token_id,
-                    session_id,
-                    access_token_id,
                     refresh_token,
-                    created_at,
-                },
-            )
-            .await
-            .into_mas("writing compat refresh tokens")?;
+                    valid_until_ms,
+                    last_validated,
+                } = token;
 
-        migrated_otel_counter.add(1, &otel_kv);
-        progress_counter.increment_migrated();
-    }
+                let username = synapse_user_id
+                    .extract_localpart(&state.server_name)
+                    .into_extract_localpart(synapse_user_id.clone())?
+                    .to_owned();
+                let Some(user_infos) = state.users.get(username.as_str()).copied() else {
+                    return Err(Error::MissingUserFromDependentTable {
+                        table: "refresh_tokens".to_owned(),
+                        user: synapse_user_id,
+                    });
+                };
 
-    access_token_write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing compat access tokens")?;
+                let Some(mas_user_id) = user_infos.mas_user_id else {
+                    progress_counter.increment_skipped();
+                    continue;
+                };
 
-    refresh_token_write_buffer
-        .finish(&mut mas)
-        .await
-        .into_mas("writing compat refresh tokens")?;
+                if user_infos.flags.is_deactivated()
+                    || user_infos.flags.is_guest()
+                    || user_infos.flags.is_appservice()
+                {
+                    progress_counter.increment_skipped();
+                    continue;
+                }
+
+                // It's not always accurate, but last_validated is *often* the creation time of
+                // the device If we don't have one, then use the current time as a
+                // fallback.
+                let created_at = last_validated.map_or_else(|| now, DateTime::from);
+
+                // Use the existing device_id if this is the second token for a device
+                let session_id = *state
+                    .devices_to_compat_sessions
+                    .entry((mas_user_id, CompactString::new(&device_id)))
+                    .or_insert_with(|| {
+                        Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng))
+                    });
+
+                let access_token_id =
+                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+                let refresh_token_id =
+                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+
+                access_token_write_buffer
+                    .write(
+                        &mut mas,
+                        MasNewCompatAccessToken {
+                            token_id: access_token_id,
+                            session_id,
+                            access_token,
+                            created_at,
+                            expires_at: valid_until_ms.map(DateTime::from),
+                        },
+                    )
+                    .await
+                    .into_mas("writing compat access tokens")?;
+                refresh_token_write_buffer
+                    .write(
+                        &mut mas,
+                        MasNewCompatRefreshToken {
+                            refresh_token_id,
+                            session_id,
+                            access_token_id,
+                            refresh_token,
+                            created_at,
+                        },
+                    )
+                    .await
+                    .into_mas("writing compat refresh tokens")?;
+
+                progress_counter.increment_migrated();
+            }
+
+            access_token_write_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing compat access tokens")?;
+
+            refresh_token_write_buffer
+                .finish(&mut mas)
+                .await
+                .into_mas("writing compat refresh tokens")?;
+            Ok((mas, state))
+        }
+        .instrument(tracing::info_span!("ingest_task")),
+    );
+
+    // In case this has an error, we still want to join the task, so we look at the
+    // error later
+    let res = synapse
+        .read_refreshable_token_pairs()
+        .map_err(|e| e.into_synapse("reading refresh token pairs"))
+        .forward(PollSender::new(tx).sink_map_err(|_| Error::ChannelClosed))
+        .inspect_err(|e| tracing::error!(error = e as &dyn std::error::Error))
+        .await;
+
+    let (mas, state) = task.await.into_join("refresh token write task")??;
+
+    res?;
 
     info!(
-        "refreshable token pairs migrated in {:.1}s",
+        "{} refreshable token pairs migrated ({} skipped) in {:.1}s",
+        progress_counter_.migrated(),
+        progress_counter_.skipped(),
         Instant::now().duration_since(start).as_secs_f64()
     );
 

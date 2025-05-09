@@ -11,6 +11,7 @@ use axum::{
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::{Page, compat::CompatSessionFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -113,12 +114,14 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let status = match self {
+        let sentry_event_id = record_error!(self, RouteError::Internal(_));
+        let status = match &self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserNotFound(_) | Self::UserSessionNotFound(_) => StatusCode::NOT_FOUND,
             Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
         };
-        (status, Json(error)).into_response()
+
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -153,7 +156,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.compat_sessions.list", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.compat_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     Pagination(pagination): Pagination,
@@ -248,7 +251,7 @@ mod tests {
 
         let device = Device::generate(&mut rng);
         repo.compat_session()
-            .add(&mut rng, &state.clock, &alice, device, None, false)
+            .add(&mut rng, &state.clock, &alice, device, None, false, None)
             .await
             .unwrap();
         let device = Device::generate(&mut rng);
@@ -257,7 +260,7 @@ mod tests {
 
         let session = repo
             .compat_session()
-            .add(&mut rng, &state.clock, &bob, device, None, false)
+            .add(&mut rng, &state.clock, &bob, device, None, false, None)
             .await
             .unwrap();
         state.clock.advance(Duration::minutes(1));
@@ -273,7 +276,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 2
@@ -291,7 +294,8 @@ mod tests {
                 "user_agent": null,
                 "last_active_at": null,
                 "last_active_ip": null,
-                "finished_at": null
+                "finished_at": null,
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
@@ -309,7 +313,8 @@ mod tests {
                 "user_agent": null,
                 "last_active_at": null,
                 "last_active_ip": null,
-                "finished_at": "2022-01-16T14:43:00Z"
+                "finished_at": "2022-01-16T14:43:00Z",
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNCZP0PPF7X0EVMJNECPZW"
@@ -322,7 +327,7 @@ mod tests {
             "last": "/api/admin/v1/compat-sessions?page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by user
         let request = Request::get(format!(
@@ -334,7 +339,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -352,7 +357,8 @@ mod tests {
                 "user_agent": null,
                 "last_active_at": null,
                 "last_active_ip": null,
-                "finished_at": null
+                "finished_at": null,
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
@@ -365,7 +371,7 @@ mod tests {
             "last": "/api/admin/v1/compat-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by status (active)
         let request = Request::get("/api/admin/v1/compat-sessions?filter[status]=active")
@@ -374,7 +380,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -392,7 +398,8 @@ mod tests {
                 "user_agent": null,
                 "last_active_at": null,
                 "last_active_ip": null,
-                "finished_at": null
+                "finished_at": null,
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
@@ -405,7 +412,7 @@ mod tests {
             "last": "/api/admin/v1/compat-sessions?filter[status]=active&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by status (finished)
         let request = Request::get("/api/admin/v1/compat-sessions?filter[status]=finished")
@@ -414,7 +421,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -432,7 +439,8 @@ mod tests {
                 "user_agent": null,
                 "last_active_at": null,
                 "last_active_ip": null,
-                "finished_at": "2022-01-16T14:43:00Z"
+                "finished_at": "2022-01-16T14:43:00Z",
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNCZP0PPF7X0EVMJNECPZW"
@@ -445,6 +453,6 @@ mod tests {
             "last": "/api/admin/v1/compat-sessions?filter[status]=finished&page[last]=10"
           }
         }
-        "###);
+        "#);
     }
 }

@@ -40,6 +40,7 @@ pub fn register(
     env.add_filter("to_params", filter_to_params);
     env.add_filter("simplify_url", filter_simplify_url);
     env.add_filter("add_slashes", filter_add_slashes);
+    env.add_filter("parse_user_agent", filter_parse_user_agent);
     env.add_function("add_params_to_url", function_add_params_to_url);
     env.add_function("counter", || Ok(Value::from_object(Counter::default())));
     env.add_global(
@@ -131,6 +132,12 @@ fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::E
     } else {
         Ok(domain.to_owned())
     }
+}
+
+/// Filter which parses a user-agent string
+fn filter_parse_user_agent(user_agent: String) -> Value {
+    let user_agent = mas_data_model::UserAgent::parse(user_agent);
+    Value::from_serialize(user_agent)
 }
 
 enum ParamsWhere {

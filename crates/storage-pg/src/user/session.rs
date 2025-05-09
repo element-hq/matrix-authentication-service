@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Authentication, AuthenticationMethod, BrowserSession, Password,
-    UpstreamOAuthAuthorizationSession, User, UserAgent,
+    UpstreamOAuthAuthorizationSession, User,
 };
 use mas_storage::{
     Clock, Page, Pagination,
@@ -83,7 +83,7 @@ impl TryFrom<SessionLookup> for BrowserSession {
             user,
             created_at: value.user_session_created_at,
             finished_at: value.user_session_finished_at,
-            user_agent: value.user_session_user_agent.map(UserAgent::parse),
+            user_agent: value.user_session_user_agent,
             last_active_at: value.user_session_last_active_at,
             last_active_ip: value.user_session_last_active_ip,
         })
@@ -208,7 +208,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        user_agent: Option<UserAgent>,
+        user_agent: Option<String>,
     ) -> Result<BrowserSession, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
@@ -564,13 +564,16 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     )]
     async fn record_batch_activity(
         &mut self,
-        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+        mut activities: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error> {
-        let mut ids = Vec::with_capacity(activity.len());
-        let mut last_activities = Vec::with_capacity(activity.len());
-        let mut ips = Vec::with_capacity(activity.len());
+        // Sort the activity by ID, so that when batching the updates, Postgres
+        // locks the rows in a stable order, preventing deadlocks
+        activities.sort_unstable();
+        let mut ids = Vec::with_capacity(activities.len());
+        let mut last_activities = Vec::with_capacity(activities.len());
+        let mut ips = Vec::with_capacity(activities.len());
 
-        for (id, last_activity, ip) in activity {
+        for (id, last_activity, ip) in activities {
             ids.push(Uuid::from(id));
             last_activities.push(last_activity);
             ips.push(ip);

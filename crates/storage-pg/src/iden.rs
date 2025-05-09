@@ -83,6 +83,7 @@ pub enum OAuth2Sessions {
     UserAgent,
     LastActiveAt,
     LastActiveIp,
+    HumanName,
 }
 
 #[derive(sea_query::Iden)]
@@ -118,6 +119,7 @@ pub enum UpstreamOAuthProviders {
     PkceMode,
     ResponseMode,
     AdditionalParameters,
+    ForwardLoginHint,
     JwksUriOverride,
     TokenEndpointOverride,
     AuthorizationEndpointOverride,

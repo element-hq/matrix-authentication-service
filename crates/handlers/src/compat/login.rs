@@ -10,17 +10,16 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::sentry::SentryEventID;
-use mas_data_model::{
-    CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User, UserAgent,
-};
+use mas_axum_utils::record_error;
+use mas_data_model::{CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User};
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, Clock, RepositoryAccess,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
     user::{UserPasswordRepository, UserRepository},
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
@@ -118,6 +117,9 @@ pub struct RequestBody {
     /// this is not specified.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     device_id: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    initial_device_display_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -210,7 +212,8 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id =
+            record_error!(self, Self::Internal(_) | Self::ProvisionDeviceFailed(_));
         LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let response = match self {
             Self::Internal(_) | Self::ProvisionDeviceFailed(_) => MatrixError {
@@ -257,16 +260,16 @@ impl IntoResponse for RouteError {
             },
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
-#[tracing::instrument(name = "handlers.compat.login.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.compat.login.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
     State(password_manager): State<PasswordManager>,
-    mut repo: BoxRepository,
+    State(repository_factory): State<BoxRepositoryFactory>,
     activity_tracker: BoundActivityTracker,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
@@ -275,8 +278,9 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     MatrixJsonBody(input): MatrixJsonBody<RequestBody>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let login_type = input.credentials.login_type();
+    let mut repo = repository_factory.create().await?;
     let (mut session, user) = match (password_manager.is_enabled(), input.credentials) {
         (
             true,
@@ -299,6 +303,9 @@ pub(crate) async fn post(
                 }
             };
 
+            // Try getting the localpart out of the MXID
+            let username = homeserver.localpart(&user).unwrap_or(&user);
+
             user_password_login(
                 &mut rng,
                 &clock,
@@ -306,22 +313,22 @@ pub(crate) async fn post(
                 &limiter,
                 requester,
                 &mut repo,
-                &homeserver,
-                user,
+                username,
                 password,
                 input.device_id, // TODO check for validity
+                input.initial_device_display_name,
             )
             .await?
         }
 
         (_, Credentials::Token { token }) => {
             token_login(
-                &mut repo,
+                &mut rng,
                 &clock,
+                &mut repo,
                 &token,
                 input.device_id,
-                &homeserver,
-                &mut rng,
+                input.initial_device_display_name,
             )
             .await?
         }
@@ -364,11 +371,52 @@ pub(crate) async fn post(
         None
     };
 
+    // Ideally, we'd keep the lock whilst we actually create the device, but we
+    // really want to stop holding the transaction while we talk to the
+    // homeserver.
+    //
+    // In practice, this is fine, because:
+    // - the session exists after we commited the transaction, so a sync job won't
+    //   try to delete it
+    // - we've acquired a lock on the user before creating the session, meaning
+    //   we've made sure that sync jobs finished before we create the new session
+    // - we're in the read-commited isolation level, which means the sync will see
+    //   what we've committed and won't try to delete the session once we release
+    //   the lock
     repo.save().await?;
 
     activity_tracker
         .record_compat_session(&clock, &session)
         .await;
+
+    // This session will have for sure the device on it, both methods create a
+    // device
+    let Some(device) = &session.device else {
+        unreachable!()
+    };
+
+    // Now we can create the device on the homeserver, without holding the
+    // transaction
+    if let Err(err) = homeserver
+        .create_device(&user_id, device.as_str(), session.human_name.as_deref())
+        .await
+    {
+        // Something went wrong, let's end this session and schedule a device sync
+        let mut repo = repository_factory.create().await?;
+        let session = repo.compat_session().finish(&clock, session).await?;
+
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SyncDevicesJob::new_for_id(session.user_id),
+            )
+            .await?;
+
+        repo.save().await?;
+
+        return Err(RouteError::ProvisionDeviceFailed(err));
+    }
 
     LOGIN_COUNTER.add(
         1,
@@ -388,12 +436,12 @@ pub(crate) async fn post(
 }
 
 async fn token_login(
-    repo: &mut BoxRepository,
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
+    repo: &mut BoxRepository,
     token: &str,
     requested_device_id: Option<String>,
-    homeserver: &dyn HomeserverConnection,
-    rng: &mut (dyn RngCore + Send),
+    initial_device_display_name: Option<String>,
 ) -> Result<(CompatSession, User), RouteError> {
     let login = repo
         .compat_sso_login()
@@ -456,7 +504,8 @@ async fn token_login(
         return Err(RouteError::InvalidLoginToken);
     }
 
-    // Lock the user sync to make sure we don't get into a race condition
+    // We're about to create a device, let's explicitly acquire a lock, so that
+    // any concurrent sync will read after we've committed
     repo.user()
         .acquire_lock_for_sync(&browser_session.user)
         .await?;
@@ -466,16 +515,14 @@ async fn token_login(
     } else {
         Device::generate(rng)
     };
-    let mxid = homeserver.mxid(&browser_session.user.username);
-    homeserver
-        .create_device(&mxid, device.as_str())
-        .await
-        .map_err(RouteError::ProvisionDeviceFailed)?;
 
     repo.app_session()
         .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
         .await?;
 
+    // We first create the session in the database, commit the transaction, then
+    // create it on the homeserver, scheduling a device sync job afterwards to
+    // make sure we don't end up in an inconsistent state.
     let compat_session = repo
         .compat_session()
         .add(
@@ -485,6 +532,7 @@ async fn token_login(
             device,
             Some(&browser_session),
             false,
+            initial_device_display_name,
         )
         .await?;
 
@@ -502,14 +550,11 @@ async fn user_password_login(
     limiter: &Limiter,
     requester: RequesterFingerprint,
     repo: &mut BoxRepository,
-    homeserver: &dyn HomeserverConnection,
-    username: String,
+    username: &str,
     password: String,
     requested_device_id: Option<String>,
+    initial_device_display_name: Option<String>,
 ) -> Result<(CompatSession, User), RouteError> {
-    // Try getting the localpart out of the MXID
-    let username = homeserver.localpart(&username).unwrap_or(&username);
-
     // Find the user
     let user = repo
         .user()
@@ -555,10 +600,9 @@ async fn user_password_login(
             .await?;
     }
 
-    // Lock the user sync to make sure we don't get into a race condition
+    // We're about to create a device, let's explicitly acquire a lock, so that
+    // any concurrent sync will read after we've committed
     repo.user().acquire_lock_for_sync(&user).await?;
-
-    let mxid = homeserver.mxid(&user.username);
 
     // Now that the user credentials have been verified, start a new compat session
     let device = if let Some(requested_device_id) = requested_device_id {
@@ -566,10 +610,6 @@ async fn user_password_login(
     } else {
         Device::generate(&mut rng)
     };
-    homeserver
-        .create_device(&mxid, device.as_str())
-        .await
-        .map_err(RouteError::ProvisionDeviceFailed)?;
 
     repo.app_session()
         .finish_sessions_to_replace_device(clock, &user, &device)
@@ -577,7 +617,15 @@ async fn user_password_login(
 
     let session = repo
         .compat_session()
-        .add(&mut rng, clock, &user, device, None, false)
+        .add(
+            &mut rng,
+            clock,
+            &user,
+            device,
+            None,
+            false,
+            initial_device_display_name,
+        )
         .await?;
 
     Ok((session, user))

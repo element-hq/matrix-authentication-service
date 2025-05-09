@@ -42,23 +42,6 @@ pub fn observe(metrics: RuntimeMetrics) {
             .build();
     }
 
-    {
-        let metrics = metrics.clone();
-        METER
-            .u64_observable_gauge("tokio_runtime.global_queue_depth")
-            .with_description(
-                "The number of tasks currently scheduled in the runtime’s global queue",
-            )
-            .with_unit("{task}")
-            .with_callback(move |instrument| {
-                instrument.observe(
-                    metrics.global_queue_depth().try_into().unwrap_or(u64::MAX),
-                    &[],
-                );
-            })
-            .build();
-    }
-
     #[cfg(tokio_unstable)]
     {
         let metrics = metrics.clone();
@@ -143,7 +126,6 @@ pub fn observe(metrics: RuntimeMetrics) {
             .build();
     }
 
-    #[cfg(tokio_unstable)]
     {
         let metrics = metrics.clone();
         METER
@@ -157,6 +139,19 @@ pub fn observe(metrics: RuntimeMetrics) {
                     metrics.global_queue_depth().try_into().unwrap_or(u64::MAX),
                     &[],
                 );
+            })
+            .build();
+    }
+
+    #[cfg(tokio_unstable)]
+    {
+        let metrics = metrics.clone();
+        METER
+            .u64_observable_counter("tokio_runtime.spawned_tasks_count")
+            .with_description("The number of tasks spawned in this runtime since it was created.")
+            .with_unit("{task}")
+            .with_callback(move |instrument| {
+                instrument.observe(metrics.spawned_tasks_count(), &[]);
             })
             .build();
     }
@@ -180,7 +175,6 @@ pub fn observe(metrics: RuntimeMetrics) {
             .build();
     }
 
-    #[cfg(tokio_unstable)]
     {
         let metrics = metrics.clone();
         METER
@@ -264,7 +258,6 @@ pub fn observe(metrics: RuntimeMetrics) {
             .build();
     }
 
-    #[cfg(tokio_unstable)]
     {
         let metrics = metrics.clone();
         METER
@@ -433,7 +426,6 @@ pub fn observe(metrics: RuntimeMetrics) {
 }
 
 /// Helper to construct a [`KeyValue`] with the worker index.
-#[allow(dead_code)]
 fn worker_idx(i: usize) -> KeyValue {
     KeyValue::new("worker_idx", i.try_into().unwrap_or(i64::MAX))
 }

@@ -33,7 +33,7 @@ jobs:
         run: make coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: policies/coverage.json
@@ -60,7 +60,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: frontend/coverage/
@@ -127,7 +127,7 @@ jobs:
           grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/coverage/*.lcov

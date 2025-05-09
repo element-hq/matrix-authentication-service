@@ -61,7 +61,11 @@ impl OAuth2Session {
 
     /// The user-agent with which the session was created.
     pub async fn user_agent(&self) -> Option<UserAgent> {
-        self.0.user_agent.clone().map(UserAgent::from)
+        self.0
+            .user_agent
+            .clone()
+            .map(mas_data_model::UserAgent::parse)
+            .map(UserAgent::from)
     }
 
     /// The state of the session.
@@ -123,6 +127,11 @@ impl OAuth2Session {
     /// The last time the session was active.
     pub async fn last_active_at(&self) -> Option<DateTime<Utc>> {
         self.0.last_active_at
+    }
+
+    /// The user-provided name for this session.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.0.human_name.as_deref()
     }
 }
 

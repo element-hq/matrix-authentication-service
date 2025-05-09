@@ -370,6 +370,10 @@ type CompatSession implements Node & CreationEvent {
   The last time the session was active.
   """
   lastActiveAt: DateTime
+  """
+  A human-provided name for the session.
+  """
+  humanName: String
 }
 
 type CompatSessionConnection {
@@ -937,7 +941,13 @@ type Mutation {
     input: CreateOAuth2SessionInput!
   ): CreateOAuth2SessionPayload!
   endOauth2Session(input: EndOAuth2SessionInput!): EndOAuth2SessionPayload!
+  setOauth2SessionName(
+    input: SetOAuth2SessionNameInput!
+  ): SetOAuth2SessionNamePayload!
   endCompatSession(input: EndCompatSessionInput!): EndCompatSessionPayload!
+  setCompatSessionName(
+    input: SetCompatSessionNameInput!
+  ): SetCompatSessionNamePayload!
   endBrowserSession(input: EndBrowserSessionInput!): EndBrowserSessionPayload!
   """
   Set the display name of a user
@@ -1060,6 +1070,10 @@ type Oauth2Session implements Node & CreationEvent {
   The last time the session was active.
   """
   lastActiveAt: DateTime
+  """
+  The user-provided name for this session.
+  """
+  humanName: String
 }
 
 type Oauth2SessionConnection {
@@ -1427,6 +1441,45 @@ type SetCanRequestAdminPayload {
 }
 
 """
+The input of the `setCompatSessionName` mutation.
+"""
+input SetCompatSessionNameInput {
+  """
+  The ID of the session to set the name of.
+  """
+  compatSessionId: ID!
+  """
+  The new name of the session.
+  """
+  humanName: String!
+}
+
+type SetCompatSessionNamePayload {
+  """
+  The status of the mutation.
+  """
+  status: SetCompatSessionNameStatus!
+  """
+  The session that was updated.
+  """
+  oauth2Session: CompatSession
+}
+
+"""
+The status of the `setCompatSessionName` mutation.
+"""
+enum SetCompatSessionNameStatus {
+  """
+  The session was updated.
+  """
+  UPDATED
+  """
+  The session was not found.
+  """
+  NOT_FOUND
+}
+
+"""
 The input for the `addEmail` mutation
 """
 input SetDisplayNameInput {
@@ -1466,6 +1519,45 @@ enum SetDisplayNameStatus {
   The display name is invalid
   """
   INVALID
+}
+
+"""
+The input of the `setOauth2SessionName` mutation.
+"""
+input SetOAuth2SessionNameInput {
+  """
+  The ID of the session to set the name of.
+  """
+  oauth2SessionId: ID!
+  """
+  The new name of the session.
+  """
+  humanName: String!
+}
+
+type SetOAuth2SessionNamePayload {
+  """
+  The status of the mutation.
+  """
+  status: SetOAuth2SessionNameStatus!
+  """
+  The session that was updated.
+  """
+  oauth2Session: Oauth2Session
+}
+
+"""
+The status of the `setOauth2SessionName` mutation.
+"""
+enum SetOAuth2SessionNameStatus {
+  """
+  The session was updated.
+  """
+  UPDATED
+  """
+  The session was not found.
+  """
+  NOT_FOUND
 }
 
 """

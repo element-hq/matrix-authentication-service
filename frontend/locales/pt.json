@@ -9,9 +9,9 @@
     "continue": "Continuar",
     "edit": "Editar",
     "expand": "Expandir",
-    "save": "Salvar",
+    "save": "Guardar",
     "save_and_continue": "Guardar e Continuar",
-    "sign_out": "Sair",
+    "sign_out": "Terminar sessão",
     "start_over": "Recomeçar"
   },
   "branding": {
@@ -40,10 +40,10 @@
       "account_password": "Palavra-passe da conta",
       "contact_info": "Informações de contacto",
       "delete_account": {
-        "alert_description": "Esta conta será permanentemente apagada e deixará de ter acesso a todas as suas mensagens.",
+        "alert_description": "Esta conta será permanentemente eliminada e deixará de ter acesso a todas as suas mensagens.",
         "alert_title": "Está prestes a perder todos os seus dados",
         "button": "Eliminar conta",
-        "dialog_description": "<text>Confirme que pretende apagar a sua conta:</text>\n<profile />\n<list>\n<item>Não poderá reativar a sua conta</item>\n<item>Deixará de poder iniciar sessão</item>\n<item>Ninguém poderá reutilizar o seu nome de utilizador (MXID), incluindo você</item>\n<item>Deixará todas as salas e mensagens diretas em que participa</item>\n<item>Será removido do servidor de identidade e ninguém o poderá encontrar com o seu e-mail ou número de telefone</item>\n</list>\n<text>As suas mensagens antigas continuarão visíveis para as pessoas que as receberam. Gostaria de ocultar as suas mensagens enviadas a pessoas que entrem em salas no futuro?</text>",
+        "dialog_description": "<text>Confirme que pretende eliminar a conta:</text>\n<profile />\n<list>\n<item>Não será possível reativar a conta</item>\n<item>Deixará de poder iniciar sessão</item>\n<item>Ninguém poderá reutilizar o seu nome de utilizador (MXID), incluindo o próprio</item>\n<item>Deixará todas as salas e mensagens diretas em que participa</item>\n<item>Será removido do servidor de identidade e ninguém o poderá encontrar com o seu e-mail ou número de telefone</item>\n</list>\n<text>As suas mensagens antigas continuarão visíveis para as pessoas que as receberam. Gostaria de ocultar as suas mensagens enviadas a pessoas que entrem em salas no futuro?</text>",
         "dialog_title": "Eliminar esta conta?",
         "erase_checkbox_label": "Sim, ocultar todas as minhas mensagens de novos marceneiros",
         "incorrect_password": "Palavra-passe incorrecta, tente novamente",
@@ -52,19 +52,19 @@
         "password_label": "Introduza a sua palavra-passe para continuar"
       },
       "edit_profile": {
-        "display_name_help": "Isso é o que os outros verão onde quer que você esteja conectado.",
-        "display_name_label": "Nome para exibição",
+        "display_name_help": "Isto é o que os outros verão sempre que tiver sessão iniciada.",
+        "display_name_label": "Nome de exibição",
         "title": "Editar perfil",
         "username_label": "Nome de utilizador"
       },
       "password": {
         "change": "Alterar palavra-passe",
-        "change_disabled": "As alterações de palavra-passe são desactivadas pelo administrador.",
-        "label": "Palavra-Passe"
+        "change_disabled": "As alterações de palavra-passe são desativadas pelo administrador.",
+        "label": "Palavra-passe"
       },
       "sign_out": {
-        "button": "Sair da conta",
-        "dialog": "Sair desta conta?"
+        "button": "Terminar sessão na conta",
+        "dialog": "Terminar sessão nesta conta?"
       },
       "title": "A sua conta"
     },
@@ -79,7 +79,7 @@
         "title": "O e-mail já existe"
       },
       "email_exists_error": "O e-mail introduzido já foi adicionado a esta conta",
-      "email_field_help": "Adicione um e-mail alternativo que você pode usar para acessar essa conta.",
+      "email_field_help": "Adicione um e-mail alternativo que possa utilizar para aceder a esta conta.",
       "email_field_label": "Adicionar e-mail",
       "email_in_use_error": "O e-mail introduzido já está a ser utilizado",
       "email_invalid_alert": {
@@ -87,11 +87,11 @@
         "title": "E-mail inválido"
       },
       "email_invalid_error": "O e-mail introduzido é inválido",
-      "incorrect_password_error": "Palavra-passe incorrecta, tente novamente",
-      "password_confirmation": "Confirme a palavra-passe da sua conta para adicionar este endereço de correio eletrónico"
+      "incorrect_password_error": "Palavra-passe incorreta, tente novamente",
+      "password_confirmation": "Confirme a palavra-passe da sua conta para adicionar este endereço de e-mail"
     },
     "app_sessions_list": {
-      "error": "Falha ao carregar sessões do aplicativo",
+      "error": "Falha ao carregar sessões da aplicação",
       "heading": "Aplicações"
     },
     "browser_session_details": {
@@ -103,7 +103,7 @@
       "body:other": "{{count}} sessões ativas",
       "heading": "Navegadores",
       "no_active_sessions": {
-        "default": "Você não está conectado a nenhum navegador da Web.",
+        "default": "Não tem sessão iniciada em nenhum navegador Web.",
         "inactive_90_days": "Todas as suas sessões estiveram ativas nos últimos 90 dias."
       },
       "view_all_button": "Ver tudo"
@@ -137,7 +137,7 @@
     "error_boundary_title": "Algo correu mal",
     "errors": {
       "field_required": "Este campo é obrigatório",
-      "rate_limit_exceeded": "Você fez muitas solicitações em um curto período. Aguarde alguns minutos e tente novamente."
+      "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente."
     },
     "last_active": {
       "active_date": "Ativo {{relativeDate}}",
@@ -299,6 +299,11 @@
       "last_auth_label": "Última autenticação",
       "name_for_platform": "{{name}}para{{platform}}",
       "scopes_label": "Âmbitos de aplicação",
+      "set_device_name": {
+        "help": "Defina um nome que o ajude a identificar este dispositivo.",
+        "label": "Nome do dispositivo",
+        "title": "Editar nome do dispositivo"
+      },
       "signed_in_date": "Conectado <datetime/>",
       "signed_in_label": "Sessão iniciada",
       "title": "Detalhes do dispositivo",

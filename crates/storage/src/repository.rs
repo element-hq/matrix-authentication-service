@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use async_trait::async_trait;
 use futures_util::future::BoxFuture;
 use thiserror::Error;
 
@@ -28,6 +29,18 @@ use crate::{
         UserRecoveryRepository, UserRegistrationRepository, UserRepository, UserTermsRepository,
     },
 };
+
+/// A [`RepositoryFactory`] is a factory that can create a [`BoxRepository`]
+// XXX(quenting): this could be generic over the repository type, but it's annoying to make it
+// dyn-safe
+#[async_trait]
+pub trait RepositoryFactory {
+    /// Create a new [`BoxRepository`]
+    async fn create(&self) -> Result<BoxRepository, RepositoryError>;
+}
+
+/// A type-erased [`RepositoryFactory`]
+pub type BoxRepositoryFactory = Box<dyn RepositoryFactory + Send + Sync + 'static>;
 
 /// A [`Repository`] helps interacting with the underlying storage backend.
 pub trait Repository<E>:

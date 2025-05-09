@@ -94,6 +94,24 @@ const localazyMetadata: LocalazyMetadata = {
       pluralType: (n) => { return (n===0 || n===1) ? "one" : "other"; }
     },
     {
+      language: "hu",
+      region: "",
+      script: "",
+      isRtl: false,
+      name: "Hungarian",
+      localizedName: "Magyar",
+      pluralType: (n) => { return (n===1) ? "one" : "other"; }
+    },
+    {
+      language: "nb",
+      region: "NO",
+      script: "",
+      isRtl: false,
+      name: "Norwegian Bokmål (Norway)",
+      localizedName: "Norsk bokmål (Norge)",
+      pluralType: (n) => { return (n===1) ? "one" : "other"; }
+    },
+    {
       language: "nl",
       region: "",
       script: "",
@@ -161,6 +179,8 @@ const localazyMetadata: LocalazyMetadata = {
         "et": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/et/frontend.json",
         "fi": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fi/frontend.json",
         "fr": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/fr/frontend.json",
+        "hu": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/hu/frontend.json",
+        "nb_NO": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/nb-NO/frontend.json",
         "nl": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/nl/frontend.json",
         "pt": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/pt/frontend.json",
         "ru": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/7c203a8ac8bd48c3c4609a8effcd0fbac430f9b2/ru/frontend.json",
@@ -181,6 +201,8 @@ const localazyMetadata: LocalazyMetadata = {
         "et": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/et/file.json",
         "fi": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fi/file.json",
         "fr": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/fr/file.json",
+        "hu": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/hu/file.json",
+        "nb_NO": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/nb-NO/file.json",
         "nl": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/nl/file.json",
         "pt": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/pt/file.json",
         "ru": "https://delivery.localazy.com/_a7686032324574572744739e0707/_e0/5b69b0350dccfd47c245a5d41c1b9fdf6912cc6e/ru/file.json",

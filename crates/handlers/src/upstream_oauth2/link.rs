@@ -14,12 +14,11 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    GenericError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    sentry::SentryEventID,
+    record_error,
 };
-use mas_data_model::UserAgent;
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -77,16 +76,16 @@ pub(crate) enum RouteError {
     LinkNotFound,
 
     /// Couldn't find the session on the link
-    #[error("Session not found")]
-    SessionNotFound,
+    #[error("Session {0} not found")]
+    SessionNotFound(Ulid),
 
     /// Couldn't find the user
-    #[error("User not found")]
-    UserNotFound,
+    #[error("User {0} not found")]
+    UserNotFound(Ulid),
 
     /// Couldn't find upstream provider
-    #[error("Upstream provider not found")]
-    ProviderNotFound,
+    #[error("Upstream provider {0} not found")]
+    ProviderNotFound(Ulid),
 
     /// Required attribute rendered to an empty string
     #[error("Template {template:?} rendered to an empty string")]
@@ -104,8 +103,8 @@ pub(crate) enum RouteError {
     },
 
     /// Session was already consumed
-    #[error("Session already consumed")]
-    SessionConsumed,
+    #[error("Session {0} already consumed")]
+    SessionConsumed(Ulid),
 
     #[error("Missing session cookie")]
     MissingCookie,
@@ -129,14 +128,24 @@ impl_from_error_for_route!(mas_jose::jwt::JwtDecodeError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
-        let response = match self {
-            Self::LinkNotFound => (StatusCode::NOT_FOUND, "Link not found").into_response(),
-            Self::Internal(e) => FancyError::from(e).into_response(),
-            e => FancyError::from(e).into_response(),
+        let sentry_event_id = record_error!(
+            self,
+            Self::Internal(_)
+                | Self::RequiredAttributeEmpty { .. }
+                | Self::RequiredAttributeRender { .. }
+                | Self::SessionNotFound(_)
+                | Self::ProviderNotFound(_)
+                | Self::UserNotFound(_)
+                | Self::HomeserverConnection(_)
+        );
+
+        let status_code = match self {
+            Self::LinkNotFound => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        let response = GenericError::new(status_code, self);
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -209,7 +218,6 @@ impl ToFormState for FormData {
     name = "handlers.upstream_oauth2.link.get",
     fields(upstream_oauth_link.id = %link_id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -225,7 +233,7 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Path(link_id): Path<Ulid>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
     let (session_id, post_auth_action) = sessions_cookie
         .lookup_link(link_id)
@@ -245,16 +253,16 @@ pub(crate) async fn get(
         .upstream_oauth_session()
         .lookup(session_id)
         .await?
-        .ok_or(RouteError::SessionNotFound)?;
+        .ok_or(RouteError::SessionNotFound(session_id))?;
 
     // This checks that we're in a browser session which is allowed to consume this
     // link: the upstream auth session should have been started in this browser.
     if upstream_session.link_id() != Some(link.id) {
-        return Err(RouteError::SessionNotFound);
+        return Err(RouteError::SessionNotFound(session_id));
     }
 
     if upstream_session.is_consumed() {
-        return Err(RouteError::SessionConsumed);
+        return Err(RouteError::SessionConsumed(session_id));
     }
 
     let (user_session_info, cookie_jar) = cookie_jar.session_info();
@@ -289,7 +297,7 @@ pub(crate) async fn get(
                 .user()
                 .lookup(user_id)
                 .await?
-                .ok_or(RouteError::UserNotFound)?;
+                .ok_or(RouteError::UserNotFound(user_id))?;
 
             let ctx = UpstreamExistingLinkContext::new(user)
                 .with_session(user_session)
@@ -315,7 +323,7 @@ pub(crate) async fn get(
                 .user()
                 .lookup(user_id)
                 .await?
-                .ok_or(RouteError::UserNotFound)?;
+                .ok_or(RouteError::UserNotFound(user_id))?;
 
             // Check that the user is not locked or deactivated
             if user.deactivated_at.is_some() {
@@ -377,7 +385,7 @@ pub(crate) async fn get(
                 .upstream_oauth_provider()
                 .lookup(link.provider_id)
                 .await?
-                .ok_or(RouteError::ProviderNotFound)?;
+                .ok_or(RouteError::ProviderNotFound(link.provider_id))?;
 
             let ctx = UpstreamRegister::new(link.clone(), provider.clone());
 
@@ -494,7 +502,7 @@ pub(crate) async fn get(
                                 email: None,
                                 requester: mas_policy::Requester {
                                     ip_address: activity_tracker.ip(),
-                                    user_agent: user_agent.clone().map(|ua| ua.raw),
+                                    user_agent: user_agent.clone(),
                                 },
                             })
                             .await?;
@@ -543,7 +551,6 @@ pub(crate) async fn get(
     name = "handlers.upstream_oauth2.link.post",
     fields(upstream_oauth_link.id = %link_id),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -561,7 +568,7 @@ pub(crate) async fn post(
     Path(link_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<FormData>>,
 ) -> Result<Response, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let sessions_cookie = UpstreamSessionsCookie::load(&cookie_jar);
@@ -583,16 +590,16 @@ pub(crate) async fn post(
         .upstream_oauth_session()
         .lookup(session_id)
         .await?
-        .ok_or(RouteError::SessionNotFound)?;
+        .ok_or(RouteError::SessionNotFound(session_id))?;
 
     // This checks that we're in a browser session which is allowed to consume this
     // link: the upstream auth session should have been started in this browser.
     if upstream_session.link_id() != Some(link.id) {
-        return Err(RouteError::SessionNotFound);
+        return Err(RouteError::SessionNotFound(session_id));
     }
 
     if upstream_session.is_consumed() {
-        return Err(RouteError::SessionConsumed);
+        return Err(RouteError::SessionConsumed(session_id));
     }
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -637,7 +644,7 @@ pub(crate) async fn post(
                 .upstream_oauth_provider()
                 .lookup(link.provider_id)
                 .await?
-                .ok_or(RouteError::ProviderNotFound)?;
+                .ok_or(RouteError::ProviderNotFound(link.provider_id))?;
 
             // Let's try to import the claims from the ID token
             let env = environment();
@@ -779,7 +786,7 @@ pub(crate) async fn post(
                         email: email.as_deref(),
                         requester: mas_policy::Requester {
                             ip_address: activity_tracker.ip(),
-                            user_agent: user_agent.clone().map(|ua| ua.raw),
+                            user_agent: user_agent.clone(),
                         },
                     })
                     .await?;
@@ -976,6 +983,7 @@ mod tests {
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
                     additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
                     ui_order: 0,
                 },
             )
@@ -990,7 +998,7 @@ mod tests {
                 &provider,
                 "state".to_owned(),
                 None,
-                "nonce".to_owned(),
+                None,
             )
             .await
             .unwrap();

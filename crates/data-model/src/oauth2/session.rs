@@ -11,7 +11,7 @@ use oauth2_types::scope::Scope;
 use serde::Serialize;
 use ulid::Ulid;
 
-use crate::{InvalidTransitionError, UserAgent};
+use crate::InvalidTransitionError;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub enum SessionState {
@@ -80,9 +80,10 @@ pub struct Session {
     pub user_session_id: Option<Ulid>,
     pub client_id: Ulid,
     pub scope: Scope,
-    pub user_agent: Option<UserAgent>,
+    pub user_agent: Option<String>,
     pub last_active_at: Option<DateTime<Utc>>,
     pub last_active_ip: Option<IpAddr>,
+    pub human_name: Option<String>,
 }
 
 impl std::ops::Deref for Session {

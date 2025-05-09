@@ -11,9 +11,8 @@ use headers::{CacheControl, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    sentry::SentryEventID,
+    record_error,
 };
-use mas_data_model::UserAgent;
 use mas_keystore::Encrypter;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2DeviceCodeGrantParams};
@@ -24,6 +23,7 @@ use oauth2_types::{
 };
 use rand::distributions::{Alphanumeric, DistString};
 use thiserror::Error;
+use ulid::Ulid;
 
 use crate::{BoundActivityTracker, impl_from_error_for_route};
 
@@ -35,35 +35,46 @@ pub(crate) enum RouteError {
     #[error("client not found")]
     ClientNotFound,
 
-    #[error("client not allowed")]
-    ClientNotAllowed,
+    #[error("client {0} is not allowed to use the device code grant")]
+    ClientNotAllowed(Ulid),
 
-    #[error("could not verify client credentials")]
-    ClientCredentialsVerification(#[from] CredentialsVerificationError),
+    #[error("invalid client credentials for client {client_id}")]
+    InvalidClientCredentials {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
+
+    #[error("could not verify client credentials for client {client_id}")]
+    ClientCredentialsVerification {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
 
         let response = match self {
-            Self::Internal(_) => (
+            Self::Internal(_) | Self::ClientCredentialsVerification { .. } => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ClientError::from(ClientErrorCode::ServerError)),
             ),
-            Self::ClientNotFound | Self::ClientCredentialsVerification(_) => (
+            Self::ClientNotFound | Self::InvalidClientCredentials { .. } => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::InvalidClient)),
             ),
-            Self::ClientNotAllowed => (
+            Self::ClientNotAllowed(_) => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::UnauthorizedClient)),
             ),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -71,7 +82,6 @@ impl IntoResponse for RouteError {
     name = "handlers.oauth2.device.request.post",
     fields(client.id = client_authorization.client_id()),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -94,15 +104,28 @@ pub(crate) async fn post(
     let method = client
         .token_endpoint_auth_method
         .as_ref()
-        .ok_or(RouteError::ClientNotAllowed)?;
+        .ok_or(RouteError::ClientNotAllowed(client.id))?;
 
     client_authorization
         .credentials
         .verify(&http_client, &encrypter, method, &client)
-        .await?;
+        .await
+        .map_err(|err| {
+            if err.is_internal() {
+                RouteError::ClientCredentialsVerification {
+                    client_id: client.id,
+                    source: err,
+                }
+            } else {
+                RouteError::InvalidClientCredentials {
+                    client_id: client.id,
+                    source: err,
+                }
+            }
+        })?;
 
     if !client.grant_types.contains(&GrantType::DeviceCode) {
-        return Err(RouteError::ClientNotAllowed);
+        return Err(RouteError::ClientNotAllowed(client.id));
     }
 
     let scope = client_authorization
@@ -113,7 +136,7 @@ pub(crate) async fn post(
 
     let expires_in = Duration::microseconds(20 * 60 * 1000 * 1000);
 
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let ip_address = activity_tracker.ip();
 
     let device_code = Alphanumeric.sample_string(&mut rng, 32);

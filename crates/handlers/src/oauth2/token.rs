@@ -13,11 +13,12 @@ use headers::{CacheControl, HeaderMap, HeaderMapExt, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
-    sentry::SentryEventID,
+    record_error,
 };
 use mas_data_model::{
-    AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType, UserAgent,
+    AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType,
 };
+use mas_i18n::DataLocale;
 use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_oidc_client::types::scope::ScopeToken;
@@ -31,6 +32,7 @@ use mas_storage::{
     },
     user::BrowserSessionRepository,
 };
+use mas_templates::{DeviceNameContext, TemplateContext, Templates};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     pkce::CodeChallengeError,
@@ -42,7 +44,7 @@ use oauth2_types::{
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use ulid::Ulid;
 
 use super::{generate_id_token, generate_token_pair};
@@ -72,17 +74,28 @@ pub(crate) enum RouteError {
     #[error("client not found")]
     ClientNotFound,
 
-    #[error("client not allowed")]
-    ClientNotAllowed,
+    #[error("client not allowed to use the token endpoint: {0}")]
+    ClientNotAllowed(Ulid),
 
-    #[error("could not verify client credentials")]
-    ClientCredentialsVerification(#[from] CredentialsVerificationError),
+    #[error("invalid client credentials for client {client_id}")]
+    InvalidClientCredentials {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
+
+    #[error("could not verify client credentials for client {client_id}")]
+    ClientCredentialsVerification {
+        client_id: Ulid,
+        #[source]
+        source: CredentialsVerificationError,
+    },
 
     #[error("grant not found")]
     GrantNotFound,
 
-    #[error("invalid grant")]
-    InvalidGrant,
+    #[error("invalid grant {0}")]
+    InvalidGrant(Ulid),
 
     #[error("refresh token not found")]
     RefreshTokenNotFound,
@@ -96,20 +109,23 @@ pub(crate) enum RouteError {
     #[error("client id mismatch: expected {expected}, got {actual}")]
     ClientIDMismatch { expected: Ulid, actual: Ulid },
 
-    #[error("policy denied the request")]
-    DeniedByPolicy(Vec<mas_policy::Violation>),
+    #[error("policy denied the request: {0}")]
+    DeniedByPolicy(mas_policy::EvaluationResult),
 
     #[error("unsupported grant type")]
     UnsupportedGrantType,
 
-    #[error("unauthorized client")]
-    UnauthorizedClient,
+    #[error("client {0} is not authorized to use this grant type")]
+    UnauthorizedClient(Ulid),
 
-    #[error("failed to load browser session")]
-    NoSuchBrowserSession,
+    #[error("unexpected client {was} (expected {expected})")]
+    UnexptectedClient { was: Ulid, expected: Ulid },
 
-    #[error("failed to load oauth session")]
-    NoSuchOAuthSession,
+    #[error("failed to load browser session {0}")]
+    NoSuchBrowserSession(Ulid),
+
+    #[error("failed to load oauth session {0}")]
+    NoSuchOAuthSession(Ulid),
 
     #[error(
         "failed to load the next refresh token ({next:?}) from the previous one ({previous:?})"
@@ -145,14 +161,25 @@ pub(crate) enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(
+            self,
+            Self::Internal(_)
+                | Self::ClientCredentialsVerification { .. }
+                | Self::NoSuchBrowserSession(_)
+                | Self::NoSuchOAuthSession(_)
+                | Self::ProvisionDeviceFailed(_)
+                | Self::NoSuchNextRefreshToken { .. }
+                | Self::NoSuchNextAccessToken { .. }
+                | Self::NoAccessTokenOnRefreshToken { .. }
+        );
 
         TOKEN_REQUEST_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
 
         let response = match self {
             Self::Internal(_)
-            | Self::NoSuchBrowserSession
-            | Self::NoSuchOAuthSession
+            | Self::ClientCredentialsVerification { .. }
+            | Self::NoSuchBrowserSession(_)
+            | Self::NoSuchOAuthSession(_)
             | Self::ProvisionDeviceFailed(_)
             | Self::NoSuchNextRefreshToken { .. }
             | Self::NoSuchNextAccessToken { .. }
@@ -160,10 +187,12 @@ impl IntoResponse for RouteError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ClientError::from(ClientErrorCode::ServerError)),
             ),
+
             Self::BadRequest => (
                 StatusCode::BAD_REQUEST,
                 Json(ClientError::from(ClientErrorCode::InvalidRequest)),
             ),
+
             Self::PkceVerification(err) => (
                 StatusCode::BAD_REQUEST,
                 Json(
@@ -171,19 +200,25 @@ impl IntoResponse for RouteError {
                         .with_description(format!("PKCE verification failed: {err}")),
                 ),
             ),
-            Self::ClientNotFound | Self::ClientCredentialsVerification(_) => (
+
+            Self::ClientNotFound | Self::InvalidClientCredentials { .. } => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::InvalidClient)),
             ),
-            Self::ClientNotAllowed | Self::UnauthorizedClient => (
+
+            Self::ClientNotAllowed(_)
+            | Self::UnauthorizedClient(_)
+            | Self::UnexptectedClient { .. } => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::UnauthorizedClient)),
             ),
-            Self::DeniedByPolicy(violations) => (
+
+            Self::DeniedByPolicy(evaluation) => (
                 StatusCode::FORBIDDEN,
                 Json(
                     ClientError::from(ClientErrorCode::InvalidScope).with_description(
-                        violations
+                        evaluation
+                            .violations
                             .into_iter()
                             .map(|violation| violation.msg)
                             .collect::<Vec<_>>()
@@ -191,19 +226,23 @@ impl IntoResponse for RouteError {
                     ),
                 ),
             ),
+
             Self::DeviceCodeRejected => (
                 StatusCode::FORBIDDEN,
                 Json(ClientError::from(ClientErrorCode::AccessDenied)),
             ),
+
             Self::DeviceCodeExpired => (
                 StatusCode::FORBIDDEN,
                 Json(ClientError::from(ClientErrorCode::ExpiredToken)),
             ),
+
             Self::DeviceCodePending => (
                 StatusCode::FORBIDDEN,
                 Json(ClientError::from(ClientErrorCode::AuthorizationPending)),
             ),
-            Self::InvalidGrant
+
+            Self::InvalidGrant(_)
             | Self::DeviceCodeExchanged
             | Self::RefreshTokenNotFound
             | Self::RefreshTokenInvalid(_)
@@ -213,16 +252,19 @@ impl IntoResponse for RouteError {
                 StatusCode::BAD_REQUEST,
                 Json(ClientError::from(ClientErrorCode::InvalidGrant)),
             ),
+
             Self::UnsupportedGrantType => (
                 StatusCode::BAD_REQUEST,
                 Json(ClientError::from(ClientErrorCode::UnsupportedGrantType)),
             ),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
+impl_from_error_for_route!(mas_i18n::DataError);
+impl_from_error_for_route!(mas_templates::TemplateError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 impl_from_error_for_route!(super::IdTokenSignatureError);
@@ -231,7 +273,6 @@ impl_from_error_for_route!(super::IdTokenSignatureError);
     name = "handlers.oauth2.token.post",
     fields(client.id = client_authorization.client_id()),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -244,11 +285,12 @@ pub(crate) async fn post(
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(encrypter): State<Encrypter>,
+    State(templates): State<Templates>,
     policy: Policy,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     client_authorization: ClientAuthorization<AccessTokenRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let client = client_authorization
         .credentials
         .fetch(&mut repo)
@@ -258,12 +300,27 @@ pub(crate) async fn post(
     let method = client
         .token_endpoint_auth_method
         .as_ref()
-        .ok_or(RouteError::ClientNotAllowed)?;
+        .ok_or(RouteError::ClientNotAllowed(client.id))?;
 
     client_authorization
         .credentials
         .verify(&http_client, &encrypter, method, &client)
-        .await?;
+        .await
+        .map_err(|err| {
+            // Classify the error differntly, depending on whether it's an 'internal' error,
+            // or just because the client presented invalid credentials.
+            if err.is_internal() {
+                RouteError::ClientCredentialsVerification {
+                    client_id: client.id,
+                    source: err,
+                }
+            } else {
+                RouteError::InvalidClientCredentials {
+                    client_id: client.id,
+                    source: err,
+                }
+            }
+        })?;
 
     let form = client_authorization.form.ok_or(RouteError::BadRequest)?;
 
@@ -282,6 +339,7 @@ pub(crate) async fn post(
                 &site_config,
                 repo,
                 &homeserver,
+                &templates,
                 user_agent,
             )
             .await?
@@ -363,11 +421,12 @@ async fn authorization_code_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
-    user_agent: Option<UserAgent>,
+    templates: &Templates,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::AuthorizationCode) {
-        return Err(RouteError::UnauthorizedClient);
+        return Err(RouteError::UnauthorizedClient(client.id));
     }
 
     let authz_grant = repo
@@ -381,40 +440,43 @@ async fn authorization_code_grant(
     let session_id = match authz_grant.stage {
         AuthorizationGrantStage::Cancelled { cancelled_at } => {
             debug!(%cancelled_at, "Authorization grant was cancelled");
-            return Err(RouteError::InvalidGrant);
+            return Err(RouteError::InvalidGrant(authz_grant.id));
         }
         AuthorizationGrantStage::Exchanged {
             exchanged_at,
             fulfilled_at,
             session_id,
         } => {
-            debug!(%exchanged_at, %fulfilled_at, "Authorization code was already exchanged");
+            warn!(%exchanged_at, %fulfilled_at, "Authorization code was already exchanged");
 
             // Ending the session if the token was already exchanged more than 20s ago
             if now - exchanged_at > Duration::microseconds(20 * 1000 * 1000) {
-                debug!("Ending potentially compromised session");
+                warn!(oauth_session.id = %session_id, "Ending potentially compromised session");
                 let session = repo
                     .oauth2_session()
                     .lookup(session_id)
                     .await?
-                    .ok_or(RouteError::NoSuchOAuthSession)?;
+                    .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
+
+                //if !session.is_finished() {
                 repo.oauth2_session().finish(clock, session).await?;
                 repo.save().await?;
+                //}
             }
 
-            return Err(RouteError::InvalidGrant);
+            return Err(RouteError::InvalidGrant(authz_grant.id));
         }
         AuthorizationGrantStage::Pending => {
-            debug!("Authorization grant has not been fulfilled yet");
-            return Err(RouteError::InvalidGrant);
+            warn!("Authorization grant has not been fulfilled yet");
+            return Err(RouteError::InvalidGrant(authz_grant.id));
         }
         AuthorizationGrantStage::Fulfilled {
             session_id,
             fulfilled_at,
         } => {
             if now - fulfilled_at > Duration::microseconds(10 * 60 * 1000 * 1000) {
-                debug!("Code exchange took more than 10 minutes");
-                return Err(RouteError::InvalidGrant);
+                warn!("Code exchange took more than 10 minutes");
+                return Err(RouteError::InvalidGrant(authz_grant.id));
             }
 
             session_id
@@ -425,7 +487,12 @@ async fn authorization_code_grant(
         .oauth2_session()
         .lookup(session_id)
         .await?
-        .ok_or(RouteError::NoSuchOAuthSession)?;
+        .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
+
+    // Generate a device name
+    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
+    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
+    let device_name = templates.render_device_name(&ctx)?;
 
     if let Some(user_agent) = user_agent {
         session = repo
@@ -435,10 +502,16 @@ async fn authorization_code_grant(
     }
 
     // This should never happen, since we looked up in the database using the code
-    let code = authz_grant.code.as_ref().ok_or(RouteError::InvalidGrant)?;
+    let code = authz_grant
+        .code
+        .as_ref()
+        .ok_or(RouteError::InvalidGrant(authz_grant.id))?;
 
     if client.id != session.client_id {
-        return Err(RouteError::UnauthorizedClient);
+        return Err(RouteError::UnexptectedClient {
+            was: client.id,
+            expected: session.client_id,
+        });
     }
 
     match (code.pkce.as_ref(), grant.code_verifier.as_ref()) {
@@ -453,14 +526,14 @@ async fn authorization_code_grant(
 
     let Some(user_session_id) = session.user_session_id else {
         tracing::warn!("No user session associated with this OAuth2 session");
-        return Err(RouteError::InvalidGrant);
+        return Err(RouteError::InvalidGrant(authz_grant.id));
     };
 
     let browser_session = repo
         .browser_session()
         .lookup(user_session_id)
         .await?
-        .ok_or(RouteError::NoSuchBrowserSession)?;
+        .ok_or(RouteError::NoSuchBrowserSession(user_session_id))?;
 
     let last_authentication = repo
         .browser_session()
@@ -506,7 +579,7 @@ async fn authorization_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str())
+                .create_device(&mxid, device.as_str(), Some(&device_name))
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -535,11 +608,11 @@ async fn refresh_token_grant(
     client: &Client,
     site_config: &SiteConfig,
     mut repo: BoxRepository,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::RefreshToken) {
-        return Err(RouteError::UnauthorizedClient);
+        return Err(RouteError::UnauthorizedClient(client.id));
     }
 
     let refresh_token = repo
@@ -552,7 +625,7 @@ async fn refresh_token_grant(
         .oauth2_session()
         .lookup(refresh_token.session_id)
         .await?
-        .ok_or(RouteError::NoSuchOAuthSession)?;
+        .ok_or(RouteError::NoSuchOAuthSession(refresh_token.session_id))?;
 
     // Let's for now record the user agent on each refresh, that should be
     // responsive enough and not too much of a burden on the database.
@@ -688,11 +761,11 @@ async fn client_credentials_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     mut policy: Policy,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::ClientCredentials) {
-        return Err(RouteError::UnauthorizedClient);
+        return Err(RouteError::UnauthorizedClient(client.id));
     }
 
     // Default to an empty scope if none is provided
@@ -710,12 +783,12 @@ async fn client_credentials_grant(
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
-                user_agent: user_agent.clone().map(|ua| ua.raw),
+                user_agent: user_agent.clone(),
             },
         })
         .await?;
     if !res.valid() {
-        return Err(RouteError::DeniedByPolicy(res.violations));
+        return Err(RouteError::DeniedByPolicy(res));
     }
 
     // Start the session
@@ -767,11 +840,11 @@ async fn device_code_grant(
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
-    user_agent: Option<UserAgent>,
+    user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::DeviceCode) {
-        return Err(RouteError::UnauthorizedClient);
+        return Err(RouteError::UnauthorizedClient(client.id));
     }
 
     let grant = repo
@@ -804,14 +877,14 @@ async fn device_code_grant(
         }
         DeviceCodeGrantState::Fulfilled {
             browser_session_id, ..
-        } => browser_session_id,
+        } => *browser_session_id,
     };
 
     let browser_session = repo
         .browser_session()
-        .lookup(*browser_session_id)
+        .lookup(browser_session_id)
         .await?
-        .ok_or(RouteError::NoSuchBrowserSession)?;
+        .ok_or(RouteError::NoSuchBrowserSession(browser_session_id))?;
 
     // Start the session
     let mut session = repo
@@ -882,7 +955,7 @@ async fn device_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str())
+                .create_device(&mxid, device.as_str(), None)
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -980,6 +1053,7 @@ mod tests {
                 Some("nonce".to_owned()),
                 ResponseMode::Query,
                 false,
+                None,
                 None,
             )
             .await
@@ -1079,6 +1153,7 @@ mod tests {
                 Some("nonce".to_owned()),
                 ResponseMode::Query,
                 false,
+                None,
                 None,
             )
             .await

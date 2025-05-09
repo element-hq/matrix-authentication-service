@@ -16,7 +16,7 @@ use crate::ConfigurationSection;
 fn default_schemes() -> Vec<HashingScheme> {
     vec![HashingScheme {
         version: 1,
-        algorithm: Algorithm::Argon2id,
+        algorithm: Algorithm::default(),
         cost: None,
         secret: None,
         secret_file: None,
@@ -36,10 +36,14 @@ fn default_minimum_complexity() -> u8 {
 pub struct PasswordsConfig {
     /// Whether password-based authentication is enabled
     #[serde(default = "default_enabled")]
-    enabled: bool,
+    pub enabled: bool,
 
+    /// The hashing schemes to use for hashing and validating passwords
+    ///
+    /// The hashing scheme with the highest version number will be used for
+    /// hashing new passwords.
     #[serde(default = "default_schemes")]
-    schemes: Vec<HashingScheme>,
+    pub schemes: Vec<HashingScheme>,
 
     /// Score between 0 and 4 determining the minimum allowed password
     /// complexity. Scores are based on the ESTIMATED number of guesses
@@ -154,23 +158,30 @@ impl PasswordsConfig {
     }
 }
 
+/// Parameters for a password hashing scheme
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct HashingScheme {
-    version: u16,
+    /// The version of the hashing scheme. They must be unique, and the highest
+    /// version will be used for hashing new passwords.
+    pub version: u16,
 
-    algorithm: Algorithm,
+    /// The hashing algorithm to use
+    pub algorithm: Algorithm,
 
     /// Cost for the bcrypt algorithm
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(default = "default_bcrypt_cost")]
-    cost: Option<u32>,
+    pub cost: Option<u32>,
 
+    /// An optional secret to use when hashing passwords. This makes it harder
+    /// to brute-force the passwords in case of a database leak.
     #[serde(skip_serializing_if = "Option::is_none")]
-    secret: Option<String>,
+    pub secret: Option<String>,
 
+    /// Same as `secret`, but read from a file.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(with = "Option<String>")]
-    secret_file: Option<Utf8PathBuf>,
+    pub secret_file: Option<Utf8PathBuf>,
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -179,13 +190,14 @@ fn default_bcrypt_cost() -> Option<u32> {
 }
 
 /// A hashing algorithm
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Algorithm {
     /// bcrypt
     Bcrypt,
 
     /// argon2id
+    #[default]
     Argon2id,
 
     /// PBKDF2

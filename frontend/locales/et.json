@@ -299,6 +299,11 @@
       "last_auth_label": "Viimati autenditud",
       "name_for_platform": "{{name}} / {{platform}}",
       "scopes_label": "Õigused",
+      "set_device_name": {
+        "help": "Sisesta nimi, mis aitab sul hiljem seda seadet ära tunda.",
+        "label": "Seadme nimi",
+        "title": "Muuda seadme nime"
+      },
       "signed_in_date": "Sisse logitud <datetime/>",
       "signed_in_label": "Sisse logitud",
       "title": "Seadme andmed",

@@ -20,6 +20,7 @@ upstream_oauth_providers:
     discovery_mode: oidc
     encrypted_client_secret: ~
     fetch_userinfo: "false"
+    forward_login_hint: "false"
     human_name: ~
     id_token_signed_response_alg: RS256
     issuer: ~

@@ -9,10 +9,10 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
+use mas_axum_utils::{cookies::CookieJar, record_error};
 use mas_data_model::UpstreamOAuthProvider;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
-use mas_router::UrlBuilder;
+use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
@@ -41,13 +41,13 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let response = match self {
             Self::ProviderNotFound => (StatusCode::NOT_FOUND, "Provider not found").into_response(),
             Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -55,7 +55,6 @@ impl IntoResponse for RouteError {
     name = "handlers.upstream_oauth2.authorize.get",
     fields(upstream_oauth_provider.id = %provider_id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -91,6 +90,21 @@ pub(crate) async fn get(
 
     if let Some(response_mode) = provider.response_mode {
         data = data.with_response_mode(response_mode.into());
+    }
+
+    // Forward the raw login hint upstream for the provider to handle however it
+    // sees fit
+    if provider.forward_login_hint {
+        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
+            if let Some(login_hint) = repo
+                .oauth2_authorization_grant()
+                .lookup(*id)
+                .await?
+                .and_then(|grant| grant.login_hint)
+            {
+                data = data.with_login_hint(login_hint);
+            }
+        }
     }
 
     let data = if let Some(methods) = lazy_metadata.pkce_methods().await? {

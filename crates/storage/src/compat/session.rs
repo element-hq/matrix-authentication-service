@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, Device, User, UserAgent};
+use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, Device, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
@@ -215,10 +215,13 @@ pub trait CompatSessionRepository: Send + Sync {
     /// * `device`: The device ID of this session
     /// * `browser_session`: The browser session which created this session
     /// * `is_synapse_admin`: Whether the session is a synapse admin session
+    /// * `human_name`: The human-readable name of the session provided by the
+    ///   client or the user
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -227,6 +230,7 @@ pub trait CompatSessionRepository: Send + Sync {
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     /// End a compat session
@@ -322,7 +326,23 @@ pub trait CompatSessionRepository: Send + Sync {
     async fn record_user_agent(
         &mut self,
         compat_session: CompatSession,
-        user_agent: UserAgent,
+        user_agent: String,
+    ) -> Result<CompatSession, Self::Error>;
+
+    /// Set the human name of a compat session
+    ///
+    /// # Parameters
+    ///
+    /// * `compat_session`: The compat session to set the human name for
+    /// * `human_name`: The human name to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 }
 
@@ -337,6 +357,7 @@ repository_impl!(CompatSessionRepository:
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 
     async fn finish(
@@ -367,6 +388,12 @@ repository_impl!(CompatSessionRepository:
     async fn record_user_agent(
         &mut self,
         compat_session: CompatSession,
-        user_agent: UserAgent,
+        user_agent: String,
+    ) -> Result<CompatSession, Self::Error>;
+
+    async fn set_human_name(
+        &mut self,
+        compat_session: CompatSession,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
 );

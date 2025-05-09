@@ -9,7 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -18,7 +18,7 @@ use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
 
-#[tracing::instrument(name = "handlers.views.logout.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.logout.post", skip_all)]
 pub(crate) async fn post(
     clock: BoxClock,
     mut repo: BoxRepository,
@@ -26,7 +26,7 @@ pub(crate) async fn post(
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
     Form(form): Form<ProtectedForm<Option<PostAuthAction>>>,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let (session_info, cookie_jar) = cookie_jar.session_info();

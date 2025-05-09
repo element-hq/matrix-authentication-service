@@ -6,6 +6,7 @@
 
 // @vitest-environment happy-dom
 
+import { TooltipProvider } from "@vector-im/compound-web";
 import { beforeAll, describe, expect, it } from "vitest";
 import { makeFragmentData } from "../../gql";
 import { mockLocale } from "../../test-utils/mockLocale";
@@ -33,7 +34,9 @@ describe("<CompatSessionDetail>", () => {
     const data = makeFragmentData({ ...baseSession }, FRAGMENT);
 
     const { container, getByText, queryByText } = render(
-      <CompatSessionDetail session={data} />,
+      <TooltipProvider>
+        <CompatSessionDetail session={data} />
+      </TooltipProvider>,
     );
 
     expect(container).toMatchSnapshot();
@@ -51,7 +54,9 @@ describe("<CompatSessionDetail>", () => {
     );
 
     const { container, getByText, queryByText } = render(
-      <CompatSessionDetail session={data} />,
+      <TooltipProvider>
+        <CompatSessionDetail session={data} />
+      </TooltipProvider>,
     );
 
     expect(container).toMatchSnapshot();
@@ -69,7 +74,9 @@ describe("<CompatSessionDetail>", () => {
     );
 
     const { container, getByText, queryByText } = render(
-      <CompatSessionDetail session={data} />,
+      <TooltipProvider>
+        <CompatSessionDetail session={data} />
+      </TooltipProvider>,
     );
 
     expect(container).toMatchSnapshot();

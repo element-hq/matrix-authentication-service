@@ -5,7 +5,8 @@
 // Please see LICENSE in the repository root for full details.
 
 use axum::response::{IntoResponse, Response};
-use http::StatusCode;
+
+use crate::InternalError;
 
 /// A simple wrapper around an error that implements [`IntoResponse`].
 #[derive(Debug, thiserror::Error)]
@@ -14,10 +15,9 @@ pub struct ErrorWrapper<T>(#[from] pub T);
 
 impl<T> IntoResponse for ErrorWrapper<T>
 where
-    T: std::error::Error,
+    T: std::error::Error + 'static,
 {
     fn into_response(self) -> Response {
-        // TODO: make this a bit more user friendly
-        (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string()).into_response()
+        InternalError::from(self.0).into_response()
     }
 }

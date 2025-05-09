@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO syn2mas__users (\n              user_id, username,\n              created_at, locked_at,\n              deactivated_at,\n              can_request_admin, is_guest)\n            SELECT * FROM UNNEST(\n              $1::UUID[], $2::TEXT[],\n              $3::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[],\n              $5::TIMESTAMP WITH TIME ZONE[],\n              $6::BOOL[], $7::BOOL[])\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TextArray",
+        "TimestamptzArray",
+        "TimestamptzArray",
+        "TimestamptzArray",
+        "BoolArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "207b880ec2dd484ad05a7138ba485277958b66e4534561686c073e282fafaf2a"
+}

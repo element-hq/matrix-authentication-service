@@ -8,7 +8,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Device, Session, User, UserAgent};
+use mas_data_model::{BrowserSession, Client, Device, Session, User};
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -428,7 +428,19 @@ pub trait OAuth2SessionRepository: Send + Sync {
     async fn record_user_agent(
         &mut self,
         session: Session,
-        user_agent: UserAgent,
+        user_agent: String,
+    ) -> Result<Session, Self::Error>;
+
+    /// Set the human name of a [`Session`]
+    ///
+    /// # Parameters
+    ///
+    /// * `session`: The [`Session`] to set the human name for
+    /// * `human_name`: The human name to set
+    async fn set_human_name(
+        &mut self,
+        session: Session,
+        human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
 }
 
@@ -487,6 +499,12 @@ repository_impl!(OAuth2SessionRepository:
     async fn record_user_agent(
         &mut self,
         session: Session,
-        user_agent: UserAgent,
+        user_agent: String,
+    ) -> Result<Session, Self::Error>;
+
+    async fn set_human_name(
+        &mut self,
+        session: Session,
+        human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
 );

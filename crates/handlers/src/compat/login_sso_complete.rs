@@ -13,7 +13,7 @@ use axum::{
 };
 use chrono::Duration;
 use mas_axum_utils::{
-    FancyError,
+    InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -48,7 +48,6 @@ pub struct Params {
     name = "handlers.compat.login_sso_complete.get",
     fields(compat_sso_login.id = %id),
     skip_all,
-    err,
 )]
 pub async fn get(
     PreferredLanguage(locale): PreferredLanguage,
@@ -60,7 +59,7 @@ pub async fn get(
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -94,7 +93,8 @@ pub async fn get(
         .compat_sso_login()
         .lookup(id)
         .await?
-        .context("Could not find compat SSO login")?;
+        .context("Could not find compat SSO login")
+        .map_err(InternalError::from_anyhow)?;
 
     // Bail out if that login session is more than 30min old
     if clock.now() > login.created_at + Duration::microseconds(30 * 60 * 1000 * 1000) {
@@ -121,7 +121,6 @@ pub async fn get(
     name = "handlers.compat.login_sso_complete.post",
     fields(compat_sso_login.id = %id),
     skip_all,
-    err,
 )]
 pub async fn post(
     mut rng: BoxRng,
@@ -134,7 +133,7 @@ pub async fn post(
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
     Form(form): Form<ProtectedForm<()>>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -168,7 +167,8 @@ pub async fn post(
         .compat_sso_login()
         .lookup(id)
         .await?
-        .context("Could not find compat SSO login")?;
+        .context("Could not find compat SSO login")
+        .map_err(InternalError::from_anyhow)?;
 
     // Bail out if that login session isn't pending, or is more than 30min old
     if !login.is_pending()

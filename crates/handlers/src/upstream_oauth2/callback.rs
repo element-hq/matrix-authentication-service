@@ -13,7 +13,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, sentry::SentryEventID};
+use mas_axum_utils::{cookies::CookieJar, record_error};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
 use mas_jose::claims::TokenHash;
 use mas_keystore::{Encrypter, Keystore};
@@ -153,7 +153,7 @@ impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let response = match self {
             Self::ProviderNotFound => (StatusCode::NOT_FOUND, "Provider not found").into_response(),
             Self::SessionNotFound => (StatusCode::NOT_FOUND, "Session not found").into_response(),
@@ -161,7 +161,7 @@ impl IntoResponse for RouteError {
             e => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -169,7 +169,6 @@ impl IntoResponse for RouteError {
     name = "handlers.upstream_oauth2.callback.handler",
     fields(upstream_oauth_provider.id = %provider_id),
     skip_all,
-    err,
 )]
 #[allow(clippy::too_many_lines, clippy::too_many_arguments)]
 pub(crate) async fn handler(
@@ -357,10 +356,12 @@ pub(crate) async fn handler(
             )
             .map_err(mas_oidc_client::error::IdTokenError::from)?;
 
-        // Nonce must match.
-        mas_jose::claims::NONCE
-            .extract_required_with_options(&mut claims, session.nonce.as_str())
-            .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        // Nonce must match if present.
+        if let Some(nonce) = session.nonce.as_deref() {
+            mas_jose::claims::NONCE
+                .extract_required_with_options(&mut claims, nonce)
+                .map_err(mas_oidc_client::error::IdTokenError::from)?;
+        }
 
         context = context.with_id_token_claims(claims);
     }

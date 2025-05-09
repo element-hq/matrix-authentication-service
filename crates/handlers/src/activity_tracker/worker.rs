@@ -7,12 +7,13 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use chrono::{DateTime, Utc};
-use mas_storage::{RepositoryAccess, user::BrowserSessionRepository};
+use mas_storage::{
+    BoxRepositoryFactory, RepositoryAccess, RepositoryError, user::BrowserSessionRepository,
+};
 use opentelemetry::{
     Key, KeyValue,
-    metrics::{Counter, Histogram},
+    metrics::{Counter, Gauge, Histogram},
 };
-use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use ulid::Ulid;
 
@@ -25,8 +26,8 @@ use crate::{
 /// database automatically.
 ///
 /// The [`ActivityRecord`] structure plus the key in the [`HashMap`] takes less
-/// than 100 bytes, so this should allocate around a megabyte of memory.
-static MAX_PENDING_RECORDS: usize = 10_000;
+/// than 100 bytes, so this should allocate around 100kB of memory.
+static MAX_PENDING_RECORDS: usize = 1000;
 
 const TYPE: Key = Key::from_static_str("type");
 const SESSION_KIND: Key = Key::from_static_str("session_kind");
@@ -43,14 +44,15 @@ struct ActivityRecord {
 
 /// Handles writing activity records to the database.
 pub struct Worker {
-    pool: PgPool,
+    repository_factory: BoxRepositoryFactory,
     pending_records: HashMap<(SessionKind, Ulid), ActivityRecord>,
+    pending_records_gauge: Gauge<u64>,
     message_counter: Counter<u64>,
     flush_time_histogram: Histogram<u64>,
 }
 
 impl Worker {
-    pub(crate) fn new(pool: PgPool) -> Self {
+    pub(crate) fn new(repository_factory: BoxRepositoryFactory) -> Self {
         let message_counter = METER
             .u64_counter("mas.activity_tracker.messages")
             .with_description("The number of messages received by the activity tracker")
@@ -80,9 +82,17 @@ impl Worker {
             .with_unit("ms")
             .build();
 
+        let pending_records_gauge = METER
+            .u64_gauge("mas.activity_tracker.pending_records")
+            .with_description("The number of pending activity records")
+            .with_unit("{records}")
+            .build();
+        pending_records_gauge.record(0, &[]);
+
         Self {
-            pool,
+            repository_factory,
             pending_records: HashMap::with_capacity(MAX_PENDING_RECORDS),
+            pending_records_gauge,
             message_counter,
             flush_time_histogram,
         }
@@ -165,6 +175,10 @@ impl Worker {
                     let _ = tx.send(());
                 }
             }
+
+            // Update the gauge
+            self.pending_records_gauge
+                .record(self.pending_records.len() as u64, &[]);
         }
 
         // Flush one last time
@@ -193,19 +207,19 @@ impl Worker {
             Err(e) => {
                 self.flush_time_histogram
                     .record(duration_ms, &[KeyValue::new(RESULT, "failure")]);
-                tracing::error!("Failed to flush activity tracker: {}", e);
+                tracing::error!(
+                    error = &e as &dyn std::error::Error,
+                    "Failed to flush activity tracker"
+                );
             }
         }
     }
 
     /// Fallible part of [`Self::flush`].
     #[tracing::instrument(name = "activity_tracker.flush", skip(self))]
-    async fn try_flush(&mut self) -> Result<(), anyhow::Error> {
+    async fn try_flush(&mut self) -> Result<(), RepositoryError> {
         let pending_records = &self.pending_records;
-
-        let mut repo = mas_storage_pg::PgRepository::from_pool(&self.pool)
-            .await?
-            .boxed();
+        let mut repo = self.repository_factory.create().await?;
 
         let mut browser_sessions = Vec::new();
         let mut oauth2_sessions = Vec::new();

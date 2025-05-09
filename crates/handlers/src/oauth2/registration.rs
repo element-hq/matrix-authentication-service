@@ -9,10 +9,10 @@ use std::sync::LazyLock;
 use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
-use mas_axum_utils::sentry::SentryEventID;
+use mas_axum_utils::record_error;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
-use mas_policy::{Policy, Violation};
+use mas_policy::{EvaluationResult, Policy};
 use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
@@ -55,8 +55,8 @@ pub(crate) enum RouteError {
     #[error("{0} is a public suffix, not a valid domain")]
     UrlIsPublicSuffix(&'static str),
 
-    #[error("denied by the policy: {0:?}")]
-    PolicyDenied(Vec<Violation>),
+    #[error("client registration denied by the policy: {0}")]
+    PolicyDenied(EvaluationResult),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -67,7 +67,7 @@ impl_from_error_for_route!(serde_json::Error);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_));
 
         REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "denied")]);
 
@@ -143,15 +143,20 @@ impl IntoResponse for RouteError {
             // For policy violations, we return an `invalid_client_metadata` error with the details
             // of the violations in most cases. If a violation includes `redirect_uri` in the
             // message, we return an `invalid_redirect_uri` error instead.
-            Self::PolicyDenied(violations) => {
+            Self::PolicyDenied(evaluation) => {
                 // TODO: detect them better
-                let code = if violations.iter().any(|v| v.msg.contains("redirect_uri")) {
+                let code = if evaluation
+                    .violations
+                    .iter()
+                    .any(|v| v.msg.contains("redirect_uri"))
+                {
                     ClientErrorCode::InvalidRedirectUri
                 } else {
                     ClientErrorCode::InvalidClientMetadata
                 };
 
-                let collected = &violations
+                let collected = &evaluation
+                    .violations
                     .iter()
                     .map(|v| v.msg.clone())
                     .collect::<Vec<String>>();
@@ -165,7 +170,7 @@ impl IntoResponse for RouteError {
             }
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 
@@ -207,7 +212,7 @@ fn localised_url_has_public_suffix(url: &Localized<Url>) -> bool {
     url.iter().any(|(_lang, url)| host_is_public_suffix(url))
 }
 
-#[tracing::instrument(name = "handlers.oauth2.registration.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.oauth2.registration.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -282,7 +287,7 @@ pub(crate) async fn post(
         })
         .await?;
     if !res.valid() {
-        return Err(RouteError::PolicyDenied(res.violations));
+        return Err(RouteError::PolicyDenied(res));
     }
 
     let (client_secret, encrypted_client_secret) = match metadata.token_endpoint_auth_method {

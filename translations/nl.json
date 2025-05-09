@@ -6,14 +6,12 @@
     "create_account": "Registreren",
     "sign_in": "Inloggen",
     "sign_out": "Uitloggen",
-    "skip": "Skip",
     "start_over": "Opnieuw beginnen",
     "submit": "Bevestigen"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
-    "name": "matrix-authentication-service",
-    "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+    "name": "matrix-authentication-service"
   },
   "branding": {
     "privacy_policy": {
@@ -38,226 +36,41 @@
     "unexpected": "Onverwachte fout"
   },
   "mas": {
-    "account": {
-      "deactivated": {
-        "description": "This account (<em>%(mxid)s</em>) has been deleted. If this is not expected, contact your server administrator.",
-        "heading": "Account deleted"
-      },
-      "locked": {
-        "description": "This account (<em>%(mxid)s</em>) has been locked. If this is not expected, contact your server administrator.",
-        "heading": "Account locked"
-      },
-      "logged_out": {
-        "description": "This session has been terminated. Sign out to be able to log back in",
-        "heading": "Session terminated"
-      }
-    },
-    "add_email": {
-      "description": "Enter an email address to recover your account in case you lose access to it.",
-      "heading": "Add an email address"
-    },
-    "back_to_homepage": "Go back to the homepage",
-    "captcha": {
-      "noscript": "This form is protected by a CAPTCHA and requires JavaScript to be enabled to submit it. Please enable JavaScript in your browser and reload this page."
-    },
     "change_password": {
       "change": "Wachtwoord wijzigen",
       "confirm": "Bevestig wachtwoord",
-      "current": "Huidig wachtwoord",
-      "description": "This will change the password on your account.",
-      "heading": "Change my password",
-      "new": "New password"
-    },
-    "choose_display_name": {
-      "description": "This is the name other people will see. You can change this at any time.",
-      "headline": "Choose your display name"
-    },
-    "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> at <span>%(redirect_uri)s</span> wants to access your account.",
-      "heading": "Allow access to your account?",
-      "make_sure_you_trust": "Make sure that you trust <span>%(client_name)s</span>.",
-      "this_will_allow": "This will allow <span>%(client_name)s</span> to:",
-      "you_may_be_sharing": "You may be sharing sensitive information with this site or app."
-    },
-    "device_card": {
-      "access_requested": "Access requested",
-      "device_code": "Code",
-      "generic_device": "Device",
-      "ip_address": "IP address"
-    },
-    "device_code_link": {
-      "description": "Link a device",
-      "headline": "Enter the code displayed on your device"
-    },
-    "device_consent": {
-      "another_device_access": "Another device wants to access your account.",
-      "denied": {
-        "description": "You denied access to %(client_name)s. You can close this window.",
-        "heading": "Access denied"
-      },
-      "granted": {
-        "description": "You granted access to %(client_name)s. You can close this window.",
-        "heading": "Access granted"
-      }
-    },
-    "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
-      "title": "The email address <span>%(email)s</span> is already in use"
-    },
-    "emails": {
-      "greeting": "Hello %(username)s,",
-      "recovery": {
-        "click_button": "Click on the button below to create a new password:",
-        "copy_link": "Copy the following link and paste it into a browser to create a new password:",
-        "create_new_password": "Create new password",
-        "fallback": "The button doesn't work for you?",
-        "headline": "You requested a password reset for your %(server_name)s account.",
-        "subject": "Reset your account password (%(mxid)s)",
-        "you_can_ignore": "If you didn't ask for a new password, you can ignore this email. Your current password will continue to work."
-      },
-      "verify": {
-        "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
-        "body_text": "Your verification code to confirm this email address is: %(code)s",
-        "subject": "Your email verification code is: %(code)s"
-      }
+      "current": "Huidig wachtwoord"
     },
     "errors": {
-      "captcha": "CAPTCHA verification failed, please try again",
-      "denied_policy": "Denied by policy: %(policy)s",
-      "email_banned": "Email is banned by the server policy",
-      "email_domain_banned": "Email domain is banned by the server policy",
-      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
-      "email_not_allowed": "Email is not allowed by the server policy",
-      "field_required": "This field is required",
-      "invalid_credentials": "Ongeldige gegevens",
-      "password_mismatch": "Password fields don't match",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
-      "username_all_numeric": "Username cannot consist solely of numbers",
-      "username_banned": "Username is banned by the server policy",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
-      "username_not_allowed": "Username is not allowed by the server policy",
-      "username_taken": "This username is already taken",
-      "username_too_long": "Username is too long",
-      "username_too_short": "Username is too short"
+      "invalid_credentials": "Ongeldige gegevens"
     },
     "login": {
-      "call_to_register": "Don't have an account yet?",
       "continue_with_provider": "Doorgaan met %(provider)s",
-      "description": "Please sign in to continue:",
-      "forgot_password": "Forgot password?",
       "headline": "Inloggen",
-      "link": {
-        "description": "Linking your <span class=\"break-keep text-links\">%(provider)s</span> account",
-        "headline": "Sign in to link"
-      },
-      "no_login_methods": "No login methods available.",
-      "separator": "Of",
-      "username_or_email": "Username or Email"
+      "separator": "Of"
     },
     "navbar": {
-      "my_account": "Mijn account",
-      "register": "Create an account",
-      "signed_in_as": "Signed in as <span class=\"font-semibold\">%(username)s</span>."
+      "my_account": "Mijn account"
     },
-    "not_found": {
-      "description": "The page you were looking for doesn't exist or has been moved",
-      "heading": "Page not found"
-    },
-    "not_you": "Not %(username)s?",
     "or_separator": "Of",
-    "policy_violation": {
-      "description": "This might be because of the client which authored the request, the currently logged in user, or the request itself.",
-      "heading": "The authorization request was denied the policy enforced by this service",
-      "logged_as": "Logged as <span class=\"font-semibold\">%(username)s</span>"
-    },
-    "recovery": {
-      "consumed": {
-        "description": "To create a new password, start over and select “Forgot password”.",
-        "heading": "The link to reset your password has already been used"
-      },
-      "disabled": {
-        "description": "If you have lost your credentials, please contact the administrator to recover your account.",
-        "heading": "Account recovery is disabled"
-      },
-      "expired": {
-        "description": "Request a new email that will be sent to: <span>%(email)s</span>.",
-        "heading": "The link to reset your password has expired",
-        "resend_email": "Resend email"
-      },
-      "finish": {
-        "confirm": "Enter new password again",
-        "description": "Choose a new password for your account.",
-        "heading": "Reset your password",
-        "new": "New password",
-        "save_and_continue": "Save and continue"
-      },
-      "progress": {
-        "change_email": "Try a different email",
-        "description": "We sent an email with a link to reset your password if there's an account using <span>%(email)s</span>.",
-        "heading": "Check your email",
-        "resend_email": "Resend email"
-      },
-      "start": {
-        "description": "An email will be sent with a link to reset your password.",
-        "heading": "Enter your email to continue"
-      }
-    },
-    "register": {
-      "call_to_login": "Already have an account?",
-      "continue_with_email": "Continue with email address",
-      "create_account": {
-        "description": "Choose a username to continue.",
-        "heading": "Create an account"
-      },
-      "sign_in_instead": "Sign in instead",
-      "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>"
-    },
-    "scope": {
-      "edit_profile": "Edit your profile and contact details",
-      "manage_sessions": "Manage your devices and sessions",
-      "mas_admin": "Administer any user on the matrix-authentication-service",
-      "send_messages": "Send new messages on your behalf",
-      "synapse_admin": "Administer the Synapse homeserver",
-      "view_messages": "View your existing messages and data",
-      "view_profile": "See your profile info and contact details"
-    },
     "upstream_oauth2": {
-      "link_mismatch": {
-        "heading": "This upstream account is already linked to another account."
-      },
       "register": {
         "choose_username": {
-          "description": "This cannot be changed later.",
           "heading": "Kies uw gebruikersnaam"
         },
         "create_account": "Nieuw account aanmaken",
-        "enforced_by_policy": "Enforced by server policy",
-        "forced_display_name": "Will use the following display name",
         "forced_email": "De volgende e-mailadres zal worden gebruikt",
         "forced_localpart": "De volgende gebruikersnaam zal worden gebruikt",
         "import_data": {
-          "description": "Confirm the information that will be linked to your new %(server_name)s account.",
           "heading": "Importeer uw data"
-        },
-        "imported_from_upstream": "Imported from your upstream account",
-        "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
-        "link_existing": "Link to an existing account",
-        "provider_name": "%(human_name)s account",
-        "signup_with_upstream": {
-          "heading": "Continue signing up with your %(human_name)s account"
         },
         "suggested_display_name": "Weergavenaam importeren",
         "suggested_email": "E-mailadres importeren",
         "use": "Gebruiken"
-      },
-      "suggest_link": {
-        "action": "Link",
-        "heading": "Link to your existing account"
       }
     },
     "verify_email": {
       "6_digit_code": "6-cijferige code",
-      "code": "Code",
       "description": "Voer de 6-cijferige code in die is verzonden naar: <em>%(email)s</em>",
       "headline": "Verifieer uw e-mailadres"
     }

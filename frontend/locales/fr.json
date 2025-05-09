@@ -299,6 +299,11 @@
       "last_auth_label": "Dernière authentification",
       "name_for_platform": "{{name}} pour {{platform}}",
       "scopes_label": "Scopes",
+      "set_device_name": {
+        "help": "Définissez un nom qui vous aidera à identifier cet appareil.",
+        "label": "Nom de l'appareil",
+        "title": "Modifier le nom de l'appareil"
+      },
       "signed_in_date": "Connecté <datetime/>",
       "signed_in_label": "Connecté",
       "title": "Détails de la session",

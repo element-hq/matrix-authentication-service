@@ -197,7 +197,7 @@ pub struct PolicyFactory {
 }
 
 impl PolicyFactory {
-    #[tracing::instrument(name = "policy.load", skip(source), err)]
+    #[tracing::instrument(name = "policy.load", skip(source))]
     pub async fn load(
         mut source: impl AsyncRead + std::marker::Unpin,
         data: Data,
@@ -283,7 +283,7 @@ impl PolicyFactory {
         Ok(true)
     }
 
-    #[tracing::instrument(name = "policy.instantiate", skip_all, err)]
+    #[tracing::instrument(name = "policy.instantiate", skip_all)]
     pub async fn instantiate(&self) -> Result<Policy, InstantiateError> {
         let data = self.dynamic_data.load();
         self.instantiate_with_data(&data.merged).await
@@ -342,7 +342,6 @@ impl Policy {
         fields(
             %input.email,
         ),
-        err,
     )]
     pub async fn evaluate_email(
         &mut self,
@@ -364,7 +363,6 @@ impl Policy {
             input.username = input.username,
             input.email = input.email,
         ),
-        err,
     )]
     pub async fn evaluate_register(
         &mut self,
@@ -402,7 +400,6 @@ impl Policy {
             %input.scope,
             %input.client.id,
         ),
-        err,
     )]
     pub async fn evaluate_authorization_grant(
         &mut self,

@@ -1,1 +1,9 @@
+# Rust
 target/
+
+# Editors
+.idea
+.nova
+
+# OS garbage
+.DS_Store

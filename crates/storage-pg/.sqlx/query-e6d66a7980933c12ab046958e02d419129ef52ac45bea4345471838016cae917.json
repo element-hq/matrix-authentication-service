@@ -1,0 +1,158 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\",\n                    forward_login_hint\n                FROM upstream_oauth_providers\n                WHERE disabled_at IS NULL\n                ORDER BY ui_order ASC, upstream_oauth_provider_id ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "upstream_oauth_provider_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "issuer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "human_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "brand_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "scope",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "client_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "encrypted_client_secret",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "token_endpoint_signing_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "token_endpoint_auth_method",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "id_token_signed_response_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "fetch_userinfo",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "userinfo_signed_response_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "disabled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "claims_imports: Json<UpstreamOAuthProviderClaimsImports>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 15,
+        "name": "jwks_uri_override",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "authorization_endpoint_override",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "token_endpoint_override",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "userinfo_endpoint_override",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "discovery_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "pkce_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "response_mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 22,
+        "name": "additional_parameters: Json<Vec<(String, String)>>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 23,
+        "name": "forward_login_hint",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "e6d66a7980933c12ab046958e02d419129ef52ac45bea4345471838016cae917"
+}

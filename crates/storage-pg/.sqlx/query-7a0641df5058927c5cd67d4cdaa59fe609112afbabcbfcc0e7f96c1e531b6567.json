@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO oauth2_authorization_grants (\n                     oauth2_authorization_grant_id,\n                     oauth2_client_id,\n                     redirect_uri,\n                     scope,\n                     state,\n                     nonce,\n                     response_mode,\n                     code_challenge,\n                     code_challenge_method,\n                     response_type_code,\n                     response_type_id_token,\n                     authorization_code,\n                     login_hint,\n                     locale,\n                     created_at\n                )\n                VALUES\n                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a0641df5058927c5cd67d4cdaa59fe609112afbabcbfcc0e7f96c1e531b6567"
+}

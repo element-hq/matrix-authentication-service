@@ -12,7 +12,7 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use mas_axum_utils::{
-    FancyError,
+    InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -41,6 +41,7 @@ pub(crate) struct ConsentForm {
     action: Action,
 }
 
+#[tracing::instrument(name = "handlers.oauth2.device.consent.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -53,7 +54,7 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -85,17 +86,21 @@ pub(crate) async fn get(
         .oauth2_device_code_grant()
         .lookup(grant_id)
         .await?
-        .context("Device grant not found")?;
+        .context("Device grant not found")
+        .map_err(InternalError::from_anyhow)?;
 
     if grant.expires_at < clock.now() {
-        return Err(FancyError::from(anyhow::anyhow!("Grant is expired")));
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "Grant is expired"
+        )));
     }
 
     let client = repo
         .oauth2_client()
         .lookup(grant.client_id)
         .await?
-        .context("Client not found")?;
+        .context("Client not found")
+        .map_err(InternalError::from_anyhow)?;
 
     // Evaluate the policy
     let res = policy
@@ -131,11 +136,13 @@ pub(crate) async fn get(
 
     let rendered = templates
         .render_device_consent(&ctx)
-        .context("Failed to render template")?;
+        .context("Failed to render template")
+        .map_err(InternalError::from_anyhow)?;
 
     Ok((cookie_jar, Html(rendered)).into_response())
 }
 
+#[tracing::instrument(name = "handlers.oauth2.device.consent.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -149,7 +156,7 @@ pub(crate) async fn post(
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<ConsentForm>>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let form = cookie_jar.verify_form(&clock, form)?;
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
@@ -181,17 +188,21 @@ pub(crate) async fn post(
         .oauth2_device_code_grant()
         .lookup(grant_id)
         .await?
-        .context("Device grant not found")?;
+        .context("Device grant not found")
+        .map_err(InternalError::from_anyhow)?;
 
     if grant.expires_at < clock.now() {
-        return Err(FancyError::from(anyhow::anyhow!("Grant is expired")));
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "Grant is expired"
+        )));
     }
 
     let client = repo
         .oauth2_client()
         .lookup(grant.client_id)
         .await?
-        .context("Client not found")?;
+        .context("Client not found")
+        .map_err(InternalError::from_anyhow)?;
 
     // Evaluate the policy
     let res = policy
@@ -254,7 +265,8 @@ pub(crate) async fn post(
 
     let rendered = templates
         .render_device_consent(&ctx)
-        .context("Failed to render template")?;
+        .context("Failed to render template")
+        .map_err(InternalError::from_anyhow)?;
 
     Ok((cookie_jar, Html(rendered)).into_response())
 }

@@ -20,7 +20,7 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{Device, UserAgent};
+    use mas_data_model::Device;
     use mas_storage::{
         Clock, Pagination, RepositoryAccess,
         clock::MockClock,
@@ -79,7 +79,7 @@ mod tests {
         let device_str = device.as_str().to_owned();
         let session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device.clone(), None, false)
+            .add(&mut rng, &clock, &user, device.clone(), None, false, None)
             .await
             .unwrap();
         assert_eq!(session.user_id, user.id);
@@ -125,7 +125,7 @@ mod tests {
         assert!(session_lookup.user_agent.is_none());
         let session = repo
             .compat_session()
-            .record_user_agent(session_lookup, UserAgent::parse("Mozilla/5.0".to_owned()))
+            .record_user_agent(session_lookup, "Mozilla/5.0".to_owned())
             .await
             .unwrap();
         assert_eq!(session.user_agent.as_deref(), Some("Mozilla/5.0"));
@@ -227,6 +227,7 @@ mod tests {
                 device,
                 Some(&browser_session),
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -331,7 +332,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device, None, false)
+            .add(&mut rng, &clock, &user, device, None, false, None)
             .await
             .unwrap();
 
@@ -452,7 +453,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device, None, false)
+            .add(&mut rng, &clock, &user, device, None, false, None)
             .await
             .unwrap();
 
@@ -618,7 +619,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let compat_session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device, None, false)
+            .add(&mut rng, &clock, &user, device, None, false, None)
             .await
             .unwrap();
 

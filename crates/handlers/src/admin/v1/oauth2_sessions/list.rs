@@ -14,6 +14,7 @@ use axum::{
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::{Page, oauth2::OAuth2SessionFilter};
 use oauth2_types::scope::{Scope, ScopeToken};
 use schemars::JsonSchema;
@@ -167,6 +168,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
+        let sentry_event_id = record_error!(self, RouteError::Internal(_));
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserNotFound(_) | Self::ClientNotFound(_) | Self::UserSessionNotFound(_) => {
@@ -174,7 +176,7 @@ impl IntoResponse for RouteError {
             }
             Self::InvalidScope(_) | Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
         };
-        (status, Json(error)).into_response()
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -213,7 +215,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.oauth2_sessions.list", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.oauth2_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     Pagination(pagination): Pagination,
@@ -329,7 +331,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -347,7 +349,8 @@ mod tests {
                 "scope": "urn:mas:admin",
                 "user_agent": null,
                 "last_active_at": null,
-                "last_active_ip": null
+                "last_active_ip": null,
+                "human_name": null
               },
               "links": {
                 "self": "/api/admin/v1/oauth2-sessions/01FSHN9AG0MKGTBNZ16RDR3PVY"
@@ -360,6 +363,6 @@ mod tests {
             "last": "/api/admin/v1/oauth2-sessions?page[last]=10"
           }
         }
-        "###);
+        "#);
     }
 }

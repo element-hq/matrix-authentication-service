@@ -8,7 +8,7 @@ use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse},
 };
-use mas_axum_utils::{FancyError, cookies::CookieJar};
+use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxClock, BoxRepository};
 use mas_templates::{
@@ -24,7 +24,7 @@ pub struct Params {
     code: Option<String>,
 }
 
-#[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all)]
 pub(crate) async fn get(
     clock: BoxClock,
     mut repo: BoxRepository,
@@ -33,7 +33,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     cookie_jar: CookieJar,
     Query(query): Query<Params>,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let mut form_state = FormState::from_form(&query);
 
     // If we have a code in query, find it in the database

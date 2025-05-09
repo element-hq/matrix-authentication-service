@@ -7,6 +7,7 @@
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -43,13 +44,14 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::Password(_));
         let status = match self {
             Self::Internal(_) | Self::Password(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::PasswordAuthDisabled => StatusCode::FORBIDDEN,
             Self::PasswordTooWeak => StatusCode::BAD_REQUEST,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
-        (status, Json(error)).into_response()
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -90,7 +92,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.users.set_password", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.users.set_password", skip_all)]
 pub async fn handler(
     CallContext {
         mut repo, clock, ..

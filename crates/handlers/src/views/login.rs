@@ -13,11 +13,11 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    FancyError, SessionInfoExt,
+    InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{UserAgent, oauth2::LoginHint};
+use mas_data_model::oauth2::LoginHint;
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
@@ -61,7 +61,7 @@ impl ToFormState for LoginForm {
     type Field = LoginFormField;
 }
 
-#[tracing::instrument(name = "handlers.views.login.get", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.login.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -74,7 +74,7 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -127,7 +127,7 @@ pub(crate) async fn get(
     .await
 }
 
-#[tracing::instrument(name = "handlers.views.login.post", skip_all, err)]
+#[tracing::instrument(name = "handlers.views.login.post", skip_all)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -145,8 +145,8 @@ pub(crate) async fn post(
     cookie_jar: CookieJar,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Form(form): Form<ProtectedForm<LoginForm>>,
-) -> Result<Response, FancyError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+) -> Result<Response, InternalError> {
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     if !site_config.password_login_enabled {
         // XXX: is it necessary to have better errors here?
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
@@ -338,11 +338,11 @@ pub(crate) async fn post(
     Ok((cookie_jar, reply).into_response())
 }
 
-async fn get_user_by_email_or_by_username(
+async fn get_user_by_email_or_by_username<R: RepositoryAccess>(
     site_config: SiteConfig,
-    repo: &mut impl RepositoryAccess,
+    repo: &mut R,
     username_or_email: &str,
-) -> Result<Option<mas_data_model::User>, Box<dyn std::error::Error>> {
+) -> Result<Option<mas_data_model::User>, R::Error> {
     if site_config.login_with_email_allowed && username_or_email.contains('@') {
         let maybe_user_email = repo.user_email().find_by_email(username_or_email).await?;
 
@@ -393,7 +393,7 @@ async fn render(
     rng: impl Rng,
     templates: &Templates,
     homeserver: &dyn HomeserverConnection,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
@@ -401,7 +401,10 @@ async fn render(
         .with_form_state(form_state)
         .with_upstream_providers(providers);
 
-    let next = action.load_context(repo).await?;
+    let next = action
+        .load_context(repo)
+        .await
+        .map_err(InternalError::from_anyhow)?;
     let ctx = if let Some(next) = next {
         let ctx = handle_login_hint(ctx, &next, homeserver);
         ctx.with_post_action(next)
@@ -495,6 +498,7 @@ mod test {
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
                     additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
                     ui_order: 0,
                 },
             )
@@ -536,6 +540,7 @@ mod test {
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
                     additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
                     ui_order: 1,
                 },
             )

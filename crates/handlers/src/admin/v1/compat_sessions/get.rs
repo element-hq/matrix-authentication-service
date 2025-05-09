@@ -6,6 +6,7 @@
 use aide::{OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
+use mas_axum_utils::record_error;
 use ulid::Ulid;
 
 use crate::{
@@ -33,11 +34,13 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let status = match self {
+        let sentry_event_id = record_error!(self, RouteError::Internal(_));
+        let status = match &self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
-        (status, Json(error)).into_response()
+
+        (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
@@ -59,7 +62,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.compat_sessions.get", skip_all, err)]
+#[tracing::instrument(name = "handler.admin.v1.compat_sessions.get", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     id: UlidPathParam,
@@ -104,7 +107,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let session = repo
             .compat_session()
-            .add(&mut rng, &state.clock, &user, device, None, false)
+            .add(&mut rng, &state.clock, &user, device, None, false, None)
             .await
             .unwrap();
         repo.save().await.unwrap();
@@ -116,7 +119,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "compat-session",
@@ -130,7 +133,8 @@ mod tests {
               "user_agent": null,
               "last_active_at": null,
               "last_active_ip": null,
-              "finished_at": null
+              "finished_at": null,
+              "human_name": null
             },
             "links": {
               "self": "/api/admin/v1/compat-sessions/01FSHN9AG0QHEHKX2JNQ2A2D07"
@@ -140,7 +144,7 @@ mod tests {
             "self": "/api/admin/v1/compat-sessions/01FSHN9AG0QHEHKX2JNQ2A2D07"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

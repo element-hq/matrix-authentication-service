@@ -12,6 +12,7 @@ Please see LICENSE in the repository root for full details.
 
 {% block content %}
   {% set client_name = client.client_name or client.client_id %}
+  {% set user_agent = grant.user_agent | parse_user_agent() %}
 
   {% if grant.state == "pending" %}
     <header class="page-heading">
@@ -27,13 +28,13 @@ Please see LICENSE in the repository root for full details.
         <h1 class="title">{{ _("mas.consent.heading") }}</h1>
 
         <div class="session-card my-4">
-          <div class="card-header" {%- if grant.user_agent %} title="{{ grant.user_agent.raw }}"{% endif %}>
+          <div class="card-header" {%- if user_agent %} title="{{ user_agent.raw }}"{% endif %}>
             <div class="device-type-icon">
-              {% if grant.user_agent.device_type == "mobile" %}
+              {% if user_agent.device_type == "mobile" %}
                 {{ icon.mobile() }}
-              {% elif grant.user_agent.device_type == "tablet" %}
+              {% elif user_agent.device_type == "tablet" %}
                 {{ icon.web_browser() }}
-              {% elif grant.user_agent.device_type == "pc" %}
+              {% elif user_agent.device_type == "pc" %}
                 {{ icon.computer() }}
               {% else %}
                 {{ icon.unknown_solid() }}
@@ -41,31 +42,31 @@ Please see LICENSE in the repository root for full details.
             </div>
 
             <div class="content auto">
-              {% if grant.user_agent.model %}
-                <div>{{ grant.user_agent.model }}</div>
+              {% if user_agent.model %}
+                <div>{{ user_agent.model }}</div>
               {% endif %}
 
-              {% if grant.user_agent.os %}
+              {% if user_agent.os %}
                 <div>
-                  {{ grant.user_agent.os }}
-                  {% if grant.user_agent.os_version %}
-                    {{ grant.user_agent.os_version }}
+                  {{ user_agent.os }}
+                  {% if user_agent.os_version %}
+                    {{ user_agent.os_version }}
                   {% endif %}
                 </div>
               {% endif %}
 
               {# If we haven't detected a model, it's probably a browser, so show the name #}
-              {% if not grant.user_agent.model and grant.user_agent.name %}
+              {% if not user_agent.model and user_agent.name %}
                 <div>
-                  {{ grant.user_agent.name }}
-                  {% if grant.user_agent.version %}
-                    {{ grant.user_agent.version }}
+                  {{ user_agent.name }}
+                  {% if user_agent.version %}
+                    {{ user_agent.version }}
                   {% endif %}
                 </div>
               {% endif %}
 
               {# If we couldn't detect anything, show a generic "Device" #}
-              {% if not grant.user_agent.model and not grant.user_agent.name and not grant.user_agent.os %}
+              {% if not user_agent.model and not user_agent.name and not user_agent.os %}
               <div>{{ _("mas.device_card.generic_device") }}</div>
               {% endif %}
             </div>

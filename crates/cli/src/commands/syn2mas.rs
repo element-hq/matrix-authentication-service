@@ -1,3 +1,8 @@
+// Copyright 2024, 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+// Please see LICENSE in the repository root for full details.
+
 use std::{collections::HashMap, process::ExitCode, time::Duration};
 
 use anyhow::Context;
@@ -15,7 +20,7 @@ use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::
 use syn2mas::{
     LockedMasDatabase, MasWriter, Progress, ProgressStage, SynapseReader, synapse_config,
 };
-use tracing::{Instrument, error, info, info_span, warn};
+use tracing::{Instrument, error, info, info_span};
 
 use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
 
@@ -32,19 +37,10 @@ pub(super) struct Options {
     #[command(subcommand)]
     subcommand: Subcommand,
 
-    /// This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. It is
-    /// only suitable for TESTING. If you want to use this tool anyway,
-    /// please pass this argument.
-    ///
-    /// If you want to migrate from Synapse to MAS today, please use the
-    /// Node.js-based tool in the MAS repository.
-    #[clap(long = "i-swear-i-am-just-testing-in-a-staging-environment")]
-    experimental_accepted: bool,
-
     /// Path to the Synapse configuration (in YAML format).
     /// May be specified multiple times if multiple Synapse configuration files
     /// are in use.
-    #[clap(long = "synapse-config")]
+    #[clap(long = "synapse-config", global = true)]
     synapse_configuration_files: Vec<Utf8PathBuf>,
 
     /// Override the Synapse database URI.
@@ -64,7 +60,7 @@ pub(super) struct Options {
     /// environment variables `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`,
     /// `PGPASSWORD`, etc. It is valid to specify the URL `postgresql:` and
     /// configure all values through those environment variables.
-    #[clap(long = "synapse-database-uri")]
+    #[clap(long = "synapse-database-uri", global = true)]
     synapse_database_uri: Option<PgConnectOptions>,
 }
 
@@ -74,8 +70,17 @@ enum Subcommand {
     ///
     /// It is OK for Synapse to be online during these checks.
     Check,
+
     /// Perform a migration. Synapse must be offline during this process.
-    Migrate,
+    Migrate {
+        /// Perform a dry-run migration, which is safe to run with Synapse
+        /// running, and will restore the MAS database to an empty state.
+        ///
+        /// This still *does* write to the MAS database, making it more
+        /// realistic compared to the final migration.
+        #[clap(long)]
+        dry_run: bool,
+    },
 }
 
 /// The number of parallel writing transactions active against the MAS database.
@@ -85,14 +90,6 @@ impl Options {
     #[tracing::instrument("cli.syn2mas.run", skip_all)]
     #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
-        warn!(
-            "This version of the syn2mas tool is EXPERIMENTAL and INCOMPLETE. Do not use it, except for TESTING."
-        );
-        if !self.experimental_accepted {
-            error!("Please agree that you can only use this tool for testing.");
-            return Ok(ExitCode::FAILURE);
-        }
-
         if self.synapse_configuration_files.is_empty() {
             error!("Please specify the path to the Synapse configuration file(s).");
             return Ok(ExitCode::FAILURE);
@@ -108,7 +105,7 @@ impl Options {
             synapse_config
                 .database
                 .to_sqlx_postgres()
-                .context("Synapse configuration does not use Postgres, cannot migrate.")?
+                .context("Synapse database configuration is invalid, cannot migrate.")?
         };
         let mut syn_conn = PgConnection::connect_with(&syn_connection_options)
             .await
@@ -130,11 +127,10 @@ impl Options {
             .await
             .context("could not run migrations")?;
 
-        if matches!(&self.subcommand, Subcommand::Migrate) {
+        if matches!(&self.subcommand, Subcommand::Migrate { .. }) {
             // First perform a config sync
             // This is crucial to ensure we register upstream OAuth providers
             // in the MAS database
-            //
             let config = SyncConfig::extract(figment)?;
             let clock = SystemClock::default();
             let encrypter = config.secrets.encrypter();
@@ -150,7 +146,8 @@ impl Options {
                 // Not a dry run — we do want to create the providers in the database
                 false,
             )
-            .await?;
+            .await
+            .context("could not sync the configuration with the database")?;
         }
 
         let Either::Left(mut mas_connection) = LockedMasDatabase::try_new(mas_connection)
@@ -213,7 +210,8 @@ impl Options {
 
                 Ok(ExitCode::SUCCESS)
             }
-            Subcommand::Migrate => {
+
+            Subcommand::Migrate { dry_run } => {
                 let provider_id_mappings: HashMap<String, Uuid> = {
                     let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)?;
 
@@ -229,21 +227,20 @@ impl Options {
 
                 // TODO how should we handle warnings at this stage?
 
-                // TODO this dry-run flag should be set to false in real circumstances !!!
-                let reader = SynapseReader::new(&mut syn_conn, true).await?;
-                let mut writer_mas_connections = Vec::with_capacity(NUM_WRITER_CONNECTIONS);
-                for _ in 0..NUM_WRITER_CONNECTIONS {
-                    writer_mas_connections.push(
+                let reader = SynapseReader::new(&mut syn_conn, dry_run).await?;
+                let writer_mas_connections =
+                    futures_util::future::try_join_all((0..NUM_WRITER_CONNECTIONS).map(|_| {
                         database_connection_from_config_with_options(
                             &config,
                             &DatabaseConnectOptions {
                                 log_slow_statements: false,
                             },
                         )
-                        .await?,
-                    );
-                }
-                let writer = MasWriter::new(mas_connection, writer_mas_connections).await?;
+                    }))
+                    .instrument(tracing::info_span!("syn2mas.mas_writer_connections"))
+                    .await?;
+                let writer =
+                    MasWriter::new(mas_connection, writer_mas_connections, dry_run).await?;
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
@@ -256,7 +253,6 @@ impl Options {
                     tokio::spawn(occasional_progress_logger(progress.clone()));
 
                 let mas_matrix = MatrixConfig::extract(figment)?;
-                eprintln!("\n\n");
                 syn2mas::migrate(
                     reader,
                     writer,
@@ -276,13 +272,13 @@ impl Options {
     }
 }
 
-/// Logs progress every 30 seconds, as a lightweight alternative to a progress
-/// bar. For most deployments, the migration will not take 30 seconds so this
+/// Logs progress every 5 seconds, as a lightweight alternative to a progress
+/// bar. For most deployments, the migration will not take 5 seconds so this
 /// will not be relevant. In other cases, this will give the operator an idea of
 /// what's going on.
 async fn occasional_progress_logger(progress: Progress) {
     loop {
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
         match &**progress.get_current_stage() {
             ProgressStage::SettingUp => {
                 info!(name: "progress", "still setting up");

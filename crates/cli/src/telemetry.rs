@@ -119,10 +119,14 @@ fn otlp_tracer_provider(
     let batch_processor =
         BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
 
+    // We sample traces based on the parent if we have one, and if not, we
+    // sample a ratio based on the configured sample rate
+    let sampler = Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(sample_rate)));
+
     let tracer_provider = SdkTracerProvider::builder()
         .with_span_processor(batch_processor)
         .with_resource(resource())
-        .with_sampler(Sampler::TraceIdRatioBased(sample_rate))
+        .with_sampler(sampler)
         .build();
 
     Ok(tracer_provider)

@@ -11,8 +11,7 @@ use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, CompatSession, Session};
-use mas_storage::Clock;
-use sqlx::PgPool;
+use mas_storage::{BoxRepositoryFactory, Clock};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use ulid::Ulid;
 
@@ -61,12 +60,12 @@ impl ActivityTracker {
     /// time, when the cancellation token is cancelled.
     #[must_use]
     pub fn new(
-        pool: PgPool,
+        repository_factory: BoxRepositoryFactory,
         flush_interval: std::time::Duration,
         task_tracker: &TaskTracker,
         cancellation_token: CancellationToken,
     ) -> Self {
-        let worker = Worker::new(pool);
+        let worker = Worker::new(repository_factory);
         let (sender, receiver) = tokio::sync::mpsc::channel(MESSAGE_QUEUE_SIZE);
         let tracker = ActivityTracker { channel: sender };
 
@@ -185,6 +184,8 @@ impl ActivityTracker {
         // This guard on the shutdown token is to ensure that if this task crashes for
         // any reason, the server will shut down
         let _guard = cancellation_token.clone().drop_guard();
+        let mut interval = tokio::time::interval(interval);
+        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
         loop {
             tokio::select! {
@@ -202,7 +203,7 @@ impl ActivityTracker {
                 }
 
 
-                () = tokio::time::sleep(interval) => {
+                _ = interval.tick() => {
                     self.flush().await;
                 }
             }

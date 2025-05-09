@@ -132,7 +132,8 @@
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
                         "last_active_ip": "1.2.3.4",
-                        "finished_at": null
+                        "finished_at": null,
+                        "human_name": "Laptop"
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
@@ -150,7 +151,8 @@
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
                         "last_active_ip": "1.2.3.4",
-                        "finished_at": "1970-01-01T00:00:00Z"
+                        "finished_at": "1970-01-01T00:00:00Z",
+                        "human_name": null
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
@@ -168,7 +170,8 @@
                         "user_agent": null,
                         "last_active_at": null,
                         "last_active_ip": null,
-                        "finished_at": null
+                        "finished_at": null,
+                        "human_name": null
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/030C1G60R30C1G60R30C1G60R3"
@@ -245,7 +248,8 @@
                       "user_agent": "Mozilla/5.0",
                       "last_active_at": "1970-01-01T00:00:00Z",
                       "last_active_ip": "1.2.3.4",
-                      "finished_at": null
+                      "finished_at": null,
+                      "human_name": "Laptop"
                     },
                     "links": {
                       "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
@@ -430,7 +434,8 @@
                         "scope": "openid",
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
-                        "last_active_ip": "127.0.0.1"
+                        "last_active_ip": "127.0.0.1",
+                        "human_name": "Laptop"
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/01040G2081040G2081040G2081"
@@ -448,7 +453,8 @@
                         "scope": "urn:mas:admin",
                         "user_agent": null,
                         "last_active_at": null,
-                        "last_active_ip": null
+                        "last_active_ip": null,
+                        "human_name": null
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/02081040G2081040G2081040G2"
@@ -466,7 +472,8 @@
                         "scope": "urn:matrix:org.matrix.msc2967.client:api:*",
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
-                        "last_active_ip": "127.0.0.1"
+                        "last_active_ip": "127.0.0.1",
+                        "human_name": null
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3"
@@ -560,7 +567,8 @@
                       "scope": "openid",
                       "user_agent": "Mozilla/5.0",
                       "last_active_at": "1970-01-01T00:00:00Z",
-                      "last_active_ip": "127.0.0.1"
+                      "last_active_ip": "127.0.0.1",
+                      "human_name": "Laptop"
                     },
                     "links": {
                       "self": "/api/admin/v1/oauth2-sessions/01040G2081040G2081040G2081"
@@ -2519,21 +2527,26 @@
         "type": "oauth2",
         "flows": {
           "clientCredentials": {
-            "refreshUrl": "/oauth2/token",
-            "tokenUrl": "/oauth2/token",
+            "refreshUrl": "./oauth2/token",
+            "tokenUrl": "./oauth2/token",
             "scopes": {
               "urn:mas:admin": "Grant access to the admin API"
             }
           },
           "authorizationCode": {
-            "authorizationUrl": "/authorize",
-            "tokenUrl": "/oauth2/token",
-            "refreshUrl": "/oauth2/token",
+            "authorizationUrl": "./authorize",
+            "tokenUrl": "./oauth2/token",
+            "refreshUrl": "./oauth2/token",
             "scopes": {
               "urn:mas:admin": "Grant access to the admin API"
             }
           }
         }
+      },
+      "token": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An access token with access to the admin API"
       }
     },
     "schemas": {
@@ -2725,6 +2738,11 @@
             "description": "The time this session was finished",
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "human_name": {
+            "description": "The user-provided name, if any",
+            "type": "string",
             "nullable": true
           }
         }
@@ -3000,6 +3018,11 @@
             "description": "The last IP address used by the session",
             "type": "string",
             "format": "ip",
+            "nullable": true
+          },
+          "human_name": {
+            "description": "The user-provided name, if any",
+            "type": "string",
             "nullable": true
           }
         }
@@ -3705,6 +3728,11 @@
   "security": [
     {
       "oauth2": [
+        "urn:mas:admin"
+      ]
+    },
+    {
+      "bearer": [
         "urn:mas:admin"
       ]
     }

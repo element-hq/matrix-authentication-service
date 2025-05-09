@@ -40,10 +40,6 @@ jobs:
       - name: Run `cargo metadata` to make sure the lockfile is up to date
         run: cargo metadata --format-version 1
 
-      - name: Set the tools/syn2mas version
-        working-directory: tools/syn2mas
-        run: npm version "${{ inputs.version }}" --no-git-tag-version
-
       - name: Commit and tag using the GitHub API
         uses: actions/github-script@v7.0.1
         id: commit

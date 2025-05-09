@@ -7,9 +7,7 @@
 //! A module containing PostgreSQL implementation of repositories for sessions
 
 use async_trait::async_trait;
-use mas_data_model::{
-    CompatSession, CompatSessionState, Device, Session, SessionState, User, UserAgent,
-};
+use mas_data_model::{CompatSession, CompatSessionState, Device, Session, SessionState, User};
 use mas_storage::{
     Clock, Page, Pagination,
     app_session::{AppSession, AppSessionFilter, AppSessionRepository, AppSessionState},
@@ -106,7 +104,6 @@ impl TryFrom<AppSessionLookup> for AppSession {
             last_active_ip,
         } = value;
 
-        let user_agent = user_agent.map(UserAgent::parse);
         let user_session_id = user_session_id.map(Ulid::from);
 
         match (
@@ -195,6 +192,7 @@ impl TryFrom<AppSessionLookup> for AppSession {
                     user_agent,
                     last_active_at,
                     last_active_ip,
+                    human_name,
                 };
 
                 Ok(AppSession::OAuth2(Box::new(session)))
@@ -302,7 +300,10 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 AppSessionLookupIden::ScopeList,
             )
             .expr_as(Expr::cust("NULL"), AppSessionLookupIden::DeviceId)
-            .expr_as(Expr::cust("NULL"), AppSessionLookupIden::HumanName)
+            .expr_as(
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::HumanName)),
+                AppSessionLookupIden::HumanName,
+            )
             .expr_as(
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::CreatedAt)),
                 AppSessionLookupIden::CreatedAt,
@@ -574,7 +575,7 @@ mod tests {
         let device = Device::generate(&mut rng);
         let compat_session = repo
             .compat_session()
-            .add(&mut rng, &clock, &user, device.clone(), None, false)
+            .add(&mut rng, &clock, &user, device.clone(), None, false, None)
             .await
             .unwrap();
 

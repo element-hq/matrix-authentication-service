@@ -62,7 +62,7 @@ fn map_claims_imports(
     }
 }
 
-#[tracing::instrument(name = "config.sync", skip_all, err(Debug))]
+#[tracing::instrument(name = "config.sync", skip_all)]
 pub async fn config_sync(
     upstream_oauth2_config: UpstreamOAuth2Config,
     clients_config: ClientsConfig,
@@ -175,11 +175,11 @@ pub async fn config_sync(
 
             let _span = info_span!("provider", %provider.id).entered();
             if existing_enabled_ids.contains(&provider.id) {
-                info!("Updating provider");
+                info!(provider.id = %provider.id, "Updating provider");
             } else if existing_disabled.contains_key(&provider.id) {
-                info!("Enabling and updating provider");
+                info!(provider.id = %provider.id, "Enabling and updating provider");
             } else {
-                info!("Adding provider");
+                info!(provider.id = %provider.id, "Adding provider");
             }
 
             if dry_run {
@@ -252,15 +252,15 @@ pub async fn config_sync(
 
             if discovery_mode.is_disabled() {
                 if provider.authorization_endpoint.is_none() {
-                    error!("Provider has discovery disabled but no authorization endpoint set");
+                    error!(provider.id = %provider.id, "Provider has discovery disabled but no authorization endpoint set");
                 }
 
                 if provider.token_endpoint.is_none() {
-                    error!("Provider has discovery disabled but no token endpoint set");
+                    error!(provider.id = %provider.id, "Provider has discovery disabled but no token endpoint set");
                 }
 
                 if provider.jwks_uri.is_none() {
-                    warn!("Provider has discovery disabled but no JWKS URI set");
+                    warn!(provider.id = %provider.id, "Provider has discovery disabled but no JWKS URI set");
                 }
             }
 
@@ -304,6 +304,7 @@ pub async fn config_sync(
                             .additional_authorization_parameters
                             .into_iter()
                             .collect(),
+                        forward_login_hint: provider.forward_login_hint,
                         ui_order,
                     },
                 )
@@ -347,9 +348,9 @@ pub async fn config_sync(
         for client in clients_config {
             let _span = info_span!("client", client.id = %client.client_id).entered();
             if existing_ids.contains(&client.client_id) {
-                info!("Updating client");
+                info!(client.id = %client.client_id, "Updating client");
             } else {
-                info!("Adding client");
+                info!(client.id = %client.client_id, "Adding client");
             }
 
             if dry_run {
@@ -357,6 +358,7 @@ pub async fn config_sync(
             }
 
             let client_secret = client.client_secret.as_deref();
+            let client_name = client.client_name.as_ref();
             let client_auth_method = client.client_auth_method();
             let jwks = client.jwks.as_ref();
             let jwks_uri = client.jwks_uri.as_ref();
@@ -369,6 +371,7 @@ pub async fn config_sync(
             repo.oauth2_client()
                 .upsert_static(
                     client.client_id,
+                    client_name.cloned(),
                     client_auth_method,
                     encrypted_client_secret,
                     jwks.cloned(),

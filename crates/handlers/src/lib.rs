@@ -35,14 +35,14 @@ use hyper::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
     },
 };
-use mas_axum_utils::{FancyError, cookies::CookieJar};
+use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Route, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::{BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng};
 use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
@@ -203,6 +203,7 @@ where
     Encrypter: FromRef<S>,
     reqwest::Client: FromRef<S>,
     SiteConfig: FromRef<S>,
+    Templates: FromRef<S>,
     Arc<dyn HomeserverConnection>: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
@@ -248,6 +249,8 @@ where
                     ACCEPT_LANGUAGE,
                     CONTENT_LANGUAGE,
                     CONTENT_TYPE,
+                    // Swagger will send this header, so we have to allow it to avoid CORS errors
+                    HeaderName::from_static("x-requested-with"),
                 ])
                 .max_age(Duration::from_secs(60 * 60)),
         )
@@ -262,6 +265,7 @@ where
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     Limiter: FromRef<S>,
+    BoxRepositoryFactory: FromRef<S>,
     BoundActivityTracker: FromRequestParts<S>,
     RequesterFingerprint: FromRequestParts<S>,
     BoxRepository: FromRequestParts<S>,
@@ -276,6 +280,10 @@ where
         .route(
             mas_router::CompatLogout::route(),
             post(self::compat::logout::post),
+        )
+        .route(
+            mas_router::CompatLogoutAll::route(),
+            post(self::compat::logout_all::post),
         )
         .route(
             mas_router::CompatRefresh::route(),
@@ -437,16 +445,14 @@ where
         )
         .layer(AndThenLayer::new(
             async move |response: axum::response::Response| {
-                if response.status().is_server_error() {
-                    // Error responses should have an ErrorContext attached to them
-                    let ext = response.extensions().get::<ErrorContext>();
-                    if let Some(ctx) = ext {
-                        if let Ok(res) = templates.render_error(ctx) {
-                            let (mut parts, _original_body) = response.into_parts();
-                            parts.headers.remove(CONTENT_TYPE);
-                            parts.headers.remove(CONTENT_LENGTH);
-                            return Ok((parts, Html(res)).into_response());
-                        }
+                // Error responses should have an ErrorContext attached to them
+                let ext = response.extensions().get::<ErrorContext>();
+                if let Some(ctx) = ext {
+                    if let Ok(res) = templates.render_error(ctx) {
+                        let (mut parts, _original_body) = response.into_parts();
+                        parts.headers.remove(CONTENT_TYPE);
+                        parts.headers.remove(CONTENT_LENGTH);
+                        return Ok((parts, Html(res)).into_response());
                     }
                 }
 
@@ -466,7 +472,7 @@ pub async fn fallback(
     method: Method,
     version: Version,
     PreferredLanguage(locale): PreferredLanguage,
-) -> Result<impl IntoResponse, FancyError> {
+) -> Result<impl IntoResponse, InternalError> {
     let ctx = NotFoundContext::new(&method, version, &uri).with_language(locale);
     // XXX: this should look at the Accept header and return JSON if requested
 

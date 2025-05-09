@@ -12,8 +12,7 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use chrono::Duration;
-use mas_axum_utils::{FancyError, SessionInfoExt as _, cookies::CookieJar};
-use mas_data_model::UserAgent;
+use mas_axum_utils::{InternalError, SessionInfoExt as _, cookies::CookieJar};
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -42,7 +41,6 @@ static PASSWORD_REGISTER_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     name = "handlers.views.register.steps.finish.get",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -56,13 +54,14 @@ pub(crate) async fn get(
     PreferredLanguage(lang): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
-) -> Result<Response, FancyError> {
-    let user_agent = user_agent.map(|ua| UserAgent::parse(ua.as_str().to_owned()));
+) -> Result<Response, InternalError> {
+    let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
     let registration = repo
         .user_registration()
         .lookup(id)
         .await?
-        .context("User registration not found")?;
+        .context("User registration not found")
+        .map_err(InternalError::from_anyhow)?;
 
     // If the registration is completed, we can go to the registration destination
     // XXX: this might not be the right thing to do? Maybe an error page would be
@@ -83,7 +82,7 @@ pub(crate) async fn get(
     // Make sure the registration session hasn't expired
     // XXX: this duration is hard-coded, could be configurable
     if clock.now() - registration.created_at > Duration::hours(1) {
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Registration session has expired"
         )));
     }
@@ -92,7 +91,7 @@ pub(crate) async fn get(
     let registrations = UserRegistrationSessions::load(&cookie_jar);
     if !registrations.contains(&registration) {
         // XXX: we should have a better error screen here
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Could not find the registration in the browser cookies"
         )));
     }
@@ -104,16 +103,17 @@ pub(crate) async fn get(
     if repo.user().exists(&registration.username).await? {
         // XXX: this could have a better error message, but as this is unlikely to
         // happen, we're fine with a vague message for now
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Username is already taken"
         )));
     }
 
     if !homeserver
         .is_localpart_available(&registration.username)
-        .await?
+        .await
+        .map_err(InternalError::from_anyhow)?
     {
-        return Err(FancyError::from(anyhow::anyhow!(
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
             "Username is not available"
         )));
     }
@@ -122,12 +122,14 @@ pub(crate) async fn get(
     // change in the future
     let email_authentication_id = registration
         .email_authentication_id
-        .context("No email authentication started for this registration")?;
+        .context("No email authentication started for this registration")
+        .map_err(InternalError::from_anyhow)?;
     let email_authentication = repo
         .user_email()
         .lookup_authentication(email_authentication_id)
         .await?
-        .context("Could not load the email authentication")?;
+        .context("Could not load the email authentication")
+        .map_err(InternalError::from_anyhow)?;
 
     // Check that the email authentication has been completed
     if email_authentication.completed_at.is_none() {

@@ -10,7 +10,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{
-    FancyError,
+    InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
@@ -49,7 +49,6 @@ impl ToFormState for DisplayNameForm {
     name = "handlers.views.register.steps.display_name.get",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -60,14 +59,15 @@ pub(crate) async fn get(
     mut repo: BoxRepository,
     Path(id): Path<Ulid>,
     cookie_jar: CookieJar,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let registration = repo
         .user_registration()
         .lookup(id)
         .await?
-        .context("Could not find user registration")?;
+        .context("Could not find user registration")
+        .map_err(InternalError::from_anyhow)?;
 
     // If the registration is completed, we can go to the registration destination
     // XXX: this might not be the right thing to do? Maybe an error page would be
@@ -100,7 +100,6 @@ pub(crate) async fn get(
     name = "handlers.views.register.steps.display_name.post",
     fields(user_registration.id = %id),
     skip_all,
-    err,
 )]
 pub(crate) async fn post(
     mut rng: BoxRng,
@@ -112,12 +111,13 @@ pub(crate) async fn post(
     Path(id): Path<Ulid>,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<DisplayNameForm>>,
-) -> Result<Response, FancyError> {
+) -> Result<Response, InternalError> {
     let registration = repo
         .user_registration()
         .lookup(id)
         .await?
-        .context("Could not find user registration")?;
+        .context("Could not find user registration")
+        .map_err(InternalError::from_anyhow)?;
 
     // If the registration is completed, we can go to the registration destination
     // XXX: this might not be the right thing to do? Maybe an error page would be

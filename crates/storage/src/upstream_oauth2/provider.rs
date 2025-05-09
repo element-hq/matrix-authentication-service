@@ -96,6 +96,9 @@ pub struct UpstreamOAuthProviderParams {
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,
 
+    /// Whether to forward the login hint to the upstream provider.
+    pub forward_login_hint: bool,
+
     /// The position of the provider in the UI
     pub ui_order: i32,
 }

@@ -98,7 +98,11 @@ impl CompatSession {
 
     /// The user-agent with which the session was created.
     pub async fn user_agent(&self) -> Option<UserAgent> {
-        self.session.user_agent.clone().map(UserAgent::from)
+        self.session
+            .user_agent
+            .clone()
+            .map(mas_data_model::UserAgent::parse)
+            .map(UserAgent::from)
     }
 
     /// The associated SSO login, if any.
@@ -160,6 +164,11 @@ impl CompatSession {
     /// The last time the session was active.
     pub async fn last_active_at(&self) -> Option<DateTime<Utc>> {
         self.session.last_active_at
+    }
+
+    /// A human-provided name for the session.
+    pub async fn human_name(&self) -> Option<&str> {
+        self.session.human_name.as_deref()
     }
 }
 

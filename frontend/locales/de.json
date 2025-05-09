@@ -299,6 +299,11 @@
       "last_auth_label": "Letzte Anmeldung",
       "name_for_platform": "{{name}} für {{platform}}",
       "scopes_label": "Berechtigungsumfang",
+      "set_device_name": {
+        "help": "Geben Sie einen Namen ein, der Ihnen hilft, dieses Gerät zu identifizieren.",
+        "label": "Gerätename",
+        "title": "Gerätename bearbeiten"
+      },
       "signed_in_date": "Angemeldet <datetime/>",
       "signed_in_label": "Angemeldet",
       "title": "Geräte Details",

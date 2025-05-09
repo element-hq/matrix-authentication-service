@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     BrowserSession, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device,
-    User, UserAgent,
+    User,
 };
 use mas_storage::{
     Clock, Page, Pagination,
@@ -77,7 +77,7 @@ impl From<CompatSessionLookup> for CompatSession {
             human_name: value.human_name,
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         }
@@ -126,7 +126,7 @@ impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSs
             user_session_id: value.user_session_id.map(Ulid::from),
             created_at: value.created_at,
             is_synapse_admin: value.is_synapse_admin,
-            user_agent: value.user_agent.map(UserAgent::parse),
+            user_agent: value.user_agent,
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         };
@@ -305,6 +305,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         device: Device,
         browser_session: Option<&BrowserSession>,
         is_synapse_admin: bool,
+        human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
@@ -314,8 +315,9 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             r#"
                 INSERT INTO compat_sessions
                     (compat_session_id, user_id, device_id,
-                     user_session_id, created_at, is_synapse_admin)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                     user_session_id, created_at, is_synapse_admin,
+                     human_name)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             Uuid::from(id),
             Uuid::from(user.id),
@@ -323,6 +325,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             browser_session.map(|s| Uuid::from(s.id)),
             created_at,
             is_synapse_admin,
+            human_name.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -333,7 +336,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             state: CompatSessionState::default(),
             user_id: user.id,
             device: Some(device),
-            human_name: None,
+            human_name,
             user_session_id: browser_session.map(|s| s.id),
             created_at,
             is_synapse_admin,
@@ -549,13 +552,16 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     )]
     async fn record_batch_activity(
         &mut self,
-        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+        mut activities: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error> {
-        let mut ids = Vec::with_capacity(activity.len());
-        let mut last_activities = Vec::with_capacity(activity.len());
-        let mut ips = Vec::with_capacity(activity.len());
+        // Sort the activity by ID, so that when batching the updates, Postgres
+        // locks the rows in a stable order, preventing deadlocks
+        activities.sort_unstable();
+        let mut ids = Vec::with_capacity(activities.len());
+        let mut last_activities = Vec::with_capacity(activities.len());
+        let mut ips = Vec::with_capacity(activities.len());
 
-        for (id, last_activity, ip) in activity {
+        for (id, last_activity, ip) in activities {
             ids.push(Uuid::from(id));
             last_activities.push(last_activity);
             ips.push(ip);
@@ -598,7 +604,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     async fn record_user_agent(
         &mut self,
         mut compat_session: CompatSession,
-        user_agent: UserAgent,
+        user_agent: String,
     ) -> Result<CompatSession, Self::Error> {
         let res = sqlx::query!(
             r#"
@@ -614,6 +620,40 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         .await?;
 
         compat_session.user_agent = Some(user_agent);
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        Ok(compat_session)
+    }
+
+    #[tracing::instrument(
+        name = "repository.compat_session.set_human_name",
+        skip(self),
+        fields(
+            compat_session.id = %compat_session.id,
+            compat_session.human_name = ?human_name,
+        ),
+        err,
+    )]
+    async fn set_human_name(
+        &mut self,
+        mut compat_session: CompatSession,
+        human_name: Option<String>,
+    ) -> Result<CompatSession, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+            UPDATE compat_sessions
+            SET human_name = $2
+            WHERE compat_session_id = $1
+        "#,
+            Uuid::from(compat_session.id),
+            human_name.as_deref(),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        compat_session.human_name = human_name;
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 

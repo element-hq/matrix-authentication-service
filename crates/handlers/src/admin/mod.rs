@@ -19,7 +19,7 @@ use axum::{
 };
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
-use mas_axum_utils::FancyError;
+use mas_axum_utils::InternalError;
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -81,35 +81,61 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ),
             ..Default::default()
         })
+        .security_scheme("oauth2", oauth_security_scheme(None))
         .security_scheme(
-            "oauth2",
-            SecurityScheme::OAuth2 {
-                flows: OAuth2Flows {
-                    client_credentials: Some(OAuth2Flow::ClientCredentials {
-                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                        scopes: IndexMap::from([(
-                            "urn:mas:admin".to_owned(),
-                            "Grant access to the admin API".to_owned(),
-                        )]),
-                    }),
-                    authorization_code: Some(OAuth2Flow::AuthorizationCode {
-                        authorization_url: OAuth2AuthorizationEndpoint::PATH.to_owned(),
-                        refresh_url: Some(OAuth2TokenEndpoint::PATH.to_owned()),
-                        token_url: OAuth2TokenEndpoint::PATH.to_owned(),
-                        scopes: IndexMap::from([(
-                            "urn:mas:admin".to_owned(),
-                            "Grant access to the admin API".to_owned(),
-                        )]),
-                    }),
-                    implicit: None,
-                    password: None,
-                },
-                description: None,
+            "token",
+            SecurityScheme::Http {
+                scheme: "bearer".to_owned(),
+                bearer_format: None,
+                description: Some("An access token with access to the admin API".to_owned()),
                 extensions: IndexMap::default(),
             },
         )
         .security_requirement_scopes("oauth2", ["urn:mas:admin"])
+        .security_requirement_scopes("bearer", ["urn:mas:admin"])
+}
+
+fn oauth_security_scheme(url_builder: Option<&UrlBuilder>) -> SecurityScheme {
+    let (authorization_url, token_url) = if let Some(url_builder) = url_builder {
+        (
+            url_builder.oauth_authorization_endpoint().to_string(),
+            url_builder.oauth_token_endpoint().to_string(),
+        )
+    } else {
+        // This is a dirty fix for Swagger UI: when it joins the URLs with the
+        // base URL, if the path starts with a slash, it will go to the root of
+        // the domain instead of the API root.
+        // It works if we make it explicitly relative
+        (
+            format!(".{}", OAuth2AuthorizationEndpoint::PATH),
+            format!(".{}", OAuth2TokenEndpoint::PATH),
+        )
+    };
+
+    let scopes = IndexMap::from([(
+        "urn:mas:admin".to_owned(),
+        "Grant access to the admin API".to_owned(),
+    )]);
+
+    SecurityScheme::OAuth2 {
+        flows: OAuth2Flows {
+            client_credentials: Some(OAuth2Flow::ClientCredentials {
+                refresh_url: Some(token_url.clone()),
+                token_url: token_url.clone(),
+                scopes: scopes.clone(),
+            }),
+            authorization_code: Some(OAuth2Flow::AuthorizationCode {
+                authorization_url,
+                refresh_url: Some(token_url.clone()),
+                token_url,
+                scopes,
+            }),
+            implicit: None,
+            password: None,
+        },
+        description: None,
+        extensions: IndexMap::default(),
+    }
 }
 
 pub fn router<S>() -> (OpenApi, Router<S>)
@@ -146,10 +172,13 @@ where
                 move |State(url_builder): State<UrlBuilder>| {
                     // Let's set the servers to the HTTP base URL
                     let mut api = api.clone();
-                    api.servers = vec![Server {
-                        url: url_builder.http_base().to_string(),
-                        ..Server::default()
-                    }];
+
+                    let _ = TransformOpenApi::new(&mut api)
+                        .server(Server {
+                            url: url_builder.http_base().to_string(),
+                            ..Server::default()
+                        })
+                        .security_scheme("oauth2", oauth_security_scheme(Some(&url_builder)));
 
                     std::future::ready(Json(api))
                 }
@@ -180,7 +209,7 @@ where
 async fn swagger(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, FancyError> {
+) -> Result<Html<String>, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger(&ctx)?;
     Ok(Html(res))
@@ -189,7 +218,7 @@ async fn swagger(
 async fn swagger_callback(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, FancyError> {
+) -> Result<Html<String>, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger_callback(&ctx)?;
     Ok(Html(res))

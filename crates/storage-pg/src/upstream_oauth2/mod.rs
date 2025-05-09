@@ -76,6 +76,7 @@ mod tests {
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
                     additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
                     ui_order: 0,
                 },
             )
@@ -107,7 +108,7 @@ mod tests {
                 &provider,
                 "some-state".to_owned(),
                 None,
-                "some-nonce".to_owned(),
+                Some("some-nonce".to_owned()),
             )
             .await
             .unwrap();
@@ -323,6 +324,7 @@ mod tests {
                         pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                         response_mode: None,
                         additional_authorization_parameters: Vec::new(),
+                        forward_login_hint: false,
                         ui_order: 0,
                     },
                 )

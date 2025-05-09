@@ -16,12 +16,14 @@ use axum::{
     error_handling::HandleErrorLayer,
     extract::{FromRef, MatchedPath},
 };
+use headers::{HeaderMapExt as _, UserAgent};
 use hyper::{
     Method, Request, Response, StatusCode, Version,
     header::{CACHE_CONTROL, HeaderValue, USER_AGENT},
 };
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
+use mas_context::LogContext;
 use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
@@ -170,6 +172,43 @@ fn on_http_response_labels<B>(res: &Response<B>) -> Vec<KeyValue> {
     )]
 }
 
+async fn log_response_middleware(
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let user_agent: Option<UserAgent> = request.headers().typed_get();
+    let user_agent = user_agent.as_ref().map_or("-", |u| u.as_str());
+    let method = otel_http_method(&request);
+    let path = request.uri().path().to_owned();
+    let version = otel_net_protocol_version(&request);
+
+    let response = next.run(request).await;
+
+    let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
+        tracing::error!("Missing log context for request, this is a bug!");
+        return response;
+    };
+
+    let status_code = response.status();
+    match status_code.as_u16() {
+        100..=399 => tracing::info!(
+            name: "http.server.response",
+            "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
+        ),
+        400..=499 => tracing::warn!(
+            name: "http.server.response",
+            "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
+        ),
+        500..=599 => tracing::error!(
+            name: "http.server.response",
+            "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
+        ),
+        _ => { /* This shouldn't happen */ }
+    }
+
+    response
+}
+
 pub fn build_router(
     state: AppState,
     resources: &[HttpResource],
@@ -252,6 +291,7 @@ pub fn build_router(
     router = router.fallback(mas_handlers::fallback);
 
     router
+        .layer(axum::middleware::from_fn(log_response_middleware))
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((
                 name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
@@ -277,7 +317,15 @@ pub fn build_router(
                 span.record("otel.status_code", "OK");
             }),
         )
-        .layer(SentryHttpLayer::new())
+        .layer(mas_context::LogContextLayer::new(|req| {
+            otel_http_method(req).into()
+        }))
+        // Careful about the order here: the `NewSentryLayer` must be around the
+        // `SentryHttpLayer`. axum makes new layers wrap the existing ones,
+        // which is the other way around compared to `tower::ServiceBuilder`.
+        // So even if the Sentry docs has an example that does
+        // 'NewSentryHttpLayer then SentryHttpLayer', we must do the opposite.
+        .layer(SentryHttpLayer::with_transaction())
         .layer(NewSentryLayer::new_from_top())
         .with_state(state)
 }

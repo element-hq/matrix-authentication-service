@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE oauth2_sessions\n                SET human_name = $2\n                WHERE oauth2_session_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8afada5220fefb0d01ed6f87d3d0ee8fca86b5cdce9320e190e3d3b8fd9f63bc"
+}

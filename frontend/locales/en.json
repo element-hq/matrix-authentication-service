@@ -259,6 +259,11 @@
       "last_active_label": "Last Active",
       "name_for_platform": "{{name}} for {{platform}}",
       "scopes_label": "Scopes",
+      "set_device_name": {
+        "help": "Set a name that will help you identify this device.",
+        "label": "Device name",
+        "title": "Edit device name"
+      },
       "signed_in_label": "Signed in",
       "title": "Device details",
       "unknown_browser": "Unknown browser",
