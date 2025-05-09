@@ -32,12 +32,12 @@ use mas_data_model::{BrowserSession, Session, SiteConfig, User};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, Clock, RepositoryError, SystemClock};
-use mas_storage_pg::PgRepository;
+use mas_storage::{
+    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, Clock, RepositoryError, SystemClock,
+};
 use opentelemetry_semantic_conventions::trace::{GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME};
 use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaChaRng;
-use sqlx::PgPool;
 use state::has_session_ended;
 use tracing::{Instrument, info_span};
 use ulid::Ulid;
@@ -69,7 +69,7 @@ pub struct ExtraRouterParameters {
 }
 
 struct GraphQLState {
-    pool: PgPool,
+    repository_factory: BoxRepositoryFactory,
     homeserver_connection: Arc<dyn HomeserverConnection>,
     policy_factory: Arc<PolicyFactory>,
     site_config: SiteConfig,
@@ -81,11 +81,7 @@ struct GraphQLState {
 #[async_trait::async_trait]
 impl state::State for GraphQLState {
     async fn repository(&self) -> Result<BoxRepository, RepositoryError> {
-        let repo = PgRepository::from_pool(&self.pool)
-            .await
-            .map_err(RepositoryError::from_error)?;
-
-        Ok(repo.boxed())
+        self.repository_factory.create().await
     }
 
     async fn policy(&self) -> Result<Policy, InstantiateError> {
@@ -128,7 +124,7 @@ impl state::State for GraphQLState {
 
 #[must_use]
 pub fn schema(
-    pool: &PgPool,
+    repository_factory: BoxRepositoryFactory,
     policy_factory: &Arc<PolicyFactory>,
     homeserver_connection: impl HomeserverConnection + 'static,
     site_config: SiteConfig,
@@ -137,7 +133,7 @@ pub fn schema(
     limiter: Limiter,
 ) -> Schema {
     let state = GraphQLState {
-        pool: pool.clone(),
+        repository_factory,
         policy_factory: Arc::clone(policy_factory),
         homeserver_connection: Arc::new(homeserver_connection),
         site_config,

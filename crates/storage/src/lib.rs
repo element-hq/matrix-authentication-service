@@ -128,7 +128,8 @@ pub use self::{
     clock::{Clock, SystemClock},
     pagination::{Page, Pagination},
     repository::{
-        BoxRepository, Repository, RepositoryAccess, RepositoryError, RepositoryTransaction,
+        BoxRepository, BoxRepositoryFactory, Repository, RepositoryAccess, RepositoryError,
+        RepositoryFactory, RepositoryTransaction,
     },
     utils::{BoxClock, BoxRng, MapErr},
 };

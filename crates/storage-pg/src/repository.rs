@@ -6,9 +6,11 @@
 
 use std::ops::{Deref, DerefMut};
 
+use async_trait::async_trait;
 use futures_util::{FutureExt, TryFutureExt, future::BoxFuture};
 use mas_storage::{
-    BoxRepository, MapErr, Repository, RepositoryAccess, RepositoryError, RepositoryTransaction,
+    BoxRepository, BoxRepositoryFactory, MapErr, Repository, RepositoryAccess, RepositoryError,
+    RepositoryFactory, RepositoryTransaction,
     app_session::AppSessionRepository,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
@@ -46,6 +48,7 @@ use crate::{
         job::PgQueueJobRepository, schedule::PgQueueScheduleRepository,
         worker::PgQueueWorkerRepository,
     },
+    telemetry::DB_CLIENT_CONNECTIONS_CREATE_TIME_HISTOGRAM,
     upstream_oauth2::{
         PgUpstreamOAuthLinkRepository, PgUpstreamOAuthProviderRepository,
         PgUpstreamOAuthSessionRepository,
@@ -56,6 +59,51 @@ use crate::{
         PgUserTermsRepository,
     },
 };
+
+/// An implementation of the [`RepositoryFactory`] trait backed by a PostgreSQL
+/// connection pool.
+#[derive(Clone)]
+pub struct PgRepositoryFactory {
+    pool: PgPool,
+}
+
+impl PgRepositoryFactory {
+    /// Create a new [`PgRepositoryFactory`] from a PostgreSQL connection pool.
+    #[must_use]
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+
+    /// Box the factory
+    #[must_use]
+    pub fn boxed(self) -> BoxRepositoryFactory {
+        Box::new(self)
+    }
+
+    /// Get the underlying PostgreSQL connection pool
+    #[must_use]
+    pub fn pool(&self) -> PgPool {
+        self.pool.clone()
+    }
+}
+
+#[async_trait]
+impl RepositoryFactory for PgRepositoryFactory {
+    async fn create(&self) -> Result<BoxRepository, RepositoryError> {
+        let start = std::time::Instant::now();
+        let repo = PgRepository::from_pool(&self.pool)
+            .await
+            .map_err(RepositoryError::from_error)?
+            .boxed();
+
+        // Measure the time it took to create the connection
+        let duration = start.elapsed();
+        let duration_ms = duration.as_millis().try_into().unwrap_or(u64::MAX);
+        DB_CLIENT_CONNECTIONS_CREATE_TIME_HISTOGRAM.record(duration_ms, &[]);
+
+        Ok(repo)
+    }
+}
 
 /// An implementation of the [`Repository`] trait backed by a PostgreSQL
 /// transaction.

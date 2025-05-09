@@ -7,12 +7,13 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use chrono::{DateTime, Utc};
-use mas_storage::{RepositoryAccess, RepositoryError, user::BrowserSessionRepository};
+use mas_storage::{
+    BoxRepositoryFactory, RepositoryAccess, RepositoryError, user::BrowserSessionRepository,
+};
 use opentelemetry::{
     Key, KeyValue,
     metrics::{Counter, Gauge, Histogram},
 };
-use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
 use ulid::Ulid;
 
@@ -43,7 +44,7 @@ struct ActivityRecord {
 
 /// Handles writing activity records to the database.
 pub struct Worker {
-    pool: PgPool,
+    repository_factory: BoxRepositoryFactory,
     pending_records: HashMap<(SessionKind, Ulid), ActivityRecord>,
     pending_records_gauge: Gauge<u64>,
     message_counter: Counter<u64>,
@@ -51,7 +52,7 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub(crate) fn new(pool: PgPool) -> Self {
+    pub(crate) fn new(repository_factory: BoxRepositoryFactory) -> Self {
         let message_counter = METER
             .u64_counter("mas.activity_tracker.messages")
             .with_description("The number of messages received by the activity tracker")
@@ -89,7 +90,7 @@ impl Worker {
         pending_records_gauge.record(0, &[]);
 
         Self {
-            pool,
+            repository_factory,
             pending_records: HashMap::with_capacity(MAX_PENDING_RECORDS),
             pending_records_gauge,
             message_counter,
@@ -218,11 +219,7 @@ impl Worker {
     #[tracing::instrument(name = "activity_tracker.flush", skip(self))]
     async fn try_flush(&mut self) -> Result<(), RepositoryError> {
         let pending_records = &self.pending_records;
-
-        let mut repo = mas_storage_pg::PgRepository::from_pool(&self.pool)
-            .await
-            .map_err(RepositoryError::from_error)?
-            .boxed();
+        let mut repo = self.repository_factory.create().await?;
 
         let mut browser_sessions = Vec::new();
         let mut oauth2_sessions = Vec::new();

@@ -224,7 +224,7 @@ impl QueueWorker {
         let mut rng = state.rng();
         let clock = state.clock();
 
-        let mut listener = PgListener::connect_with(state.pool())
+        let mut listener = PgListener::connect_with(&state.pool())
             .await
             .map_err(QueueRunnerError::SetupListener)?;
 
