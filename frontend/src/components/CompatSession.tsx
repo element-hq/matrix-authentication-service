@@ -43,15 +43,14 @@ const CompatSession: React.FC<{
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, session);
 
-  const clientName =
-    data.humanName ??
-    (data.ssoLogin?.redirectUri
-      ? simplifyUrl(data.ssoLogin.redirectUri)
-      : undefined);
+  const clientName = data.ssoLogin?.redirectUri
+    ? simplifyUrl(data.ssoLogin.redirectUri)
+    : undefined;
 
   const deviceType = data.userAgent?.deviceType ?? "UNKNOWN";
 
   const deviceName =
+    data.humanName ??
     data.userAgent?.model ??
     (data.userAgent?.name
       ? data.userAgent?.os
