@@ -77,7 +77,7 @@
     "postcss-nesting": "^13.0.1",
     "rimraf": "^6.0.1",
     "storybook": "^8.6.12",
-    "storybook-react-i18next": "^3.3.1",
+    "storybook-react-i18next": "^4.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "vite": "6.3.5",
