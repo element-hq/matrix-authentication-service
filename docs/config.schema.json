@@ -893,6 +893,10 @@
             "socket": {
               "description": "Path to the socket",
               "type": "string"
+            },
+            "mode": {
+              "description": "Socket file mode",
+              "type": "string"
             }
           }
         },
