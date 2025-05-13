@@ -11,6 +11,7 @@ use minijinja::{
     Environment, Error, ErrorKind, Value,
     value::{Enumerator, Object},
 };
+use tchap;
 
 /// Context passed to the attribute mapping template
 ///
@@ -187,6 +188,16 @@ pub fn environment() -> Environment<'static> {
     env.add_filter("tlvdecode", tlvdecode);
     env.add_filter("string", string);
     env.add_filter("from_json", from_json);
+
+    // Add Tchap-specific filters, this could be a generic config submitted
+    // to upstream allowing all users to add their own filters without upstream code
+    // modifications tester les fonctions async pour le reseau
+    env.add_filter("email_to_display_name", |s: &str| {
+        tchap::email_to_display_name(s)
+    });
+    env.add_filter("email_to_mxid_localpart", |s: &str| {
+        tchap::email_to_mxid_localpart(s)
+    });
 
     env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
 

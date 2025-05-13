@@ -3370,6 +3370,7 @@ dependencies = [
  "serde_with",
  "sha2",
  "sqlx",
+ "tchap",
  "thiserror 2.0.12",
  "tokio",
  "tokio-util",
@@ -6228,6 +6229,10 @@ name = "target-lexicon"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
+
+[[package]]
+name = "tchap"
+version = "0.1.0"
 
 [[package]]
 name = "tempfile"
