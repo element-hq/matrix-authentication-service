@@ -37,9 +37,12 @@ use mas_templates::{
 use minijinja::Environment;
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
+//:tchap:
+use tchap::{self, EmailAllowedResult};
 use thiserror::Error;
 use ulid::Ulid;
 
+//:tchap: end
 use super::{
     UpstreamSessionsCookie,
     template::{AttributeMappingContext, environment},
@@ -445,6 +448,45 @@ pub(crate) async fn get(
                     provider.claims_imports.email.is_required(),
                 )? {
                     Some(value) => {
+                        //:tchap:
+                        let server_name = homeserver.homeserver();
+                        let email_result = check_email_allowed(&value, server_name).await;
+
+                        match email_result {
+                            EmailAllowedResult::Allowed => {
+                                // Email is allowed, continue
+                            }
+                            EmailAllowedResult::WrongServer => {
+                                // Email is mapped to a different server
+                                let ctx = ErrorContext::new()
+                                    .with_code("wrong_server")
+                                    .with_description(format!("Votre adresse mail {value} est associée à un autre serveur."))
+                                    .with_details("Veuillez-vous contacter le support de Tchap support@tchap.beta.gouv.fr".to_owned())
+                                    .with_language(&locale);
+
+                                //return error template
+                                return Ok((
+                                    cookie_jar,
+                                    Html(templates.render_error(&ctx)?).into_response(),
+                                ));
+                            }
+                            EmailAllowedResult::InvitationMissing => {
+                                // Server requires an invitation that is not present
+                                let ctx = ErrorContext::new()
+                                    .with_code("invitation_missing")
+                                    .with_description("Vous avez besoin d'une invitation pour accéder à Tchap.".to_owned())
+                                    .with_details("Les partenaires externes peuvent accéder à Tchap uniquement avec une invitation d'un agent public.".to_owned())
+                                    .with_language(&locale);
+
+                                //return error template
+                                return Ok((
+                                    cookie_jar,
+                                    Html(templates.render_error(&ctx)?).into_response(),
+                                ));
+                            }
+                        }
+                        //:tchap: end
+
                         ctx.with_email(value, provider.claims_imports.email.is_forced_or_required())
                     }
                     None => ctx,
@@ -1006,6 +1048,19 @@ pub(crate) async fn post(
 
     Ok((cookie_jar, post_auth_action.go_next(&url_builder)).into_response())
 }
+
+//:tchap:
+///real function used when not testing
+#[cfg(not(test))]
+async fn check_email_allowed(email: &str, server_name: &str) -> EmailAllowedResult {
+    tchap::is_email_allowed(email, server_name).await
+}
+///mock function used when testing
+#[cfg(test)]
+async fn check_email_allowed(_email: &str, _server_name: &str) -> EmailAllowedResult {
+    EmailAllowedResult::Allowed
+}
+//:tchap:end
 
 #[cfg(test)]
 mod tests {

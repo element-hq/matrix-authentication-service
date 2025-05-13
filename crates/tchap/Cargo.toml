@@ -3,5 +3,13 @@ name = "tchap"
 version = "0.1.0"
 description = "Tchap-specific functionality for Matrix Authentication Service"
 license = "MIT"
+edition = "2024"
+
 
 [dependencies]
+reqwest.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+url.workspace = true
+serde.workspace = true
