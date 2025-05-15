@@ -4,13 +4,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
+use std::sync::Arc;
+
 use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Redirect},
 };
 use hyper::StatusCode;
 use mas_axum_utils::{cookies::CookieJar, record_error};
-use mas_data_model::UpstreamOAuthProvider;
+use mas_data_model::{UpstreamOAuthProvider, oauth2::LoginHint};
+use mas_matrix::HomeserverConnection;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -66,6 +69,7 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
     Path(provider_id): Path<Ulid>,
     Query(query): Query<OptionalPostAuthAction>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
 ) -> Result<impl IntoResponse, RouteError> {
     let provider = repo
         .upstream_oauth_provider()
@@ -96,13 +100,11 @@ pub(crate) async fn get(
     // sees fit
     if provider.forward_login_hint {
         if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
-            if let Some(login_hint) = repo
-                .oauth2_authorization_grant()
-                .lookup(*id)
-                .await?
-                .and_then(|grant| grant.login_hint)
-            {
-                data = data.with_login_hint(login_hint);
+            if let Some(grant) = repo.oauth2_authorization_grant().lookup(*id).await? {
+                match grant.parse_login_hint(homeserver.homeserver()) {
+                    LoginHint::MXID(mxid) => data = data.with_login_hint(mxid.to_string()),
+                    LoginHint::None => (),
+                }
             }
         }
     }
