@@ -1484,6 +1484,7 @@ impl TemplateContext for UpstreamRegister {
                 discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
                 pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
                 response_mode: None,
+                allow_existing_users: false,
                 additional_authorization_parameters: Vec::new(),
                 forward_login_hint: false,
                 created_at: now,

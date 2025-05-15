@@ -770,6 +770,9 @@ upstream_oauth2:
         # This helps end user identify what account they are using
         account_name:
           #template: "@{{ user.preferred_username }}"
+      # set to true to allow a user logging in via OIDC to match a pre-existing account instead of failing. 
+      # This could be used if switching from password logins to OIDC. Defaults to false.
+      allow_existing_users: true
 ```
 
 ## `experimental`
