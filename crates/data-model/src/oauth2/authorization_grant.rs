@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::str::FromStr as _;
+
 use chrono::{DateTime, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use oauth2_types::{
@@ -142,6 +144,7 @@ impl AuthorizationGrantStage {
 
 pub enum LoginHint<'a> {
     MXID(&'a UserId),
+    EMAIL(lettre::Address),
     None,
 }
 
@@ -173,7 +176,7 @@ impl std::ops::Deref for AuthorizationGrant {
 
 impl AuthorizationGrant {
     #[must_use]
-    pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint {
+    pub fn parse_login_hint(&self, homeserver: &str, login_with_email_allowed: bool) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
@@ -196,6 +199,16 @@ impl AuthorizationGrant {
                 }
 
                 LoginHint::MXID(mxid)
+            }
+            "email" => {
+                if !login_with_email_allowed {
+                    return LoginHint::None;
+                }
+                // Validate the email
+                let Ok(address) = lettre::Address::from_str(value) else {
+                    return LoginHint::None;
+                };
+                LoginHint::EMAIL(address)
             }
             // Unknown hint type, treat as none
             _ => LoginHint::None,
@@ -288,7 +301,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com");
+        let hint = grant.parse_login_hint("example.com", false);
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -306,9 +319,45 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com");
+        let hint = grant.parse_login_hint("example.com", false);
 
         assert!(matches!(hint, LoginHint::MXID(mxid) if mxid.localpart() == "example-user"));
+    }
+
+    #[test]
+    fn valid_login_hint_with_email() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("email:example@user")),
+            ..AuthorizationGrant::sample(now, &mut rng)
+        };
+
+        let hint = grant.parse_login_hint("example.com", true);
+
+        assert!(matches!(hint, LoginHint::EMAIL(email) if email.to_string() == "example@user"));
+    }
+
+    #[test]
+    fn valid_login_hint_with_email_when_login_with_email_not_allowed() {
+        #[allow(clippy::disallowed_methods)]
+        let mut rng = thread_rng();
+
+        #[allow(clippy::disallowed_methods)]
+        let now = Utc::now();
+
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("email:example@user")),
+            ..AuthorizationGrant::sample(now, &mut rng)
+        };
+
+        let hint = grant.parse_login_hint("example.com", false);
+
+        assert!(matches!(hint, LoginHint::None));
     }
 
     #[test]
@@ -324,7 +373,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com");
+        let hint = grant.parse_login_hint("example.com", false);
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -342,7 +391,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com");
+        let hint = grant.parse_login_hint("example.com", false);
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -360,7 +409,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com");
+        let hint = grant.parse_login_hint("example.com", false);
 
         assert!(matches!(hint, LoginHint::None));
     }
