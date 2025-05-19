@@ -8,6 +8,11 @@ Global options:
 - `--synapse-config <synapse-config>`: Path to the Synapse configuration file.
 - `--synapse-database-uri <synapse-database-uri>`: Override the Synapse database URI.
 
+If your Synapse is configured with OIDC providers, note that you will need to
+configure the `synapse_idp_id` for them for each provider in the MAS
+`upstream_oauth2.providers` list. The Synapse IDP ID's can be removed after
+a successful migration has been completed.
+
 ## `syn2mas check`
 
 Check the setup for potential problems before running a migration
