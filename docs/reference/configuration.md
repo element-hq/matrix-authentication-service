@@ -772,6 +772,37 @@ upstream_oauth2:
           #template: "@{{ user.preferred_username }}"
 ```
 
+## `branding`
+
+Configuration section for tweaking the branding of the service.
+
+```yaml
+branding:
+  # A human-readable name. Defaults to the server's address.
+  #service_name:
+
+  # Link to a privacy policy, displayed in the footer of web pages and
+  # emails. It is also advertised to clients through the `op_policy_uri`
+  # OIDC provider metadata.
+  #policy_uri:
+
+  # Link to a terms of service document, displayed in the footer of web
+  # pages and emails. It is also advertised to clients through the
+  # `op_tos_uri` OIDC provider metadata.
+  #
+  # This also adds a mandatory checkbox during registration. The value of
+  # this config item will be stored in the `user_terms` table to indicate
+  # which ToS document the user accepted. Note that currently changing this
+  # value will not force existing users to re-accept terms.
+  #tos_uri:
+
+  # Legal imprint, displayed in the footer in the footer of web pages and emails.
+  #imprint:
+
+  # Logo displayed in some web pages.
+  #logo_uri:
+```
+
 ## `experimental`
 
 Settings that may change or be removed in future versions.
