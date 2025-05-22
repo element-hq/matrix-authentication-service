@@ -344,6 +344,7 @@ impl OidcProvider {
             response_mode,
             claims_imports,
             additional_authorization_parameters,
+            allow_existing_users: true,
             forward_login_hint: self.forward_login_hint,
         })
     }

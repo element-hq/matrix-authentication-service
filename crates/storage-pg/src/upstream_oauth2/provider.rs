@@ -69,6 +69,7 @@ struct ProviderLookup {
     discovery_mode: String,
     pkce_mode: String,
     response_mode: Option<String>,
+    allow_existing_users: bool,
     additional_parameters: Option<Json<Vec<(String, String)>>>,
     forward_login_hint: bool,
 }
@@ -217,6 +218,7 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             discovery_mode,
             pkce_mode,
             response_mode,
+            allow_existing_users: value.allow_existing_users,
             additional_authorization_parameters,
             forward_login_hint: value.forward_login_hint,
         })
@@ -276,6 +278,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_existing_users,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint
                 FROM upstream_oauth_providers
@@ -339,10 +342,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 discovery_mode,
                 pkce_mode,
                 response_mode,
+                allow_existing_users,
                 forward_login_hint,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+                      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
         "#,
             Uuid::from(id),
             params.issuer.as_deref(),
@@ -379,6 +383,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
             params.response_mode.as_ref().map(ToString::to_string),
+            params.allow_existing_users,
             params.forward_login_hint,
             created_at,
         )
@@ -409,6 +414,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
             response_mode: params.response_mode,
+            allow_existing_users: params.allow_existing_users,
             additional_authorization_parameters: params.additional_authorization_parameters,
             forward_login_hint: params.forward_login_hint,
         })
@@ -522,13 +528,14 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_existing_users,
                     additional_parameters,
                     forward_login_hint,
                     ui_order,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                           $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                          $21, $22, $23, $24)
+                          $21, $22, $23, $24, $25)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -552,6 +559,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         discovery_mode = EXCLUDED.discovery_mode,
                         pkce_mode = EXCLUDED.pkce_mode,
                         response_mode = EXCLUDED.response_mode,
+                        allow_existing_users = EXCLUDED.allow_existing_users,
                         additional_parameters = EXCLUDED.additional_parameters,
                         forward_login_hint = EXCLUDED.forward_login_hint,
                         ui_order = EXCLUDED.ui_order
@@ -592,6 +600,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.discovery_mode.as_str(),
             params.pkce_mode.as_str(),
             params.response_mode.as_ref().map(ToString::to_string),
+            params.allow_existing_users,
             Json(&params.additional_authorization_parameters) as _,
             params.forward_login_hint,
             params.ui_order,
@@ -624,6 +633,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             discovery_mode: params.discovery_mode,
             pkce_mode: params.pkce_mode,
             response_mode: params.response_mode,
+            allow_existing_users: params.allow_existing_users,
             additional_authorization_parameters: params.additional_authorization_parameters,
             forward_login_hint: params.forward_login_hint,
         })
@@ -832,6 +842,13 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             .expr_as(
                 Expr::col((
                     UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::AllowExistingUsers,
+                )),
+                ProviderLookupIden::AllowExistingUsers,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
                     UpstreamOAuthProviders::AdditionalParameters,
                 )),
                 ProviderLookupIden::AdditionalParameters,
@@ -935,6 +952,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     discovery_mode,
                     pkce_mode,
                     response_mode,
+                    allow_existing_users,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint
                 FROM upstream_oauth_providers

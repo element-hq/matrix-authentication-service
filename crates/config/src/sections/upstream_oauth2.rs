@@ -110,6 +110,17 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                     }
                 }
             }
+
+            if provider.allow_existing_users
+                && !matches!(
+                    provider.claims_imports.localpart.action,
+                    ImportAction::Force | ImportAction::Require
+                )
+            {
+                return annotate(figment::Error::custom(
+                    "When `allow_existing_users` is true, localpart claim import must be either `force` or `require`",
+                ));
+            }
         }
 
         Ok(())
@@ -411,6 +422,7 @@ fn is_default_scope(scope: &str) -> bool {
 /// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Provider {
     /// Whether this provider is enabled.
     ///
@@ -570,6 +582,13 @@ pub struct Provider {
     /// provider
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
+
+    /// Whether to allow a user logging in via OIDC to match a pre-existing
+    /// account instead of failing. This could be used if switching from
+    /// password logins to OIDC.
+    //Defaults to false.
+    #[serde(default)]
+    pub allow_existing_users: bool,
 
     /// Additional parameters to include in the authorization request
     ///
