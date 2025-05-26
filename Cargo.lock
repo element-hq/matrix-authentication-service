@@ -3219,6 +3219,7 @@ dependencies = [
  "camino",
  "chrono",
  "figment",
+ "futures",
  "governor",
  "indoc",
  "ipnetwork",
