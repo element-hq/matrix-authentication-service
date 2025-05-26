@@ -77,6 +77,52 @@ impl From<Option<Password>> for PasswordRaw {
     }
 }
 
+/// Key config option.
+///
+/// It either holds the key value directly or references a file where the key is
+/// stored.
+#[derive(Clone, Debug)]
+pub enum Key {
+    File(Utf8PathBuf),
+    Value(String),
+}
+
+/// Key fields as serialized in JSON.
+#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
+struct KeyRaw {
+    #[schemars(with = "Option<String>")]
+    key_file: Option<Utf8PathBuf>,
+    key: Option<String>,
+}
+
+impl TryFrom<KeyRaw> for Key {
+    type Error = anyhow::Error;
+
+    fn try_from(value: KeyRaw) -> Result<Key, Self::Error> {
+        match (value.key, value.key_file) {
+            (None, None) => bail!("Missing `key` or `key_file`"),
+            (None, Some(path)) => Ok(Key::File(path)),
+            (Some(key), None) => Ok(Key::Value(key)),
+            (Some(_), Some(_)) => bail!("Cannot specify both `key` and `key_file`"),
+        }
+    }
+}
+
+impl From<Key> for KeyRaw {
+    fn from(value: Key) -> Self {
+        match value {
+            Key::File(path) => KeyRaw {
+                key_file: Some(path),
+                key: None,
+            },
+            Key::Value(key) => KeyRaw {
+                key_file: None,
+                key: Some(key),
+            },
+        }
+    }
+}
+
 /// A single key with its key ID and optional password.
 #[serde_as]
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
@@ -88,12 +134,10 @@ pub struct KeyConfig {
     #[serde(flatten)]
     password: Option<Password>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    key: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
-    key_file: Option<Utf8PathBuf>,
+    #[schemars(with = "KeyRaw")]
+    #[serde_as(as = "serde_with::TryFromInto<KeyRaw>")]
+    #[serde(flatten)]
+    key: Key,
 }
 
 impl KeyConfig {
@@ -105,6 +149,16 @@ impl KeyConfig {
             Some(Password::File(path)) => Some(Cow::Owned(tokio::fs::read_to_string(path).await?)),
             Some(Password::Value(password)) => Some(Cow::Borrowed(password)),
             None => None,
+        })
+    }
+
+    /// Returns the key.
+    ///
+    /// If `key_file` was given, the key is read from that file.
+    async fn key(&self) -> anyhow::Result<Cow<String>> {
+        Ok(match &self.key {
+            Key::File(path) => Cow::Owned(tokio::fs::read_to_string(path).await?),
+            Key::Value(key) => Cow::Borrowed(key),
         })
     }
 }
@@ -139,31 +193,13 @@ impl SecretsConfig {
         for item in &self.keys {
             let password = item.password().await?;
 
-            // Read the key either embedded in the config file or on disk
-            let key = match (&item.key, &item.key_file) {
-                (None, None) => bail!("Missing `key` or `key_file`"),
-                (Some(_), Some(_)) => bail!("Cannot specify both `key` and `key_file`"),
-                (Some(key), None) => {
-                    // If the key was embedded in the config file, assume it is formatted as PEM
-                    if let Some(password) = password {
-                        PrivateKey::load_encrypted_pem(key, password.as_bytes())?
-                    } else {
-                        PrivateKey::load_pem(key)?
-                    }
-                }
-                (None, Some(path)) => {
-                    // When reading from disk, it might be either PEM or DER. `PrivateKey::load*`
-                    // will try both.
-                    let key = tokio::fs::read(path).await?;
-                    if let Some(password) = password {
-                        PrivateKey::load_encrypted(&key, password.as_bytes())?
-                    } else {
-                        PrivateKey::load(&key)?
-                    }
-                }
+            let key = item.key().await?;
+            let private_key = match password {
+                Some(password) => PrivateKey::load_encrypted(key.as_bytes(), password.as_bytes())?,
+                None => PrivateKey::load(key.as_bytes())?,
             };
 
-            let key = JsonWebKey::new(key)
+            let key = JsonWebKey::new(private_key)
                 .with_kid(item.kid.clone())
                 .with_use(mas_iana::jose::JsonWebKeyUse::Sig);
             keys.push(key);
@@ -183,34 +219,7 @@ impl SecretsConfig {
 impl ConfigurationSection for SecretsConfig {
     const PATH: Option<&'static str> = Some("secrets");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
-        for (index, key) in self.keys.iter().enumerate() {
-            let annotate = |mut error: figment::Error| {
-                error.metadata = figment
-                    .find_metadata(&format!("{root}.keys", root = Self::PATH.unwrap()))
-                    .cloned();
-                error.profile = Some(figment::Profile::Default);
-                error.path = vec![
-                    Self::PATH.unwrap().to_owned(),
-                    "keys".to_owned(),
-                    index.to_string(),
-                ];
-                Err(error)
-            };
-
-            if key.key.is_none() && key.key_file.is_none() {
-                return annotate(figment::Error::from(
-                    "Missing `key` or `key_file`".to_owned(),
-                ));
-            }
-
-            if key.key.is_some() && key.key_file.is_some() {
-                return annotate(figment::Error::from(
-                    "Cannot specify both `key` and `key_file`".to_owned(),
-                ));
-            }
-        }
-
+    fn validate(&self, _figment: &figment::Figment) -> Result<(), figment::Error> {
         Ok(())
     }
 }
@@ -236,8 +245,7 @@ impl SecretsConfig {
         let rsa_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            key: Some(rsa_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
-            key_file: None,
+            key: Key::Value(rsa_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
 
         let span = tracing::info_span!("ec_p256");
@@ -253,8 +261,7 @@ impl SecretsConfig {
         let ec_p256_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            key: Some(ec_p256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
-            key_file: None,
+            key: Key::Value(ec_p256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
 
         let span = tracing::info_span!("ec_p384");
@@ -270,8 +277,7 @@ impl SecretsConfig {
         let ec_p384_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            key: Some(ec_p384_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
-            key_file: None,
+            key: Key::Value(ec_p384_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
 
         let span = tracing::info_span!("ec_k256");
@@ -287,8 +293,7 @@ impl SecretsConfig {
         let ec_k256_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            key: Some(ec_k256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
-            key_file: None,
+            key: Key::Value(ec_k256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
 
         Ok(Self {
@@ -301,7 +306,7 @@ impl SecretsConfig {
         let rsa_key = KeyConfig {
             kid: "abcdef".to_owned(),
             password: None,
-            key: Some(
+            key: Key::Value(
                 indoc::indoc! {r"
                   -----BEGIN PRIVATE KEY-----
                   MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAymS2RkeIZo7pUeEN
@@ -316,12 +321,11 @@ impl SecretsConfig {
                 "}
                 .to_owned(),
             ),
-            key_file: None,
         };
         let ecdsa_key = KeyConfig {
             kid: "ghijkl".to_owned(),
             password: None,
-            key: Some(
+            key: Key::Value(
                 indoc::indoc! {r"
                   -----BEGIN PRIVATE KEY-----
                   MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgqfn5mYO/5Qq/wOOiWgHA
@@ -331,7 +335,6 @@ impl SecretsConfig {
                 "}
                 .to_owned(),
             ),
-            key_file: None,
         };
 
         Self {
