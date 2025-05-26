@@ -6,7 +6,7 @@
 
 use std::borrow::Cow;
 
-use anyhow::{Context, bail};
+use anyhow::{Context, anyhow, bail};
 use camino::Utf8PathBuf;
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
@@ -46,18 +46,68 @@ pub struct KeyConfig {
     key_file: Option<Utf8PathBuf>,
 }
 
+/// Encryption config option.
+#[derive(Debug, Clone)]
+pub enum Encryption {
+    File(Utf8PathBuf),
+    Value([u8; 32]),
+}
+
+/// Encryption fields as serialized in JSON.
+#[serde_as]
+#[derive(JsonSchema, Serialize, Deserialize, Debug, Clone)]
+struct EncryptionRaw {
+    /// File containing the encryption key for secure cookies.
+    #[schemars(with = "Option<String>")]
+    encryption_file: Option<Utf8PathBuf>,
+
+    /// Encryption key for secure cookies.
+    #[schemars(
+        with = "Option<String>",
+        regex(pattern = r"[0-9a-fA-F]{64}"),
+        example = "example_secret"
+    )]
+    #[serde_as(as = "Option<serde_with::hex::Hex>")]
+    encryption: Option<[u8; 32]>,
+}
+
+impl TryFrom<EncryptionRaw> for Encryption {
+    type Error = anyhow::Error;
+
+    fn try_from(value: EncryptionRaw) -> Result<Encryption, Self::Error> {
+        match (value.encryption, value.encryption_file) {
+            (None, None) => bail!("Missing `encryption` or `encryption_file`"),
+            (None, Some(path)) => Ok(Encryption::File(path)),
+            (Some(encryption), None) => Ok(Encryption::Value(encryption)),
+            (Some(_), Some(_)) => bail!("Cannot specify both `encryption` and `encryption_file`"),
+        }
+    }
+}
+
+impl From<Encryption> for EncryptionRaw {
+    fn from(value: Encryption) -> Self {
+        match value {
+            Encryption::File(path) => EncryptionRaw {
+                encryption_file: Some(path),
+                encryption: None,
+            },
+            Encryption::Value(encryption) => EncryptionRaw {
+                encryption_file: None,
+                encryption: Some(encryption),
+            },
+        }
+    }
+}
+
 /// Application secrets
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SecretsConfig {
     /// Encryption key for secure cookies
-    #[schemars(
-        with = "String",
-        regex(pattern = r"[0-9a-fA-F]{64}"),
-        example = "example_secret"
-    )]
-    #[serde_as(as = "serde_with::hex::Hex")]
-    pub encryption: [u8; 32],
+    #[schemars(with = "EncryptionRaw")]
+    #[serde_as(as = "serde_with::TryFromInto<EncryptionRaw>")]
+    #[serde(flatten)]
+    encryption: Encryption,
 
     /// List of private keys to use for signing and encrypting payloads
     #[serde(default)]
@@ -118,9 +168,27 @@ impl SecretsConfig {
     }
 
     /// Derive an [`Encrypter`] out of the config
-    #[must_use]
-    pub fn encrypter(&self) -> Encrypter {
-        Encrypter::new(&self.encryption)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the Encryptor can not be created.
+    pub async fn encrypter(&self) -> anyhow::Result<Encrypter> {
+        Ok(Encrypter::new(&self.encryption().await?))
+    }
+
+    /// Returns the encryption secret.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the encryption secret could not be read from file.
+    pub async fn encryption(&self) -> anyhow::Result<[u8; 32]> {
+        // Read the encryption secret either embedded in the config file or on disk
+        match self.encryption {
+            Encryption::Value(encryption) => Ok(encryption),
+            Encryption::File(ref path) => tokio::fs::read(path).await?.try_into().map_err(|_| {
+                anyhow!("Content of `encryption_file` must be exactly 32 bytes long.")
+            }),
+        }
     }
 }
 
@@ -246,7 +314,7 @@ impl SecretsConfig {
         };
 
         Ok(Self {
-            encryption: Standard.sample(&mut rng),
+            encryption: Encryption::Value(Standard.sample(&mut rng)),
             keys: vec![rsa_key, ec_p256_key, ec_p384_key, ec_k256_key],
         })
     }
@@ -291,7 +359,7 @@ impl SecretsConfig {
         };
 
         Self {
-            encryption: [0xEA; 32],
+            encryption: Encryption::Value([0xEA; 32]),
             keys: vec![rsa_key, ecdsa_key],
         }
     }

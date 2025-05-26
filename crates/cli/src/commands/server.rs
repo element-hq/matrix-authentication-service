@@ -94,7 +94,7 @@ impl Options {
                 .context("could not run database migrations")?;
         }
 
-        let encrypter = config.secrets.encrypter();
+        let encrypter = config.secrets.encrypter().await?;
 
         if self.no_sync {
             info!("Skipping configuration sync");
@@ -124,8 +124,10 @@ impl Options {
             .await
             .context("could not import keys from config")?;
 
-        let cookie_manager =
-            CookieManager::derive_from(config.http.public_base.clone(), &config.secrets.encryption);
+        let cookie_manager = CookieManager::derive_from(
+            config.http.public_base.clone(),
+            &config.secrets.encryption().await?,
+        );
 
         // Load and compile the WASM policies (and fallback to the default embedded one)
         info!("Loading and compiling the policy module");

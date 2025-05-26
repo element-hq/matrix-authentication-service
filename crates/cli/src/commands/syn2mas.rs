@@ -133,7 +133,7 @@ impl Options {
             // in the MAS database
             let config = SyncConfig::extract(figment)?;
             let clock = SystemClock::default();
-            let encrypter = config.secrets.encrypter();
+            let encrypter = config.secrets.encrypter().await?;
 
             crate::sync::config_sync(
                 config.upstream_oauth2,
