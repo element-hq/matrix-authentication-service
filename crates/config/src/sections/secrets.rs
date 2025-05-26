@@ -8,6 +8,7 @@ use std::borrow::Cow;
 
 use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
+use futures::future::{try_join, try_join_all};
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
 use rand::{
@@ -161,6 +162,22 @@ impl KeyConfig {
             Key::Value(key) => Cow::Borrowed(key),
         })
     }
+
+    /// Returns the JSON Web Key derived from this key config.
+    ///
+    /// Password and/or key are read from file if they’re given as path.
+    async fn json_web_key(&self) -> anyhow::Result<JsonWebKey<mas_keystore::PrivateKey>> {
+        let (key, password) = try_join(self.key(), self.password()).await?;
+
+        let private_key = match password {
+            Some(password) => PrivateKey::load_encrypted(key.as_bytes(), password.as_bytes())?,
+            None => PrivateKey::load(key.as_bytes())?,
+        };
+
+        Ok(JsonWebKey::new(private_key)
+            .with_kid(self.kid.clone())
+            .with_use(mas_iana::jose::JsonWebKeyUse::Sig))
+    }
 }
 
 /// Application secrets
@@ -189,24 +206,9 @@ impl SecretsConfig {
     /// Returns an error when a key could not be imported
     #[tracing::instrument(name = "secrets.load", skip_all)]
     pub async fn key_store(&self) -> anyhow::Result<Keystore> {
-        let mut keys = Vec::with_capacity(self.keys.len());
-        for item in &self.keys {
-            let password = item.password().await?;
+        let web_keys = try_join_all(self.keys.iter().map(KeyConfig::json_web_key)).await?;
 
-            let key = item.key().await?;
-            let private_key = match password {
-                Some(password) => PrivateKey::load_encrypted(key.as_bytes(), password.as_bytes())?,
-                None => PrivateKey::load(key.as_bytes())?,
-            };
-
-            let key = JsonWebKey::new(private_key)
-                .with_kid(item.kid.clone())
-                .with_use(mas_iana::jose::JsonWebKeyUse::Sig);
-            keys.push(key);
-        }
-
-        let keys = JsonWebKeySet::new(keys);
-        Ok(Keystore::new(keys))
+        Ok(Keystore::new(JsonWebKeySet::new(web_keys)))
     }
 
     /// Derive an [`Encrypter`] out of the config
