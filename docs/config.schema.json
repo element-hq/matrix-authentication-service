@@ -1547,16 +1547,16 @@
         "kid": {
           "type": "string"
         },
-        "password": {
+        "key": {
+          "type": "string"
+        },
+        "key_file": {
           "type": "string"
         },
         "password_file": {
           "type": "string"
         },
-        "key": {
-          "type": "string"
-        },
-        "key_file": {
+        "password": {
           "type": "string"
         }
       }

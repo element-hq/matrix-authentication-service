@@ -27,17 +27,66 @@ fn example_secret() -> &'static str {
     "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
 }
 
+/// Password config option.
+///
+/// It either holds the password value directly or references a file where the
+/// password is stored.
+#[derive(Clone, Debug)]
+pub enum Password {
+    File(Utf8PathBuf),
+    Value(String),
+}
+
+/// Password fields as serialized in JSON.
+#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
+struct PasswordRaw {
+    #[schemars(with = "Option<String>")]
+    password_file: Option<Utf8PathBuf>,
+    password: Option<String>,
+}
+
+impl TryFrom<PasswordRaw> for Option<Password> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: PasswordRaw) -> Result<Self, Self::Error> {
+        match (value.password, value.password_file) {
+            (None, None) => Ok(None),
+            (None, Some(path)) => Ok(Some(Password::File(path))),
+            (Some(password), None) => Ok(Some(Password::Value(password))),
+            (Some(_), Some(_)) => bail!("Cannot specify both `password` and `password_file`"),
+        }
+    }
+}
+
+impl From<Option<Password>> for PasswordRaw {
+    fn from(value: Option<Password>) -> Self {
+        match value {
+            Some(Password::File(path)) => PasswordRaw {
+                password_file: Some(path),
+                password: None,
+            },
+            Some(Password::Value(password)) => PasswordRaw {
+                password_file: None,
+                password: Some(password),
+            },
+            None => PasswordRaw {
+                password_file: None,
+                password: None,
+            },
+        }
+    }
+}
+
 /// A single key with its key ID and optional password.
+#[serde_as]
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct KeyConfig {
     kid: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    password: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
-    password_file: Option<Utf8PathBuf>,
+    #[schemars(with = "PasswordRaw")]
+    #[serde_as(as = "serde_with::TryFromInto<PasswordRaw>")]
+    #[serde(flatten)]
+    password: Option<Password>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     key: Option<String>,
@@ -45,6 +94,19 @@ pub struct KeyConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(with = "Option<String>")]
     key_file: Option<Utf8PathBuf>,
+}
+
+impl KeyConfig {
+    /// Returns the password in case any is provided.
+    ///
+    /// If `password_file` was given, the password is read from that file.
+    async fn password(&self) -> anyhow::Result<Option<Cow<String>>> {
+        Ok(match &self.password {
+            Some(Password::File(path)) => Some(Cow::Owned(tokio::fs::read_to_string(path).await?)),
+            Some(Password::Value(password)) => Some(Cow::Borrowed(password)),
+            None => None,
+        })
+    }
 }
 
 /// Application secrets
@@ -75,14 +137,7 @@ impl SecretsConfig {
     pub async fn key_store(&self) -> anyhow::Result<Keystore> {
         let mut keys = Vec::with_capacity(self.keys.len());
         for item in &self.keys {
-            let password = match (&item.password, &item.password_file) {
-                (None, None) => None,
-                (Some(_), Some(_)) => {
-                    bail!("Cannot specify both `password` and `password_file`")
-                }
-                (Some(password), None) => Some(Cow::Borrowed(password)),
-                (None, Some(path)) => Some(Cow::Owned(tokio::fs::read_to_string(path).await?)),
-            };
+            let password = item.password().await?;
 
             // Read the key either embedded in the config file or on disk
             let key = match (&item.key, &item.key_file) {
@@ -154,12 +209,6 @@ impl ConfigurationSection for SecretsConfig {
                     "Cannot specify both `key` and `key_file`".to_owned(),
                 ));
             }
-
-            if key.password.is_some() && key.password_file.is_some() {
-                return annotate(figment::Error::from(
-                    "Cannot specify both `password` and `password_file`".to_owned(),
-                ));
-            }
         }
 
         Ok(())
@@ -187,7 +236,6 @@ impl SecretsConfig {
         let rsa_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            password_file: None,
             key: Some(rsa_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
             key_file: None,
         };
@@ -205,7 +253,6 @@ impl SecretsConfig {
         let ec_p256_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            password_file: None,
             key: Some(ec_p256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
             key_file: None,
         };
@@ -223,7 +270,6 @@ impl SecretsConfig {
         let ec_p384_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            password_file: None,
             key: Some(ec_p384_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
             key_file: None,
         };
@@ -241,7 +287,6 @@ impl SecretsConfig {
         let ec_k256_key = KeyConfig {
             kid: Alphanumeric.sample_string(&mut rng, 10),
             password: None,
-            password_file: None,
             key: Some(ec_k256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
             key_file: None,
         };
@@ -256,7 +301,6 @@ impl SecretsConfig {
         let rsa_key = KeyConfig {
             kid: "abcdef".to_owned(),
             password: None,
-            password_file: None,
             key: Some(
                 indoc::indoc! {r"
                   -----BEGIN PRIVATE KEY-----
@@ -277,7 +321,6 @@ impl SecretsConfig {
         let ecdsa_key = KeyConfig {
             kid: "ghijkl".to_owned(),
             password: None,
-            password_file: None,
             key: Some(
                 indoc::indoc! {r"
                   -----BEGIN PRIVATE KEY-----
