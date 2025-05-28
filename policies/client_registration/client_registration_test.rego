@@ -215,6 +215,13 @@ test_web_redirect_uri if {
 		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback", "https://example.com/callback?query=value"],
 	}
 
+	client_registration.allow with input.client_metadata as {
+		"application_type": "web",
+		"client_uri": "http://localhost:8080",
+		"redirect_uris": ["http://localhost:8080/?no_universal_links=true"],
+	}
+		with client_registration.allow_insecure_uris as true
+
 	# HTTPS redirect_uri with non-standard port
 	client_registration.allow with input.client_metadata as {
 		"application_type": "web",
@@ -402,4 +409,14 @@ test_reverse_dns_match if {
 	client_registration.reverse_dns_match("example.com", "com.example.app")
 	not client_registration.reverse_dns_match("example.com", "org.example")
 	not client_registration.reverse_dns_match("test.com", "com.example")
+}
+
+test_parse_uri if {
+	client_uri_query := client_registration.parse_uri("https://example.com:8080/users?query=test")
+	client_uri_query.authority == "example.com:8080"
+	client_uri_query.host == "example.com"
+	client_uri_query.path == "/users"
+	client_uri_query.scheme == "https"
+	client_uri_query.port == "8080"
+	client_uri_query.query == "?query=test"
 }
