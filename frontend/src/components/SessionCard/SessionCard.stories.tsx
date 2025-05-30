@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign-out";
 import { Button } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";

@@ -9,7 +9,7 @@ import type {
   Decorator,
   Parameters,
   Preview,
-} from "@storybook/react";
+} from "@storybook/react-vite";
 import { TooltipProvider } from "@vector-im/compound-web";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { useLayoutEffect } from "react";
@@ -124,6 +124,7 @@ const preview: Preview = {
     i18n,
   },
   loaders: [mswLoader],
+  tags: ["autodocs"],
 };
 
 export default preview;

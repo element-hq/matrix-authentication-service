@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, waitFor, within } from "@storybook/test";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import i18n from "i18next";
 import { type GraphQLHandler, HttpResponse } from "msw";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   CONFIG_FRAGMENT as ACCOUNT_DELETE_BUTTON_CONFIG_FRAGMENT,
   USER_FRAGMENT as ACCOUNT_DELETE_BUTTON_USER_FRAGMENT,

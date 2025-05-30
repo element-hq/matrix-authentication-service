@@ -9,34 +9,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 const config: StorybookConfig = {
   stories: ["../{src,stories}/**/*.stories.@(js|jsx|ts|tsx)"],
 
-  addons: [
-    // Automatic docs pages
-    "@storybook/addon-docs",
-
-    // Controls of components props
-    "@storybook/addon-controls",
-
-    // Document components actions
-    "@storybook/addon-actions",
-
-    // Helps measuring elements
-    "@storybook/addon-measure",
-
-    // Helps showing components boundaries
-    "@storybook/addon-outline",
-
-    // Quickly change viewport size
-    "@storybook/addon-viewport",
-
-    // Theme switch toolbar
-    "@storybook/addon-toolbars",
-
-    // Interactions
-    "@storybook/addon-interactions",
-
-    // i18next integration
-    "storybook-react-i18next",
-  ],
+  addons: ["storybook-react-i18next", "@storybook/addon-docs"],
 
   framework: "@storybook/react-vite",
 
@@ -46,10 +19,6 @@ const config: StorybookConfig = {
 
   core: {
     disableTelemetry: true,
-  },
-
-  docs: {
-    autodocs: true,
   },
 
   env: {
