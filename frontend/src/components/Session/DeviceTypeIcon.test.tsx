@@ -6,7 +6,7 @@
 
 // @vitest-environment happy-dom
 
-import { composeStory } from "@storybook/react";
+import { composeStory } from "@storybook/react-vite";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
