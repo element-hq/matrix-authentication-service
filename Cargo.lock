@@ -3312,6 +3312,7 @@ dependencies = [
  "headers",
  "hex",
  "hyper",
+ "icu_normalizer",
  "indexmap 2.9.0",
  "insta",
  "lettre",

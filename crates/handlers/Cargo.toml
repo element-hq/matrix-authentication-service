@@ -74,6 +74,7 @@ chrono.workspace = true
 elliptic-curve.workspace = true
 hex.workspace = true
 governor.workspace = true
+icu_normalizer = "1.5.0"
 indexmap.workspace = true
 pkcs8.workspace = true
 psl = "2.1.111"

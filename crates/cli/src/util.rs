@@ -36,20 +36,24 @@ pub async fn password_manager_from_config(
         return Ok(PasswordManager::disabled());
     }
 
-    let schemes = config
-        .load()
-        .await?
-        .into_iter()
-        .map(|(version, algorithm, cost, secret)| {
+    let schemes = config.load().await?.into_iter().map(
+        |(version, algorithm, cost, secret, unicode_normalization)| {
             use mas_handlers::passwords::Hasher;
             let hasher = match algorithm {
-                mas_config::PasswordAlgorithm::Pbkdf2 => Hasher::pbkdf2(secret),
-                mas_config::PasswordAlgorithm::Bcrypt => Hasher::bcrypt(cost, secret),
-                mas_config::PasswordAlgorithm::Argon2id => Hasher::argon2id(secret),
+                mas_config::PasswordAlgorithm::Pbkdf2 => {
+                    Hasher::pbkdf2(secret, unicode_normalization)
+                }
+                mas_config::PasswordAlgorithm::Bcrypt => {
+                    Hasher::bcrypt(cost, secret, unicode_normalization)
+                }
+                mas_config::PasswordAlgorithm::Argon2id => {
+                    Hasher::argon2id(secret, unicode_normalization)
+                }
             };
 
             (version, hasher)
-        });
+        },
+    );
 
     PasswordManager::new(config.minimum_complexity(), schemes)
 }
@@ -492,7 +496,7 @@ mod tests {
     #[tokio::test]
     async fn test_password_manager_from_config() {
         let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
-        let password = Zeroizing::new(b"hunter2".to_vec());
+        let password = Zeroizing::new("hunter2".to_owned());
 
         // Test a valid, enabled config
         let config = serde_json::from_value(serde_json::json!({

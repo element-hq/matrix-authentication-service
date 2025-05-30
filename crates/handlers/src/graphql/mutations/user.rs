@@ -742,7 +742,7 @@ impl UserMutations {
             if let Err(_err) = password_manager
                 .verify(
                     active_password.version,
-                    Zeroizing::new(current_password_attempt.into_bytes()),
+                    Zeroizing::new(current_password_attempt),
                     active_password.hashed_password,
                 )
                 .await
@@ -754,7 +754,7 @@ impl UserMutations {
         }
 
         let (new_password_version, new_password_hash) = password_manager
-            .hash(state.rng(), Zeroizing::new(input.new_password.into_bytes()))
+            .hash(state.rng(), Zeroizing::new(input.new_password))
             .await?;
 
         repo.user_password()
@@ -849,7 +849,7 @@ impl UserMutations {
         }
 
         let (new_password_version, new_password_hash) = password_manager
-            .hash(state.rng(), Zeroizing::new(input.new_password.into_bytes()))
+            .hash(state.rng(), Zeroizing::new(input.new_password))
             .await?;
 
         repo.user_password()

@@ -31,6 +31,7 @@ use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{RngCore, SeedableRng};
 use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
+use zeroize::Zeroizing;
 
 use crate::util::{
     database_connection_from_config, homeserver_connection_from_config,
@@ -210,7 +211,7 @@ impl Options {
                     return Ok(ExitCode::from(1));
                 }
 
-                let password = password.into_bytes().into();
+                let password = Zeroizing::new(password);
 
                 let (version, hashed_password) = password_manager.hash(&mut rng, password).await?;
 
@@ -566,7 +567,7 @@ impl Options {
 
                 // Hash the password if it's provided
                 let hashed_password = if let Some(password) = password {
-                    let password = password.into_bytes().into();
+                    let password = Zeroizing::new(password);
                     Some(password_manager.hash(&mut rng, password).await?)
                 } else {
                     None
@@ -641,7 +642,7 @@ impl Options {
                                     .interact()
                             })
                             .await??;
-                            let password = password.into_bytes().into();
+                            let password = Zeroizing::new(password);
                             req.hashed_password =
                                 Some(password_manager.hash(&mut rng, password).await?);
                         }

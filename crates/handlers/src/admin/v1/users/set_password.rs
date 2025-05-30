@@ -122,7 +122,7 @@ pub async fn handler(
         return Err(RouteError::PasswordTooWeak);
     }
 
-    let password = Zeroizing::new(params.password.into_bytes());
+    let password = Zeroizing::new(params.password);
     let (version, hashed_password) = password_manager
         .hash(&mut rng, password)
         .await
@@ -184,7 +184,7 @@ mod tests {
         // Check that the user now has a password
         let mut repo = state.repository().await.unwrap();
         let user_password = repo.user_password().active(&user).await.unwrap().unwrap();
-        let password = Zeroizing::new(b"this is a good enough password".to_vec());
+        let password = Zeroizing::new(String::from("this is a good enough password"));
         state
             .password_manager
             .verify(
@@ -243,7 +243,7 @@ mod tests {
         // Check that the user now has a password
         let mut repo = state.repository().await.unwrap();
         let user_password = repo.user_password().active(&user).await.unwrap().unwrap();
-        let password = Zeroizing::new(b"password".to_vec());
+        let password = Zeroizing::new("password".to_owned());
         state
             .password_manager
             .verify(

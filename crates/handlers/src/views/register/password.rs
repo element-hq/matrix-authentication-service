@@ -364,7 +364,7 @@ pub(crate) async fn post(
         .await?;
 
     // Hash the password
-    let password = Zeroizing::new(form.password.into_bytes());
+    let password = Zeroizing::new(form.password);
     let (version, hashed_password) = password_manager
         .hash(&mut rng, password)
         .await

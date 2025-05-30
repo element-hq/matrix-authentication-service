@@ -179,6 +179,7 @@ impl Config {
                     cost: self.bcrypt_rounds,
                     secret: self.password_config.pepper,
                     secret_file: None,
+                    unicode_normalization: true,
                 },
                 // Use the default algorithm MAS uses as a second hashing scheme, so that users
                 // will get their password hash upgraded to a more modern algorithm over time
@@ -188,6 +189,7 @@ impl Config {
                     cost: None,
                     secret: None,
                     secret_file: None,
+                    unicode_normalization: false,
                 },
             ];
 

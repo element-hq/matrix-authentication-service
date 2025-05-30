@@ -1613,6 +1613,10 @@
             }
           ]
         },
+        "unicode_normalization": {
+          "description": "Whether to apply Unicode normalization to the password before hashing\n\nDefaults to `false`, and generally recommended to stay false. This is although recommended when importing password hashs from Synapse, as it applies an NFKC normalization to the password before hashing it.",
+          "type": "boolean"
+        },
         "cost": {
           "description": "Cost for the bcrypt algorithm",
           "default": 12,

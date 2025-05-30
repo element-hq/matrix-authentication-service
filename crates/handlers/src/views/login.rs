@@ -244,7 +244,7 @@ pub(crate) async fn post(
         .await;
     };
 
-    let password = Zeroizing::new(form.password.as_bytes().to_vec());
+    let password = Zeroizing::new(form.password);
 
     // Verify the password, and upgrade it on-the-fly if needed
     let user_password = match password_manager
@@ -581,7 +581,7 @@ mod test {
             .unwrap();
         let (version, hash) = state
             .password_manager
-            .hash(&mut rng, Zeroizing::new(password.as_bytes().to_vec()))
+            .hash(&mut rng, Zeroizing::new(password.to_owned()))
             .await
             .unwrap();
         repo.user_password()
