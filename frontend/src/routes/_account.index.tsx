@@ -83,6 +83,9 @@ const actionSchema = v.variant("action", [
   v.object({
     action: v.literal("org.matrix.cross_signing_reset"),
   }),
+  v.object({
+    action: v.literal("org.matrix.plan_management"),
+  }),
   v.partial(
     v.looseObject({
       action: v.never(),
@@ -125,6 +128,10 @@ export const Route = createFileRoute("/_account/")({
         throw redirect({
           to: "/reset-cross-signing",
           search: { deepLink: true },
+        });
+      case "org.matrix.plan_management":
+        throw redirect({
+          to: "/plan",
         });
     }
   },
