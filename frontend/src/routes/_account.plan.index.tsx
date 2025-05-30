@@ -4,7 +4,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -39,6 +39,8 @@ function Plan(): React.ReactElement {
   const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
 
   if (!planManagementIframeUri) {
+    const { navigate } = useRouter();
+    navigate({ to: "/", replace: true }); // Redirect if no iframe URI is configured
     return <div />;
   }
 
