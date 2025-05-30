@@ -45,37 +45,37 @@ function Plan(): React.ReactElement {
   }
 
   const ref = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState("0px");
+  const [iframeHeight, setIframeHeight] = useState("0px");
 
   // Poll the size of the iframe content and set the height
   // This will only work where the iframe is served from the same origin
-  const doHeight = useCallback(() => {
+  const calculateHeight = useCallback(() => {
     const height =
       ref.current?.contentWindow?.document.body.parentElement?.scrollHeight;
     if (height) {
-      setHeight(`${height}px`);
+      setIframeHeight(`${height}px`);
     } else {
-      setHeight("500px");
+      setIframeHeight("500px");
     }
   }, []);
   useEffect(() => {
-    doHeight();
+    calculateHeight();
 
     const interval = setInterval(() => {
-      doHeight();
+      calculateHeight();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [doHeight]);
+  }, [calculateHeight]);
 
   return (
     <iframe
-      title="asd"
+      title="iframe" // no proper title as this is experimental feature
       ref={ref}
-      onLoad={doHeight}
+      onLoad={calculateHeight}
       src={planManagementIframeUri}
       scrolling="no"
-      height={height}
+      height={iframeHeight}
     />
   );
 }
