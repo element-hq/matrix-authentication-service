@@ -300,6 +300,7 @@ pub async fn config_sync(
                         fetch_userinfo: provider.fetch_userinfo,
                         userinfo_signed_response_alg: provider.userinfo_signed_response_alg,
                         response_mode,
+                        allow_existing_users: provider.allow_existing_users,
                         additional_authorization_parameters: provider
                             .additional_authorization_parameters
                             .into_iter()
