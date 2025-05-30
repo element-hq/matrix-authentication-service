@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -116,7 +116,7 @@ impl PasswordManager {
     pub async fn hash<R: CryptoRng + RngCore + Send>(
         &self,
         rng: R,
-        password: Zeroizing<Vec<u8>>,
+        password: Zeroizing<String>,
     ) -> Result<(SchemeVersion, String), anyhow::Error> {
         let inner = self.get_inner()?;
 
@@ -130,7 +130,7 @@ impl PasswordManager {
         let version = inner.current_version;
 
         let hashed = tokio::task::spawn_blocking(move || {
-            span.in_scope(move || inner.current_hasher.hash_blocking(rng, &password))
+            span.in_scope(move || inner.current_hasher.hash_blocking(rng, password))
         })
         .await??;
 
@@ -147,7 +147,7 @@ impl PasswordManager {
     pub async fn verify(
         &self,
         scheme: SchemeVersion,
-        password: Zeroizing<Vec<u8>>,
+        password: Zeroizing<String>,
         hashed_password: String,
     ) -> Result<(), anyhow::Error> {
         let inner = self.get_inner()?;
@@ -164,7 +164,7 @@ impl PasswordManager {
                         .context("Hashing scheme not found")?
                 };
 
-                hasher.verify_blocking(&hashed_password, &password)
+                hasher.verify_blocking(&hashed_password, password)
             })
         })
         .await??;
@@ -184,7 +184,7 @@ impl PasswordManager {
         &self,
         rng: R,
         scheme: SchemeVersion,
-        password: Zeroizing<Vec<u8>>,
+        password: Zeroizing<String>,
         hashed_password: String,
     ) -> Result<Option<(SchemeVersion, String)>, anyhow::Error> {
         let inner = self.get_inner()?;
@@ -209,43 +209,78 @@ impl PasswordManager {
 /// A hashing scheme, with an optional pepper
 pub struct Hasher {
     algorithm: Algorithm,
+    unicode_normalization: bool,
     pepper: Option<Vec<u8>>,
 }
 
 impl Hasher {
     /// Creates a new hashing scheme based on the bcrypt algorithm
     #[must_use]
-    pub const fn bcrypt(cost: Option<u32>, pepper: Option<Vec<u8>>) -> Self {
+    pub const fn bcrypt(
+        cost: Option<u32>,
+        pepper: Option<Vec<u8>>,
+        unicode_normalization: bool,
+    ) -> Self {
         let algorithm = Algorithm::Bcrypt { cost };
-        Self { algorithm, pepper }
+        Self {
+            algorithm,
+            unicode_normalization,
+            pepper,
+        }
     }
 
     /// Creates a new hashing scheme based on the argon2id algorithm
     #[must_use]
-    pub const fn argon2id(pepper: Option<Vec<u8>>) -> Self {
+    pub const fn argon2id(pepper: Option<Vec<u8>>, unicode_normalization: bool) -> Self {
         let algorithm = Algorithm::Argon2id;
-        Self { algorithm, pepper }
+        Self {
+            algorithm,
+            unicode_normalization,
+            pepper,
+        }
     }
 
     /// Creates a new hashing scheme based on the pbkdf2 algorithm
     #[must_use]
-    pub const fn pbkdf2(pepper: Option<Vec<u8>>) -> Self {
+    pub const fn pbkdf2(pepper: Option<Vec<u8>>, unicode_normalization: bool) -> Self {
         let algorithm = Algorithm::Pbkdf2;
-        Self { algorithm, pepper }
+        Self {
+            algorithm,
+            unicode_normalization,
+            pepper,
+        }
+    }
+
+    fn normalize_password(&self, password: Zeroizing<String>) -> Zeroizing<String> {
+        if self.unicode_normalization {
+            // This is the normalization method used by Synapse
+            let normalizer = icu_normalizer::ComposingNormalizer::new_nfkc();
+            Zeroizing::new(normalizer.normalize(&password))
+        } else {
+            password
+        }
     }
 
     fn hash_blocking<R: CryptoRng + RngCore>(
         &self,
         rng: R,
-        password: &[u8],
+        password: Zeroizing<String>,
     ) -> Result<String, anyhow::Error> {
+        let password = self.normalize_password(password);
+
         self.algorithm
-            .hash_blocking(rng, password, self.pepper.as_deref())
+            .hash_blocking(rng, password.as_bytes(), self.pepper.as_deref())
     }
 
-    fn verify_blocking(&self, hashed_password: &str, password: &[u8]) -> Result<(), anyhow::Error> {
+    fn verify_blocking(
+        &self,
+        hashed_password: &str,
+        password: Zeroizing<String>,
+    ) -> Result<(), anyhow::Error> {
+        let password = self.normalize_password(password);
+
         self.algorithm
-            .verify_blocking(hashed_password, password, self.pepper.as_deref())
+            .verify_blocking(hashed_password, password.as_bytes(), self.pepper.as_deref())
     }
 }
 
@@ -461,8 +496,8 @@ mod tests {
         // after changing the hashing schemes. The salt generation is done with a seeded
         // RNG, so that we can do stable snapshots of hashed passwords
         let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
-        let password = Zeroizing::new(b"hunter2".to_vec());
-        let wrong_password = Zeroizing::new(b"wrong-password".to_vec());
+        let password = Zeroizing::new("hunter2".to_owned());
+        let wrong_password = Zeroizing::new("wrong-password".to_owned());
 
         let manager = PasswordManager::new(
             0,
@@ -470,7 +505,7 @@ mod tests {
                 // Start with one hashing scheme: the one used by synapse, bcrypt + pepper
                 (
                     1,
-                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec())),
+                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec()), false),
                 ),
             ],
         )
@@ -519,10 +554,10 @@ mod tests {
         let manager = PasswordManager::new(
             0,
             [
-                (2, Hasher::argon2id(None)),
+                (2, Hasher::argon2id(None, false)),
                 (
                     1,
-                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec())),
+                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec()), false),
                 ),
             ],
         )
@@ -575,11 +610,14 @@ mod tests {
         let manager = PasswordManager::new(
             0,
             [
-                (3, Hasher::argon2id(Some(b"a-secret-pepper".to_vec()))),
-                (2, Hasher::argon2id(None)),
+                (
+                    3,
+                    Hasher::argon2id(Some(b"a-secret-pepper".to_vec()), false),
+                ),
+                (2, Hasher::argon2id(None, false)),
                 (
                     1,
-                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec())),
+                    Hasher::bcrypt(Some(10), Some(b"a-secret-pepper".to_vec()), false),
                 ),
             ],
         )

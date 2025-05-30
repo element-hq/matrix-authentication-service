@@ -20,6 +20,7 @@ fn default_schemes() -> Vec<HashingScheme> {
         cost: None,
         secret: None,
         secret_file: None,
+        unicode_normalization: false,
     }]
 }
 
@@ -124,7 +125,7 @@ impl PasswordsConfig {
     /// not be read.
     pub async fn load(
         &self,
-    ) -> Result<Vec<(u16, Algorithm, Option<u32>, Option<Vec<u8>>)>, anyhow::Error> {
+    ) -> Result<Vec<(u16, Algorithm, Option<u32>, Option<Vec<u8>>, bool)>, anyhow::Error> {
         let mut schemes: Vec<&HashingScheme> = self.schemes.iter().collect();
         schemes.sort_unstable_by_key(|a| Reverse(a.version));
         schemes.dedup_by_key(|a| a.version);
@@ -151,11 +152,22 @@ impl PasswordsConfig {
                 (None, None) => None,
             };
 
-            mapped_result.push((scheme.version, scheme.algorithm, scheme.cost, secret));
+            mapped_result.push((
+                scheme.version,
+                scheme.algorithm,
+                scheme.cost,
+                secret,
+                scheme.unicode_normalization,
+            ));
         }
 
         Ok(mapped_result)
     }
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+const fn is_default_false(value: &bool) -> bool {
+    !*value
 }
 
 /// Parameters for a password hashing scheme
@@ -167,6 +179,14 @@ pub struct HashingScheme {
 
     /// The hashing algorithm to use
     pub algorithm: Algorithm,
+
+    /// Whether to apply Unicode normalization to the password before hashing
+    ///
+    /// Defaults to `false`, and generally recommended to stay false. This is
+    /// although recommended when importing password hashs from Synapse, as it
+    /// applies an NFKC normalization to the password before hashing it.
+    #[serde(default, skip_serializing_if = "is_default_false")]
+    pub unicode_normalization: bool,
 
     /// Cost for the bcrypt algorithm
     #[serde(skip_serializing_if = "Option::is_none")]

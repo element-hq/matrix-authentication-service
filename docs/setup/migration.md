@@ -47,7 +47,7 @@ When using this tool, be careful to examine the log output for any warnings abou
 #### Local passwords
 
 Synapse uses bcrypt as its password hashing scheme, while MAS defaults to using the newer argon2id.
-You will have to configure the version 1 scheme as bcrypt for migrated passwords to work.
+You will have to configure the version 1 scheme as bcrypt with `unicode_normalization: true` for migrated passwords to work.
 It is also recommended that you keep argon2id as version 2 so that once users log in, their hashes will be updated to the newer, recommended scheme.
 
 Example passwords configuration:
@@ -57,6 +57,7 @@ passwords:
   schemes:
   - version: 1
     algorithm: bcrypt
+    unicode_normalization: true
     # Optional, must match the `password_config.pepper` in the Synapse config
     #secret: secretPepperValue
   - version: 2

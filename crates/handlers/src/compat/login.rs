@@ -574,7 +574,7 @@ async fn user_password_login(
         .ok_or(RouteError::NoPassword)?;
 
     // Verify the password
-    let password = Zeroizing::new(password.into_bytes());
+    let password = Zeroizing::new(password);
 
     let new_password_hash = password_manager
         .verify_and_upgrade(
@@ -787,7 +787,7 @@ mod tests {
             .unwrap();
         let (version, hash) = state
             .password_manager
-            .hash(&mut rng, Zeroizing::new(password.as_bytes().to_vec()))
+            .hash(&mut rng, Zeroizing::new(password.to_owned()))
             .await
             .unwrap();
 

@@ -844,7 +844,7 @@ mod tests {
 
         let (version, hashed_password) = state
             .password_manager
-            .hash(&mut state.rng(), Zeroizing::new(b"password".to_vec()))
+            .hash(&mut state.rng(), Zeroizing::new("password".to_owned()))
             .await
             .unwrap();
 

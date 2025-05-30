@@ -199,9 +199,9 @@ pub async fn synapse_config_check_against_mas_config(
     // Look for the MAS password hashing scheme that will be used for imported
     // Synapse passwords, then check the configuration matches so that Synapse
     // passwords will be compatible with MAS.
-    if let Some((_, algorithm, _, secret)) = mas_password_schemes
+    if let Some((_, algorithm, _, secret, _)) = mas_password_schemes
         .iter()
-        .find(|(version, _, _, _)| *version == MIGRATED_PASSWORD_VERSION)
+        .find(|(version, _, _, _, _)| *version == MIGRATED_PASSWORD_VERSION)
     {
         if algorithm != &PasswordAlgorithm::Bcrypt {
             errors.push(CheckError::PasswordSchemeNotBcrypt);

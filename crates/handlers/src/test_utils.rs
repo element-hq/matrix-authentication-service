@@ -194,7 +194,7 @@ impl TestState {
         let password_manager = if site_config.password_login_enabled {
             PasswordManager::new(
                 site_config.minimum_password_complexity,
-                [(1, Hasher::argon2id(None))],
+                [(1, Hasher::argon2id(None, false))],
             )?
         } else {
             PasswordManager::disabled()

@@ -76,7 +76,7 @@ async fn verify_password_if_needed(
         return Ok(false);
     };
 
-    let password = Zeroizing::new(password.into_bytes());
+    let password = Zeroizing::new(password);
 
     let res = password_manager
         .verify(
