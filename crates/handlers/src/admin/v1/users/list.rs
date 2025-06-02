@@ -32,6 +32,7 @@ use crate::{
 enum UserStatus {
     Active,
     Locked,
+    Deactivated,
 }
 
 impl std::fmt::Display for UserStatus {
@@ -39,6 +40,7 @@ impl std::fmt::Display for UserStatus {
         match self {
             Self::Active => write!(f, "active"),
             Self::Locked => write!(f, "locked"),
+            Self::Deactivated => write!(f, "deactivated"),
         }
     }
 }
@@ -58,7 +60,9 @@ pub struct FilterParams {
     ///
     /// * `active`: Only retrieve active users
     ///
-    /// * `locked`: Only retrieve locked users
+    /// * `locked`: Only retrieve locked users (includes deactivated users)
+    ///
+    /// * `deactivated`: Only retrieve deactivated users
     #[serde(rename = "filter[status]")]
     status: Option<UserStatus>,
 }
@@ -142,6 +146,7 @@ pub async fn handler(
     let filter = match params.status {
         Some(UserStatus::Active) => filter.active_only(),
         Some(UserStatus::Locked) => filter.locked_only(),
+        Some(UserStatus::Deactivated) => filter.deactivated_only(),
         None => filter,
     };
 

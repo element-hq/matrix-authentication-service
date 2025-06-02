@@ -47,6 +47,9 @@ pub struct User {
     /// When the user was locked. If null, the user is not locked.
     locked_at: Option<DateTime<Utc>>,
 
+    /// When the user was deactivated. If null, the user is not deactivated.
+    deactivated_at: Option<DateTime<Utc>>,
+
     /// Whether the user can request admin privileges.
     admin: bool,
 }
@@ -60,6 +63,7 @@ impl User {
                 username: "alice".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 admin: false,
             },
             Self {
@@ -67,6 +71,7 @@ impl User {
                 username: "bob".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: None,
+                deactivated_at: None,
                 admin: true,
             },
             Self {
@@ -74,6 +79,7 @@ impl User {
                 username: "charlie".to_owned(),
                 created_at: DateTime::default(),
                 locked_at: Some(DateTime::default()),
+                deactivated_at: None,
                 admin: false,
             },
         ]
@@ -87,6 +93,7 @@ impl From<mas_data_model::User> for User {
             username: user.username,
             created_at: user.created_at,
             locked_at: user.locked_at,
+            deactivated_at: user.deactivated_at,
             admin: user.can_request_admin,
         }
     }
