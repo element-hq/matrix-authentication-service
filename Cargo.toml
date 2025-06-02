@@ -153,7 +153,7 @@ features = ["std", "dashmap", "quanta"]
 
 # HTTP headers
 [workspace.dependencies.headers]
-version = "0.4.0"
+version = "0.4.1"
 
 # Hex encoding and decoding
 [workspace.dependencies.hex]
