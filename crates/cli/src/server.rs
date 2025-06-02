@@ -5,22 +5,18 @@
 // Please see LICENSE in the repository root for full details.
 
 use std::{
-    future::ready,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, ToSocketAddrs},
     os::unix::net::UnixListener,
+    time::Duration,
 };
 
 use anyhow::Context;
 use axum::{
     Extension, Router,
-    error_handling::HandleErrorLayer,
     extract::{FromRef, MatchedPath},
 };
-use headers::{HeaderMapExt as _, UserAgent};
-use hyper::{
-    Method, Request, Response, StatusCode, Version,
-    header::{CACHE_CONTROL, HeaderValue, USER_AGENT},
-};
+use headers::{CacheControl, HeaderMapExt as _, UserAgent};
+use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
 use mas_context::LogContext;
@@ -40,7 +36,7 @@ use opentelemetry_semantic_conventions::trace::{
 use rustls::ServerConfig;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use tower::Layer;
-use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
+use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -209,6 +205,7 @@ async fn log_response_middleware(
     response
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn build_router(
     state: AppState,
     resources: &[HttpResource],
@@ -246,17 +243,28 @@ pub fn build_router(
                     .precompressed_gzip()
                     .precompressed_deflate();
 
-                let error_layer =
-                    HandleErrorLayer::new(|_e| ready(StatusCode::INTERNAL_SERVER_ERROR));
-
-                let cache_layer = SetResponseHeaderLayer::overriding(
-                    CACHE_CONTROL,
-                    HeaderValue::from_static("public, max-age=31536000, immutable"),
+                let add_cache_headers = axum::middleware::map_response(
+                    async |mut res: Response<ServeFileSystemResponseBody>| {
+                        let cache_control = if res.status() == StatusCode::NOT_FOUND {
+                            // Cache 404s for 5 minutes
+                            CacheControl::new()
+                                .with_public()
+                                .with_max_age(Duration::from_secs(5 * 60))
+                        } else {
+                            // Cache assets for 1 year
+                            CacheControl::new()
+                                .with_public()
+                                .with_max_age(Duration::from_secs(365 * 24 * 60 * 60))
+                                .with_immutable()
+                        };
+                        res.headers_mut().typed_insert(cache_control);
+                        res
+                    },
                 );
 
                 router.nest_service(
                     mas_router::StaticAsset::route(),
-                    (error_layer, cache_layer).layer(static_service),
+                    add_cache_headers.layer(static_service),
                 )
             }
             mas_config::HttpResource::OAuth => router.merge(mas_handlers::api_router::<AppState>()),
