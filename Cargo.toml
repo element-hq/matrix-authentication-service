@@ -350,7 +350,7 @@ features = ["preserve_order"]
 
 # SQL database support
 [workspace.dependencies.sqlx]
-version = "0.8.5"
+version = "0.8.6"
 features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
