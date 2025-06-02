@@ -27,6 +27,7 @@ fn example_secret() -> &'static str {
     "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
 }
 
+/// A single key with its key ID and optional password.
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct KeyConfig {
     kid: String,

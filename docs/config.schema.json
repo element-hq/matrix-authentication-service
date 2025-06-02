@@ -1538,6 +1538,7 @@
       }
     },
     "KeyConfig": {
+      "description": "A single key with its key ID and optional password.",
       "type": "object",
       "required": [
         "kid"
