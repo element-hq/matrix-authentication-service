@@ -27,7 +27,12 @@ import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList, {
   query as userEmailListQuery,
 } from "../components/UserProfile/UserEmailList";
-import { graphql } from "../gql";
+import {
+  CONFIG_FRAGMENT as PLAN_MANAGEMENT_CONFIG_FRAGMENT,
+  query as planManagementQuery,
+} from "./_account.plan.index";
+
+import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
@@ -96,7 +101,7 @@ const actionSchema = v.variant("action", [
 export const Route = createFileRoute("/_account/")({
   validateSearch: actionSchema,
 
-  beforeLoad({ search }) {
+  async beforeLoad({ search, context }) {
     switch (search.action) {
       case "profile":
       case "org.matrix.profile":
@@ -129,10 +134,17 @@ export const Route = createFileRoute("/_account/")({
           to: "/reset-cross-signing",
           search: { deepLink: true },
         });
-      case "org.matrix.plan_management":
+      case "org.matrix.plan_management": {
+        const { siteConfig } =
+          await context.queryClient.ensureQueryData(planManagementQuery);
+        const { planManagementIframeUri } = useFragment(
+          PLAN_MANAGEMENT_CONFIG_FRAGMENT,
+          siteConfig,
+        );
         throw redirect({
-          to: "/plan",
+          to: planManagementIframeUri ? "/plan" : "/",
         });
+      }
     }
   },
 

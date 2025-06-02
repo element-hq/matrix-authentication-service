@@ -4,7 +4,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -23,7 +23,7 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-const query = queryOptions({
+export const query = queryOptions({
   queryKey: ["siteConfig"],
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
