@@ -26,7 +26,7 @@ pub use self::{
     password::UserPasswordRepository,
     recovery::UserRecoveryRepository,
     registration::UserRegistrationRepository,
-    registration_token::UserRegistrationTokenRepository,
+    registration_token::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
     session::{BrowserSessionFilter, BrowserSessionRepository},
     terms::UserTermsRepository,
 };
