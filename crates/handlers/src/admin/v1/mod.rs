@@ -128,6 +128,13 @@ where
             ),
         )
         .api_route(
+            "/user-registration-tokens/{id}",
+            get_with(
+                self::user_registration_tokens::get,
+                self::user_registration_tokens::get_doc,
+            ),
+        )
+        .api_route(
             "/upstream-oauth-links",
             get_with(
                 self::upstream_oauth_links::list,

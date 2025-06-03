@@ -2292,6 +2292,77 @@
         }
       }
     },
+    "/api/admin/v1/user-registration-tokens/{id}": {
+      "get": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Get a user registration token",
+        "operationId": "getUserRegistrationToken",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration token was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserRegistrationToken"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-registration_token",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "token": "abc123def456",
+                      "usage_limit": 10,
+                      "times_used": 5,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "last_used_at": "1970-01-01T00:00:00Z",
+                      "expires_at": "1970-01-31T00:00:00Z",
+                      "revoked_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/upstream-oauth-links": {
       "get": {
         "tags": [
@@ -3875,6 +3946,22 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "SingleResponse_for_UserRegistrationToken": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UserRegistrationToken"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
           }
         }
       },
