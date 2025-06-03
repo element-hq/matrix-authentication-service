@@ -2413,6 +2413,95 @@
         }
       }
     },
+    "/api/admin/v1/user-registration-tokens/{id}/revoke": {
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Revoke a user registration token",
+        "description": "Calling this endpoint will revoke the user registration token, preventing it from being used for new registrations.",
+        "operationId": "revokeUserRegistrationToken",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration token was revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserRegistrationToken"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-registration_token",
+                    "id": "02081040G2081040G2081040G2",
+                    "attributes": {
+                      "token": "xyz789abc012",
+                      "usage_limit": null,
+                      "times_used": 0,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "last_used_at": null,
+                      "expires_at": null,
+                      "revoked_at": "1970-01-01T00:00:00Z"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2/revoke"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token is already revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 is already revoked"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/upstream-oauth-links": {
       "get": {
         "tags": [

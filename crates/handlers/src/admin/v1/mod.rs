@@ -139,6 +139,13 @@ where
             ),
         )
         .api_route(
+            "/user-registration-tokens/{id}/revoke",
+            post_with(
+                self::user_registration_tokens::revoke,
+                self::user_registration_tokens::revoke_doc,
+            ),
+        )
+        .api_route(
             "/upstream-oauth-links",
             get_with(
                 self::upstream_oauth_links::list,
