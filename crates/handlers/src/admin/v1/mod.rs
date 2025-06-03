@@ -125,6 +125,10 @@ where
             get_with(
                 self::user_registration_tokens::list,
                 self::user_registration_tokens::list_doc,
+            )
+            .post_with(
+                self::user_registration_tokens::add,
+                self::user_registration_tokens::add_doc,
             ),
         )
         .api_route(

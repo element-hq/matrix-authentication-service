@@ -2290,6 +2290,56 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Create a new user registration token",
+        "operationId": "addUserRegistrationToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserRegistrationTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "A new user registration token was created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserRegistrationToken"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-registration_token",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "token": "abc123def456",
+                      "usage_limit": 10,
+                      "times_used": 5,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "last_used_at": "1970-01-01T00:00:00Z",
+                      "expires_at": "1970-01-31T00:00:00Z",
+                      "revoked_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/admin/v1/user-registration-tokens/{id}": {
@@ -3943,6 +3993,30 @@
           },
           "revoked_at": {
             "description": "When the token was revoked. If null, the token is not revoked.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "AddUserRegistrationTokenRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/user-registration-tokens`",
+        "type": "object",
+        "properties": {
+          "token": {
+            "description": "The token string. If not provided, a random token will be generated.",
+            "type": "string",
+            "nullable": true
+          },
+          "usage_limit": {
+            "description": "Maximum number of times this token can be used. If not provided, the token can be used an unlimited number of times.",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0,
+            "nullable": true
+          },
+          "expires_at": {
+            "description": "When the token expires. If not provided, the token never expires.",
             "type": "string",
             "format": "date-time",
             "nullable": true
