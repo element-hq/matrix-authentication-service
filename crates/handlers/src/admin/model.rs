@@ -602,3 +602,83 @@ impl PolicyData {
         }]
     }
 }
+
+/// A registration token
+#[derive(Serialize, JsonSchema)]
+pub struct UserRegistrationToken {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The token string
+    token: String,
+
+    /// Maximum number of times this token can be used
+    usage_limit: Option<u32>,
+
+    /// Number of times this token has been used
+    times_used: u32,
+
+    /// When the token was created
+    created_at: DateTime<Utc>,
+
+    /// When the token was last used. If null, the token has never been used.
+    last_used_at: Option<DateTime<Utc>>,
+
+    /// When the token expires. If null, the token never expires.
+    expires_at: Option<DateTime<Utc>>,
+
+    /// When the token was revoked. If null, the token is not revoked.
+    revoked_at: Option<DateTime<Utc>>,
+}
+
+impl From<mas_data_model::UserRegistrationToken> for UserRegistrationToken {
+    fn from(token: mas_data_model::UserRegistrationToken) -> Self {
+        Self {
+            id: token.id,
+            token: token.token,
+            usage_limit: token.usage_limit,
+            times_used: token.times_used,
+            created_at: token.created_at,
+            last_used_at: token.last_used_at,
+            expires_at: token.expires_at,
+            revoked_at: token.revoked_at,
+        }
+    }
+}
+
+impl Resource for UserRegistrationToken {
+    const KIND: &'static str = "user-registration_token";
+    const PATH: &'static str = "/api/admin/v1/user-registration-tokens";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl UserRegistrationToken {
+    /// Samples of registration tokens
+    pub fn samples() -> [Self; 2] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                token: "abc123def456".to_owned(),
+                usage_limit: Some(10),
+                times_used: 5,
+                created_at: DateTime::default(),
+                last_used_at: Some(DateTime::default()),
+                expires_at: Some(DateTime::default() + chrono::Duration::days(30)),
+                revoked_at: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                token: "xyz789abc012".to_owned(),
+                usage_limit: None,
+                times_used: 0,
+                created_at: DateTime::default(),
+                last_used_at: None,
+                expires_at: None,
+                revoked_at: Some(DateTime::default()),
+            },
+        ]
+    }
+}
