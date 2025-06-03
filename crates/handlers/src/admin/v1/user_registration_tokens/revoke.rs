@@ -95,7 +95,7 @@ pub async fn handler(
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
-        UserRegistrationToken::from(token),
+        UserRegistrationToken::new(token, clock.now()),
         format!("/api/admin/v1/user-registration-tokens/{id}/revoke"),
     )))
 }

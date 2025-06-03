@@ -135,7 +135,8 @@ pub async fn handler(
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserRegistrationToken>>, RouteError> {
     let base = format!("{path}{params}", path = UserRegistrationToken::PATH);
-    let mut filter = UserRegistrationTokenFilter::new(clock.now());
+    let now = clock.now();
+    let mut filter = UserRegistrationTokenFilter::new(now);
 
     if let Some(used) = params.used {
         filter = filter.with_been_used(used);
@@ -160,7 +161,7 @@ pub async fn handler(
     let count = repo.user_registration_token().count(filter).await?;
 
     Ok(Json(PaginatedResponse::new(
-        page.map(UserRegistrationToken::from),
+        page.map(|token| UserRegistrationToken::new(token, now)),
         pagination,
         count,
         &base,
@@ -288,6 +289,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -304,6 +306,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -320,6 +323,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -336,6 +340,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -352,6 +357,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -399,6 +405,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -415,6 +422,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -454,6 +462,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -470,6 +479,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -486,6 +496,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -533,6 +544,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -549,6 +561,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -588,6 +601,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -604,6 +618,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -620,6 +635,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -667,6 +683,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -706,6 +723,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -722,6 +740,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -738,6 +757,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -754,6 +774,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -801,6 +822,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -817,6 +839,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -856,6 +879,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -872,6 +896,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -888,6 +913,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -937,6 +963,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -984,6 +1011,7 @@ mod tests {
               "id": "01FSHN9AG064K8BYZXSY5G511Z",
               "attributes": {
                 "token": "token_expired",
+                "valid": false,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1000,6 +1028,7 @@ mod tests {
               "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
               "attributes": {
                 "token": "token_used",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1040,6 +1069,7 @@ mod tests {
               "id": "01FSHN9AG09AVTNSQFMSR34AJC",
               "attributes": {
                 "token": "token_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1056,6 +1086,7 @@ mod tests {
               "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
               "attributes": {
                 "token": "token_unused",
+                "valid": true,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1096,6 +1127,7 @@ mod tests {
               "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
               "attributes": {
                 "token": "token_used_revoked",
+                "valid": false,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",

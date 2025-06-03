@@ -612,6 +612,9 @@ pub struct UserRegistrationToken {
     /// The token string
     token: String,
 
+    /// Whether the token is valid
+    valid: bool,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -631,10 +634,11 @@ pub struct UserRegistrationToken {
     revoked_at: Option<DateTime<Utc>>,
 }
 
-impl From<mas_data_model::UserRegistrationToken> for UserRegistrationToken {
-    fn from(token: mas_data_model::UserRegistrationToken) -> Self {
+impl UserRegistrationToken {
+    pub fn new(token: mas_data_model::UserRegistrationToken, now: DateTime<Utc>) -> Self {
         Self {
             id: token.id,
+            valid: token.is_valid(now),
             token: token.token,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
@@ -662,6 +666,7 @@ impl UserRegistrationToken {
             Self {
                 id: Ulid::from_bytes([0x01; 16]),
                 token: "abc123def456".to_owned(),
+                valid: true,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
@@ -672,6 +677,7 @@ impl UserRegistrationToken {
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
                 token: "xyz789abc012".to_owned(),
+                valid: false,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),

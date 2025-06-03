@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::BoxRng;
-use rand::{Rng, distributions::Alphanumeric};
+use rand::distributions::{Alphanumeric, DistString};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -79,13 +79,9 @@ pub async fn handler(
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<UserRegistrationToken>>), RouteError> {
     // Generate a random token if none was provided
-    let token = params.token.unwrap_or_else(|| {
-        (&mut rng)
-            .sample_iter(&Alphanumeric)
-            .take(12)
-            .map(char::from)
-            .collect()
-    });
+    let token = params
+        .token
+        .unwrap_or_else(|| Alphanumeric.sample_string(&mut rng, 12));
 
     let registration_token = repo
         .user_registration_token()
@@ -102,7 +98,10 @@ pub async fn handler(
 
     Ok((
         StatusCode::CREATED,
-        Json(SingleResponse::new_canonical(registration_token.into())),
+        Json(SingleResponse::new_canonical(UserRegistrationToken::new(
+            registration_token,
+            clock.now(),
+        ))),
     ))
 }
 
@@ -137,6 +136,7 @@ mod tests {
             "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
             "attributes": {
               "token": "test_token_123",
+              "valid": true,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -178,6 +178,7 @@ mod tests {
             "id": "01FSHN9AG0QMGC989M0XSFVF2X",
             "attributes": {
               "token": "42oTpLoieH5I",
+              "valid": true,
               "usage_limit": 1,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",

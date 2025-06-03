@@ -63,7 +63,9 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 
 #[tracing::instrument(name = "handler.admin.v1.user_registration_tokens.get", skip_all)]
 pub async fn handler(
-    CallContext { mut repo, .. }: CallContext,
+    CallContext {
+        mut repo, clock, ..
+    }: CallContext,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
     let token = repo
@@ -73,7 +75,7 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(*id))?;
 
     Ok(Json(SingleResponse::new_canonical(
-        UserRegistrationToken::from(token),
+        UserRegistrationToken::new(token, clock.now()),
     )))
 }
 
@@ -116,13 +118,14 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "user-registration_token",
             "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
             "attributes": {
               "token": "test_token_123",
+              "valid": true,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -138,7 +141,7 @@ mod tests {
             "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

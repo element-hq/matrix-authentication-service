@@ -2251,6 +2251,7 @@
                       "id": "01040G2081040G2081040G2081",
                       "attributes": {
                         "token": "abc123def456",
+                        "valid": true,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -2267,6 +2268,7 @@
                       "id": "02081040G2081040G2081040G2",
                       "attributes": {
                         "token": "xyz789abc012",
+                        "valid": false,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -2321,6 +2323,7 @@
                     "id": "01040G2081040G2081040G2081",
                     "attributes": {
                       "token": "abc123def456",
+                      "valid": true,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -2375,6 +2378,7 @@
                     "id": "01040G2081040G2081040G2081",
                     "attributes": {
                       "token": "abc123def456",
+                      "valid": true,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -2447,6 +2451,7 @@
                     "id": "02081040G2081040G2081040G2",
                     "attributes": {
                       "token": "xyz789abc012",
+                      "valid": false,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4043,12 +4048,17 @@
         "required": [
           "created_at",
           "times_used",
-          "token"
+          "token",
+          "valid"
         ],
         "properties": {
           "token": {
             "description": "The token string",
             "type": "string"
+          },
+          "valid": {
+            "description": "Whether the token is valid",
+            "type": "boolean"
           },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
