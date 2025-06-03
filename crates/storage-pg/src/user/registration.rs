@@ -7,7 +7,9 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{UserEmailAuthentication, UserRegistration, UserRegistrationPassword};
+use mas_data_model::{
+    UserEmailAuthentication, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+};
 use mas_storage::{Clock, user::UserRegistrationRepository};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -40,6 +42,7 @@ struct UserRegistrationLookup {
     display_name: Option<String>,
     terms_url: Option<String>,
     email_authentication_id: Option<Uuid>,
+    user_registration_token_id: Option<Uuid>,
     hashed_password: Option<String>,
     hashed_password_version: Option<i32>,
     created_at: DateTime<Utc>,
@@ -94,6 +97,7 @@ impl TryFrom<UserRegistrationLookup> for UserRegistration {
             display_name: value.display_name,
             terms_url,
             email_authentication_id: value.email_authentication_id.map(Ulid::from),
+            user_registration_token_id: value.user_registration_token_id.map(Ulid::from),
             password,
             created_at: value.created_at,
             completed_at: value.completed_at,
@@ -126,6 +130,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
                      , display_name
                      , terms_url
                      , email_authentication_id
+                     , user_registration_token_id
                      , hashed_password
                      , hashed_password_version
                      , created_at
@@ -200,6 +205,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             display_name: None,
             terms_url: None,
             email_authentication_id: None,
+            user_registration_token_id: None,
             password: None,
         })
     }
@@ -347,6 +353,41 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             hashed_password,
             version,
         });
+
+        Ok(user_registration)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_registration.set_registration_token",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_registration.id,
+            %user_registration_token.id,
+        ),
+        err,
+    )]
+    async fn set_registration_token(
+        &mut self,
+        mut user_registration: UserRegistration,
+        user_registration_token: &UserRegistrationToken,
+    ) -> Result<UserRegistration, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registrations
+                SET user_registration_token_id = $2
+                WHERE user_registration_id = $1 AND completed_at IS NULL
+            "#,
+            Uuid::from(user_registration.id),
+            Uuid::from(user_registration_token.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user_registration.user_registration_token_id = Some(user_registration_token.id);
 
         Ok(user_registration)
     }

@@ -202,12 +202,59 @@ pub struct UserRegistrationPassword {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserRegistrationToken {
+    pub id: Ulid,
+    pub token: String,
+    pub usage_limit: Option<u32>,
+    pub times_used: u32,
+    pub created_at: DateTime<Utc>,
+    pub last_used_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime<Utc>>,
+}
+
+impl UserRegistrationToken {
+    /// Returns `true` if the token is still valid and can be used
+    #[must_use]
+    pub fn is_valid(&self, now: DateTime<Utc>) -> bool {
+        // Check if revoked
+        if self.revoked_at.is_some() {
+            return false;
+        }
+
+        // Check if expired
+        if let Some(expires_at) = self.expires_at {
+            if now >= expires_at {
+                return false;
+            }
+        }
+
+        // Check if usage limit exceeded
+        if let Some(usage_limit) = self.usage_limit {
+            if self.times_used >= usage_limit {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Returns `true` if the token can still be used (not expired and under
+    /// usage limit)
+    #[must_use]
+    pub fn can_be_used(&self, now: DateTime<Utc>) -> bool {
+        self.is_valid(now)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UserRegistration {
     pub id: Ulid,
     pub username: String,
     pub display_name: Option<String>,
     pub terms_url: Option<Url>,
     pub email_authentication_id: Option<Ulid>,
+    pub user_registration_token_id: Option<Ulid>,
     pub password: Option<UserRegistrationPassword>,
     pub post_auth_action: Option<serde_json::Value>,
     pub ip_address: Option<IpAddr>,

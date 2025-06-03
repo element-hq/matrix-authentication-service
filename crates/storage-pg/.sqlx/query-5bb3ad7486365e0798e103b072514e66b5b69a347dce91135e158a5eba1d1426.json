@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_registration_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , post_auth_action\n                     , username\n                     , display_name\n                     , terms_url\n                     , email_authentication_id\n                     , hashed_password\n                     , hashed_password_version\n                     , created_at\n                     , completed_at\n                FROM user_registrations\n                WHERE user_registration_id = $1\n            ",
+  "query": "\n                SELECT user_registration_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , post_auth_action\n                     , username\n                     , display_name\n                     , terms_url\n                     , email_authentication_id\n                     , user_registration_token_id\n                     , hashed_password\n                     , hashed_password_version\n                     , created_at\n                     , completed_at\n                FROM user_registrations\n                WHERE user_registration_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -45,21 +45,26 @@
       },
       {
         "ordinal": 8,
+        "name": "user_registration_token_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
         "name": "hashed_password",
         "type_info": "Text"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "hashed_password_version",
         "type_info": "Int4"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "completed_at",
         "type_info": "Timestamptz"
       }
@@ -80,9 +85,10 @@
       true,
       true,
       true,
+      true,
       false,
       true
     ]
   },
-  "hash": "6772b17585f26365e70ec3e342100c6890d2d63f54f1306e1bb95ca6ca123777"
+  "hash": "5bb3ad7486365e0798e103b072514e66b5b69a347dce91135e158a5eba1d1426"
 }

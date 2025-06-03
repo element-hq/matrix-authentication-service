@@ -26,7 +26,11 @@ use mas_storage::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
     },
-    user::{BrowserSessionRepository, UserEmailRepository, UserPasswordRepository, UserRepository},
+    user::{
+        BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
+        UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
+        UserRepository, UserTermsRepository,
+    },
 };
 use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 use tracing::Instrument;
@@ -55,8 +59,8 @@ use crate::{
     },
     user::{
         PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasswordRepository,
-        PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRepository,
-        PgUserTermsRepository,
+        PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRegistrationTokenRepository,
+        PgUserRepository, PgUserTermsRepository,
     },
 };
 
@@ -232,20 +236,24 @@ where
 
     fn user_recovery<'c>(
         &'c mut self,
-    ) -> Box<dyn mas_storage::user::UserRecoveryRepository<Error = Self::Error> + 'c> {
+    ) -> Box<dyn UserRecoveryRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserRecoveryRepository::new(self.conn.as_mut()))
     }
 
-    fn user_terms<'c>(
-        &'c mut self,
-    ) -> Box<dyn mas_storage::user::UserTermsRepository<Error = Self::Error> + 'c> {
+    fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserTermsRepository::new(self.conn.as_mut()))
     }
 
     fn user_registration<'c>(
         &'c mut self,
-    ) -> Box<dyn mas_storage::user::UserRegistrationRepository<Error = Self::Error> + 'c> {
+    ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserRegistrationRepository::new(self.conn.as_mut()))
+    }
+
+    fn user_registration_token<'c>(
+        &'c mut self,
+    ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
+        Box::new(PgUserRegistrationTokenRepository::new(self.conn.as_mut()))
     }
 
     fn browser_session<'c>(

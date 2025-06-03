@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registration_tokens\n                SET times_used = times_used + 1,\n                    last_used_at = $2\n                WHERE user_registration_token_id = $1 AND revoked_at IS NULL\n                RETURNING times_used\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "times_used",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5133f9c5ba06201433be4ec784034d222975d084d0a9ebe7f1b6b865ab2e09ef"
+}
