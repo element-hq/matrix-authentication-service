@@ -7,6 +7,7 @@
 use std::{collections::BTreeMap, process::ExitCode};
 
 use anyhow::Context;
+use chrono::Duration;
 use clap::{ArgAction, CommandFactory, Parser};
 use console::{Alignment, Style, Term, pad_str, style};
 use dialoguer::{Confirm, FuzzySelect, Input, Password, theme::ColorfulTheme};
@@ -28,7 +29,10 @@ use mas_storage::{
     user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
-use rand::{RngCore, SeedableRng};
+use rand::{
+    RngCore, SeedableRng,
+    distributions::{Alphanumeric, DistString as _},
+};
 use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
 use zeroize::Zeroizing;
@@ -93,6 +97,29 @@ enum Subcommand {
         /// Whether that token should be admin
         #[arg(long = "yes-i-want-to-grant-synapse-admin-privileges")]
         admin: bool,
+    },
+
+    /// Create a new user registration token
+    IssueUserRegistrationToken {
+        /// Specific token string to use. If not provided, a random token will
+        /// be generated.
+        #[arg(long)]
+        token: Option<String>,
+
+        /// Maximum number of times this token can be used.
+        /// If not provided, the token can be used only once, unless the
+        /// `--unlimited` flag is set.
+        #[arg(long, group = "token-usage-limit")]
+        usage_limit: Option<u32>,
+
+        /// Allow the token to be used an unlimited number of times.
+        #[arg(long, action = ArgAction::SetTrue, group = "token-usage-limit")]
+        unlimited: bool,
+
+        /// Time in seconds after which the token expires.
+        /// If not provided, the token never expires.
+        #[arg(long)]
+        expires_in: Option<u32>,
     },
 
     /// Trigger a provisioning job for all users
@@ -326,6 +353,46 @@ impl Options {
                     %user.username,
                     "Compatibility token issued: {}", compat_access_token.token
                 );
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::IssueUserRegistrationToken {
+                token,
+                usage_limit,
+                unlimited,
+                expires_in,
+            } => {
+                let _span = info_span!("cli.manage.add_user_registration_token").entered();
+
+                let usage_limit = match (usage_limit, unlimited) {
+                    (Some(usage_limit), false) => Some(usage_limit),
+                    (None, false) => Some(1),
+                    (None, true) => None,
+                    (Some(_), true) => unreachable!(), // This should be handled by the clap group
+                };
+
+                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                // Calculate expiration time if provided
+                let expires_at =
+                    expires_in.map(|seconds| clock.now() + Duration::seconds(seconds.into()));
+
+                // Generate a token if not provided
+                let token_str = token.unwrap_or_else(|| Alphanumeric.sample_string(&mut rng, 12));
+
+                // Create the token
+                let registration_token = repo
+                    .user_registration_token()
+                    .add(&mut rng, &clock, token_str, usage_limit, expires_at)
+                    .await?;
+
+                repo.into_inner().commit().await?;
+
+                info!(%registration_token.id, "Created user registration token: {}", registration_token.token);
 
                 Ok(ExitCode::SUCCESS)
             }

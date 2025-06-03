@@ -46,6 +46,19 @@ Options:
 $ mas-cli manage issue-compatibility-token <username> --device-id <device_id> --yes-i-want-to-grant-synapse-admin-privileges
 ```
 
+## `manage issue-user-registration-token`
+
+Create a new user registration token.
+
+Options:
+- `--token <token>`: Specific token string to use. If not provided, a random token will be generated.
+- `--usage-limit <usage_limit>`: Limit the number of times the token can be used. If not provided, the token can be used an unlimited number of times.
+- `--expires-in <expires_in>`: Time in seconds after which the token expires. If not provided, the token never expires.
+
+```
+$ mas-cli manage issue-user-registration-token --token <token> --usage-limit <usage_limit> --expires-in <expires_in>
+```
+
 ## `manage provision-all-users`
 
 Trigger a provisioning job for all users.
