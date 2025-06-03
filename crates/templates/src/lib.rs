@@ -42,7 +42,8 @@ pub use self::{
         RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
         RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
         RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
-        RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
+        RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
+        RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
         UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage, WithOptionalSession, WithSession,
@@ -340,6 +341,9 @@ register_templates! {
     /// Render the display name page
     pub fn render_register_steps_display_name(WithLanguage<WithCsrf<RegisterStepsDisplayNameContext>>) { "pages/register/steps/display_name.html" }
 
+    /// Render the registration token page
+    pub fn render_register_steps_registration_token(WithLanguage<WithCsrf<RegisterStepsRegistrationTokenContext>>) { "pages/register/steps/registration_token.html" }
+
     /// Render the client consent page
     pub fn render_consent(WithLanguage<WithCsrf<WithSession<ConsentContext>>>) { "pages/consent.html" }
 
@@ -444,6 +448,7 @@ impl Templates {
         check::render_register_steps_verify_email(self, now, rng)?;
         check::render_register_steps_email_in_use(self, now, rng)?;
         check::render_register_steps_display_name(self, now, rng)?;
+        check::render_register_steps_registration_token(self, now, rng)?;
         check::render_consent(self, now, rng)?;
         check::render_policy_violation(self, now, rng)?;
         check::render_sso_login(self, now, rng)?;

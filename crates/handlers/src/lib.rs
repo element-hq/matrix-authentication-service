@@ -393,6 +393,11 @@ where
                 .post(self::views::register::steps::verify_email::post),
         )
         .route(
+            mas_router::RegisterToken::route(),
+            get(self::views::register::steps::registration_token::get)
+                .post(self::views::register::steps::registration_token::post),
+        )
+        .route(
             mas_router::RegisterDisplayName::route(),
             get(self::views::register::steps::display_name::get)
                 .post(self::views::register::steps::display_name::post),

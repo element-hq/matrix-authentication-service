@@ -1068,6 +1068,61 @@ impl TemplateContext for RegisterStepsDisplayNameContext {
     }
 }
 
+/// Fields of the registration token form
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RegisterStepsRegistrationTokenFormField {
+    /// The registration token
+    Token,
+}
+
+impl FormField for RegisterStepsRegistrationTokenFormField {
+    fn keep(&self) -> bool {
+        match self {
+            Self::Token => true,
+        }
+    }
+}
+
+/// The registration token page context
+#[derive(Serialize, Default)]
+pub struct RegisterStepsRegistrationTokenContext {
+    form: FormState<RegisterStepsRegistrationTokenFormField>,
+}
+
+impl RegisterStepsRegistrationTokenContext {
+    /// Constructs a context for the registration token page
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the form state
+    #[must_use]
+    pub fn with_form_state(
+        mut self,
+        form_state: FormState<RegisterStepsRegistrationTokenFormField>,
+    ) -> Self {
+        self.form = form_state;
+        self
+    }
+}
+
+impl TemplateContext for RegisterStepsRegistrationTokenContext {
+    fn sample(
+        _now: chrono::DateTime<chrono::Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> Vec<Self>
+    where
+        Self: Sized,
+    {
+        vec![Self {
+            form: FormState::default(),
+        }]
+    }
+}
+
 /// Fields of the account recovery start form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

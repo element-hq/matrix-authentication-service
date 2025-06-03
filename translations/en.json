@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -633,6 +633,20 @@
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
         "context": "pages/register/password.html:51:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
+      }
+    },
+    "registration_token": {
+      "description": "Enter a registration token provided by the homeserver administrator.",
+      "@description": {
+        "context": "pages/register/steps/registration_token.html:17:25-64"
+      },
+      "field": "Registration token",
+      "@field": {
+        "context": "pages/register/steps/registration_token.html:33:35-68"
+      },
+      "headline": "Registration token",
+      "@headline": {
+        "context": "pages/register/steps/registration_token.html:16:27-63"
       }
     },
     "scope": {
