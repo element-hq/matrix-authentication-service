@@ -13,6 +13,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use chrono::Duration;
 use mas_axum_utils::{InternalError, SessionInfoExt as _, cookies::CookieJar};
+use mas_data_model::SiteConfig;
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -51,6 +52,7 @@ pub(crate) async fn get(
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(templates): State<Templates>,
+    State(site_config): State<SiteConfig>,
     PreferredLanguage(lang): PreferredLanguage,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
@@ -118,6 +120,37 @@ pub(crate) async fn get(
         )));
     }
 
+    // Check if the registration token is required and was provided
+    let registration_token = if site_config.registration_token_required {
+        if let Some(registration_token_id) = registration.user_registration_token_id {
+            let registration_token = repo
+                .user_registration_token()
+                .lookup(registration_token_id)
+                .await?
+                .context("Could not load the registration token")
+                .map_err(InternalError::from_anyhow)?;
+
+            if !registration_token.is_valid(clock.now()) {
+                // XXX: the registration token isn't valid anymore, we should
+                // have a better error in this case?
+                return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                    "Registration token used is no longer valid"
+                )));
+            }
+
+            Some(registration_token)
+        } else {
+            // Else redirect to the registration token page
+            return Ok((
+                cookie_jar,
+                url_builder.redirect(&mas_router::RegisterToken::new(registration.id)),
+            )
+                .into_response());
+        }
+    } else {
+        None
+    };
+
     // For now, we require an email address on the registration, but this might
     // change in the future
     let email_authentication_id = registration
@@ -174,11 +207,18 @@ pub(crate) async fn get(
             .into_response());
     }
 
-    // Everuthing is good, let's complete the registration
+    // Everything is good, let's complete the registration
     let registration = repo
         .user_registration()
         .complete(&clock, registration)
         .await?;
+
+    // If we used a registration token, we need to mark it as used
+    if let Some(registration_token) = registration_token {
+        repo.user_registration_token()
+            .use_token(&clock, registration_token)
+            .await?;
+    }
 
     // Consume the registration session
     let cookie_jar = registrations
