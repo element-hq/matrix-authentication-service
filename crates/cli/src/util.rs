@@ -9,13 +9,13 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Context;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
-    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
-    PolicyConfig, TemplatesConfig,
+    EmailTransportKind, ExperimentalConfig, HomeserverKind, HttpConfig, MatrixConfig,
+    PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
 use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
-use mas_handlers::passwords::PasswordManager;
+use mas_handlers::{passwords::PasswordManager, webauthn::Webauthn};
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
 use mas_matrix_synapse::SynapseConnection;
 use mas_policy::PolicyFactory;
@@ -222,6 +222,7 @@ pub fn site_config_from_config(
         minimum_password_complexity: password_config.minimum_complexity(),
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
+        passkeys_enabled: experimental_config.passkeys,
     })
 }
 
@@ -484,6 +485,10 @@ pub fn homeserver_connection_from_config(
             Arc::new(readonly)
         }
     }
+}
+
+pub fn webauthn_from_config(config: &HttpConfig) -> Result<Webauthn, anyhow::Error> {
+    Webauthn::new(&config.public_base)
 }
 
 #[cfg(test)]

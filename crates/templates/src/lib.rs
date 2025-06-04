@@ -38,10 +38,11 @@ pub use self::{
         DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, DeviceNameContext,
         EmailRecoveryContext, EmailVerificationContext, EmptyContext, ErrorContext,
         FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        PasskeyLoginContext, PasskeyLoginFormField, PasswordRegisterContext,
+        PolicyViolationContext, PostAuthContext, PostAuthContextInner, RecoveryExpiredContext,
+        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
+        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
@@ -323,7 +324,10 @@ register_templates! {
     pub fn render_swagger_callback(ApiDocContext) { "swagger/oauth2-redirect.html" }
 
     /// Render the login page
-    pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
+    pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login/index.html" }
+
+    /// Render the passkey login page
+    pub fn render_passkey_login(WithLanguage<WithCsrf<PasskeyLoginContext>>) { "pages/login/passkey.html" }
 
     /// Render the registration page
     pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }
@@ -439,6 +443,7 @@ impl Templates {
         check::render_swagger(self, now, rng)?;
         check::render_swagger_callback(self, now, rng)?;
         check::render_login(self, now, rng)?;
+        check::render_passkey_login(self, now, rng)?;
         check::render_register(self, now, rng)?;
         check::render_password_register(self, now, rng)?;
         check::render_register_steps_verify_email(self, now, rng)?;
@@ -494,6 +499,7 @@ mod tests {
             password_registration: true,
             account_recovery: true,
             login_with_email_allowed: true,
+            passkeys_enabled: true,
         };
         let vite_manifest_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");

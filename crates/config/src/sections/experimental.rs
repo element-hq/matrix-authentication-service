@@ -75,6 +75,12 @@ pub struct ExperimentalConfig {
     /// Disabled by default
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inactive_session_expiration: Option<InactiveSessionExpirationConfig>,
+
+    /// Experimental passkey support
+    ///
+    /// Disabled by default
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub passkeys: bool,
 }
 
 impl Default for ExperimentalConfig {
@@ -83,6 +89,7 @@ impl Default for ExperimentalConfig {
             access_token_ttl: default_token_ttl(),
             compat_token_ttl: default_token_ttl(),
             inactive_session_expiration: None,
+            passkeys: false,
         }
     }
 }
@@ -92,6 +99,7 @@ impl ExperimentalConfig {
         is_default_token_ttl(&self.access_token_ttl)
             && is_default_token_ttl(&self.compat_token_ttl)
             && self.inactive_session_expiration.is_none()
+            && !self.passkeys
     }
 }
 

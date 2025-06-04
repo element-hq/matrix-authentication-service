@@ -356,6 +356,40 @@ export type CompleteEmailAuthenticationStatus =
   /** Too many attempts to complete an email authentication */
   | 'RATE_LIMITED';
 
+/** The input for the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyInput = {
+  /** The ID of the passkey challenge to complete */
+  id: Scalars['ID']['input'];
+  /** Name of the passkey */
+  name: Scalars['String']['input'];
+  /** The response from `navigator.credentials.create()` as a JSON string */
+  response: Scalars['String']['input'];
+};
+
+/** The payload of the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyPayload = {
+  __typename?: 'CompleteRegisterPasskeyPayload';
+  /** The error when the status is `INVALID_RESPONSE` */
+  error?: Maybe<Scalars['String']['output']>;
+  /** The passkey that was added */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: CompleteRegisterPasskeyStatus;
+};
+
+/** The status of the `completeRegisterPasskey` mutation */
+export type CompleteRegisterPasskeyStatus =
+  /** The passkey was added */
+  | 'ADDED'
+  /** The passkey credential already exists */
+  | 'EXISTS'
+  /** The challenge was invalid */
+  | 'INVALID_CHALLENGE'
+  /** The name for the passkey was invalid */
+  | 'INVALID_NAME'
+  /** The response was invalid */
+  | 'INVALID_RESPONSE';
+
 /** The input of the `createOauth2Session` mutation. */
 export type CreateOAuth2SessionInput = {
   /** Whether the session should issue a never-expiring access token */
@@ -547,6 +581,8 @@ export type Mutation = {
   allowUserCrossSigningReset: AllowUserCrossSigningResetPayload;
   /** Complete the email authentication flow */
   completeEmailAuthentication: CompleteEmailAuthenticationPayload;
+  /** Complete registering a new passkey */
+  completeRegisterPasskey: CompleteRegisterPasskeyPayload;
   /**
    * Create a new arbitrary OAuth 2.0 Session.
    *
@@ -567,6 +603,10 @@ export type Mutation = {
   lockUser: LockUserPayload;
   /** Remove an email address */
   removeEmail: RemoveEmailPayload;
+  /** Remove a passkey */
+  removePasskey: RemovePasskeyPayload;
+  /** Rename a passkey */
+  renamePasskey: RenamePasskeyPayload;
   /** Resend the email authentication code */
   resendEmailAuthenticationCode: ResendEmailAuthenticationCodePayload;
   /**
@@ -604,6 +644,8 @@ export type Mutation = {
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Start a new email authentication flow */
   startEmailAuthentication: StartEmailAuthenticationPayload;
+  /** Start registering a new passkey */
+  startRegisterPasskey: StartRegisterPasskeyPayload;
   /** Unlock a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
 };
@@ -630,6 +672,12 @@ export type MutationAllowUserCrossSigningResetArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationCompleteEmailAuthenticationArgs = {
   input: CompleteEmailAuthenticationInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationCompleteRegisterPasskeyArgs = {
+  input: CompleteRegisterPasskeyInput;
 };
 
 
@@ -672,6 +720,18 @@ export type MutationLockUserArgs = {
 /** The mutations root of the GraphQL interface. */
 export type MutationRemoveEmailArgs = {
   input: RemoveEmailInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationRemovePasskeyArgs = {
+  input: RemovePasskeyInput;
+};
+
+
+/** The mutations root of the GraphQL interface. */
+export type MutationRenamePasskeyArgs = {
+  input: RenamePasskeyInput;
 };
 
 
@@ -1027,6 +1087,54 @@ export type RemoveEmailStatus =
   /** The email address was removed */
   | 'REMOVED';
 
+/** The input for the `removePasskey` mutation */
+export type RemovePasskeyInput = {
+  /** The ID of the passkey to remove */
+  id: Scalars['ID']['input'];
+};
+
+/** The payload of the `removePasskey` mutation */
+export type RemovePasskeyPayload = {
+  __typename?: 'RemovePasskeyPayload';
+  /** The passkey that was removed */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: RemovePasskeyStatus;
+};
+
+/** The status of the `removePasskey` mutation */
+export type RemovePasskeyStatus =
+  /** The passkey was not found */
+  | 'NOT_FOUND'
+  /** The passkey was removed */
+  | 'REMOVED';
+
+/** The input for the `renamePasskey` mutation */
+export type RenamePasskeyInput = {
+  /** The ID of the passkey to rename */
+  id: Scalars['ID']['input'];
+  /** new name for the passkey */
+  name: Scalars['String']['input'];
+};
+
+/** The payload of the `renamePasskey` mutation */
+export type RenamePasskeyPayload = {
+  __typename?: 'RenamePasskeyPayload';
+  /** The passkey that was renamed */
+  passkey?: Maybe<UserPasskey>;
+  /** Status of the operation */
+  status: RenamePasskeyStatus;
+};
+
+/** The status of the `renamePasskey` mutation */
+export type RenamePasskeyStatus =
+  /** The new name was invalid */
+  | 'INVALID'
+  /** The passkey was not found */
+  | 'NOT_FOUND'
+  /** The passkey was renamed */
+  | 'RENAMED';
+
 /** The input for the `resendEmailAuthenticationCode` mutation */
 export type ResendEmailAuthenticationCodeInput = {
   /** The ID of the authentication session to resend the code for */
@@ -1290,6 +1398,8 @@ export type SiteConfig = Node & {
    * in use is <https://crates.io/crates/zxcvbn>.
    */
   minimumPasswordComplexity: Scalars['Int']['output'];
+  /** Whether passkeys are enabled */
+  passkeysEnabled: Scalars['Boolean']['output'];
   /** Whether passwords are enabled and users can change their own passwords. */
   passwordChangeAllowed: Scalars['Boolean']['output'];
   /** Whether passwords are enabled for login. */
@@ -1342,6 +1452,14 @@ export type StartEmailAuthenticationStatus =
   | 'RATE_LIMITED'
   /** The email address was started */
   | 'STARTED';
+
+/** The payload of the `startRegisterPasskey` mutation */
+export type StartRegisterPasskeyPayload = {
+  __typename?: 'StartRegisterPasskeyPayload';
+  id: Scalars['ID']['output'];
+  /** The options to pass to `navigator.credentials.create()` as a JSON string */
+  options: Scalars['String']['output'];
+};
 
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
@@ -1475,6 +1593,8 @@ export type User = Node & {
   matrix: MatrixUser;
   /** Get the list of OAuth 2.0 sessions, chronologically sorted */
   oauth2Sessions: Oauth2SessionConnection;
+  /** Get the list of passkeys, chronologically sorted */
+  passkeys: UserPasskeyConnection;
   /** Get the list of upstream OAuth 2.0 links */
   upstreamOauth2Links: UpstreamOAuth2LinkConnection;
   /** Username chosen by the user. */
@@ -1546,6 +1666,15 @@ export type UserOauth2SessionsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   lastActive?: InputMaybe<DateFilter>;
   state?: InputMaybe<SessionState>;
+};
+
+
+/** A user is an individual's account. */
+export type UserPasskeysArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1654,6 +1783,40 @@ export type UserEmailState =
   | 'CONFIRMED'
   /** The email address is pending confirmation. */
   | 'PENDING';
+
+/** A passkey */
+export type UserPasskey = {
+  __typename?: 'UserPasskey';
+  /** When the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** ID of the object */
+  id: Scalars['ID']['output'];
+  /** When the passkey was last used */
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Name of the passkey */
+  name: Scalars['String']['output'];
+};
+
+export type UserPasskeyConnection = {
+  __typename?: 'UserPasskeyConnection';
+  /** A list of edges. */
+  edges: Array<UserPasskeyEdge>;
+  /** A list of nodes. */
+  nodes: Array<UserPasskey>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type UserPasskeyEdge = {
+  __typename?: 'UserPasskeyEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: UserPasskey;
+};
 
 /** A recovery ticket */
 export type UserRecoveryTicket = CreationEvent & Node & {
@@ -1815,6 +1978,23 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
+export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name: string, lastUsedAt?: string | null, createdAt: string } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
+
+export type RemovePasskeyMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RemovePasskeyMutation = { __typename?: 'Mutation', removePasskey: { __typename?: 'RemovePasskeyPayload', status: RemovePasskeyStatus } };
+
+export type RenamePasskeyMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+}>;
+
+
+export type RenamePasskeyMutation = { __typename?: 'Mutation', renamePasskey: { __typename?: 'RenamePasskeyPayload', status: RenamePasskeyStatus } };
+
 export type AddEmailForm_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'AddEmailForm_UserFragment' };
 
 export type AddEmailForm_SiteConfigFragment = { __typename?: 'SiteConfig', passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AddEmailForm_SiteConfigFragment' };
@@ -1827,6 +2007,20 @@ export type AddEmailMutationVariables = Exact<{
 
 
 export type AddEmailMutation = { __typename?: 'Mutation', startEmailAuthentication: { __typename?: 'StartEmailAuthenticationPayload', status: StartEmailAuthenticationStatus, violations?: Array<string> | null, authentication?: { __typename?: 'UserEmailAuthentication', id: string } | null } };
+
+export type StartRegisterPasskeyMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type StartRegisterPasskeyMutation = { __typename?: 'Mutation', startRegisterPasskey: { __typename?: 'StartRegisterPasskeyPayload', id: string, options: string } };
+
+export type CompleteRegisterPasskeyMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  response: Scalars['String']['input'];
+}>;
+
+
+export type CompleteRegisterPasskeyMutation = { __typename?: 'Mutation', completeRegisterPasskey: { __typename?: 'CompleteRegisterPasskeyPayload', status: CompleteRegisterPasskeyStatus, error?: string | null } };
 
 export type UserEmailListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1845,6 +2039,19 @@ export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boo
 
 export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
+export type UserPasskeyListQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UserPasskeyListQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', passkeys: { __typename?: 'UserPasskeyConnection', totalCount: number, edges: Array<{ __typename?: 'UserPasskeyEdge', cursor: string, node: (
+          { __typename?: 'UserPasskey' }
+          & { ' $fragmentRefs'?: { 'UserPasskey_PasskeyFragment': UserPasskey_PasskeyFragment } }
+        ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } };
+
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
@@ -1854,7 +2061,7 @@ export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typena
       { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
     ) } | { __typename: 'Oauth2Session' }, siteConfig: (
-    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, accountDeactivationAllowed: boolean }
+    { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, passkeysEnabled: boolean, accountDeactivationAllowed: boolean }
     & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
@@ -2348,6 +2555,14 @@ export const UserGreeting_SiteConfigFragmentDoc = new TypedDocumentString(`
   displayNameChangeAllowed
 }
     `, {"fragmentName":"UserGreeting_siteConfig"}) as unknown as TypedDocumentString<UserGreeting_SiteConfigFragment, unknown>;
+export const UserPasskey_PasskeyFragmentDoc = new TypedDocumentString(`
+    fragment UserPasskey_passkey on UserPasskey {
+  id
+  name
+  lastUsedAt
+  createdAt
+}
+    `, {"fragmentName":"UserPasskey_passkey"}) as unknown as TypedDocumentString<UserPasskey_PasskeyFragment, unknown>;
 export const AddEmailForm_UserFragmentDoc = new TypedDocumentString(`
     fragment AddEmailForm_user on User {
   hasPassword
@@ -2482,6 +2697,20 @@ export const SetDisplayNameDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<SetDisplayNameMutation, SetDisplayNameMutationVariables>;
+export const RemovePasskeyDocument = new TypedDocumentString(`
+    mutation RemovePasskey($id: ID!) {
+  removePasskey(input: {id: $id}) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<RemovePasskeyMutation, RemovePasskeyMutationVariables>;
+export const RenamePasskeyDocument = new TypedDocumentString(`
+    mutation RenamePasskey($id: ID!, $name: String!) {
+  renamePasskey(input: {id: $id, name: $name}) {
+    status
+  }
+}
+    `) as unknown as TypedDocumentString<RenamePasskeyMutation, RenamePasskeyMutationVariables>;
 export const AddEmailDocument = new TypedDocumentString(`
     mutation AddEmail($email: String!, $password: String, $language: String!) {
   startEmailAuthentication(
@@ -2495,6 +2724,22 @@ export const AddEmailDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<AddEmailMutation, AddEmailMutationVariables>;
+export const StartRegisterPasskeyDocument = new TypedDocumentString(`
+    mutation StartRegisterPasskey {
+  startRegisterPasskey {
+    id
+    options
+  }
+}
+    `) as unknown as TypedDocumentString<StartRegisterPasskeyMutation, StartRegisterPasskeyMutationVariables>;
+export const CompleteRegisterPasskeyDocument = new TypedDocumentString(`
+    mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {
+  completeRegisterPasskey(input: {id: $id, name: $name, response: $response}) {
+    status
+    error
+  }
+}
+    `) as unknown as TypedDocumentString<CompleteRegisterPasskeyMutation, CompleteRegisterPasskeyMutationVariables>;
 export const UserEmailListDocument = new TypedDocumentString(`
     query UserEmailList($first: Int, $after: String, $last: Int, $before: String) {
   viewer {
@@ -2522,6 +2767,35 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
+export const UserPasskeyListDocument = new TypedDocumentString(`
+    query UserPasskeyList($first: Int, $after: String, $last: Int, $before: String) {
+  viewer {
+    __typename
+    ... on User {
+      passkeys(first: $first, after: $after, last: $last, before: $before) {
+        edges {
+          cursor
+          node {
+            ...UserPasskey_passkey
+          }
+        }
+        totalCount
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+      }
+    }
+  }
+}
+    fragment UserPasskey_passkey on UserPasskey {
+  id
+  name
+  lastUsedAt
+  createdAt
+}`) as unknown as TypedDocumentString<UserPasskeyListQuery, UserPasskeyListQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewerSession {
@@ -2542,6 +2816,7 @@ export const UserProfileDocument = new TypedDocumentString(`
   siteConfig {
     emailChangeAllowed
     passwordLoginEnabled
+    passkeysEnabled
     accountDeactivationAllowed
     ...AddEmailForm_siteConfig
     ...UserEmailList_siteConfig
@@ -3221,6 +3496,50 @@ export const mockSetDisplayNameMutation = (resolver: GraphQLResponseResolver<Set
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockRemovePasskeyMutation(
+ *   ({ query, variables }) => {
+ *     const { id } = variables;
+ *     return HttpResponse.json({
+ *       data: { removePasskey }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRemovePasskeyMutation = (resolver: GraphQLResponseResolver<RemovePasskeyMutation, RemovePasskeyMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<RemovePasskeyMutation, RemovePasskeyMutationVariables>(
+    'RemovePasskey',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockRenamePasskeyMutation(
+ *   ({ query, variables }) => {
+ *     const { id, name } = variables;
+ *     return HttpResponse.json({
+ *       data: { renamePasskey }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRenamePasskeyMutation = (resolver: GraphQLResponseResolver<RenamePasskeyMutation, RenamePasskeyMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<RenamePasskeyMutation, RenamePasskeyMutationVariables>(
+    'RenamePasskey',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockAddEmailMutation(
  *   ({ query, variables }) => {
  *     const { email, password, language } = variables;
@@ -3243,6 +3562,49 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockStartRegisterPasskeyMutation(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { startRegisterPasskey }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockStartRegisterPasskeyMutation = (resolver: GraphQLResponseResolver<StartRegisterPasskeyMutation, StartRegisterPasskeyMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<StartRegisterPasskeyMutation, StartRegisterPasskeyMutationVariables>(
+    'StartRegisterPasskey',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockCompleteRegisterPasskeyMutation(
+ *   ({ query, variables }) => {
+ *     const { id, name, response } = variables;
+ *     return HttpResponse.json({
+ *       data: { completeRegisterPasskey }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockCompleteRegisterPasskeyMutation = (resolver: GraphQLResponseResolver<CompleteRegisterPasskeyMutation, CompleteRegisterPasskeyMutationVariables>, options?: RequestHandlerOptions) =>
+  graphql.mutation<CompleteRegisterPasskeyMutation, CompleteRegisterPasskeyMutationVariables>(
+    'CompleteRegisterPasskey',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockUserEmailListQuery(
  *   ({ query, variables }) => {
  *     const { first, after, last, before } = variables;
@@ -3256,6 +3618,28 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
 export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
     'UserEmailList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUserPasskeyListQuery(
+ *   ({ query, variables }) => {
+ *     const { first, after, last, before } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUserPasskeyListQuery = (resolver: GraphQLResponseResolver<UserPasskeyListQuery, UserPasskeyListQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UserPasskeyListQuery, UserPasskeyListQueryVariables>(
+    'UserPasskeyList',
     resolver,
     options
   )

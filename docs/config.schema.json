@@ -2561,6 +2561,10 @@
               "$ref": "#/definitions/InactiveSessionExpirationConfig"
             }
           ]
+        },
+        "passkeys": {
+          "description": "Experimental passkey support\n\nDisabled by default",
+          "type": "boolean"
         }
       }
     },

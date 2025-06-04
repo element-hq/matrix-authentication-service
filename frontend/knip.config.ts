@@ -9,6 +9,7 @@ export default {
   entry: [
     "src/main.tsx",
     "src/swagger.ts",
+    "src/template_passkey.ts",
     "src/routes/*",
     "i18next-parser.config.ts",
   ],
