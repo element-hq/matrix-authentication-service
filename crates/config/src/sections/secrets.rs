@@ -42,7 +42,9 @@ pub enum Password {
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 struct PasswordRaw {
     #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     password_file: Option<Utf8PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     password: Option<String>,
 }
 
@@ -92,7 +94,9 @@ pub enum Key {
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 struct KeyRaw {
     #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     key_file: Option<Utf8PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     key: Option<String>,
 }
 
