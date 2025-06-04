@@ -4,77 +4,91 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Navigate, createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { graphql, useFragment } from "../gql";
+import { Navigate, createFileRoute, redirect } from "@tanstack/react-router";
+import { type Ref, useCallback } from "react";
+import { preload } from "react-dom";
+import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
-export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
-  fragment PlanManagement_siteConfig on SiteConfig {
-    planManagementIframeUri
-  }
-`);
-
 const QUERY = graphql(/* GraphQL */ `
-  query SiteConfig {
+  query PlanManagementTab {
     siteConfig {
-      ...PlanManagement_siteConfig
+      planManagementIframeUri
     }
   }
 `);
 
 export const query = queryOptions({
-  queryKey: ["siteConfig"],
+  queryKey: ["planManagementTab"],
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
 export const Route = createFileRoute("/_account/plan/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  loader: async ({ context }) => {
+    const { planManagementIframeUri } = (
+      await context.queryClient.ensureQueryData(query)
+    ).siteConfig;
+    if (planManagementIframeUri) {
+      preload(planManagementIframeUri, { as: "document" });
+    } else {
+      throw redirect({ to: "/" });
+    }
+  },
   component: Plan,
 });
 
 function Plan(): React.ReactElement {
   const result = useSuspenseQuery(query);
-  const siteConfig = result.data.siteConfig;
-  const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
+  const { planManagementIframeUri } = result.data.siteConfig;
 
   if (!planManagementIframeUri) {
     // Redirect if no iframe URI is configured
     return <Navigate to="/" replace />;
   }
 
-  const ref = useRef<HTMLIFrameElement>(null);
-  const [iframeHeight, setIframeHeight] = useState("0px");
-
-  // Poll the size of the iframe content and set the height
+  // Query the size of the iframe content and set the height
   // This will only work where the iframe is served from the same origin
-  const calculateHeight = useCallback(() => {
+  const calculateHeight = useCallback((iframe: HTMLIFrameElement) => {
     const height =
-      ref.current?.contentWindow?.document.body.parentElement?.scrollHeight;
+      iframe.contentWindow?.document.body.parentElement?.scrollHeight;
+
     if (height) {
-      setIframeHeight(`${height}px`);
+      iframe.height = `${height}px`;
     } else {
-      setIframeHeight("500px");
+      iframe.height = "500px";
     }
   }, []);
-  useEffect(() => {
-    calculateHeight();
 
-    const interval = setInterval(() => {
-      calculateHeight();
-    }, 1000);
+  const ref: Ref<HTMLIFrameElement> = useCallback(
+    (iframe: HTMLIFrameElement) => {
+      calculateHeight(iframe);
 
-    return () => clearInterval(interval);
-  }, [calculateHeight]);
+      if (iframe.contentWindow) {
+        const iframeDocument = iframe.contentWindow.document;
+
+        const observer = new MutationObserver((_mutationsList) => {
+          calculateHeight(iframe);
+        });
+
+        observer.observe(iframeDocument.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+        });
+
+        return () => observer.disconnect();
+      }
+    },
+    [calculateHeight],
+  );
 
   return (
     <iframe
       title="iframe" // no proper title as this is experimental feature
       ref={ref}
-      onLoad={calculateHeight}
+      onLoad={(e) => calculateHeight(e.target as HTMLIFrameElement)}
       src={planManagementIframeUri}
       scrolling="no"
-      height={iframeHeight}
     />
   );
 }

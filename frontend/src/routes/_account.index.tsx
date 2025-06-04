@@ -27,12 +27,8 @@ import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList, {
   query as userEmailListQuery,
 } from "../components/UserProfile/UserEmailList";
-import {
-  CONFIG_FRAGMENT as PLAN_MANAGEMENT_CONFIG_FRAGMENT,
-  query as planManagementQuery,
-} from "./_account.plan.index";
 
-import { graphql, useFragment } from "../gql";
+import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
 const QUERY = graphql(/* GraphQL */ `
@@ -101,7 +97,7 @@ const actionSchema = v.variant("action", [
 export const Route = createFileRoute("/_account/")({
   validateSearch: actionSchema,
 
-  async beforeLoad({ search, context }) {
+  beforeLoad({ search }) {
     switch (search.action) {
       case "profile":
       case "org.matrix.profile":
@@ -135,15 +131,9 @@ export const Route = createFileRoute("/_account/")({
           search: { deepLink: true },
         });
       case "org.matrix.plan_management": {
-        const { siteConfig } =
-          await context.queryClient.ensureQueryData(planManagementQuery);
-        const { planManagementIframeUri } = useFragment(
-          PLAN_MANAGEMENT_CONFIG_FRAGMENT,
-          siteConfig,
-        );
-        throw redirect({
-          to: planManagementIframeUri ? "/plan" : "/",
-        });
+        // We don't both checking if the plan management iframe is actually available and
+        // instead rely on the plan tab handling it.
+        throw redirect({ to: "/plan" });
       }
     }
   },

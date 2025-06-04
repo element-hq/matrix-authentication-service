@@ -1859,15 +1859,10 @@ export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typena
     & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
-export type PlanManagement_SiteConfigFragment = { __typename?: 'SiteConfig', planManagementIframeUri?: string | null } & { ' $fragmentName'?: 'PlanManagement_SiteConfigFragment' };
-
-export type SiteConfigQueryVariables = Exact<{ [key: string]: never; }>;
+export type PlanManagementTabQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SiteConfigQuery = { __typename?: 'Query', siteConfig: (
-    { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'PlanManagement_SiteConfigFragment': PlanManagement_SiteConfigFragment } }
-  ) };
+export type PlanManagementTabQuery = { __typename?: 'Query', siteConfig: { __typename?: 'SiteConfig', planManagementIframeUri?: string | null } };
 
 export type BrowserSessionListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1915,8 +1910,8 @@ export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer: { __typen
     { __typename: 'User' }
     & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
   ), siteConfig: (
-    { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment;'PlanManagement_SiteConfigFragment': PlanManagement_SiteConfigFragment } }
+    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null }
+    & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
 export type OAuth2ClientQueryVariables = Exact<{
@@ -2388,11 +2383,6 @@ export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
   }
 }
     `, {"fragmentName":"BrowserSessionsOverview_user"}) as unknown as TypedDocumentString<BrowserSessionsOverview_UserFragment, unknown>;
-export const PlanManagement_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment PlanManagement_siteConfig on SiteConfig {
-  planManagementIframeUri
-}
-    `, {"fragmentName":"PlanManagement_siteConfig"}) as unknown as TypedDocumentString<PlanManagement_SiteConfigFragment, unknown>;
 export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentString(`
     fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
   username
@@ -2592,15 +2582,13 @@ fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
   passwordLoginEnabled
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
-export const SiteConfigDocument = new TypedDocumentString(`
-    query SiteConfig {
+export const PlanManagementTabDocument = new TypedDocumentString(`
+    query PlanManagementTab {
   siteConfig {
-    ...PlanManagement_siteConfig
+    planManagementIframeUri
   }
 }
-    fragment PlanManagement_siteConfig on SiteConfig {
-  planManagementIframeUri
-}`) as unknown as TypedDocumentString<SiteConfigQuery, SiteConfigQueryVariables>;
+    `) as unknown as TypedDocumentString<PlanManagementTabQuery, PlanManagementTabQueryVariables>;
 export const BrowserSessionListDocument = new TypedDocumentString(`
     query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
   viewerSession {
@@ -2788,7 +2776,7 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
   }
   siteConfig {
     ...UserGreeting_siteConfig
-    ...PlanManagement_siteConfig
+    planManagementIframeUri
   }
 }
     fragment UserGreeting_user on User {
@@ -2800,9 +2788,6 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
 }
 fragment UserGreeting_siteConfig on SiteConfig {
   displayNameChangeAllowed
-}
-fragment PlanManagement_siteConfig on SiteConfig {
-  planManagementIframeUri
 }`) as unknown as TypedDocumentString<CurrentUserGreetingQuery, CurrentUserGreetingQueryVariables>;
 export const OAuth2ClientDocument = new TypedDocumentString(`
     query OAuth2Client($id: ID!) {
@@ -3315,7 +3300,7 @@ export const mockUserProfileQuery = (resolver: GraphQLResponseResolver<UserProfi
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
- * mockSiteConfigQuery(
+ * mockPlanManagementTabQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
  *       data: { siteConfig }
@@ -3324,9 +3309,9 @@ export const mockUserProfileQuery = (resolver: GraphQLResponseResolver<UserProfi
  *   requestOptions
  * )
  */
-export const mockSiteConfigQuery = (resolver: GraphQLResponseResolver<SiteConfigQuery, SiteConfigQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<SiteConfigQuery, SiteConfigQueryVariables>(
-    'SiteConfig',
+export const mockPlanManagementTabQuery = (resolver: GraphQLResponseResolver<PlanManagementTabQuery, PlanManagementTabQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<PlanManagementTabQuery, PlanManagementTabQueryVariables>(
+    'PlanManagementTab',
     resolver,
     options
   )

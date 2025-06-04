@@ -12,9 +12,8 @@ import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
 import NavItem from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
-import { graphql, useFragment } from "../gql";
+import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { CONFIG_FRAGMENT } from "./_account.plan.index";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -27,7 +26,7 @@ const QUERY = graphql(/* GraphQL */ `
 
     siteConfig {
       ...UserGreeting_siteConfig
-      ...PlanManagement_siteConfig
+      planManagementIframeUri
     }
   }
 `);
@@ -47,9 +46,8 @@ function Account(): React.ReactElement {
   const result = useSuspenseQuery(query);
   const viewer = result.data.viewer;
   if (viewer?.__typename !== "User") throw notFound();
-  const siteConfig = result.data.siteConfig;
-
-  const { planManagementIframeUri } = useFragment(CONFIG_FRAGMENT, siteConfig);
+  const { siteConfig } = result.data;
+  const { planManagementIframeUri } = siteConfig;
 
   return (
     <Layout wide>

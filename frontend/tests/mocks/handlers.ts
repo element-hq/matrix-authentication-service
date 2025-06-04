@@ -31,7 +31,6 @@ import {
   mockUserEmailListQuery,
   mockUserProfileQuery,
 } from "../../src/gql/graphql";
-import { CONFIG_FRAGMENT as PLAN_MANAGEMENT_CONFIG_FRAGMENT } from "../../src/routes/_account.plan.index";
 
 export const handlers = [
   mockFooterQuery(() =>
@@ -90,7 +89,6 @@ export const handlers = [
             },
             USER_GREETING_CONFIG_FRAGMENT,
           ),
-          makeFragmentData({}, PLAN_MANAGEMENT_CONFIG_FRAGMENT),
         ),
       },
     }),
