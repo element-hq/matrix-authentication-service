@@ -243,9 +243,9 @@ via file, set `secrets.encryption_file` to the file path; alternatively use
 If given via file, the encyption secret is only read at application startup.
 The secret is not updated when the content of the file changes.
 
-> ⚠️ **Warning** – Do not change the encryption secret after the initial start.
-> Changing the encryption secret afterwards will lead to a loss of all
-> information stored in the database.
+> ⚠️ **Warning** – Do not change the encryption secret after the initial start!
+> Changing the encryption secret afterwards will lead to a loss of all encrypted
+> information in the database.
 
 ### `secrets.keys`
 
