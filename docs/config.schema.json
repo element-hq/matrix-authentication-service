@@ -1530,7 +1530,6 @@
         },
         "encryption": {
           "description": "Encryption key for secure cookies.",
-          "default": null,
           "examples": [
             "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
           ],

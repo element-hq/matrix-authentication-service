@@ -59,6 +59,7 @@ pub enum Encryption {
 struct EncryptionRaw {
     /// File containing the encryption key for secure cookies.
     #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     encryption_file: Option<Utf8PathBuf>,
 
     /// Encryption key for secure cookies.
@@ -68,6 +69,7 @@ struct EncryptionRaw {
         example = "example_secret"
     )]
     #[serde_as(as = "Option<serde_with::hex::Hex>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     encryption: Option<[u8; 32]>,
 }
 
