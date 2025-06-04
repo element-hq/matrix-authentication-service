@@ -6,7 +6,7 @@
 
 use std::borrow::Cow;
 
-use anyhow::{Context, anyhow, bail};
+use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
@@ -185,9 +185,15 @@ impl SecretsConfig {
         // Read the encryption secret either embedded in the config file or on disk
         match self.encryption {
             Encryption::Value(encryption) => Ok(encryption),
-            Encryption::File(ref path) => tokio::fs::read(path).await?.try_into().map_err(|_| {
-                anyhow!("Content of `encryption_file` must be exactly 32 bytes long.")
-            }),
+            Encryption::File(ref path) => {
+                let mut bytes = [0; 32];
+                let content = tokio::fs::read(path).await?;
+                hex::decode_to_slice(content, &mut bytes).context(
+                    "Content of `encryption_file` must contain hex characters \
+                    encoding exactly 32 bytes",
+                )?;
+                Ok(bytes)
+            }
         }
     }
 }

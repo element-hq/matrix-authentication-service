@@ -19,6 +19,7 @@ anyhow.workspace = true
 camino = { workspace = true, features = ["serde1"] }
 chrono.workspace = true
 figment.workspace = true
+hex.workspace = true
 ipnetwork = { version = "0.20.0", features = ["serde", "schemars"] }
 lettre.workspace = true
 schemars.workspace = true
