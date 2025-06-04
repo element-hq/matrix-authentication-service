@@ -60,7 +60,8 @@ function Plan(): React.ReactElement {
   }, []);
 
   const ref: Ref<HTMLIFrameElement> = useCallback(
-    (iframe: HTMLIFrameElement) => {
+    (iframe: HTMLIFrameElement | null) => {
+      if (!iframe) return;
       calculateHeight(iframe);
 
       if (iframe.contentWindow) {
