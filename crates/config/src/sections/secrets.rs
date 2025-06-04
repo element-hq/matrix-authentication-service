@@ -220,10 +220,6 @@ impl SecretsConfig {
 
 impl ConfigurationSection for SecretsConfig {
     const PATH: Option<&'static str> = Some("secrets");
-
-    fn validate(&self, _figment: &figment::Figment) -> Result<(), figment::Error> {
-        Ok(())
-    }
 }
 
 impl SecretsConfig {
