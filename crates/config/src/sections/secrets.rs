@@ -8,7 +8,7 @@ use std::borrow::Cow;
 
 use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
-use futures::future::{try_join, try_join_all};
+use futures_util::future::{try_join, try_join_all};
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
 use rand::{
