@@ -5,7 +5,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Navigate, createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { preload } from "react-dom";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -50,7 +50,7 @@ function Plan(): React.ReactElement {
 
   // Query the size of the iframe content and set the height
   // This will only work where the iframe is served from the same origin
-  const calculateHeight = () => {
+  const calculateHeight = useCallback(() => {
     const iframe = ref.current;
     if (!iframe) {
       return;
@@ -63,21 +63,21 @@ function Plan(): React.ReactElement {
     } else {
       iframe.height = "500px";
     }
-  };
+  }, []);
 
   const observer = useMemo(
     () =>
       new MutationObserver((_mutationsList) => {
         // we calculate the height immediately when the observer is triggered
         calculateHeight();
-        // then we recalculate the height after a short timeout
-        // to ensure that any layout changes have settled
+        // then we recalculate the height after a short timeout to allow for any rendering
+        // that doesn't trigger a mutation. e.g. an iframe
         setTimeout(() => {
           calculateHeight();
         }, 1000);
         // n.b. we don't worry about the timeout happening after the component is unmounted
       }),
-    [],
+    [calculateHeight],
   );
 
   useEffect(() => {
@@ -87,7 +87,7 @@ function Plan(): React.ReactElement {
     }
     // Cleanup observer when the component unmounts
     return () => observer.disconnect();
-  }, []);
+  }, [observer]);
 
   const attachObserver = (iframe: HTMLIFrameElement) => {
     const iframeBody = iframe.contentWindow?.document.body;
