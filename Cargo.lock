@@ -3216,6 +3216,7 @@ dependencies = [
  "figment",
  "futures-util",
  "governor",
+ "hex",
  "indoc",
  "ipnetwork",
  "lettre",

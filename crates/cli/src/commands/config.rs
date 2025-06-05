@@ -123,7 +123,7 @@ impl Options {
             SC::Sync { prune, dry_run } => {
                 let config = SyncConfig::extract(figment)?;
                 let clock = SystemClock::default();
-                let encrypter = config.secrets.encrypter();
+                let encrypter = config.secrets.encrypter().await?;
 
                 // Grab a connection to the database
                 let mut conn = database_connection_from_config(&config.database).await?;

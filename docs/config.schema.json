@@ -1515,18 +1515,7 @@
     "SecretsConfig": {
       "description": "Application secrets",
       "type": "object",
-      "required": [
-        "encryption"
-      ],
       "properties": {
-        "encryption": {
-          "description": "Encryption key for secure cookies",
-          "examples": [
-            "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
-          ],
-          "type": "string",
-          "pattern": "[0-9a-fA-F]{64}"
-        },
         "keys": {
           "description": "List of private keys to use for signing and encrypting payloads",
           "default": [],
@@ -1534,6 +1523,18 @@
           "items": {
             "$ref": "#/definitions/KeyConfig"
           }
+        },
+        "encryption_file": {
+          "description": "File containing the encryption key for secure cookies.",
+          "type": "string"
+        },
+        "encryption": {
+          "description": "Encryption key for secure cookies.",
+          "examples": [
+            "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
+          ],
+          "type": "string",
+          "pattern": "[0-9a-fA-F]{64}"
         }
       }
     },
