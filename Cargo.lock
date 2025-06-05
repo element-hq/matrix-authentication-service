@@ -3022,7 +3022,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -4737,9 +4737,9 @@ dependencies = [
 
 [[package]]
 name = "psl"
-version = "2.1.114"
+version = "2.1.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1722a421a1f0ae8f40e4cd265bd559fed5f5f67c0bbd7b70a780a43519c8e19"
+checksum = "10a9da533ae9faae4b0fbef5afbe9acaf1802b18fafa002a421753e3273389df"
 dependencies = [
  "psl-types",
 ]
@@ -7353,7 +7353,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
