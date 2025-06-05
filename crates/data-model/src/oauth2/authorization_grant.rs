@@ -144,7 +144,7 @@ impl AuthorizationGrantStage {
 
 pub enum LoginHint<'a> {
     MXID(&'a UserId),
-    EMAIL(lettre::Address),
+    Email(lettre::Address),
     None,
 }
 
@@ -175,14 +175,31 @@ impl std::ops::Deref for AuthorizationGrant {
 }
 
 impl AuthorizationGrant {
+    /// Parse a `login_hint`
+    ///
+    /// Returns `LoginHint::MXID` for valid mxid 'mxid:@john.doe:example.com'
+    ///
+    /// Returns `LoginHint::Email` for valid email 'john.doe@example.com' if
+    /// email supports is enabled
+    ///
+    /// Otherwise returns `LoginHint::None`
     #[must_use]
     pub fn parse_login_hint(&self, homeserver: &str, login_with_email_allowed: bool) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
 
-        // Return none if the format is incorrect
         let Some((prefix, value)) = login_hint.split_once(':') else {
+            // If email supports for login_hint is enabled
+            if login_with_email_allowed {
+                // Validate the email
+                let Ok(address) = lettre::Address::from_str(login_hint) else {
+                    // Return none if the format is incorrect
+                    return LoginHint::None;
+                };
+                return LoginHint::Email(address);
+            }
+            // Unknown hint type, treat as none
             return LoginHint::None;
         };
 
@@ -199,16 +216,6 @@ impl AuthorizationGrant {
                 }
 
                 LoginHint::MXID(mxid)
-            }
-            "email" => {
-                if !login_with_email_allowed {
-                    return LoginHint::None;
-                }
-                // Validate the email
-                let Ok(address) = lettre::Address::from_str(value) else {
-                    return LoginHint::None;
-                };
-                LoginHint::EMAIL(address)
             }
             // Unknown hint type, treat as none
             _ => LoginHint::None,
@@ -333,13 +340,13 @@ mod tests {
         let now = Utc::now();
 
         let grant = AuthorizationGrant {
-            login_hint: Some(String::from("email:example@user")),
+            login_hint: Some(String::from("example@user")),
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
         let hint = grant.parse_login_hint("example.com", true);
 
-        assert!(matches!(hint, LoginHint::EMAIL(email) if email.to_string() == "example@user"));
+        assert!(matches!(hint, LoginHint::Email(email) if email.to_string() == "example@user"));
     }
 
     #[test]
@@ -351,7 +358,7 @@ mod tests {
         let now = Utc::now();
 
         let grant = AuthorizationGrant {
-            login_hint: Some(String::from("email:example@user")),
+            login_hint: Some(String::from("example@user")),
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
