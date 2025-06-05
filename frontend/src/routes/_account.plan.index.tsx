@@ -5,7 +5,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Navigate, createFileRoute, redirect } from "@tanstack/react-router";
-import { type Ref, useCallback } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { preload } from "react-dom";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -46,9 +46,15 @@ function Plan(): React.ReactElement {
     return <Navigate to="/" replace />;
   }
 
+  const ref = useRef<HTMLIFrameElement>(null);
+
   // Query the size of the iframe content and set the height
   // This will only work where the iframe is served from the same origin
-  const calculateHeight = useCallback((iframe: HTMLIFrameElement) => {
+  const calculateHeight = () => {
+    const iframe = ref.current;
+    if (!iframe) {
+      return;
+    }
     const height =
       iframe.contentWindow?.document.body.parentElement?.scrollHeight;
 
@@ -57,37 +63,52 @@ function Plan(): React.ReactElement {
     } else {
       iframe.height = "500px";
     }
+  };
+
+  const observer = useMemo(
+    () =>
+      new MutationObserver((_mutationsList) => {
+        // we calculate the height immediately when the observer is triggered
+        calculateHeight();
+        // then we recalculate the height after a short timeout
+        // to ensure that any layout changes have settled
+        setTimeout(() => {
+          calculateHeight();
+        }, 1000);
+        // n.b. we don't worry about the timeout happening after the component is unmounted
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    const iframe = ref.current;
+    if (iframe) {
+      attachObserver(iframe);
+    }
+    // Cleanup observer when the component unmounts
+    return () => observer.disconnect();
   }, []);
 
-  const ref: Ref<HTMLIFrameElement> = useCallback(
-    (iframe: HTMLIFrameElement | null) => {
-      if (!iframe) return;
-      calculateHeight(iframe);
-
-      if (iframe.contentWindow) {
-        const iframeDocument = iframe.contentWindow.document;
-
-        const observer = new MutationObserver((_mutationsList) => {
-          calculateHeight(iframe);
-        });
-
-        observer.observe(iframeDocument.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-        });
-
-        return () => observer.disconnect();
-      }
-    },
-    [calculateHeight],
-  );
+  const attachObserver = (iframe: HTMLIFrameElement) => {
+    const iframeBody = iframe.contentWindow?.document.body;
+    if (!iframeBody) {
+      return;
+    }
+    // calculate the height immediately
+    calculateHeight();
+    // observe future changes to the body of the iframe
+    observer.observe(iframeBody, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+  };
 
   return (
     <iframe
       title="iframe" // no proper title as this is experimental feature
       ref={ref}
-      onLoad={(e) => calculateHeight(e.target as HTMLIFrameElement)}
+      onLoad={(e) => attachObserver(e.target as HTMLIFrameElement)}
       src={planManagementIframeUri}
       scrolling="no"
     />
