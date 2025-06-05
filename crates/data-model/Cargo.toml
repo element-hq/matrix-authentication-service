@@ -24,9 +24,9 @@ rand.workspace = true
 regex = "1.11.1"
 woothee = "0.13.0"
 ruma-common.workspace = true
+lettre.workspace = true
 
 mas-iana.workspace = true
 mas-jose.workspace = true
 oauth2-types.workspace = true
-# Emails
-lettre.workspace = true
+
