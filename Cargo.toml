@@ -106,7 +106,7 @@ version = "1.10.1"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
-version = "1.1.9"
+version = "1.1.10"
 
 # Memory optimisation for short strings
 [workspace.dependencies.compact_str]
