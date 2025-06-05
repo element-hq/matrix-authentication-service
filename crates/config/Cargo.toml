@@ -15,6 +15,7 @@ workspace = true
 tokio.workspace = true
 tracing.workspace = true
 anyhow.workspace = true
+futures-util.workspace = true
 
 camino = { workspace = true, features = ["serde1"] }
 chrono.workspace = true

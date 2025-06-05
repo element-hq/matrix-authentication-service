@@ -1538,6 +1538,7 @@
       }
     },
     "KeyConfig": {
+      "description": "A single key with its key ID and optional password.",
       "type": "object",
       "required": [
         "kid"
@@ -1546,16 +1547,16 @@
         "kid": {
           "type": "string"
         },
-        "password": {
-          "type": "string"
-        },
         "password_file": {
           "type": "string"
         },
-        "key": {
+        "password": {
           "type": "string"
         },
         "key_file": {
+          "type": "string"
+        },
+        "key": {
           "type": "string"
         }
       }
