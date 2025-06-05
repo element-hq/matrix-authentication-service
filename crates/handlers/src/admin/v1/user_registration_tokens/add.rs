@@ -25,6 +25,9 @@ use crate::{
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
+    #[error("A registration token with the same token already exists")]
+    Conflict(mas_data_model::UserRegistrationToken),
+
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
@@ -36,6 +39,7 @@ impl IntoResponse for RouteError {
         let error = ErrorResponse::from_error(&self);
         let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
+            Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -82,6 +86,12 @@ pub async fn handler(
     let token = params
         .token
         .unwrap_or_else(|| Alphanumeric.sample_string(&mut rng, 12));
+
+    // See if we have an existing token with the same token
+    let existing_token = repo.user_registration_token().find_by_token(&token).await?;
+    if let Some(existing_token) = existing_token {
+        return Err(RouteError::Conflict(existing_token));
+    }
 
     let registration_token = repo
         .user_registration_token()
@@ -195,5 +205,57 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_conflict(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "token": "test_token_123",
+                "usage_limit": 5
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let body: serde_json::Value = response.json();
+
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": {
+            "type": "user-registration_token",
+            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "attributes": {
+              "token": "test_token_123",
+              "valid": true,
+              "usage_limit": 5,
+              "times_used": 0,
+              "created_at": "2022-01-16T14:40:00Z",
+              "last_used_at": null,
+              "expires_at": null,
+              "revoked_at": null
+            },
+            "links": {
+              "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+          }
+        }
+        "#);
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "token": "test_token_123",
+                "usage_limit": 5
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CONFLICT);
     }
 }
