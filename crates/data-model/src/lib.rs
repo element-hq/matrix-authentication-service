@@ -50,6 +50,6 @@ pub use self::{
     users::{
         Authentication, AuthenticationMethod, BrowserSession, Password, User, UserEmail,
         UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
-        UserRecoveryTicket, UserRegistration, UserRegistrationPassword,
+        UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
 };

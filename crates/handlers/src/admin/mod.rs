@@ -74,6 +74,11 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ..Tag::default()
         })
         .tag(Tag {
+            name: "user-registration-token".to_owned(),
+            description: Some("Manage user registration tokens".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
             name: "upstream-oauth-link".to_owned(),
             description: Some(
                 "Manage links between local users and identities from upstream OAuth 2.0 providers"

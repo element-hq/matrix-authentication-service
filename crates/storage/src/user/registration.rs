@@ -6,7 +6,7 @@
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{UserEmailAuthentication, UserRegistration};
+use mas_data_model::{UserEmailAuthentication, UserRegistration, UserRegistrationToken};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
@@ -138,6 +138,25 @@ pub trait UserRegistrationRepository: Send + Sync {
         version: u16,
     ) -> Result<UserRegistration, Self::Error>;
 
+    /// Set the registration token of a [`UserRegistration`]
+    ///
+    /// Returns the updated [`UserRegistration`]
+    ///
+    /// # Parameters
+    ///
+    /// * `user_registration`: The [`UserRegistration`] to update
+    /// * `user_registration_token`: The [`UserRegistrationToken`] to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails or if the
+    /// registration is already completed
+    async fn set_registration_token(
+        &mut self,
+        user_registration: UserRegistration,
+        user_registration_token: &UserRegistrationToken,
+    ) -> Result<UserRegistration, Self::Error>;
+
     /// Complete a [`UserRegistration`]
     ///
     /// Returns the updated [`UserRegistration`]
@@ -189,6 +208,11 @@ repository_impl!(UserRegistrationRepository:
         user_registration: UserRegistration,
         hashed_password: String,
         version: u16,
+    ) -> Result<UserRegistration, Self::Error>;
+    async fn set_registration_token(
+        &mut self,
+        user_registration: UserRegistration,
+        user_registration_token: &UserRegistrationToken,
     ) -> Result<UserRegistration, Self::Error>;
     async fn complete(
         &mut self,

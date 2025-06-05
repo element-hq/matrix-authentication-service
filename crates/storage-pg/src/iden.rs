@@ -1,4 +1,4 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -138,4 +138,17 @@ pub enum UpstreamOAuthLinks {
     Subject,
     HumanAccountName,
     CreatedAt,
+}
+
+#[derive(sea_query::Iden)]
+pub enum UserRegistrationTokens {
+    Table,
+    UserRegistrationTokenId,
+    Token,
+    UsageLimit,
+    TimesUsed,
+    CreatedAt,
+    LastUsedAt,
+    ExpiresAt,
+    RevokedAt,
 }

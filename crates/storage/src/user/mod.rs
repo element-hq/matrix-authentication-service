@@ -17,6 +17,7 @@ mod email;
 mod password;
 mod recovery;
 mod registration;
+mod registration_token;
 mod session;
 mod terms;
 
@@ -25,6 +26,7 @@ pub use self::{
     password::UserPasswordRepository,
     recovery::UserRecoveryRepository,
     registration::UserRegistrationRepository,
+    registration_token::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
     session::{BrowserSessionFilter, BrowserSessionRepository},
     terms::UserTermsRepository,
 };

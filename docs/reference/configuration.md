@@ -320,6 +320,14 @@ account:
   # Defaults to `false`.
   # This has no effect if password login is disabled.
   login_with_email_allowed: false
+
+  # Whether registration tokens are required for password registrations.
+  #
+  # Defaults to `false`.
+  #
+  # When enabled, users must provide a valid registration token during password
+  # registration. This has no effect if password registration is disabled.
+  registration_token_required: false
 ```
 
 ## `captcha`
@@ -712,7 +720,7 @@ upstream_oauth2:
       # Additional parameters to include in the authorization request
       #additional_authorization_parameters:
       #  foo: "bar"
-      
+
       # Whether the `login_hint` should be forwarded to the provider in the
       # authorization request.
       #forward_login_hint: false

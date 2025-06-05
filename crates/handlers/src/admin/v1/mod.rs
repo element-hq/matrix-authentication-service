@@ -23,6 +23,7 @@ mod oauth2_sessions;
 mod policy_data;
 mod upstream_oauth_links;
 mod user_emails;
+mod user_registration_tokens;
 mod user_sessions;
 mod users;
 
@@ -118,6 +119,31 @@ where
         .api_route(
             "/user-sessions/{id}",
             get_with(self::user_sessions::get, self::user_sessions::get_doc),
+        )
+        .api_route(
+            "/user-registration-tokens",
+            get_with(
+                self::user_registration_tokens::list,
+                self::user_registration_tokens::list_doc,
+            )
+            .post_with(
+                self::user_registration_tokens::add,
+                self::user_registration_tokens::add_doc,
+            ),
+        )
+        .api_route(
+            "/user-registration-tokens/{id}",
+            get_with(
+                self::user_registration_tokens::get,
+                self::user_registration_tokens::get_doc,
+            ),
+        )
+        .api_route(
+            "/user-registration-tokens/{id}/revoke",
+            post_with(
+                self::user_registration_tokens::revoke,
+                self::user_registration_tokens::revoke_doc,
+            ),
         )
         .api_route(
             "/upstream-oauth-links",

@@ -26,7 +26,8 @@ use crate::{
     },
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-        UserRecoveryRepository, UserRegistrationRepository, UserRepository, UserTermsRepository,
+        UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
+        UserRepository, UserTermsRepository,
     },
 };
 
@@ -148,6 +149,11 @@ pub trait RepositoryAccess: Send {
         &'c mut self,
     ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c>;
 
+    /// Get an [`UserRegistrationTokenRepository`]
+    fn user_registration_token<'c>(
+        &'c mut self,
+    ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c>;
+
     /// Get an [`UserTermsRepository`]
     fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c>;
 
@@ -249,7 +255,8 @@ mod impls {
         },
         user::{
             BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-            UserRegistrationRepository, UserRepository, UserTermsRepository,
+            UserRegistrationRepository, UserRegistrationTokenRepository, UserRepository,
+            UserTermsRepository,
         },
     };
 
@@ -344,6 +351,15 @@ mod impls {
         ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(
                 self.inner.user_registration(),
+                &mut self.mapper,
+            ))
+        }
+
+        fn user_registration_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(
+                self.inner.user_registration_token(),
                 &mut self.mapper,
             ))
         }
@@ -510,6 +526,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
             (**self).user_registration()
+        }
+
+        fn user_registration_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
+            (**self).user_registration_token()
         }
 
         fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c> {

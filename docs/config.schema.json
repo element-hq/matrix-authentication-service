@@ -2533,6 +2533,10 @@
         "login_with_email_allowed": {
           "description": "Whether users can log in with their email address. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
+        },
+        "registration_token_required": {
+          "description": "Whether registration tokens are required for password registrations. Defaults to `false`.\n\nWhen enabled, users must provide a valid registration token during password registration. This has no effect if password registration is disabled.",
+          "type": "boolean"
         }
       }
     },
