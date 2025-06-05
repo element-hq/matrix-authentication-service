@@ -578,6 +578,79 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 
         Ok(token)
     }
+
+    #[tracing::instrument(
+        name = "db.user_registration_token.set_expiry",
+        skip_all,
+        fields(
+            db.query.text,
+            user_registration_token.id = %token.id,
+        ),
+        err,
+    )]
+    async fn set_expiry(
+        &mut self,
+        mut token: UserRegistrationToken,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Result<UserRegistrationToken, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registration_tokens
+                SET expires_at = $2
+                WHERE user_registration_token_id = $1
+            "#,
+            Uuid::from(token.id),
+            expires_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        token.expires_at = expires_at;
+
+        Ok(token)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_registration_token.set_usage_limit",
+        skip_all,
+        fields(
+            db.query.text,
+            user_registration_token.id = %token.id,
+        ),
+        err,
+    )]
+    async fn set_usage_limit(
+        &mut self,
+        mut token: UserRegistrationToken,
+        usage_limit: Option<u32>,
+    ) -> Result<UserRegistrationToken, Self::Error> {
+        let usage_limit_i32 = usage_limit
+            .map(i32::try_from)
+            .transpose()
+            .map_err(DatabaseError::to_invalid_operation)?;
+
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registration_tokens
+                SET usage_limit = $2
+                WHERE user_registration_token_id = $1
+            "#,
+            Uuid::from(token.id),
+            usage_limit_i32,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        token.usage_limit = usage_limit;
+
+        Ok(token)
+    }
 }
 
 #[cfg(test)]
@@ -635,6 +708,93 @@ mod tests {
             .unwrap();
 
         assert!(page.edges.iter().any(|t| t.id == unrevoked_token.id));
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_set_expiry(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Create a token without expiry
+        let token = repo
+            .user_registration_token()
+            .add(&mut rng, &clock, "test_token_expiry".to_owned(), None, None)
+            .await
+            .unwrap();
+
+        // Verify it has no expiration
+        assert!(token.expires_at.is_none());
+
+        // Set an expiration
+        let future_time = clock.now() + Duration::days(30);
+        let updated_token = repo
+            .user_registration_token()
+            .set_expiry(token, Some(future_time))
+            .await
+            .unwrap();
+
+        // Verify expiration is set
+        assert_eq!(updated_token.expires_at, Some(future_time));
+
+        // Remove the expiration
+        let final_token = repo
+            .user_registration_token()
+            .set_expiry(updated_token, None)
+            .await
+            .unwrap();
+
+        // Verify expiration is removed
+        assert!(final_token.expires_at.is_none());
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_set_usage_limit(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Create a token without usage limit
+        let token = repo
+            .user_registration_token()
+            .add(&mut rng, &clock, "test_token_limit".to_owned(), None, None)
+            .await
+            .unwrap();
+
+        // Verify it has no usage limit
+        assert!(token.usage_limit.is_none());
+
+        // Set a usage limit
+        let updated_token = repo
+            .user_registration_token()
+            .set_usage_limit(token, Some(5))
+            .await
+            .unwrap();
+
+        // Verify usage limit is set
+        assert_eq!(updated_token.usage_limit, Some(5));
+
+        // Change the usage limit
+        let changed_token = repo
+            .user_registration_token()
+            .set_usage_limit(updated_token, Some(10))
+            .await
+            .unwrap();
+
+        // Verify usage limit is changed
+        assert_eq!(changed_token.usage_limit, Some(10));
+
+        // Remove the usage limit
+        let final_token = repo
+            .user_registration_token()
+            .set_usage_limit(changed_token, None)
+            .await
+            .unwrap();
+
+        // Verify usage limit is removed
+        assert!(final_token.usage_limit.is_none());
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]

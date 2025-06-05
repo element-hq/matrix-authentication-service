@@ -136,6 +136,10 @@ where
             get_with(
                 self::user_registration_tokens::get,
                 self::user_registration_tokens::get_doc,
+            )
+            .put_with(
+                self::user_registration_tokens::update,
+                self::user_registration_tokens::update_doc,
             ),
         )
         .api_route(

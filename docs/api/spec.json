@@ -2415,6 +2415,87 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Update a user registration token",
+        "description": "Update properties of a user registration token such as expiration and usage limit. To set a field to null (removing the limit/expiration), include the field with a null value. To leave a field unchanged, omit it from the request body.",
+        "operationId": "updateUserRegistrationToken",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditUserRegistrationTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Registration token was updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserRegistrationToken"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-registration_token",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "token": "abc123def456",
+                      "valid": true,
+                      "usage_limit": 10,
+                      "times_used": 5,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "last_used_at": "1970-01-01T00:00:00Z",
+                      "expires_at": "1970-01-31T00:00:00Z",
+                      "revoked_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/admin/v1/user-registration-tokens/{id}/revoke": {
@@ -4225,6 +4306,25 @@
           },
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "EditUserRegistrationTokenRequest": {
+        "title": "JSON payload for the `PUT /api/admin/v1/user-registration-tokens/{id}` endpoint",
+        "type": "object",
+        "properties": {
+          "expires_at": {
+            "description": "New expiration date for the token, or null to remove expiration",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "usage_limit": {
+            "description": "New usage limit for the token, or null to remove the limit",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0,
+            "nullable": true
           }
         }
       },
