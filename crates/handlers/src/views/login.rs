@@ -392,7 +392,7 @@ fn handle_login_hint(
             site_config.login_with_email_allowed,
         ) {
             LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
-            LoginHint::EMAIL(email) => Some(email.to_string()),
+            LoginHint::Email(email) => Some(email.to_string()),
             LoginHint::None => None,
         };
         form_state.set_value(LoginFormField::Username, value);
