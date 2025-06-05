@@ -196,6 +196,20 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         token: UserRegistrationToken,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
+    /// Unrevoke a previously revoked [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to unrevoke
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn unrevoke(
+        &mut self,
+        token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -247,6 +261,10 @@ repository_impl!(UserRegistrationTokenRepository:
     async fn revoke(
         &mut self,
         clock: &dyn Clock,
+        token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn unrevoke(
+        &mut self,
         token: UserRegistrationToken,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(

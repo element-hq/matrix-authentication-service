@@ -2507,6 +2507,96 @@
         }
       }
     },
+    "/api/admin/v1/user-registration-tokens/{id}/unrevoke": {
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Unrevoke a user registration token",
+        "description": "Calling this endpoint will unrevoke a previously revoked user registration token, allowing it to be used for registrations again (subject to its usage limits and expiration).",
+        "operationId": "unrevokeUserRegistrationToken",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration token was unrevoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserRegistrationToken"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-registration_token",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "token": "abc123def456",
+                      "valid": true,
+                      "usage_limit": 10,
+                      "times_used": 5,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "last_used_at": "1970-01-01T00:00:00Z",
+                      "expires_at": "1970-01-31T00:00:00Z",
+                      "revoked_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081/unrevoke"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token is not revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 is not revoked"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/upstream-oauth-links": {
       "get": {
         "tags": [

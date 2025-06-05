@@ -546,6 +546,38 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 
         Ok(token)
     }
+
+    #[tracing::instrument(
+        name = "db.user_registration_token.unrevoke",
+        skip_all,
+        fields(
+            db.query.text,
+            user_registration_token.id = %token.id,
+        ),
+        err,
+    )]
+    async fn unrevoke(
+        &mut self,
+        mut token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registration_tokens
+                SET revoked_at = NULL
+                WHERE user_registration_token_id = $1
+            "#,
+            Uuid::from(token.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        token.revoked_at = None;
+
+        Ok(token)
+    }
 }
 
 #[cfg(test)]
@@ -559,6 +591,51 @@ mod tests {
     use sqlx::PgPool;
 
     use crate::PgRepository;
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_unrevoke(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Create a token
+        let token = repo
+            .user_registration_token()
+            .add(&mut rng, &clock, "test_token".to_owned(), None, None)
+            .await
+            .unwrap();
+
+        // Revoke the token
+        let revoked_token = repo
+            .user_registration_token()
+            .revoke(&clock, token)
+            .await
+            .unwrap();
+
+        // Verify it's revoked
+        assert!(revoked_token.revoked_at.is_some());
+
+        // Unrevoke the token
+        let unrevoked_token = repo
+            .user_registration_token()
+            .unrevoke(revoked_token)
+            .await
+            .unwrap();
+
+        // Verify it's no longer revoked
+        assert!(unrevoked_token.revoked_at.is_none());
+
+        // Check that we can find it with the non-revoked filter
+        let non_revoked_filter = UserRegistrationTokenFilter::new(clock.now()).with_revoked(false);
+        let page = repo
+            .user_registration_token()
+            .list(non_revoked_filter, Pagination::first(10))
+            .await
+            .unwrap();
+
+        assert!(page.edges.iter().any(|t| t.id == unrevoked_token.id));
+    }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_list_and_count(pool: PgPool) {
