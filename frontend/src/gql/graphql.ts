@@ -1296,6 +1296,7 @@ export type SiteConfig = Node & {
   passwordLoginEnabled: Scalars['Boolean']['output'];
   /** Whether passwords are enabled and users can register using a password. */
   passwordRegistrationEnabled: Scalars['Boolean']['output'];
+  /** Experimental plan management iframe URI. */
   planManagementIframeUri?: Maybe<Scalars['String']['output']>;
   /** The URL to the privacy policy. */
   policyUri?: Maybe<Scalars['Url']['output']>;
