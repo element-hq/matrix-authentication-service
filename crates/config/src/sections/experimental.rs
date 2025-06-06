@@ -77,7 +77,8 @@ pub struct ExperimentalConfig {
     pub inactive_session_expiration: Option<InactiveSessionExpirationConfig>,
 
     /// Experimental feature to show a plan management tab and iframe.
-    /// This value is passed through "as is" to the client without any validation.
+    /// This value is passed through "as is" to the client without any
+    /// validation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plan_management_iframe_uri: Option<String>,
 }
