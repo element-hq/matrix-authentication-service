@@ -296,6 +296,9 @@ pub struct ImportPreference {
 
     #[serde(default)]
     pub template: Option<String>,
+
+    #[serde(default)]
+    pub on_conflict: Option<OnConflict>,
 }
 
 impl std::ops::Deref for ImportPreference {
@@ -346,5 +349,31 @@ impl ImportAction {
             Self::Suggest => user_preference,
             Self::Force | Self::Require => true,
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the sso login on conflict
+    #[default]
+    Fail,
+
+    /// Adds the oauth identity link, regardless of whether there is an existing
+    /// link or not
+    Add,
+
+    // Overwrites any existing oauth identity link (not implemented yet)
+    //Replace,
+
+    // Adds a oauth identity link only if there are no existing link for that
+    // provider on the user (not implemented yet)
+    // Set,
+}
+
+impl OnConflict {
+    #[must_use]
+    pub fn is_add(&self) -> bool {
+        matches!(self, Self::Add)
     }
 }

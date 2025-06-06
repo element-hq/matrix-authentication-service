@@ -1,0 +1,32 @@
+{#
+Copyright 2024 New Vector Ltd.
+Copyright 2022-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="icon">
+      {{ icon.link() }}
+    </div>
+
+    <div class="header">
+      <h1 class="title">{{ _("mas.upstream_oauth2.suggest_link.heading") }}</h1>
+    </div>
+  </header>
+  <section class="flex flex-col gap-6 justify-center">
+    Hello {{ linked_user.username }}
+    <form method="POST" class="cpd-form-root">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      <input type="hidden" name="action" value="associate" />
+      <input type="hidden" name="username" value="{{ linked_user.username }}" />
+
+      {{ button.button(text=_("mas.upstream_oauth2.suggest_link.action")) }}
+    </form>
+
+  </section>
+{% endblock content %}
