@@ -57,6 +57,7 @@ pub struct SiteConfig {
     /// Whether users can log in with their email address.
     login_with_email_allowed: bool,
 
+    /// Experimental plan management iframe URI. 
     plan_management_iframe_uri: Option<String>,
 }
 
