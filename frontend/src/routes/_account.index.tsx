@@ -27,7 +27,6 @@ import AddEmailForm from "../components/UserProfile/AddEmailForm";
 import UserEmailList, {
   query as userEmailListQuery,
 } from "../components/UserProfile/UserEmailList";
-
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 

@@ -82,13 +82,11 @@ export const handlers = [
           ),
         ),
 
-        siteConfig: Object.assign(
-          makeFragmentData(
-            {
-              displayNameChangeAllowed: true,
-            },
-            USER_GREETING_CONFIG_FRAGMENT,
-          ),
+        siteConfig: makeFragmentData(
+          {
+            displayNameChangeAllowed: true,
+          },
+          USER_GREETING_CONFIG_FRAGMENT,
         ),
       },
     }),
