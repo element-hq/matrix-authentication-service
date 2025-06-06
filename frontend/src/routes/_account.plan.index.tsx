@@ -25,14 +25,13 @@ export const query = queryOptions({
 
 export const Route = createFileRoute("/_account/plan/")({
   loader: async ({ context }) => {
-    const { planManagementIframeUri } = (
-      await context.queryClient.ensureQueryData(query)
-    ).siteConfig;
-    if (planManagementIframeUri) {
-      preload(planManagementIframeUri, { as: "document" });
-    } else {
-      throw redirect({ to: "/" });
-    }
+    const { siteConfig: { planManagementIframeUri } } =
+      await context.queryClient.ensureQueryData(query);
+
+    if (!planManagementIframeUri)
+      throw redirect({ to: "/", replace: true });
+
+    preload(planManagementIframeUri, { as: "document" });
   },
   component: Plan,
 });
