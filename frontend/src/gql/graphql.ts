@@ -1296,6 +1296,8 @@ export type SiteConfig = Node & {
   passwordLoginEnabled: Scalars['Boolean']['output'];
   /** Whether passwords are enabled and users can register using a password. */
   passwordRegistrationEnabled: Scalars['Boolean']['output'];
+  /** Experimental plan management iframe URI. */
+  planManagementIframeUri?: Maybe<Scalars['String']['output']>;
   /** The URL to the privacy policy. */
   policyUri?: Maybe<Scalars['Url']['output']>;
   /** The server name of the homeserver. */
@@ -1858,6 +1860,11 @@ export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typena
     & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
 
+export type PlanManagementTabQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PlanManagementTabQuery = { __typename?: 'Query', siteConfig: { __typename?: 'SiteConfig', planManagementIframeUri?: string | null } };
+
 export type BrowserSessionListQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -1904,7 +1911,7 @@ export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer: { __typen
     { __typename: 'User' }
     & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
   ), siteConfig: (
-    { __typename?: 'SiteConfig' }
+    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
@@ -2576,6 +2583,13 @@ fragment UserEmailList_siteConfig on SiteConfig {
   emailChangeAllowed
   passwordLoginEnabled
 }`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
+export const PlanManagementTabDocument = new TypedDocumentString(`
+    query PlanManagementTab {
+  siteConfig {
+    planManagementIframeUri
+  }
+}
+    `) as unknown as TypedDocumentString<PlanManagementTabQuery, PlanManagementTabQueryVariables>;
 export const BrowserSessionListDocument = new TypedDocumentString(`
     query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
   viewerSession {
@@ -2763,6 +2777,7 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
   }
   siteConfig {
     ...UserGreeting_siteConfig
+    planManagementIframeUri
   }
 }
     fragment UserGreeting_user on User {
@@ -3277,6 +3292,27 @@ export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEma
 export const mockUserProfileQuery = (resolver: GraphQLResponseResolver<UserProfileQuery, UserProfileQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserProfileQuery, UserProfileQueryVariables>(
     'UserProfile',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockPlanManagementTabQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { siteConfig }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockPlanManagementTabQuery = (resolver: GraphQLResponseResolver<PlanManagementTabQuery, PlanManagementTabQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<PlanManagementTabQuery, PlanManagementTabQueryVariables>(
+    'PlanManagementTab',
     resolver,
     options
   )

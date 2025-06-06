@@ -75,6 +75,12 @@ pub struct ExperimentalConfig {
     /// Disabled by default
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inactive_session_expiration: Option<InactiveSessionExpirationConfig>,
+
+    /// Experimental feature to show a plan management tab and iframe.
+    /// This value is passed through "as is" to the client without any
+    /// validation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plan_management_iframe_uri: Option<String>,
 }
 
 impl Default for ExperimentalConfig {
@@ -83,6 +89,7 @@ impl Default for ExperimentalConfig {
             access_token_ttl: default_token_ttl(),
             compat_token_ttl: default_token_ttl(),
             inactive_session_expiration: None,
+            plan_management_iframe_uri: None,
         }
     }
 }
@@ -92,6 +99,7 @@ impl ExperimentalConfig {
         is_default_token_ttl(&self.access_token_ttl)
             && is_default_token_ttl(&self.compat_token_ttl)
             && self.inactive_session_expiration.is_none()
+            && self.plan_management_iframe_uri.is_none()
     }
 }
 
