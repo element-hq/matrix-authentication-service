@@ -92,5 +92,5 @@ pub struct SiteConfig {
     pub login_with_email_allowed: bool,
 
     /// The iframe URL to show in the plan tab of the UI
-    pub plan_management_iframe_uri: Option<Url>,
+    pub plan_management_iframe_uri: Option<String>,
 }

@@ -8,7 +8,6 @@ use chrono::Duration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use url::Url;
 
 use crate::ConfigurationSection;
 
@@ -77,9 +76,10 @@ pub struct ExperimentalConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inactive_session_expiration: Option<InactiveSessionExpirationConfig>,
 
-    /// Experimental feature to show a plan management tab and iframe
+    /// Experimental feature to show a plan management tab and iframe.
+    /// This value is passed through "as is" to the client without any validation.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub plan_management_iframe_uri: Option<Url>,
+    pub plan_management_iframe_uri: Option<String>,
 }
 
 impl Default for ExperimentalConfig {
