@@ -19,6 +19,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     record_error,
 };
+use mas_data_model::UpstreamOAuthProviderOnConflict;
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -37,7 +38,6 @@ use minijinja::Environment;
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::warn;
 use ulid::Ulid;
 
 use super::{
@@ -68,6 +68,7 @@ const PROVIDER: Key = Key::from_static_str("provider");
 const DEFAULT_LOCALPART_TEMPLATE: &str = "{{ user.preferred_username }}";
 const DEFAULT_DISPLAYNAME_TEMPLATE: &str = "{{ user.name }}";
 const DEFAULT_EMAIL_TEMPLATE: &str = "{{ user.email }}";
+const DEFAULT_ON_CONFLICT:UpstreamOAuthProviderOnConflict  = UpstreamOAuthProviderOnConflict::Fail;
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -208,6 +209,10 @@ pub(crate) enum FormData {
         accept_terms: Option<String>,
     },
     Link,
+    Associate {
+        #[serde(default)]
+        username: Option<String>,
+    },
 }
 
 impl ToFormState for FormData {
@@ -473,13 +478,25 @@ pub(crate) async fn get(
                             .await
                             .map_err(RouteError::HomeserverConnection)?;
 
-                        if !provider.allow_existing_users
-                            && (maybe_existing_user.is_some() || !is_available)
-                        {
-                            if let Some(existing_user) = maybe_existing_user {
-                                // The mapper returned a username which already exists, but isn't
-                                // linked to this upstream user.
-                                warn!(username = %localpart, user_id = %existing_user.id, "Localpart template returned an existing username");
+                        if let Some(existing_user) = maybe_existing_user {
+                            // The mapper returned a username which already exists, but isn't
+                            // linked to this upstream user.
+                            let on_conflict = provider
+                                .claims_imports
+                                .localpart
+                                .on_conflict
+                                .unwrap_or(DEFAULT_ON_CONFLICT);
+
+                            if on_conflict.is_add() {
+                                // new oauth link is allowed
+                                let ctx = UpstreamExistingLinkContext::new(existing_user)
+                                    .with_csrf(csrf_token.form_value())
+                                    .with_language(locale);
+
+                                return Ok((
+                                    cookie_jar,
+                                    Html(templates.render_upstream_oauth2_do_login(&ctx)?).into_response()
+                                ));
                             }
 
                             // TODO: translate
@@ -487,7 +504,22 @@ pub(crate) async fn get(
                                 .with_code("User exists")
                                 .with_description(format!(
                                     r"Upstream account provider returned {localpart:?} as username,
-                                    which is not linked to that upstream account. Homeserver does not allow linking existing account"
+                                    which is not linked to that upstream account"
+                                ))
+                                .with_language(&locale);
+
+                            return Ok((
+                                cookie_jar,
+                                Html(templates.render_error(&ctx)?).into_response(),
+                            ));
+                        }
+
+                        if !is_available {
+                            // TODO: translate
+                            let ctx = ErrorContext::new()
+                                .with_code("Localpart not available")
+                                .with_description(format!(
+                                    r"Localpart is not available on this homeserver"
                                 ))
                                 .with_language(&locale);
 
@@ -509,11 +541,7 @@ pub(crate) async fn get(
                             })
                             .await?;
 
-                        if provider.allow_existing_users && maybe_existing_user.is_some() {
-                            // use existing user if allowed
-                            ctx.with_existing_user(maybe_existing_user.unwrap())
-                                .with_localpart(localpart, true)
-                        } else if res.valid() {
+                        if res.valid() {
                             // The username passes the policy check, add it to the context
                             ctx.with_localpart(
                                 localpart,
@@ -622,6 +650,32 @@ pub(crate) async fn post(
                 .await?;
 
             session
+        }
+
+        (None, None, FormData::Associate { username }) => {
+            //user already exists, but it is not linked, neither connected
+            //proceed by associating the link and connect the user
+            
+            let maybe_user = repo
+                .user()
+                .find_by_username(&username.unwrap())
+                .await?;
+
+            if maybe_user.is_some() {
+        
+                let user = maybe_user.unwrap();
+
+                repo.upstream_oauth_link()
+                    .associate_to_user(&link, &user)
+                    .await?;
+
+                repo.browser_session()
+                    .add(&mut rng, &clock, &user, user_agent)
+                    .await?
+
+            }else{
+                return Err(RouteError::InvalidFormAction);
+            }
         }
 
         (
@@ -755,16 +809,15 @@ pub(crate) async fn post(
                         mas_templates::UpstreamRegisterFormField::Username,
                         FieldError::Required,
                     );
-                } else if !provider.allow_existing_users && repo.user().exists(&username).await? {
+                } else if repo.user().exists(&username).await? {
                     form_state.add_error_on_field(
                         mas_templates::UpstreamRegisterFormField::Username,
                         FieldError::Exists,
                     );
-                } else if !provider.allow_existing_users
-                    && !homeserver
-                        .is_localpart_available(&username)
-                        .await
-                        .map_err(RouteError::HomeserverConnection)?
+                } else if !homeserver
+                    .is_localpart_available(&username)
+                    .await
+                    .map_err(RouteError::HomeserverConnection)?
                 {
                     // The user already exists on the homeserver
                     tracing::warn!(
@@ -844,39 +897,26 @@ pub(crate) async fn post(
                     .into_response());
             }
 
-            let mut existing_user: Option<mas_data_model::User> = None;
+            REGISTRATION_COUNTER.add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
 
-            //search and use existing users if allowed
-            if provider.allow_existing_users {
-                existing_user = repo.user().find_by_username(&username).await?;
+            // Now we can create the user
+            let user = repo.user().add(&mut rng, &clock, username).await?;
+
+            if let Some(terms_url) = &site_config.tos_uri {
+                repo.user_terms()
+                    .accept_terms(&mut rng, &clock, &user, terms_url.clone())
+                    .await?;
             }
 
-            let user = if existing_user.is_some() {
-                existing_user.unwrap()
-            } else {
-                REGISTRATION_COUNTER.add(1, &[KeyValue::new(PROVIDER, provider.id.to_string())]);
+            // And schedule the job to provision it
+            let mut job = ProvisionUserJob::new(&user);
 
-                // Now we can create the user
-                let user = repo.user().add(&mut rng, &clock, username).await?;
+            // If we have a display name, set it during provisioning
+            if let Some(name) = display_name {
+                job = job.set_display_name(name);
+            }
 
-                if let Some(terms_url) = &site_config.tos_uri {
-                    repo.user_terms()
-                        .accept_terms(&mut rng, &clock, &user, terms_url.clone())
-                        .await?;
-                }
-
-                // And schedule the job to provision it
-                let mut job = ProvisionUserJob::new(&user);
-
-                // If we have a display name, set it during provisioning
-                if let Some(name) = display_name {
-                    job = job.set_display_name(name);
-                }
-
-                repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
-
-                user
-            };
+            repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
 
             // If we have an email, add it to the user
             if let Some(email) = email {
@@ -950,10 +990,12 @@ mod tests {
             localpart: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Force,
                 template: None,
+                on_conflict: None,
             },
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Force,
                 template: None,
+                on_conflict: None,
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
@@ -993,7 +1035,6 @@ mod tests {
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
-                    allow_existing_users: true,
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
@@ -1108,10 +1149,12 @@ mod tests {
             localpart: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
+                on_conflict: Some(mas_data_model::UpstreamOAuthProviderOnConflict::Add),
             },
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
+                on_conflict: None,
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
@@ -1151,7 +1194,6 @@ mod tests {
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
-                    allow_existing_users: true,
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
@@ -1212,9 +1254,8 @@ mod tests {
         let request = Request::post(&*mas_router::UpstreamOAuth2Link::new(link.id).path()).form(
             serde_json::json!({
                 "csrf": csrf_token,
-                "action": "register",
-                "import_email": "on",
-                "accept_terms": "on",
+                "action": "associate",
+                "username" : user.username.clone()
             }),
         );
         let request = cookies.with_cookies(request);
@@ -1234,17 +1275,6 @@ mod tests {
 
         assert_eq!(link.user_id, Some(user.id));
 
-        let page = repo
-            .user_email()
-            .list(UserEmailFilter::new().for_user(&user), Pagination::first(1))
-            .await
-            .unwrap();
-
-        //check that the existing user email is updated by oidc email
-        assert_eq!(page.edges.len(), 1);
-        let email = page.edges.first().expect("email exists");
-
-        assert_eq!(email.email, oidc_email);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1273,10 +1303,12 @@ mod tests {
             localpart: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
+                on_conflict: Some(mas_data_model::UpstreamOAuthProviderOnConflict::Fail),
             },
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
+                on_conflict: None,
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
@@ -1316,7 +1348,6 @@ mod tests {
                     discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
                     pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
                     response_mode: None,
-                    allow_existing_users: false,
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,

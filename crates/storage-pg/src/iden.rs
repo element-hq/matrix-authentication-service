@@ -124,7 +124,6 @@ pub enum UpstreamOAuthProviders {
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
-    AllowExistingUsers,
 }
 
 #[derive(sea_query::Iden)]

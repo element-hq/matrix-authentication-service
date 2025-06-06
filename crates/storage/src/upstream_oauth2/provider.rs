@@ -93,9 +93,6 @@ pub struct UpstreamOAuthProviderParams {
     /// What response mode it should ask
     pub response_mode: Option<UpstreamOAuthProviderResponseMode>,
 
-    /// Whether to allow existing users to be linked to the provider
-    pub allow_existing_users: bool,
-
     /// Additional parameters to include in the authorization request
     pub additional_authorization_parameters: Vec<(String, String)>,
 

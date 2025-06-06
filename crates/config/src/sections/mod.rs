@@ -54,7 +54,8 @@ pub use self::{
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction, PkceMethod as UpstreamOAuth2PkceMethod,
         Provider as UpstreamOAuth2Provider, ResponseMode as UpstreamOAuth2ResponseMode,
-        TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
+        TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config, OnConflict as UpstreamOAuth2OnConflict
+
     },
 };
 use crate::util::ConfigurationSection;

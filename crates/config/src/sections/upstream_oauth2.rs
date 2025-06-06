@@ -111,16 +111,20 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 }
             }
 
-            if provider.allow_existing_users
+            if provider.claims_imports.localpart.on_conflict.is_some()
+                && provider.claims_imports.localpart.on_conflict.unwrap().add()
                 && !matches!(
                     provider.claims_imports.localpart.action,
                     ImportAction::Force | ImportAction::Require
                 )
             {
                 return annotate(figment::Error::custom(
-                    "When `allow_existing_users` is true, localpart claim import must be either `force` or `require`",
+                    "When `on_conflict` is set to `add`, localpart claim import must be either `force` or `require`",
                 ));
             }
+
+            //TODO : check that claims imports use on_conflict where it is not
+            // supported?
         }
 
         Ok(())
@@ -194,6 +198,32 @@ impl ImportAction {
     }
 }
 
+/// How to handle an existing localpart claim
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the sso login on conflict
+    #[default]
+    Fail,
+
+    /// Adds the oauth identity link, regardless of whether there is an existing
+    /// link or not
+    Add,
+
+    // Overwrites any existing oauth identity link (not implemented yet)
+    //Replace,
+
+    // Adds a oauth identity link only if there are no existing link for that
+    // provider on the user (not implemented yet)
+    //Set,
+}
+
+impl OnConflict {
+    const fn add(&self) -> bool {
+        matches!(self, OnConflict::Add)
+    }
+}
+
 /// What should be done for the subject attribute
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct SubjectImportPreference {
@@ -222,6 +252,10 @@ pub struct LocalpartImportPreference {
     /// If not provided, the default template is `{{ user.preferred_username }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
+
+    /// How to handle existing users (only for localpart)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub on_conflict: Option<OnConflict>,
 }
 
 impl LocalpartImportPreference {
@@ -582,13 +616,6 @@ pub struct Provider {
     /// provider
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
-
-    /// Whether to allow a user logging in via OIDC to match a pre-existing
-    /// account instead of failing. This could be used if switching from
-    /// password logins to OIDC.
-    //Defaults to false.
-    #[serde(default)]
-    pub allow_existing_users: bool,
 
     /// Additional parameters to include in the authorization request
     ///

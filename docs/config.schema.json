@@ -2115,11 +2115,6 @@
             }
           ]
         },
-        "allow_existing_users": {
-          "description": "Whether to allow a user logging in via OIDC to match a pre-existing account instead of failing. This could be used if switching from password logins to OIDC.",
-          "default": false,
-          "type": "boolean"
-        },
         "additional_authorization_parameters": {
           "description": "Additional parameters to include in the authorization request\n\nOrders of the keys are not preserved.",
           "type": "object",
@@ -2348,6 +2343,14 @@
         "template": {
           "description": "The Jinja2 template to use for the localpart attribute\n\nIf not provided, the default template is `{{ user.preferred_username }}`",
           "type": "string"
+        },
+        "on_conflict": {
+          "description": "How to handle existing users (only for localpart)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OnConflict"
+            }
+          ]
         }
       }
     },
@@ -2380,6 +2383,39 @@
           "type": "string",
           "enum": [
             "require"
+          ]
+        }
+      ]
+    },
+    "OnConflict": {
+      "description": "How to handle an existing user",
+      "oneOf": [
+        {
+          "description": "Fails the sso login on conflict",
+          "type": "string",
+          "enum": [
+            "fail"
+          ]
+        },
+        {
+          "description": "Adds the oauth identity link, regardless of whether there is an existing link or not",
+          "type": "string",
+          "enum": [
+            "add"
+          ]
+        },
+        {
+          "description": "Overwrites any existing oauth identity link (not implemented yet)",
+          "type": "string",
+          "enum": [
+            "replace"
+          ]
+        },
+        {
+          "description": "Adds a oauth identity link only if there are no existing link for that provider on the user (not implemented yet)",
+          "type": "string",
+          "enum": [
+            "set"
           ]
         }
       ]
