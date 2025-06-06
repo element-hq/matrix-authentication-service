@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registration_tokens\n                SET revoked_at = NULL\n                WHERE user_registration_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c7fc3e386ce51187f6344ad65e1d78a7f026e8311bdc7d5ccc2f39d962e898f"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registration_tokens\n                SET expires_at = $2\n                WHERE user_registration_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "21b9e39ffd89de288305765c339a991d2471667cf2981770447cde6fd025fbb7"
+}

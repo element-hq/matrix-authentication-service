@@ -196,6 +196,53 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         token: UserRegistrationToken,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
+    /// Unrevoke a previously revoked [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to unrevoke
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn unrevoke(
+        &mut self,
+        token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
+    /// Set the expiration time of a [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `expires_at`: The new expiration time, or `None` to remove the
+    ///   expiration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_expiry(
+        &mut self,
+        token: UserRegistrationToken,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
+    /// Set the usage limit of a [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `usage_limit`: The new usage limit, or `None` to remove the limit
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_usage_limit(
+        &mut self,
+        token: UserRegistrationToken,
+        usage_limit: Option<u32>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -248,6 +295,20 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         clock: &dyn Clock,
         token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn unrevoke(
+        &mut self,
+        token: UserRegistrationToken,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_expiry(
+        &mut self,
+        token: UserRegistrationToken,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_usage_limit(
+        &mut self,
+        token: UserRegistrationToken,
+        usage_limit: Option<u32>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(
         &mut self,

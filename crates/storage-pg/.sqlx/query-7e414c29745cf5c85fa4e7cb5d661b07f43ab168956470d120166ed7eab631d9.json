@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_registration_tokens\n                SET usage_limit = $2\n                WHERE user_registration_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7e414c29745cf5c85fa4e7cb5d661b07f43ab168956470d120166ed7eab631d9"
+}

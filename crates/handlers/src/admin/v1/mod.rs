@@ -136,6 +136,10 @@ where
             get_with(
                 self::user_registration_tokens::get,
                 self::user_registration_tokens::get_doc,
+            )
+            .put_with(
+                self::user_registration_tokens::update,
+                self::user_registration_tokens::update_doc,
             ),
         )
         .api_route(
@@ -143,6 +147,13 @@ where
             post_with(
                 self::user_registration_tokens::revoke,
                 self::user_registration_tokens::revoke_doc,
+            ),
+        )
+        .api_route(
+            "/user-registration-tokens/{id}/unrevoke",
+            post_with(
+                self::user_registration_tokens::unrevoke,
+                self::user_registration_tokens::unrevoke_doc,
             ),
         )
         .api_route(
