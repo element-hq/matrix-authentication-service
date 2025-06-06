@@ -191,7 +191,7 @@ features = [
 
 # Hyper Rustls support
 [workspace.dependencies.hyper-rustls]
-version = "0.27.6"
+version = "0.27.7"
 features = ["http1", "http2"]
 default-features = false
 
