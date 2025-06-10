@@ -269,7 +269,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # High-precision clock
 [workspace.dependencies.quanta]
-version = "0.12.5"
+version = "0.12.6"
 
 # Random values
 [workspace.dependencies.rand]
