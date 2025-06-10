@@ -94,7 +94,7 @@ features = ["cookie-private", "cookie-key-expansion", "typed-header"]
 
 # Constant-time base64
 [workspace.dependencies.base64ct]
-version = "1.7.3"
+version = "1.8.0"
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
