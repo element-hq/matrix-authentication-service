@@ -3,20 +3,20 @@
 exports[`<OAuth2Session /> > renders a finished session 1`] = `
 <DocumentFragment>
   <section
-    class="_sessionCardRoot_e2909e"
+    class="_sessionCardRoot_6c1027"
   >
     <a
       aria-disabled="true"
-      class="_sessionCard_e2909e _disabled_e2909e"
+      class="_sessionCard_6c1027 _disabled_6c1027"
       disabled=""
       role="link"
     >
       <header
-        class="_cardHeader_e2909e"
+        class="_cardHeader_6c1027"
       >
         <svg
           aria-label="Computer"
-          class="_deviceTypeIcon_e677aa"
+          class="_deviceTypeIcon_261d75"
           fill="currentColor"
           height="1em"
           viewBox="0 0 24 24"
@@ -28,31 +28,31 @@ exports[`<OAuth2Session /> > renders a finished session 1`] = `
           />
         </svg>
         <div
-          class="_content_e2909e"
+          class="_content_6c1027"
         >
           <div
-            class="_name_e2909e"
+            class="_name_6c1027"
           >
             Unknown device
           </div>
           <div
-            class="_client_e2909e"
+            class="_client_6c1027"
           >
             Element
           </div>
         </div>
       </header>
       <ul
-        class="_metadata_e2909e"
+        class="_metadata_6c1027"
       >
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Signed in
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             <time
               datetime="2023-06-29T03:35:17Z"
@@ -63,12 +63,12 @@ exports[`<OAuth2Session /> > renders a finished session 1`] = `
         </li>
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Device ID
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             abcd1234
           </div>
@@ -82,18 +82,18 @@ exports[`<OAuth2Session /> > renders a finished session 1`] = `
 exports[`<OAuth2Session /> > renders an active session 1`] = `
 <DocumentFragment>
   <section
-    class="_sessionCardRoot_e2909e"
+    class="_sessionCardRoot_6c1027"
   >
     <a
-      class="_sessionCard_e2909e"
+      class="_sessionCard_6c1027"
       href="/sessions/session-id"
     >
       <header
-        class="_cardHeader_e2909e"
+        class="_cardHeader_6c1027"
       >
         <svg
           aria-label="Computer"
-          class="_deviceTypeIcon_e677aa"
+          class="_deviceTypeIcon_261d75"
           fill="currentColor"
           height="1em"
           viewBox="0 0 24 24"
@@ -105,31 +105,31 @@ exports[`<OAuth2Session /> > renders an active session 1`] = `
           />
         </svg>
         <div
-          class="_content_e2909e"
+          class="_content_6c1027"
         >
           <div
-            class="_name_e2909e"
+            class="_name_6c1027"
           >
             Unknown device
           </div>
           <div
-            class="_client_e2909e"
+            class="_client_6c1027"
           >
             Element
           </div>
         </div>
       </header>
       <ul
-        class="_metadata_e2909e"
+        class="_metadata_6c1027"
       >
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Signed in
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             <time
               datetime="2023-06-29T03:35:17Z"
@@ -140,12 +140,12 @@ exports[`<OAuth2Session /> > renders an active session 1`] = `
         </li>
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Device ID
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             abcd1234
           </div>
@@ -153,7 +153,7 @@ exports[`<OAuth2Session /> > renders an active session 1`] = `
       </ul>
     </a>
     <div
-      class="_action_e2909e"
+      class="_action_6c1027"
     >
       <button
         aria-controls="radix-«r0»"
@@ -189,20 +189,20 @@ exports[`<OAuth2Session /> > renders an active session 1`] = `
 exports[`<OAuth2Session /> > renders correct icon for a native session 1`] = `
 <DocumentFragment>
   <section
-    class="_sessionCardRoot_e2909e"
+    class="_sessionCardRoot_6c1027"
   >
     <a
       aria-disabled="true"
-      class="_sessionCard_e2909e _disabled_e2909e"
+      class="_sessionCard_6c1027 _disabled_6c1027"
       disabled=""
       role="link"
     >
       <header
-        class="_cardHeader_e2909e"
+        class="_cardHeader_6c1027"
       >
         <svg
           aria-label="Mobile"
-          class="_deviceTypeIcon_e677aa"
+          class="_deviceTypeIcon_261d75"
           fill="currentColor"
           height="1em"
           viewBox="0 0 24 24"
@@ -214,31 +214,31 @@ exports[`<OAuth2Session /> > renders correct icon for a native session 1`] = `
           />
         </svg>
         <div
-          class="_content_e2909e"
+          class="_content_6c1027"
         >
           <div
-            class="_name_e2909e"
+            class="_name_6c1027"
           >
             Unknown device
           </div>
           <div
-            class="_client_e2909e"
+            class="_client_6c1027"
           >
             Element
           </div>
         </div>
       </header>
       <ul
-        class="_metadata_e2909e"
+        class="_metadata_6c1027"
       >
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Signed in
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             <time
               datetime="2023-06-29T03:35:17Z"
@@ -249,12 +249,12 @@ exports[`<OAuth2Session /> > renders correct icon for a native session 1`] = `
         </li>
         <li>
           <div
-            class="_key_e2909e"
+            class="_key_6c1027"
           >
             Device ID
           </div>
           <div
-            class="_value_e2909e"
+            class="_value_6c1027"
           >
             abcd1234
           </div>

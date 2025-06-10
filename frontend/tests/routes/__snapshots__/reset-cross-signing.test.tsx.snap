@@ -3,13 +3,13 @@
 exports[`Reset cross signing > renders the cancelled page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _invalid_c10486"
+        class="_icon_5ba6c3 _invalid_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -24,10 +24,10 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Identity reset cancelled.
         </h1>
@@ -44,7 +44,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
       If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.
     </p>
     <footer
-      class="_legalFooter_eb428f"
+      class="_legalFooter_acfd2c"
     >
       <nav>
         <a
@@ -59,7 +59,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
         </a>
         <div
           aria-hidden="true"
-          class="_separator_eb428f"
+          class="_separator_acfd2c"
         >
           •
         </div>
@@ -75,7 +75,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
         </a>
       </nav>
       <p
-        class="_imprint_eb428f"
+        class="_imprint_acfd2c"
       >
         All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
       </p>
@@ -87,13 +87,13 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
 exports[`Reset cross signing > renders the deep link page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _invalid_c10486"
+        class="_icon_5ba6c3 _invalid_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -108,10 +108,10 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Reset your identity in case you can't confirm another way
         </h1>
@@ -207,7 +207,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     </button>
     <a
       aria-disabled="false"
-      class="_button_vczzf_8 _buttonLink_42cda0"
+      class="_button_vczzf_8 _buttonLink_014cb0"
       data-kind="tertiary"
       data-size="lg"
       href="/reset-cross-signing/cancelled"
@@ -217,7 +217,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
       Cancel
     </a>
     <footer
-      class="_legalFooter_eb428f"
+      class="_legalFooter_acfd2c"
     >
       <nav>
         <a
@@ -232,7 +232,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         </a>
         <div
           aria-hidden="true"
-          class="_separator_eb428f"
+          class="_separator_acfd2c"
         >
           •
         </div>
@@ -248,7 +248,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         </a>
       </nav>
       <p
-        class="_imprint_eb428f"
+        class="_imprint_acfd2c"
       >
         All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
       </p>
@@ -260,13 +260,13 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
 exports[`Reset cross signing > renders the errored page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _invalid_c10486"
+        class="_icon_5ba6c3 _invalid_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -281,10 +281,10 @@ exports[`Reset cross signing > renders the errored page 1`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Failed to allow crypto identity reset
         </h1>
@@ -305,7 +305,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
       Back
     </button>
     <footer
-      class="_legalFooter_eb428f"
+      class="_legalFooter_acfd2c"
     >
       <nav>
         <a
@@ -320,7 +320,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
         </a>
         <div
           aria-hidden="true"
-          class="_separator_eb428f"
+          class="_separator_acfd2c"
         >
           •
         </div>
@@ -336,7 +336,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
         </a>
       </nav>
       <p
-        class="_imprint_eb428f"
+        class="_imprint_acfd2c"
       >
         All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
       </p>
@@ -348,13 +348,13 @@ exports[`Reset cross signing > renders the errored page 1`] = `
 exports[`Reset cross signing > renders the page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _invalid_c10486"
+        class="_icon_5ba6c3 _invalid_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -369,10 +369,10 @@ exports[`Reset cross signing > renders the page 1`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Reset your identity in case you can't confirm another way
         </h1>
@@ -468,7 +468,7 @@ exports[`Reset cross signing > renders the page 1`] = `
     </button>
     <a
       aria-disabled="false"
-      class="_button_vczzf_8 _buttonLink_42cda0"
+      class="_button_vczzf_8 _buttonLink_014cb0"
       data-kind="tertiary"
       data-size="lg"
       href="/"
@@ -478,7 +478,7 @@ exports[`Reset cross signing > renders the page 1`] = `
       Back
     </a>
     <footer
-      class="_legalFooter_eb428f"
+      class="_legalFooter_acfd2c"
     >
       <nav>
         <a
@@ -493,7 +493,7 @@ exports[`Reset cross signing > renders the page 1`] = `
         </a>
         <div
           aria-hidden="true"
-          class="_separator_eb428f"
+          class="_separator_acfd2c"
         >
           •
         </div>
@@ -509,7 +509,7 @@ exports[`Reset cross signing > renders the page 1`] = `
         </a>
       </nav>
       <p
-        class="_imprint_eb428f"
+        class="_imprint_acfd2c"
       >
         All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
       </p>
@@ -521,13 +521,13 @@ exports[`Reset cross signing > renders the page 1`] = `
 exports[`Reset cross signing > renders the success page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _success_c10486"
+        class="_icon_5ba6c3 _success_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -542,10 +542,10 @@ exports[`Reset cross signing > renders the success page 1`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Identity reset successfully. Go back to the app to finish the process.
         </h1>
@@ -563,13 +563,13 @@ exports[`Reset cross signing > renders the success page 1`] = `
 exports[`Reset cross signing > renders the success page 2`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9"
+    class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_c10486"
+      class="_pageHeading_5ba6c3"
     >
       <div
-        class="_icon_c10486 _success_c10486"
+        class="_icon_5ba6c3 _success_5ba6c3"
       >
         <svg
           fill="currentColor"
@@ -584,10 +584,10 @@ exports[`Reset cross signing > renders the success page 2`] = `
         </svg>
       </div>
       <div
-        class="_header_c10486"
+        class="_header_5ba6c3"
       >
         <h1
-          class="_title_c10486"
+          class="_title_5ba6c3"
         >
           Identity reset successfully. Go back to the app to finish the process.
         </h1>

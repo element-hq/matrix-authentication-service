@@ -4,7 +4,7 @@ exports[`<DeviceTypeIcon /> > renders mobile device type 1`] = `
 <div>
   <svg
     aria-label="Mobile"
-    class="_deviceTypeIcon_e677aa"
+    class="_deviceTypeIcon_261d75"
     fill="currentColor"
     height="1em"
     viewBox="0 0 24 24"
@@ -22,7 +22,7 @@ exports[`<DeviceTypeIcon /> > renders pc device type 1`] = `
 <div>
   <svg
     aria-label="Computer"
-    class="_deviceTypeIcon_e677aa"
+    class="_deviceTypeIcon_261d75"
     fill="currentColor"
     height="1em"
     viewBox="0 0 24 24"
@@ -40,7 +40,7 @@ exports[`<DeviceTypeIcon /> > renders tablet device type 1`] = `
 <div>
   <svg
     aria-label="Tablet"
-    class="_deviceTypeIcon_e677aa"
+    class="_deviceTypeIcon_261d75"
     fill="currentColor"
     height="1em"
     viewBox="0 0 24 24"
@@ -58,7 +58,7 @@ exports[`<DeviceTypeIcon /> > renders unknown device type 1`] = `
 <div>
   <svg
     aria-label="Unknown device type"
-    class="_deviceTypeIcon_e677aa"
+    class="_deviceTypeIcon_261d75"
     fill="currentColor"
     height="1em"
     viewBox="0 0 24 24"

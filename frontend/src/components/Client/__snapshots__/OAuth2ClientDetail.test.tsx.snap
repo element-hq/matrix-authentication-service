@@ -24,7 +24,7 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -56,7 +56,7 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
             class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-ellipsis overflow-hidden"
           >
             <a
-              class="_link_1v5rz_8 _externalLink_a97355"
+              class="_link_1v5rz_8 _externalLink_94c115"
               data-kind="primary"
               data-size="medium"
               href="https://client.org/tos"
@@ -79,7 +79,7 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
             class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-ellipsis overflow-hidden"
           >
             <a
-              class="_link_1v5rz_8 _externalLink_a97355"
+              class="_link_1v5rz_8 _externalLink_94c115"
               data-kind="primary"
               data-size="medium"
               href="https://client.org/policy"

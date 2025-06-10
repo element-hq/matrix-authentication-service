@@ -23,7 +23,7 @@ exports[`<LastActive > renders a relative timestamp 1`] = `
 exports[`<LastActive > renders an 'active now' timestamp 1`] = `
 <div>
   <span
-    class="_active_04756f"
+    class="_active_f381d7"
     title="Mon, 18 Sept 2023, 01:12"
   >
     Active now

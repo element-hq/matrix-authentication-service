@@ -6,10 +6,10 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
     class="flex flex-col gap-10"
   >
     <header
-      class="_header_92353c"
+      class="_header_28c6f4"
     >
       <a
-        class="_backButton_92353c"
+        class="_backButton_28c6f4"
         href="/sessions"
       >
         <svg
@@ -71,7 +71,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -230,7 +230,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -302,10 +302,10 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
     class="flex flex-col gap-10"
   >
     <header
-      class="_header_92353c"
+      class="_header_28c6f4"
     >
       <a
-        class="_backButton_92353c"
+        class="_backButton_28c6f4"
         href="/sessions"
       >
         <svg
@@ -367,7 +367,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -526,7 +526,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -584,10 +584,10 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
     class="flex flex-col gap-10"
   >
     <header
-      class="_header_92353c"
+      class="_header_28c6f4"
     >
       <a
-        class="_backButton_92353c"
+        class="_backButton_28c6f4"
         href="/sessions"
       >
         <svg
@@ -649,7 +649,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul
@@ -826,7 +826,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       </h4>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc -mt-4"
+        class="_separator_59a6a1 _section_59a6a1 -mt-4"
         role="separator"
       />
       <ul

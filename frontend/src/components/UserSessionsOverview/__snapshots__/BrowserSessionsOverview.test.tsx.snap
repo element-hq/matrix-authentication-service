@@ -3,7 +3,7 @@
 exports[`BrowserSessionsOverview > renders with no browser sessions 1`] = `
 <div>
   <div
-    class="_browserSessionsOverview_c5c17e"
+    class="_browserSessionsOverview_5c5d1f"
   >
     <div
       class="flex flex-1 flex-col"
@@ -35,7 +35,7 @@ exports[`BrowserSessionsOverview > renders with no browser sessions 1`] = `
 exports[`BrowserSessionsOverview > renders with sessions 1`] = `
 <div>
   <div
-    class="_browserSessionsOverview_c5c17e"
+    class="_browserSessionsOverview_5c5d1f"
   >
     <div
       class="flex flex-1 flex-col"
