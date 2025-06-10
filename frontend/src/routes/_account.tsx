@@ -26,6 +26,7 @@ const QUERY = graphql(/* GraphQL */ `
 
     siteConfig {
       ...UserGreeting_siteConfig
+      planManagementIframeUri
     }
   }
 `);
@@ -45,7 +46,8 @@ function Account(): React.ReactElement {
   const result = useSuspenseQuery(query);
   const viewer = result.data.viewer;
   if (viewer?.__typename !== "User") throw notFound();
-  const siteConfig = result.data.siteConfig;
+  const { siteConfig } = result.data;
+  const { planManagementIframeUri } = siteConfig;
 
   return (
     <Layout wide>
@@ -60,6 +62,9 @@ function Account(): React.ReactElement {
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
             <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
+            {planManagementIframeUri && (
+              <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
+            )}
           </NavBar>
         </div>
       </div>

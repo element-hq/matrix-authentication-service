@@ -122,6 +122,7 @@
     },
     "nav": {
       "devices": "Devices",
+      "plan": "Plan",
       "settings": "Settings"
     },
     "not_found_alert_title": "Not found.",

@@ -1758,6 +1758,10 @@ type SiteConfig implements Node {
   """
   loginWithEmailAllowed: Boolean!
   """
+  Experimental plan management iframe URI.
+  """
+  planManagementIframeUri: String
+  """
   The ID of the site configuration.
   """
   id: ID!
