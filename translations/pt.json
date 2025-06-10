@@ -26,10 +26,10 @@
     }
   },
   "common": {
-    "display_name": "Nome para exibição",
+    "display_name": "Nome de exibição",
     "email_address": "Endereço de e-mail",
     "loading": "A carregar...",
-    "mxid": "ID Matrix",
+    "mxid": "ID do Matrix",
     "password": "Palavra-passe",
     "password_confirm": "Confirmar palavra-passe",
     "username": "Nome de utilizador"
@@ -237,7 +237,7 @@
         },
         "create_account": "Criar uma nova conta",
         "enforced_by_policy": "Imposto pela política do servidor",
-        "forced_display_name": "Usará o seguinte nome de exibição",
+        "forced_display_name": "Utilizará o seguinte nome de exibição",
         "forced_email": "Usará o seguinte endereço de e-mail",
         "forced_localpart": "Utilizará o seguinte nome de utilizador",
         "import_data": {

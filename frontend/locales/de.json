@@ -146,6 +146,7 @@
     },
     "nav": {
       "devices": "Geräte",
+      "plan": "Plan",
       "profile": "Profil",
       "sessions": "Sitzungen",
       "settings": "Einstellungen"

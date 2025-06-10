@@ -146,6 +146,7 @@
     },
     "nav": {
       "devices": "Laitteet",
+      "plan": "Plan",
       "profile": "Profiili",
       "sessions": "Istunnot",
       "settings": "Asetukset"

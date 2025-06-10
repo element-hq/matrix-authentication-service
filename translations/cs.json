@@ -217,6 +217,11 @@
       "sign_in_instead": "Místo toho se přihlaste",
       "terms_of_service": "Souhlasím s podmínkami <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\"></a>"
     },
+    "registration_token": {
+      "description": "Zadejte registrační token poskytnutý správcem domovského serveru.",
+      "field": "Registrační token",
+      "headline": "Registrační token"
+    },
     "scope": {
       "edit_profile": "Upravte svůj profil a kontaktní údaje",
       "manage_sessions": "Spravujte svá zařízení a relace",

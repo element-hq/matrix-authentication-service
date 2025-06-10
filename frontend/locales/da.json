@@ -146,6 +146,7 @@
     },
     "nav": {
       "devices": "Enheder",
+      "plan": "Plan",
       "profile": "Profil",
       "sessions": "Sessioner",
       "settings": "Indstillinger"
@@ -300,9 +301,9 @@
       "name_for_platform": "{{name}} til {{platform}}",
       "scopes_label": "Omfang",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
-        "label": "Device name",
-        "title": "Edit device name"
+        "help": "Angiv et navn, der hjælper dig med at identificere denne enhed.",
+        "label": "Enhedens navn",
+        "title": "Rediger navnet på enheden"
       },
       "signed_in_date": "Logget ind <datetime/>",
       "signed_in_label": "Logget ind",

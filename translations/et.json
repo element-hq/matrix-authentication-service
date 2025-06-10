@@ -217,6 +217,11 @@
       "sign_in_instead": "Siis logi sisse",
       "terms_of_service": "Ma nõustun <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">teenuse kasutustingimustega</a>"
     },
+    "registration_token": {
+      "description": "Palun sisesta registreerimise tunnusluba, mille serveri haldaja on sulle andnud.",
+      "field": "Registreerimise tunnusluba",
+      "headline": "Registreerimise tunnusluba"
+    },
     "scope": {
       "edit_profile": "Muuta sinu kasutajaprofiili ning kontaktandmeid",
       "manage_sessions": "Hallata sinu seadmeid ja sessioone",
