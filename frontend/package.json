@@ -35,7 +35,7 @@
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.2",
     "swagger-ui-dist": "^5.22.0",
-    "valibot": "^1.0.0",
+    "valibot": "^1.1.0",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
