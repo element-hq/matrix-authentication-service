@@ -13,10 +13,5 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-serde = { workspace = true, optional = true }
-schemars = { workspace = true, optional = true }
-
-[features]
-default = ["serde", "schemars"]
-serde = ["dep:serde"]
-schemars = ["dep:schemars"]
+serde.workspace = true
+schemars.workspace = true

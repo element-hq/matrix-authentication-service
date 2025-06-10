@@ -167,7 +167,7 @@ impl AsymmetricSigningKey {
                 Ok(Self::es256k(params.try_into()?))
             }
 
-            (JsonWebKeyPrivateParameters::Okp(_params), JsonWebSignatureAlg::EdDsa) => {
+            (JsonWebKeyPrivateParameters::Okp(_params), _) => {
                 Err(AsymmetricKeyFromJwkError::UnsupportedAlgorithm { alg: alg.clone() })
             }
 
@@ -401,7 +401,7 @@ impl AsymmetricVerifyingKey {
                 Ok(Self::es256k(params.try_into()?))
             }
 
-            (JsonWebKeyPublicParameters::Okp(_params), JsonWebSignatureAlg::EdDsa) => {
+            (JsonWebKeyPublicParameters::Okp(_params), _) => {
                 Err(AsymmetricKeyFromJwkError::UnsupportedAlgorithm { alg: alg.clone() })
             }
 

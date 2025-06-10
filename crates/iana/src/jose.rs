@@ -62,6 +62,12 @@ pub enum JsonWebSignatureAlg {
     /// ECDSA using secp256k1 curve and SHA-256
     Es256K,
 
+    /// EdDSA using Ed25519 curve
+    Ed25519,
+
+    /// EdDSA using Ed448 curve
+    Ed448,
+
     /// An unknown value.
     Unknown(String),
 }
@@ -84,6 +90,8 @@ impl core::fmt::Display for JsonWebSignatureAlg {
             Self::None => write!(f, "none"),
             Self::EdDsa => write!(f, "EdDSA"),
             Self::Es256K => write!(f, "ES256K"),
+            Self::Ed25519 => write!(f, "Ed25519"),
+            Self::Ed448 => write!(f, "Ed448"),
             Self::Unknown(value) => write!(f, "{value}"),
         }
     }
@@ -109,12 +117,13 @@ impl core::str::FromStr for JsonWebSignatureAlg {
             "none" => Ok(Self::None),
             "EdDSA" => Ok(Self::EdDsa),
             "ES256K" => Ok(Self::Es256K),
+            "Ed25519" => Ok(Self::Ed25519),
+            "Ed448" => Ok(Self::Ed448),
             value => Ok(Self::Unknown(value.to_owned())),
         }
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebSignatureAlg {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -125,7 +134,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebSignatureAlg {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebSignatureAlg {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -135,7 +143,6 @@ impl serde::Serialize for JsonWebSignatureAlg {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebSignatureAlg {
     fn schema_name() -> String {
         "JsonWebSignatureAlg".to_owned()
@@ -339,6 +346,32 @@ impl schemars::JsonSchema for JsonWebSignatureAlg {
                 ..Default::default()
             }
             .into(),
+            // ---
+            schemars::schema::SchemaObject {
+                metadata: Some(Box::new(schemars::schema::Metadata {
+                    description: Some(
+                        // ---
+                        r"EdDSA using Ed25519 curve".to_owned(),
+                    ),
+                    ..Default::default()
+                })),
+                const_value: Some("Ed25519".into()),
+                ..Default::default()
+            }
+            .into(),
+            // ---
+            schemars::schema::SchemaObject {
+                metadata: Some(Box::new(schemars::schema::Metadata {
+                    description: Some(
+                        // ---
+                        r"EdDSA using Ed448 curve".to_owned(),
+                    ),
+                    ..Default::default()
+                })),
+                const_value: Some("Ed448".into()),
+                ..Default::default()
+            }
+            .into(),
         ];
 
         let description = r#"JSON Web Signature "alg" parameter"#;
@@ -480,7 +513,6 @@ impl core::str::FromStr for JsonWebEncryptionAlg {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebEncryptionAlg {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -491,7 +523,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebEncryptionAlg {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebEncryptionAlg {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -501,7 +532,6 @@ impl serde::Serialize for JsonWebEncryptionAlg {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebEncryptionAlg {
     fn schema_name() -> String {
         "JsonWebEncryptionAlg".to_owned()
@@ -833,7 +863,6 @@ impl core::str::FromStr for JsonWebEncryptionEnc {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebEncryptionEnc {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -844,7 +873,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebEncryptionEnc {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebEncryptionEnc {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -854,7 +882,6 @@ impl serde::Serialize for JsonWebEncryptionEnc {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebEncryptionEnc {
     fn schema_name() -> String {
         "JsonWebEncryptionEnc".to_owned()
@@ -992,7 +1019,6 @@ impl core::str::FromStr for JsonWebEncryptionCompressionAlgorithm {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebEncryptionCompressionAlgorithm {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1003,7 +1029,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebEncryptionCompressionAlgorithm {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebEncryptionCompressionAlgorithm {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1013,7 +1038,6 @@ impl serde::Serialize for JsonWebEncryptionCompressionAlgorithm {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebEncryptionCompressionAlgorithm {
     fn schema_name() -> String {
         "JsonWebEncryptionCompressionAlgorithm".to_owned()
@@ -1101,7 +1125,6 @@ impl core::str::FromStr for JsonWebKeyType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebKeyType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1112,7 +1135,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebKeyType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebKeyType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1122,7 +1144,6 @@ impl serde::Serialize for JsonWebKeyType {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebKeyType {
     fn schema_name() -> String {
         "JsonWebKeyType".to_owned()
@@ -1249,7 +1270,6 @@ impl core::str::FromStr for JsonWebKeyEcEllipticCurve {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebKeyEcEllipticCurve {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1260,7 +1280,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebKeyEcEllipticCurve {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebKeyEcEllipticCurve {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1270,7 +1289,6 @@ impl serde::Serialize for JsonWebKeyEcEllipticCurve {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebKeyEcEllipticCurve {
     fn schema_name() -> String {
         "JsonWebKeyEcEllipticCurve".to_owned()
@@ -1397,7 +1415,6 @@ impl core::str::FromStr for JsonWebKeyOkpEllipticCurve {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebKeyOkpEllipticCurve {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1408,7 +1425,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebKeyOkpEllipticCurve {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebKeyOkpEllipticCurve {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1418,7 +1434,6 @@ impl serde::Serialize for JsonWebKeyOkpEllipticCurve {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebKeyOkpEllipticCurve {
     fn schema_name() -> String {
         "JsonWebKeyOkpEllipticCurve".to_owned()
@@ -1535,7 +1550,6 @@ impl core::str::FromStr for JsonWebKeyUse {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebKeyUse {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1546,7 +1560,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebKeyUse {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebKeyUse {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1556,7 +1569,6 @@ impl serde::Serialize for JsonWebKeyUse {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebKeyUse {
     fn schema_name() -> String {
         "JsonWebKeyUse".to_owned()
@@ -1677,7 +1689,6 @@ impl core::str::FromStr for JsonWebKeyOperation {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for JsonWebKeyOperation {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -1688,7 +1699,6 @@ impl<'de> serde::Deserialize<'de> for JsonWebKeyOperation {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for JsonWebKeyOperation {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1698,7 +1708,6 @@ impl serde::Serialize for JsonWebKeyOperation {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for JsonWebKeyOperation {
     fn schema_name() -> String {
         "JsonWebKeyOperation".to_owned()

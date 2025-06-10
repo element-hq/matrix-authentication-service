@@ -31,6 +31,7 @@ enum Requirements {
     RecommendedMinus,
     Optional,
     Prohibited,
+    Deprecated,
 }
 
 #[allow(dead_code)]
@@ -78,10 +79,18 @@ impl EnumEntry for WebEncryptionSignatureAlgorithm {
                 if self.reference.contains("RFC7518, Section 3")
                     || self.reference.contains("RFC8037")
                     || self.reference.contains("RFC8812")
+                    || (self
+                        .reference
+                        .contains("RFC-ietf-jose-fully-specified-algorithms")
+                        && self.reference.contains("Section 2"))
                 {
                     Some("JsonWebSignatureAlg")
                 } else if self.reference.contains("RFC7518, Section 4")
                     || self.reference.contains("WebCryptoAPI")
+                    || (self
+                        .reference
+                        .contains("RFC-ietf-jose-fully-specified-algorithms")
+                        && self.reference.contains("Section 3"))
                 {
                     Some("JsonWebEncryptionAlg")
                 } else {

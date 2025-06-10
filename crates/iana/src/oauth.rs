@@ -59,7 +59,6 @@ impl core::str::FromStr for OAuthAccessTokenType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for OAuthAccessTokenType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -70,7 +69,6 @@ impl<'de> serde::Deserialize<'de> for OAuthAccessTokenType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for OAuthAccessTokenType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -80,7 +78,6 @@ impl serde::Serialize for OAuthAccessTokenType {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for OAuthAccessTokenType {
     fn schema_name() -> String {
         "OAuthAccessTokenType".to_owned()
@@ -194,7 +191,6 @@ impl core::str::FromStr for OAuthAuthorizationEndpointResponseType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for OAuthAuthorizationEndpointResponseType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -205,7 +201,6 @@ impl<'de> serde::Deserialize<'de> for OAuthAuthorizationEndpointResponseType {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for OAuthAuthorizationEndpointResponseType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -215,7 +210,6 @@ impl serde::Serialize for OAuthAuthorizationEndpointResponseType {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for OAuthAuthorizationEndpointResponseType {
     fn schema_name() -> String {
         "OAuthAuthorizationEndpointResponseType".to_owned()
@@ -333,7 +327,6 @@ impl core::str::FromStr for OAuthTokenTypeHint {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for OAuthTokenTypeHint {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -344,7 +337,6 @@ impl<'de> serde::Deserialize<'de> for OAuthTokenTypeHint {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for OAuthTokenTypeHint {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -354,7 +346,6 @@ impl serde::Serialize for OAuthTokenTypeHint {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for OAuthTokenTypeHint {
     fn schema_name() -> String {
         "OAuthTokenTypeHint".to_owned()
@@ -462,7 +453,6 @@ impl core::str::FromStr for OAuthClientAuthenticationMethod {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for OAuthClientAuthenticationMethod {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -473,7 +463,6 @@ impl<'de> serde::Deserialize<'de> for OAuthClientAuthenticationMethod {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for OAuthClientAuthenticationMethod {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -483,7 +472,6 @@ impl serde::Serialize for OAuthClientAuthenticationMethod {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for OAuthClientAuthenticationMethod {
     fn schema_name() -> String {
         "OAuthClientAuthenticationMethod".to_owned()
@@ -590,7 +578,6 @@ impl core::str::FromStr for PkceCodeChallengeMethod {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for PkceCodeChallengeMethod {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -601,7 +588,6 @@ impl<'de> serde::Deserialize<'de> for PkceCodeChallengeMethod {
     }
 }
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for PkceCodeChallengeMethod {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -611,7 +597,6 @@ impl serde::Serialize for PkceCodeChallengeMethod {
     }
 }
 
-#[cfg(feature = "schemars")]
 impl schemars::JsonSchema for PkceCodeChallengeMethod {
     fn schema_name() -> String {
         "PkceCodeChallengeMethod".to_owned()
