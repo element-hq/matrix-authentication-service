@@ -57,7 +57,6 @@ deny = [
 multiple-versions = "deny"
 
 skip = [
-    { name = "base64", version = "0.21.7" },         # many dependencies depends on this old version
     { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
     { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version

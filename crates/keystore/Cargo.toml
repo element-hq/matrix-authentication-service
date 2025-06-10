@@ -7,15 +7,19 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-aead = { version = "0.5.2", features = ["std"] }
-const-oid = { version = "0.9.6", features = ["std"] }
-der = { version = "0.7.10", features = ["std"] }
+aead.workspace = true
+base64ct.workspace = true
+chacha20poly1305.workspace = true
+const-oid.workspace = true
+der.workspace = true
 elliptic-curve.workspace = true
+generic-array.workspace = true
 k256.workspace = true
 p256.workspace = true
 p384.workspace = true
@@ -23,13 +27,10 @@ pem-rfc7468.workspace = true
 pkcs1.workspace = true
 pkcs8.workspace = true
 rand.workspace = true
-rsa = { version = "0.9.8", features = ["std", "pem"] }
-sec1 = { version = "0.7.3", features = ["std"] }
-spki = { version = "0.7.3", features = ["std"] }
+rsa.workspace = true
+sec1.workspace = true
+spki.workspace = true
 thiserror.workspace = true
-generic-array = "0.14.7"
-chacha20poly1305 = { version = "0.10.1", features = ["std"] }
-base64ct = "1.8.0"
 
 mas-iana.workspace = true
 mas-jose.workspace = true

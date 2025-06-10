@@ -1,12 +1,12 @@
 [package]
 name = "mas-i18n-scan"
 version.workspace = true
-license.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -18,6 +18,6 @@ minijinja.workspace = true
 serde_json.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
-walkdir = "2.5.0"
+walkdir.workspace = true
 
 mas-i18n.workspace = true

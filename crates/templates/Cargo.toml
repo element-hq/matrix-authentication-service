@@ -6,33 +6,30 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-arc-swap.workspace = true
-tracing.workspace = true
-tokio.workspace = true
-walkdir = "2.5.0"
-
 anyhow.workspace = true
-thiserror.workspace = true
-
-minijinja.workspace = true
-minijinja-contrib.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-serde_urlencoded = "0.7.1"
-v_htmlescape = "0.15.8"
-
+arc-swap.workspace = true
 camino.workspace = true
 chrono.workspace = true
-url.workspace = true
 http.workspace = true
-ulid.workspace = true
+minijinja-contrib.workspace = true
+minijinja.workspace = true
 rand.workspace = true
+serde_json.workspace = true
+serde_urlencoded.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+ulid.workspace = true
+url.workspace = true
+v_htmlescape.workspace = true
+walkdir.workspace = true
 
 oauth2-types.workspace = true
 mas-data-model.workspace = true
