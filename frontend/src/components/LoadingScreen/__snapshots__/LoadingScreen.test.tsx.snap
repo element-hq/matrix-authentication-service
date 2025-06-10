@@ -3,7 +3,7 @@
 exports[`LoadingScreen > render <LoadingScreen /> 1`] = `
 <DocumentFragment>
   <main
-    class="_loadingScreen_0642c6"
+    class="_loadingScreen_5dc073"
   >
     <div
       aria-busy="true"
@@ -11,7 +11,7 @@ exports[`LoadingScreen > render <LoadingScreen /> 1`] = `
       role="alert"
     >
       <svg
-        class="_loadingSpinnerInner_0c7436"
+        class="_loadingSpinnerInner_14d3fe"
         fill="none"
         role="img"
         viewBox="0 0 100 101"

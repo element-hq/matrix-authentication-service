@@ -3,11 +3,11 @@
 exports[`<SessionHeader /> > renders a session header 1`] = `
 <div>
   <header
-    class="_header_92353c"
+    class="_header_28c6f4"
   >
     <a
       aria-current="page"
-      class="_backButton_92353c active"
+      class="_backButton_28c6f4 active"
       data-status="active"
       href="/"
     >

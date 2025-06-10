@@ -4,7 +4,7 @@ exports[`Account home page > display name edit box > displays an error if the di
 <div
   aria-describedby="radix-«r86»"
   aria-labelledby="radix-«r85»"
-  class="_body_9cf7b0"
+  class="_body_820528"
   data-state="open"
   id="radix-«r84»"
   role="dialog"
@@ -12,7 +12,7 @@ exports[`Account home page > display name edit box > displays an error if the di
   tabindex="-1"
 >
   <h2
-    class="_title_9cf7b0"
+    class="_title_820528"
     id="radix-«r85»"
   >
     Edit profile
@@ -31,7 +31,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     class="_root_19upo_16"
   >
     <div
-      class="_dialogForm_66f22a"
+      class="_dialogForm_0d9d49"
     >
       <div
         class="_field_19upo_26"
@@ -130,7 +130,7 @@ exports[`Account home page > display name edit box > displays an error if the di
   </button>
   <button
     aria-labelledby="«ra2»"
-    class="_close_9cf7b0"
+    class="_close_820528"
     type="button"
   >
     <svg
@@ -152,7 +152,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
 <div
   aria-describedby="radix-«r1n»"
   aria-labelledby="radix-«r1m»"
-  class="_body_9cf7b0"
+  class="_body_820528"
   data-state="open"
   id="radix-«r1l»"
   role="dialog"
@@ -160,7 +160,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
   tabindex="-1"
 >
   <h2
-    class="_title_9cf7b0"
+    class="_title_820528"
     id="radix-«r1m»"
   >
     Edit profile
@@ -179,7 +179,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     class="_root_19upo_16"
   >
     <div
-      class="_dialogForm_66f22a"
+      class="_dialogForm_0d9d49"
     >
       <div
         class="_field_19upo_26"
@@ -274,7 +274,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
   </button>
   <button
     aria-labelledby="«r3j»"
-    class="_close_9cf7b0"
+    class="_close_820528"
     type="button"
   >
     <svg
@@ -295,7 +295,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
 exports[`Account home page > renders the page 1`] = `
 <DocumentFragment>
   <div
-    class="_layoutContainer_0c8bf9 _wide_0c8bf9"
+    class="_layoutContainer_4402d3 _wide_4402d3"
   >
     <div
       class="flex flex-col gap-10"
@@ -309,11 +309,11 @@ exports[`Account home page > renders the page 1`] = `
         class="flex flex-col gap-4"
       >
         <div
-          class="_user_66f22a"
+          class="_user_0d9d49"
         >
           <span
             aria-label="@alice:example.com"
-            class="_avatar_1qbcf_8 _avatar_66f22a _avatar-imageless_1qbcf_52"
+            class="_avatar_1qbcf_8 _avatar_0d9d49 _avatar-imageless_1qbcf_52"
             data-color="6"
             data-type="round"
             role="img"
@@ -322,7 +322,7 @@ exports[`Account home page > renders the page 1`] = `
             A
           </span>
           <div
-            class="_meta_66f22a"
+            class="_meta_0d9d49"
           >
             <p
               class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
@@ -330,7 +330,7 @@ exports[`Account home page > renders the page 1`] = `
               Alice
             </p>
             <p
-              class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 _mxid_66f22a"
+              class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 _mxid_0d9d49"
             >
               @alice:example.com
             </p>
@@ -340,7 +340,7 @@ exports[`Account home page > renders the page 1`] = `
             aria-expanded="false"
             aria-haspopup="dialog"
             aria-labelledby="«r3»"
-            class="_icon-button_m2erp_8 _editButton_66f22a"
+            class="_icon-button_m2erp_8 _editButton_0d9d49"
             data-state="closed"
             role="button"
             style="--cpd-icon-button-size: var(--cpd-space-6x);"
@@ -368,17 +368,17 @@ exports[`Account home page > renders the page 1`] = `
           </button>
         </div>
         <nav
-          class="_navBar_214497"
+          class="_navBar_6d152a"
         >
           <ul
-            class="_navBarItems_214497"
+            class="_navBarItems_6d152a"
           >
             <li
-              class="_navTab_8603fc"
+              class="_navTab_a2fe1e"
             >
               <a
                 aria-current="page"
-                class="_navItem_8603fc"
+                class="_navItem_a2fe1e"
                 data-status="active"
                 href="/"
               >
@@ -386,10 +386,10 @@ exports[`Account home page > renders the page 1`] = `
               </a>
             </li>
             <li
-              class="_navTab_8603fc"
+              class="_navTab_a2fe1e"
             >
               <a
-                class="_navItem_8603fc"
+                class="_navItem_a2fe1e"
                 href="/sessions"
               >
                 Devices
@@ -404,17 +404,17 @@ exports[`Account home page > renders the page 1`] = `
     >
       <section
         aria-labelledby="«r8»"
-        class="_root_f1daaa"
+        class="_root_a44bb3"
         data-state="open"
       >
         <header
-          class="_heading_f1daaa"
+          class="_heading_a44bb3"
         >
           <div
-            class="_trigger_f1daaa"
+            class="_trigger_a44bb3"
           >
             <h4
-              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_f1daaa"
+              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
               id="«r8»"
             >
               Contact info
@@ -423,7 +423,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-«ra»"
               aria-expanded="true"
               aria-labelledby="«rb»"
-              class="_icon-button_m2erp_8 _triggerIcon_f1daaa"
+              class="_icon-button_m2erp_8 _triggerIcon_a44bb3"
               data-state="open"
               role="button"
               style="--cpd-icon-button-size: 32px;"
@@ -450,7 +450,7 @@ exports[`Account home page > renders the page 1`] = `
           </div>
         </header>
         <article
-          class="_content_f1daaa"
+          class="_content_a44bb3"
           data-state="open"
           id="radix-«ra»"
           style="transition-duration: 0s; animation-name: none;"
@@ -471,7 +471,7 @@ exports[`Account home page > renders the page 1`] = `
                 class="flex items-center gap-2"
               >
                 <input
-                  class="_control_sqdq4_10 _userEmailField_e2a518"
+                  class="_control_sqdq4_10 _userEmailField_06c85d"
                   id="radix-«rj»"
                   name="email"
                   readonly=""
@@ -519,22 +519,22 @@ exports[`Account home page > renders the page 1`] = `
       </section>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc"
+        class="_separator_59a6a1 _section_59a6a1"
         role="separator"
       />
       <section
         aria-labelledby="«rp»"
-        class="_root_f1daaa"
+        class="_root_a44bb3"
         data-state="open"
       >
         <header
-          class="_heading_f1daaa"
+          class="_heading_a44bb3"
         >
           <div
-            class="_trigger_f1daaa"
+            class="_trigger_a44bb3"
           >
             <h4
-              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_f1daaa"
+              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
               id="«rp»"
             >
               Account password
@@ -543,7 +543,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-«rr»"
               aria-expanded="true"
               aria-labelledby="«rs»"
-              class="_icon-button_m2erp_8 _triggerIcon_f1daaa"
+              class="_icon-button_m2erp_8 _triggerIcon_a44bb3"
               data-state="open"
               role="button"
               style="--cpd-icon-button-size: 32px;"
@@ -570,7 +570,7 @@ exports[`Account home page > renders the page 1`] = `
           </div>
         </header>
         <article
-          class="_content_f1daaa"
+          class="_content_a44bb3"
           data-state="open"
           id="radix-«rr»"
           style="transition-duration: 0s; animation-name: none;"
@@ -602,7 +602,7 @@ exports[`Account home page > renders the page 1`] = `
                 id="radix-«r12»"
               >
                 <a
-                  class="_link_7634c3"
+                  class="_link_2a6fa3"
                   href="/password/change"
                 >
                   Change password
@@ -614,22 +614,22 @@ exports[`Account home page > renders the page 1`] = `
       </section>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc"
+        class="_separator_59a6a1 _section_59a6a1"
         role="separator"
       />
       <section
         aria-labelledby="«r13»"
-        class="_root_f1daaa"
+        class="_root_a44bb3"
         data-state="closed"
       >
         <header
-          class="_heading_f1daaa"
+          class="_heading_a44bb3"
         >
           <div
-            class="_trigger_f1daaa"
+            class="_trigger_a44bb3"
           >
             <h4
-              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_f1daaa"
+              class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
               id="«r13»"
             >
               End-to-end encryption
@@ -638,7 +638,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-«r15»"
               aria-expanded="false"
               aria-labelledby="«r16»"
-              class="_icon-button_m2erp_8 _triggerIcon_f1daaa"
+              class="_icon-button_m2erp_8 _triggerIcon_a44bb3"
               data-state="closed"
               role="button"
               style="--cpd-icon-button-size: 32px;"
@@ -667,7 +667,7 @@ exports[`Account home page > renders the page 1`] = `
       </section>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc _section_162edc"
+        class="_separator_59a6a1 _section_59a6a1"
         role="separator"
       />
       <button
@@ -698,7 +698,7 @@ exports[`Account home page > renders the page 1`] = `
       </button>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc"
+        class="_separator_59a6a1"
         role="separator"
       />
       <button
@@ -729,12 +729,12 @@ exports[`Account home page > renders the page 1`] = `
       </button>
       <div
         aria-orientation="horizontal"
-        class="_separator_162edc"
+        class="_separator_59a6a1"
         role="separator"
       />
     </div>
     <footer
-      class="_legalFooter_eb428f"
+      class="_legalFooter_acfd2c"
     >
       <nav>
         <a
@@ -749,7 +749,7 @@ exports[`Account home page > renders the page 1`] = `
         </a>
         <div
           aria-hidden="true"
-          class="_separator_eb428f"
+          class="_separator_acfd2c"
         >
           •
         </div>
@@ -765,7 +765,7 @@ exports[`Account home page > renders the page 1`] = `
         </a>
       </nav>
       <p
-        class="_imprint_eb428f"
+        class="_imprint_acfd2c"
       >
         All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
       </p>
