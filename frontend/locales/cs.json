@@ -147,6 +147,7 @@
     },
     "nav": {
       "devices": "Zařízení",
+      "plan": "Plan",
       "profile": "Profil",
       "sessions": "Relace",
       "settings": "Nastavení"

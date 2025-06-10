@@ -145,6 +145,7 @@
     },
     "nav": {
       "devices": "设备",
+      "plan": "Plan",
       "profile": "个人资料",
       "sessions": "会话",
       "settings": "设置"

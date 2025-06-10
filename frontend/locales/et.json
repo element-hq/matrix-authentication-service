@@ -146,6 +146,7 @@
     },
     "nav": {
       "devices": "Seadmed",
+      "plan": "Plan",
       "profile": "Profiil",
       "sessions": "Sessioonid",
       "settings": "Seadistused"

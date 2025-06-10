@@ -217,6 +217,11 @@
       "sign_in_instead": "Se connecter",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"
     },
+    "registration_token": {
+      "description": "Saisissez le jeton d'enregistrement fourni par l'administrateur du serveur d'accueil.",
+      "field": "Jeton d'enregistrement",
+      "headline": "Jeton d'enregistrement"
+    },
     "scope": {
       "edit_profile": "Modifier votre profil et vos coordonnées",
       "manage_sessions": "Gérer vos appareils et vos sessions",

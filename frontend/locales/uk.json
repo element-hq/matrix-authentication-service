@@ -147,6 +147,7 @@
     },
     "nav": {
       "devices": "Пристрої",
+      "plan": "Plan",
       "profile": "Профіль",
       "sessions": "Сеанси",
       "settings": "Налаштування"

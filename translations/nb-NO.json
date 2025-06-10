@@ -217,6 +217,11 @@
       "sign_in_instead": "Logg på i stedet",
       "terms_of_service": "Jeg godtar <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">vilkårene og betingelsene</a>"
     },
+    "registration_token": {
+      "description": "Enter et registreringstoken som er levert av administratoren av homeserveren.",
+      "field": "Registreringstoken",
+      "headline": "Registreringstoken"
+    },
     "scope": {
       "edit_profile": "Rediger din profil og kontaktdetaljer",
       "manage_sessions": "Administrer enhetene og sesjonene dine",

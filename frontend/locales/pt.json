@@ -47,7 +47,7 @@
         "dialog_title": "Eliminar esta conta?",
         "erase_checkbox_label": "Sim, ocultar todas as minhas mensagens de novos marceneiros",
         "incorrect_password": "Palavra-passe incorrecta, tente novamente",
-        "mxid_label": "Confirme seu ID da Matrix ({{ mxid }})",
+        "mxid_label": "Confirme o seu ID do Matrix ({{ mxid }})",
         "mxid_mismatch": "Este valor não corresponde ao seu ID da matrix",
         "password_label": "Introduza a sua palavra-passe para continuar"
       },
@@ -146,6 +146,7 @@
     },
     "nav": {
       "devices": "Dispositivos",
+      "plan": "Plan",
       "profile": "Perfil",
       "sessions": "Sessões",
       "settings": "Configurações"
@@ -261,9 +262,9 @@
       },
       "description": "Se não tiver sessão iniciada noutros dispositivos e tiver perdido a sua chave de recuperação, terá de repor a sua identidade para continuar a utilizar a aplicação.",
       "effect_list": {
-        "negative_1": "Você perderá seu histórico de mensagens existente",
+        "negative_1": "Perderá o histórico de mensagens existente",
         "negative_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
-        "neutral_1": "Você perderá qualquer histórico de mensagens armazenado apenas no servidor",
+        "neutral_1": "Perderá qualquer histórico de mensagens que esteja armazenado apenas no servidor",
         "neutral_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
         "positive_1": "Os detalhes da sua conta, contactos, preferências e lista de conversação serão mantidos"
       },
@@ -351,7 +352,7 @@
       "error": "Falha ao carregar o usuário"
     },
     "user_name": {
-      "display_name_field_label": "Nome para exibição"
+      "display_name_field_label": "Nome de exibição"
     },
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} sessão ativa",

@@ -217,6 +217,11 @@
       "sign_in_instead": "Kirjaudu sisään sen sijaan",
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
     },
+    "registration_token": {
+      "description": "Anna kotipalvelimen ylläpitäjän antama rekisteröitymispoletti.",
+      "field": "Rekisteröitymispoletti",
+      "headline": "Rekisteröitymispoletti"
+    },
     "scope": {
       "edit_profile": "Muokata profiiliasi ja yhteystietojasi",
       "manage_sessions": "Hallinnoida laitteitasi ja istuntojasi",
