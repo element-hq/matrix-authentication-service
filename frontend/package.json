@@ -68,7 +68,7 @@
     "i18next-parser": "^9.3.0",
     "knip": "^5.59.1",
     "msw": "^2.8.7",
-    "msw-storybook-addon": "^2.0.4",
+    "msw-storybook-addon": "^2.0.5",
     "postcss": "^8.5.4",
     "postcss-import": "^16.1.0",
     "postcss-nesting": "^13.0.1",
