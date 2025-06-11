@@ -1,30 +1,30 @@
 [package]
 name = "mas-i18n"
 version.workspace = true
-license.workspace = true
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
 camino.workspace = true
-icu_calendar = { version = "1.5.2", features = ["compiled_data", "std"] }
-icu_datetime = { version = "1.5.1", features = ["compiled_data", "std"] }
-icu_locid = { version = "1.5.0", features = ["std"] }
-icu_locid_transform = { version = "1.5.0", features = ["compiled_data", "std"] }
-icu_plurals = { version = "1.5.0", features = ["compiled_data", "std"] }
-icu_provider = { version = "1.5.0", features = ["std", "sync"] }
-icu_provider_adapters = { version = "1.5.0", features = ["std"] }
-icu_experimental = { version = "0.1.0", features = ["compiled_data", "std"] }
-pad = "0.1.6"
-pest = "2.8.0"
-pest_derive = "2.8.0"
-serde.workspace = true
+icu_calendar.workspace = true
+icu_datetime.workspace = true
+icu_experimental.workspace = true
+icu_locid_transform.workspace = true
+icu_locid.workspace = true
+icu_plurals.workspace = true
+icu_provider_adapters.workspace = true
+icu_provider.workspace = true
+pad.workspace = true
+pest_derive.workspace = true
+pest.workspace = true
 serde_json.workspace = true
+serde.workspace = true
 thiserror.workspace = true
-writeable = "0.5.5"
+writeable.workspace = true

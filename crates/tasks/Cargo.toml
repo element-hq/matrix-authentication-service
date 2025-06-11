@@ -6,7 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -14,21 +14,21 @@ workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
-cron.workspace = true
 chrono.workspace = true
-rand.workspace = true
+cron.workspace = true
+opentelemetry-semantic-conventions.workspace = true
+opentelemetry.workspace = true
 rand_chacha.workspace = true
+rand.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 sqlx.workspace = true
 thiserror.workspace = true
-tokio.workspace = true
 tokio-util.workspace = true
-tracing.workspace = true
+tokio.workspace = true
 tracing-opentelemetry.workspace = true
-opentelemetry.workspace = true
-opentelemetry-semantic-conventions.workspace = true
+tracing.workspace = true
 ulid.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 
 mas-context.workspace = true
 mas-data-model.workspace = true
@@ -36,6 +36,6 @@ mas-email.workspace = true
 mas-i18n.workspace = true
 mas-matrix.workspace = true
 mas-router.workspace = true
-mas-storage.workspace = true
 mas-storage-pg.workspace = true
+mas-storage.workspace = true
 mas-templates.workspace = true

@@ -3364,7 +3364,6 @@ dependencies = [
  "sha2",
  "sqlx",
  "thiserror 2.0.12",
- "time",
  "tokio",
  "tokio-util",
  "tower",

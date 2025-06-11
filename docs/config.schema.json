@@ -543,6 +543,14 @@
         {
           "description": "ECDSA using secp256k1 curve and SHA-256",
           "const": "ES256K"
+        },
+        {
+          "description": "EdDSA using Ed25519 curve",
+          "const": "Ed25519"
+        },
+        {
+          "description": "EdDSA using Ed448 curve",
+          "const": "Ed448"
         }
       ]
     },

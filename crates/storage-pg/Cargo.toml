@@ -6,29 +6,28 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
 async-trait.workspace = true
-sqlx.workspace = true
-sea-query.workspace = true
-sea-query-binder.workspace = true
 chrono.workspace = true
+futures-util.workspace = true
+opentelemetry-semantic-conventions.workspace = true
+opentelemetry.workspace = true
+rand_chacha.workspace = true
+rand.workspace = true
+sea-query-binder.workspace = true
+sea-query.workspace = true
 serde_json.workspace = true
+sqlx.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
-futures-util.workspace = true
-opentelemetry.workspace = true
-opentelemetry-semantic-conventions.workspace = true
-
-rand.workspace = true
-rand_chacha.workspace = true
+ulid.workspace = true
 url.workspace = true
-uuid = "1.17.0"
-ulid = { workspace = true, features = ["uuid"] }
+uuid.workspace = true
 
 oauth2-types.workspace = true
 mas-storage.workspace = true

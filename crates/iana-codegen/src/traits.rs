@@ -89,6 +89,13 @@ pub trait EnumEntry: DeserializeOwned + Send + Sync {
             .into_deserialize()
             .filter_map(|item: Result<Self, _>| {
                 item.map(|item| {
+                    if item
+                        .description()
+                        .is_some_and(|desc| desc.contains("TEMPORARY"))
+                    {
+                        return None;
+                    }
+
                     item.key().map(|key| {
                         (
                             key,

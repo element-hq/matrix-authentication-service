@@ -13,12 +13,12 @@ use std::net::IpAddr;
 
 use mas_data_model::{Client, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// A well-known policy code.
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Debug, Clone, Copy, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Code {
     /// The username is too short.
     UsernameTooShort,
@@ -71,8 +71,7 @@ impl Code {
 }
 
 /// A single violation of a policy.
-#[derive(Deserialize, Debug)]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+#[derive(Deserialize, Debug, JsonSchema)]
 pub struct Violation {
     pub msg: String,
     pub redirect_uri: Option<String>,
@@ -111,9 +110,8 @@ impl EvaluationResult {
 }
 
 /// Identity of the requester
-#[derive(Serialize, Debug, Default)]
+#[derive(Serialize, Debug, Default, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Requester {
     /// IP address of the entity making the request
     pub ip_address: Option<IpAddr>,
@@ -122,8 +120,7 @@ pub struct Requester {
     pub user_agent: Option<String>,
 }
 
-#[derive(Serialize, Debug)]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
+#[derive(Serialize, Debug, JsonSchema)]
 pub enum RegistrationMethod {
     #[serde(rename = "password")]
     Password,
@@ -133,9 +130,8 @@ pub enum RegistrationMethod {
 }
 
 /// Input for the user registration policy.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 #[serde(tag = "registration_method")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct RegisterInput<'a> {
     pub registration_method: RegistrationMethod,
 
@@ -148,21 +144,16 @@ pub struct RegisterInput<'a> {
 }
 
 /// Input for the client registration policy.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct ClientRegistrationInput<'a> {
-    #[cfg_attr(
-        feature = "jsonschema",
-        schemars(with = "std::collections::HashMap<String, serde_json::Value>")
-    )]
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client_metadata: &'a VerifiedClientMetadata,
     pub requester: Requester,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum GrantType {
     AuthorizationCode,
     ClientCredentials,
@@ -171,23 +162,16 @@ pub enum GrantType {
 }
 
 /// Input for the authorization grant policy.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct AuthorizationGrantInput<'a> {
-    #[cfg_attr(
-        feature = "jsonschema",
-        schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")
-    )]
+    #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
     pub user: Option<&'a User>,
 
-    #[cfg_attr(
-        feature = "jsonschema",
-        schemars(with = "std::collections::HashMap<String, serde_json::Value>")
-    )]
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client: &'a Client,
 
-    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
+    #[schemars(with = "String")]
     pub scope: &'a Scope,
 
     pub grant_type: GrantType,
@@ -196,9 +180,8 @@ pub struct AuthorizationGrantInput<'a> {
 }
 
 /// Input for the email add policy.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct EmailInput<'a> {
     pub email: &'a str,
 

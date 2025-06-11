@@ -6,88 +6,62 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-# Async runtime
-tokio.workspace = true
-tokio-util.workspace = true
-futures-util.workspace = true
-async-trait.workspace = true
-
-# Logging and tracing
-tracing.workspace = true
-opentelemetry.workspace = true
-opentelemetry-semantic-conventions.workspace = true
-
-# Error management
-thiserror.workspace = true
-anyhow.workspace = true
-sentry.workspace = true
-
-# Web server
-hyper.workspace = true
-tower.workspace = true
-tower-http.workspace = true
-axum.workspace = true
-axum-macros = "0.5.0"
-axum-extra.workspace = true
-rustls.workspace = true
-
 aide.workspace = true
+anyhow.workspace = true
+argon2.workspace = true
 async-graphql.workspace = true
-schemars.workspace = true
-
-# HTTP client
-reqwest.workspace = true
-
-# Emails
-lettre.workspace = true
-
-# Database access
-sqlx.workspace = true
-
-# Various structure (de)serialization
-serde.workspace = true
-serde_with = { version = "3.12.0", features = ["hex", "chrono"] }
-serde_json.workspace = true
-serde_urlencoded = "0.7.1"
-
-# Password hashing
-argon2 = { version = "0.5.3", features = ["password-hash", "std"] }
-bcrypt = { version = "0.17.0", default-features = true }
-pbkdf2 = { version = "0.12.2", features = [
-    "password-hash",
-    "std",
-    "simple",
-    "parallel",
-] }
-zeroize = "1.8.1"
-
-# Various data types and utilities
+async-trait.workspace = true
+axum-extra.workspace = true
+axum-macros.workspace = true
+axum.workspace = true
 base64ct.workspace = true
+bcrypt.workspace = true
 camino.workspace = true
 chrono.workspace = true
 elliptic-curve.workspace = true
-hex.workspace = true
+futures-util.workspace = true
 governor.workspace = true
-icu_normalizer = "1.5.0"
-indexmap.workspace = true
-pkcs8.workspace = true
-psl = "2.1.119"
-sha2.workspace = true
-time = "0.3.41"
-url.workspace = true
-mime = "0.3.17"
-minijinja.workspace = true
-minijinja-contrib.workspace = true
-rand.workspace = true
-rand_chacha.workspace = true
 headers.workspace = true
+hex.workspace = true
+hyper.workspace = true
+icu_normalizer.workspace = true
+indexmap.workspace = true
+lettre.workspace = true
+mime.workspace = true
+minijinja-contrib.workspace = true
+minijinja.workspace = true
+opentelemetry-semantic-conventions.workspace = true
+opentelemetry.workspace = true
+pbkdf2.workspace = true
+pkcs8.workspace = true
+psl.workspace = true
+rand_chacha.workspace = true
+rand.workspace = true
+reqwest.workspace = true
+rustls.workspace = true
+schemars.workspace = true
+sentry.workspace = true
+serde_json.workspace = true
+serde_urlencoded.workspace = true
+serde_with.workspace = true
+serde.workspace = true
+sha2.workspace = true
+sqlx.workspace = true
+thiserror.workspace = true
+tokio-util.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tower.workspace = true
+tracing.workspace = true
 ulid.workspace = true
+url.workspace = true
+zeroize.workspace = true
 
 mas-axum-utils.workspace = true
 mas-config.workspace = true
@@ -106,13 +80,11 @@ mas-storage.workspace = true
 mas-storage-pg.workspace = true
 mas-templates.workspace = true
 oauth2-types.workspace = true
-zxcvbn = "3.1.0"
+zxcvbn.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
 tracing-subscriber.workspace = true
-cookie_store = { version = "0.21.1", default-features = false, features = [
-    "serde_json",
-] }
+cookie_store.workspace = true
 sqlx.workspace = true
 wiremock.workspace = true

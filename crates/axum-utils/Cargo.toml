@@ -6,7 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -19,13 +19,13 @@ base64ct.workspace = true
 chrono.workspace = true
 headers.workspace = true
 http.workspace = true
-icu_locid = "1.5.0"
-mime = "0.3.17"
+icu_locid.workspace = true
+mime.workspace = true
 rand.workspace = true
 reqwest.workspace = true
 sentry.workspace = true
 serde.workspace = true
-serde_with = "3.12.0"
+serde_with.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

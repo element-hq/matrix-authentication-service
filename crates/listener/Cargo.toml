@@ -6,7 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -15,25 +15,25 @@ workspace = true
 bytes.workspace = true
 futures-util.workspace = true
 http-body.workspace = true
-hyper = { workspace = true, features = ["server"] }
 hyper-util.workspace = true
+hyper.workspace = true
 pin-project-lite.workspace = true
-socket2 = "0.5.10"
+socket2.workspace = true
 thiserror.workspace = true
-tokio.workspace = true
-tokio-rustls = "0.26.2"
+tokio-rustls.workspace = true
 tokio-util.workspace = true
-tower.workspace = true
+tokio.workspace = true
 tower-http.workspace = true
+tower.workspace = true
 tracing.workspace = true
 
 mas-context.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
-rustls-pemfile = "2.2.0"
+rustls-pemfile.workspace = true
+tokio-test.workspace = true
 tokio.workspace = true
-tokio-test = "0.4.4"
 tracing-subscriber.workspace = true
 
 [[example]]
