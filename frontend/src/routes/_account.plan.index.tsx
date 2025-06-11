@@ -4,7 +4,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Navigate, createFileRoute, redirect } from "@tanstack/react-router";
+import { Navigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { preload } from "react-dom";
 import { graphql } from "../gql";
@@ -23,7 +23,7 @@ export const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-export const Route = createFileRoute("/_account/plan/")({
+export const Route = createFileRoute({
   loader: async ({ context }) => {
     const {
       siteConfig: { planManagementIframeUri },

@@ -5,12 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  notFound,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { notFound, redirect, useNavigate } from "@tanstack/react-router";
 import IconSignOut from "@vector-im/compound-design-tokens/assets/web/icons/sign-out";
 import { Button, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
@@ -93,7 +88,7 @@ const actionSchema = v.variant("action", [
   ),
 ]);
 
-export const Route = createFileRoute("/_account/")({
+export const Route = createFileRoute({
   validateSearch: actionSchema,
 
   beforeLoad({ search }) {

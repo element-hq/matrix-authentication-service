@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 
@@ -56,7 +56,7 @@ const query = (deviceId: string, userId: string) =>
       }),
   });
 
-export const Route = createFileRoute("/devices/$")({
+export const Route = createFileRoute({
   async loader({ context, params }) {
     const data = await context.queryClient.fetchQuery(currentViewerQuery);
     if (data.viewer.__typename !== "User")

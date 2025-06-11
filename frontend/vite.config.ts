@@ -8,7 +8,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { codecovVitePlugin } from "@codecov/vite-plugin";
-import { TanStackRouterVite as tanStackRouter } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import type { Manifest, PluginOption } from "vite";
@@ -66,9 +66,10 @@ export default defineConfig((env) => ({
   plugins: [
     codegen(),
 
-    tanStackRouter({
+    tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+      verboseFileRoutes: false,
     }),
 
     react(),
