@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "generate": "graphql-codegen",
+    "generate": "graphql-codegen && i18next",
     "lint": "graphql-codegen && biome check && tsc && i18next --fail-on-warnings --fail-on-update",
     "format": "biome format --write",
     "build": "rimraf ./dist/ && vite build",
