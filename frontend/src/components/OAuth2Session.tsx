@@ -1,3 +1,8 @@
+// Copyright 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type FragmentType, graphql, useFragment } from "../gql";
