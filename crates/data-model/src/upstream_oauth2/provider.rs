@@ -339,6 +339,9 @@ pub struct ImportPreference {
 
     #[serde(default)]
     pub template: Option<String>,
+
+    #[serde(default)]
+    pub on_conflict: OnConflict,
 }
 
 impl std::ops::Deref for ImportPreference {
@@ -389,5 +392,24 @@ impl ImportAction {
             Self::Suggest => user_preference,
             Self::Force | Self::Require => true,
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the upstream OAuth 2.0 login
+    #[default]
+    Fail,
+
+    /// Adds the upstream account link, regardless of whether there is an
+    /// existing link or not
+    Add,
+}
+
+impl OnConflict {
+    #[must_use]
+    pub fn is_add(&self) -> bool {
+        matches!(self, Self::Add)
     }
 }

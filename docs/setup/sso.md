@@ -66,6 +66,30 @@ The template has the following variables available:
  - `user`: an object which contains the claims from both the `id_token` and the `userinfo` endpoint
  - `extra_callback_parameters`: an object with the additional parameters the provider sent to the redirect URL
 
+
+## Allow linking existing user accounts
+
+The authentication service supports linking external provider identities to existing local user accounts.
+
+To enable this behavior, the following option must be explicitly set in the provider configuration:
+
+```yaml
+claims_imports:
+  localpart:
+    on_conflict: add
+```
+`on_conflict` configuration is specific to `localpart` claim_imports, it can be either:
+* `add` : when a user authenticates with the provider for the first time, the system checks whether a local user already exists with a `localpart` matching the attribute mapping `localpart` , _by default `{{ user.preferred_username }}`_. If a match is found, the external identity is linked to the existing local account.
+* `fail` *(default)* : fails the sso login.
+
+To enable this option, the `localpart` mapping must be set to either `force` or `require`.
+
+> ⚠️ **Security Notice**
+> Enabling this option can introduce a risk of account takeover.
+>
+> To mitigate this risk, ensure that this option is only enabled for identity providers where you can guarantee that the attribute mapping `localpart` will reliably and uniquely correspond to the intended local user account.
+
+
 ## Multiple providers behaviour
 
 Multiple authentication methods can be configured at the same time, in which case the authentication service will let the user choose which one to use.

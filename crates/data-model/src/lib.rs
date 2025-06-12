@@ -42,7 +42,7 @@ pub use self::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState,
         UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
         UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderImportAction,
-        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderOnConflict, UpstreamOAuthProviderOnBackchannelLogout,
         UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
         UpstreamOAuthProviderSubjectPreference, UpstreamOAuthProviderTokenAuthMethod,
     },

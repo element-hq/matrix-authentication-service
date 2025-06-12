@@ -117,6 +117,20 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                     }
                 }
             }
+
+            if !provider.claims_imports.localpart.on_conflict.is_default()
+                && !matches!(
+                    provider.claims_imports.localpart.action,
+                    ImportAction::Force | ImportAction::Require
+                )
+            {
+                return annotate(figment::Error::custom(
+                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
+                ));
+            }
+
+            //TODO : check that claims imports use on_conflict where it is not
+            // supported?
         }
 
         Ok(())
@@ -190,6 +204,26 @@ impl ImportAction {
     }
 }
 
+/// How to handle an existing localpart claim
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the sso login on conflict
+    #[default]
+    Fail,
+
+    /// Adds the oauth identity link, regardless of whether there is an existing
+    /// link or not
+    Add,
+}
+
+impl OnConflict {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, OnConflict::Fail)
+    }
+}
+
 /// What should be done for the subject attribute
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct SubjectImportPreference {
@@ -218,6 +252,10 @@ pub struct LocalpartImportPreference {
     /// If not provided, the default template is `{{ user.preferred_username }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
+
+    /// How to handle conflicts on the claim, default value is `Fail`
+    #[serde(default, skip_serializing_if = "OnConflict::is_default")]
+    pub on_conflict: OnConflict,
 }
 
 impl LocalpartImportPreference {
