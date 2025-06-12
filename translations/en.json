@@ -14,7 +14,7 @@
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:192:26-52"
+      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:191:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -691,6 +691,20 @@
         "@heading": {
           "context": "pages/upstream_oauth2/link_mismatch.html:19:11-57",
           "description": "Page shown when the user tries to link an upstream account that is already linked to another account"
+        }
+      },
+      "login_link": {
+        "action": "Continue",
+        "@action": {
+          "context": "pages/upstream_oauth2/login_link.html:27:28-70"
+        },
+        "description": "An account exists for this username (%(username)s), it will be linked to this upstream account.",
+        "@description": {
+          "context": "pages/upstream_oauth2/login_link.html:21:7-85"
+        },
+        "heading": "Link to your existing account",
+        "@heading": {
+          "context": "pages/upstream_oauth2/login_link.html:17:27-70"
         }
       },
       "register": {

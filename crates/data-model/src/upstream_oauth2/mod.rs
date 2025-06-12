@@ -15,7 +15,7 @@ pub use self::{
         DiscoveryMode as UpstreamOAuthProviderDiscoveryMode,
         ImportAction as UpstreamOAuthProviderImportAction,
         ImportPreference as UpstreamOAuthProviderImportPreference,
-        PkceMode as UpstreamOAuthProviderPkceMode,
+        OnConflict as UpstreamOAuthProviderOnConflict, PkceMode as UpstreamOAuthProviderPkceMode,
         ResponseMode as UpstreamOAuthProviderResponseMode,
         SubjectPreference as UpstreamOAuthProviderSubjectPreference,
         TokenAuthMethod as UpstreamOAuthProviderTokenAuthMethod, UpstreamOAuthProvider,
