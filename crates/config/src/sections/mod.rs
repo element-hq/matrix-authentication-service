@@ -52,7 +52,7 @@ pub use self::{
     upstream_oauth2::{
         ClaimsImports as UpstreamOAuth2ClaimsImports, DiscoveryMode as UpstreamOAuth2DiscoveryMode,
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
-        ImportAction as UpstreamOAuth2ImportAction,
+        ImportAction as UpstreamOAuth2ImportAction, OnConflict as UpstreamOAuth2OnConflict,
         OnBackchannelLogout as UpstreamOAuth2OnBackchannelLogout,
         PkceMethod as UpstreamOAuth2PkceMethod, Provider as UpstreamOAuth2Provider,
         ResponseMode as UpstreamOAuth2ResponseMode,
