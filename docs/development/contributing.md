@@ -17,7 +17,7 @@ There are two main ways to contribute to MAS:
 
 ## 3. What do I need?
 
-To get MAS running locally from source you will need:
+To get MAS running locally from source you will need to:
 
 - [Install Rust and Cargo](https://www.rust-lang.org/learn/get-started). We recommend using the latest stable version of Rust.
 - [Install Node.js and npm](https://nodejs.org/). We recommend using the latest LTS version of Node.js.

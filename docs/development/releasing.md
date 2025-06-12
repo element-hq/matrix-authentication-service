@@ -69,7 +69,7 @@ When a PR is tagged with the `Z-Build-Workflow` label:
 
 ## Changelog generation
 
-Changelogs are automatically generated from PR titles and labels with the GitHub tools.
+Changelogs are automatically generated from PR titles and labels.
 
 The configuration for those can be found in the `.github/release.yml`, but the main labels to be aware of are:
 
