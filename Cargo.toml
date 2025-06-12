@@ -60,7 +60,7 @@ syn2mas = { path = "./crates/syn2mas", version = "=0.17.0-rc.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.14.2"
+version = "0.15.0"
 features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
 
 # An `Arc` that can be atomically updated
@@ -330,7 +330,7 @@ features = ["yaml", "json"]
 # IP network address types
 [workspace.dependencies.ipnetwork]
 version = "0.20.0"
-features = ["serde", "schemars"]
+features = ["serde"]
 
 # Iterator utilities
 [workspace.dependencies.itertools]
@@ -531,8 +531,8 @@ version = "0.4.5"
 
 # JSON Schema generation
 [workspace.dependencies.schemars]
-version = "0.8.22"
-features = ["url", "chrono", "preserve_order"]
+version = "0.9.0"
+features = ["url2", "chrono04", "preserve_order"]
 
 # SEC1 encoding format
 [workspace.dependencies.sec1]

@@ -144,249 +144,105 @@ impl serde::Serialize for JsonWebSignatureAlg {
 }
 
 impl schemars::JsonSchema for JsonWebSignatureAlg {
-    fn schema_name() -> String {
-        "JsonWebSignatureAlg".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebSignatureAlg")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"HMAC using SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("HS256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"HMAC using SHA-256",
+                "const": "HS256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"HMAC using SHA-384".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("HS384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"HMAC using SHA-384",
+                "const": "HS384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"HMAC using SHA-512".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("HS512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"HMAC using SHA-512",
+                "const": "HS512",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PKCS1-v1_5 using SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RS256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PKCS1-v1_5 using SHA-256",
+                "const": "RS256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PKCS1-v1_5 using SHA-384".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RS384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PKCS1-v1_5 using SHA-384",
+                "const": "RS384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PKCS1-v1_5 using SHA-512".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RS512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PKCS1-v1_5 using SHA-512",
+                "const": "RS512",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"ECDSA using P-256 and SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ES256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"ECDSA using P-256 and SHA-256",
+                "const": "ES256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"ECDSA using P-384 and SHA-384".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ES384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"ECDSA using P-384 and SHA-384",
+                "const": "ES384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"ECDSA using P-521 and SHA-512".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ES512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"ECDSA using P-521 and SHA-512",
+                "const": "ES512",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PSS using SHA-256 and MGF1 with SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PS256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PSS using SHA-256 and MGF1 with SHA-256",
+                "const": "PS256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PSS using SHA-384 and MGF1 with SHA-384".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PS384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PSS using SHA-384 and MGF1 with SHA-384",
+                "const": "PS384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSASSA-PSS using SHA-512 and MGF1 with SHA-512".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PS512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSASSA-PSS using SHA-512 and MGF1 with SHA-512",
+                "const": "PS512",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"No digital signature or MAC performed".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("none".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"No digital signature or MAC performed",
+                "const": "none",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"EdDSA signature algorithms".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("EdDSA".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"EdDSA signature algorithms",
+                "const": "EdDSA",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"ECDSA using secp256k1 curve and SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ES256K".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"ECDSA using secp256k1 curve and SHA-256",
+                "const": "ES256K",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"EdDSA using Ed25519 curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("Ed25519".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"EdDSA using Ed25519 curve",
+                "const": "Ed25519",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"EdDSA using Ed448 curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("Ed448".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"EdDSA using Ed448 curve",
+                "const": "Ed448",
+            }),
         ];
 
         let description = r#"JSON Web Signature "alg" parameter"#;
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -533,275 +389,115 @@ impl serde::Serialize for JsonWebEncryptionAlg {
 }
 
 impl schemars::JsonSchema for JsonWebEncryptionAlg {
-    fn schema_name() -> String {
-        "JsonWebEncryptionAlg".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebEncryptionAlg")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSAES-PKCS1-v1_5".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA1_5".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSAES-PKCS1-v1_5",
+                "const": "RSA1_5",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSAES OAEP using default parameters".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA-OAEP".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSAES OAEP using default parameters",
+                "const": "RSA-OAEP",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSAES OAEP using SHA-256 and MGF1 with SHA-256".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA-OAEP-256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSAES OAEP using SHA-256 and MGF1 with SHA-256",
+                "const": "RSA-OAEP-256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES Key Wrap using 128-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A128KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES Key Wrap using 128-bit key",
+                "const": "A128KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES Key Wrap using 192-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A192KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES Key Wrap using 192-bit key",
+                "const": "A192KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES Key Wrap using 256-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A256KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES Key Wrap using 256-bit key",
+                "const": "A256KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Direct use of a shared symmetric key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("dir".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Direct use of a shared symmetric key",
+                "const": "dir",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"ECDH-ES using Concat KDF".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ECDH-ES".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"ECDH-ES using Concat KDF",
+                "const": "ECDH-ES",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"ECDH-ES using Concat KDF and "A128KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ECDH-ES+A128KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"ECDH-ES using Concat KDF and "A128KW" wrapping"#,
+                "const": "ECDH-ES+A128KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"ECDH-ES using Concat KDF and "A192KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ECDH-ES+A192KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"ECDH-ES using Concat KDF and "A192KW" wrapping"#,
+                "const": "ECDH-ES+A192KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"ECDH-ES using Concat KDF and "A256KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("ECDH-ES+A256KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"ECDH-ES using Concat KDF and "A256KW" wrapping"#,
+                "const": "ECDH-ES+A256KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Key wrapping with AES GCM using 128-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A128GCMKW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Key wrapping with AES GCM using 128-bit key",
+                "const": "A128GCMKW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Key wrapping with AES GCM using 192-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A192GCMKW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Key wrapping with AES GCM using 192-bit key",
+                "const": "A192GCMKW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Key wrapping with AES GCM using 256-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A256GCMKW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Key wrapping with AES GCM using 256-bit key",
+                "const": "A256GCMKW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"PBES2 with HMAC SHA-256 and "A128KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PBES2-HS256+A128KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"PBES2 with HMAC SHA-256 and "A128KW" wrapping"#,
+                "const": "PBES2-HS256+A128KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"PBES2 with HMAC SHA-384 and "A192KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PBES2-HS384+A192KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"PBES2 with HMAC SHA-384 and "A192KW" wrapping"#,
+                "const": "PBES2-HS384+A192KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r#"PBES2 with HMAC SHA-512 and "A256KW" wrapping"#.to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("PBES2-HS512+A256KW".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r#"PBES2 with HMAC SHA-512 and "A256KW" wrapping"#,
+                "const": "PBES2-HS512+A256KW",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSA-OAEP using SHA-384 and MGF1 with SHA-384".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA-OAEP-384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSA-OAEP using SHA-384 and MGF1 with SHA-384",
+                "const": "RSA-OAEP-384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSA-OAEP using SHA-512 and MGF1 with SHA-512".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA-OAEP-512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSA-OAEP using SHA-512 and MGF1 with SHA-512",
+                "const": "RSA-OAEP-512",
+            }),
         ];
 
         let description = r#"JSON Web Encryption "alg" parameter"#;
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -883,106 +579,50 @@ impl serde::Serialize for JsonWebEncryptionEnc {
 }
 
 impl schemars::JsonSchema for JsonWebEncryptionEnc {
-    fn schema_name() -> String {
-        "JsonWebEncryptionEnc".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebEncryptionEnc")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A128CBC-HS256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm",
+                "const": "A128CBC-HS256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A192CBC-HS384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm",
+                "const": "A192CBC-HS384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A256CBC-HS512".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm",
+                "const": "A256CBC-HS512",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES GCM using 128-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A128GCM".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES GCM using 128-bit key",
+                "const": "A128GCM",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES GCM using 192-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A192GCM".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES GCM using 192-bit key",
+                "const": "A192GCM",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"AES GCM using 256-bit key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("A256GCM".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"AES GCM using 256-bit key",
+                "const": "A256GCM",
+            }),
         ];
 
         let description = r#"JSON Web Encryption "enc" parameter"#;
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1039,41 +679,25 @@ impl serde::Serialize for JsonWebEncryptionCompressionAlgorithm {
 }
 
 impl schemars::JsonSchema for JsonWebEncryptionCompressionAlgorithm {
-    fn schema_name() -> String {
-        "JsonWebEncryptionCompressionAlgorithm".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebEncryptionCompressionAlgorithm")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"DEFLATE".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("DEF".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"DEFLATE",
+                "const": "DEF",
+            }),
         ];
 
         let description = r"JSON Web Encryption Compression Algorithm";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1145,80 +769,40 @@ impl serde::Serialize for JsonWebKeyType {
 }
 
 impl schemars::JsonSchema for JsonWebKeyType {
-    fn schema_name() -> String {
-        "JsonWebKeyType".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebKeyType")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Elliptic Curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("EC".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Elliptic Curve",
+                "const": "EC",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"RSA".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("RSA".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"RSA",
+                "const": "RSA",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Octet sequence".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("oct".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Octet sequence",
+                "const": "oct",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Octet string key pairs".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("OKP".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Octet string key pairs",
+                "const": "OKP",
+            }),
         ];
 
         let description = r"JSON Web Key Type";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1290,80 +874,40 @@ impl serde::Serialize for JsonWebKeyEcEllipticCurve {
 }
 
 impl schemars::JsonSchema for JsonWebKeyEcEllipticCurve {
-    fn schema_name() -> String {
-        "JsonWebKeyEcEllipticCurve".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebKeyEcEllipticCurve")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"P-256 Curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("P-256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"P-256 Curve",
+                "const": "P-256",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"P-384 Curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("P-384".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"P-384 Curve",
+                "const": "P-384",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"P-521 Curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("P-521".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"P-521 Curve",
+                "const": "P-521",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"SECG secp256k1 curve".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("secp256k1".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"SECG secp256k1 curve",
+                "const": "secp256k1",
+            }),
         ];
 
         let description = r"JSON Web Key EC Elliptic Curve";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1435,80 +979,40 @@ impl serde::Serialize for JsonWebKeyOkpEllipticCurve {
 }
 
 impl schemars::JsonSchema for JsonWebKeyOkpEllipticCurve {
-    fn schema_name() -> String {
-        "JsonWebKeyOkpEllipticCurve".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebKeyOkpEllipticCurve")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Ed25519 signature algorithm key pairs".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("Ed25519".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Ed25519 signature algorithm key pairs",
+                "const": "Ed25519",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Ed448 signature algorithm key pairs".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("Ed448".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Ed448 signature algorithm key pairs",
+                "const": "Ed448",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"X25519 function key pairs".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("X25519".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"X25519 function key pairs",
+                "const": "X25519",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"X448 function key pairs".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("X448".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"X448 function key pairs",
+                "const": "X448",
+            }),
         ];
 
         let description = r"JSON Web Key OKP Elliptic Curve";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1570,54 +1074,30 @@ impl serde::Serialize for JsonWebKeyUse {
 }
 
 impl schemars::JsonSchema for JsonWebKeyUse {
-    fn schema_name() -> String {
-        "JsonWebKeyUse".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebKeyUse")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Digital Signature or MAC".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("sig".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Digital Signature or MAC",
+                "const": "sig",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Encryption".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("enc".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Encryption",
+                "const": "enc",
+            }),
         ];
 
         let description = r"JSON Web Key Use";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -1709,131 +1189,59 @@ impl serde::Serialize for JsonWebKeyOperation {
 }
 
 impl schemars::JsonSchema for JsonWebKeyOperation {
-    fn schema_name() -> String {
-        "JsonWebKeyOperation".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("JsonWebKeyOperation")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Compute digital signature or MAC".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("sign".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Compute digital signature or MAC",
+                "const": "sign",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Verify digital signature or MAC".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("verify".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Verify digital signature or MAC",
+                "const": "verify",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Encrypt content".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("encrypt".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Encrypt content",
+                "const": "encrypt",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Decrypt content and validate decryption, if applicable".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("decrypt".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Decrypt content and validate decryption, if applicable",
+                "const": "decrypt",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Encrypt key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("wrapKey".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Encrypt key",
+                "const": "wrapKey",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Decrypt key and validate decryption, if applicable".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("unwrapKey".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Decrypt key and validate decryption, if applicable",
+                "const": "unwrapKey",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Derive key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("deriveKey".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Derive key",
+                "const": "deriveKey",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                metadata: Some(Box::new(schemars::schema::Metadata {
-                    description: Some(
-                        // ---
-                        r"Derive bits not to be used as a key".to_owned(),
-                    ),
-                    ..Default::default()
-                })),
-                const_value: Some("deriveBits".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "description": r"Derive bits not to be used as a key",
+                "const": "deriveBits",
+            }),
         ];
 
         let description = r"JSON Web Key Operation";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }

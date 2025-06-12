@@ -60,8 +60,6 @@ skip = [
     { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
     { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version
-    { name = "indexmap", version = "1.9.3" },        # schemars depends on this old version
-    { name = "hashbrown", version = "0.12.3" },      # schemars -> indexmap depends on this old version
     { name = "hashbrown", version = "0.14.5" },      # a few crates depend on this old version
     # a few dependencies depend on the 1.x version of thiserror
     { name = "thiserror", version = "1.0.69" },

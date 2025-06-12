@@ -23,19 +23,6 @@ fn default_public_base() -> Url {
     "http://[::]:8080".parse().unwrap()
 }
 
-fn http_address_example_1() -> &'static str {
-    "[::1]:8080"
-}
-fn http_address_example_2() -> &'static str {
-    "[::]:8080"
-}
-fn http_address_example_3() -> &'static str {
-    "127.0.0.1:8080"
-}
-fn http_address_example_4() -> &'static str {
-    "0.0.0.0:8080"
-}
-
 #[cfg(not(any(feature = "docker", feature = "dist")))]
 fn http_listener_assets_path_default() -> Utf8PathBuf {
     "./frontend/dist/".into()
@@ -111,10 +98,10 @@ pub enum BindConfig {
     Address {
         /// Host and port on which to listen
         #[schemars(
-            example = "http_address_example_1",
-            example = "http_address_example_2",
-            example = "http_address_example_3",
-            example = "http_address_example_4"
+            example = &"[::1]:8080",
+            example = &"[::]:8080",
+            example = &"127.0.0.1:8080",
+            example = &"0.0.0.0:8080",
         )]
         address: String,
     },
@@ -354,6 +341,7 @@ pub struct HttpConfig {
     /// List of trusted reverse proxies that can set the `X-Forwarded-For`
     /// header
     #[serde(default = "default_trusted_proxies")]
+    #[schemars(with = "Vec<String>", inner(ip))]
     pub trusted_proxies: Vec<IpNetwork>,
 
     /// Public URL base from where the authentication service is reachable

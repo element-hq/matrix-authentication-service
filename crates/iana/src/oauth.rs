@@ -79,52 +79,36 @@ impl serde::Serialize for OAuthAccessTokenType {
 }
 
 impl schemars::JsonSchema for OAuthAccessTokenType {
-    fn schema_name() -> String {
-        "OAuthAccessTokenType".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("OAuthAccessTokenType")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("Bearer".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "Bearer",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("N_A".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "N_A",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("PoP".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "PoP",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("DPoP".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "DPoP",
+            }),
         ];
 
         let description = r"OAuth Access Token Type";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -211,76 +195,52 @@ impl serde::Serialize for OAuthAuthorizationEndpointResponseType {
 }
 
 impl schemars::JsonSchema for OAuthAuthorizationEndpointResponseType {
-    fn schema_name() -> String {
-        "OAuthAuthorizationEndpointResponseType".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("OAuthAuthorizationEndpointResponseType")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("code".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "code",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("code id_token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "code id_token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("code id_token token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "code id_token token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("code token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "code token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("id_token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "id_token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("id_token token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "id_token token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("none".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "none",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "token",
+            }),
         ];
 
         let description = r"OAuth Authorization Endpoint Response Type";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -347,46 +307,32 @@ impl serde::Serialize for OAuthTokenTypeHint {
 }
 
 impl schemars::JsonSchema for OAuthTokenTypeHint {
-    fn schema_name() -> String {
-        "OAuthTokenTypeHint".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("OAuthTokenTypeHint")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("access_token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "access_token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("refresh_token".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "refresh_token",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("pct".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "pct",
+            }),
         ];
 
         let description = r"OAuth Token Type Hint";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -473,70 +419,48 @@ impl serde::Serialize for OAuthClientAuthenticationMethod {
 }
 
 impl schemars::JsonSchema for OAuthClientAuthenticationMethod {
-    fn schema_name() -> String {
-        "OAuthClientAuthenticationMethod".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("OAuthClientAuthenticationMethod")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("none".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "none",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("client_secret_post".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "client_secret_post",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("client_secret_basic".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "client_secret_basic",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("client_secret_jwt".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "client_secret_jwt",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("private_key_jwt".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "private_key_jwt",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("tls_client_auth".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "tls_client_auth",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("self_signed_tls_client_auth".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "self_signed_tls_client_auth",
+            }),
         ];
 
         let description = r"OAuth Token Endpoint Authentication Method";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }
 
@@ -598,39 +522,27 @@ impl serde::Serialize for PkceCodeChallengeMethod {
 }
 
 impl schemars::JsonSchema for PkceCodeChallengeMethod {
-    fn schema_name() -> String {
-        "PkceCodeChallengeMethod".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("PkceCodeChallengeMethod")
     }
 
     #[allow(clippy::too_many_lines)]
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("plain".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "plain",
+            }),
             // ---
-            schemars::schema::SchemaObject {
-                const_value: Some("S256".into()),
-                ..Default::default()
-            }
-            .into(),
+            schemars::json_schema!({
+                "const": "S256",
+            }),
         ];
 
         let description = r"PKCE Code Challenge Method";
-        schemars::schema::SchemaObject {
-            metadata: Some(Box::new(schemars::schema::Metadata {
-                description: Some(description.to_owned()),
-                ..Default::default()
-            })),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
-                any_of: Some(enums),
-                ..Default::default()
-            })),
-            ..Default::default()
-        }
-        .into()
+        schemars::json_schema!({
+            "description": description,
+            "anyOf": enums,
+        })
     }
 }

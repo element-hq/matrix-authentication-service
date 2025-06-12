@@ -3,10 +3,6 @@
   "title": "EmailInput",
   "description": "Input for the email add policy.",
   "type": "object",
-  "required": [
-    "email",
-    "requester"
-  ],
   "properties": {
     "email": {
       "type": "string"
@@ -15,6 +11,10 @@
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "email",
+    "requester"
+  ],
   "definitions": {
     "Requester": {
       "description": "Identity of the requester",
@@ -23,11 +23,13 @@
         "ip_address": {
           "description": "IP address of the entity making the request",
           "type": "string",
-          "format": "ip"
+          "format": "ip",
+          "nullable": true
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": "string",
+          "nullable": true
         }
       }
     }

@@ -55,16 +55,12 @@ impl IntoResponse for RouteError {
     }
 }
 
-fn password_example() -> String {
-    "hunter2".to_owned()
-}
-
 /// # JSON payload for the `POST /api/admin/v1/users/:id/set-password` endpoint
 #[derive(Deserialize, JsonSchema)]
 #[schemars(rename = "SetUserPasswordRequest")]
 pub struct Request {
     /// The password to set for the user
-    #[schemars(example = "password_example")]
+    #[schemars(example = &"hunter2")]
     password: String,
 
     /// Skip the password complexity check
