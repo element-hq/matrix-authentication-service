@@ -10,7 +10,7 @@ resolver = "2"
 
 # Updated in the CI with a `sed` command
 package.version = "0.17.0-rc.0"
-package.license = "AGPL-3.0-only"
+package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
 package.homepage = "https://element-hq.github.io/matrix-authentication-service/"
