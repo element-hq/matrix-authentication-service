@@ -26,4 +26,4 @@ Anyone can contribute to translations through [Localazy](https://localazy.com/el
 
 ## 🏗️ Contributing
 
-See the [contribution guidelines](https://element-hq.github.io/matrix-authentication-service/contributing.html) for information on how to contribute to this project.
+See the [contribution guidelines](https://element-hq.github.io/matrix-authentication-service/development/contributing.html) for information on how to contribute to this project.
