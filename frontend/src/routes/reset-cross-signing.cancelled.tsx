@@ -3,13 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
 
-import { createFileRoute } from "@tanstack/react-router";
 import IconKeyOffSolid from "@vector-im/compound-design-tokens/assets/web/icons/key-off-solid";
 import { Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import PageHeading from "../components/PageHeading";
 
-export const Route = createFileRoute("/reset-cross-signing/cancelled")({
+export const Route = createFileRoute({
   component: () => {
     const { t } = useTranslation();
     return (

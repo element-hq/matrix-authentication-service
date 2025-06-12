@@ -10,12 +10,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  notFound,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { notFound, redirect, useNavigate } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
@@ -61,7 +56,7 @@ export const query = (id: string) =>
       graphqlRequest({ query: QUERY, signal, variables: { id } }),
   });
 
-export const Route = createFileRoute("/emails/$id/verify")({
+export const Route = createFileRoute({
   async loader({ context, params }): Promise<void> {
     const data = await context.queryClient.ensureQueryData(query(params.id));
     if (!data.userEmailAuthentication) {

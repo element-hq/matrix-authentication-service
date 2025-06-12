@@ -9,7 +9,7 @@ import {
   useMutation,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import IconCheck from "@vector-im/compound-design-tokens/assets/web/icons/check";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
@@ -46,7 +46,7 @@ const currentViewerQuery = queryOptions({
     }),
 });
 
-export const Route = createFileRoute("/reset-cross-signing/")({
+export const Route = createFileRoute({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(currentViewerQuery),
 

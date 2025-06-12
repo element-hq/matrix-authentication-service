@@ -5,7 +5,7 @@
 // Please see LICENSE in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import { H5 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -93,7 +93,7 @@ const searchSchema = v.intersect([
   anyPaginationSchema,
 ]);
 
-export const Route = createFileRoute("/_account/sessions/browsers")({
+export const Route = createFileRoute({
   validateSearch: searchSchema,
 
   loaderDeps: ({ search: { inactive, ...pagination } }) => ({

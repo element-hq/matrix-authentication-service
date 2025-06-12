@@ -9,7 +9,7 @@ import {
   useMutation,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
+import { notFound, useRouter } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Form } from "@vector-im/compound-web";
 import { type FormEvent, useRef } from "react";
@@ -62,7 +62,7 @@ const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-export const Route = createFileRoute("/password/change/")({
+export const Route = createFileRoute({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
   component: ChangePassword,
 });
