@@ -14,14 +14,14 @@ Please see LICENSE in the repository root for full details.
       {% elif scope == "urn:mas:graphql:*" %}
         <li>{{ icon.info() }}<p>{{ _("mas.scope.edit_profile") }}</p></li>
         <li>{{ icon.computer() }}<p>{{ _("mas.scope.manage_sessions") }}</p></li>
-      {% elif scope == "urn:matrix:org.matrix.msc2967.client:api:*" %}
+      {% elif scope == "urn:matrix:client:api:*" or scope == "urn:matrix:org.matrix.msc2967.client:api:*" %}
         <li>{{ icon.chat() }}<p>{{ _("mas.scope.view_messages") }}</p></li>
         <li>{{ icon.send() }}<p>{{ _("mas.scope.send_messages") }}</p></li>
       {% elif scope == "urn:synapse:admin:*" %}
         <li>{{ icon.error_solid() }}<p>{{ _("mas.scope.synapse_admin") }}</p></li>
       {% elif scope == "urn:mas:admin" %}
         <li>{{ icon.error_solid() }}<p>{{ _("mas.scope.mas_admin") }}</p></li>
-      {% elif scope is startingwith("urn:matrix:org.matrix.msc2967.client:device:") %}
+      {% elif scope is startingwith("urn:matrix:client:device:") or scope is startingwith("urn:matrix:org.matrix.msc2967.client:device:") %}
         {# We hide this scope #}
       {% else %}
         <li>{{ icon.info() }}<p>{{ scope }}</p></li>
