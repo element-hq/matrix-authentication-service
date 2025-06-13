@@ -499,17 +499,24 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         .instrument(span)
         .await?;
 
-        if let Ok(device_as_scope_token) = device.to_scope_token() {
+        if let Ok([stable_device_as_scope_token, unstable_device_as_scope_token]) =
+            device.to_scope_token()
+        {
             let span = tracing::info_span!(
                 "db.app_session.finish_sessions_to_replace_device.oauth2_sessions",
                 { DB_QUERY_TEXT } = tracing::field::Empty,
             );
             sqlx::query!(
                 "
-                    UPDATE oauth2_sessions SET finished_at = $3 WHERE user_id = $1 AND $2 = ANY(scope_list) AND finished_at IS NULL
+                    UPDATE oauth2_sessions
+                    SET finished_at = $4
+                    WHERE user_id = $1
+                      AND ($2 = ANY(scope_list) OR $3 = ANY(scope_list))
+                      AND finished_at IS NULL
                 ",
                 Uuid::from(user.id),
-                device_as_scope_token.as_str(),
+                stable_device_as_scope_token.as_str(),
+                unstable_device_as_scope_token.as_str(),
                 finished_at
             )
             .record(&span)
@@ -652,7 +659,10 @@ mod tests {
             .unwrap();
 
         let device2 = Device::generate(&mut rng);
-        let scope = Scope::from_iter([OPENID, device2.to_scope_token().unwrap()]);
+        let scope: Scope = [OPENID]
+            .into_iter()
+            .chain(device2.to_scope_token().unwrap().into_iter())
+            .collect();
 
         // We're moving the clock forward by 1 minute between each session to ensure
         // we're getting consistent ordering in lists.
