@@ -469,7 +469,7 @@
                         "user_id": "040G2081040G2081040G208104",
                         "user_session_id": "050M2GA1850M2GA1850M2GA185",
                         "client_id": "060R30C1G60R30C1G60R30C1G6",
-                        "scope": "urn:matrix:org.matrix.msc2967.client:api:*",
+                        "scope": "urn:matrix:client:api:*",
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
                         "last_active_ip": "127.0.0.1",
