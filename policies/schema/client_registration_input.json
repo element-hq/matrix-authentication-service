@@ -3,10 +3,6 @@
   "title": "ClientRegistrationInput",
   "description": "Input for the client registration policy.",
   "type": "object",
-  "required": [
-    "client_metadata",
-    "requester"
-  ],
   "properties": {
     "client_metadata": {
       "type": "object",
@@ -16,6 +12,10 @@
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "client_metadata",
+    "requester"
+  ],
   "definitions": {
     "Requester": {
       "description": "Identity of the requester",
@@ -24,11 +24,13 @@
         "ip_address": {
           "description": "IP address of the entity making the request",
           "type": "string",
-          "format": "ip"
+          "format": "ip",
+          "nullable": true
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": "string",
+          "nullable": true
         }
       }
     }

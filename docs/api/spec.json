@@ -31,8 +31,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -42,8 +48,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -53,10 +65,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -66,10 +80,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -79,8 +95,14 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -90,19 +112,31 @@
             "description": "Retrieve the items started from the given browser session",
             "schema": {
               "description": "Retrieve the items started from the given browser session",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-              "$ref": "#/components/schemas/CompatSessionStatus",
-              "nullable": true
+              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CompatSessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           }
@@ -297,8 +331,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -308,8 +348,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -319,10 +365,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -332,10 +380,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -345,8 +395,14 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -356,8 +412,14 @@
             "description": "Retrieve the items for the given client",
             "schema": {
               "description": "Retrieve the items for the given client",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -367,8 +429,14 @@
             "description": "Retrieve the items only for a specific client kind",
             "schema": {
               "description": "Retrieve the items only for a specific client kind",
-              "$ref": "#/components/schemas/OAuth2ClientKind",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OAuth2ClientKind"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -378,8 +446,14 @@
             "description": "Retrieve the items started from the given browser session",
             "schema": {
               "description": "Retrieve the items started from the given browser session",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -389,22 +463,28 @@
             "description": "Retrieve the items with the given scope",
             "schema": {
               "description": "Retrieve the items with the given scope",
-              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "default": []
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-              "$ref": "#/components/schemas/OAuth2SessionStatus",
-              "nullable": true
+              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OAuth2SessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           }
@@ -817,8 +897,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -828,8 +914,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -839,10 +931,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -852,10 +946,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -865,19 +961,27 @@
             "description": "Retrieve users with (or without) the `admin` flag set",
             "schema": {
               "description": "Retrieve users with (or without) the `admin` flag set",
-              "type": "boolean",
-              "nullable": true
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
             "schema": {
-              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
-              "$ref": "#/components/schemas/UserStatus",
-              "nullable": true
+              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           }
@@ -1563,8 +1667,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -1574,8 +1684,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -1585,10 +1701,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -1598,10 +1716,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -1611,8 +1731,14 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -1622,8 +1748,10 @@
             "description": "Retrieve the user email with the given email address",
             "schema": {
               "description": "Retrieve the user email with the given email address",
-              "type": "string",
-              "nullable": true
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "style": "form"
           }
@@ -1908,8 +2036,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -1919,8 +2053,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -1930,10 +2070,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -1943,10 +2085,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -1956,19 +2100,31 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-              "$ref": "#/components/schemas/UserSessionStatus",
-              "nullable": true
+              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserSessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           }
@@ -2146,8 +2302,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2157,8 +2319,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2168,10 +2336,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -2181,10 +2351,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -2194,8 +2366,10 @@
             "description": "Retrieve tokens that have (or have not) been used at least once",
             "schema": {
               "description": "Retrieve tokens that have (or have not) been used at least once",
-              "type": "boolean",
-              "nullable": true
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "style": "form"
           },
@@ -2205,8 +2379,10 @@
             "description": "Retrieve tokens that are (or are not) revoked",
             "schema": {
               "description": "Retrieve tokens that are (or are not) revoked",
-              "type": "boolean",
-              "nullable": true
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "style": "form"
           },
@@ -2216,19 +2392,23 @@
             "description": "Retrieve tokens that are (or are not) expired",
             "schema": {
               "description": "Retrieve tokens that are (or are not) expired",
-              "type": "boolean",
-              "nullable": true
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[valid]",
-            "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not reached its usage limit.",
+            "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
             "schema": {
-              "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not reached its usage limit.",
-              "type": "boolean",
-              "nullable": true
+              "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "style": "form"
           }
@@ -2693,8 +2873,14 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2704,8 +2890,14 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2715,10 +2907,12 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -2728,10 +2922,12 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": "integer",
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint",
-              "minimum": 1.0,
-              "nullable": true
+              "minimum": 1
             },
             "style": "form"
           },
@@ -2741,8 +2937,14 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2752,8 +2954,14 @@
             "description": "Retrieve the items for the given provider",
             "schema": {
               "description": "Retrieve the items for the given provider",
-              "$ref": "#/components/schemas/ULID",
-              "nullable": true
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2763,8 +2971,10 @@
             "description": "Retrieve the items with the given subject",
             "schema": {
               "description": "Retrieve the items with the given subject",
-              "type": "string",
-              "nullable": true
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "style": "form"
           }
@@ -3111,26 +3321,44 @@
         "properties": {
           "page[before]": {
             "description": "Retrieve the items before the given ID",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "page[after]": {
             "description": "Retrieve the items after the given ID",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "page[first]": {
             "description": "Retrieve the first N items",
             "type": "integer",
             "format": "uint",
-            "minimum": 1.0,
+            "minimum": 1,
             "nullable": true
           },
           "page[last]": {
             "description": "Retrieve the last N items",
             "type": "integer",
             "format": "uint",
-            "minimum": 1.0,
+            "minimum": 1,
             "nullable": true
           }
         }
@@ -3138,30 +3366,54 @@
       "ULID": {
         "title": "ULID",
         "description": "A ULID as per https://github.com/ulid/spec",
-        "examples": [
-          "01ARZ3NDEKTSV4RRFFQ69G5FAV",
-          "01J41912SC8VGAQDD50F6APK91"
-        ],
         "type": "string",
-        "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
+        "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$",
+        "example": "01ARZ3NDEKTSV4RRFFQ69G5FAV"
       },
       "CompatSessionFilter": {
         "type": "object",
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[user-session]": {
             "description": "Retrieve the items started from the given browser session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-            "$ref": "#/components/schemas/CompatSessionStatus",
-            "nullable": true
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompatSessionStatus"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         }
       },
@@ -3175,15 +3427,14 @@
       "PaginatedResponse_for_CompatSession": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -3194,33 +3445,36 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "PaginationMeta": {
         "type": "object",
-        "required": [
-          "count"
-        ],
         "properties": {
           "count": {
             "description": "The total number of results",
             "type": "integer",
             "format": "uint",
-            "minimum": 0.0
+            "minimum": 0
           }
-        }
+        },
+        "required": [
+          "count"
+        ]
       },
       "SingleResource_for_CompatSession": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -3228,39 +3482,63 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/CompatSession"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompatSession"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "CompatSession": {
         "description": "A compatibility session for legacy clients",
         "type": "object",
-        "required": [
-          "created_at",
-          "device_id",
-          "user_id",
-          "user_session_id"
-        ],
         "properties": {
           "user_id": {
             "description": "The ID of the user that owns this session",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "device_id": {
             "description": "The Matrix device ID of this session",
-            "$ref": "#/components/schemas/DeviceID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceID"
+              }
+            ]
           },
           "user_session_id": {
             "description": "The ID of the user session that started this session, if any",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "redirect_uri": {
             "description": "The redirect URI used to login in the client, if it was an SSO login",
@@ -3301,38 +3579,37 @@
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "user_id",
+          "device_id",
+          "user_session_id",
+          "created_at"
+        ]
       },
       "DeviceID": {
         "title": "Device ID",
-        "examples": [
-          "AABBCCDDEE",
-          "FFGGHHIIJJ"
-        ],
+        "description": "A device ID as per https://matrix.org/docs/spec/client_server/r0.6.0#device-ids",
         "type": "string",
-        "pattern": "^[A-Za-z0-9._~!$&'()*+,;=:&/-]+$"
+        "pattern": "^[A-Za-z0-9._~!$&'()*+,;=:&/-]+$",
+        "example": "AABBCCDDEE"
       },
       "SelfLinks": {
         "description": "Related links",
         "type": "object",
-        "required": [
-          "self"
-        ],
         "properties": {
           "self": {
             "description": "The canonical link to the current resource",
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "self"
+        ]
       },
       "PaginationLinks": {
         "description": "Related links",
         "type": "object",
-        "required": [
-          "first",
-          "last",
-          "self"
-        ],
         "properties": {
           "self": {
             "description": "The canonical link to the current page",
@@ -3347,23 +3624,25 @@
             "type": "string"
           },
           "next": {
-            "description": "The link to the next page of results\n\nOnly present if there is a next page",
+            "description": "The link to the next page of results\n\n Only present if there is a next page",
             "type": "string",
             "nullable": true
           },
           "prev": {
-            "description": "The link to the previous page of results\n\nOnly present if there is a previous page",
+            "description": "The link to the previous page of results\n\n Only present if there is a previous page",
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "self",
+          "first",
+          "last"
+        ]
       },
       "ErrorResponse": {
         "description": "A top-level response with a list of errors",
         "type": "object",
-        "required": [
-          "errors"
-        ],
         "properties": {
           "errors": {
             "description": "The list of errors",
@@ -3372,40 +3651,43 @@
               "$ref": "#/components/schemas/Error"
             }
           }
-        }
+        },
+        "required": [
+          "errors"
+        ]
       },
       "Error": {
         "description": "A single error",
         "type": "object",
-        "required": [
-          "title"
-        ],
         "properties": {
           "title": {
             "description": "A human-readable title for the error",
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "title"
+        ]
       },
       "UlidInPath": {
         "type": "object",
-        "required": [
-          "id"
-        ],
         "properties": {
           "id": {
             "title": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "id"
+        ]
       },
       "SingleResponse_for_CompatSession": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_CompatSession"
@@ -3413,43 +3695,92 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "OAuth2SessionFilter": {
         "type": "object",
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[client]": {
             "description": "Retrieve the items for the given client",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[client-kind]": {
             "description": "Retrieve the items only for a specific client kind",
-            "$ref": "#/components/schemas/OAuth2ClientKind",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OAuth2ClientKind"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[user-session]": {
             "description": "Retrieve the items started from the given browser session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[scope]": {
             "description": "Retrieve the items with the given scope",
-            "default": [],
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "default": []
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-            "$ref": "#/components/schemas/OAuth2SessionStatus",
-            "nullable": true
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OAuth2SessionStatus"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         }
       },
@@ -3470,15 +3801,14 @@
       "PaginatedResponse_for_OAuth2Session": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -3489,19 +3819,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_OAuth2Session": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -3509,26 +3842,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/OAuth2Session"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OAuth2Session"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "OAuth2Session": {
         "description": "A OAuth 2.0 session",
         "type": "object",
-        "required": [
-          "client_id",
-          "created_at",
-          "scope"
-        ],
         "properties": {
           "created_at": {
             "description": "When the object was created",
@@ -3543,17 +3889,39 @@
           },
           "user_id": {
             "description": "The ID of the user who owns the session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "user_session_id": {
             "description": "The ID of the browser session which started this session",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "client_id": {
             "description": "The ID of the client which requested this session",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "scope": {
             "description": "The scope granted for this session",
@@ -3581,15 +3949,16 @@
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "created_at",
+          "client_id",
+          "scope"
+        ]
       },
       "SingleResponse_for_OAuth2Session": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
@@ -3597,33 +3966,31 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "SetPolicyDataRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/policy-data`",
         "type": "object",
-        "required": [
-          "data"
-        ],
         "properties": {
           "data": {
-            "examples": [
-              {
-                "hello": "world",
-                "foo": 42,
-                "bar": true
-              }
-            ]
+            "example": {
+              "hello": "world",
+              "foo": 42,
+              "bar": true
+            }
           }
-        }
+        },
+        "required": [
+          "data"
+        ]
       },
       "SingleResponse_for_PolicyData": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_PolicyData"
@@ -3631,17 +3998,15 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_PolicyData": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -3649,25 +4014,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/PolicyData"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyData"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "PolicyData": {
         "description": "The policy data",
         "type": "object",
-        "required": [
-          "created_at",
-          "data"
-        ],
         "properties": {
           "created_at": {
             "description": "The creation date of the policy data",
@@ -3677,7 +4056,11 @@
           "data": {
             "description": "The policy data content"
           }
-        }
+        },
+        "required": [
+          "created_at",
+          "data"
+        ]
       },
       "UserFilter": {
         "type": "object",
@@ -3688,9 +4071,18 @@
             "nullable": true
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
-            "$ref": "#/components/schemas/UserStatus",
-            "nullable": true
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         }
       },
@@ -3705,15 +4097,14 @@
       "PaginatedResponse_for_User": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -3724,19 +4115,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_User": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -3744,26 +4138,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/User"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "User": {
         "description": "A user",
         "type": "object",
-        "required": [
-          "admin",
-          "created_at",
-          "username"
-        ],
         "properties": {
           "username": {
             "description": "The username (localpart) of the user",
@@ -3790,33 +4197,34 @@
             "description": "Whether the user can request admin privileges.",
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "username",
+          "created_at",
+          "admin"
+        ]
       },
       "AddUserRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/users` endpoint",
         "type": "object",
-        "required": [
-          "username"
-        ],
         "properties": {
           "username": {
             "description": "The username of the user to add.",
             "type": "string"
           },
           "skip_homeserver_check": {
-            "description": "Skip checking with the homeserver whether the username is available.\n\nUse this with caution! The main reason to use this, is when a user used by an application service needs to exist in MAS to craft special tokens (like with admin access) for them",
-            "default": false,
-            "type": "boolean"
+            "description": "Skip checking with the homeserver whether the username is available.\n\n Use this with caution! The main reason to use this, is when a user used\n by an application service needs to exist in MAS to craft special\n tokens (like with admin access) for them",
+            "type": "boolean",
+            "default": false
           }
-        }
+        },
+        "required": [
+          "username"
+        ]
       },
       "SingleResponse_for_User": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_User"
@@ -3824,61 +4232,72 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "SetUserPasswordRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/users/:id/set-password` endpoint",
         "type": "object",
-        "required": [
-          "password"
-        ],
         "properties": {
           "password": {
             "description": "The password to set for the user",
-            "examples": [
-              "hunter2"
-            ],
-            "type": "string"
+            "type": "string",
+            "example": "hunter2"
           },
           "skip_password_check": {
             "description": "Skip the password complexity check",
             "type": "boolean",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "password"
+        ]
       },
       "UsernamePathParam": {
         "type": "object",
-        "required": [
-          "username"
-        ],
         "properties": {
           "username": {
             "description": "The username (localpart) of the user to get",
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "username"
+        ]
       },
       "UserSetAdminRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/users/:id/set-admin` endpoint",
         "type": "object",
-        "required": [
-          "admin"
-        ],
         "properties": {
           "admin": {
             "description": "Whether the user can request admin privileges.",
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "admin"
+        ]
       },
       "UserEmailFilter": {
         "type": "object",
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[email]": {
             "description": "Retrieve the user email with the given email address",
@@ -3890,15 +4309,14 @@
       "PaginatedResponse_for_UserEmail": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -3909,19 +4327,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_UserEmail": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -3929,26 +4350,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/UserEmail"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserEmail"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "UserEmail": {
         "description": "An email address for a user",
         "type": "object",
-        "required": [
-          "created_at",
-          "email",
-          "user_id"
-        ],
         "properties": {
           "created_at": {
             "description": "When the object was created",
@@ -3957,40 +4391,49 @@
           },
           "user_id": {
             "description": "The ID of the user who owns this email address",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "email": {
             "description": "The email address",
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "created_at",
+          "user_id",
+          "email"
+        ]
       },
       "AddUserEmailRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/user-emails`",
         "type": "object",
-        "required": [
-          "email",
-          "user_id"
-        ],
         "properties": {
           "user_id": {
             "description": "The ID of the user to which the email should be added.",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "email": {
             "description": "The email address of the user to add.",
             "type": "string",
             "format": "email"
           }
-        }
+        },
+        "required": [
+          "user_id",
+          "email"
+        ]
       },
       "SingleResponse_for_UserEmail": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_UserEmail"
@@ -3998,20 +4441,42 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "UserSessionFilter": {
         "type": "object",
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
-            "$ref": "#/components/schemas/UserSessionStatus",
-            "nullable": true
+            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSessionStatus"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         }
       },
@@ -4025,15 +4490,14 @@
       "PaginatedResponse_for_UserSession": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -4044,19 +4508,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_UserSession": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -4064,25 +4531,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/UserSession"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserSession"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "UserSession": {
         "description": "The browser (cookie) session for a user",
         "type": "object",
-        "required": [
-          "created_at",
-          "user_id"
-        ],
         "properties": {
           "created_at": {
             "description": "When the object was created",
@@ -4097,7 +4578,11 @@
           },
           "user_id": {
             "description": "The ID of the user who owns the session",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "user_agent": {
             "description": "The user agent string of the client which started this session",
@@ -4116,15 +4601,15 @@
             "format": "ip",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "created_at",
+          "user_id"
+        ]
       },
       "SingleResponse_for_UserSession": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_UserSession"
@@ -4132,7 +4617,11 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "RegistrationTokenFilter": {
         "type": "object",
@@ -4153,7 +4642,7 @@
             "nullable": true
           },
           "filter[valid]": {
-            "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not reached its usage limit.",
+            "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
             "type": "boolean",
             "nullable": true
           }
@@ -4162,15 +4651,14 @@
       "PaginatedResponse_for_UserRegistrationToken": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -4181,19 +4669,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_UserRegistrationToken": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -4201,27 +4692,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/UserRegistrationToken"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRegistrationToken"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "UserRegistrationToken": {
         "description": "A registration token",
         "type": "object",
-        "required": [
-          "created_at",
-          "times_used",
-          "token",
-          "valid"
-        ],
         "properties": {
           "token": {
             "description": "The token string",
@@ -4235,14 +4738,14 @@
             "description": "Maximum number of times this token can be used",
             "type": "integer",
             "format": "uint32",
-            "minimum": 0.0,
+            "minimum": 0,
             "nullable": true
           },
           "times_used": {
             "description": "Number of times this token has been used",
             "type": "integer",
             "format": "uint32",
-            "minimum": 0.0
+            "minimum": 0
           },
           "created_at": {
             "description": "When the token was created",
@@ -4267,7 +4770,13 @@
             "format": "date-time",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "token",
+          "valid",
+          "times_used",
+          "created_at"
+        ]
       },
       "AddUserRegistrationTokenRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/user-registration-tokens`",
@@ -4279,10 +4788,10 @@
             "nullable": true
           },
           "usage_limit": {
-            "description": "Maximum number of times this token can be used. If not provided, the token can be used an unlimited number of times.",
+            "description": "Maximum number of times this token can be used. If not provided, the\n token can be used an unlimited number of times.",
             "type": "integer",
             "format": "uint32",
-            "minimum": 0.0,
+            "minimum": 0,
             "nullable": true
           },
           "expires_at": {
@@ -4296,10 +4805,6 @@
       "SingleResponse_for_UserRegistrationToken": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_UserRegistrationToken"
@@ -4307,7 +4812,11 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       },
       "EditUserRegistrationTokenRequest": {
         "title": "JSON payload for the `PUT /api/admin/v1/user-registration-tokens/{id}` endpoint",
@@ -4323,7 +4832,7 @@
             "description": "New usage limit for the token, or null to remove the limit",
             "type": "integer",
             "format": "uint32",
-            "minimum": 0.0,
+            "minimum": 0,
             "nullable": true
           }
         }
@@ -4333,13 +4842,31 @@
         "properties": {
           "filter[user]": {
             "description": "Retrieve the items for the given user",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[provider]": {
             "description": "Retrieve the items for the given provider",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "filter[subject]": {
             "description": "Retrieve the items with the given subject",
@@ -4351,15 +4878,14 @@
       "PaginatedResponse_for_UpstreamOAuthLink": {
         "description": "A top-level response with a page of resources",
         "type": "object",
-        "required": [
-          "data",
-          "links",
-          "meta"
-        ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              }
+            ]
           },
           "data": {
             "description": "The list of resources",
@@ -4370,19 +4896,22 @@
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/PaginationLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "meta",
+          "data",
+          "links"
+        ]
       },
       "SingleResource_for_UpstreamOAuthLink": {
         "description": "A single resource, with its type, ID, attributes and related links",
         "type": "object",
-        "required": [
-          "attributes",
-          "id",
-          "links",
-          "type"
-        ],
         "properties": {
           "type": {
             "description": "The type of the resource",
@@ -4390,26 +4919,39 @@
           },
           "id": {
             "description": "The ID of the resource",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "attributes": {
             "description": "The attributes of the resource",
-            "$ref": "#/components/schemas/UpstreamOAuthLink"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpstreamOAuthLink"
+              }
+            ]
           },
           "links": {
             "description": "Related links",
-            "$ref": "#/components/schemas/SelfLinks"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
           }
-        }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
       },
       "UpstreamOAuthLink": {
         "description": "An upstream OAuth 2.0 link",
         "type": "object",
-        "required": [
-          "created_at",
-          "provider_id",
-          "subject"
-        ],
         "properties": {
           "created_at": {
             "description": "When the object was created",
@@ -4418,7 +4960,11 @@
           },
           "provider_id": {
             "description": "The ID of the provider",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "subject": {
             "description": "The subject of the upstream account, unique per provider",
@@ -4426,32 +4972,49 @@
           },
           "user_id": {
             "description": "The ID of the user who owns this link, if any",
-            "$ref": "#/components/schemas/ULID",
-            "nullable": true
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           },
           "human_account_name": {
             "description": "A human-readable name of the upstream account",
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "created_at",
+          "provider_id",
+          "subject"
+        ]
       },
       "AddUpstreamOauthLinkRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/upstream-oauth-links`",
         "type": "object",
-        "required": [
-          "provider_id",
-          "subject",
-          "user_id"
-        ],
         "properties": {
           "user_id": {
             "description": "The ID of the user to which the link should be added.",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "provider_id": {
             "description": "The ID of the upstream provider to which the link is for.",
-            "$ref": "#/components/schemas/ULID"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
           },
           "subject": {
             "description": "The subject (sub) claim of the user on the provider.",
@@ -4462,15 +5025,16 @@
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "required": [
+          "user_id",
+          "provider_id",
+          "subject"
+        ]
       },
       "SingleResponse_for_UpstreamOAuthLink": {
         "description": "A top-level response with a single resource",
         "type": "object",
-        "required": [
-          "data",
-          "links"
-        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
@@ -4478,7 +5042,11 @@
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
           }
-        }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       }
     }
   },
