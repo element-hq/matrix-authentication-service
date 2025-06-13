@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+#
 # This script is used by the Cloudflare Pages to build the documentation.
 # It detects if it's running in the Cloudflare Pages build environment and will install the required dependencies.
 # It can also be used locally to build the documentation, given that the required dependencies are installed.

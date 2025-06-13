@@ -1,4 +1,9 @@
 #!/bin/sh
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+#
 set -eu
 
 if [ "${DATABASE_URL+defined}" != defined ]; then
@@ -21,11 +26,11 @@ for crate in $CRATES_WITH_SQLX; do
   if [ $crate = syn2mas ]; then
     # We need to apply the syn2mas_temporary_tables.sql one-off 'migration'
     # for checking the syn2mas queries
-    
+
     # not evident from the help text, but psql accepts connection URLs as the dbname
     psql --dbname="$DATABASE_URL" --single-transaction --file="${crates_dir}/syn2mas/src/mas_writer/syn2mas_temporary_tables.sql"
   fi
-  
+
   (cd "$crates_dir/$crate" && cargo sqlx prepare) || echo "(failed to prepare for $crate)"
 
   if [ $crate = syn2mas ]; then
