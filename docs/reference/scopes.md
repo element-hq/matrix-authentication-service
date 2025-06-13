@@ -4,9 +4,8 @@ The [default policy](../topics/policy.md#authorization-requests) shipped with MA
 
  - [`openid`](#openid)
  - [`email`](#email)
- - [`urn:matrix:org.matrix.msc2967.client:api:*`](#urnmatrixorgmatrixmsc2967clientapi)
- - [`urn:matrix:org.matrix.msc2967.client:device:[device id]`](#urnmatrixorgmatrixmsc2967clientdevicedevice-id)
- - [`urn:matrix:org.matrix.msc2967.client:guest`](#urnmatrixorgmatrixmsc2967clientguest)
+ - [`urn:matrix:client:api:*`](#urnmatrixclientapi)
+ - [`urn:matrix:client:device:[device id]`](#urnmatrixclientdevicedevice-id)
  - [`urn:synapse:admin:*`](#urnsynapseadmin)
  - [`urn:mas:admin`](#urnmasadmin)
  - [`urn:mas:graphql:*`](#urnmasgraphql)
@@ -33,28 +32,19 @@ The default policy allows any client and any user to request this scope.
 
 Those scopes are specific to the Matrix protocol and are part of [MSC2967].
 
-### `urn:matrix:org.matrix.msc2967.client:api:*`
+### `urn:matrix:client:api:*`
 
 This scope grants access to the full Matrix client-server API.
 
 The default policy allows any client and any user to request this scope.
 
-### `urn:matrix:org.matrix.msc2967.client:device:[device id]`
+### `urn:matrix:client:device:[device id]`
 
 This scope sets the device ID of the session, where `[device id]` is the device ID of the session.
 Currently, MAS only allows the following characters in the device ID: `a-z`, `A-Z`, `0-9` and `-`.
 It also needs to be at least 10 characters long.
 
 There can only be one device ID in the scope list of a session.
-
-The default policy allows any client and any user to request this scope.
-
-### `urn:matrix:org.matrix.msc2967.client:guest`
-
-This scope grants access to a restricted set of endpoints that are available to guest users.
-It is mutually exclusive with the `urn:matrix:org.matrix.msc2967.client:api:*` scope.
-
-Note that MAS doesn't yet implement any special semantic around guest users, but this scope is reserved for future use.
 
 The default policy allows any client and any user to request this scope.
 
@@ -67,7 +57,7 @@ MAS also supports one Synapse-specific scope, which aren't formally defined in a
 This scope grants access to the [Synapse admin API].
 
 Because of how Synapse works for now, this scope by itself isn't sufficient to access the admin API.
-A session wanting to access the admin API also needs to have the `urn:matrix:org.matrix.msc2967.client:api:*` scope.
+A session wanting to access the admin API also needs to have the `urn:matrix:client:api:*` scope.
 
 The default policy doesn't allow everyone to request this scope.
 It allows:
