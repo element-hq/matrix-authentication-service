@@ -276,7 +276,7 @@ pub(crate) async fn post(
         Ok(PasswordVerificationResult::Failure) => {
             tracing::warn!("Failed to verify/upgrade password for user: {user}");
             let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
-            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "mismatch")]);
             return render(
                 locale,
                 cookie_jar,
