@@ -38,7 +38,7 @@ use zeroize::Zeroizing;
 use super::shared::OptionalPostAuthAction;
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
-    passwords::PasswordManager,
+    passwords::{PasswordManager, PasswordVerificationResult},
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
@@ -259,7 +259,7 @@ pub(crate) async fn post(
         )
         .await
     {
-        Ok(Some((version, new_password_hash))) => {
+        Ok(PasswordVerificationResult::Success(Some((version, new_password_hash)))) => {
             // Save the upgraded password
             repo.user_password()
                 .add(
@@ -272,8 +272,8 @@ pub(crate) async fn post(
                 )
                 .await?
         }
-        Ok(None) => user_password,
-        Err(_) => {
+        Ok(PasswordVerificationResult::Success(None)) => user_password,
+        Ok(PasswordVerificationResult::Failure) => {
             tracing::warn!("Failed to verify/upgrade password for user: {user}");
             let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
             PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
@@ -290,6 +290,7 @@ pub(crate) async fn post(
             )
             .await;
         }
+        Err(err) => return Err(InternalError::from_anyhow(err)),
     };
 
     // Now that we have checked the user password, we now want to show an error if

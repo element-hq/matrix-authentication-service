@@ -32,7 +32,8 @@ use zeroize::Zeroizing;
 use super::{MatrixError, MatrixJsonBody};
 use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
-    passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
+    passwords::{PasswordManager, PasswordVerificationResult},
+    rate_limit::PasswordCheckLimitedError,
 };
 
 static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
@@ -193,7 +194,7 @@ pub enum RouteError {
     NoPassword,
 
     #[error("password verification failed")]
-    PasswordVerificationFailed(#[source] anyhow::Error),
+    PasswordVerificationFailed,
 
     #[error("request rate limited")]
     RateLimited(#[from] PasswordCheckLimitedError),
@@ -209,6 +210,12 @@ pub enum RouteError {
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
+
+impl From<anyhow::Error> for RouteError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Internal(err.into())
+    }
+}
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -241,7 +248,7 @@ impl IntoResponse for RouteError {
                 error: "Missing property 'identifier",
                 status: StatusCode::BAD_REQUEST,
             },
-            Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed(_) => {
+            Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed => {
                 MatrixError {
                     errcode: "M_FORBIDDEN",
                     error: "Invalid username/password",
@@ -576,28 +583,32 @@ async fn user_password_login(
     // Verify the password
     let password = Zeroizing::new(password);
 
-    let new_password_hash = password_manager
+    match password_manager
         .verify_and_upgrade(
             &mut rng,
             user_password.version,
             password,
             user_password.hashed_password.clone(),
         )
-        .await
-        .map_err(RouteError::PasswordVerificationFailed)?;
-
-    if let Some((version, hashed_password)) = new_password_hash {
-        // Save the upgraded password if needed
-        repo.user_password()
-            .add(
-                &mut rng,
-                clock,
-                &user,
-                version,
-                hashed_password,
-                Some(&user_password),
-            )
-            .await?;
+        .await?
+    {
+        PasswordVerificationResult::Success(Some((version, hashed_password))) => {
+            // Save the upgraded password if needed
+            repo.user_password()
+                .add(
+                    &mut rng,
+                    clock,
+                    &user,
+                    version,
+                    hashed_password,
+                    Some(&user_password),
+                )
+                .await?;
+        }
+        PasswordVerificationResult::Success(None) => {}
+        PasswordVerificationResult::Failure => {
+            return Err(RouteError::PasswordVerificationFailed);
+        }
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
