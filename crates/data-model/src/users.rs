@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::net::IpAddr;
+use std::{fmt::Display, net::IpAddr};
 
 use chrono::{DateTime, Utc};
 use rand::Rng;
@@ -44,6 +44,14 @@ impl User {
             deactivated_at: None,
             can_request_admin: false,
         }]
+    }
+}
+
+impl Display for User {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Format the user as their username, this is useful for logging and
+        // debugging.
+        self.username.fmt(f)
     }
 }
 
