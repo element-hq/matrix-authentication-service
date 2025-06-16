@@ -57,7 +57,7 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
-        localpart: mas_data_model::UpstreamOAuthProviderImportPreference {
+        localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),
             on_conflict: map_import_on_conflict(config.localpart.on_conflict),
@@ -65,12 +65,10 @@ fn map_claims_imports(
         displayname: mas_data_model::UpstreamOAuthProviderImportPreference {
             action: map_import_action(config.displayname.action),
             template: config.displayname.template.clone(),
-            on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
         },
         email: mas_data_model::UpstreamOAuthProviderImportPreference {
             action: map_import_action(config.email.action),
             template: config.email.template.clone(),
-            on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
         },
         account_name: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.account_name.template.clone(),
