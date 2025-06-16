@@ -677,7 +677,7 @@ pub(crate) async fn post(
             }
             let context = context.build();
 
-            // Check both if is it `force` or `require`
+            // `is_forced` checks both if is it `force` or `require`
             if !provider.claims_imports.localpart.is_forced() {
                 //Claims import for `localpart` should be `require` or `force` at this stage
                 return Err(RouteError::InvalidFormAction);
@@ -1004,7 +1004,8 @@ mod tests {
     use hyper::{Request, StatusCode, header::CONTENT_TYPE};
     use mas_data_model::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProviderClaimsImports,
-        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderTokenAuthMethod, User,
+        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderLocalpartPreference,
+        UpstreamOAuthProviderTokenAuthMethod, User,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
@@ -1030,7 +1031,7 @@ mod tests {
         let cookies = CookieHelper::new();
 
         let claims_imports = UpstreamOAuthProviderClaimsImports {
-            localpart: UpstreamOAuthProviderImportPreference {
+            localpart: UpstreamOAuthProviderLocalpartPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Force,
                 template: None,
                 on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
@@ -1038,7 +1039,6 @@ mod tests {
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Force,
                 template: None,
-                on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
@@ -1232,7 +1232,7 @@ mod tests {
         let cookies = CookieHelper::new();
 
         let claims_imports = UpstreamOAuthProviderClaimsImports {
-            localpart: UpstreamOAuthProviderImportPreference {
+            localpart: UpstreamOAuthProviderLocalpartPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
                 on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::Add,
@@ -1240,7 +1240,6 @@ mod tests {
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
-                on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
@@ -1387,7 +1386,7 @@ mod tests {
         let cookies = CookieHelper::new();
 
         let claims_imports = UpstreamOAuthProviderClaimsImports {
-            localpart: UpstreamOAuthProviderImportPreference {
+            localpart: UpstreamOAuthProviderLocalpartPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
                 on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
@@ -1395,7 +1394,6 @@ mod tests {
             email: UpstreamOAuthProviderImportPreference {
                 action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
-                on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };

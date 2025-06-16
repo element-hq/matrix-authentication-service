@@ -128,9 +128,6 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                     "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
                 ));
             }
-
-            //TODO : check that claims imports use on_conflict where it is not
-            // supported?
         }
 
         Ok(())

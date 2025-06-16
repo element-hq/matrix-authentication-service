@@ -42,9 +42,10 @@ pub use self::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState,
         UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
         UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderImportAction,
-        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderOnConflict, UpstreamOAuthProviderOnBackchannelLogout,
-        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
-        UpstreamOAuthProviderSubjectPreference, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderLocalpartPreference, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderOnConflict, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderSubjectPreference,
+        UpstreamOAuthProviderTokenAuthMethod,
     },
     user_agent::{DeviceType, UserAgent},
     users::{

@@ -313,7 +313,7 @@ pub struct ClaimsImports {
     pub subject: SubjectPreference,
 
     #[serde(default)]
-    pub localpart: ImportPreference,
+    pub localpart: LocalpartPreference,
 
     #[serde(default)]
     pub displayname: ImportPreference,
@@ -333,7 +333,7 @@ pub struct SubjectPreference {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct ImportPreference {
+pub struct LocalpartPreference {
     #[serde(default)]
     pub action: ImportAction,
 
@@ -342,6 +342,23 @@ pub struct ImportPreference {
 
     #[serde(default)]
     pub on_conflict: OnConflict,
+}
+
+impl std::ops::Deref for LocalpartPreference {
+    type Target = ImportAction;
+
+    fn deref(&self) -> &Self::Target {
+        &self.action
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ImportPreference {
+    #[serde(default)]
+    pub action: ImportAction,
+
+    #[serde(default)]
+    pub template: Option<String>,
 }
 
 impl std::ops::Deref for ImportPreference {

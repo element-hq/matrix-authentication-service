@@ -16,6 +16,7 @@ pub use self::{
         ImportAction as UpstreamOAuthProviderImportAction,
         ImportPreference as UpstreamOAuthProviderImportPreference,
         OnBackchannelLogout as UpstreamOAuthProviderOnBackchannelLogout,
+        LocalpartPreference as UpstreamOAuthProviderLocalpartPreference,
         OnConflict as UpstreamOAuthProviderOnConflict, PkceMode as UpstreamOAuthProviderPkceMode,
         ResponseMode as UpstreamOAuthProviderResponseMode,
         SubjectPreference as UpstreamOAuthProviderSubjectPreference,
