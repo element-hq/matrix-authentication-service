@@ -388,7 +388,7 @@ pub enum ImportAction {
 
 impl ImportAction {
     #[must_use]
-    pub fn is_forced(&self) -> bool {
+    pub fn is_forced_or_required(&self) -> bool {
         matches!(self, Self::Force | Self::Require)
     }
 
