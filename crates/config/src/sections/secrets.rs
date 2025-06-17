@@ -149,10 +149,10 @@ impl KeyConfig {
     /// Returns the password in case any is provided.
     ///
     /// If `password_file` was given, the password is read from that file.
-    async fn password(&self) -> anyhow::Result<Option<Cow<String>>> {
+    async fn password(&self) -> anyhow::Result<Option<Cow<[u8]>>> {
         Ok(match &self.password {
-            Some(Password::File(path)) => Some(Cow::Owned(tokio::fs::read_to_string(path).await?)),
-            Some(Password::Value(password)) => Some(Cow::Borrowed(password)),
+            Some(Password::File(path)) => Some(Cow::Owned(tokio::fs::read(path).await?)),
+            Some(Password::Value(password)) => Some(Cow::Borrowed(password.as_bytes())),
             None => None,
         })
     }
@@ -160,10 +160,10 @@ impl KeyConfig {
     /// Returns the key.
     ///
     /// If `key_file` was given, the key is read from that file.
-    async fn key(&self) -> anyhow::Result<Cow<String>> {
+    async fn key(&self) -> anyhow::Result<Cow<[u8]>> {
         Ok(match &self.key {
-            Key::File(path) => Cow::Owned(tokio::fs::read_to_string(path).await?),
-            Key::Value(key) => Cow::Borrowed(key),
+            Key::File(path) => Cow::Owned(tokio::fs::read(path).await?),
+            Key::Value(key) => Cow::Borrowed(key.as_bytes()),
         })
     }
 
@@ -174,8 +174,8 @@ impl KeyConfig {
         let (key, password) = try_join(self.key(), self.password()).await?;
 
         let private_key = match password {
-            Some(password) => PrivateKey::load_encrypted(key.as_bytes(), password.as_bytes())?,
-            None => PrivateKey::load(key.as_bytes())?,
+            Some(password) => PrivateKey::load_encrypted(&key, password)?,
+            None => PrivateKey::load(&key)?,
         };
 
         Ok(JsonWebKey::new(private_key)
