@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-oidc-client"
 description = "OpenID Connect client library used by the Matrix Authentication Service"
@@ -7,26 +12,27 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
 async-trait.workspace = true
-base64ct = { version = "1.8.0", features = ["std"] }
+base64ct.workspace = true
 chrono.workspace = true
 elliptic-curve.workspace = true
-form_urlencoded = "1.2.1"
+form_urlencoded.workspace = true
 headers.workspace = true
 http.workspace = true
-language-tags = "0.3.2"
-mime = "0.3.17"
+language-tags.workspace = true
+mime.workspace = true
 p256.workspace = true
 rand.workspace = true
 reqwest.workspace = true
-serde.workspace = true
 serde_json.workspace = true
-serde_urlencoded = "0.7.1"
+serde_urlencoded.workspace = true
+serde.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 url.workspace = true
@@ -38,10 +44,10 @@ mas-keystore.workspace = true
 oauth2-types.workspace = true
 
 [dev-dependencies]
-assert_matches = "1.5.0"
+assert_matches.workspace = true
 bitflags.workspace = true
+http-body-util.workspace = true
 rand_chacha.workspace = true
+rustls.workspace = true
 tokio.workspace = true
 wiremock.workspace = true
-http-body-util.workspace = true
-rustls.workspace = true

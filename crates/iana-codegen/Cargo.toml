@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-iana-codegen"
 version.workspace = true
@@ -6,7 +11,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -15,10 +20,10 @@ workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 camino.workspace = true
-convert_case = "0.8.0"
-csv = "1.3.1"
+convert_case.workspace = true
+csv.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 tokio.workspace = true
-tracing.workspace = true
 tracing-subscriber.workspace = true
+tracing.workspace = true

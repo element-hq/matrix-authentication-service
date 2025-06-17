@@ -1,10 +1,24 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 name: Create a new release branch
 on:
   workflow_dispatch:
+    inputs:
+      kind:
+        description: Kind of release (major = v1.2.3 -> v2.0.0-rc.0, minor = v1.2.3 -> v1.3.0-rc.0)
+        required: true
+        type: choice
+        default: minor
+        options:
+          - major
+          - minor
 
 jobs:
   compute-version:
-    name: Compute the next minor RC version
+    name: Compute the next ${{ inputs.kind }} RC version
     runs-on: ubuntu-24.04
 
     permissions:
@@ -27,9 +41,11 @@ jobs:
 
       - name: Compute the new minor RC
         id: next
+        env:
+          BUMP: pre${{ inputs.kind }}
         run: |
           CURRENT_VERSION="$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
-          NEXT_VERSION="$(npx --yes semver@7.5.4 -i preminor --preid rc "${CURRENT_VERSION}")"
+          NEXT_VERSION="$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "${CURRENT_VERSION}")"
           # compute the short minor version, e.g. 0.1.0-rc.1 -> 0.1
           SHORT_VERSION="$(echo "${NEXT_VERSION}" | cut -d. -f1-2)"
           echo "full=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"

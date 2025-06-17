@@ -1,13 +1,9 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
-import {
-  type ErrorComponentProps,
-  Outlet,
-  createFileRoute,
-} from "@tanstack/react-router";
+import { type ErrorComponentProps, Outlet } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button, Text } from "@vector-im/compound-web";
 import * as v from "valibot";
@@ -20,7 +16,7 @@ const searchSchema = v.object({
   deepLink: v.optional(v.boolean()),
 });
 
-export const Route = createFileRoute("/reset-cross-signing")({
+export const Route = createFileRoute({
   validateSearch: searchSchema,
   component: () => (
     <Layout>

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use crate::traits::{EnumMember, Section};
 
@@ -164,8 +164,7 @@ pub fn json_schema_impl(
 ) -> std::fmt::Result {
     write!(
         f,
-        r#"#[cfg(feature = "schemars")]
-impl schemars::JsonSchema for {} {{
+        r#"impl schemars::JsonSchema for {} {{
     fn schema_name() -> String {{
         "{}".to_owned()
     }}
@@ -237,8 +236,7 @@ impl schemars::JsonSchema for {} {{
 pub fn serde_impl(f: &mut std::fmt::Formatter<'_>, section: &Section) -> std::fmt::Result {
     writeln!(
         f,
-        r#"#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for {} {{
+        r"impl<'de> serde::Deserialize<'de> for {} {{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::de::Deserializer<'de>,
@@ -248,7 +246,6 @@ impl<'de> serde::Deserialize<'de> for {} {{
     }}
 }}
 
-#[cfg(feature = "serde")]
 impl serde::Serialize for {} {{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -256,7 +253,7 @@ impl serde::Serialize for {} {{
     {{
         serializer.serialize_str(&self.to_string())
     }}
-}}"#,
+}}",
         section.key, section.key,
     )
 }

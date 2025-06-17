@@ -40,6 +40,7 @@
 # Development
 
 - [Contributing](./development/contributing.md)
+- [Releasing](./development/releasing.md)
 - [Architecture](./development/architecture.md)
 - [Database](./development/database.md)
 - [Internal GraphQL API](./development/graphql.md)

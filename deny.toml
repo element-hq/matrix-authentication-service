@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [graph]
 targets = [
     { triple = "x86_64-unknown-linux-gnu" },
@@ -57,7 +62,6 @@ deny = [
 multiple-versions = "deny"
 
 skip = [
-    { name = "base64", version = "0.21.7" },         # many dependencies depends on this old version
     { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
     { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version

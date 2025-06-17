@@ -1,15 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import {
   queryOptions,
   useMutation,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import IconCheck from "@vector-im/compound-design-tokens/assets/web/icons/check";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
@@ -46,7 +46,7 @@ const currentViewerQuery = queryOptions({
     }),
 });
 
-export const Route = createFileRoute("/reset-cross-signing/")({
+export const Route = createFileRoute({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(currentViewerQuery),
 

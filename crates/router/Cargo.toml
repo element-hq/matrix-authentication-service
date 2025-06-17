@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-router"
 version.workspace = true
@@ -6,14 +11,14 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
 axum.workspace = true
+serde_urlencoded.workspace = true
 serde.workspace = true
-serde_urlencoded = "0.7.1"
-url.workspace = true
 ulid.workspace = true
+url.workspace = true

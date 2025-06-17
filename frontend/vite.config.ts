@@ -1,14 +1,14 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { codecovVitePlugin } from "@codecov/vite-plugin";
-import { TanStackRouterVite as tanStackRouter } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import type { Manifest, PluginOption } from "vite";
@@ -66,9 +66,10 @@ export default defineConfig((env) => ({
   plugins: [
     codegen(),
 
-    tanStackRouter({
+    tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+      verboseFileRoutes: false,
     }),
 
     react(),

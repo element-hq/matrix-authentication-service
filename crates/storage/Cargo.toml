@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-storage"
 version.workspace = true
@@ -6,7 +11,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -17,8 +22,8 @@ chrono.workspace = true
 futures-util.workspace = true
 opentelemetry.workspace = true
 rand_core.workspace = true
-serde.workspace = true
 serde_json.workspace = true
+serde.workspace = true
 thiserror.workspace = true
 tracing-opentelemetry.workspace = true
 tracing.workspace = true
