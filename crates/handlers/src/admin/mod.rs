@@ -29,6 +29,7 @@ use mas_router::{
 };
 use mas_storage::BoxRng;
 use mas_templates::{ApiDocContext, Templates};
+use schemars::transform::{AddNullable, RecursiveTransform};
 use tower_http::cors::{Any, CorsLayer};
 
 mod call_context;
@@ -159,8 +160,10 @@ where
     aide::generate::infer_responses(false);
 
     aide::generate::in_context(|ctx| {
-        ctx.schema =
-            schemars::r#gen::SchemaGenerator::new(schemars::r#gen::SchemaSettings::openapi3());
+        ctx.schema = schemars::generate::SchemaGenerator::new(
+            schemars::generate::SchemaSettings::openapi3()
+                .with_transform(RecursiveTransform(AddNullable::default())),
+        );
     });
 
     let mut api = OpenApi::default();

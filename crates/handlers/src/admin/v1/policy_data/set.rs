@@ -59,7 +59,7 @@ fn data_example() -> serde_json::Value {
 #[derive(Deserialize, JsonSchema)]
 #[serde(rename = "SetPolicyDataRequest")]
 pub struct SetPolicyDataRequest {
-    #[schemars(example = "data_example")]
+    #[schemars(example = data_example())]
     pub data: serde_json::Value,
 }
 
