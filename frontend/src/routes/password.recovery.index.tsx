@@ -1,13 +1,13 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
@@ -80,7 +80,7 @@ const schema = v.object({
   ticket: v.string(),
 });
 
-export const Route = createFileRoute("/password/recovery/")({
+export const Route = createFileRoute({
   validateSearch: schema,
 
   loaderDeps: ({ search: { ticket } }) => ({ ticket }),

@@ -1,10 +1,10 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { notFound, redirect } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 import { query } from "./emails.$id.verify";
 
-export const Route = createFileRoute("/emails/$id/in-use")({
+export const Route = createFileRoute({
   async loader({ context, params }): Promise<void> {
     const data = await context.queryClient.ensureQueryData(query(params.id));
     if (!data.userEmailAuthentication) {

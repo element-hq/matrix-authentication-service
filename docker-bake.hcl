@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+#
 // This is used to set the version reported by the binary through an environment
 // variable. This is mainly useful when building out of a git context, like in
 // CI, where we don't have the full commit history available

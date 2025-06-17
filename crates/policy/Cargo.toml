@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-policy"
 version.workspace = true
@@ -6,7 +11,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
-publish = false
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -14,10 +19,10 @@ workspace = true
 [dependencies]
 anyhow.workspace = true
 arc-swap.workspace = true
-opa-wasm = "0.1.5"
-serde.workspace = true
+opa-wasm.workspace = true
+schemars.workspace = true
 serde_json.workspace = true
-schemars = { workspace = true, optional = true }
+serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -25,9 +30,5 @@ tracing.workspace = true
 mas-data-model.workspace = true
 oauth2-types.workspace = true
 
-[features]
-jsonschema = ["dep:schemars"]
-
 [[bin]]
 name = "schema"
-required-features = ["jsonschema"]

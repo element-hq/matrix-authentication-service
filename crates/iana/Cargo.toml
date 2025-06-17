@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-iana"
 description = "IANA registry data for JOSE and OAuth 2.0"
@@ -7,15 +12,11 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-serde = { workspace = true, optional = true }
-schemars = { workspace = true, optional = true }
-
-[features]
-default = ["serde", "schemars"]
-serde = ["dep:serde"]
-schemars = ["dep:schemars"]
+serde.workspace = true
+schemars.workspace = true

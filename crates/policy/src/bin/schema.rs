@@ -1,8 +1,13 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+
+#![expect(
+    clippy::disallowed_types,
+    reason = "We use Path/PathBuf instead of camino here for simplicity"
+)]
 
 use std::path::{Path, PathBuf};
 
@@ -12,17 +17,14 @@ use mas_policy::model::{
 use schemars::{JsonSchema, r#gen::SchemaSettings};
 
 fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
-    let mut writer: Box<dyn std::io::Write> = match out_dir {
-        Some(out_dir) => {
-            let path = out_dir.join(file);
-            eprintln!("Writing to {path:?}");
-            let file = std::fs::File::create(path).expect("Failed to create file");
-            Box::new(std::io::BufWriter::new(file))
-        }
-        None => {
-            eprintln!("--- {file} ---");
-            Box::new(std::io::stdout())
-        }
+    let mut writer: Box<dyn std::io::Write> = if let Some(out_dir) = out_dir {
+        let path = out_dir.join(file);
+        eprintln!("Writing to {path:?}");
+        let file = std::fs::File::create(path).expect("Failed to create file");
+        Box::new(std::io::BufWriter::new(file))
+    } else {
+        eprintln!("--- {file} ---");
+        Box::new(std::io::stdout())
     };
 
     let settings = SchemaSettings::draft07().with(|s| {
