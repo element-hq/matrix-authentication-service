@@ -117,7 +117,6 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '': typeof AccountRouteWithChildren
   '/reset-cross-signing': typeof ResetCrossSigningRouteWithChildren
   '/clients/$id': typeof ClientsIdRoute
   '/devices/$': typeof DevicesSplatRoute
@@ -175,7 +174,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ''
     | '/reset-cross-signing'
     | '/clients/$id'
     | '/devices/$'
