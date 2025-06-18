@@ -270,7 +270,7 @@ pub struct ClaimsImports {
     pub subject: SubjectPreference,
 
     #[serde(default)]
-    pub localpart: ImportPreference,
+    pub localpart: LocalpartPreference,
 
     #[serde(default)]
     pub displayname: ImportPreference,
@@ -287,6 +287,26 @@ pub struct ClaimsImports {
 pub struct SubjectPreference {
     #[serde(default)]
     pub template: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct LocalpartPreference {
+    #[serde(default)]
+    pub action: ImportAction,
+
+    #[serde(default)]
+    pub template: Option<String>,
+
+    #[serde(default)]
+    pub on_conflict: OnConflict,
+}
+
+impl std::ops::Deref for LocalpartPreference {
+    type Target = ImportAction;
+
+    fn deref(&self) -> &Self::Target {
+        &self.action
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -325,7 +345,7 @@ pub enum ImportAction {
 
 impl ImportAction {
     #[must_use]
-    pub fn is_forced(&self) -> bool {
+    pub fn is_forced_or_required(&self) -> bool {
         matches!(self, Self::Force | Self::Require)
     }
 
@@ -346,5 +366,24 @@ impl ImportAction {
             Self::Suggest => user_preference,
             Self::Force | Self::Require => true,
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the upstream OAuth 2.0 login
+    #[default]
+    Fail,
+
+    /// Adds the upstream account link, regardless of whether there is an
+    /// existing link or not
+    Add,
+}
+
+impl OnConflict {
+    #[must_use]
+    pub fn is_add(&self) -> bool {
+        matches!(self, Self::Add)
     }
 }
