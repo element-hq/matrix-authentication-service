@@ -47,14 +47,6 @@ impl User {
     }
 }
 
-impl Display for User {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // Format the user as their username, this is useful for logging and
-        // debugging.
-        self.username.fmt(f)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Password {
     pub id: Ulid,
