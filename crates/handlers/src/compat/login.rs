@@ -194,7 +194,7 @@ pub enum RouteError {
     NoPassword,
 
     #[error("password verification failed")]
-    PasswordVerificationFailed,
+    PasswordMismatch,
 
     #[error("request rate limited")]
     RateLimited(#[from] PasswordCheckLimitedError),
@@ -248,13 +248,11 @@ impl IntoResponse for RouteError {
                 error: "Missing property 'identifier",
                 status: StatusCode::BAD_REQUEST,
             },
-            Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed => {
-                MatrixError {
-                    errcode: "M_FORBIDDEN",
-                    error: "Invalid username/password",
-                    status: StatusCode::FORBIDDEN,
-                }
-            }
+            Self::UserNotFound | Self::NoPassword | Self::PasswordMismatch => MatrixError {
+                errcode: "M_FORBIDDEN",
+                error: "Invalid username/password",
+                status: StatusCode::FORBIDDEN,
+            },
             Self::LoginTookTooLong => MatrixError {
                 errcode: "M_FORBIDDEN",
                 error: "Login token expired",
@@ -607,7 +605,7 @@ async fn user_password_login(
         }
         PasswordVerificationResult::Success(None) => {}
         PasswordVerificationResult::Failure => {
-            return Err(RouteError::PasswordVerificationFailed);
+            return Err(RouteError::PasswordMismatch);
         }
     }
 
