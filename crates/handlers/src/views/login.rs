@@ -38,7 +38,7 @@ use zeroize::Zeroizing;
 use super::shared::OptionalPostAuthAction;
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
-    passwords::PasswordManager,
+    passwords::{PasswordManager, PasswordVerificationResult},
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
@@ -166,6 +166,7 @@ pub(crate) async fn post(
     }
 
     if !form_state.is_valid() {
+        tracing::warn!("Invalid login form: {form_state:?}");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
@@ -189,6 +190,7 @@ pub(crate) async fn post(
     // First, lookup the user
     let Some(user) = get_user_by_email_or_by_username(site_config, &mut repo, username).await?
     else {
+        tracing::warn!(username, "User not found");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -207,7 +209,7 @@ pub(crate) async fn post(
 
     // Check the rate limit
     if let Err(e) = limiter.check_password(requester, &user) {
-        tracing::warn!(error = &e as &dyn std::error::Error);
+        tracing::warn!(error = &e as &dyn std::error::Error, "ratelimit exceeded");
         let form_state = form_state.with_error_on_form(FormError::RateLimitExceeded);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -228,6 +230,7 @@ pub(crate) async fn post(
     let Some(user_password) = repo.user_password().active(&user).await? else {
         // There is no password for this user, but we don't want to disclose that. Show
         // a generic 'invalid credentials' error instead
+        tracing::warn!(username, "No password for user");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -256,7 +259,7 @@ pub(crate) async fn post(
         )
         .await
     {
-        Ok(Some((version, new_password_hash))) => {
+        Ok(PasswordVerificationResult::Success(Some((version, new_password_hash)))) => {
             // Save the upgraded password
             repo.user_password()
                 .add(
@@ -269,10 +272,11 @@ pub(crate) async fn post(
                 )
                 .await?
         }
-        Ok(None) => user_password,
-        Err(_) => {
+        Ok(PasswordVerificationResult::Success(None)) => user_password,
+        Ok(PasswordVerificationResult::Failure) => {
+            tracing::warn!(username, "Failed to verify/upgrade password for user");
             let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
-            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "mismatch")]);
             return render(
                 locale,
                 cookie_jar,
@@ -286,11 +290,13 @@ pub(crate) async fn post(
             )
             .await;
         }
+        Err(err) => return Err(InternalError::from_anyhow(err)),
     };
 
     // Now that we have checked the user password, we now want to show an error if
     // the user is locked or deactivated
     if user.deactivated_at.is_some() {
+        tracing::warn!(username, "User is deactivated");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
@@ -301,6 +307,7 @@ pub(crate) async fn post(
     }
 
     if user.locked_at.is_some() {
+        tracing::warn!(username, "User is locked");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
