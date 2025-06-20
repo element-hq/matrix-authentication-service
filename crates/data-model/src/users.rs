@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{fmt::Display, net::IpAddr};
+use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
 use rand::Rng;
