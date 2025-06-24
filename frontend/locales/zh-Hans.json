@@ -4,11 +4,11 @@
     "cancel": "取消",
     "clear": "清除",
     "close": "关闭",
-    "collapse": "Collapse",
-    "confirm": "Confirm",
+    "collapse": "折叠",
+    "confirm": "确认",
     "continue": "继续",
     "edit": "编辑",
-    "expand": "Expand",
+    "expand": "展开",
     "save": "保存",
     "save_and_continue": "保存并继续",
     "sign_out": "注销",
@@ -26,30 +26,30 @@
   },
   "common": {
     "add": "添加",
-    "e2ee": "End-to-end encryption",
+    "e2ee": "端到端加密",
     "error": "错误",
     "loading": "加载中...",
-    "next": "下一步",
-    "password": "Password",
-    "previous": "上一步",
+    "next": "下一页",
+    "password": "密码",
+    "previous": "上一页",
     "saved": "已保存",
     "saving": "正在保存..."
   },
   "frontend": {
     "account": {
-      "account_password": "Account password",
-      "contact_info": "Contact info",
+      "account_password": "账户密码",
+      "contact_info": "联系方式",
       "delete_account": {
-        "alert_description": "This account will be permanently erased and you’ll no longer have access to any of your messages.",
-        "alert_title": "You’re about to lose all of your data",
-        "button": "Delete account",
-        "dialog_description": "<text>Confirm that you would like to delete your account:</text>\n<profile />\n<list>\n<item>You will not be able to reactivate your account</item>\n<item>You will no longer be able to sign in</item>\n<item>No one will be able to reuse your username (MXID), including you</item>\n<item>You will leave all rooms and direct messages you are in</item>\n<item>You will be removed from the identity server, and no one will be able to find you with your email or phone number</item>\n</list>\n<text>Your old messages will still be visible to people who received them. Would you like to hide your send messages from people who join rooms in the future?</text>",
-        "dialog_title": "Delete this account?",
-        "erase_checkbox_label": "Yes, hide all my messages from new joiners",
-        "incorrect_password": "Incorrect password, please try again",
-        "mxid_label": "Confirm your Matrix ID ({{ mxid }})",
-        "mxid_mismatch": "This value does not match your Matrix ID",
-        "password_label": "Enter your password to continue"
+        "alert_description": "此账户将被永久删除，你将无法再访问任何消息。",
+        "alert_title": "你将丢失所有数据",
+        "button": "删除账户",
+        "dialog_description": "<text>确认你想删除账户：</text>\n<profile />\n<list>\n<item>你将无法重新激活账户</item>\n<item>你将无法再登录</item>\n<item>包括你在内，没有人能重复使用此用户名（MXID）</item>\n<item>你将离开所有房间与私聊</item>\n<item>你将被从身份服务器中移除，遂没有人能通过你的邮件地址或电话号码找到你</item>\n</list>\n<text>收到过你曾经的消息的人员仍然能看到你的历史消息。是否向未来加入房间的人员隐藏你发送的消息？</text>",
+        "dialog_title": "删除此账户？",
+        "erase_checkbox_label": "是，对新加入者隐藏我的所有消息",
+        "incorrect_password": "密码不正确，请重试。",
+        "mxid_label": "确认你的 Matrix ID（{{ mxid }}）",
+        "mxid_mismatch": "此值与你的 Matrix ID 不匹配",
+        "password_label": "输入密码以继续"
       },
       "edit_profile": {
         "display_name_help": "无论您在哪里登录，其他人都会看到此内容。",
@@ -63,8 +63,8 @@
         "label": "密码"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "注销登录",
+        "dialog": "注销此账户？"
       },
       "title": "你的账户"
     },
@@ -81,14 +81,14 @@
       "email_exists_error": "输入的电子邮件地址已添加到此账户",
       "email_field_help": "添加可用于访问此账户的备用电子邮件地址。",
       "email_field_label": "添加电子邮件地址",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "输入的邮件地址已被使用",
       "email_invalid_alert": {
         "text": "输入的电子邮件地址无效",
         "title": "无效的电子邮件地址"
       },
       "email_invalid_error": "输入的电子邮件地址无效",
-      "incorrect_password_error": "Incorrect password, please try again",
-      "password_confirmation": "Confirm your account password to add this email address"
+      "incorrect_password_error": "密码不正确，请重试",
+      "password_confirmation": "确认账户密码以添加此邮件地址"
     },
     "app_sessions_list": {
       "error": "加载应用程序会话失败",
@@ -121,11 +121,11 @@
       "web": "网页"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "此邮件地址 {{email}} 已被使用。"
     },
     "end_session_button": {
       "confirmation_modal_title": "你确定要结束这个会话吗？",
-      "text": "登出"
+      "text": "移除设备"
     },
     "error": {
       "hideDetails": "隐藏详细信息",
@@ -196,12 +196,12 @@
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "subtitle": "要创建新密码，请重新开始并选择“忘记密码”。",
         "title": "重置密码的链接已被使用"
       },
       "expired": {
         "resend_email": "重新发送电子邮件",
-        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "subtitle": "请求发送新邮件到：{{email}}",
         "title": "重置密码的链接已过期"
       },
       "subtitle": "为您的账户选择一个新密码。",
@@ -253,34 +253,34 @@
       }
     },
     "reset_cross_signing": {
-      "button": "允许重置加密身份",
+      "button": "重置身份",
       "cancelled": {
-        "description_1": "You can close this window and go back to the app to continue.",
-        "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
-        "heading": "Identity reset cancelled."
+        "description_1": "你可以关闭此窗口并返回到 App 以继续。",
+        "description_2": "若你在任何地方都已注销并且忘记恢复代码，你仍然需要重置身份。",
+        "heading": "身份重置流程已被取消。"
       },
       "description": "如果您没有在其他地方登录，并且忘记或丢失了所有恢复选项，则需要重置您的加密身份。这意味着您将丢失现有的信息历史记录，其他用户会看到您已重置身份，您需要再次验证现有设备。",
       "effect_list": {
-        "negative_1": "You will lose your existing message history",
-        "negative_2": "You will need to verify all your existing devices and contacts again",
-        "neutral_1": "You will lose any message history that's stored only on the server",
-        "neutral_2": "You will need to verify all your existing devices and contacts again",
-        "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
+        "negative_1": "你将丢失现有消息历史",
+        "negative_2": "你将需要再次验证所有现有设备与联系人",
+        "neutral_1": "你将丢失仅存储在服务器上的消息历史",
+        "neutral_2": "你将需要再次验证所有现有设备与联系人",
+        "positive_1": "你的账户的详细信息、联系人、偏好与聊天列表都将被保留"
       },
       "failure": {
         "description": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系服务器管理员。",
-        "heading": "Failed to allow crypto identity reset",
+        "heading": "加密身份重置授权失败。",
         "title": "无法允许加密身份"
       },
-      "finish_reset": "Finish reset",
+      "finish_reset": "完成重置",
       "heading": "重置加密身份",
-      "start_reset": "Start reset",
+      "start_reset": "开始重置",
       "success": {
-        "description": "客户端现在可以临时重置您的账户加密身份。请按照客户端中的说明完成该过程。",
-        "heading": "Identity reset successfully. Go back to the app to finish the process.",
+        "description": "身份重置已获批准，在接下来的 {{minutes}} 分钟内有效。您可以关闭此窗口并返回应用继续操作。",
+        "heading": "已成功重置身份。返回到 App 以完成此流程。",
         "title": "临时允许重置加密身份"
       },
-      "warning": "Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key."
+      "warning": "仅当你无法访问其它已登录的设备并且丢失了恢复密钥时才重置身份。"
     },
     "selectable_session": {
       "label": "选择会话"
@@ -292,7 +292,7 @@
       "device_id_label": "设备 ID",
       "finished_date": "已完成 <datetime/>",
       "finished_label": "已完成",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "浏览器会话",
       "id_label": "ID",
       "ip_label": "IP 地址",
       "last_active_label": "最后活动",
@@ -300,9 +300,9 @@
       "name_for_platform": "{{name}}对于 {{platform}}",
       "scopes_label": "范围",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
-        "label": "Device name",
-        "title": "Edit device name"
+        "help": "设置一个名称有助于识别此设备。",
+        "label": "设备名称",
+        "title": "编辑设备名称"
       },
       "signed_in_date": "<datetime/>已登录",
       "signed_in_label": "已登录",
@@ -331,8 +331,8 @@
       "delete_button_confirmation_modal": {
         "action": "删除电子邮件地址",
         "body": "您确定要删除此电子邮件地址吗？",
-        "incorrect_password": "Incorrect password, please try again",
-        "password_confirmation": "Confirm your account password to delete this email address"
+        "incorrect_password": "密码不正确，请重试",
+        "password_confirmation": "确认账户密码以删除此邮件地址"
       },
       "delete_button_title": "删除电子邮件地址",
       "email": "电子邮件地址",
@@ -362,8 +362,8 @@
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "此代码已过期，请重新请求新代码。",
+        "title": "代码已过期"
       },
       "code_field_error": "无法识别代码",
       "code_field_label": "6位数代码",
