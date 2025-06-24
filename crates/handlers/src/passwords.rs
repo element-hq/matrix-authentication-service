@@ -9,13 +9,57 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::Context;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use futures_util::future::OptionFuture;
-use pbkdf2::Pbkdf2;
+use pbkdf2::{Pbkdf2, password_hash};
 use rand::{CryptoRng, RngCore, SeedableRng, distributions::Standard, prelude::Distribution};
 use thiserror::Error;
 use zeroize::Zeroizing;
 use zxcvbn::zxcvbn;
 
 pub type SchemeVersion = u16;
+
+/// The result of a password verification, which is `true` if the password
+/// matches the hashed password, and `false` otherwise.
+///
+/// In the success case it can also contain additional data, such as the new
+/// hashing scheme and the new hashed password.
+#[must_use]
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum PasswordVerificationResult<T = ()> {
+    /// The password matches the stored password hash
+    Success(T),
+    /// The password does not match the stored password hash
+    Failure,
+}
+
+impl PasswordVerificationResult<()> {
+    fn success() -> Self {
+        Self::Success(())
+    }
+
+    fn failure() -> Self {
+        Self::Failure
+    }
+}
+
+impl<T> PasswordVerificationResult<T> {
+    /// Converts the result into a new result with the given data.
+    fn with_data<N>(self, data: N) -> PasswordVerificationResult<N> {
+        match self {
+            Self::Success(_) => PasswordVerificationResult::Success(data),
+            Self::Failure => PasswordVerificationResult::Failure,
+        }
+    }
+}
+
+impl From<bool> for PasswordVerificationResult<()> {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::success()
+        } else {
+            Self::failure()
+        }
+    }
+}
 
 #[derive(Debug, Error)]
 #[error("Password manager is disabled")]
@@ -149,11 +193,11 @@ impl PasswordManager {
         scheme: SchemeVersion,
         password: Zeroizing<String>,
         hashed_password: String,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<PasswordVerificationResult, anyhow::Error> {
         let inner = self.get_inner()?;
         let span = tracing::Span::current();
 
-        tokio::task::spawn_blocking(move || {
+        let result = tokio::task::spawn_blocking(move || {
             span.in_scope(move || {
                 let hasher = if scheme == inner.current_version {
                     &inner.current_hasher
@@ -169,7 +213,7 @@ impl PasswordManager {
         })
         .await??;
 
-        Ok(())
+        Ok(result)
     }
 
     /// Verify a password hash for the given hashing scheme, and upgrade it on
@@ -186,7 +230,7 @@ impl PasswordManager {
         scheme: SchemeVersion,
         password: Zeroizing<String>,
         hashed_password: String,
-    ) -> Result<Option<(SchemeVersion, String)>, anyhow::Error> {
+    ) -> Result<PasswordVerificationResult<Option<(SchemeVersion, String)>>, anyhow::Error> {
         let inner = self.get_inner()?;
 
         // If the current scheme isn't the default one, we also hash with the default
@@ -198,11 +242,11 @@ impl PasswordManager {
         let verify_fut = self.verify(scheme, password, hashed_password);
 
         let (new_hash_res, verify_res) = tokio::join!(new_hash_fut, verify_fut);
-        verify_res?;
+        let password_result = verify_res?;
 
         let new_hash = new_hash_res.transpose()?;
 
-        Ok(new_hash)
+        Ok(password_result.with_data(new_hash))
     }
 }
 
@@ -276,7 +320,7 @@ impl Hasher {
         &self,
         hashed_password: &str,
         password: Zeroizing<String>,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<PasswordVerificationResult, anyhow::Error> {
         let password = self.normalize_password(password);
 
         self.algorithm
@@ -345,8 +389,8 @@ impl Algorithm {
         hashed_password: &str,
         password: &[u8],
         pepper: Option<&[u8]>,
-    ) -> Result<(), anyhow::Error> {
-        match self {
+    ) -> Result<PasswordVerificationResult, anyhow::Error> {
+        let result = match self {
             Algorithm::Bcrypt { .. } => {
                 let mut password = Zeroizing::new(password.to_vec());
                 if let Some(pepper) = pepper {
@@ -354,7 +398,7 @@ impl Algorithm {
                 }
 
                 let result = bcrypt::verify(password, hashed_password)?;
-                anyhow::ensure!(result, "wrong password");
+                PasswordVerificationResult::from(result)
             }
 
             Algorithm::Argon2id => {
@@ -370,7 +414,11 @@ impl Algorithm {
 
                 let hashed_password = PasswordHash::new(hashed_password)?;
 
-                phf.verify_password(password.as_ref(), &hashed_password)?;
+                match phf.verify_password(password.as_ref(), &hashed_password) {
+                    Ok(()) => PasswordVerificationResult::success(),
+                    Err(password_hash::Error::Password) => PasswordVerificationResult::failure(),
+                    Err(e) => Err(e)?,
+                }
             }
 
             Algorithm::Pbkdf2 => {
@@ -381,11 +429,15 @@ impl Algorithm {
 
                 let hashed_password = PasswordHash::new(hashed_password)?;
 
-                Pbkdf2.verify_password(password.as_ref(), &hashed_password)?;
+                match Pbkdf2.verify_password(password.as_ref(), &hashed_password) {
+                    Ok(()) => PasswordVerificationResult::success(),
+                    Err(password_hash::Error::Password) => PasswordVerificationResult::failure(),
+                    Err(e) => Err(e)?,
+                }
             }
-        }
+        };
 
-        Ok(())
+        Ok(result)
     }
 }
 
@@ -410,10 +462,26 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, Some(pepper)).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper2)).is_err());
-        assert!(alg.verify_blocking(&hash, password, None).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper2))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
 
         // Hash without pepper
         let hash = alg
@@ -421,9 +489,21 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, None).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, None).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
     }
 
     #[test]
@@ -441,10 +521,26 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, Some(pepper)).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper2)).is_err());
-        assert!(alg.verify_blocking(&hash, password, None).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper2))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
 
         // Hash without pepper
         let hash = alg
@@ -452,9 +548,21 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, None).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, None).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
     }
 
     #[test]
@@ -473,10 +581,26 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, Some(pepper)).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper2)).is_err());
-        assert!(alg.verify_blocking(&hash, password, None).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper2))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
 
         // Hash without pepper
         let hash = alg
@@ -484,9 +608,21 @@ mod tests {
             .expect("Couldn't hash password");
         insta::assert_snapshot!(hash);
 
-        assert!(alg.verify_blocking(&hash, password, None).is_ok());
-        assert!(alg.verify_blocking(&hash, password2, None).is_err());
-        assert!(alg.verify_blocking(&hash, password, Some(pepper)).is_err());
+        assert_eq!(
+            alg.verify_blocking(&hash, password, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Success(())
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password2, None)
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
+        assert_eq!(
+            alg.verify_blocking(&hash, password, Some(pepper))
+                .expect("Verification failed"),
+            PasswordVerificationResult::Failure
+        );
     }
 
     #[allow(clippy::too_many_lines)]
@@ -520,16 +656,18 @@ mod tests {
         insta::assert_snapshot!(hash);
 
         // Just verifying works
-        manager
+        let res = manager
             .verify(version, password.clone(), hash.clone())
             .await
             .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Success(()));
 
         // And doesn't work with the wrong password
-        manager
+        let res = manager
             .verify(version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         // Verifying with the wrong version doesn't work
         manager
@@ -543,13 +681,14 @@ mod tests {
             .await
             .expect("Failed to verify");
 
-        assert!(res.is_none());
+        assert_eq!(res, PasswordVerificationResult::Success(None));
 
         // Upgrading still verify that the password matches
-        manager
+        let res = manager
             .verify_and_upgrade(&mut rng, version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         let manager = PasswordManager::new(
             0,
@@ -564,16 +703,18 @@ mod tests {
         .unwrap();
 
         // Verifying still works
-        manager
+        let res = manager
             .verify(version, password.clone(), hash.clone())
             .await
             .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Success(()));
 
         // And doesn't work with the wrong password
-        manager
+        let res = manager
             .verify(version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         // Upgrading does re-hash
         let res = manager
@@ -581,9 +722,9 @@ mod tests {
             .await
             .expect("Failed to verify");
 
-        assert!(res.is_some());
-        let (version, hash) = res.unwrap();
-
+        let PasswordVerificationResult::Success(Some((version, hash))) = res else {
+            panic!("Expected a successful upgrade");
+        };
         assert_eq!(version, 2);
         insta::assert_snapshot!(hash);
 
@@ -593,19 +734,21 @@ mod tests {
             .await
             .expect("Failed to verify");
 
-        assert!(res.is_none());
+        assert_eq!(res, PasswordVerificationResult::Success(None));
 
         // Upgrading still verify that the password matches
-        manager
+        let res = manager
             .verify_and_upgrade(&mut rng, version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         // Upgrading still verify that the password matches
-        manager
+        let res = manager
             .verify_and_upgrade(&mut rng, version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         let manager = PasswordManager::new(
             0,
@@ -624,16 +767,18 @@ mod tests {
         .unwrap();
 
         // Verifying still works
-        manager
+        let res = manager
             .verify(version, password.clone(), hash.clone())
             .await
             .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Success(()));
 
         // And doesn't work with the wrong password
-        manager
+        let res = manager
             .verify(version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
 
         // Upgrading does re-hash
         let res = manager
@@ -641,8 +786,9 @@ mod tests {
             .await
             .expect("Failed to verify");
 
-        assert!(res.is_some());
-        let (version, hash) = res.unwrap();
+        let PasswordVerificationResult::Success(Some((version, hash))) = res else {
+            panic!("Expected a successful upgrade");
+        };
 
         assert_eq!(version, 3);
         insta::assert_snapshot!(hash);
@@ -653,12 +799,13 @@ mod tests {
             .await
             .expect("Failed to verify");
 
-        assert!(res.is_none());
+        assert_eq!(res, PasswordVerificationResult::Success(None));
 
         // Upgrading still verify that the password matches
-        manager
+        let res = manager
             .verify_and_upgrade(&mut rng, version, wrong_password.clone(), hash.clone())
             .await
-            .expect_err("Verification should have failed");
+            .expect("Failed to verify");
+        assert_eq!(res, PasswordVerificationResult::Failure);
     }
 }
