@@ -375,7 +375,7 @@ impl OAuth2Session {
                 user_id: Some(Ulid::from_bytes([0x04; 16])),
                 user_session_id: Some(Ulid::from_bytes([0x05; 16])),
                 client_id: Ulid::from_bytes([0x06; 16]),
-                scope: "urn:matrix:org.matrix.msc2967.client:api:*".to_owned(),
+                scope: "urn:matrix:client:api:*".to_owned(),
                 user_agent: Some("Mozilla/5.0".to_owned()),
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some("127.0.0.1".parse().unwrap()),
