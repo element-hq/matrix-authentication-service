@@ -320,7 +320,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.9.0"
+version = "2.10.0"
 features = ["serde"]
 
 # Indented string literals
