@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    extra_callback_parameters,\n                    userinfo,\n                    created_at,\n                    completed_at,\n                    consumed_at,\n                    unlinked_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_authorization_session_id,\n                    upstream_oauth_provider_id,\n                    upstream_oauth_link_id,\n                    state,\n                    code_challenge_verifier,\n                    nonce,\n                    id_token,\n                    id_token_claims,\n                    extra_callback_parameters,\n                    userinfo,\n                    created_at,\n                    completed_at,\n                    consumed_at,\n                    unlinked_at\n                FROM upstream_oauth_authorization_sessions\n                WHERE upstream_oauth_authorization_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -40,31 +40,36 @@
       },
       {
         "ordinal": 7,
-        "name": "extra_callback_parameters",
+        "name": "id_token_claims",
         "type_info": "Jsonb"
       },
       {
         "ordinal": 8,
-        "name": "userinfo",
+        "name": "extra_callback_parameters",
         "type_info": "Jsonb"
       },
       {
         "ordinal": 9,
+        "name": "userinfo",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "completed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "consumed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "unlinked_at",
         "type_info": "Timestamptz"
       }
@@ -84,11 +89,12 @@
       true,
       true,
       true,
+      true,
       false,
       true,
       true,
       true
     ]
   },
-  "hash": "37a124678323380357fa9d1375fd125fb35476ac3008e5adbd04a761d5edcd42"
+  "hash": "e62d043f86e7232e6e9433631f8273e7ed0770c81071cf1f17516d3a45881ae9"
 }

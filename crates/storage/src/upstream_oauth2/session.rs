@@ -74,18 +74,23 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// * `upstream_oauth_link`: the link to associate with the session
     /// * `id_token`: the ID token returned by the upstream OAuth provider, if
     ///   present
+    /// * `id_token_claims`: the claims contained in the ID token, if present
     /// * `extra_callback_parameters`: the extra query parameters returned in
     ///   the callback, if any
+    /// * `userinfo`: the user info returned by the upstream OAuth provider, if
+    ///   requested
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
+    #[expect(clippy::too_many_arguments)]
     async fn complete_with_link(
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
         upstream_oauth_link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
@@ -131,6 +136,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
         upstream_oauth_link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
