@@ -15,6 +15,8 @@ use crate::{Clock, Pagination, pagination::Page, repository_impl};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct UpstreamOAuthSessionFilter<'a> {
     provider: Option<&'a UpstreamOAuthProvider>,
+    sub_claim: Option<&'a str>,
+    sid_claim: Option<&'a str>,
 }
 
 impl<'a> UpstreamOAuthSessionFilter<'a> {
@@ -37,6 +39,36 @@ impl<'a> UpstreamOAuthSessionFilter<'a> {
     #[must_use]
     pub fn provider(&self) -> Option<&UpstreamOAuthProvider> {
         self.provider
+    }
+
+    /// Set the `sub` claim to filter by
+    #[must_use]
+    pub fn with_sub_claim(mut self, sub_claim: &'a str) -> Self {
+        self.sub_claim = Some(sub_claim);
+        self
+    }
+
+    /// Get the `sub` claim filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn sub_claim(&self) -> Option<&str> {
+        self.sub_claim
+    }
+
+    /// Set the `sid` claim to filter by
+    #[must_use]
+    pub fn with_sid_claim(mut self, sid_claim: &'a str) -> Self {
+        self.sid_claim = Some(sid_claim);
+        self
+    }
+
+    /// Get the `sid` claim filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn sid_claim(&self) -> Option<&str> {
+        self.sid_claim
     }
 }
 

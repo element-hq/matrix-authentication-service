@@ -15,7 +15,7 @@ use mas_storage::{
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -31,13 +31,30 @@ use crate::{
 
 impl Filter for UpstreamOAuthSessionFilter<'_> {
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
-        sea_query::Condition::all().add_option(self.provider().map(|provider| {
-            Expr::col((
-                UpstreamOAuthAuthorizationSessions::Table,
-                UpstreamOAuthAuthorizationSessions::UpstreamOAuthProviderId,
-            ))
-            .eq(Uuid::from(provider.id))
-        }))
+        sea_query::Condition::all()
+            .add_option(self.provider().map(|provider| {
+                Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthProviderId,
+                ))
+                .eq(Uuid::from(provider.id))
+            }))
+            .add_option(self.sub_claim().map(|sub| {
+                Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::IdTokenClaims,
+                ))
+                .cast_json_field("sub")
+                .eq(sub)
+            }))
+            .add_option(self.sid_claim().map(|sid| {
+                Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::IdTokenClaims,
+                ))
+                .cast_json_field("sid")
+                .eq(sid)
+            }))
     }
 }
 

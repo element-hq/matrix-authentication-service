@@ -499,13 +499,43 @@ mod tests {
             0
         );
 
+        let mut links = Vec::with_capacity(3);
+        for subject in ["alice", "bob", "charlie"] {
+            let link = repo
+                .upstream_oauth_link()
+                .add(&mut rng, &clock, &provider, subject.to_owned(), None)
+                .await
+                .unwrap();
+            links.push(link);
+        }
+
         let mut ids = Vec::with_capacity(20);
+        let sids = ["one", "two"].into_iter().cycle();
         // Create 20 sessions
-        for idx in 0..20 {
+        for (idx, (link, sid)) in links.iter().cycle().zip(sids).enumerate().take(20) {
             let state = format!("state-{idx}");
             let session = repo
                 .upstream_oauth_session()
                 .add(&mut rng, &clock, &provider, state, None, None)
+                .await
+                .unwrap();
+            let id_token_claims = serde_json::json!({
+                "sub": link.subject,
+                "sid": sid,
+                "aud": provider.client_id,
+                "iss": "https://example.com/",
+            });
+            let session = repo
+                .upstream_oauth_session()
+                .complete_with_link(
+                    &clock,
+                    session,
+                    link,
+                    None,
+                    Some(id_token_claims),
+                    None,
+                    None,
+                )
                 .await
                 .unwrap();
             ids.push(session.id);
@@ -577,5 +607,41 @@ mod tests {
         assert!(!page.has_next_page);
         let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
         assert_eq!(&edge_ids, &ids[6..11]);
+
+        // Check the sub/sid filters
+        assert_eq!(
+            repo.upstream_oauth_session()
+                .count(filter.with_sub_claim("alice").with_sid_claim("one"))
+                .await
+                .unwrap(),
+            4
+        );
+        assert_eq!(
+            repo.upstream_oauth_session()
+                .count(filter.with_sub_claim("bob").with_sid_claim("two"))
+                .await
+                .unwrap(),
+            4
+        );
+
+        let page = repo
+            .upstream_oauth_session()
+            .list(
+                filter.with_sub_claim("alice").with_sid_claim("one"),
+                Pagination::first(10),
+            )
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 4);
+        for edge in page.edges {
+            assert_eq!(
+                edge.id_token_claims().unwrap().get("sub").unwrap().as_str(),
+                Some("alice")
+            );
+            assert_eq!(
+                edge.id_token_claims().unwrap().get("sid").unwrap().as_str(),
+                Some("one")
+            );
+        }
     }
 }
