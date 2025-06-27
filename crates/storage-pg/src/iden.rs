@@ -141,6 +141,29 @@ pub enum UpstreamOAuthLinks {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "upstream_oauth_authorization_sessions"]
+pub enum UpstreamOAuthAuthorizationSessions {
+    Table,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+    #[iden = "upstream_oauth_provider_id"]
+    UpstreamOAuthProviderId,
+    #[iden = "upstream_oauth_link_id"]
+    UpstreamOAuthLinkId,
+    State,
+    CodeChallengeVerifier,
+    Nonce,
+    IdToken,
+    IdTokenClaims,
+    ExtraCallbackParameters,
+    Userinfo,
+    CreatedAt,
+    CompletedAt,
+    ConsumedAt,
+    UnlinkedAt,
+}
+
+#[derive(sea_query::Iden)]
 pub enum UserRegistrationTokens {
     Table,
     UserRegistrationTokenId,

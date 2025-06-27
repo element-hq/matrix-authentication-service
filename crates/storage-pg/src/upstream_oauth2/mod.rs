@@ -29,7 +29,7 @@ mod tests {
         upstream_oauth2::{
             UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository, UpstreamOAuthProviderFilter,
             UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
-            UpstreamOAuthSessionRepository,
+            UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository,
         },
         user::UserRepository,
     };
@@ -262,6 +262,29 @@ mod tests {
             1
         );
 
+        // Test listing and counting sessions
+        let session_filter = UpstreamOAuthSessionFilter::new().for_provider(&provider);
+
+        // Count the sessions for the provider
+        let session_count = repo
+            .upstream_oauth_session()
+            .count(session_filter)
+            .await
+            .unwrap();
+        assert_eq!(session_count, 1);
+
+        // List the sessions for the provider
+        let session_page = repo
+            .upstream_oauth_session()
+            .list(session_filter, Pagination::first(10))
+            .await
+            .unwrap();
+
+        assert_eq!(session_page.edges.len(), 1);
+        assert_eq!(session_page.edges[0].id, session.id);
+        assert!(!session_page.has_next_page);
+        assert!(!session_page.has_previous_page);
+
         // Try deleting the provider
         repo.upstream_oauth_provider()
             .delete(provider)
@@ -422,5 +445,137 @@ mod tests {
                 .edges
                 .is_empty()
         );
+    }
+
+    /// Test that the pagination works as expected in the upstream OAuth
+    /// session repository
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_session_repository_pagination(pool: PgPool) {
+        let scope = Scope::from_iter([OPENID]);
+
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+        // Create a provider
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://example.com/".to_owned()),
+                    human_name: None,
+                    brand_name: None,
+                    scope,
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    token_endpoint_signing_alg: None,
+                    client_id: "client-id".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    token_endpoint_override: None,
+                    authorization_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    jwks_uri_override: None,
+                    discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
+                    pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                },
+            )
+            .await
+            .unwrap();
+
+        let filter = UpstreamOAuthSessionFilter::new().for_provider(&provider);
+
+        // Count the number of sessions before we start
+        assert_eq!(
+            repo.upstream_oauth_session().count(filter).await.unwrap(),
+            0
+        );
+
+        let mut ids = Vec::with_capacity(20);
+        // Create 20 sessions
+        for idx in 0..20 {
+            let state = format!("state-{idx}");
+            let session = repo
+                .upstream_oauth_session()
+                .add(&mut rng, &clock, &provider, state, None, None)
+                .await
+                .unwrap();
+            ids.push(session.id);
+            clock.advance(Duration::microseconds(10 * 1000 * 1000));
+        }
+
+        // Now we have 20 sessions
+        assert_eq!(
+            repo.upstream_oauth_session().count(filter).await.unwrap(),
+            20
+        );
+
+        // Lookup the first 10 items
+        let page = repo
+            .upstream_oauth_session()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+
+        // It returned the first 10 items
+        assert!(page.has_next_page);
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        assert_eq!(&edge_ids, &ids[..10]);
+
+        // Lookup the next 10 items
+        let page = repo
+            .upstream_oauth_session()
+            .list(filter, Pagination::first(10).after(ids[9]))
+            .await
+            .unwrap();
+
+        // It returned the next 10 items
+        assert!(!page.has_next_page);
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        assert_eq!(&edge_ids, &ids[10..]);
+
+        // Lookup the last 10 items
+        let page = repo
+            .upstream_oauth_session()
+            .list(filter, Pagination::last(10))
+            .await
+            .unwrap();
+
+        // It returned the last 10 items
+        assert!(page.has_previous_page);
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        assert_eq!(&edge_ids, &ids[10..]);
+
+        // Lookup the previous 10 items
+        let page = repo
+            .upstream_oauth_session()
+            .list(filter, Pagination::last(10).before(ids[10]))
+            .await
+            .unwrap();
+
+        // It returned the previous 10 items
+        assert!(!page.has_previous_page);
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        assert_eq!(&edge_ids, &ids[..10]);
+
+        // Lookup 5 items between two IDs
+        let page = repo
+            .upstream_oauth_session()
+            .list(filter, Pagination::first(10).after(ids[5]).before(ids[11]))
+            .await
+            .unwrap();
+
+        // It returned the items in between
+        assert!(!page.has_next_page);
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        assert_eq!(&edge_ids, &ids[6..11]);
     }
 }
