@@ -20,7 +20,8 @@ pub use self::{
 mod tests {
     use chrono::Duration;
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{
@@ -78,6 +79,7 @@ mod tests {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await
@@ -349,6 +351,7 @@ mod tests {
                         additional_authorization_parameters: Vec::new(),
                         forward_login_hint: false,
                         ui_order: 0,
+                        on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     },
                 )
                 .await
@@ -486,6 +489,7 @@ mod tests {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await

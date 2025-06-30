@@ -424,7 +424,8 @@ mod test {
         header::{CONTENT_TYPE, LOCATION},
     };
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_router::Route;
@@ -500,6 +501,7 @@ mod test {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await
@@ -542,6 +544,7 @@ mod test {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 1,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await

@@ -986,6 +986,8 @@ mod tests {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout:
+                        mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await

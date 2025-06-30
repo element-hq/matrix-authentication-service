@@ -216,6 +216,45 @@ impl std::str::FromStr for TokenAuthMethod {
 #[error("Invalid upstream OAuth 2.0 token auth method: {0}")]
 pub struct InvalidUpstreamOAuth2TokenAuthMethod(String);
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum OnBackchannelLogout {
+    DoNothing,
+    LogoutBrowserOnly,
+}
+
+impl OnBackchannelLogout {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DoNothing => "do_nothing",
+            Self::LogoutBrowserOnly => "logout_browser_only",
+        }
+    }
+}
+
+impl std::fmt::Display for OnBackchannelLogout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for OnBackchannelLogout {
+    type Err = InvalidUpstreamOAuth2OnBackchannelLogout;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "do_nothing" => Ok(Self::DoNothing),
+            "logout_browser_only" => Ok(Self::LogoutBrowserOnly),
+            s => Err(InvalidUpstreamOAuth2OnBackchannelLogout(s.to_owned())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("Invalid upstream OAuth 2.0 'on backchannel logout': {0}")]
+pub struct InvalidUpstreamOAuth2OnBackchannelLogout(String);
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
@@ -242,6 +281,7 @@ pub struct UpstreamOAuthProvider {
     pub claims_imports: ClaimsImports,
     pub additional_authorization_parameters: Vec<(String, String)>,
     pub forward_login_hint: bool,
+    pub on_backchannel_logout: OnBackchannelLogout,
 }
 
 impl PartialOrd for UpstreamOAuthProvider {

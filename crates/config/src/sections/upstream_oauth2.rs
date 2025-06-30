@@ -408,6 +408,25 @@ fn is_default_scope(scope: &str) -> bool {
     scope == default_scope()
 }
 
+/// What to do when receiving an OIDC Backchannel logout request.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum OnBackchannelLogout {
+    /// Do nothing
+    #[default]
+    DoNothing,
+
+    /// Only log out the MAS 'browser session' started by this OIDC session
+    LogoutBrowserOnly,
+}
+
+impl OnBackchannelLogout {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, OnBackchannelLogout::DoNothing)
+    }
+}
+
 /// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -583,4 +602,10 @@ pub struct Provider {
     /// Defaults to `false`.
     #[serde(default)]
     pub forward_login_hint: bool,
+
+    /// What to do when receiving an OIDC Backchannel logout request.
+    ///
+    /// Defaults to "do_nothing".
+    #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
+    pub on_backchannel_logout: OnBackchannelLogout,
 }
