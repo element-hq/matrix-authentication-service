@@ -122,7 +122,7 @@
       "web": "Web"
     },
     "email_in_use": {
-      "heading": "O endereço de correio eletrónico {{email}} já está a ser utilizado."
+      "heading": "O endereço de e-mail {{email}} já está a ser utilizado."
     },
     "end_session_button": {
       "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
@@ -146,7 +146,7 @@
     },
     "nav": {
       "devices": "Dispositivos",
-      "plan": "Plan",
+      "plan": "Plano",
       "profile": "Perfil",
       "sessions": "Sessões",
       "settings": "Configurações"
@@ -172,13 +172,13 @@
       "current_password_label": "Palavra-passe atual",
       "failure": {
         "description": {
-          "account_locked": "A sua conta está bloqueada e não pode ser recuperada neste momento. Se isso não for esperado, entre em contato com o administrador do servidor.",
-          "expired_recovery_ticket": "O link de recuperação expirou. Por favor, inicie o processo de recuperação de conta novamente desde o início.",
+          "account_locked": "A sua conta está bloqueada e não pode ser recuperada neste momento. Se isso não for esperado, entre em contacto com o administrador do servidor.",
+          "expired_recovery_ticket": "O link de recuperação expirou. Inicie o processo de recuperação da conta desde o início.",
           "invalid_new_password": "A nova senha que você escolheu é inválida; ela pode não atender à política de segurança configurada.",
           "no_current_password": "Você não tem uma senha atual.",
-          "no_such_recovery_ticket": "O link de recuperação é inválido. Se você copiou o link do e-mail de recuperação, verifique se o link completo foi copiado.",
+          "no_such_recovery_ticket": "O link de recuperação é inválido. Se copiou o link a partir do e-mail de recuperação, verifique se o copiou na totalidade.",
           "password_changes_disabled": "As alterações de palavra-passe estão desactivadas.",
-          "recovery_ticket_already_used": "O link de recuperação já foi usado. Não pode ser utilizado novamente.",
+          "recovery_ticket_already_used": "O link de recuperação já foi utilizado e não pode ser utilizado novamente.",
           "unspecified": "Este pode ser um problema temporário, por isso, tente novamente mais tarde. Se o problema persistir, entre em contato com o administrador do servidor.",
           "wrong_password": "A palavra-passe que forneceu como palavra-passe atual está incorreta. Por favor, tente novamente."
         },
@@ -235,10 +235,10 @@
       },
       "too_weak": "Esta palavra-passe é demasiado fraca",
       "warning": {
-        "common": "Esta é uma senha comumente usada.",
+        "common": "Esta é uma palavra-passe frequentemente utilizada.",
         "common_names": "Nomes e sobrenomes comuns são fáceis de adivinhar.",
         "dates": "As datas são fáceis de adivinhar.",
-        "extended_repeat": "Padrões de caracteres repetidos como \"abcabcabc\" são fáceis de adivinhar.",
+        "extended_repeat": "Padrões repetidos de carateres, como 'abcabcabc', são fáceis de adivinhar.",
         "key_pattern": "Padrões de teclado curtos são fáceis de adivinhar.",
         "names_by_themselves": "Nomes individuais ou sobrenomes são fáceis de adivinhar.",
         "pwned": "A sua palavra-passe foi exposta por uma violação de dados na Internet.",
@@ -257,15 +257,15 @@
       "button": "Redefinir identidade",
       "cancelled": {
         "description_1": "Pode fechar esta janela e voltar à aplicação para continuar.",
-        "description_2": "Se você estiver desconectado em todos os lugares e não se lembrar do código de recuperação, ainda precisará redefinir sua identidade.",
+        "description_2": "Caso tenha terminado sessão em todos os dispositivos e não se recorde do seu código de recuperação, continuará a ser necessário repor a sua identidade.",
         "heading": "Redefinição de identidade cancelada."
       },
       "description": "Se não tiver sessão iniciada noutros dispositivos e tiver perdido a sua chave de recuperação, terá de repor a sua identidade para continuar a utilizar a aplicação.",
       "effect_list": {
         "negative_1": "Perderá o histórico de mensagens existente",
-        "negative_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
+        "negative_2": "Terá de verificar novamente todos os seus dispositivos e contactos existentes.",
         "neutral_1": "Perderá qualquer histórico de mensagens que esteja armazenado apenas no servidor",
-        "neutral_2": "Você precisará verificar todos os seus dispositivos e contatos existentes novamente",
+        "neutral_2": "Terá de verificar novamente todos os seus dispositivos e contactos existentes.",
         "positive_1": "Os detalhes da sua conta, contactos, preferências e lista de conversação serão mantidos"
       },
       "failure": {
@@ -305,7 +305,7 @@
         "label": "Nome do dispositivo",
         "title": "Editar nome do dispositivo"
       },
-      "signed_in_date": "Conectado <datetime/>",
+      "signed_in_date": "Sessão iniciada <datetime/>",
       "signed_in_label": "Sessão iniciada",
       "title": "Detalhes do dispositivo",
       "unknown_browser": "Navegador desconhecido",
@@ -357,9 +357,9 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} sessão ativa",
       "active_sessions:other": "{{count}} sessões ativas",
-      "heading": "Onde você está conectado",
+      "heading": "Onde tem sessão iniciada",
       "no_active_sessions": {
-        "default": "Você não está conectado a nenhum aplicativo.",
+        "default": "Não tem sessão iniciada em nenhuma aplicação.",
         "inactive_90_days": "Todas as suas sessões estiveram ativas nos últimos 90 dias."
       }
     },
