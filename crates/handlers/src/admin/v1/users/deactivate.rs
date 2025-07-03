@@ -8,12 +8,12 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use schemars::JsonSchema;
-use serde::Deserialize;
 use mas_storage::{
     BoxRng,
     queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
 };
+use schemars::JsonSchema;
+use serde::Deserialize;
 use tracing::info;
 use ulid::Ulid;
 
@@ -101,7 +101,11 @@ pub async fn handler(
 
     info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
-        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, params.erase))
+        .schedule_job(
+            &mut rng,
+            &clock,
+            DeactivateUserJob::new(&user, params.erase),
+        )
         .await?;
 
     repo.save().await?;
