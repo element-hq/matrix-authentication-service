@@ -39,6 +39,7 @@ pub struct BrowserSessionFilter<'a> {
     state: Option<BrowserSessionState>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
+    authenticated_by_upstream_sessions: Option<&'a [UpstreamOAuthAuthorizationSession]>,
 }
 
 impl<'a> BrowserSessionFilter<'a> {
@@ -109,6 +110,25 @@ impl<'a> BrowserSessionFilter<'a> {
     #[must_use]
     pub fn state(&self) -> Option<BrowserSessionState> {
         self.state
+    }
+
+    /// Only return browser sessions authenticated by the given upstream OAuth
+    /// sessions
+    #[must_use]
+    pub fn authenticated_by_upstream_sessions_only(
+        mut self,
+        upstream_oauth_sessions: &'a [UpstreamOAuthAuthorizationSession],
+    ) -> Self {
+        self.authenticated_by_upstream_sessions = Some(upstream_oauth_sessions);
+        self
+    }
+
+    /// Get the upstream OAuth session filter
+    #[must_use]
+    pub fn authenticated_by_upstream_sessions(
+        &self,
+    ) -> Option<&'a [UpstreamOAuthAuthorizationSession]> {
+        self.authenticated_by_upstream_sessions
     }
 }
 

@@ -19,6 +19,18 @@ pub enum UserSessions {
 }
 
 #[derive(sea_query::Iden)]
+#[expect(dead_code)]
+pub enum UserSessionAuthentications {
+    Table,
+    UserSessionAuthenticationId,
+    UserSessionId,
+    CreatedAt,
+    UserPasswordId,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+}
+
+#[derive(sea_query::Iden)]
 pub enum Users {
     Table,
     UserId,
