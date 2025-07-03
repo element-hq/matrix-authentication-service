@@ -441,6 +441,10 @@ where
             get(self::upstream_oauth2::link::get).post(self::upstream_oauth2::link::post),
         )
         .route(
+            mas_router::UpstreamOAuth2BackchannelLogout::route(),
+            post(self::upstream_oauth2::backchannel_logout::post),
+        )
+        .route(
             mas_router::DeviceCodeLink::route(),
             get(self::oauth2::device::link::get),
         )
