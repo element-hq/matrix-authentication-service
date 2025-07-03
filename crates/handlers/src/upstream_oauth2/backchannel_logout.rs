@@ -12,7 +12,7 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::UpstreamOAuthProvider;
+use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderOnBackchannelLogout};
 use mas_jose::{
     claims::{self, Claim, TimeOptions},
     jwt::JwtDecodeError,
@@ -23,6 +23,7 @@ use mas_oidc_client::{
 };
 use mas_storage::{
     BoxClock, BoxRepository, Pagination, upstream_oauth2::UpstreamOAuthSessionFilter,
+    user::BrowserSessionFilter,
 };
 use oauth2_types::errors::{ClientError, ClientErrorCode};
 use serde::Deserialize;
@@ -229,6 +230,9 @@ pub(crate) async fn post(
         filter = filter.with_sid_claim(sid);
     }
 
+    // Load the corresponding authentication sessions, by batches of 100s. It's
+    // VERY unlikely that we'll ever have more that 100 sessions for a single
+    // logout notification, but we'll handle it anyway.
     let mut cursor = Pagination::first(100);
     let mut sessions = Vec::new();
     loop {
@@ -244,7 +248,21 @@ pub(crate) async fn post(
         }
     }
 
-    tracing::info!(sub, sid, %provider.id, "Backchannel logout received, found {} corresponding sessions", sessions.len());
+    tracing::info!(sub, sid, %provider.id, "Backchannel logout received, found {} corresponding authentication sessions", sessions.len());
+
+    match provider.on_backchannel_logout {
+        UpstreamOAuthProviderOnBackchannelLogout::DoNothing => {
+            tracing::warn!(%provider.id, "Provider configured to do nothing on backchannel logout");
+        }
+        UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly => {
+            let filter =
+                BrowserSessionFilter::new().authenticated_by_upstream_sessions_only(&sessions);
+            let affected = repo.browser_session().finish_bulk(&clock, filter).await?;
+            tracing::info!("Finished {affected} browser sessions");
+        }
+    }
+
+    repo.save().await?;
 
     Ok(())
 }
