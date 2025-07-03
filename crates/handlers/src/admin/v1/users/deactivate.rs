@@ -8,6 +8,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use schemars::JsonSchema;
+use serde::Deserialize;
 use mas_storage::{
     BoxRng,
     queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
@@ -49,6 +51,14 @@ impl IntoResponse for RouteError {
     }
 }
 
+/// # JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint
+#[derive(Deserialize, JsonSchema)]
+#[serde(rename = "DeactivateUserRequest")]
+pub struct Request {
+    /// Whether the user should be GDPR-erased from the homeserver.
+    erase: bool,
+}
+
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("deactivateUser")
@@ -76,6 +86,7 @@ pub async fn handler(
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
+    Json(params): Json<Request>,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
     let mut user = repo
@@ -90,7 +101,7 @@ pub async fn handler(
 
     info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
-        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
+        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, params.erase))
         .await?;
 
     repo.save().await?;

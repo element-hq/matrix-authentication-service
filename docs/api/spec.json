@@ -1359,6 +1359,16 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "User was deactivated",
@@ -3868,6 +3878,19 @@
         "properties": {
           "admin": {
             "description": "Whether the user can request admin privileges.",
+            "type": "boolean"
+          }
+        }
+      },
+      "DeactivateUserRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
+        "type": "object",
+        "required": [
+          "erase"
+        ],
+        "properties": {
+          "erase": {
+            "description": "Whether the user should be GDPR-erased from the homeserver.",
             "type": "boolean"
           }
         }
