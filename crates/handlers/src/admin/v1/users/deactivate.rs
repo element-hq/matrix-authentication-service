@@ -12,6 +12,8 @@ use mas_storage::{
     BoxRng,
     queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
 };
+use schemars::JsonSchema;
+use serde::Deserialize;
 use tracing::info;
 use ulid::Ulid;
 
@@ -49,6 +51,20 @@ impl IntoResponse for RouteError {
     }
 }
 
+/// # JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint
+#[derive(Deserialize, JsonSchema)]
+#[serde(rename = "DeactivateUserRequest")]
+pub struct Request {
+    /// Whether the user should be GDPR-erased from the homeserver.
+    erase: bool,
+}
+
+impl Default for Request {
+    fn default() -> Self {
+        Self { erase: true }
+    }
+}
+
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("deactivateUser")
@@ -76,7 +92,9 @@ pub async fn handler(
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
+    body: Option<Json<Request>>,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
+    let Json(params) = body.unwrap_or_default();
     let id = *id;
     let mut user = repo
         .user()
@@ -90,7 +108,11 @@ pub async fn handler(
 
     info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
-        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
+        .schedule_job(
+            &mut rng,
+            &clock,
+            DeactivateUserJob::new(&user, params.erase),
+        )
         .await?;
 
     repo.save().await?;
@@ -110,8 +132,7 @@ mod tests {
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_deactivate_user(pool: PgPool) {
+    async fn test_deactivate_user_helper(pool: PgPool, erase: Option<bool>) {
         setup();
         let mut state = TestState::from_pool(pool.clone()).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -124,9 +145,14 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
-            .bearer(&token)
-            .empty();
+        let request =
+            Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id)).bearer(&token);
+        let request = match erase {
+            None => request.empty(),
+            Some(erase) => request.json(serde_json::json!({
+                "erase": erase,
+            })),
+        };
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
@@ -146,6 +172,52 @@ mod tests {
         .await
         .expect("Deactivation job to be scheduled");
         assert_eq!(job["user_id"], serde_json::json!(user.id));
+        assert_eq!(job["hs_erase"], serde_json::json!(erase.unwrap_or(true)));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user(pool: PgPool) {
+        test_deactivate_user_helper(pool, Option::None).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user_with_explicit_erase(pool: PgPool) {
+        test_deactivate_user_helper(pool, Option::Some(true)).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user_without_erase(pool: PgPool) {
+        test_deactivate_user_helper(pool, Option::Some(false)).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user_missing_erase(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool.clone()).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
+            .bearer(&token)
+            .json(serde_json::json!({}));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::UNPROCESSABLE_ENTITY);
+
+        // It should have not scheduled a deactivation job for the user
+        let count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM queue_jobs WHERE queue_name = 'deactivate-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(count, 0);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
