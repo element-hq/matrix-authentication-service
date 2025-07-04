@@ -283,6 +283,9 @@ pub async fn config_sync(
                 mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutBrowserOnly => {
                     mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly
                 }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutAll => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutAll
+                }
             };
 
             repo.upstream_oauth_provider()

@@ -221,6 +221,7 @@ pub struct InvalidUpstreamOAuth2TokenAuthMethod(String);
 pub enum OnBackchannelLogout {
     DoNothing,
     LogoutBrowserOnly,
+    LogoutAll,
 }
 
 impl OnBackchannelLogout {
@@ -229,6 +230,7 @@ impl OnBackchannelLogout {
         match self {
             Self::DoNothing => "do_nothing",
             Self::LogoutBrowserOnly => "logout_browser_only",
+            Self::LogoutAll => "logout_all",
         }
     }
 }
@@ -246,6 +248,7 @@ impl std::str::FromStr for OnBackchannelLogout {
         match s {
             "do_nothing" => Ok(Self::DoNothing),
             "logout_browser_only" => Ok(Self::LogoutBrowserOnly),
+            "logout_all" => Ok(Self::LogoutAll),
             s => Err(InvalidUpstreamOAuth2OnBackchannelLogout(s.to_owned())),
         }
     }

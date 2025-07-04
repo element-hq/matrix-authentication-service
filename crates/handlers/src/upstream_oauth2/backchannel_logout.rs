@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use axum::{
     Form, Json,
@@ -22,7 +22,11 @@ use mas_oidc_client::{
     requests::jose::{JwtVerificationData, verify_signed_jwt},
 };
 use mas_storage::{
-    BoxClock, BoxRepository, upstream_oauth2::UpstreamOAuthSessionFilter,
+    BoxClock, BoxRepository, BoxRng, Pagination,
+    compat::CompatSessionFilter,
+    oauth2::OAuth2SessionFilter,
+    queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
+    upstream_oauth2::UpstreamOAuthSessionFilter,
     user::BrowserSessionFilter,
 };
 use oauth2_types::errors::{ClientError, ClientErrorCode};
@@ -131,6 +135,7 @@ const EVENTS: Claim<LogoutTokenEvents> = Claim::new("events");
 )]
 pub(crate) async fn post(
     clock: BoxClock,
+    mut rng: BoxRng,
     mut repo: BoxRepository,
     State(metadata_cache): State<MetadataCache>,
     State(client): State<reqwest::Client>,
@@ -242,9 +247,66 @@ pub(crate) async fn post(
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly => {
             let filter = BrowserSessionFilter::new()
-                .authenticated_by_upstream_sessions_only(auth_session_filter);
+                .authenticated_by_upstream_sessions_only(auth_session_filter)
+                .active_only();
             let affected = repo.browser_session().finish_bulk(&clock, filter).await?;
             tracing::info!("Finished {affected} browser sessions");
+        }
+        UpstreamOAuthProviderOnBackchannelLogout::LogoutAll => {
+            let browser_session_filter = BrowserSessionFilter::new()
+                .authenticated_by_upstream_sessions_only(auth_session_filter);
+
+            // We need to loop through all the browser sessions to find all the
+            // users affected so that we can trigger a device sync job for them
+            let mut cursor = Pagination::first(1000);
+            let mut user_ids = HashSet::new();
+            loop {
+                let browser_sessions = repo
+                    .browser_session()
+                    .list(browser_session_filter, cursor)
+                    .await?;
+                for browser_session in browser_sessions.edges {
+                    user_ids.insert(browser_session.user.id);
+                    cursor = cursor.after(browser_session.id);
+                }
+
+                if !browser_sessions.has_next_page {
+                    break;
+                }
+            }
+
+            let browser_sessions_affected = repo
+                .browser_session()
+                .finish_bulk(&clock, browser_session_filter.active_only())
+                .await?;
+
+            let oauth2_session_filter = OAuth2SessionFilter::new()
+                .active_only()
+                .for_browser_sessions(browser_session_filter);
+
+            let oauth2_sessions_affected = repo
+                .oauth2_session()
+                .finish_bulk(&clock, oauth2_session_filter)
+                .await?;
+
+            let compat_session_filter = CompatSessionFilter::new()
+                .active_only()
+                .for_browser_sessions(browser_session_filter);
+
+            let compat_sessions_affected = repo
+                .compat_session()
+                .finish_bulk(&clock, compat_session_filter)
+                .await?;
+
+            tracing::info!(
+                "Finished {browser_sessions_affected} browser sessions, {oauth2_sessions_affected} OAuth 2.0 sessions and {compat_sessions_affected} compatibility sessions"
+            );
+
+            for user_id in user_ids {
+                tracing::info!(user.id = %user_id, "Queueing a device sync job for user");
+                let job = SyncDevicesJob::new_for_id(user_id);
+                repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
+            }
         }
     }
 

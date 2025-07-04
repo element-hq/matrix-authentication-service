@@ -2459,6 +2459,13 @@
           "enum": [
             "logout_browser_only"
           ]
+        },
+        {
+          "description": "Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions",
+          "type": "string",
+          "enum": [
+            "logout_all"
+          ]
         }
       ]
     },

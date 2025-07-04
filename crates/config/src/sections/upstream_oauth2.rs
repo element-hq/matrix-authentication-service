@@ -418,6 +418,10 @@ pub enum OnBackchannelLogout {
 
     /// Only log out the MAS 'browser session' started by this OIDC session
     LogoutBrowserOnly,
+
+    /// Log out all sessions started by this OIDC session, including MAS
+    /// 'browser sessions' and client sessions
+    LogoutAll,
 }
 
 impl OnBackchannelLogout {
