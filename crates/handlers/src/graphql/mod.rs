@@ -341,8 +341,7 @@ pub async fn post(
 
     let request = async_graphql::http::receive_body(
         content_type,
-        body.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-            .into_async_read(),
+        body.map_err(std::io::Error::other).into_async_read(),
         MultipartOptions::default(),
     )
     .await?
