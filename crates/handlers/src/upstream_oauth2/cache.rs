@@ -296,7 +296,8 @@ mod tests {
     // 'insecure' discovery
 
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{Clock, clock::MockClock};
@@ -427,6 +428,7 @@ mod tests {
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
+            on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
         };
 
         // Without any override, it should just use discovery

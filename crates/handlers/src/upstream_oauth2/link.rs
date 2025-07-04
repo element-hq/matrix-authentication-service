@@ -934,7 +934,7 @@ mod tests {
             ..UpstreamOAuthProviderClaimsImports::default()
         };
 
-        let id_token = serde_json::json!({
+        let id_token_claims = serde_json::json!({
             "preferred_username": "john",
             "email": "john@example.com",
             "email_verified": true,
@@ -953,7 +953,8 @@ mod tests {
             .signing_key_for_alg(&JsonWebSignatureAlg::Rs256)
             .unwrap();
         let header = JsonWebSignatureHeader::new(JsonWebSignatureAlg::Rs256);
-        let id_token = Jwt::sign_with_rng(&mut rng, header, id_token, &signer).unwrap();
+        let id_token =
+            Jwt::sign_with_rng(&mut rng, header, id_token_claims.clone(), &signer).unwrap();
 
         // Provision a provider and a link
         let mut repo = state.repository().await.unwrap();
@@ -985,6 +986,8 @@ mod tests {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout:
+                        mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await
@@ -1022,6 +1025,7 @@ mod tests {
                 session,
                 &link,
                 Some(id_token.into_string()),
+                Some(id_token_claims),
                 None,
                 None,
             )

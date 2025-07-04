@@ -740,6 +740,13 @@ upstream_oauth2:
       # authorization request.
       #forward_login_hint: false
 
+      # What to do when receiving an OIDC Backchannel logout request.
+      # Possible values are:
+      #  - `do_nothing` (default): do nothing, other than validating and logging the request
+      #  - `logout_browser_only`: Only log out the MAS 'browser session' started by this OIDC session
+      #  - `logout_all`: Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions
+      #on_backchannel_logout: do_nothing
+
       # How user attributes should be mapped
       #
       # Most of those attributes have two main properties:

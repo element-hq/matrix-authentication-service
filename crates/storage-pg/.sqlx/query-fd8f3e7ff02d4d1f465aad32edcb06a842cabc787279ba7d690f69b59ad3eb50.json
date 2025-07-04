@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE upstream_oauth_authorization_sessions\n                SET upstream_oauth_link_id = $1\n                  , completed_at = $2\n                  , id_token = $3\n                  , id_token_claims = $4\n                  , extra_callback_parameters = $5\n                  , userinfo = $6\n                WHERE upstream_oauth_authorization_session_id = $7\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fd8f3e7ff02d4d1f465aad32edcb06a842cabc787279ba7d690f69b59ad3eb50"
+}

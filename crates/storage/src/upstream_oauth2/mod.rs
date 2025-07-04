@@ -16,5 +16,5 @@ pub use self::{
     provider::{
         UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
     },
-    session::UpstreamOAuthSessionRepository,
+    session::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };

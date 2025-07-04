@@ -24,7 +24,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
-    iden::{OAuth2Clients, OAuth2Sessions},
+    iden::{OAuth2Clients, OAuth2Sessions, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -140,6 +140,18 @@ impl Filter for OAuth2SessionFilter<'_> {
             .add_option(self.browser_session().map(|browser_session| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserSessionId))
                     .eq(Uuid::from(browser_session.id))
+            }))
+            .add_option(self.browser_session_filter().map(|browser_session_filter| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessions::Table,
+                            UserSessions::UserSessionId,
+                        )))
+                        .apply_filter(browser_session_filter)
+                        .from(UserSessions::Table)
+                        .take(),
+                )
             }))
             .add_option(self.state().map(|state| {
                 if state.is_active() {

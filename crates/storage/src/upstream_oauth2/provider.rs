@@ -9,8 +9,8 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use mas_data_model::{
     UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
-    UpstreamOAuthProviderTokenAuthMethod,
+    UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+    UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
@@ -101,6 +101,9 @@ pub struct UpstreamOAuthProviderParams {
 
     /// The position of the provider in the UI
     pub ui_order: i32,
+
+    /// The behavior when receiving a backchannel logout notification
+    pub on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout,
 }
 
 /// Filter parameters for listing upstream OAuth 2.0 providers

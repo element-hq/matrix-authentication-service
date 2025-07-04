@@ -312,6 +312,7 @@ pub(crate) async fn handler(
     .await?;
 
     let mut jwks = None;
+    let mut id_token_claims = None;
 
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
@@ -336,6 +337,14 @@ pub(crate) async fn handler(
         )?;
 
         let (_headers, mut claims) = id_token.into_parts();
+
+        // Save a copy of the claims for later; the claims extract methods
+        // remove them from the map, and we want to store the original claims.
+        // We anyway need this to be a serde_json::Value
+        id_token_claims = Some(
+            serde_json::to_value(&claims)
+                .expect("serializing a HashMap<String, Value> into a Value should never fail"),
+        );
 
         // Access token hash must match.
         mas_jose::claims::AT_HASH
@@ -472,6 +481,7 @@ pub(crate) async fn handler(
             session,
             &link,
             token_response.id_token,
+            id_token_claims,
             params.extra_callback_parameters,
             userinfo,
         )

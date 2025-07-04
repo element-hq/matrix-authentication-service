@@ -25,6 +25,7 @@ upstream_oauth_providers:
     id_token_signed_response_alg: RS256
     issuer: ~
     jwks_uri_override: ~
+    on_backchannel_logout: do_nothing
     pkce_mode: auto
     response_mode: query
     scope: openid
