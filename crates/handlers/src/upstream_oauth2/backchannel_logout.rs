@@ -22,7 +22,7 @@ use mas_oidc_client::{
     requests::jose::{JwtVerificationData, verify_signed_jwt},
 };
 use mas_storage::{
-    BoxClock, BoxRepository, Pagination, upstream_oauth2::UpstreamOAuthSessionFilter,
+    BoxClock, BoxRepository, upstream_oauth2::UpstreamOAuthSessionFilter,
     user::BrowserSessionFilter,
 };
 use oauth2_types::errors::{ClientError, ClientErrorCode};
@@ -222,41 +222,27 @@ pub(crate) async fn post(
     claims::NONCE.assert_absent(&claims)?; // (7)
 
     // Find the corresponding upstream OAuth 2.0 sessions
-    let mut filter = UpstreamOAuthSessionFilter::new().for_provider(&provider);
+    let mut auth_session_filter = UpstreamOAuthSessionFilter::new().for_provider(&provider);
     if let Some(sub) = &sub {
-        filter = filter.with_sub_claim(sub);
+        auth_session_filter = auth_session_filter.with_sub_claim(sub);
     }
     if let Some(sid) = &sid {
-        filter = filter.with_sid_claim(sid);
+        auth_session_filter = auth_session_filter.with_sid_claim(sid);
     }
+    let count = repo
+        .upstream_oauth_session()
+        .count(auth_session_filter)
+        .await?;
 
-    // Load the corresponding authentication sessions, by batches of 100s. It's
-    // VERY unlikely that we'll ever have more that 100 sessions for a single
-    // logout notification, but we'll handle it anyway.
-    let mut cursor = Pagination::first(100);
-    let mut sessions = Vec::new();
-    loop {
-        let page = repo.upstream_oauth_session().list(filter, cursor).await?;
-
-        for session in page.edges {
-            cursor = cursor.after(session.id);
-            sessions.push(session);
-        }
-
-        if !page.has_next_page {
-            break;
-        }
-    }
-
-    tracing::info!(sub, sid, %provider.id, "Backchannel logout received, found {} corresponding authentication sessions", sessions.len());
+    tracing::info!(sub, sid, %provider.id, "Backchannel logout received, found {count} corresponding authentication sessions");
 
     match provider.on_backchannel_logout {
         UpstreamOAuthProviderOnBackchannelLogout::DoNothing => {
             tracing::warn!(%provider.id, "Provider configured to do nothing on backchannel logout");
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly => {
-            let filter =
-                BrowserSessionFilter::new().authenticated_by_upstream_sessions_only(&sessions);
+            let filter = BrowserSessionFilter::new()
+                .authenticated_by_upstream_sessions_only(auth_session_filter);
             let affected = repo.browser_session().finish_bulk(&clock, filter).await?;
             tracing::info!("Finished {affected} browser sessions");
         }

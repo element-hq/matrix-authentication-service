@@ -9,7 +9,7 @@ use mas_iana::jose::JsonWebSignatureAlg;
 use mas_storage::{
     Clock, Pagination, RepositoryAccess,
     clock::MockClock,
-    upstream_oauth2::UpstreamOAuthProviderParams,
+    upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
@@ -779,8 +779,11 @@ async fn test_user_session(pool: PgPool) {
         .await
         .unwrap();
 
-    let session_list = vec![upstream_oauth_session];
-    let filter = BrowserSessionFilter::new().authenticated_by_upstream_sessions_only(&session_list);
+    // This will match all authorization sessions, which matches exactly that one
+    // authorization session
+    let upstream_oauth_session_filter = UpstreamOAuthSessionFilter::new();
+    let filter = BrowserSessionFilter::new()
+        .authenticated_by_upstream_sessions_only(upstream_oauth_session_filter);
 
     // Now try to look it up
     let page = repo

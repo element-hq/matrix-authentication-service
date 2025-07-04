@@ -14,7 +14,10 @@ use mas_data_model::{
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{
+    Clock, Pagination, pagination::Page, repository_impl,
+    upstream_oauth2::UpstreamOAuthSessionFilter,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BrowserSessionState {
@@ -39,7 +42,7 @@ pub struct BrowserSessionFilter<'a> {
     state: Option<BrowserSessionState>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
-    authenticated_by_upstream_sessions: Option<&'a [UpstreamOAuthAuthorizationSession]>,
+    authenticated_by_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
 }
 
 impl<'a> BrowserSessionFilter<'a> {
@@ -117,17 +120,15 @@ impl<'a> BrowserSessionFilter<'a> {
     #[must_use]
     pub fn authenticated_by_upstream_sessions_only(
         mut self,
-        upstream_oauth_sessions: &'a [UpstreamOAuthAuthorizationSession],
+        filter: UpstreamOAuthSessionFilter<'a>,
     ) -> Self {
-        self.authenticated_by_upstream_sessions = Some(upstream_oauth_sessions);
+        self.authenticated_by_upstream_sessions = Some(filter);
         self
     }
 
     /// Get the upstream OAuth session filter
     #[must_use]
-    pub fn authenticated_by_upstream_sessions(
-        &self,
-    ) -> Option<&'a [UpstreamOAuthAuthorizationSession]> {
+    pub fn authenticated_by_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
         self.authenticated_by_upstream_sessions
     }
 }

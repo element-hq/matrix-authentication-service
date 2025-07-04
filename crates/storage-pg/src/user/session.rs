@@ -17,7 +17,7 @@ use mas_storage::{
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PgFunc, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -26,7 +26,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
-    iden::{UserSessionAuthentications, UserSessions, Users},
+    iden::{UpstreamOAuthAuthorizationSessions, UserSessionAuthentications, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -145,13 +145,17 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
             }))
-            .add_option(self.authenticated_by_upstream_sessions().map(|sessions| {
+            .add_option(self.authenticated_by_upstream_sessions().map(|filter| {
                 // For filtering by upstream sessions, we need to hop over the
                 // `user_session_authentications` table
-                let session_ids: Vec<_> = sessions
-                    .iter()
-                    .map(|session| Uuid::from(session.id))
-                    .collect();
+                let join_expr = Expr::col((
+                    UserSessionAuthentications::Table,
+                    UserSessionAuthentications::UpstreamOAuthAuthorizationSessionId,
+                ))
+                .eq(Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
+                )));
 
                 Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(
                     Query::select()
@@ -160,13 +164,8 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
                             UserSessionAuthentications::UserSessionId,
                         )))
                         .from(UserSessionAuthentications::Table)
-                        .and_where(
-                            Expr::col((
-                                UserSessionAuthentications::Table,
-                                UserSessionAuthentications::UpstreamOAuthAuthorizationSessionId,
-                            ))
-                            .eq(PgFunc::any(Expr::value(session_ids))),
-                        )
+                        .inner_join(UpstreamOAuthAuthorizationSessions::Table, join_expr)
+                        .apply_filter(filter)
                         .take(),
                 )
             }))
