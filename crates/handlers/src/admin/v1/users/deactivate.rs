@@ -145,8 +145,8 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
-            .bearer(&token);
+        let request =
+            Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id)).bearer(&token);
         let request = match erase {
             None => request.empty(),
             Some(erase) => request.json(serde_json::json!({
