@@ -5135,9 +5135,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-common"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b75da013b362664c3e161662902e5da3f77e990525681b59c6035bac27e87b4"
+checksum = "52e4969d85f1915b666dfe7939141b874aacd4191f8ad86689d16bfbfa08a770"
 dependencies = [
  "as_variant",
  "base64",
@@ -5172,9 +5172,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-macros"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1182e83ee5cd10121974f163337b16af68a93eedfc7cdbdbd52307ac7e1d743"
+checksum = "5ff13fbd6045a7278533390826de316d6116d8582ed828352661337b0c422e1c"
 dependencies = [
  "cfg-if",
  "proc-macro-crate",
