@@ -16,6 +16,7 @@
 
   /* Fallback for browsers that do not support 100svh */
   min-height: 100vh;
+  /* biome-ignore lint/suspicious/noDuplicateProperties: this isn't a real duplicate */
   min-height: 100svh;
 
   margin: 0 auto;

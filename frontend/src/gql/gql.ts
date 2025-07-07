@@ -44,7 +44,7 @@ type Documents = {
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": typeof types.SetDisplayNameDocument,
     "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": typeof types.AddEmailForm_UserFragmentDoc,
     "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": typeof types.AddEmailForm_SiteConfigFragmentDoc,
-    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": typeof types.AddEmailDocument,
+    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(\n      input: { email: $email, password: $password, language: $language }\n    ) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": typeof types.AddEmailDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": typeof types.UserEmailListDocument,
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": typeof types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": typeof types.UserEmailList_SiteConfigFragmentDoc,
@@ -101,7 +101,7 @@ const documents: Documents = {
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": types.SetDisplayNameDocument,
     "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": types.AddEmailForm_UserFragmentDoc,
     "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": types.AddEmailForm_SiteConfigFragmentDoc,
-    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": types.AddEmailDocument,
+    "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(\n      input: { email: $email, password: $password, language: $language }\n    ) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": types.AddEmailDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": types.UserEmailListDocument,
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
@@ -248,7 +248,7 @@ export function graphql(source: "\n  fragment AddEmailForm_siteConfig on SiteCon
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(input: {\n      email: $email,\n      password: $password,\n      language: $language\n    }) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').AddEmailDocument;
+export function graphql(source: "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(\n      input: { email: $email, password: $password, language: $language }\n    ) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n"): typeof import('./graphql').AddEmailDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

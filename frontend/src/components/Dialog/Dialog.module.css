@@ -95,6 +95,7 @@
 
   /* Cap the block size */
   max-block-size: calc(100vh - var(--cpd-space-4x));
+  /* biome-ignore lint/suspicious/noDuplicateProperties: this isn't a real duplicate */
   max-block-size: calc(100svh - var(--cpd-space-4x));
 
   /* Drawer comes in the Android style by default */

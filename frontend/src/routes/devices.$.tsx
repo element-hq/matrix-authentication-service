@@ -4,11 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+import { queryOptions } from "@tanstack/react-query";
 import { notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
-
-import { queryOptions } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
 import { graphql } from "../gql";

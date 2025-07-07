@@ -10,7 +10,7 @@ import { composeStory } from "@storybook/react-vite";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import Meta, { Unknown, Pc, Mobile, Tablet } from "./DeviceTypeIcon.stories";
+import Meta, { Mobile, Pc, Tablet, Unknown } from "./DeviceTypeIcon.stories";
 
 describe("<DeviceTypeIcon />", () => {
   it("renders unknown device type", () => {

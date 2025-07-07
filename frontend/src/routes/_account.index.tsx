@@ -188,73 +188,68 @@ function Index(): React.ReactElement {
   };
 
   return (
-    <>
-      <div className="flex flex-col gap-6">
-        {/* Only display this section if the user can add email addresses to their
+    <div className="flex flex-col gap-6">
+      {/* Only display this section if the user can add email addresses to their
           account *or* if they have any existing email addresses */}
-        {(siteConfig.emailChangeAllowed ||
-          viewerSession.user.emails.totalCount > 0) && (
-          <>
-            <Collapsible.Section
-              defaultOpen
-              title={t("frontend.account.contact_info")}
-            >
-              <UserEmailList
+      {(siteConfig.emailChangeAllowed ||
+        viewerSession.user.emails.totalCount > 0) && (
+        <>
+          <Collapsible.Section
+            defaultOpen
+            title={t("frontend.account.contact_info")}
+          >
+            <UserEmailList user={viewerSession.user} siteConfig={siteConfig} />
+
+            {siteConfig.emailChangeAllowed && (
+              <AddEmailForm
                 user={viewerSession.user}
                 siteConfig={siteConfig}
+                onAdd={onAdd}
               />
+            )}
+          </Collapsible.Section>
 
-              {siteConfig.emailChangeAllowed && (
-                <AddEmailForm
-                  user={viewerSession.user}
-                  siteConfig={siteConfig}
-                  onAdd={onAdd}
-                />
-              )}
-            </Collapsible.Section>
+          <Separator kind="section" />
+        </>
+      )}
 
-            <Separator kind="section" />
-          </>
-        )}
+      {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
+        <>
+          <Collapsible.Section
+            defaultOpen
+            title={t("frontend.account.account_password")}
+          >
+            <AccountManagementPasswordPreview siteConfig={siteConfig} />
+          </Collapsible.Section>
 
-        {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
-          <>
-            <Collapsible.Section
-              defaultOpen
-              title={t("frontend.account.account_password")}
-            >
-              <AccountManagementPasswordPreview siteConfig={siteConfig} />
-            </Collapsible.Section>
+          <Separator kind="section" />
+        </>
+      )}
 
-            <Separator kind="section" />
-          </>
-        )}
+      <Collapsible.Section title={t("common.e2ee")}>
+        <Text className="text-secondary" size="md">
+          {t("frontend.reset_cross_signing.description")}
+        </Text>
+        <ButtonLink to="/reset-cross-signing" kind="secondary" destructive>
+          {t("frontend.reset_cross_signing.start_reset")}
+        </ButtonLink>
+      </Collapsible.Section>
 
-        <Collapsible.Section title={t("common.e2ee")}>
-          <Text className="text-secondary" size="md">
-            {t("frontend.reset_cross_signing.description")}
-          </Text>
-          <ButtonLink to="/reset-cross-signing" kind="secondary" destructive>
-            {t("frontend.reset_cross_signing.start_reset")}
-          </ButtonLink>
-        </Collapsible.Section>
+      <Separator kind="section" />
 
-        <Separator kind="section" />
+      <SignOutButton id={viewerSession.id} />
 
-        <SignOutButton id={viewerSession.id} />
+      {siteConfig.accountDeactivationAllowed && (
+        <>
+          <Separator />
+          <AccountDeleteButton
+            user={viewerSession.user}
+            siteConfig={siteConfig}
+          />
+        </>
+      )}
 
-        {siteConfig.accountDeactivationAllowed && (
-          <>
-            <Separator />
-            <AccountDeleteButton
-              user={viewerSession.user}
-              siteConfig={siteConfig}
-            />
-          </>
-        )}
-
-        <Separator />
-      </div>
-    </>
+      <Separator />
+    </div>
   );
 }

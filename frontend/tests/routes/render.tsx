@@ -4,8 +4,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
-import { createRouter } from "@tanstack/react-router";
+import {
+  createMemoryHistory,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
 import { type RenderResult, render } from "@testing-library/react";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";
