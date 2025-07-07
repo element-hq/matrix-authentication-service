@@ -13,7 +13,7 @@ use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Clock, Pagination, pagination::Page, repository_impl, user::BrowserSessionFilter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OAuth2SessionState {
@@ -49,6 +49,7 @@ pub struct OAuth2SessionFilter<'a> {
     user: Option<&'a User>,
     any_user: Option<bool>,
     browser_session: Option<&'a BrowserSession>,
+    browser_session_filter: Option<BrowserSessionFilter<'a>>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
     client_kind: Option<ClientKind>,
@@ -109,12 +110,30 @@ impl<'a> OAuth2SessionFilter<'a> {
         self
     }
 
+    /// List sessions started by a set of browser sessions
+    #[must_use]
+    pub fn for_browser_sessions(
+        mut self,
+        browser_session_filter: BrowserSessionFilter<'a>,
+    ) -> Self {
+        self.browser_session_filter = Some(browser_session_filter);
+        self
+    }
+
     /// Get the browser session filter
     ///
     /// Returns [`None`] if no browser session filter was set
     #[must_use]
     pub fn browser_session(&self) -> Option<&'a BrowserSession> {
         self.browser_session
+    }
+
+    /// Get the browser sessions filter
+    ///
+    /// Returns [`None`] if no browser session filter was set
+    #[must_use]
+    pub fn browser_session_filter(&self) -> Option<BrowserSessionFilter<'a>> {
+        self.browser_session_filter
     }
 
     /// List sessions for a specific client

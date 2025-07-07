@@ -182,6 +182,22 @@ where
             Err(e) => Err(e),
         }
     }
+
+    /// Assert that the claim is absent.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the claim is present.
+    pub fn assert_absent(
+        &self,
+        claims: &HashMap<String, serde_json::Value>,
+    ) -> Result<(), ClaimError> {
+        if claims.contains_key(self.claim) {
+            Err(ClaimError::InvalidClaim(self.claim))
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -525,7 +541,15 @@ mod oidc_core {
     pub const UPDATED_AT: Claim<Timestamp> = Claim::new("updated_at");
 }
 
-pub use self::{oidc_core::*, rfc7519::*};
+/// Claims defined in OpenID.FrontChannel
+/// <https://openid.net/specs/openid-connect-frontchannel-1_0.html#ClaimsContents>
+mod oidc_frontchannel {
+    use super::Claim;
+
+    pub const SID: Claim<String> = Claim::new("sid");
+}
+
+pub use self::{oidc_core::*, oidc_frontchannel::*, rfc7519::*};
 
 #[cfg(test)]
 mod tests {

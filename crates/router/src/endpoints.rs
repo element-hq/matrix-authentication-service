@@ -738,6 +738,29 @@ impl Route for UpstreamOAuth2Link {
     }
 }
 
+/// `POST /upstream/backchannel-logout/{id}`
+pub struct UpstreamOAuth2BackchannelLogout {
+    id: Ulid,
+}
+
+impl UpstreamOAuth2BackchannelLogout {
+    #[must_use]
+    pub const fn new(id: Ulid) -> Self {
+        Self { id }
+    }
+}
+
+impl Route for UpstreamOAuth2BackchannelLogout {
+    type Query = ();
+    fn route() -> &'static str {
+        "/upstream/backchannel-logout/{provider_id}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/upstream/backchannel-logout/{}", self.id).into()
+    }
+}
+
 /// `GET|POST /link`
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct DeviceCodeLink {

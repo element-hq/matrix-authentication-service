@@ -16,6 +16,7 @@ use thiserror::Error;
 use url::Url;
 
 pub(crate) mod authorize;
+pub(crate) mod backchannel_logout;
 pub(crate) mod cache;
 pub(crate) mod callback;
 mod cookie;
