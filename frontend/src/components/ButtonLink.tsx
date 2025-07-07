@@ -7,7 +7,7 @@
 import { createLink } from "@tanstack/react-router";
 import { Button } from "@vector-im/compound-web";
 import cx from "classnames";
-import { type PropsWithChildren, forwardRef } from "react";
+import { forwardRef, type PropsWithChildren } from "react";
 import styles from "./ButtonLink.module.css";
 
 type Props = {

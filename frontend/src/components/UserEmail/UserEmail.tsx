@@ -105,7 +105,7 @@ const UserEmail: React.FC<{
 
   const onRemoveClick = useCallback(
     async (_e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
-      let password = undefined;
+      let password: string | undefined;
       if (shouldPromptPassword) {
         password = await promptPassword();
       }

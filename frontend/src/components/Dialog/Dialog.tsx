@@ -102,4 +102,4 @@ export const Title: React.FC<PropsWithChildren> = ({ children }) => (
   <DialogTitle className={styles.title}>{children}</DialogTitle>
 );
 
-export { Description, Close } from "@radix-ui/react-dialog";
+export { Close, Description } from "@radix-ui/react-dialog";

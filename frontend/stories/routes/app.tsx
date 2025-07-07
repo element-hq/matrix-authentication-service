@@ -5,9 +5,9 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  RouterProvider,
   createHashHistory,
   createRouter,
+  RouterProvider,
 } from "@tanstack/react-router";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";

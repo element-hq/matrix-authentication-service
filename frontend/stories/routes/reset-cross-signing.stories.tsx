@@ -4,7 +4,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay } from "msw";
+import { delay, HttpResponse } from "msw";
 import {
   mockAllowCrossSigningResetMutation,
   mockCurrentViewerQuery,
