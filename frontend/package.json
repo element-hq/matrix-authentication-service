@@ -39,7 +39,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.6",
+    "@biomejs/biome": "^2.1.0",
     "@browser-logos/chrome": "^2.0.0",
     "@browser-logos/firefox": "^3.0.10",
     "@browser-logos/safari": "^2.1.0",
