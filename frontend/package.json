@@ -34,7 +34,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^15.6.0",
-    "swagger-ui-dist": "^5.24.2",
+    "swagger-ui-dist": "^5.26.2",
     "valibot": "^1.1.0",
     "vaul": "^1.1.2"
   },
