@@ -268,6 +268,10 @@ async fn test_user_repo_find_by_username(pool: PgPool) {
 async fn test_user_email_repo(pool: PgPool) {
     const USERNAME: &str = "john";
     const EMAIL: &str = "john@example.com";
+    // This is what is stored in the database, making sure that:
+    //  1. we don't normalize the email address when storing it
+    //  2. looking it up is case-incensitive
+    const UPPERCASE_EMAIL: &str = "JOHN@EXAMPLE.COM";
 
     let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
     let mut rng = ChaChaRng::seed_from_u64(42);
@@ -295,12 +299,12 @@ async fn test_user_email_repo(pool: PgPool) {
 
     let user_email = repo
         .user_email()
-        .add(&mut rng, &clock, &user, EMAIL.to_owned())
+        .add(&mut rng, &clock, &user, UPPERCASE_EMAIL.to_owned())
         .await
         .unwrap();
 
     assert_eq!(user_email.user_id, user.id);
-    assert_eq!(user_email.email, EMAIL);
+    assert_eq!(user_email.email, UPPERCASE_EMAIL);
 
     // Check the counts
     assert_eq!(repo.user_email().count(all).await.unwrap(), 1);
@@ -321,7 +325,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .expect("user email was not found");
 
     assert_eq!(user_email.user_id, user.id);
-    assert_eq!(user_email.email, EMAIL);
+    assert_eq!(user_email.email, UPPERCASE_EMAIL);
 
     // Listing the user emails should work
     let emails = repo
