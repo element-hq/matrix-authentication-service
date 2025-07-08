@@ -117,7 +117,7 @@ At this point, the releaser should check the changelog and ensure the "Set as pr
 [`translations-download` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/translations-download.yaml
 [`release-branch` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/release-branch.yaml
 [`release-bump` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/release-bump.yaml
-[`build` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/build
+[`build` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/build.yaml
 [translation download PR]: https://github.com/element-hq/matrix-authentication-service/pulls?q=is%3Apr+label%3AA-I18n
 [CI to churn]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/build.yaml?query=event%3Apush+actor%3Amatrixbot
 [draft release to appear]: https://github.com/element-hq/matrix-authentication-service/releases
