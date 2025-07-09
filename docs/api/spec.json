@@ -1409,6 +1409,76 @@
         }
       }
     },
+    "/api/admin/v1/users/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Reactivate a user",
+        "description": "Calling this endpoint will reactivate a deactivated user, both locally and on the Matrix homeserver.",
+        "operationId": "reactivateUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User was reactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_User"
+                },
+                "example": {
+                  "data": {
+                    "type": "user",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "username": "charlie",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "locked_at": "1970-01-01T00:00:00Z",
+                      "deactivated_at": null,
+                      "admin": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3/reactivate"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/users/{id}/lock": {
       "post": {
         "tags": [

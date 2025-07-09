@@ -1,5 +1,4 @@
-// Copyright 2024, 2025 New Vector Ltd.
-// Copyright 2024 The Matrix.org Foundation C.I.C.
+// Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -10,7 +9,7 @@ use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::{
     BoxRng,
-    queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
+    queue::{QueueJobRepositoryExt as _, ReactivateUserJob},
 };
 use tracing::info;
 use ulid::Ulid;
@@ -51,17 +50,16 @@ impl IntoResponse for RouteError {
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
-        .id("deactivateUser")
-        .summary("Deactivate a user")
-        .description("Calling this endpoint will lock and deactivate the user, preventing them from doing any action.
-This invalidates any existing session, and will ask the homeserver to make them leave all rooms.")
+        .id("reactivateUser")
+        .summary("Reactivate a user")
+        .description("Calling this endpoint will reactivate a deactivated user, both locally and on the Matrix homeserver.")
         .tag("user")
         .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
             // In the samples, the third user is the one locked
-            let [_alice, _bob, charlie, ..] = User::samples();
-            let id = charlie.id();
-            let response = SingleResponse::new(charlie, format!("/api/admin/v1/users/{id}/deactivate"));
-            t.description("User was deactivated").example(response)
+            let [sample, ..] = User::samples();
+            let id = sample.id();
+            let response = SingleResponse::new(sample, format!("/api/admin/v1/users/{id}/reactivate"));
+            t.description("User was reactivated").example(response)
         })
         .response_with::<404, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotFound(Ulid::nil()));
@@ -69,7 +67,7 @@ This invalidates any existing session, and will ask the homeserver to make them 
         })
 }
 
-#[tracing::instrument(name = "handler.admin.v1.users.deactivate", skip_all)]
+#[tracing::instrument(name = "handler.admin.v1.users.reactivate", skip_all)]
 pub async fn handler(
     CallContext {
         mut repo, clock, ..
@@ -78,102 +76,36 @@ pub async fn handler(
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
-    let mut user = repo
+    let user = repo
         .user()
         .lookup(id)
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    if user.locked_at.is_none() {
-        user = repo.user().lock(&clock, user).await?;
-    }
-
-    info!(%user.id, "Scheduling deactivation of user");
+    info!(%user.id, "Scheduling reactivation of user");
     repo.queue_job()
-        .schedule_job(&mut rng, &clock, DeactivateUserJob::new(&user, true))
+        .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user, false))
         .await?;
 
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
         User::from(user),
-        format!("/api/admin/v1/users/{id}/deactivate"),
+        format!("/api/admin/v1/users/{id}/reactivate"),
     )))
 }
 
 #[cfg(test)]
 mod tests {
-    use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use insta::assert_json_snapshot;
+    use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
-    use sqlx::PgPool;
+    use sqlx::{PgPool, types::Json};
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_deactivate_user(pool: PgPool) {
-        setup();
-        let mut state = TestState::from_pool(pool.clone()).await.unwrap();
-        let token = state.token_with_scope("urn:mas:admin").await;
-
-        let mut repo = state.repository().await.unwrap();
-        let user = repo
-            .user()
-            .add(&mut state.rng(), &state.clock, "alice".to_owned())
-            .await
-            .unwrap();
-        repo.save().await.unwrap();
-
-        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
-            .bearer(&token)
-            .empty();
-        let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
-        let body: serde_json::Value = response.json();
-
-        // The locked_at timestamp should be the same as the current time
-        assert_eq!(
-            body["data"]["attributes"]["locked_at"],
-            serde_json::json!(state.clock.now())
-        );
-        // TODO: have test coverage on deactivated_at timestamp
-
-        // Make sure to run the jobs in the queue
-        state.run_jobs_in_queue().await;
-
-        let request = Request::get(format!("/api/admin/v1/users/{}", user.id))
-            .bearer(&token)
-            .empty();
-        let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
-        let body: serde_json::Value = response.json();
-
-        assert_json_snapshot!(body, @r#"
-        {
-          "data": {
-            "type": "user",
-            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
-            "attributes": {
-              "username": "alice",
-              "created_at": "2022-01-16T14:40:00Z",
-              "locked_at": "2022-01-16T14:40:00Z",
-              "deactivated_at": "2022-01-16T14:40:00Z",
-              "admin": false
-            },
-            "links": {
-              "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
-            }
-          },
-          "links": {
-            "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
-          }
-        }
-        "#);
-    }
-
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_deactivate_locked_user(pool: PgPool) {
+    async fn test_reactivate_deactivated_user(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool.clone()).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -185,69 +117,99 @@ mod tests {
             .await
             .unwrap();
         let user = repo.user().lock(&state.clock, user).await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
         repo.save().await.unwrap();
 
-        // Move the clock forward to make sure the locked_at timestamp doesn't change
-        state.clock.advance(Duration::try_minutes(1).unwrap());
+        // Provision and immediately deactivate the user on the homeserver,
+        // because this endpoint will try to reactivate it
+        let mxid = state.homeserver_connection.mxid(&user.username);
+        state
+            .homeserver_connection
+            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .await
+            .unwrap();
+        state
+            .homeserver_connection
+            .delete_user(&mxid, true)
+            .await
+            .unwrap();
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
+        // The user should be deactivated on the homeserver
+        let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
+        assert!(mx_user.deactivated);
+
+        let request = Request::post(format!("/api/admin/v1/users/{}/reactivate", user.id))
             .bearer(&token)
             .empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        // The locked_at timestamp should be different from the current time
-        assert_ne!(
+        // The user should remain locked after being reactivated
+        assert_eq!(
             body["data"]["attributes"]["locked_at"],
             serde_json::json!(state.clock.now())
         );
-        assert_ne!(
+        // TODO: have test coverage on deactivated_at timestamp
+
+        // It should have scheduled a reactivation job for the user
+        // XXX: we don't have a good way to look for the reactivation job
+        let job: Json<serde_json::Value> = sqlx::query_scalar(
+            "SELECT payload FROM queue_jobs WHERE queue_name = 'reactivate-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Reactivation job to be scheduled");
+        assert_eq!(job["user_id"], serde_json::json!(user.id));
+        assert_eq!(job["unlock"], serde_json::Value::Bool(false));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_reactivate_active_user(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool.clone()).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::post(format!("/api/admin/v1/users/{}/reactivate", user.id))
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+
+        assert_eq!(
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
         );
         // TODO: have test coverage on deactivated_at timestamp
 
-        // Make sure to run the jobs in the queue
-        state.run_jobs_in_queue().await;
-
-        let request = Request::get(format!("/api/admin/v1/users/{}", user.id))
-            .bearer(&token)
-            .empty();
-        let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
-        let body: serde_json::Value = response.json();
-
-        assert_json_snapshot!(body, @r#"
-        {
-          "data": {
-            "type": "user",
-            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
-            "attributes": {
-              "username": "alice",
-              "created_at": "2022-01-16T14:40:00Z",
-              "locked_at": "2022-01-16T14:40:00Z",
-              "deactivated_at": "2022-01-16T14:41:00Z",
-              "admin": false
-            },
-            "links": {
-              "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
-            }
-          },
-          "links": {
-            "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
-          }
-        }
-        "#);
+        // It should have scheduled a reactivation job for the user
+        // XXX: we don't have a good way to look for the reactivation job
+        let job: Json<serde_json::Value> = sqlx::query_scalar(
+            "SELECT payload FROM queue_jobs WHERE queue_name = 'reactivate-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Reactivation job to be scheduled");
+        assert_eq!(job["user_id"], serde_json::json!(user.id));
+        assert_eq!(job["unlock"], serde_json::Value::Bool(false));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_deactivate_unknown_user(pool: PgPool) {
+    async fn test_reactivate_unknown_user(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
 
-        let request = Request::post("/api/admin/v1/users/01040G2081040G2081040G2081/deactivate")
+        let request = Request::post("/api/admin/v1/users/01040G2081040G2081040G2081/reactivate")
             .bearer(&token)
             .empty();
         let response = state.request(request).await;

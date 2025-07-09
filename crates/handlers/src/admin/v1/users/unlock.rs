@@ -141,7 +141,7 @@ mod tests {
 
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
-            serde_json::json!(null)
+            serde_json::Value::Null
         );
     }
 
@@ -158,6 +158,7 @@ mod tests {
             .await
             .unwrap();
         let user = repo.user().lock(&state.clock, user).await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
         repo.save().await.unwrap();
 
         // Provision the user on the homeserver
@@ -187,8 +188,10 @@ mod tests {
 
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
-            serde_json::json!(null)
+            serde_json::Value::Null
         );
+        // TODO: have test coverage on deactivated_at timestamp
+
         // The user should be reactivated on the homeserver
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
         assert!(!mx_user.deactivated);

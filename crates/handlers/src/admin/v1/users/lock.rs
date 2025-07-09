@@ -157,6 +157,10 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::json!(state.clock.now())
         );
+        assert_ne!(
+            body["data"]["attributes"]["locked_at"],
+            serde_json::Value::Null
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
