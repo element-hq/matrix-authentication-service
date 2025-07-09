@@ -214,7 +214,7 @@ impl QueueWorker {
         skip_all,
         fields(worker.id)
     )]
-    pub async fn new(
+    pub(crate) async fn new(
         state: State,
         cancellation_token: CancellationToken,
     ) -> Result<Self, QueueRunnerError> {
@@ -289,7 +289,7 @@ impl QueueWorker {
         })
     }
 
-    pub fn register_handler<T: RunnableJob + InsertableJob>(&mut self) -> &mut Self {
+    pub(crate) fn register_handler<T: RunnableJob + InsertableJob>(&mut self) -> &mut Self {
         // There is a potential panic here, which is fine as it's going to be caught
         // within the job task
         let factory = |payload: JobPayload| {
@@ -302,7 +302,7 @@ impl QueueWorker {
         self
     }
 
-    pub fn add_schedule<T: InsertableJob>(
+    pub(crate) fn add_schedule<T: InsertableJob>(
         &mut self,
         schedule_name: &'static str,
         expression: Schedule,
@@ -320,7 +320,7 @@ impl QueueWorker {
         self
     }
 
-    pub async fn run(mut self) {
+    pub(crate) async fn run(mut self) {
         if let Err(e) = self.run_inner().await {
             tracing::error!(
                 error = &e as &dyn std::error::Error,
@@ -344,7 +344,7 @@ impl QueueWorker {
     }
 
     #[tracing::instrument(name = "worker.setup_schedules", skip_all)]
-    pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
+    pub(crate) async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
         let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
 
         // Start a transaction on the existing PgListener connection

@@ -10,13 +10,15 @@ use mas_data_model::SiteConfig;
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxRepository, Clock, RepositoryError, RepositoryFactory, SystemClock};
+use mas_storage::{BoxRepository, Clock, RepositoryError, RepositoryFactory};
 use mas_storage_pg::PgRepositoryFactory;
 use new_queue::QueueRunnerError;
 use opentelemetry::metrics::Meter;
 use rand::SeedableRng;
 use sqlx::{Pool, Postgres};
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
+
+pub use crate::new_queue::QueueWorker;
 
 mod database;
 mod email;
@@ -99,29 +101,31 @@ impl State {
     }
 }
 
-/// Initialise the workers.
+/// Initialise the worker, without running it.
+///
+/// This is mostly useful for tests.
 ///
 /// # Errors
 ///
 /// This function can fail if the database connection fails.
 pub async fn init(
     repository_factory: PgRepositoryFactory,
+    clock: impl Clock + 'static,
     mailer: &Mailer,
     homeserver: impl HomeserverConnection + 'static,
     url_builder: UrlBuilder,
     site_config: &SiteConfig,
     cancellation_token: CancellationToken,
-    task_tracker: &TaskTracker,
-) -> Result<(), QueueRunnerError> {
+) -> Result<QueueWorker, QueueRunnerError> {
     let state = State::new(
         repository_factory,
-        SystemClock::default(),
+        clock,
         mailer.clone(),
         homeserver,
         url_builder,
         site_config.clone(),
     );
-    let mut worker = self::new_queue::QueueWorker::new(state, cancellation_token).await?;
+    let mut worker = QueueWorker::new(state, cancellation_token).await?;
 
     worker
         .register_handler::<mas_storage::queue::CleanupExpiredTokensJob>()
@@ -156,6 +160,35 @@ pub async fn init(
             "0 0 2 * * *".parse()?,
             mas_storage::queue::PruneStalePolicyDataJob,
         );
+
+    Ok(worker)
+}
+
+/// Initialise the worker and run it.
+///
+/// # Errors
+///
+/// This function can fail if the database connection fails.
+pub async fn init_and_run(
+    repository_factory: PgRepositoryFactory,
+    clock: impl Clock + 'static,
+    mailer: &Mailer,
+    homeserver: impl HomeserverConnection + 'static,
+    url_builder: UrlBuilder,
+    site_config: &SiteConfig,
+    cancellation_token: CancellationToken,
+    task_tracker: &TaskTracker,
+) -> Result<(), QueueRunnerError> {
+    let worker = init(
+        repository_factory,
+        clock,
+        mailer,
+        homeserver,
+        url_builder,
+        site_config,
+        cancellation_token,
+    )
+    .await?;
 
     task_tracker.spawn(worker.run());
 
