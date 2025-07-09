@@ -5146,9 +5146,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-common"
-version = "0.15.3"
+version = "0.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52e4969d85f1915b666dfe7939141b874aacd4191f8ad86689d16bfbfa08a770"
+checksum = "387e1898e868d32ff7b205e7db327361d5dcf635c00a8ae5865068607595a9cf"
 dependencies = [
  "as_variant",
  "base64",
