@@ -24,7 +24,7 @@
     "@radix-ui/react-dialog": "^1.1.14",
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-router": "^1.125.6",
-    "@vector-im/compound-design-tokens": "4.0.4",
+    "@vector-im/compound-design-tokens": "4.0.5",
     "@vector-im/compound-web": "^8.1.2",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
