@@ -46,6 +46,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_fill_id_token_claims
     BEFORE INSERT OR UPDATE ON upstream_oauth_authorization_sessions
     FOR EACH ROW
+    WHEN (NEW.id_token_claims IS NULL AND NEW.id_token IS NOT NULL AND NEW.id_token <> '')
     EXECUTE FUNCTION fill_id_token_claims();
 
 -- This backfills the id_token_claims column in the upstream_oauth_authorization_sessions table
