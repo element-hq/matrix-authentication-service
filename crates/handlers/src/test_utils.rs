@@ -115,7 +115,7 @@ pub(crate) struct TestState {
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
     pub task_tracker: TaskTracker,
-    queue_worker: Arc<Mutex<QueueWorker>>,
+    queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -257,7 +257,7 @@ impl TestState {
         .await
         .unwrap();
 
-        let queue_worker = Arc::new(Mutex::new(queue_worker));
+        let queue_worker = Arc::new(tokio::sync::Mutex::new(queue_worker));
 
         Ok(Self {
             repository_factory: PgRepositoryFactory::new(pool),
@@ -287,7 +287,7 @@ impl TestState {
     ///
     /// Panics if it fails to run the jobs (but not on job failures!)
     pub async fn run_jobs_in_queue(&self) {
-        let mut queue = self.queue_worker.lock().unwrap();
+        let mut queue = self.queue_worker.lock().await;
         queue.process_all_jobs_in_tests().await.unwrap();
     }
 
