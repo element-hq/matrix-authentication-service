@@ -9,7 +9,8 @@
 --
 -- We will be able to remove this trigger in a future version of the app.
 --
--- We do this before the backfilling starts, to make sure we don't miss anything
+-- We backfill in a second migration after this one to make sure we don't miss
+-- any rows, and don't lock the table for too long.
 CREATE OR REPLACE FUNCTION fill_id_token_claims()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -48,21 +49,3 @@ CREATE TRIGGER trg_fill_id_token_claims
     FOR EACH ROW
     WHEN (NEW.id_token_claims IS NULL AND NEW.id_token IS NOT NULL AND NEW.id_token <> '')
     EXECUTE FUNCTION fill_id_token_claims();
-
--- This backfills the id_token_claims column in the upstream_oauth_authorization_sessions table
--- by decoding the id_token column and storing the decoded claims in the id_token_claims column.
-UPDATE upstream_oauth_authorization_sessions
-SET id_token_claims = CASE
-    WHEN id_token IS NULL OR id_token = '' THEN NULL
-    WHEN split_part(id_token, '.', 2) = '' THEN NULL
-    ELSE
-        (convert_from(
-            decode(
-                replace(replace(split_part(id_token, '.', 2), '-', '+'), '_', '/') ||
-                repeat('=', (4 - length(split_part(id_token, '.', 2)) % 4) % 4),
-                'base64'
-            ),
-            'UTF8'
-        ))::JSONB
-END
-WHERE id_token IS NOT NULL AND id_token_claims IS NULL;
