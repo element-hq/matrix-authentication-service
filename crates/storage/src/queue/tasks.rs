@@ -257,10 +257,11 @@ impl InsertableJob for DeactivateUserJob {
     const QUEUE_NAME: &'static str = "deactivate-user";
 }
 
-/// A job to reactivate a user
+/// A job to reactivate and optionally unlock a user
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReactivateUserJob {
     user_id: Ulid,
+    unlock: bool,
 }
 
 impl ReactivateUserJob {
@@ -269,15 +270,25 @@ impl ReactivateUserJob {
     /// # Parameters
     ///
     /// * `user` - The user to reactivate
+    /// * `unlock` - Whether the user should be unlocked on reactivation
     #[must_use]
-    pub fn new(user: &User) -> Self {
-        Self { user_id: user.id }
+    pub fn new(user: &User, unlock: bool) -> Self {
+        Self {
+            user_id: user.id,
+            unlock,
+        }
     }
 
     /// The ID of the user to reactivate
     #[must_use]
     pub fn user_id(&self) -> Ulid {
         self.user_id
+    }
+
+    /// Whether the user should be unlocked on reactivation
+    #[must_use]
+    pub fn unlock(&self) -> bool {
+        self.unlock
     }
 }
 
