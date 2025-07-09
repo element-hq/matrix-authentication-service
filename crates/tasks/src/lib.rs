@@ -169,6 +169,7 @@ pub async fn init(
 /// # Errors
 ///
 /// This function can fail if the database connection fails.
+#[expect(clippy::too_many_arguments, reason = "this is fine")]
 pub async fn init_and_run(
     repository_factory: PgRepositoryFactory,
     clock: impl Clock + 'static,
