@@ -713,6 +713,73 @@ impl QueueWorker {
 
         Ok(())
     }
+
+    /// Process all the pending jobs in the queue.
+    /// This should only be called in tests!
+    ///
+    /// # Errors
+    ///
+    /// This function can fail if the database connection fails.
+    pub async fn process_all_jobs_in_tests(&mut self) -> Result<(), QueueRunnerError> {
+        // I swear, I'm the leader!
+        self.am_i_leader = true;
+
+        // First, perform the leader duties. This will make sure that we schedule
+        // recurring jobs.
+        self.perform_leader_duties().await?;
+
+        let clock = self.state.clock();
+        let mut rng = self.state.rng();
+
+        // Grab the connection from the PgListener
+        let txn = self
+            .listener
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+        let mut repo = PgRepository::from_conn(txn);
+
+        // Spawn all the jobs in the database
+        let queues = self.tracker.queues();
+        let jobs = repo
+            .queue_job()
+            // I really hope that we don't spawn more than 10k jobs in tests
+            .reserve(clock, &self.registration, &queues, 10_000)
+            .await?;
+
+        for Job {
+            id,
+            queue_name,
+            payload,
+            metadata,
+            attempt,
+        } in jobs
+        {
+            let cancellation_token = self.cancellation_token.child_token();
+            let start = Instant::now();
+            let context = JobContext {
+                id,
+                metadata,
+                queue_name,
+                attempt,
+                start,
+                cancellation_token,
+            };
+
+            self.tracker.spawn_job(self.state.clone(), context, payload);
+        }
+
+        self.tracker
+            .process_jobs(&mut rng, clock, &mut repo, true)
+            .await?;
+
+        repo.into_inner()
+            .commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
+
+        Ok(())
+    }
 }
 
 /// Tracks running jobs

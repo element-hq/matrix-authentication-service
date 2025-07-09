@@ -283,6 +283,14 @@ impl TestState {
         })
     }
 
+    /// Run all the available jobs in the queue.
+    ///
+    /// Panics if it fails to run the jobs (but not on job failures!)
+    pub async fn run_jobs_in_queue(&self) {
+        let mut queue = self.queue_worker.lock().unwrap();
+        queue.process_all_jobs_in_tests().await.unwrap();
+    }
+
     /// Reset the test utils to a fresh state, with the same configuration.
     pub async fn reset(self) -> Self {
         let site_config = self.site_config.clone();
