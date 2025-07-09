@@ -246,7 +246,7 @@ impl QueueWorker {
             .map_err(QueueRunnerError::StartTransaction)?;
         let mut repo = PgRepository::from_conn(txn);
 
-        let registration = repo.queue_worker().register(&mut rng, &clock).await?;
+        let registration = repo.queue_worker().register(&mut rng, clock).await?;
         tracing::Span::current().record("worker.id", tracing::field::display(registration.id));
         repo.into_inner()
             .commit()

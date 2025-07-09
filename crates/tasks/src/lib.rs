@@ -10,7 +10,7 @@ use mas_data_model::SiteConfig;
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, RepositoryError, RepositoryFactory, SystemClock};
+use mas_storage::{BoxRepository, Clock, RepositoryError, RepositoryFactory, SystemClock};
 use mas_storage_pg::PgRepositoryFactory;
 use new_queue::QueueRunnerError;
 use opentelemetry::metrics::Meter;
@@ -39,7 +39,7 @@ static METER: LazyLock<Meter> = LazyLock::new(|| {
 struct State {
     repository_factory: PgRepositoryFactory,
     mailer: Mailer,
-    clock: SystemClock,
+    clock: Arc<dyn Clock>,
     homeserver: Arc<dyn HomeserverConnection>,
     url_builder: UrlBuilder,
     site_config: SiteConfig,
@@ -48,7 +48,7 @@ struct State {
 impl State {
     pub fn new(
         repository_factory: PgRepositoryFactory,
-        clock: SystemClock,
+        clock: impl Clock + 'static,
         mailer: Mailer,
         homeserver: impl HomeserverConnection + 'static,
         url_builder: UrlBuilder,
@@ -57,7 +57,7 @@ impl State {
         Self {
             repository_factory,
             mailer,
-            clock,
+            clock: Arc::new(clock),
             homeserver: Arc::new(homeserver),
             url_builder,
             site_config,
@@ -68,8 +68,8 @@ impl State {
         self.repository_factory.pool()
     }
 
-    pub fn clock(&self) -> BoxClock {
-        Box::new(self.clock.clone())
+    pub fn clock(&self) -> &dyn Clock {
+        &self.clock
     }
 
     pub fn mailer(&self) -> &Mailer {

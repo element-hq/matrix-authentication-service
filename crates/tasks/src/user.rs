@@ -44,14 +44,14 @@ impl RunnableJob for DeactivateUserJob {
         // Let's first lock & deactivate the user
         let user = repo
             .user()
-            .lock(&clock, user)
+            .lock(clock, user)
             .await
             .context("Failed to lock user")
             .map_err(JobError::retry)?;
 
         let user = repo
             .user()
-            .deactivate(&clock, user)
+            .deactivate(clock, user)
             .await
             .context("Failed to deactivate user")
             .map_err(JobError::retry)?;
@@ -60,7 +60,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .browser_session()
             .finish_bulk(
-                &clock,
+                clock,
                 BrowserSessionFilter::new().for_user(&user).active_only(),
             )
             .await
@@ -70,7 +70,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .oauth2_session()
             .finish_bulk(
-                &clock,
+                clock,
                 OAuth2SessionFilter::new().for_user(&user).active_only(),
             )
             .await
@@ -80,7 +80,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .compat_session()
             .finish_bulk(
-                &clock,
+                clock,
                 CompatSessionFilter::new().for_user(&user).active_only(),
             )
             .await
