@@ -1440,20 +1440,20 @@
                 "example": {
                   "data": {
                     "type": "user",
-                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "id": "01040G2081040G2081040G2081",
                     "attributes": {
-                      "username": "charlie",
+                      "username": "alice",
                       "created_at": "1970-01-01T00:00:00Z",
-                      "locked_at": "1970-01-01T00:00:00Z",
+                      "locked_at": null,
                       "deactivated_at": null,
                       "admin": false
                     },
                     "links": {
-                      "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
+                      "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
                     }
                   },
                   "links": {
-                    "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3/reactivate"
+                    "self": "/api/admin/v1/users/01040G2081040G2081040G2081/reactivate"
                   }
                 }
               }
