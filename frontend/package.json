@@ -25,7 +25,7 @@
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-router": "^1.125.6",
     "@vector-im/compound-design-tokens": "5.0.1",
-    "@vector-im/compound-web": "^8.1.2",
+    "@vector-im/compound-web": "^8.2.0",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
