@@ -65,7 +65,16 @@ impl Default for Request {
     }
 }
 
-pub fn doc(operation: TransformOperation) -> TransformOperation {
+pub fn doc(mut operation: TransformOperation) -> TransformOperation {
+    operation
+        .inner_mut()
+        .request_body
+        .as_mut()
+        .unwrap()
+        .as_item_mut()
+        .unwrap()
+        .required = false;
+
     operation
         .id("deactivateUser")
         .summary("Deactivate a user")

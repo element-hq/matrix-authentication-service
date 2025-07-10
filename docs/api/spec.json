@@ -1366,8 +1366,7 @@
                 "$ref": "#/components/schemas/DeactivateUserRequest"
               }
             }
-          },
-          "required": false
+          }
         },
         "responses": {
           "200": {
