@@ -15,7 +15,7 @@ use std::sync::{Arc, atomic::AtomicI64};
 use chrono::{DateTime, TimeZone, Utc};
 
 /// Represents a clock which can give the current date and time
-pub trait Clock: Sync {
+pub trait Clock: Send + Sync {
     /// Get the current date and time
     fn now(&self) -> DateTime<Utc>;
 }

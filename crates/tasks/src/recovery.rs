@@ -75,7 +75,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
 
                 let ticket = repo
                     .user_recovery()
-                    .add_ticket(&mut rng, &clock, &session, &email, ticket)
+                    .add_ticket(&mut rng, clock, &session, &email, ticket)
                     .await
                     .map_err(JobError::retry)?;
 

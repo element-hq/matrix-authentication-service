@@ -80,7 +80,7 @@ impl RunnableJob for ProvisionUserJob {
         // Schedule a device sync job
         let sync_device_job = SyncDevicesJob::new(&user);
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, sync_device_job)
+            .schedule_job(&mut rng, clock, sync_device_job)
             .await
             .map_err(JobError::retry)?;
 
@@ -118,7 +118,7 @@ impl RunnableJob for ProvisionDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
@@ -154,7 +154,7 @@ impl RunnableJob for DeleteDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
