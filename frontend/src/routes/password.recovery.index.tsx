@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { queryOptions } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { notFound } from "@tanstack/react-router";
+import {
+  queryOptions,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { notFound, useNavigate, useSearch } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
@@ -19,8 +21,7 @@ import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
-import { type FragmentType, useFragment } from "../gql";
-import { graphql } from "../gql";
+import { type FragmentType, graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
 

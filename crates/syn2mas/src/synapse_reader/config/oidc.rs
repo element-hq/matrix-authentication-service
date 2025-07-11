@@ -8,7 +8,8 @@ use std::{collections::BTreeMap, str::FromStr as _};
 use chrono::{DateTime, Utc};
 use mas_config::{
     UpstreamOAuth2ClaimsImports, UpstreamOAuth2DiscoveryMode, UpstreamOAuth2ImportAction,
-    UpstreamOAuth2PkceMethod, UpstreamOAuth2ResponseMode, UpstreamOAuth2TokenAuthMethod,
+    UpstreamOAuth2OnBackchannelLogout, UpstreamOAuth2PkceMethod, UpstreamOAuth2ResponseMode,
+    UpstreamOAuth2TokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::{OPENID, Scope, ScopeToken};
@@ -159,7 +160,6 @@ pub struct OidcProvider {
     #[serde(default)]
     skip_verification: bool,
 
-    // Unsupported, we want to shout about it
     #[serde(default)]
     backchannel_logout_enabled: bool,
 
@@ -217,10 +217,6 @@ impl OidcProvider {
 
         if self.id_token_signing_alg_values_supported.is_some() {
             warn!("The `id_token_signing_alg_values_supported` option is not supported, ignoring.");
-        }
-
-        if self.backchannel_logout_enabled {
-            warn!("The `backchannel_logout_enabled` option is not supported, ignoring.");
         }
 
         if !self.enable_registration {
@@ -319,6 +315,12 @@ impl OidcProvider {
             self.user_mapping_provider.config.into_mas_config()
         };
 
+        let on_backchannel_logout = if self.backchannel_logout_enabled {
+            UpstreamOAuth2OnBackchannelLogout::DoNothing
+        } else {
+            UpstreamOAuth2OnBackchannelLogout::LogoutBrowserOnly
+        };
+
         Some(mas_config::UpstreamOAuth2Provider {
             enabled: true,
             id,
@@ -345,6 +347,7 @@ impl OidcProvider {
             claims_imports,
             additional_authorization_parameters,
             forward_login_hint: self.forward_login_hint,
+            on_backchannel_logout,
         })
     }
 }

@@ -6,9 +6,8 @@
 import { type ErrorComponentProps, Outlet } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button, Text } from "@vector-im/compound-web";
-import * as v from "valibot";
-
 import { useTranslation } from "react-i18next";
+import * as v from "valibot";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 

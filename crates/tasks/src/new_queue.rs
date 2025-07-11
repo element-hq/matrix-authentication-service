@@ -19,7 +19,6 @@ use opentelemetry::{
     metrics::{Counter, Histogram, UpDownCounter},
 };
 use rand::{Rng, RngCore, distributions::Uniform};
-use rand_chacha::ChaChaRng;
 use serde::de::DeserializeOwned;
 use sqlx::{
     Acquire, Either,
@@ -195,8 +194,6 @@ struct ScheduleDefinition {
 }
 
 pub struct QueueWorker {
-    rng: ChaChaRng,
-    clock: Box<dyn Clock + Send>,
     listener: PgListener,
     registration: Worker,
     am_i_leader: bool,
@@ -217,7 +214,7 @@ impl QueueWorker {
         skip_all,
         fields(worker.id)
     )]
-    pub async fn new(
+    pub(crate) async fn new(
         state: State,
         cancellation_token: CancellationToken,
     ) -> Result<Self, QueueRunnerError> {
@@ -246,7 +243,7 @@ impl QueueWorker {
             .map_err(QueueRunnerError::StartTransaction)?;
         let mut repo = PgRepository::from_conn(txn);
 
-        let registration = repo.queue_worker().register(&mut rng, &clock).await?;
+        let registration = repo.queue_worker().register(&mut rng, clock).await?;
         tracing::Span::current().record("worker.id", tracing::field::display(registration.id));
         repo.into_inner()
             .commit()
@@ -278,8 +275,6 @@ impl QueueWorker {
         let cancellation_guard = cancellation_token.clone().drop_guard();
 
         Ok(Self {
-            rng,
-            clock,
             listener,
             registration,
             am_i_leader: false,
@@ -294,7 +289,7 @@ impl QueueWorker {
         })
     }
 
-    pub fn register_handler<T: RunnableJob + InsertableJob>(&mut self) -> &mut Self {
+    pub(crate) fn register_handler<T: RunnableJob + InsertableJob>(&mut self) -> &mut Self {
         // There is a potential panic here, which is fine as it's going to be caught
         // within the job task
         let factory = |payload: JobPayload| {
@@ -307,7 +302,7 @@ impl QueueWorker {
         self
     }
 
-    pub fn add_schedule<T: InsertableJob>(
+    pub(crate) fn add_schedule<T: InsertableJob>(
         &mut self,
         schedule_name: &'static str,
         expression: Schedule,
@@ -325,7 +320,7 @@ impl QueueWorker {
         self
     }
 
-    pub async fn run(mut self) {
+    pub(crate) async fn run(mut self) {
         if let Err(e) = self.run_inner().await {
             tracing::error!(
                 error = &e as &dyn std::error::Error,
@@ -349,7 +344,7 @@ impl QueueWorker {
     }
 
     #[tracing::instrument(name = "worker.setup_schedules", skip_all)]
-    pub async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
+    pub(crate) async fn setup_schedules(&mut self) -> Result<(), QueueRunnerError> {
         let schedules: Vec<_> = self.schedules.iter().map(|s| s.schedule_name).collect();
 
         // Start a transaction on the existing PgListener connection
@@ -397,6 +392,9 @@ impl QueueWorker {
     async fn shutdown(&mut self) -> Result<(), QueueRunnerError> {
         tracing::info!("Shutting down worker");
 
+        let clock = self.state.clock();
+        let mut rng = self.state.rng();
+
         // Start a transaction on the existing PgListener connection
         let txn = self
             .listener
@@ -421,13 +419,13 @@ impl QueueWorker {
 
         // Wait for all the jobs to finish
         self.tracker
-            .process_jobs(&mut self.rng, &self.clock, &mut repo, true)
+            .process_jobs(&mut rng, clock, &mut repo, true)
             .await?;
 
         // Tell the other workers we're shutting down
         // This also releases the leader election lease
         repo.queue_worker()
-            .shutdown(&self.clock, &self.registration)
+            .shutdown(clock, &self.registration)
             .await?;
 
         repo.into_inner()
@@ -440,12 +438,12 @@ impl QueueWorker {
 
     #[tracing::instrument(name = "worker.wait_until_wakeup", skip_all)]
     async fn wait_until_wakeup(&mut self) -> Result<(), QueueRunnerError> {
+        let mut rng = self.state.rng();
+
         // This is to make sure we wake up every second to do the maintenance tasks
         // We add a little bit of random jitter to the duration, so that we don't get
         // fully synced workers waking up at the same time after each notification
-        let sleep_duration = self
-            .rng
-            .sample(Uniform::new(MIN_SLEEP_DURATION, MAX_SLEEP_DURATION));
+        let sleep_duration = rng.sample(Uniform::new(MIN_SLEEP_DURATION, MAX_SLEEP_DURATION));
         let wakeup_sleep = tokio::time::sleep(sleep_duration);
 
         tokio::select! {
@@ -490,7 +488,9 @@ impl QueueWorker {
     )]
     async fn tick(&mut self) -> Result<(), QueueRunnerError> {
         tracing::debug!("Tick");
-        let now = self.clock.now();
+        let clock = self.state.clock();
+        let mut rng = self.state.rng();
+        let now = clock.now();
 
         // Start a transaction on the existing PgListener connection
         let txn = self
@@ -505,25 +505,25 @@ impl QueueWorker {
         if now - self.last_heartbeat >= chrono::Duration::minutes(1) {
             tracing::info!("Sending heartbeat");
             repo.queue_worker()
-                .heartbeat(&self.clock, &self.registration)
+                .heartbeat(clock, &self.registration)
                 .await?;
             self.last_heartbeat = now;
         }
 
         // Remove any dead worker leader leases
         repo.queue_worker()
-            .remove_leader_lease_if_expired(&self.clock)
+            .remove_leader_lease_if_expired(clock)
             .await?;
 
         // Try to become (or stay) the leader
         let leader = repo
             .queue_worker()
-            .try_get_leader_lease(&self.clock, &self.registration)
+            .try_get_leader_lease(clock, &self.registration)
             .await?;
 
         // Process any job task which finished
         self.tracker
-            .process_jobs(&mut self.rng, &self.clock, &mut repo, false)
+            .process_jobs(&mut rng, clock, &mut repo, false)
             .await?;
 
         // Compute how many jobs we should fetch at most
@@ -538,7 +538,7 @@ impl QueueWorker {
             let queues = self.tracker.queues();
             let jobs = repo
                 .queue_job()
-                .reserve(&self.clock, &self.registration, &queues, max_jobs_to_fetch)
+                .reserve(clock, &self.registration, &queues, max_jobs_to_fetch)
                 .await?;
 
             for Job {
@@ -592,6 +592,9 @@ impl QueueWorker {
             return Err(QueueRunnerError::NotLeader);
         }
 
+        let clock = self.state.clock();
+        let mut rng = self.state.rng();
+
         // Start a transaction on the existing PgListener connection
         let txn = self
             .listener
@@ -633,7 +636,7 @@ impl QueueWorker {
         // Look at the state of schedules in the database
         let schedules_status = repo.queue_schedule().list().await?;
 
-        let now = self.clock.now();
+        let now = clock.now();
         for schedule in &self.schedules {
             // Find the schedule status from the database
             let Some(schedule_status) = schedules_status
@@ -670,8 +673,8 @@ impl QueueWorker {
 
             repo.queue_job()
                 .schedule_later(
-                    &mut self.rng,
-                    &self.clock,
+                    &mut rng,
+                    clock,
                     schedule.queue_name,
                     schedule.payload.clone(),
                     serde_json::json!({}),
@@ -684,16 +687,13 @@ impl QueueWorker {
         // We also check if the worker is dead, and if so, we shutdown all the dead
         // workers that haven't checked in the last two minutes
         repo.queue_worker()
-            .shutdown_dead_workers(&self.clock, Duration::minutes(2))
+            .shutdown_dead_workers(clock, Duration::minutes(2))
             .await?;
 
         // TODO: mark tasks those workers had as lost
 
         // Mark all the scheduled jobs as available
-        let scheduled = repo
-            .queue_job()
-            .schedule_available_jobs(&self.clock)
-            .await?;
+        let scheduled = repo.queue_job().schedule_available_jobs(clock).await?;
         match scheduled {
             0 => {}
             1 => tracing::info!("One scheduled job marked as available"),
@@ -708,6 +708,73 @@ impl QueueWorker {
             .map_err(QueueRunnerError::LeaderLock)?;
 
         txn.commit()
+            .await
+            .map_err(QueueRunnerError::CommitTransaction)?;
+
+        Ok(())
+    }
+
+    /// Process all the pending jobs in the queue.
+    /// This should only be called in tests!
+    ///
+    /// # Errors
+    ///
+    /// This function can fail if the database connection fails.
+    pub async fn process_all_jobs_in_tests(&mut self) -> Result<(), QueueRunnerError> {
+        // I swear, I'm the leader!
+        self.am_i_leader = true;
+
+        // First, perform the leader duties. This will make sure that we schedule
+        // recurring jobs.
+        self.perform_leader_duties().await?;
+
+        let clock = self.state.clock();
+        let mut rng = self.state.rng();
+
+        // Grab the connection from the PgListener
+        let txn = self
+            .listener
+            .begin()
+            .await
+            .map_err(QueueRunnerError::StartTransaction)?;
+        let mut repo = PgRepository::from_conn(txn);
+
+        // Spawn all the jobs in the database
+        let queues = self.tracker.queues();
+        let jobs = repo
+            .queue_job()
+            // I really hope that we don't spawn more than 10k jobs in tests
+            .reserve(clock, &self.registration, &queues, 10_000)
+            .await?;
+
+        for Job {
+            id,
+            queue_name,
+            payload,
+            metadata,
+            attempt,
+        } in jobs
+        {
+            let cancellation_token = self.cancellation_token.child_token();
+            let start = Instant::now();
+            let context = JobContext {
+                id,
+                metadata,
+                queue_name,
+                attempt,
+                start,
+                cancellation_token,
+            };
+
+            self.tracker.spawn_job(self.state.clone(), context, payload);
+        }
+
+        self.tracker
+            .process_jobs(&mut rng, clock, &mut repo, true)
+            .await?;
+
+        repo.into_inner()
+            .commit()
             .await
             .map_err(QueueRunnerError::CommitTransaction)?;
 

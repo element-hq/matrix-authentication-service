@@ -19,6 +19,18 @@ pub enum UserSessions {
 }
 
 #[derive(sea_query::Iden)]
+#[expect(dead_code)]
+pub enum UserSessionAuthentications {
+    Table,
+    UserSessionAuthenticationId,
+    UserSessionId,
+    CreatedAt,
+    UserPasswordId,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+}
+
+#[derive(sea_query::Iden)]
 pub enum Users {
     Table,
     UserId,
@@ -124,6 +136,7 @@ pub enum UpstreamOAuthProviders {
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
+    OnBackchannelLogout,
 }
 
 #[derive(sea_query::Iden)]
@@ -138,6 +151,29 @@ pub enum UpstreamOAuthLinks {
     Subject,
     HumanAccountName,
     CreatedAt,
+}
+
+#[derive(sea_query::Iden)]
+#[iden = "upstream_oauth_authorization_sessions"]
+pub enum UpstreamOAuthAuthorizationSessions {
+    Table,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+    #[iden = "upstream_oauth_provider_id"]
+    UpstreamOAuthProviderId,
+    #[iden = "upstream_oauth_link_id"]
+    UpstreamOAuthLinkId,
+    State,
+    CodeChallengeVerifier,
+    Nonce,
+    IdToken,
+    IdTokenClaims,
+    ExtraCallbackParameters,
+    Userinfo,
+    CreatedAt,
+    CompletedAt,
+    ConsumedAt,
+    UnlinkedAt,
 }
 
 #[derive(sea_query::Iden)]

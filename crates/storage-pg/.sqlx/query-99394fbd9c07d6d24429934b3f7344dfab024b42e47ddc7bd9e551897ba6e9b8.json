@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\",\n                    forward_login_hint\n                FROM upstream_oauth_providers\n                WHERE disabled_at IS NULL\n                ORDER BY ui_order ASC, upstream_oauth_provider_id ASC\n            ",
+  "query": "\n                SELECT\n                    upstream_oauth_provider_id,\n                    issuer,\n                    human_name,\n                    brand_name,\n                    scope,\n                    client_id,\n                    encrypted_client_secret,\n                    token_endpoint_signing_alg,\n                    token_endpoint_auth_method,\n                    id_token_signed_response_alg,\n                    fetch_userinfo,\n                    userinfo_signed_response_alg,\n                    created_at,\n                    disabled_at,\n                    claims_imports as \"claims_imports: Json<UpstreamOAuthProviderClaimsImports>\",\n                    jwks_uri_override,\n                    authorization_endpoint_override,\n                    token_endpoint_override,\n                    userinfo_endpoint_override,\n                    discovery_mode,\n                    pkce_mode,\n                    response_mode,\n                    additional_parameters as \"additional_parameters: Json<Vec<(String, String)>>\",\n                    forward_login_hint,\n                    on_backchannel_logout\n                FROM upstream_oauth_providers\n                WHERE disabled_at IS NULL\n                ORDER BY ui_order ASC, upstream_oauth_provider_id ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -122,6 +122,11 @@
         "ordinal": 23,
         "name": "forward_login_hint",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 24,
+        "name": "on_backchannel_logout",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -151,8 +156,9 @@
       false,
       true,
       true,
+      false,
       false
     ]
   },
-  "hash": "e6d66a7980933c12ab046958e02d419129ef52ac45bea4345471838016cae917"
+  "hash": "99394fbd9c07d6d24429934b3f7344dfab024b42e47ddc7bd9e551897ba6e9b8"
 }

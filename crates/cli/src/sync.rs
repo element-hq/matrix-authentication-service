@@ -276,6 +276,18 @@ pub async fn config_sync(
                 }
             };
 
+            let on_backchannel_logout = match provider.on_backchannel_logout {
+                mas_config::UpstreamOAuth2OnBackchannelLogout::DoNothing => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutBrowserOnly => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutAll => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutAll
+                }
+            };
+
             repo.upstream_oauth_provider()
                 .upsert(
                     clock,
@@ -306,6 +318,7 @@ pub async fn config_sync(
                             .collect(),
                         forward_login_hint: provider.forward_login_hint,
                         ui_order,
+                        on_backchannel_logout,
                     },
                 )
                 .await?;

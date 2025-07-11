@@ -173,8 +173,9 @@ impl Options {
             test_mailer_in_background(&mailer, Duration::from_secs(30));
 
             info!("Starting task worker");
-            mas_tasks::init(
+            mas_tasks::init_and_run(
                 PgRepositoryFactory::new(pool.clone()),
+                SystemClock::default(),
                 &mailer,
                 homeserver_connection.clone(),
                 url_builder.clone(),

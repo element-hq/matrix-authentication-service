@@ -7,10 +7,10 @@
 import {
   type BackendModule,
   type InitOptions,
+  default as i18n,
   type LanguageDetectorModule,
   type ReadCallback,
   type ResourceKey,
-  default as i18n,
 } from "i18next";
 import { initReactI18next } from "react-i18next";
 

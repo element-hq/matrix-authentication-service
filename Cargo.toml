@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "0.18.0"
+package.version = "0.19.0-rc.1"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -33,35 +33,35 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=0.18.0" }
-mas-cli = { path = "./crates/cli/", version = "=0.18.0" }
-mas-config = { path = "./crates/config/", version = "=0.18.0" }
-mas-context = { path = "./crates/context/", version = "=0.18.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=0.18.0" }
-mas-email = { path = "./crates/email/", version = "=0.18.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=0.18.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=0.18.0" }
-mas-http = { path = "./crates/http/", version = "=0.18.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=0.18.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=0.18.0" }
-mas-iana = { path = "./crates/iana/", version = "=0.18.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=0.18.0" }
-mas-jose = { path = "./crates/jose/", version = "=0.18.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=0.18.0" }
-mas-listener = { path = "./crates/listener/", version = "=0.18.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=0.18.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=0.18.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=0.18.0" }
-mas-policy = { path = "./crates/policy/", version = "=0.18.0" }
-mas-router = { path = "./crates/router/", version = "=0.18.0" }
-mas-spa = { path = "./crates/spa/", version = "=0.18.0" }
-mas-storage = { path = "./crates/storage/", version = "=0.18.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=0.18.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=0.18.0" }
-mas-templates = { path = "./crates/templates/", version = "=0.18.0" }
-mas-tower = { path = "./crates/tower/", version = "=0.18.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=0.18.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=0.18.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=0.19.0-rc.1" }
+mas-cli = { path = "./crates/cli/", version = "=0.19.0-rc.1" }
+mas-config = { path = "./crates/config/", version = "=0.19.0-rc.1" }
+mas-context = { path = "./crates/context/", version = "=0.19.0-rc.1" }
+mas-data-model = { path = "./crates/data-model/", version = "=0.19.0-rc.1" }
+mas-email = { path = "./crates/email/", version = "=0.19.0-rc.1" }
+mas-graphql = { path = "./crates/graphql/", version = "=0.19.0-rc.1" }
+mas-handlers = { path = "./crates/handlers/", version = "=0.19.0-rc.1" }
+mas-http = { path = "./crates/http/", version = "=0.19.0-rc.1" }
+mas-i18n = { path = "./crates/i18n/", version = "=0.19.0-rc.1" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=0.19.0-rc.1" }
+mas-iana = { path = "./crates/iana/", version = "=0.19.0-rc.1" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=0.19.0-rc.1" }
+mas-jose = { path = "./crates/jose/", version = "=0.19.0-rc.1" }
+mas-keystore = { path = "./crates/keystore/", version = "=0.19.0-rc.1" }
+mas-listener = { path = "./crates/listener/", version = "=0.19.0-rc.1" }
+mas-matrix = { path = "./crates/matrix/", version = "=0.19.0-rc.1" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=0.19.0-rc.1" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=0.19.0-rc.1" }
+mas-policy = { path = "./crates/policy/", version = "=0.19.0-rc.1" }
+mas-router = { path = "./crates/router/", version = "=0.19.0-rc.1" }
+mas-spa = { path = "./crates/spa/", version = "=0.19.0-rc.1" }
+mas-storage = { path = "./crates/storage/", version = "=0.19.0-rc.1" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=0.19.0-rc.1" }
+mas-tasks = { path = "./crates/tasks/", version = "=0.19.0-rc.1" }
+mas-templates = { path = "./crates/templates/", version = "=0.19.0-rc.1" }
+mas-tower = { path = "./crates/tower/", version = "=0.19.0-rc.1" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=0.19.0-rc.1" }
+syn2mas = { path = "./crates/syn2mas", version = "=0.19.0-rc.1" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
@@ -166,7 +166,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.40"
+version = "4.5.41"
 features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
@@ -273,7 +273,7 @@ features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.14"
+version = "0.1.15"
 features = [
     "client",
     "server",
@@ -320,7 +320,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.9.0"
+version = "2.10.0"
 features = ["serde"]
 
 # Indented string literals
@@ -375,12 +375,12 @@ version = "0.3.17"
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.10.2"
+version = "2.11.0"
 features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.10.2"
+version = "2.11.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -455,7 +455,7 @@ version = "2.8.1"
 
 # Pest derive macros
 [workspace.dependencies.pest_derive]
-version = "2.8.0"
+version = "2.8.1"
 
 # Pin projection
 [workspace.dependencies.pin-project-lite]
@@ -473,7 +473,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.122"
+version = "2.1.124"
 
 # Prometheus metrics
 [workspace.dependencies.prometheus]
@@ -497,7 +497,7 @@ version = "1.11.1"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
-version = "0.12.20"
+version = "0.12.22"
 default-features = false
 features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
 
@@ -512,11 +512,11 @@ version = "2.1.1"
 
 # Matrix-related types
 [workspace.dependencies.ruma-common]
-version = "0.15.2"
+version = "0.15.4"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.28"
+version = "0.23.29"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
@@ -591,7 +591,7 @@ version = "0.7.1"
 
 # Custom serialization helpers
 [workspace.dependencies.serde_with]
-version = "3.13.0"
+version = "3.14.0"
 features = ["hex", "chrono"]
 
 # YAML serialization
@@ -639,7 +639,7 @@ version = "0.2.1"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.45.1"
+version = "1.46.1"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]

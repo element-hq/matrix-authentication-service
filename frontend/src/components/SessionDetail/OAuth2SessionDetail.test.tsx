@@ -6,12 +6,10 @@
 
 // @vitest-environment happy-dom
 
+import { TooltipProvider } from "@vector-im/compound-web";
 import { beforeAll, describe, expect, it } from "vitest";
-
 import { makeFragmentData } from "../../gql";
 import { mockLocale } from "../../test-utils/mockLocale";
-
-import { TooltipProvider } from "@vector-im/compound-web";
 import render from "../../test-utils/render";
 import OAuth2SessionDetail, { FRAGMENT } from "./OAuth2SessionDetail";
 

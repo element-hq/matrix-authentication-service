@@ -24,6 +24,7 @@ The general configuration usually goes as follows:
    - `response_type`: `code`
    - `response_mode`: `query`
    - `grant_type`: `authorization_code`
+   - (optional) `backchannel_logout_uri`: `https://<auth-service-domain>/upstream/backchannel-logout/<id>`
  - fill the `upstream_oauth2` section of the configuration file with the following parameters:
    - `providers`:
      - `id`: the previously generated ULID
@@ -73,6 +74,25 @@ In such cases, the `human_name` parameter of the provider configuration is used 
 
 If there is only one upstream provider configured and the local password database is disabled ([`passwords.enabled`](../reference/configuration.md#passwords) is set to `false`), the authentication service will automatically trigger an authorization flow with this provider.
 
+## Backchannel logout
+
+The service supports receiving [OpenID Connect Back-Channel Logout](https://openid.net/specs/openid-connect-backchannel-1_0.html) requests.
+Those are notifications from the upstream provider that the user has logged out of the provider.
+
+The backchannel logout URI must be configured in the provider as `https://<auth-service-domain>/upstream/backchannel-logout/<id>`, where `<id>` is the `id` of the provider.
+
+By default, the authentication service will not perform any action when receiving a backchannel logout request.
+The [`on_backchannel_logout`](../reference/configuration.md#upstream_oauth2) option can be used to configure what to do when receiving a backchannel logout request.
+
+Possible values are:
+
+ - `do_nothing`: Do nothing, other than validating and logging the request
+ - `logout_browser_only`: Only log out the MAS 'browser session' started by this OIDC session
+ - `logout_all`: Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions
+
+One important caveat is that `logout_all` will log out all sessions started by this upstream OIDC session, including 'remote' ones done through the Device Code flow.
+Concretely, this means that if QR-code login is used to log in on a phone from a laptop, when MAS receives a backchannel logout request from the upstream provider for the laptop, MAS will also log out the session on the phone.
+
 ## Sample configurations
 
 This section contains sample configurations for popular OIDC providers.
@@ -93,12 +113,11 @@ upstream_oauth2:
       response_mode: "form_post"
       token_endpoint_auth_method: "sign_in_with_apple"
       sign_in_with_apple:
-      
         # Only one of the below should be filled for the private key
         private_key_file: "<Location of the PEM-encoded private key file>" # TO BE FILLED
         private_key: | # TO BE FILLED
           # <Contents of the private key>
-        
+
         team_id: "<Team ID>" # TO BE FILLED
         key_id: "<Key ID>" # TO BE FILLED
       claims_imports:
@@ -386,6 +405,9 @@ Follow the [Getting Started Guide](https://www.keycloak.org/guides) to install K
    | Client Protocol | `openid-connect` |
    | Access Type | `confidential` |
    | Valid Redirect URIs | `https://<auth-service-domain>/upstream/callback/<id>` |
+   | Front channel logout | `Off` |
+   | Backchannel logout URL | `https://<auth-service-domain>/upstream/backchannel-logout/<id>` |
+   | Backchannel logout session required | `On` |
 
 5. Click `Save`
 6. On the Credentials tab, update the fields:

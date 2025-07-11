@@ -136,6 +136,7 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
+    use insta::{allow_duplicates, assert_json_snapshot};
     use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
     use sqlx::{PgPool, types::Json};
 
@@ -182,6 +183,38 @@ mod tests {
         .expect("Deactivation job to be scheduled");
         assert_eq!(job["user_id"], serde_json::json!(user.id));
         assert_eq!(job["hs_erase"], serde_json::json!(erase.unwrap_or(true)));
+
+        // Make sure to run the jobs in the queue
+        state.run_jobs_in_queue().await;
+
+        let request = Request::get(format!("/api/admin/v1/users/{}", user.id))
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+
+        allow_duplicates!(assert_json_snapshot!(body, @r#"
+        {
+          "data": {
+            "type": "user",
+            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "attributes": {
+              "username": "alice",
+              "created_at": "2022-01-16T14:40:00Z",
+              "locked_at": "2022-01-16T14:40:00Z",
+              "deactivated_at": "2022-01-16T14:40:00Z",
+              "admin": false
+            },
+            "links": {
+              "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+          }
+        }
+        "#));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -260,15 +293,37 @@ mod tests {
             serde_json::json!(state.clock.now())
         );
 
-        // It should have scheduled a deactivation job for the user
-        // XXX: we don't have a good way to look for the deactivation job
-        let job: Json<serde_json::Value> = sqlx::query_scalar(
-            "SELECT payload FROM queue_jobs WHERE queue_name = 'deactivate-user'",
-        )
-        .fetch_one(&pool)
-        .await
-        .expect("Deactivation job to be scheduled");
-        assert_eq!(job["user_id"], serde_json::json!(user.id));
+        // Make sure to run the jobs in the queue
+        state.run_jobs_in_queue().await;
+
+        let request = Request::get(format!("/api/admin/v1/users/{}", user.id))
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": {
+            "type": "user",
+            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "attributes": {
+              "username": "alice",
+              "created_at": "2022-01-16T14:40:00Z",
+              "locked_at": "2022-01-16T14:40:00Z",
+              "deactivated_at": "2022-01-16T14:41:00Z",
+              "admin": false
+            },
+            "links": {
+              "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+          }
+        }
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

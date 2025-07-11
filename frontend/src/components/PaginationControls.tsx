@@ -39,9 +39,9 @@ const PaginationControls: React.FC<Props> = ({
         {t("common.previous")}
       </Button>
       <div className="text-center">
-        {count !== undefined ? (
-          <>{t("frontend.pagination_controls.total", { totalCount: count })}</>
-        ) : null}
+        {count !== undefined
+          ? t("frontend.pagination_controls.total", { totalCount: count })
+          : null}
       </div>
       <Button
         kind="secondary"

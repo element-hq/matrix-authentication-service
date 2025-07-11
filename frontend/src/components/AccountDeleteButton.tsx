@@ -70,7 +70,10 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
     mutationFn: ({
       password,
       hsErase,
-    }: { password: string | null; hsErase: boolean }) =>
+    }: {
+      password: string | null;
+      hsErase: boolean;
+    }) =>
       graphqlRequest({
         query: MUTATION,
         variables: { password, hsErase },

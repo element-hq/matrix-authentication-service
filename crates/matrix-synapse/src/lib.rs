@@ -23,6 +23,9 @@ const M_USER_IN_USE: &str = "M_USER_IN_USE";
 /// Encountered when trying to register a user ID which is not valid.
 /// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
 const M_INVALID_USERNAME: &str = "M_INVALID_USERNAME";
+/// Encountered when trying to register a user ID reserved by an appservice.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+const M_EXCLUSIVE: &str = "M_EXCLUSIVE";
 
 mod error;
 
@@ -241,7 +244,8 @@ impl HomeserverConnection for SynapseConnection {
 
             Err(err)
                 if err.errcode() == Some(M_INVALID_USERNAME)
-                    || err.errcode() == Some(M_USER_IN_USE) =>
+                    || err.errcode() == Some(M_USER_IN_USE)
+                    || err.errcode() == Some(M_EXCLUSIVE) =>
             {
                 debug!(
                     error = &err as &dyn std::error::Error,
