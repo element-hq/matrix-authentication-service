@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 static GENERATED_DEVICE_ID_LENGTH: usize = 10;
-static DEVICE_SCOPE_PREFIX: &str = "urn:matrix:org.matrix.msc2967.client:device:";
+static UNSTABLE_DEVICE_SCOPE_PREFIX: &str = "urn:matrix:org.matrix.msc2967.client:device:";
+static STABLE_DEVICE_SCOPE_PREFIX: &str = "urn:matrix:client:device:";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -28,16 +29,21 @@ pub enum ToScopeTokenError {
 }
 
 impl Device {
-    /// Get the corresponding [`ScopeToken`] for that device
+    /// Get the corresponding stable and unstable [`ScopeToken`] for that device
     ///
     /// # Errors
     ///
     /// Returns an error if the device ID contains characters that can't be
     /// encoded in a scope
-    pub fn to_scope_token(&self) -> Result<ScopeToken, ToScopeTokenError> {
-        format!("{DEVICE_SCOPE_PREFIX}{}", self.id)
-            .parse()
-            .map_err(|_| ToScopeTokenError::InvalidCharacters)
+    pub fn to_scope_token(&self) -> Result<[ScopeToken; 2], ToScopeTokenError> {
+        Ok([
+            format!("{STABLE_DEVICE_SCOPE_PREFIX}{}", self.id)
+                .parse()
+                .map_err(|_| ToScopeTokenError::InvalidCharacters)?,
+            format!("{UNSTABLE_DEVICE_SCOPE_PREFIX}{}", self.id)
+                .parse()
+                .map_err(|_| ToScopeTokenError::InvalidCharacters)?,
+        ])
     }
 
     /// Get the corresponding [`Device`] from a [`ScopeToken`]
@@ -45,7 +51,9 @@ impl Device {
     /// Returns `None` if the [`ScopeToken`] is not a device scope
     #[must_use]
     pub fn from_scope_token(token: &ScopeToken) -> Option<Self> {
-        let id = token.as_str().strip_prefix(DEVICE_SCOPE_PREFIX)?;
+        let stable = token.as_str().strip_prefix(STABLE_DEVICE_SCOPE_PREFIX);
+        let unstable = token.as_str().strip_prefix(UNSTABLE_DEVICE_SCOPE_PREFIX);
+        let id = stable.or(unstable)?;
         Some(Device::from(id.to_owned()))
     }
 
@@ -89,12 +97,23 @@ mod test {
     #[test]
     fn test_device_id_to_from_scope_token() {
         let device = Device::from("AABBCCDDEE".to_owned());
-        let scope_token = device.to_scope_token().unwrap();
+        let [stable_scope_token, unstable_scope_token] = device.to_scope_token().unwrap();
         assert_eq!(
-            scope_token.as_str(),
+            stable_scope_token.as_str(),
+            "urn:matrix:client:device:AABBCCDDEE"
+        );
+        assert_eq!(
+            unstable_scope_token.as_str(),
             "urn:matrix:org.matrix.msc2967.client:device:AABBCCDDEE"
         );
-        assert_eq!(Device::from_scope_token(&scope_token), Some(device));
+        assert_eq!(
+            Device::from_scope_token(&unstable_scope_token).as_ref(),
+            Some(&device)
+        );
+        assert_eq!(
+            Device::from_scope_token(&stable_scope_token).as_ref(),
+            Some(&device)
+        );
         assert_eq!(Device::from_scope_token(&OPENID), None);
     }
 }

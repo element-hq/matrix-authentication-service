@@ -5,7 +5,8 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-const DEVICE_PREFIX = "urn:matrix:org.matrix.msc2967.client:device:";
+const UNSTABLE_DEVICE_PREFIX = "urn:matrix:org.matrix.msc2967.client:device:";
+const STABLE_DEVICE_PREFIX = "urn:matrix:client:device:";
 
 /**
  * Device scopes are suffixed with the deviceId
@@ -14,6 +15,7 @@ const DEVICE_PREFIX = "urn:matrix:org.matrix.msc2967.client:device:";
  * @returns deviceId, or undefined when not a device scope
  */
 export const getDeviceIdFromScope = (scope: string): string | undefined => {
-  const [, deviceId] = scope.split(DEVICE_PREFIX);
-  return deviceId;
+  const [, stableDeviceId] = scope.split(STABLE_DEVICE_PREFIX);
+  const [, unstableDeviceId] = scope.split(UNSTABLE_DEVICE_PREFIX);
+  return stableDeviceId || unstableDeviceId;
 };
