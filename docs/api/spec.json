@@ -3807,6 +3807,11 @@
             "description": "Skip checking with the homeserver whether the username is available.\n\nUse this with caution! The main reason to use this, is when a user used by an application service needs to exist in MAS to craft special tokens (like with admin access) for them",
             "default": false,
             "type": "boolean"
+          },
+          "add_synchronously": {
+            "description": "Delay the response until the user has been created on the homeserver.",
+            "default": false,
+            "type": "boolean"
           }
         }
       },
