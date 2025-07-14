@@ -205,6 +205,9 @@ pub enum RouteError {
     #[error("invalid login token")]
     InvalidLoginToken,
 
+    #[error("user is locked")]
+    UserLocked,
+
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
 }
@@ -262,6 +265,11 @@ impl IntoResponse for RouteError {
                 errcode: "M_FORBIDDEN",
                 error: "Invalid login token",
                 status: StatusCode::FORBIDDEN,
+            },
+            Self::UserLocked => MatrixError {
+                errcode: "M_USER_LOCKED",
+                error: "User account has been locked",
+                status: StatusCode::UNAUTHORIZED,
             },
         };
 
@@ -506,7 +514,13 @@ async fn token_login(
             browser_session.id = %browser_session_id,
             "Attempt to exchange login token but browser session is not active"
         );
-        return Err(RouteError::InvalidLoginToken);
+        return Err(
+            if browser_session.finished_at.is_none() && browser_session.user.locked_at.is_some() {
+                RouteError::UserLocked
+            } else {
+                RouteError::InvalidLoginToken
+            },
+        );
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
@@ -565,8 +579,12 @@ async fn user_password_login(
         .user()
         .find_by_username(username)
         .await?
-        .filter(mas_data_model::User::is_valid)
+        .filter(|user| user.deactivated_at.is_none())
         .ok_or(RouteError::UserNotFound)?;
+
+    if user.locked_at.is_some() {
+        return Err(RouteError::UserLocked);
+    }
 
     // Check the rate limit
     limiter.check_password(requester, &user)?;
