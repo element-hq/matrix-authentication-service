@@ -158,7 +158,8 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        // The locked_at timestamp should be the same as the current time, or null if not locked
+        // The locked_at timestamp should be the same as the current time, or null if
+        // not locked
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
             if !skip_lock.unwrap_or(false) {

@@ -139,7 +139,11 @@ impl RunnableJob for ReactivateUserJob {
 
         // We want to unlock the user from our side only once it has been reactivated on
         // the homeserver
-        let _user = repo.user().reactivate_and_unlock(user).await.map_err(JobError::retry)?;
+        let _user = repo
+            .user()
+            .reactivate_and_unlock(user)
+            .await
+            .map_err(JobError::retry)?;
         repo.save().await.map_err(JobError::retry)?;
 
         Ok(())

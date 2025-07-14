@@ -127,7 +127,7 @@ pub async fn handler(
 mod tests {
     use hyper::{Request, StatusCode};
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use mas_storage::{user::UserRepository, Clock, RepositoryAccess};
+    use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -202,7 +202,8 @@ mod tests {
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
         assert!(mx_user.deactivated);
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id)).bearer(&token);
+        let request =
+            Request::post(format!("/api/admin/v1/users/{}/unlock", user.id)).bearer(&token);
         let request = match skip_reactivate {
             None => request.empty(),
             Some(skip_reactivate) => request.json(serde_json::json!({
