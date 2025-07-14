@@ -3884,12 +3884,10 @@
       "DeactivateUserRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
         "type": "object",
-        "required": [
-          "erase"
-        ],
         "properties": {
-          "erase": {
-            "description": "Whether the user should be GDPR-erased from the homeserver.",
+          "skip_erase": {
+            "description": "Whether to skip requesting the homeserver to GDPR-erase the user upon deactivation.",
+            "default": false,
             "type": "boolean"
           }
         }
