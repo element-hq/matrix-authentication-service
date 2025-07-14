@@ -542,7 +542,7 @@ impl Options {
 
                 warn!(%user.id, "User scheduling user reactivation");
                 repo.queue_job()
-                    .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user, true))
+                    .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
                     .await?;
 
                 repo.into_inner().commit().await?;

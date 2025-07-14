@@ -3,15 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use std::sync::Arc;
+
+use aide::{OperationIo, transform::TransformOperation};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::{
-    BoxRng,
-    queue::{QueueJobRepositoryExt as _, ReactivateUserJob},
-};
-use tracing::info;
+use mas_matrix::HomeserverConnection;
 use ulid::Ulid;
 
 use crate::{
@@ -30,6 +28,9 @@ pub enum RouteError {
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 
+    #[error(transparent)]
+    Homeserver(anyhow::Error),
+
     #[error("User ID {0} not found")]
     NotFound(Ulid),
 }
@@ -39,9 +40,9 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let sentry_event_id = record_error!(self, Self::Internal(_));
+        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::Homeserver(_));
         let status = match self {
-            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Internal(_) | Self::Homeserver(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -69,10 +70,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 
 #[tracing::instrument(name = "handler.admin.v1.users.reactivate", skip_all)]
 pub async fn handler(
-    CallContext {
-        mut repo, clock, ..
-    }: CallContext,
-    NoApi(mut rng): NoApi<BoxRng>,
+    CallContext { mut repo, .. }: CallContext,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
@@ -82,10 +81,15 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    info!(%user.id, "Scheduling reactivation of user");
-    repo.queue_job()
-        .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user, false))
-        .await?;
+    // Call the homeserver synchronously to reactivate the user
+    let mxid = homeserver.mxid(&user.username);
+    homeserver
+        .reactivate_user(&mxid)
+        .await
+        .map_err(RouteError::Homeserver)?;
+
+    // Now reactivate the user in our database
+    let user = repo.user().reactivate(user).await?;
 
     repo.save().await?;
 
@@ -100,7 +104,7 @@ mod tests {
     use hyper::{Request, StatusCode};
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
-    use sqlx::{PgPool, types::Json};
+    use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
@@ -150,18 +154,10 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::json!(state.clock.now())
         );
-        // TODO: have test coverage on deactivated_at timestamp
-
-        // It should have scheduled a reactivation job for the user
-        // XXX: we don't have a good way to look for the reactivation job
-        let job: Json<serde_json::Value> = sqlx::query_scalar(
-            "SELECT payload FROM queue_jobs WHERE queue_name = 'reactivate-user'",
-        )
-        .fetch_one(&pool)
-        .await
-        .expect("Reactivation job to be scheduled");
-        assert_eq!(job["user_id"], serde_json::json!(user.id));
-        assert_eq!(job["unlock"], serde_json::Value::Bool(false));
+        assert_eq!(
+            body["data"]["attributes"]["deactivated_at"],
+            serde_json::Value::Null,
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -178,6 +174,14 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
+        // Provision the user on the homeserver
+        let mxid = state.homeserver_connection.mxid(&user.username);
+        state
+            .homeserver_connection
+            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .await
+            .unwrap();
+
         let request = Request::post(format!("/api/admin/v1/users/{}/reactivate", user.id))
             .bearer(&token)
             .empty();
@@ -189,18 +193,10 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
         );
-        // TODO: have test coverage on deactivated_at timestamp
-
-        // It should have scheduled a reactivation job for the user
-        // XXX: we don't have a good way to look for the reactivation job
-        let job: Json<serde_json::Value> = sqlx::query_scalar(
-            "SELECT payload FROM queue_jobs WHERE queue_name = 'reactivate-user'",
-        )
-        .fetch_one(&pool)
-        .await
-        .expect("Reactivation job to be scheduled");
-        assert_eq!(job["user_id"], serde_json::json!(user.id));
-        assert_eq!(job["unlock"], serde_json::Value::Bool(false));
+        assert_eq!(
+            body["data"]["attributes"]["deactivated_at"],
+            serde_json::Value::Null
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

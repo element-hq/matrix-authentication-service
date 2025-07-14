@@ -590,7 +590,7 @@ impl UserMutations {
         matrix.reactivate_user(&mxid).await?;
 
         // Now unlock the user in our database
-        let user = repo.user().unlock(user).await?;
+        let user = repo.user().reactivate_and_unlock(user).await?;
 
         repo.save().await?;
 

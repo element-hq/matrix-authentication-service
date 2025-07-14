@@ -12,6 +12,8 @@ use mas_storage::{
     BoxRng,
     queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
 };
+use schemars::JsonSchema;
+use serde::Deserialize;
 use tracing::info;
 use ulid::Ulid;
 
@@ -49,7 +51,25 @@ impl IntoResponse for RouteError {
     }
 }
 
-pub fn doc(operation: TransformOperation) -> TransformOperation {
+/// # JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint
+#[derive(Default, Deserialize, JsonSchema)]
+#[serde(rename = "DeactivateUserRequest")]
+pub struct Request {
+    /// Whether to skip locking the user before deactivation.
+    #[serde(default)]
+    skip_lock: bool,
+}
+
+pub fn doc(mut operation: TransformOperation) -> TransformOperation {
+    operation
+        .inner_mut()
+        .request_body
+        .as_mut()
+        .unwrap()
+        .as_item_mut()
+        .unwrap()
+        .required = false;
+
     operation
         .id("deactivateUser")
         .summary("Deactivate a user")
@@ -76,7 +96,9 @@ pub async fn handler(
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
+    body: Option<Json<Request>>,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
+    let Json(params) = body.unwrap_or_default();
     let id = *id;
     let mut user = repo
         .user()
@@ -84,7 +106,7 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    if user.locked_at.is_none() {
+    if !params.skip_lock && user.locked_at.is_none() {
         user = repo.user().lock(&clock, user).await?;
     }
 
@@ -105,14 +127,13 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use insta::assert_json_snapshot;
+    use insta::{allow_duplicates, assert_json_snapshot};
     use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_deactivate_user(pool: PgPool) {
+    async fn test_deactivate_user_helper(pool: PgPool, skip_lock: Option<bool>) {
         setup();
         let mut state = TestState::from_pool(pool.clone()).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -125,19 +146,27 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id))
-            .bearer(&token)
-            .empty();
+        let request =
+            Request::post(format!("/api/admin/v1/users/{}/deactivate", user.id)).bearer(&token);
+        let request = match skip_lock {
+            None => request.empty(),
+            Some(skip_lock) => request.json(serde_json::json!({
+                "skip_lock": skip_lock,
+            })),
+        };
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        // The locked_at timestamp should be the same as the current time
+        // The locked_at timestamp should be the same as the current time, or null if not locked
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
-            serde_json::json!(state.clock.now())
+            if !skip_lock.unwrap_or(false) {
+                serde_json::json!(state.clock.now())
+            } else {
+                serde_json::Value::Null
+            }
         );
-        // TODO: have test coverage on deactivated_at timestamp
 
         // Make sure to run the jobs in the queue
         state.run_jobs_in_queue().await;
@@ -149,7 +178,7 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        assert_json_snapshot!(body, @r#"
+        allow_duplicates!(assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "user",
@@ -169,7 +198,17 @@ mod tests {
             "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
-        "#);
+        "#));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user(pool: PgPool) {
+        test_deactivate_user_helper(pool, Option::None).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deactivate_user_skip_lock(pool: PgPool) {
+        test_deactivate_user_helper(pool, Option::Some(true)).await;
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -206,7 +245,6 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
         );
-        // TODO: have test coverage on deactivated_at timestamp
 
         // Make sure to run the jobs in the queue
         state.run_jobs_in_queue().await;

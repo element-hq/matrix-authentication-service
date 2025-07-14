@@ -11,6 +11,8 @@ use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_matrix::HomeserverConnection;
+use schemars::JsonSchema;
+use serde::Deserialize;
 use ulid::Ulid;
 
 use crate::{
@@ -50,7 +52,25 @@ impl IntoResponse for RouteError {
     }
 }
 
-pub fn doc(operation: TransformOperation) -> TransformOperation {
+/// # JSON payload for the `POST /api/admin/v1/users/:id/unlock` endpoint
+#[derive(Default, Deserialize, JsonSchema)]
+#[serde(rename = "UnlockUserRequest")]
+pub struct Request {
+    /// Whether to skip ensuring the user is active upon being unlocked.
+    #[serde(default)]
+    skip_reactivate: bool,
+}
+
+pub fn doc(mut operation: TransformOperation) -> TransformOperation {
+    operation
+        .inner_mut()
+        .request_body
+        .as_mut()
+        .unwrap()
+        .as_item_mut()
+        .unwrap()
+        .required = false;
+
     operation
         .id("unlockUser")
         .summary("Unlock a user")
@@ -73,7 +93,9 @@ pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     id: UlidPathParam,
+    body: Option<Json<Request>>,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
+    let Json(params) = body.unwrap_or_default();
     let id = *id;
     let user = repo
         .user()
@@ -81,15 +103,17 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    // Call the homeserver synchronously to unlock the user
-    let mxid = homeserver.mxid(&user.username);
-    homeserver
-        .reactivate_user(&mxid)
-        .await
-        .map_err(RouteError::Homeserver)?;
-
-    // Now unlock the user in our database
-    let user = repo.user().unlock(user).await?;
+    let user = if !params.skip_reactivate {
+        // Call the homeserver synchronously to reactivate the user
+        let mxid = homeserver.mxid(&user.username);
+        homeserver
+            .reactivate_user(&mxid)
+            .await
+            .map_err(RouteError::Homeserver)?;
+        repo.user().reactivate_and_unlock(user).await?
+    } else {
+        repo.user().unlock(user).await?
+    };
 
     repo.save().await?;
 
@@ -103,7 +127,7 @@ pub async fn handler(
 mod tests {
     use hyper::{Request, StatusCode};
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use mas_storage::{RepositoryAccess, user::UserRepository};
+    use mas_storage::{user::UserRepository, Clock, RepositoryAccess};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -145,8 +169,7 @@ mod tests {
         );
     }
 
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_unlock_deactivated_user(pool: PgPool) {
+    async fn test_unlock_deactivated_user_helper(pool: PgPool, skip_reactivate: Option<bool>) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -179,9 +202,13 @@ mod tests {
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
         assert!(mx_user.deactivated);
 
-        let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id))
-            .bearer(&token)
-            .empty();
+        let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id)).bearer(&token);
+        let request = match skip_reactivate {
+            None => request.empty(),
+            Some(skip_reactivate) => request.json(serde_json::json!({
+                "skip_reactivate": skip_reactivate,
+            })),
+        };
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
@@ -190,11 +217,30 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
         );
-        // TODO: have test coverage on deactivated_at timestamp
 
-        // The user should be reactivated on the homeserver
+        let skip_reactivate = skip_reactivate.unwrap_or(false);
+        assert_eq!(
+            body["data"]["attributes"]["deactivated_at"],
+            if !skip_reactivate {
+                serde_json::Value::Null
+            } else {
+                serde_json::json!(state.clock.now())
+            }
+        );
+
+        // Check whether the user should be reactivated on the homeserver
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
-        assert!(!mx_user.deactivated);
+        assert_eq!(mx_user.deactivated, skip_reactivate);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unlock_deactivated_user(pool: PgPool) {
+        test_unlock_deactivated_user_helper(pool, Option::None).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unlock_deactivated_user_skip_reactivate(pool: PgPool) {
+        test_unlock_deactivated_user_helper(pool, Option::Some(true)).await;
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -1359,6 +1359,15 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateUserRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "User was deactivated",
@@ -1568,6 +1577,15 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockUserRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "User was unlocked",
@@ -3938,6 +3956,28 @@
         "properties": {
           "admin": {
             "description": "Whether the user can request admin privileges.",
+            "type": "boolean"
+          }
+        }
+      },
+      "DeactivateUserRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
+        "type": "object",
+        "properties": {
+          "skip_lock": {
+            "description": "Whether to skip locking the user before deactivation.",
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      },
+      "UnlockUserRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/users/:id/unlock` endpoint",
+        "type": "object",
+        "properties": {
+          "skip_reactivate": {
+            "description": "Whether to skip ensuring the user is active upon being unlocked.",
+            "default": false,
             "type": "boolean"
           }
         }
