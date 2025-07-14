@@ -162,10 +162,10 @@ mod tests {
         // not locked
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
-            if !skip_lock.unwrap_or(false) {
-                serde_json::json!(state.clock.now())
-            } else {
+            if skip_lock.unwrap_or(false) {
                 serde_json::Value::Null
+            } else {
+                serde_json::json!(state.clock.now())
             }
         );
 

@@ -103,7 +103,9 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    let user = if !params.skip_reactivate {
+    let user = if params.skip_reactivate {
+        repo.user().unlock(user).await?
+    } else {
         // Call the homeserver synchronously to reactivate the user
         let mxid = homeserver.mxid(&user.username);
         homeserver
@@ -111,8 +113,6 @@ pub async fn handler(
             .await
             .map_err(RouteError::Homeserver)?;
         repo.user().reactivate_and_unlock(user).await?
-    } else {
-        repo.user().unlock(user).await?
     };
 
     repo.save().await?;
@@ -222,10 +222,10 @@ mod tests {
         let skip_reactivate = skip_reactivate.unwrap_or(false);
         assert_eq!(
             body["data"]["attributes"]["deactivated_at"],
-            if !skip_reactivate {
-                serde_json::Value::Null
-            } else {
+            if skip_reactivate {
                 serde_json::json!(state.clock.now())
+            } else {
+                serde_json::Value::Null
             }
         );
 
