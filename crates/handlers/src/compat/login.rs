@@ -800,7 +800,12 @@ mod tests {
         "###);
     }
 
-    async fn user_with_password(state: &TestState, username: &str, password: &str) {
+    async fn user_with_password(
+        state: &TestState,
+        username: &str,
+        password: &str,
+        locked: bool,
+    ) -> User {
         let mut rng = state.rng();
         let mut repo = state.repository().await.unwrap();
 
@@ -826,7 +831,14 @@ mod tests {
             .await
             .unwrap();
 
+        let user = if locked {
+            repo.user().lock(&state.clock, user).await.unwrap()
+        } else {
+            user
+        };
+
         repo.save().await.unwrap();
+        return user;
     }
 
     /// Test that a user can login with a password using the Matrix
@@ -836,7 +848,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        let user = user_with_password(&state, "alice", "password", true).await;
 
         // Now let's try to login with the password, without asking for a refresh token.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -848,14 +860,30 @@ mod tests {
             "password": "password",
         }));
 
+        // First try to login to a locked account
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let _ = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
-          "device_id": "ZGpSvYQqlq",
+          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
+          "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -877,10 +905,10 @@ mod tests {
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
-          "device_id": "42oTpLoieH",
+          "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
+          "device_id": "Yp7FM44zJN",
           "user_id": "@alice:example.com",
-          "refresh_token": "mcr_7IvDc44woP66fRQoS9MVcHXO9OeBmR_0jDGr1",
+          "refresh_token": "mcr_LoYqtrtBUBcWlE4RX6o47chBCGkadB_9gzpc1",
           "expires_in_ms": 300000
         }
         "###);
@@ -898,8 +926,8 @@ mod tests {
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
-          "device_id": "Yp7FM44zJN",
+          "access_token": "mct_Xl3bbpfh9yNy9NzuRxyR3b3PLW0rqd_DiXAH2",
+          "device_id": "6cq7FqNSYo",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -953,7 +981,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        user_with_password(&state, "alice", "password", false).await;
         // Try without a Content-Type header
         let mut request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
             "type": "m.login.password",
@@ -985,7 +1013,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        let user = user_with_password(&state, "alice", "password", true).await;
 
         // Login with a full MXID as identifier
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -997,13 +1025,29 @@ mod tests {
             "password": "password",
         }));
 
+        // First try to login to a locked account
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let _ = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
-          "device_id": "ZGpSvYQqlq",
+          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
+          "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -1147,6 +1191,8 @@ mod tests {
             .add(&mut state.rng(), &state.clock, "alice".to_owned())
             .await
             .unwrap();
+        // Start with a locked account
+        let user = repo.user().lock(&state.clock, user).await.unwrap();
         repo.save().await.unwrap();
 
         let mxid = state.homeserver_connection.mxid(&user.username);
@@ -1179,14 +1225,29 @@ mod tests {
             "type": "m.login.token",
             "token": token,
         }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r#"
         {
-          "access_token": "mct_bnkWh1tPmm1MZOpygPaXwygX8PfxEY_hE6do1",
-          "device_id": "O3Ju1MUh3Z",
+          "access_token": "mct_bUTa4XIh92RARTPTjqQrCZLAkq2ild_0VsYE6",
+          "device_id": "uihy4bk51g",
           "user_id": "@alice:example.com"
         }
         "#);
