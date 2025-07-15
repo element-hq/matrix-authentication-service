@@ -838,7 +838,7 @@ mod tests {
         };
 
         repo.save().await.unwrap();
-        return user;
+        user
     }
 
     /// Test that a user can login with a password using the Matrix
