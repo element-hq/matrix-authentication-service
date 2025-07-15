@@ -11,10 +11,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_matrix::{HomeserverConnection, ProvisionRequest};
-use mas_storage::{
-    BoxRng,
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-};
+use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::warn;
@@ -106,10 +103,6 @@ pub struct Request {
     /// tokens (like with admin access) for them
     #[serde(default)]
     skip_homeserver_check: bool,
-
-    /// Delay the response until the user has been created on the homeserver.
-    #[serde(default)]
-    add_synchronously: bool,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -172,19 +165,13 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
-    if params.add_synchronously {
-        homeserver
-            .provision_user(&ProvisionRequest::new(
-                homeserver.mxid(&user.username),
-                &user.sub,
-            ))
-            .await
-            .map_err(RouteError::Homeserver)?;
-    } else {
-        repo.queue_job()
-            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
-            .await?;
-    }
+    homeserver
+        .provision_user(&ProvisionRequest::new(
+            homeserver.mxid(&user.username),
+            &user.sub,
+        ))
+        .await
+        .map_err(RouteError::Homeserver)?;
 
     repo.save().await?;
 
@@ -233,23 +220,6 @@ mod tests {
             .unwrap();
 
         assert_eq!(user.username, "alice");
-    }
-
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_add_user_synchronously(pool: PgPool) {
-        setup();
-        let mut state = TestState::from_pool(pool).await.unwrap();
-        let token = state.token_with_scope("urn:mas:admin").await;
-
-        let request = Request::post("/api/admin/v1/users")
-            .bearer(&token)
-            .json(serde_json::json!({
-                "username": "alice",
-                "add_synchronously": true,
-            }));
-
-        let response = state.request(request).await;
-        response.assert_status(StatusCode::CREATED);
 
         // Check that the user was created on the homeserver
         let mxid = state.homeserver_connection.mxid("alice");
