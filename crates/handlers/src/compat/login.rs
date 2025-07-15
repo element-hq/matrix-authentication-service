@@ -508,19 +508,16 @@ async fn token_login(
         );
         return Err(RouteError::InvalidLoginToken);
     };
+    if browser_session.user.locked_at.is_some() {
+        return Err(RouteError::UserLocked);
+    }
     if !browser_session.active() || !browser_session.user.is_valid() {
         tracing::info!(
             compat_sso_login.id = %login.id,
             browser_session.id = %browser_session_id,
             "Attempt to exchange login token but browser session is not active"
         );
-        return Err(
-            if browser_session.finished_at.is_none() && browser_session.user.locked_at.is_some() {
-                RouteError::UserLocked
-            } else {
-                RouteError::InvalidLoginToken
-            },
-        );
+        return Err(RouteError::InvalidLoginToken);
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
