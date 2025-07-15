@@ -100,7 +100,7 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
             .user_email()
             .add_authentication_code(
                 &mut rng,
-                &clock,
+                clock,
                 Duration::minutes(5), // TODO: make this configurable
                 &user_email_authentication,
                 code,

@@ -166,7 +166,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.40"
+version = "4.5.41"
 features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
@@ -273,7 +273,7 @@ features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.14"
+version = "0.1.15"
 features = [
     "client",
     "server",
@@ -473,7 +473,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.123"
+version = "2.1.124"
 
 # Prometheus metrics
 [workspace.dependencies.prometheus]
@@ -512,11 +512,11 @@ version = "2.1.1"
 
 # Matrix-related types
 [workspace.dependencies.ruma-common]
-version = "0.15.3"
+version = "0.15.4"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.28"
+version = "0.23.29"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
@@ -591,7 +591,7 @@ version = "0.7.1"
 
 # Custom serialization helpers
 [workspace.dependencies.serde_with]
-version = "3.13.0"
+version = "3.14.0"
 features = ["hex", "chrono"]
 
 # YAML serialization

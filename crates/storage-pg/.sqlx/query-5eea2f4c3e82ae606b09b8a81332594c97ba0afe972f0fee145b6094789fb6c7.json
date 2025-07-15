@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_email_id\n                     , user_id\n                     , email\n                     , created_at\n                FROM user_emails\n\n                WHERE user_id = $1 AND email = $2\n            ",
+  "query": "\n                SELECT user_email_id\n                     , user_id\n                     , email\n                     , created_at\n                FROM user_emails\n                WHERE LOWER(email) = LOWER($1)\n            ",
   "describe": {
     "columns": [
       {
@@ -26,7 +26,6 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Text"
       ]
     },
@@ -37,5 +36,5 @@
       false
     ]
   },
-  "hash": "f7d26de1d380e3e52f47f2b89ed7506e1e4cca72682bc7737e6508dc4015b8d5"
+  "hash": "5eea2f4c3e82ae606b09b8a81332594c97ba0afe972f0fee145b6094789fb6c7"
 }

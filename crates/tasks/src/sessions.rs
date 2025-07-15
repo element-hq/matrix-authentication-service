@@ -39,7 +39,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveOAuthSessionsJob::new(now - ttl),
                 )
                 .await
@@ -50,7 +50,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveCompatSessionsJob::new(now - ttl),
                 )
                 .await
@@ -61,7 +61,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveUserSessionsJob::new(now - ttl),
                 )
                 .await
@@ -104,7 +104,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -117,7 +117,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
                     repo.queue_job()
                         .schedule_job_later(
                             &mut rng,
-                            &clock,
+                            clock,
                             SyncDevicesJob::new_for_id(user_id),
                             clock.now() + delay,
                         )
@@ -128,7 +128,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
             }
 
             repo.oauth2_session()
-                .finish(&clock, edge)
+                .finish(clock, edge)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -168,7 +168,7 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -180,7 +180,7 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
                 repo.queue_job()
                     .schedule_job_later(
                         &mut rng,
-                        &clock,
+                        clock,
                         SyncDevicesJob::new_for_id(edge.user_id),
                         clock.now() + delay,
                     )
@@ -190,7 +190,7 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
             }
 
             repo.compat_session()
-                .finish(&clock, edge)
+                .finish(clock, edge)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -223,14 +223,14 @@ impl RunnableJob for ExpireInactiveUserSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
 
         for edge in page.edges {
             repo.browser_session()
-                .finish(&clock, edge)
+                .finish(clock, edge)
                 .await
                 .map_err(JobError::retry)?;
         }

@@ -15,7 +15,7 @@ use mas_storage::{
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
+use sea_query::{Expr, Func, PostgresQueryBuilder, Query, SimpleExpr, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -110,10 +110,13 @@ impl Filter for UserEmailFilter<'_> {
             .add_option(self.user().map(|user| {
                 Expr::col((UserEmails::Table, UserEmails::UserId)).eq(Uuid::from(user.id))
             }))
-            .add_option(
-                self.email()
-                    .map(|email| Expr::col((UserEmails::Table, UserEmails::Email)).eq(email)),
-            )
+            .add_option(self.email().map(|email| {
+                SimpleExpr::from(Func::lower(Expr::col((
+                    UserEmails::Table,
+                    UserEmails::Email,
+                ))))
+                .eq(Func::lower(email))
+            }))
     }
 }
 
@@ -175,7 +178,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , created_at
                 FROM user_emails
 
-                WHERE user_id = $1 AND email = $2
+                WHERE user_id = $1 AND LOWER(email) = LOWER($2)
             "#,
             Uuid::from(user.id),
             email,
@@ -209,7 +212,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , email
                      , created_at
                 FROM user_emails
-                WHERE email = $1
+                WHERE LOWER(email) = LOWER($1)
             "#,
             email,
         )
