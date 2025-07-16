@@ -697,12 +697,10 @@ pub(crate) async fn post(
 
             let maybe_user = repo.user().find_by_username(&localpart.unwrap()).await?;
 
-            if maybe_user.is_none() {
-                //user can not be None at this stage
+            let Some(user) = maybe_user else {
+                // user cannot be None at this stage
                 return Err(RouteError::InvalidFormAction);
             }
-
-            let user = maybe_user.unwrap();
 
             let on_conflict = provider.claims_imports.localpart.on_conflict;
 
