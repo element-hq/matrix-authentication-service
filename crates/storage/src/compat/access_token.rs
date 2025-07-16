@@ -13,7 +13,7 @@ use ulid::Ulid;
 use crate::{Clock, repository_impl};
 
 /// A [`CompatAccessTokenRepository`] helps interacting with
-/// [`CompatAccessToken`] saved in the storage backend
+/// [`CompatAccessToken`] saved in the storage backend
 #[async_trait]
 pub trait CompatAccessTokenRepository: Send + Sync {
     /// The error type returned by the repository

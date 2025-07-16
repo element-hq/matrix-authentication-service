@@ -17,7 +17,7 @@ use url::Url;
 
 use crate::{Clock, repository_impl};
 
-/// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
+/// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
 /// storage backend
 #[async_trait]
 pub trait OAuth2ClientRepository: Send + Sync {
