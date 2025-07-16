@@ -508,16 +508,19 @@ async fn token_login(
         );
         return Err(RouteError::InvalidLoginToken);
     };
-    if browser_session.user.locked_at.is_some() {
-        return Err(RouteError::UserLocked);
-    }
     if !browser_session.active() || !browser_session.user.is_valid() {
         tracing::info!(
             compat_sso_login.id = %login.id,
             browser_session.id = %browser_session_id,
             "Attempt to exchange login token but browser session is not active"
         );
-        return Err(RouteError::InvalidLoginToken);
+        return Err(
+            if browser_session.finished_at.is_some() || browser_session.user.deactivated_at.is_some() {
+                RouteError::InvalidLoginToken
+            } else {
+                RouteError::UserLocked
+            }
+        );
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
@@ -873,7 +876,7 @@ mod tests {
 
         // Now try again after unlocking the account
         let mut repo = state.repository().await.unwrap();
-        let _ = repo.user().unlock(user).await.unwrap();
+        let user = repo.user().unlock(user).await.unwrap();
         repo.save().await.unwrap();
 
         let response = state.request(request).await;
@@ -973,6 +976,45 @@ mod tests {
         // The response should be the same as the previous one, so that we don't leak if
         // it's the user that is invalid or the password.
         assert_eq!(body, old_body);
+
+        // Try to login to a deactivated account
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        }));
+
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
+
+        // Should get the same error if the deactivated user is also locked
+        let mut repo = state.repository().await.unwrap();
+        let _user = repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
     }
 
     /// Test that we can send a login request without a Content-Type header
@@ -1286,6 +1328,41 @@ mod tests {
         {
           "errcode": "M_FORBIDDEN",
           "error": "Login token expired"
+        }
+        "###);
+
+        // Try to login to a deactivated account
+        let token = get_login_token(&state, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.token",
+            "token": token,
+        }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
+        }
+        "###);
+
+        // Should get the same error if the deactivated user is also locked
+        let mut repo = state.repository().await.unwrap();
+        let _user = repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
         }
         "###);
     }
