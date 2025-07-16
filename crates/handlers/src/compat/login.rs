@@ -515,11 +515,13 @@ async fn token_login(
             "Attempt to exchange login token but browser session is not active"
         );
         return Err(
-            if browser_session.finished_at.is_some() || browser_session.user.deactivated_at.is_some() {
+            if browser_session.finished_at.is_some()
+                || browser_session.user.deactivated_at.is_some()
+            {
                 RouteError::InvalidLoginToken
             } else {
                 RouteError::UserLocked
-            }
+            },
         );
     }
 
