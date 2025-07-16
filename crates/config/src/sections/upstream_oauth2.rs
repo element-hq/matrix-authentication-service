@@ -118,8 +118,10 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 }
             }
 
-            if !provider.claims_imports.localpart.on_conflict.is_default()
-                && !matches!(
+            if matches!(
+                provider.claims_imports.localpart.on_conflict,
+                OnConflict::Add
+            ) && !matches!(
                     provider.claims_imports.localpart.action,
                     ImportAction::Force | ImportAction::Require
                 )
