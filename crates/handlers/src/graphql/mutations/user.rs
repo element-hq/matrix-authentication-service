@@ -144,6 +144,9 @@ impl LockUserPayload {
 struct UnlockUserInput {
     /// The ID of the user to unlock
     user_id: ID,
+
+    /// Reactivate the user if it had been deactivated
+    reactivate: Option<bool>,
 }
 
 /// The status of the `unlockUser` mutation.
@@ -585,12 +588,19 @@ impl UserMutations {
             return Ok(UnlockUserPayload::NotFound);
         };
 
-        // Call the homeserver synchronously to unlock the user
-        let mxid = matrix.mxid(&user.username);
-        matrix.reactivate_user(&mxid).await?;
+        let user = if input.reactivate.unwrap_or(false) {
+            // Call the homeserver synchronously to reactivate the user
+            let mxid = matrix.mxid(&user.username);
+            matrix.reactivate_user(&mxid).await?;
+
+            // Now reactivate the user in our database
+            repo.user().reactivate(user).await?
+        } else {
+            user
+        };
 
         // Now unlock the user in our database
-        let user = repo.user().reactivate_and_unlock(user).await?;
+        let user = repo.user().unlock(user).await?;
 
         repo.save().await?;
 

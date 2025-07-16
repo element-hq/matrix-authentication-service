@@ -1842,6 +1842,10 @@ input UnlockUserInput {
   The ID of the user to unlock
   """
   userId: ID!
+  """
+  Reactivate the user if it had been deactivated
+  """
+  reactivate: Boolean
 }
 
 """

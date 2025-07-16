@@ -4,15 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::sync::Arc;
-
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, extract::State, response::IntoResponse};
+use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_matrix::HomeserverConnection;
-use schemars::JsonSchema;
-use serde::Deserialize;
 use ulid::Ulid;
 
 use crate::{
@@ -31,9 +26,6 @@ pub enum RouteError {
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 
-    #[error(transparent)]
-    Homeserver(anyhow::Error),
-
     #[error("User ID {0} not found")]
     NotFound(Ulid),
 }
@@ -43,37 +35,21 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         let error = ErrorResponse::from_error(&self);
-        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::Homeserver(_));
+        let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
-            Self::Internal(_) | Self::Homeserver(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
         (status, sentry_event_id, Json(error)).into_response()
     }
 }
 
-/// # JSON payload for the `POST /api/admin/v1/users/:id/unlock` endpoint
-#[derive(Default, Deserialize, JsonSchema)]
-#[serde(rename = "UnlockUserRequest")]
-pub struct Request {
-    /// Whether to skip ensuring the user is active upon being unlocked.
-    #[serde(default)]
-    skip_reactivate: bool,
-}
-
-pub fn doc(mut operation: TransformOperation) -> TransformOperation {
-    operation
-        .inner_mut()
-        .request_body
-        .as_mut()
-        .unwrap()
-        .as_item_mut()
-        .unwrap()
-        .required = false;
-
+pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("unlockUser")
         .summary("Unlock a user")
+        .description("Calling this endpoint will lift restrictions on user actions that had imposed by locking.
+This DOES NOT reactivate a deactivated user, which will remain unavailable until it is explicitly reactivated.")
         .tag("user")
         .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
             // In the samples, the third user is the one locked
@@ -91,11 +67,8 @@ pub fn doc(mut operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.users.unlock", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     id: UlidPathParam,
-    body: Option<Json<Request>>,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
-    let Json(params) = body.unwrap_or_default();
     let id = *id;
     let user = repo
         .user()
@@ -103,17 +76,7 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    let user = if params.skip_reactivate {
-        repo.user().unlock(user).await?
-    } else {
-        // Call the homeserver synchronously to reactivate the user
-        let mxid = homeserver.mxid(&user.username);
-        homeserver
-            .reactivate_user(&mxid)
-            .await
-            .map_err(RouteError::Homeserver)?;
-        repo.user().reactivate_and_unlock(user).await?
-    };
+    let user = repo.user().unlock(user).await?;
 
     repo.save().await?;
 
@@ -169,7 +132,8 @@ mod tests {
         );
     }
 
-    async fn test_unlock_deactivated_user_helper(pool: PgPool, skip_reactivate: Option<bool>) {
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unlock_deactivated_user(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
@@ -202,14 +166,9 @@ mod tests {
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
         assert!(mx_user.deactivated);
 
-        let request =
-            Request::post(format!("/api/admin/v1/users/{}/unlock", user.id)).bearer(&token);
-        let request = match skip_reactivate {
-            None => request.empty(),
-            Some(skip_reactivate) => request.json(serde_json::json!({
-                "skip_reactivate": skip_reactivate,
-            })),
-        };
+        let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id))
+            .bearer(&token)
+            .empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
@@ -218,30 +177,13 @@ mod tests {
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
         );
-
-        let skip_reactivate = skip_reactivate.unwrap_or(false);
+        // The user should remain deactivated
         assert_eq!(
             body["data"]["attributes"]["deactivated_at"],
-            if skip_reactivate {
-                serde_json::json!(state.clock.now())
-            } else {
-                serde_json::Value::Null
-            }
+            serde_json::json!(state.clock.now())
         );
-
-        // Check whether the user should be reactivated on the homeserver
         let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
-        assert_eq!(mx_user.deactivated, skip_reactivate);
-    }
-
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_unlock_deactivated_user(pool: PgPool) {
-        test_unlock_deactivated_user_helper(pool, Option::None).await;
-    }
-
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_unlock_deactivated_user_skip_reactivate(pool: PgPool) {
-        test_unlock_deactivated_user_helper(pool, Option::Some(true)).await;
+        assert!(mx_user.deactivated);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

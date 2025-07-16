@@ -257,19 +257,6 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
 
-    /// Reactivate and unlock a [`User`]
-    ///
-    /// Returns the reactivated and unlocked [`User`]
-    ///
-    /// # Parameters
-    ///
-    /// * `user`: The [`User`] to reactivate and unlock
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn reactivate_and_unlock(&mut self, user: User) -> Result<User, Self::Error>;
-
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -342,7 +329,6 @@ repository_impl!(UserRepository:
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
-    async fn reactivate_and_unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,

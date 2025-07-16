@@ -53,7 +53,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("reactivateUser")
         .summary("Reactivate a user")
-        .description("Calling this endpoint will reactivate a deactivated user, both locally and on the Matrix homeserver.")
+        .description("Calling this endpoint will reactivate a deactivated user.
+This DOES NOT unlock a locked user, which is still prevented from doing any action until it is explicitly unlocked.")
         .tag("user")
         .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
             // In the samples, the third user is the one locked

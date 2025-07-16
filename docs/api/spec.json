@@ -1345,7 +1345,7 @@
           "user"
         ],
         "summary": "Deactivate a user",
-        "description": "Calling this endpoint will lock and deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
+        "description": "Calling this endpoint will deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
         "operationId": "deactivateUser",
         "parameters": [
           {
@@ -1359,15 +1359,6 @@
             "style": "simple"
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeactivateUserRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "User was deactivated",
@@ -1424,7 +1415,7 @@
           "user"
         ],
         "summary": "Reactivate a user",
-        "description": "Calling this endpoint will reactivate a deactivated user, both locally and on the Matrix homeserver.",
+        "description": "Calling this endpoint will reactivate a deactivated user.\nThis DOES NOT unlock a locked user, which is still prevented from doing any action until it is explicitly unlocked.",
         "operationId": "reactivateUser",
         "parameters": [
           {
@@ -1564,6 +1555,7 @@
           "user"
         ],
         "summary": "Unlock a user",
+        "description": "Calling this endpoint will lift restrictions on user actions that had imposed by locking.\nThis DOES NOT reactivate a deactivated user, which will remain unavailable until it is explicitly reactivated.",
         "operationId": "unlockUser",
         "parameters": [
           {
@@ -1577,15 +1569,6 @@
             "style": "simple"
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnlockUserRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "User was unlocked",
@@ -3956,28 +3939,6 @@
         "properties": {
           "admin": {
             "description": "Whether the user can request admin privileges.",
-            "type": "boolean"
-          }
-        }
-      },
-      "DeactivateUserRequest": {
-        "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
-        "type": "object",
-        "properties": {
-          "skip_lock": {
-            "description": "Whether to skip locking the user before deactivation.",
-            "default": false,
-            "type": "boolean"
-          }
-        }
-      },
-      "UnlockUserRequest": {
-        "title": "JSON payload for the `POST /api/admin/v1/users/:id/unlock` endpoint",
-        "type": "object",
-        "properties": {
-          "skip_reactivate": {
-            "description": "Whether to skip ensuring the user is active upon being unlocked.",
-            "default": false,
             "type": "boolean"
           }
         }

@@ -257,14 +257,14 @@ impl InsertableJob for DeactivateUserJob {
     const QUEUE_NAME: &'static str = "deactivate-user";
 }
 
-/// A job to reactivate and unlock a user
+/// A job to reactivate a user
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReactivateUserJob {
     user_id: Ulid,
 }
 
 impl ReactivateUserJob {
-    /// Create a new job to reactivate and unlock a user
+    /// Create a new job to reactivate a user
     ///
     /// # Parameters
     ///

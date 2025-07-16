@@ -1347,6 +1347,8 @@ export type StartEmailAuthenticationStatus =
 
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
+  /** Reactivate the user if it had been deactivated */
+  reactivate?: InputMaybe<Scalars['Boolean']['input']>;
   /** The ID of the user to unlock */
   userId: Scalars['ID']['input'];
 };

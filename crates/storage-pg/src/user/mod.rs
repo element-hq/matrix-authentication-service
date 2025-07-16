@@ -379,7 +379,7 @@ impl UserRepository for PgUserRepository<'_> {
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        user.deactivated_at = Some(user.created_at);
+        user.deactivated_at = Some(deactivated_at);
 
         Ok(user)
     }
@@ -413,40 +413,6 @@ impl UserRepository for PgUserRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         user.deactivated_at = None;
-
-        Ok(user)
-    }
-
-    #[tracing::instrument(
-        name = "db.user.reactivate_and_unlock",
-        skip_all,
-        fields(
-            db.query.text,
-            %user.id,
-        ),
-        err,
-    )]
-    async fn reactivate_and_unlock(&mut self, mut user: User) -> Result<User, Self::Error> {
-        if user.deactivated_at.is_none() && user.locked_at.is_none() {
-            return Ok(user);
-        }
-
-        let res = sqlx::query!(
-            r#"
-                UPDATE users
-                SET deactivated_at = NULL, locked_at = NULL
-                WHERE user_id = $1
-            "#,
-            Uuid::from(user.id),
-        )
-        .traced()
-        .execute(&mut *self.conn)
-        .await?;
-
-        DatabaseError::ensure_affected_rows(&res, 1)?;
-
-        user.deactivated_at = None;
-        user.locked_at = None;
 
         Ok(user)
     }
