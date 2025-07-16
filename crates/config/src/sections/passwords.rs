@@ -72,12 +72,15 @@ impl Default for PasswordsConfig {
 impl ConfigurationSection for PasswordsConfig {
     const PATH: Option<&'static str> = Some("passwords");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let annotate = |mut error: figment::Error| {
             error.metadata = figment.find_metadata(Self::PATH.unwrap()).cloned();
             error.profile = Some(figment::Profile::Default);
             error.path = vec![Self::PATH.unwrap().to_owned()];
-            Err(error)
+            error
         };
 
         if !self.enabled {
@@ -86,16 +89,18 @@ impl ConfigurationSection for PasswordsConfig {
         }
 
         if self.schemes.is_empty() {
-            return annotate(figment::Error::from(
+            return Err(annotate(figment::Error::from(
                 "Requires at least one password scheme in the config".to_owned(),
-            ));
+            ))
+            .into());
         }
 
         for scheme in &self.schemes {
             if scheme.secret.is_some() && scheme.secret_file.is_some() {
-                return annotate(figment::Error::from(
+                return Err(annotate(figment::Error::from(
                     "Cannot specify both `secret` and `secret_file`".to_owned(),
-                ));
+                ))
+                .into());
             }
         }
 

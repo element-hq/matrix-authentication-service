@@ -96,6 +96,7 @@ impl Options {
         }
 
         let synapse_config = synapse_config::Config::load(&self.synapse_configuration_files)
+            .map_err(anyhow::Error::from_boxed)
             .context("Failed to load Synapse configuration")?;
 
         // Establish a connection to Synapse's Postgres database
@@ -111,7 +112,8 @@ impl Options {
             .await
             .context("could not connect to Synapse Postgres database")?;
 
-        let config = DatabaseConfig::extract_or_default(figment)?;
+        let config =
+            DatabaseConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
 
         let mut mas_connection = database_connection_from_config_with_options(
             &config,
@@ -131,7 +133,7 @@ impl Options {
             // First perform a config sync
             // This is crucial to ensure we register upstream OAuth providers
             // in the MAS database
-            let config = SyncConfig::extract(figment)?;
+            let config = SyncConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
             let clock = SystemClock::default();
             let encrypter = config.secrets.encrypter().await?;
 
@@ -213,7 +215,8 @@ impl Options {
 
             Subcommand::Migrate { dry_run } => {
                 let provider_id_mappings: HashMap<String, Uuid> = {
-                    let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)?;
+                    let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(figment)
+                        .map_err(anyhow::Error::from_boxed)?;
 
                     mas_oauth2
                         .providers
@@ -252,7 +255,8 @@ impl Options {
                 let occasional_progress_logger_task =
                     tokio::spawn(occasional_progress_logger(progress.clone()));
 
-                let mas_matrix = MatrixConfig::extract(figment)?;
+                let mas_matrix =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 syn2mas::migrate(
                     reader,
                     writer,

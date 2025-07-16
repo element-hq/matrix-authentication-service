@@ -37,13 +37,20 @@ impl Options {
             SC::Check => {
                 let _span = info_span!("cli.templates.check").entered();
 
-                let template_config = TemplatesConfig::extract_or_default(figment)?;
-                let branding_config = BrandingConfig::extract_or_default(figment)?;
-                let matrix_config = MatrixConfig::extract(figment)?;
-                let experimental_config = ExperimentalConfig::extract_or_default(figment)?;
-                let password_config = PasswordsConfig::extract_or_default(figment)?;
-                let account_config = AccountConfig::extract_or_default(figment)?;
-                let captcha_config = CaptchaConfig::extract_or_default(figment)?;
+                let template_config = TemplatesConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let branding_config = BrandingConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+                let experimental_config = ExperimentalConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let password_config = PasswordsConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let account_config = AccountConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let captcha_config = CaptchaConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
 
                 let clock = SystemClock::default();
                 // XXX: we should disallow SeedableRng::from_entropy

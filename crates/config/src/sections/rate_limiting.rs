@@ -117,7 +117,10 @@ pub struct RateLimiterConfiguration {
 impl ConfigurationSection for RateLimitingConfig {
     const PATH: Option<&'static str> = Some("rate_limiting");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let metadata = figment.find_metadata(Self::PATH.unwrap());
 
         let error_on_field = |mut error: figment::error::Error, field: &'static str| {
@@ -154,25 +157,21 @@ impl ConfigurationSection for RateLimitingConfig {
             };
 
         if let Some(error) = error_on_limiter(&self.account_recovery.per_ip) {
-            return Err(error_on_nested_field(error, "account_recovery", "per_ip"));
+            return Err(error_on_nested_field(error, "account_recovery", "per_ip").into());
         }
         if let Some(error) = error_on_limiter(&self.account_recovery.per_address) {
-            return Err(error_on_nested_field(
-                error,
-                "account_recovery",
-                "per_address",
-            ));
+            return Err(error_on_nested_field(error, "account_recovery", "per_address").into());
         }
 
         if let Some(error) = error_on_limiter(&self.registration) {
-            return Err(error_on_field(error, "registration"));
+            return Err(error_on_field(error, "registration").into());
         }
 
         if let Some(error) = error_on_limiter(&self.login.per_ip) {
-            return Err(error_on_nested_field(error, "login", "per_ip"));
+            return Err(error_on_nested_field(error, "login", "per_ip").into());
         }
         if let Some(error) = error_on_limiter(&self.login.per_account) {
-            return Err(error_on_nested_field(error, "login", "per_account"));
+            return Err(error_on_nested_field(error, "login", "per_account").into());
         }
 
         Ok(())

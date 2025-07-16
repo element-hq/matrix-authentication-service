@@ -78,7 +78,7 @@ pub struct EndOAuth2SessionInput {
 /// The payload of the `endOauth2Session` mutation.
 pub enum EndOAuth2SessionPayload {
     NotFound,
-    Ended(mas_data_model::Session),
+    Ended(Box<mas_data_model::Session>),
 }
 
 /// The status of the `endOauth2Session` mutation.
@@ -104,7 +104,7 @@ impl EndOAuth2SessionPayload {
     /// Returns the ended session.
     async fn oauth2_session(&self) -> Option<OAuth2Session> {
         match self {
-            Self::Ended(session) => Some(OAuth2Session(session.clone())),
+            Self::Ended(session) => Some(OAuth2Session(*session.clone())),
             Self::NotFound => None,
         }
     }
@@ -126,7 +126,7 @@ pub enum SetOAuth2SessionNamePayload {
     NotFound,
 
     /// The session was updated.
-    Updated(mas_data_model::Session),
+    Updated(Box<mas_data_model::Session>),
 }
 
 /// The status of the `setOauth2SessionName` mutation.
@@ -152,7 +152,7 @@ impl SetOAuth2SessionNamePayload {
     /// The session that was updated.
     async fn oauth2_session(&self) -> Option<OAuth2Session> {
         match self {
-            Self::Updated(session) => Some(OAuth2Session(session.clone())),
+            Self::Updated(session) => Some(OAuth2Session(*session.clone())),
             Self::NotFound => None,
         }
     }
@@ -293,7 +293,7 @@ impl OAuth2SessionMutations {
 
         repo.save().await?;
 
-        Ok(EndOAuth2SessionPayload::Ended(session))
+        Ok(EndOAuth2SessionPayload::Ended(Box::new(session)))
     }
 
     async fn set_oauth2_session_name(
@@ -343,6 +343,6 @@ impl OAuth2SessionMutations {
 
         repo.save().await?;
 
-        Ok(SetOAuth2SessionNamePayload::Updated(session))
+        Ok(SetOAuth2SessionNamePayload::Updated(Box::new(session)))
     }
 }

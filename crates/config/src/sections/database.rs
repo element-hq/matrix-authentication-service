@@ -222,13 +222,16 @@ pub struct DatabaseConfig {
 impl ConfigurationSection for DatabaseConfig {
     const PATH: Option<&'static str> = Some("database");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::error::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let metadata = figment.find_metadata(Self::PATH.unwrap());
         let annotate = |mut error: figment::Error| {
             error.metadata = metadata.cloned();
             error.profile = Some(figment::Profile::Default);
             error.path = vec![Self::PATH.unwrap().to_owned()];
-            Err(error)
+            error
         };
 
         // Check that the user did not specify both `uri` and the split options at the
@@ -241,37 +244,41 @@ impl ConfigurationSection for DatabaseConfig {
             || self.database.is_some();
 
         if self.uri.is_some() && has_split_options {
-            return annotate(figment::error::Error::from(
+            return Err(annotate(figment::error::Error::from(
                 "uri must not be specified if host, port, socket, username, password, or database are specified".to_owned(),
-            ));
+            )).into());
         }
 
         if self.ssl_ca.is_some() && self.ssl_ca_file.is_some() {
-            return annotate(figment::error::Error::from(
+            return Err(annotate(figment::error::Error::from(
                 "ssl_ca must not be specified if ssl_ca_file is specified".to_owned(),
-            ));
+            ))
+            .into());
         }
 
         if self.ssl_certificate.is_some() && self.ssl_certificate_file.is_some() {
-            return annotate(figment::error::Error::from(
+            return Err(annotate(figment::error::Error::from(
                 "ssl_certificate must not be specified if ssl_certificate_file is specified"
                     .to_owned(),
-            ));
+            ))
+            .into());
         }
 
         if self.ssl_key.is_some() && self.ssl_key_file.is_some() {
-            return annotate(figment::error::Error::from(
+            return Err(annotate(figment::error::Error::from(
                 "ssl_key must not be specified if ssl_key_file is specified".to_owned(),
-            ));
+            ))
+            .into());
         }
 
         if (self.ssl_key.is_some() || self.ssl_key_file.is_some())
             ^ (self.ssl_certificate.is_some() || self.ssl_certificate_file.is_some())
         {
-            return annotate(figment::error::Error::from(
+            return Err(annotate(figment::error::Error::from(
                 "both a ssl_certificate and a ssl_key must be set at the same time or none of them"
                     .to_owned(),
-            ));
+            ))
+            .into());
         }
 
         Ok(())

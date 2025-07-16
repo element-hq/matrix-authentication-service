@@ -59,7 +59,7 @@ impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
         let mut shutdown = LifecycleManager::new()?;
-        let config = AppConfig::extract(figment)?;
+        let config = AppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         info!(version = crate::VERSION, "Starting up");
 
@@ -101,8 +101,10 @@ impl Options {
         } else {
             // Sync the configuration with the database
             let mut conn = pool.acquire().await?;
-            let clients_config = ClientsConfig::extract_or_default(figment)?;
-            let upstream_oauth2_config = UpstreamOAuth2Config::extract_or_default(figment)?;
+            let clients_config =
+                ClientsConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
+            let upstream_oauth2_config = UpstreamOAuth2Config::extract_or_default(figment)
+                .map_err(anyhow::Error::from_boxed)?;
 
             crate::sync::config_sync(
                 upstream_oauth2_config,

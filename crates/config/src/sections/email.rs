@@ -175,7 +175,10 @@ impl Default for EmailConfig {
 impl ConfigurationSection for EmailConfig {
     const PATH: Option<&'static str> = Some("email");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::error::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let metadata = figment.find_metadata(Self::PATH.unwrap());
 
         let error_on_field = |mut error: figment::error::Error, field: &'static str| {
@@ -201,29 +204,29 @@ impl ConfigurationSection for EmailConfig {
 
             EmailTransportKind::Smtp => {
                 if let Err(e) = Mailbox::from_str(&self.from) {
-                    return Err(error_on_field(figment::error::Error::custom(e), "from"));
+                    return Err(error_on_field(figment::error::Error::custom(e), "from").into());
                 }
 
                 if let Err(e) = Mailbox::from_str(&self.reply_to) {
-                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to"));
+                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to").into());
                 }
 
                 match (self.username.is_some(), self.password.is_some()) {
                     (true, true) | (false, false) => {}
                     (true, false) => {
-                        return Err(missing_field("password"));
+                        return Err(missing_field("password").into());
                     }
                     (false, true) => {
-                        return Err(missing_field("username"));
+                        return Err(missing_field("username").into());
                     }
                 }
 
                 if self.mode.is_none() {
-                    return Err(missing_field("mode"));
+                    return Err(missing_field("mode").into());
                 }
 
                 if self.hostname.is_none() {
-                    return Err(missing_field("hostname"));
+                    return Err(missing_field("hostname").into());
                 }
 
                 if self.command.is_some() {
@@ -239,7 +242,8 @@ impl ConfigurationSection for EmailConfig {
                             "username",
                             "password",
                         ],
-                    ));
+                    )
+                    .into());
                 }
             }
 
@@ -247,35 +251,35 @@ impl ConfigurationSection for EmailConfig {
                 let expected_fields = &["from", "reply_to", "transport", "command"];
 
                 if let Err(e) = Mailbox::from_str(&self.from) {
-                    return Err(error_on_field(figment::error::Error::custom(e), "from"));
+                    return Err(error_on_field(figment::error::Error::custom(e), "from").into());
                 }
 
                 if let Err(e) = Mailbox::from_str(&self.reply_to) {
-                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to"));
+                    return Err(error_on_field(figment::error::Error::custom(e), "reply_to").into());
                 }
 
                 if self.command.is_none() {
-                    return Err(missing_field("command"));
+                    return Err(missing_field("command").into());
                 }
 
                 if self.mode.is_some() {
-                    return Err(unexpected_field("mode", expected_fields));
+                    return Err(unexpected_field("mode", expected_fields).into());
                 }
 
                 if self.hostname.is_some() {
-                    return Err(unexpected_field("hostname", expected_fields));
+                    return Err(unexpected_field("hostname", expected_fields).into());
                 }
 
                 if self.port.is_some() {
-                    return Err(unexpected_field("port", expected_fields));
+                    return Err(unexpected_field("port", expected_fields).into());
                 }
 
                 if self.username.is_some() {
-                    return Err(unexpected_field("username", expected_fields));
+                    return Err(unexpected_field("username", expected_fields).into());
                 }
 
                 if self.password.is_some() {
-                    return Err(unexpected_field("password", expected_fields));
+                    return Err(unexpected_field("password", expected_fields).into());
                 }
             }
         }
