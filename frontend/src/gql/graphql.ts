@@ -604,7 +604,7 @@ export type Mutation = {
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Start a new email authentication flow */
   startEmailAuthentication: StartEmailAuthenticationPayload;
-  /** Unlock a user. This is only available to administrators. */
+  /** Unlock and reactivate a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
 };
 
@@ -1347,8 +1347,6 @@ export type StartEmailAuthenticationStatus =
 
 /** The input for the `unlockUser` mutation. */
 export type UnlockUserInput = {
-  /** Reactivate the user if it had been deactivated */
-  reactivate?: InputMaybe<Scalars['Boolean']['input']>;
   /** The ID of the user to unlock */
   userId: Scalars['ID']['input'];
 };

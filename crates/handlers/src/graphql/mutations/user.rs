@@ -144,9 +144,6 @@ impl LockUserPayload {
 struct UnlockUserInput {
     /// The ID of the user to unlock
     user_id: ID,
-
-    /// Reactivate the user if it had been deactivated
-    reactivate: Option<bool>,
 }
 
 /// The status of the `unlockUser` mutation.
@@ -566,7 +563,7 @@ impl UserMutations {
         Ok(LockUserPayload::Locked(user))
     }
 
-    /// Unlock a user. This is only available to administrators.
+    /// Unlock and reactivate a user. This is only available to administrators.
     async fn unlock_user(
         &self,
         ctx: &Context<'_>,
@@ -588,18 +585,12 @@ impl UserMutations {
             return Ok(UnlockUserPayload::NotFound);
         };
 
-        let user = if input.reactivate.unwrap_or(false) {
-            // Call the homeserver synchronously to reactivate the user
-            let mxid = matrix.mxid(&user.username);
-            matrix.reactivate_user(&mxid).await?;
+        // Call the homeserver synchronously to reactivate the user
+        let mxid = matrix.mxid(&user.username);
+        matrix.reactivate_user(&mxid).await?;
 
-            // Now reactivate the user in our database
-            repo.user().reactivate(user).await?
-        } else {
-            user
-        };
-
-        // Now unlock the user in our database
+        // Now reactivate & unlock the user in our database
+        let user = repo.user().reactivate(user).await?;
         let user = repo.user().unlock(user).await?;
 
         repo.save().await?;

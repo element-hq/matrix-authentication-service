@@ -886,7 +886,7 @@ type Mutation {
   """
   lockUser(input: LockUserInput!): LockUserPayload!
   """
-  Unlock a user. This is only available to administrators.
+  Unlock and reactivate a user. This is only available to administrators.
   """
   unlockUser(input: UnlockUserInput!): UnlockUserPayload!
   """
@@ -1842,10 +1842,6 @@ input UnlockUserInput {
   The ID of the user to unlock
   """
   userId: ID!
-  """
-  Reactivate the user if it had been deactivated
-  """
-  reactivate: Boolean
 }
 
 """
