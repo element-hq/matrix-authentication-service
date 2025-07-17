@@ -323,6 +323,9 @@ pub struct ClaimsImports {
 
     #[serde(default)]
     pub account_name: SubjectPreference,
+
+    #[serde(default)]
+    pub is_admin: ImportPreference,
 }
 
 // XXX: this should have another name

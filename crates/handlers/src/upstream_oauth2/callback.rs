@@ -27,6 +27,7 @@ use mas_storage::{
     },
 };
 use mas_templates::{FormPostContext, Templates};
+use minijinja::Value;
 use oauth2_types::{errors::ClientErrorCode, requests::AccessTokenRequest};
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
@@ -458,7 +459,7 @@ pub(crate) async fn handler(
             .account_name
             .template
             .as_deref()
-            .and_then(|template| match env.render_str(template, context) {
+            .and_then(|template| match env.render_str(template, context.clone()) {
                 Ok(name) => Some(name),
                 Err(e) => {
                     tracing::warn!(
@@ -487,6 +488,20 @@ pub(crate) async fn handler(
         )
         .await?;
 
+    // Try to set can_request_admin
+    if let Some(user_id) = link.user_id {
+        let is_admin = determine_admin_flag(&provider, &env, context)
+            .await
+            .unwrap_or(false);
+        let user = repo.user().lookup(user_id).await?;
+
+        if let Some(user) = user {
+            repo.user()
+                .set_can_request_admin(user.clone(), is_admin)
+                .await?;
+        }
+    }
+
     let cookie_jar = sessions_cookie
         .add_link_to_session(session.id, link.id)?
         .save(cookie_jar, &clock);
@@ -498,4 +513,142 @@ pub(crate) async fn handler(
         url_builder.redirect(&mas_router::UpstreamOAuth2Link::new(link.id)),
     )
         .into_response())
+}
+
+async fn determine_admin_flag(
+    provider: &UpstreamOAuthProvider,
+    env: &minijinja::Environment<'_>,
+    context: Value,
+) -> Option<bool> {
+    provider
+        .claims_imports
+        .is_admin
+        .template
+        .as_deref()
+        .and_then(|template| match env.render_str(template, context) {
+            Ok(is_admin) => match is_admin.parse() {
+                Ok(is_admin) => Some(is_admin),
+                Err(e) => {
+                    tracing::warn!(
+                        error = &e as &dyn std::error::Error,
+                        "Failed to parse is_admin"
+                    );
+                    None
+                }
+            },
+            Err(e) => {
+                tracing::warn!(
+                    error = &e as &dyn std::error::Error,
+                    "Failed to render is_admin"
+                );
+                None
+            }
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use mas_data_model::{
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderImportAction,
+        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use minijinja::Environment;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_determine_admin_flag() {
+        let provider = UpstreamOAuthProvider {
+            id: Default::default(),
+            issuer: None,
+            human_name: None,
+            brand_name: None,
+            discovery_mode: Default::default(),
+            pkce_mode: Default::default(),
+            jwks_uri_override: None,
+            authorization_endpoint_override: None,
+            scope: "openid profile".parse().unwrap(),
+            token_endpoint_override: None,
+            userinfo_endpoint_override: None,
+            fetch_userinfo: false,
+            userinfo_signed_response_alg: None,
+            client_id: "".to_string(),
+            encrypted_client_secret: None,
+            token_endpoint_signing_alg: None,
+            token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+            id_token_signed_response_alg: JsonWebSignatureAlg::Hs256,
+            response_mode: None,
+            created_at: Default::default(),
+            disabled_at: None,
+            claims_imports: UpstreamOAuthProviderClaimsImports {
+                is_admin: UpstreamOAuthProviderImportPreference {
+                    action: UpstreamOAuthProviderImportAction::Force,
+                    template: Some("{{ user.is_admin }}".to_string()),
+                },
+                ..Default::default()
+            },
+            additional_authorization_parameters: vec![],
+            forward_login_hint: false,
+            on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+        };
+
+        let env = Environment::new();
+
+        let mut id_token_claims = HashMap::new();
+
+        // Test with is_admin set to true
+        id_token_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(true));
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context)
+            .await
+            .unwrap();
+        assert!(result);
+
+        id_token_claims.clear();
+
+        // Test with is_admin set to false
+        id_token_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(false));
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context)
+            .await
+            .unwrap();
+        assert!(!result);
+
+        id_token_claims.clear();
+
+        // Test with invalid admin field set to true
+        id_token_claims.insert(
+            "can_request_admin".to_owned(),
+            serde_json::Value::Bool(true),
+        );
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context).await;
+        assert!(result.is_none());
+
+        id_token_claims.clear();
+
+        // Test with no claims
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context).await;
+        assert!(result.is_none());
+    }
 }

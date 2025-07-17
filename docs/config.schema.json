@@ -2333,6 +2333,14 @@
               "$ref": "#/definitions/AccountNameImportPreference"
             }
           ]
+        },
+        "is_admin": {
+          "description": "Import the `can_request_admin` attribute of the user based on the defined claim (i.e. `is_admin`)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/IsAdminImportPreference"
+            }
+          ]
         }
       }
     },
@@ -2439,6 +2447,24 @@
       "properties": {
         "template": {
           "description": "The Jinja2 template to use for the account name. This name is only used for display purposes.\n\nIf not provided, it will be ignored.",
+          "type": "string"
+        }
+      }
+    },
+    "IsAdminImportPreference": {
+      "description": "What should be done for the `ìs_admin` attribute",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "How to handle the claim",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ImportAction"
+            }
+          ]
+        },
+        "template": {
+          "description": "The Jinja2 template to use for the admin attribute.\n\nIf not provided, it will be ignored.",
           "type": "string"
         }
       }

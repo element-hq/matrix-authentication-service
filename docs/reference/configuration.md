@@ -800,6 +800,11 @@ upstream_oauth2:
         # This helps end user identify what account they are using
         account_name:
           #template: "@{{ user.preferred_username }}"
+
+        # Whether the user is an admin and can request the admin scope
+        is_admin:
+          #action: force
+          #template: "{{ user.is_admin }}"
 ```
 
 ## `experimental`
