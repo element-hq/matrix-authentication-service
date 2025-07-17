@@ -1066,7 +1066,8 @@ mod tests {
             .signing_key_for_alg(&JsonWebSignatureAlg::Rs256)
             .unwrap();
         let header = JsonWebSignatureHeader::new(JsonWebSignatureAlg::Rs256);
-        let id_token = Jwt::sign_with_rng(&mut rng, header,  id_token_claims.clone(), &signer).unwrap();
+        let id_token =
+            Jwt::sign_with_rng(&mut rng, header, id_token_claims.clone(), &signer).unwrap();
 
         // Provision a provider and a link
         let mut repo = state.repository().await.unwrap();
@@ -1301,7 +1302,7 @@ mod tests {
             &provider,
             &subject,
             &id_token.into_string(),
-            id_token_claims
+            id_token_claims,
         )
         .await
         .unwrap();
@@ -1454,7 +1455,7 @@ mod tests {
             &provider,
             &subject,
             &id_token.into_string(),
-            id_token_claims
+            id_token_claims,
         )
         .await
         .unwrap();
@@ -1551,7 +1552,15 @@ mod tests {
 
         let session = repo
             .upstream_oauth_session()
-            .complete_with_link(clock, session, &link, Some(id_token.to_owned()), Some(id_token_claims), None, None)
+            .complete_with_link(
+                clock,
+                session,
+                &link,
+                Some(id_token.to_owned()),
+                Some(id_token_claims),
+                None,
+                None,
+            )
             .await?;
 
         Ok((link, session))
