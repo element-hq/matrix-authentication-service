@@ -604,7 +604,7 @@ export type Mutation = {
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Start a new email authentication flow */
   startEmailAuthentication: StartEmailAuthenticationPayload;
-  /** Unlock a user. This is only available to administrators. */
+  /** Unlock and reactivate a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
 };
 

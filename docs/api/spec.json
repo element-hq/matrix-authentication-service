@@ -1345,7 +1345,7 @@
           "user"
         ],
         "summary": "Deactivate a user",
-        "description": "Calling this endpoint will lock and deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
+        "description": "Calling this endpoint will deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
         "operationId": "deactivateUser",
         "parameters": [
           {
@@ -1359,6 +1359,15 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateUserRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "User was deactivated",
@@ -1384,6 +1393,76 @@
                   },
                   "links": {
                     "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3/deactivate"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/users/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Reactivate a user",
+        "description": "Calling this endpoint will reactivate a deactivated user.\nThis DOES NOT unlock a locked user, which is still prevented from doing any action until it is explicitly unlocked.",
+        "operationId": "reactivateUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User was reactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_User"
+                },
+                "example": {
+                  "data": {
+                    "type": "user",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "username": "alice",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "locked_at": null,
+                      "deactivated_at": null,
+                      "admin": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/users/01040G2081040G2081040G2081/reactivate"
                   }
                 }
               }
@@ -1485,6 +1564,7 @@
           "user"
         ],
         "summary": "Unlock a user",
+        "description": "Calling this endpoint will lift restrictions on user actions that had imposed by locking.\nThis DOES NOT reactivate a deactivated user, which will remain unavailable until it is explicitly reactivated.",
         "operationId": "unlockUser",
         "parameters": [
           {
@@ -3868,6 +3948,17 @@
         "properties": {
           "admin": {
             "description": "Whether the user can request admin privileges.",
+            "type": "boolean"
+          }
+        }
+      },
+      "DeactivateUserRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
+        "type": "object",
+        "properties": {
+          "skip_erase": {
+            "description": "Whether to skip requesting the homeserver to GDPR-erase the user upon deactivation.",
+            "default": false,
             "type": "boolean"
           }
         }

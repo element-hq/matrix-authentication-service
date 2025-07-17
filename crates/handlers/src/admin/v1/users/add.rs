@@ -10,11 +10,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_matrix::HomeserverConnection;
-use mas_storage::{
-    BoxRng,
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-};
+use mas_matrix::{HomeserverConnection, ProvisionRequest};
+use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::warn;
@@ -168,9 +165,13 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
-    repo.queue_job()
-        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
-        .await?;
+    homeserver
+        .provision_user(&ProvisionRequest::new(
+            homeserver.mxid(&user.username),
+            &user.sub,
+        ))
+        .await
+        .map_err(RouteError::Homeserver)?;
 
     repo.save().await?;
 
@@ -183,6 +184,7 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_matrix::HomeserverConnection;
     use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
@@ -218,6 +220,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(user.username, "alice");
+
+        // Check that the user was created on the homeserver
+        let mxid = state.homeserver_connection.mxid("alice");
+        let result = state.homeserver_connection.query_user(&mxid).await;
+        assert!(result.is_ok());
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
