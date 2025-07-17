@@ -33,7 +33,7 @@ impl Options {
             "💡 Running diagnostics, make sure that both MAS and Synapse are running, and that MAS is using the same configuration files as this tool."
         );
 
-        let config = RootConfig::extract(figment)?;
+        let config = RootConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         // We'll need an HTTP client
         let http_client = mas_http::reqwest_client();

@@ -412,7 +412,10 @@ impl Default for HttpConfig {
 impl ConfigurationSection for HttpConfig {
     const PATH: Option<&'static str> = Some("http");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         for (index, listener) in self.listeners.iter().enumerate() {
             let annotate = |mut error: figment::Error| {
                 error.metadata = figment
@@ -424,49 +427,57 @@ impl ConfigurationSection for HttpConfig {
                     "listeners".to_owned(),
                     index.to_string(),
                 ];
-                Err(error)
+                error
             };
 
             if listener.resources.is_empty() {
-                return annotate(figment::Error::from("listener has no resources".to_owned()));
+                return Err(
+                    annotate(figment::Error::from("listener has no resources".to_owned())).into(),
+                );
             }
 
             if listener.binds.is_empty() {
-                return annotate(figment::Error::from(
+                return Err(annotate(figment::Error::from(
                     "listener does not bind to any address".to_owned(),
-                ));
+                ))
+                .into());
             }
 
             if let Some(tls_config) = &listener.tls {
                 if tls_config.certificate.is_some() && tls_config.certificate_file.is_some() {
-                    return annotate(figment::Error::from(
+                    return Err(annotate(figment::Error::from(
                         "Only one of `certificate` or `certificate_file` can be set at a time"
                             .to_owned(),
-                    ));
+                    ))
+                    .into());
                 }
 
                 if tls_config.certificate.is_none() && tls_config.certificate_file.is_none() {
-                    return annotate(figment::Error::from(
+                    return Err(annotate(figment::Error::from(
                         "TLS configuration is missing a certificate".to_owned(),
-                    ));
+                    ))
+                    .into());
                 }
 
                 if tls_config.key.is_some() && tls_config.key_file.is_some() {
-                    return annotate(figment::Error::from(
+                    return Err(annotate(figment::Error::from(
                         "Only one of `key` or `key_file` can be set at a time".to_owned(),
-                    ));
+                    ))
+                    .into());
                 }
 
                 if tls_config.key.is_none() && tls_config.key_file.is_none() {
-                    return annotate(figment::Error::from(
+                    return Err(annotate(figment::Error::from(
                         "TLS configuration is missing a private key".to_owned(),
-                    ));
+                    ))
+                    .into());
                 }
 
                 if tls_config.password.is_some() && tls_config.password_file.is_some() {
-                    return annotate(figment::Error::from(
+                    return Err(annotate(figment::Error::from(
                         "Only one of `password` or `password_file` can be set at a time".to_owned(),
-                    ));
+                    ))
+                    .into());
                 }
             }
         }

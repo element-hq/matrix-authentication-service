@@ -19,7 +19,7 @@ use schemars::{JsonSchema, r#gen::SchemaSettings};
 fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
     let mut writer: Box<dyn std::io::Write> = if let Some(out_dir) = out_dir {
         let path = out_dir.join(file);
-        eprintln!("Writing to {path:?}");
+        eprintln!("Writing to {}", path.display());
         let file = std::fs::File::create(path).expect("Failed to create file");
         Box::new(std::io::BufWriter::new(file))
     } else {

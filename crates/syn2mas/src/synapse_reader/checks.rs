@@ -25,7 +25,7 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
 
     #[error("failed to load MAS config: {0}")]
-    MasConfig(#[from] figment::Error),
+    MasConfig(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
 
     #[error("failed to load MAS password config: {0}")]
     MasPasswordConfig(#[source] anyhow::Error),
@@ -188,13 +188,13 @@ pub async fn synapse_config_check_against_mas_config(
     let mut errors = Vec::new();
     let mut warnings = Vec::new();
 
-    let mas_passwords = PasswordsConfig::extract_or_default(mas)?;
+    let mas_passwords = PasswordsConfig::extract_or_default(mas).map_err(Error::MasConfig)?;
     let mas_password_schemes = mas_passwords
         .load()
         .await
         .map_err(Error::MasPasswordConfig)?;
 
-    let mas_matrix = MatrixConfig::extract(mas)?;
+    let mas_matrix = MatrixConfig::extract(mas).map_err(Error::MasConfig)?;
 
     // Look for the MAS password hashing scheme that will be used for imported
     // Synapse passwords, then check the configuration matches so that Synapse
@@ -230,12 +230,12 @@ pub async fn synapse_config_check_against_mas_config(
         });
     }
 
-    let mas_captcha = CaptchaConfig::extract_or_default(mas)?;
+    let mas_captcha = CaptchaConfig::extract_or_default(mas).map_err(Error::MasConfig)?;
     if synapse.enable_registration_captcha && mas_captcha.service.is_none() {
         warnings.push(CheckWarning::ShouldPortRegistrationCaptcha);
     }
 
-    let mas_branding = BrandingConfig::extract_or_default(mas)?;
+    let mas_branding = BrandingConfig::extract_or_default(mas).map_err(Error::MasConfig)?;
     if synapse.user_consent.is_some() && mas_branding.tos_uri.is_none() {
         warnings.push(CheckWarning::ShouldPortUserConsentAsTerms);
     }
@@ -295,7 +295,7 @@ pub async fn synapse_database_check(
     .await?;
     if !oauth_provider_user_counts.is_empty() {
         let syn_oauth2 = synapse.all_oidc_providers();
-        let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(mas)?;
+        let mas_oauth2 = UpstreamOAuth2Config::extract_or_default(mas).map_err(Error::MasConfig)?;
         for row in oauth_provider_user_counts {
             // This is a special case of a previous migration attempt to MAS
             if row.auth_provider == "oauth-delegated" {

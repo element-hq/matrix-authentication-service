@@ -49,7 +49,7 @@ impl<T> Validator<T> for () {
 }
 
 pub struct Claim<T, V = ()> {
-    claim: &'static str,
+    value: &'static str,
     t: PhantomData<T>,
     v: PhantomData<V>,
 }
@@ -61,7 +61,7 @@ where
     #[must_use]
     pub const fn new(claim: &'static str) -> Self {
         Self {
-            claim,
+            value: claim,
             t: PhantomData,
             v: PhantomData,
         }
@@ -83,8 +83,8 @@ where
     {
         let value = value.into();
         let value: serde_json::Value =
-            serde_json::to_value(&value).map_err(|_| ClaimError::InvalidClaim(self.claim))?;
-        claims.insert(self.claim.to_owned(), value);
+            serde_json::to_value(&value).map_err(|_| ClaimError::InvalidClaim(self.value))?;
+        claims.insert(self.value.to_owned(), value);
 
         Ok(())
     }
@@ -126,15 +126,15 @@ where
     {
         let validator: V = validator.into();
         let claim = claims
-            .remove(self.claim)
-            .ok_or(ClaimError::MissingClaim(self.claim))?;
+            .remove(self.value)
+            .ok_or(ClaimError::MissingClaim(self.value))?;
 
         let res =
-            serde_json::from_value(claim).map_err(|_| ClaimError::InvalidClaim(self.claim))?;
+            serde_json::from_value(claim).map_err(|_| ClaimError::InvalidClaim(self.value))?;
         validator
             .validate(&res)
             .map_err(|source| ClaimError::ValidationError {
-                claim: self.claim,
+                claim: self.value,
                 source: Box::new(source),
             })?;
         Ok(res)
@@ -192,8 +192,8 @@ where
         &self,
         claims: &HashMap<String, serde_json::Value>,
     ) -> Result<(), ClaimError> {
-        if claims.contains_key(self.claim) {
-            Err(ClaimError::InvalidClaim(self.claim))
+        if claims.contains_key(self.value) {
+            Err(ClaimError::InvalidClaim(self.value))
         } else {
             Ok(())
         }

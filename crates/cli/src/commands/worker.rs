@@ -29,7 +29,7 @@ impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let shutdown = LifecycleManager::new()?;
         let span = info_span!("cli.worker.init").entered();
-        let config = AppConfig::extract(figment)?;
+        let config = AppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         // Connect to the database
         info!("Connecting to the database");

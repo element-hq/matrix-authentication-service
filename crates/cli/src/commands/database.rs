@@ -30,7 +30,8 @@ enum Subcommand {
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let _span = info_span!("cli.database.migrate").entered();
-        let config = DatabaseConfig::extract_or_default(figment)?;
+        let config =
+            DatabaseConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
         let mut conn = database_connection_from_config(&config).await?;
 
         // Run pending migrations

@@ -130,7 +130,10 @@ pub struct RootConfig {
 }
 
 impl ConfigurationSection for RootConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.clients.validate(figment)?;
         self.http.validate(figment)?;
         self.database.validate(figment)?;
@@ -249,7 +252,10 @@ pub struct AppConfig {
 }
 
 impl ConfigurationSection for AppConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.http.validate(figment)?;
         self.database.validate(figment)?;
         self.templates.validate(figment)?;
@@ -285,7 +291,10 @@ pub struct SyncConfig {
 }
 
 impl ConfigurationSection for SyncConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.database.validate(figment)?;
         self.secrets.validate(figment)?;
         self.clients.validate(figment)?;

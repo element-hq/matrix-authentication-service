@@ -33,7 +33,10 @@ impl UpstreamOAuth2Config {
 impl ConfigurationSection for UpstreamOAuth2Config {
     const PATH: Option<&'static str> = Some("upstream_oauth2");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         for (index, provider) in self.providers.iter().enumerate() {
             let annotate = |mut error: figment::Error| {
                 error.metadata = figment
@@ -45,15 +48,16 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                     "providers".to_owned(),
                     index.to_string(),
                 ];
-                Err(error)
+                error
             };
 
             if !matches!(provider.discovery_mode, DiscoveryMode::Disabled)
                 && provider.issuer.is_none()
             {
-                return annotate(figment::Error::custom(
+                return Err(annotate(figment::Error::custom(
                     "The `issuer` field is required when discovery is enabled",
-                ));
+                ))
+                .into());
             }
 
             match provider.token_endpoint_auth_method {
@@ -61,16 +65,16 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 | TokenAuthMethod::PrivateKeyJwt
                 | TokenAuthMethod::SignInWithApple => {
                     if provider.client_secret.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `client_secret` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
                 TokenAuthMethod::ClientSecretBasic
                 | TokenAuthMethod::ClientSecretPost
                 | TokenAuthMethod::ClientSecretJwt => {
                     if provider.client_secret.is_none() {
-                        return annotate(figment::Error::missing_field("client_secret"));
+                        return Err(annotate(figment::Error::missing_field("client_secret")).into());
                     }
                 }
             }
@@ -81,16 +85,17 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 | TokenAuthMethod::ClientSecretPost
                 | TokenAuthMethod::SignInWithApple => {
                     if provider.token_endpoint_auth_signing_alg.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `token_endpoint_auth_signing_alg` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
                 TokenAuthMethod::ClientSecretJwt | TokenAuthMethod::PrivateKeyJwt => {
                     if provider.token_endpoint_auth_signing_alg.is_none() {
-                        return annotate(figment::Error::missing_field(
+                        return Err(annotate(figment::Error::missing_field(
                             "token_endpoint_auth_signing_alg",
-                        ));
+                        ))
+                        .into());
                     }
                 }
             }
@@ -98,15 +103,17 @@ impl ConfigurationSection for UpstreamOAuth2Config {
             match provider.token_endpoint_auth_method {
                 TokenAuthMethod::SignInWithApple => {
                     if provider.sign_in_with_apple.is_none() {
-                        return annotate(figment::Error::missing_field("sign_in_with_apple"));
+                        return Err(
+                            annotate(figment::Error::missing_field("sign_in_with_apple")).into(),
+                        );
                     }
                 }
 
                 _ => {
                     if provider.sign_in_with_apple.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `sign_in_with_apple` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
             }

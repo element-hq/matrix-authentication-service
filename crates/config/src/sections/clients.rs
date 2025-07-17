@@ -6,7 +6,6 @@
 
 use std::ops::Deref;
 
-use figment::Figment;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::jwk::PublicJsonWebKeySet;
 use schemars::JsonSchema;
@@ -104,7 +103,7 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    fn validate(&self) -> Result<(), figment::error::Error> {
+    fn validate(&self) -> Result<(), Box<figment::error::Error>> {
         let auth_method = self.client_auth_method;
         match self.client_auth_method {
             ClientAuthMethodConfig::PrivateKeyJwt => {
@@ -112,20 +111,20 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(
                         "jwks or jwks_uri is required for private_key_jwt",
                     );
-                    return Err(error.with_path("client_auth_method"));
+                    return Err(Box::new(error.with_path("client_auth_method")));
                 }
 
                 if self.jwks.is_some() && self.jwks_uri.is_some() {
                     let error =
                         figment::error::Error::custom("jwks and jwks_uri are mutually exclusive");
-                    return Err(error.with_path("jwks"));
+                    return Err(Box::new(error.with_path("jwks")));
                 }
 
                 if self.client_secret.is_some() {
                     let error = figment::error::Error::custom(
                         "client_secret is not allowed with private_key_jwt",
                     );
-                    return Err(error.with_path("client_secret"));
+                    return Err(Box::new(error.with_path("client_secret")));
                 }
             }
 
@@ -136,21 +135,21 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(format!(
                         "client_secret is required for {auth_method}"
                     ));
-                    return Err(error.with_path("client_auth_method"));
+                    return Err(Box::new(error.with_path("client_auth_method")));
                 }
 
                 if self.jwks.is_some() {
                     let error = figment::error::Error::custom(format!(
                         "jwks is not allowed with {auth_method}"
                     ));
-                    return Err(error.with_path("jwks"));
+                    return Err(Box::new(error.with_path("jwks")));
                 }
 
                 if self.jwks_uri.is_some() {
                     let error = figment::error::Error::custom(format!(
                         "jwks_uri is not allowed with {auth_method}"
                     ));
-                    return Err(error.with_path("jwks_uri"));
+                    return Err(Box::new(error.with_path("jwks_uri")));
                 }
             }
 
@@ -159,21 +158,21 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(
                         "client_secret is not allowed with none authentication method",
                     );
-                    return Err(error.with_path("client_secret"));
+                    return Err(Box::new(error.with_path("client_secret")));
                 }
 
                 if self.jwks.is_some() {
                     let error = figment::error::Error::custom(
                         "jwks is not allowed with none authentication method",
                     );
-                    return Err(error);
+                    return Err(Box::new(error));
                 }
 
                 if self.jwks_uri.is_some() {
                     let error = figment::error::Error::custom(
                         "jwks_uri is not allowed with none authentication method",
                     );
-                    return Err(error);
+                    return Err(Box::new(error));
                 }
             }
         }
@@ -232,7 +231,10 @@ impl IntoIterator for ClientsConfig {
 impl ConfigurationSection for ClientsConfig {
     const PATH: Option<&'static str> = Some("clients");
 
-    fn validate(&self, figment: &Figment) -> Result<(), figment::error::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         for (index, client) in self.0.iter().enumerate() {
             client.validate().map_err(|mut err| {
                 // Save the error location information in the error

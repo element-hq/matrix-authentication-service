@@ -94,7 +94,9 @@ impl Config {
     ///
     /// - If there is a problem reading any of the files.
     /// - If the configuration is not valid.
-    pub fn load(files: &[Utf8PathBuf]) -> Result<Config, figment::Error> {
+    pub fn load(
+        files: &[Utf8PathBuf],
+    ) -> Result<Config, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let mut figment = figment::Figment::new();
         for file in files {
             // TODO this is not exactly correct behaviour — Synapse does not merge anything
@@ -103,7 +105,8 @@ impl Config {
             // https://github.com/element-hq/synapse/blob/develop/synapse/config/_base.py?rgh-link-date=2025-01-20T17%3A02%3A56Z#L870
             figment = figment.merge(Yaml::file(file));
         }
-        figment.extract::<Config>()
+        let config = figment.extract::<Config>()?;
+        Ok(config)
     }
 
     /// Returns a map of all OIDC providers from the Synapse configuration.
