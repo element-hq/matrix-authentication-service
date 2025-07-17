@@ -700,7 +700,7 @@ pub(crate) async fn post(
             let Some(user) = maybe_user else {
                 // user cannot be None at this stage
                 return Err(RouteError::InvalidFormAction);
-            }
+            };
 
             let on_conflict = provider.claims_imports.localpart.on_conflict;
 
