@@ -41,14 +41,7 @@ impl RunnableJob for DeactivateUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        // Let's first lock & deactivate the user
-        let user = repo
-            .user()
-            .lock(clock, user)
-            .await
-            .context("Failed to lock user")
-            .map_err(JobError::retry)?;
-
+        // Let's first deactivate the user
         let user = repo
             .user()
             .deactivate(clock, user)
@@ -137,9 +130,13 @@ impl RunnableJob for ReactivateUserJob {
             .await
             .map_err(JobError::retry)?;
 
-        // We want to unlock the user from our side only once it has been reactivated on
-        // the homeserver
-        let _user = repo.user().unlock(user).await.map_err(JobError::retry)?;
+        // We want to reactivate the user from our side only once it has been
+        // reactivated on the homeserver
+        let _user = repo
+            .user()
+            .reactivate(user)
+            .await
+            .map_err(JobError::retry)?;
         repo.save().await.map_err(JobError::retry)?;
 
         Ok(())

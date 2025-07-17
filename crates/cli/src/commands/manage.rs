@@ -149,6 +149,10 @@ enum Subcommand {
     UnlockUser {
         /// User to unlock
         username: String,
+
+        /// Whether to reactivate the user if it had been deactivated
+        #[arg(long)]
+        reactivate: bool,
     },
 
     /// Register a user
@@ -527,8 +531,12 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
 
-            SC::UnlockUser { username } => {
-                let _span = info_span!("cli.manage.lock_user", user.username = username).entered();
+            SC::UnlockUser {
+                username,
+                reactivate,
+            } => {
+                let _span =
+                    info_span!("cli.manage.unlock_user", user.username = username).entered();
                 let config = DatabaseConfig::extract_or_default(figment)?;
                 let mut conn = database_connection_from_config(&config).await?;
                 let txn = conn.begin().await?;
@@ -540,10 +548,14 @@ impl Options {
                     .await?
                     .context("User not found")?;
 
-                warn!(%user.id, "User scheduling user reactivation");
-                repo.queue_job()
-                    .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
-                    .await?;
+                if reactivate {
+                    warn!(%user.id, "Scheduling user reactivation");
+                    repo.queue_job()
+                        .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
+                        .await?;
+                } else {
+                    repo.user().unlock(user).await?;
+                }
 
                 repo.into_inner().commit().await?;
 

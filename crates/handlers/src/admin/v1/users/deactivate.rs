@@ -53,14 +53,17 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("deactivateUser")
         .summary("Deactivate a user")
-        .description("Calling this endpoint will lock and deactivate the user, preventing them from doing any action.
-This invalidates any existing session, and will ask the homeserver to make them leave all rooms.")
+        .description(
+            "Calling this endpoint will deactivate the user, preventing them from doing any action.
+This invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
+        )
         .tag("user")
         .response_with::<200, Json<SingleResponse<User>>, _>(|t| {
             // In the samples, the third user is the one locked
             let [_alice, _bob, charlie, ..] = User::samples();
             let id = charlie.id();
-            let response = SingleResponse::new(charlie, format!("/api/admin/v1/users/{id}/deactivate"));
+            let response =
+                SingleResponse::new(charlie, format!("/api/admin/v1/users/{id}/deactivate"));
             t.description("User was deactivated").example(response)
         })
         .response_with::<404, RouteError, _>(|t| {
@@ -78,15 +81,13 @@ pub async fn handler(
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
-    let mut user = repo
+    let user = repo
         .user()
         .lookup(id)
         .await?
         .ok_or(RouteError::NotFound(id))?;
 
-    if user.locked_at.is_none() {
-        user = repo.user().lock(&clock, user).await?;
-    }
+    let user = repo.user().deactivate(&clock, user).await?;
 
     info!(%user.id, "Scheduling deactivation of user");
     repo.queue_job()
@@ -132,10 +133,16 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        // The locked_at timestamp should be the same as the current time
+        // The deactivated_at timestamp should be the same as the current time
+        assert_eq!(
+            body["data"]["attributes"]["deactivated_at"],
+            serde_json::json!(state.clock.now())
+        );
+
+        // Deactivating the user should not lock it
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
-            serde_json::json!(state.clock.now())
+            serde_json::Value::Null
         );
 
         // Make sure to run the jobs in the queue
@@ -156,7 +163,7 @@ mod tests {
             "attributes": {
               "username": "alice",
               "created_at": "2022-01-16T14:40:00Z",
-              "locked_at": "2022-01-16T14:40:00Z",
+              "locked_at": null,
               "deactivated_at": "2022-01-16T14:40:00Z",
               "admin": false
             },
@@ -196,10 +203,16 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        // The locked_at timestamp should be different from the current time
-        assert_ne!(
-            body["data"]["attributes"]["locked_at"],
+        // The deactivated_at timestamp should be the same as the current time
+        assert_eq!(
+            body["data"]["attributes"]["deactivated_at"],
             serde_json::json!(state.clock.now())
+        );
+
+        // The deactivated_at timestamp should be different from the locked_at timestamp
+        assert_ne!(
+            body["data"]["attributes"]["deactivated_at"],
+            body["data"]["attributes"]["locked_at"],
         );
 
         // Make sure to run the jobs in the queue
