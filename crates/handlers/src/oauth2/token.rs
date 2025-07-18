@@ -575,11 +575,14 @@ async fn authorization_code_grant(
         .await?;
 
     // Look for device to provision
-    let mxid = homeserver.mxid(&browser_session.user.username);
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str(), Some(&device_name))
+                .create_device(
+                    &browser_session.user.username,
+                    device.as_str(),
+                    Some(&device_name),
+                )
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -951,11 +954,10 @@ async fn device_code_grant(
         .await?;
 
     // Look for device to provision
-    let mxid = homeserver.mxid(&browser_session.user.username);
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str(), None)
+                .create_device(&browser_session.user.username, device.as_str(), None)
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }

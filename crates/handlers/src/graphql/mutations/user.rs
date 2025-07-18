@@ -586,8 +586,7 @@ impl UserMutations {
         };
 
         // Call the homeserver synchronously to reactivate the user
-        let mxid = matrix.mxid(&user.username);
-        matrix.reactivate_user(&mxid).await?;
+        matrix.reactivate_user(&user.username).await?;
 
         // Now reactivate & unlock the user in our database
         let user = repo.user().reactivate(user).await?;
@@ -654,9 +653,7 @@ impl UserMutations {
         };
 
         let conn = state.homeserver_connection();
-        let mxid = conn.mxid(&user.username);
-
-        conn.allow_cross_signing_reset(&mxid)
+        conn.allow_cross_signing_reset(&user.username)
             .await
             .context("Failed to allow cross-signing reset")?;
 

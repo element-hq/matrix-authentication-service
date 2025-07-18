@@ -27,9 +27,9 @@ impl MatrixUser {
         conn: &C,
         user: &str,
     ) -> Result<MatrixUser, anyhow::Error> {
-        let mxid = conn.mxid(user);
+        let info = conn.query_user(user).await?;
 
-        let info = conn.query_user(&mxid).await?;
+        let mxid = conn.mxid(user);
 
         Ok(MatrixUser {
             mxid,

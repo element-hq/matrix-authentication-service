@@ -112,10 +112,9 @@ mod tests {
 
         // Also provision the user on the homeserver, because this endpoint will try to
         // reactivate it
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -149,21 +148,24 @@ mod tests {
         repo.save().await.unwrap();
 
         // Provision the user on the homeserver
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
         // but then deactivate it
         state
             .homeserver_connection
-            .delete_user(&mxid, true)
+            .delete_user(&user.username, true)
             .await
             .unwrap();
 
         // The user should be deactivated on the homeserver
-        let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
+        let mx_user = state
+            .homeserver_connection
+            .query_user(&user.username)
+            .await
+            .unwrap();
         assert!(mx_user.deactivated);
 
         let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id))
@@ -182,7 +184,11 @@ mod tests {
             body["data"]["attributes"]["deactivated_at"],
             serde_json::json!(state.clock.now())
         );
-        let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
+        let mx_user = state
+            .homeserver_connection
+            .query_user(&user.username)
+            .await
+            .unwrap();
         assert!(mx_user.deactivated);
     }
 

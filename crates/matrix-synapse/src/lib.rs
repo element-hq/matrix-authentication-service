@@ -177,12 +177,13 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
         ),
         err(Debug),
     )]
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
 
         let response = self
             .get(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
@@ -263,7 +264,7 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = request.mxid(),
+            matrix.localpart = request.localpart(),
             user.id = request.sub(),
         ),
         err(Debug),
@@ -297,7 +298,8 @@ impl HomeserverConnection for SynapseConnection {
                 );
             });
 
-        let encoded_mxid = urlencoding::encode(request.mxid());
+        let mxid = self.mxid(request.localpart());
+        let encoded_mxid = urlencoding::encode(&mxid);
         let response = self
             .put(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .json(&body)
@@ -322,18 +324,19 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
         err(Debug),
     )]
     async fn create_device(
         &self,
-        mxid: &str,
+        localpart: &str,
         device_id: &str,
         initial_display_name: Option<&str>,
     ) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
 
         let response = self
             .post(&format!("_synapse/admin/v2/users/{encoded_mxid}/devices"))
@@ -360,7 +363,7 @@ impl HomeserverConnection for SynapseConnection {
         // It's annoying, but the POST endpoint doesn't let us set the display name
         // of the device, so we have to do it manually.
         if let Some(display_name) = initial_display_name {
-            self.update_device_display_name(mxid, device_id, display_name)
+            self.update_device_display_name(localpart, device_id, display_name)
                 .await?;
         }
 
@@ -372,18 +375,19 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
         err(Debug),
     )]
     async fn update_device_display_name(
         &self,
-        mxid: &str,
+        localpart: &str,
         device_id: &str,
         display_name: &str,
     ) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
         let device_id = urlencoding::encode(device_id);
         let response = self
             .put(&format!(
@@ -416,13 +420,14 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
         err(Debug),
     )]
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn delete_device(&self, localpart: &str, device_id: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
         let encoded_device_id = urlencoding::encode(device_id);
 
         let response = self
@@ -453,17 +458,18 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
         ),
         err(Debug),
     )]
     async fn sync_devices(
         &self,
-        mxid: &str,
+        localpart: &str,
         devices: HashSet<String>,
     ) -> Result<(), anyhow::Error> {
         // Get the list of current devices
-        let encoded_mxid = urlencoding::encode(mxid);
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
 
         let response = self
             .get(&format!("_synapse/admin/v2/users/{encoded_mxid}/devices"))
@@ -519,7 +525,7 @@ impl HomeserverConnection for SynapseConnection {
         // Then, create the devices that are missing. There is no batching API to do
         // this, so we do this sequentially, which is fine as the API is idempotent.
         for device_id in devices.difference(&existing_devices) {
-            self.create_device(mxid, device_id, None).await?;
+            self.create_device(localpart, device_id, None).await?;
         }
 
         Ok(())
@@ -530,13 +536,14 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
             erase = erase,
         ),
         err(Debug),
     )]
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn delete_user(&self, localpart: &str, erase: bool) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
 
         let response = self
             .post(&format!("_synapse/admin/v1/deactivate/{encoded_mxid}"))
@@ -567,12 +574,13 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
         ),
         err(Debug),
     )]
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn reactivate_user(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
         let response = self
             .put(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .json(&SynapseUser {
@@ -599,13 +607,18 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
             matrix.displayname = displayname,
         ),
         err(Debug),
     )]
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn set_displayname(
+        &self,
+        localpart: &str,
+        displayname: &str,
+    ) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
         let response = self
             .put(&format!(
                 "_matrix/client/v3/profile/{encoded_mxid}/displayname"
@@ -635,12 +648,12 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
         ),
         err(Display),
     )]
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        self.set_displayname(mxid, "").await
+    async fn unset_displayname(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        self.set_displayname(localpart, "").await
     }
 
     #[tracing::instrument(
@@ -648,12 +661,13 @@ impl HomeserverConnection for SynapseConnection {
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
-            matrix.mxid = mxid,
+            matrix.localpart = localpart,
         ),
         err(Debug),
     )]
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
-        let encoded_mxid = urlencoding::encode(mxid);
+    async fn allow_cross_signing_reset(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let encoded_mxid = urlencoding::encode(&mxid);
 
         let response = self
             .post(&format!(
