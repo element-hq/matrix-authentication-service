@@ -59,6 +59,10 @@ fn map_claims_imports(
         account_name: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.account_name.template.clone(),
         },
+        is_admin: mas_data_model::UpstreamOAuthProviderImportPreference {
+            action: map_import_action(config.is_admin.action),
+            template: config.is_admin.template.clone(),
+        },
     }
 }
 

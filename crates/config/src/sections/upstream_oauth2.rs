@@ -283,6 +283,26 @@ impl AccountNameImportPreference {
     }
 }
 
+/// What should be done for the `ìs_admin` attribute
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+pub struct IsAdminImportPreference {
+    /// How to handle the claim
+    #[serde(default, skip_serializing_if = "ImportAction::is_default")]
+    pub action: ImportAction,
+
+    /// The Jinja2 template to use for the admin attribute.
+    ///
+    /// If not provided, it will be ignored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<String>,
+}
+
+impl IsAdminImportPreference {
+    const fn is_default(&self) -> bool {
+        self.action.is_default() && self.template.is_none()
+    }
+}
+
 /// How claims should be imported
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct ClaimsImports {
@@ -312,6 +332,11 @@ pub struct ClaimsImports {
         skip_serializing_if = "AccountNameImportPreference::is_default"
     )]
     pub account_name: AccountNameImportPreference,
+
+    /// Import the `can_request_admin` attribute of the user based on the
+    /// defined claim (i.e. `is_admin`)
+    #[serde(default, skip_serializing_if = "IsAdminImportPreference::is_default")]
+    pub is_admin: IsAdminImportPreference,
 }
 
 impl ClaimsImports {
