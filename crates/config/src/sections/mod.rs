@@ -54,8 +54,8 @@ pub use self::{
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction,
         OnBackchannelLogout as UpstreamOAuth2OnBackchannelLogout,
-        PkceMethod as UpstreamOAuth2PkceMethod, Provider as UpstreamOAuth2Provider,
-        ResponseMode as UpstreamOAuth2ResponseMode,
+        OnConflict as UpstreamOAuth2OnConflict, PkceMethod as UpstreamOAuth2PkceMethod,
+        Provider as UpstreamOAuth2Provider, ResponseMode as UpstreamOAuth2ResponseMode,
         TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
     },
 };
