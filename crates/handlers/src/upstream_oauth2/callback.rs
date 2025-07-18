@@ -650,5 +650,54 @@ mod tests {
 
         let result = determine_admin_flag(&provider, &env, context).await;
         assert!(result.is_none());
+
+        id_token_claims.clear();
+
+        // Test with String value type
+        id_token_claims.insert(
+            "is_admin".to_owned(),
+            serde_json::Value::String("true".to_owned()),
+        );
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context)
+            .await
+            .unwrap();
+        assert!(result);
+
+        id_token_claims.clear();
+
+        // Test with String value type
+        id_token_claims.insert(
+            "is_admin".to_owned(),
+            serde_json::Value::String("false".to_owned()),
+        );
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context)
+            .await
+            .unwrap();
+        assert!(!result);
+
+        id_token_claims.clear();
+
+        // Test with invalid value
+        id_token_claims.insert(
+            "is_admin".to_owned(),
+            serde_json::Value::String("something".to_owned()),
+        );
+
+        let context = AttributeMappingContext::new()
+            .with_id_token_claims(id_token_claims.clone())
+            .build();
+
+        let result = determine_admin_flag(&provider, &env, context).await;
+        assert!(result.is_none());
     }
 }
