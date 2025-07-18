@@ -548,32 +548,36 @@ async fn determine_admin_flag(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::test_utils::{setup, CookieHelper, RequestBuilderExt, ResponseExt, TestState};
-    use axum::http::Request;
-    use axum::Json;
+    use std::collections::HashMap;
+
+    use axum::{Json, http::Request};
     use chrono::Duration;
     use mas_data_model::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthProviderClaimsImports,
         UpstreamOAuthProviderImportAction, UpstreamOAuthProviderImportPreference,
         UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderTokenAuthMethod, User,
     };
-    use mas_iana::jose::JsonWebSignatureAlg;
-    use mas_iana::oauth::OAuthAccessTokenType;
-    use mas_jose::claims;
-    use mas_jose::constraints::Constrainable;
-    use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
+    use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthAccessTokenType};
+    use mas_jose::{
+        claims,
+        constraints::Constrainable,
+        jwt::{JsonWebSignatureHeader, Jwt},
+    };
     use mas_router::Route;
-    use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
-    use mas_storage::user::UserRepository;
-    use mas_storage::RepositoryAccess;
+    use mas_storage::{
+        RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderParams, user::UserRepository,
+    };
     use minijinja::Environment;
-    use oauth2_types::scope::{Scope, OPENID};
+    use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
-    use std::collections::HashMap;
     use url::Url;
-    use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
+
+    use super::*;
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
     #[tokio::test]
     async fn test_determine_admin_flag() {
@@ -731,7 +735,8 @@ mod tests {
             .await;
 
         // Set up the mock server to respond to the jwks endpoint
-        // For test purposes re-use the JWKs MAS uses as the JWKs an upstream IDP would publish
+        // For test purposes re-use the JWKs MAS uses as the JWKs an upstream IDP would
+        // publish
         let jwks = Json(state.key_store.public_jwks());
         let _mock_guard = Mock::given(method("GET"))
             .and(path("/jwks"))
@@ -1004,7 +1009,7 @@ mod tests {
                 ..UpstreamOAuthProviderClaimsImports::default()
             },
         )
-            .await;
+        .await;
 
         let (user, session) =
             setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
@@ -1089,7 +1094,7 @@ mod tests {
                 ..UpstreamOAuthProviderClaimsImports::default()
             },
         )
-            .await;
+        .await;
 
         let (user, session) =
             setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
@@ -1137,7 +1142,9 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_config_claim(pool: PgPool) {
+    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_config_claim(
+        pool: PgPool,
+    ) {
         setup();
 
         let state = TestState::from_pool(pool).await.unwrap();
@@ -1178,7 +1185,7 @@ mod tests {
                 ..UpstreamOAuthProviderClaimsImports::default()
             },
         )
-            .await;
+        .await;
 
         let (user, session) =
             setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
@@ -1226,7 +1233,9 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_upstream_claim(pool: PgPool) {
+    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_upstream_claim(
+        pool: PgPool,
+    ) {
         setup();
 
         let state = TestState::from_pool(pool).await.unwrap();
@@ -1240,7 +1249,10 @@ mod tests {
         let subject = "testuser123";
 
         let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
-        additional_claims.insert("is_this_user_admin".to_owned(), serde_json::Value::Bool(true));
+        additional_claims.insert(
+            "is_this_user_admin".to_owned(),
+            serde_json::Value::Bool(true),
+        );
 
         // Create an ID token with the is_admin claim set to true
         let id_token = create_id_token(
@@ -1267,7 +1279,7 @@ mod tests {
                 ..UpstreamOAuthProviderClaimsImports::default()
             },
         )
-            .await;
+        .await;
 
         let (user, session) =
             setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
