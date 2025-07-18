@@ -548,17 +548,32 @@ async fn determine_admin_flag(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
+    use super::*;
+    use crate::test_utils::{setup, CookieHelper, RequestBuilderExt, ResponseExt, TestState};
+    use axum::http::Request;
+    use axum::Json;
+    use chrono::Duration;
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderImportAction,
-        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderOnBackchannelLogout,
-        UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthAuthorizationSession, UpstreamOAuthProviderClaimsImports,
+        UpstreamOAuthProviderImportAction, UpstreamOAuthProviderImportPreference,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderTokenAuthMethod, User,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_iana::oauth::OAuthAccessTokenType;
+    use mas_jose::claims;
+    use mas_jose::constraints::Constrainable;
+    use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
+    use mas_router::Route;
+    use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
+    use mas_storage::user::UserRepository;
+    use mas_storage::RepositoryAccess;
     use minijinja::Environment;
-
-    use super::*;
+    use oauth2_types::scope::{Scope, OPENID};
+    use sqlx::PgPool;
+    use std::collections::HashMap;
+    use url::Url;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[tokio::test]
     async fn test_determine_admin_flag() {
@@ -699,5 +714,603 @@ mod tests {
 
         let result = determine_admin_flag(&provider, &env, context).await;
         assert!(result.is_none());
+    }
+
+    async fn setup_mock_server(state: &TestState, id_token: String, mock_server: &MockServer) {
+        // Set up the mock server to respond to the token endpoint
+        let _mock_guard = Mock::given(method("POST"))
+            .and(path("/token"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "access_token": "test_access_token",
+                "token_type": OAuthAccessTokenType::Bearer,
+                "expires_in": 3600,
+                "scope": "openid profile",
+                "id_token": id_token,
+            })))
+            .mount(&mock_server)
+            .await;
+
+        // Set up the mock server to respond to the jwks endpoint
+        // For test purposes re-use the JWKs MAS uses as the JWKs an upstream IDP would publish
+        let jwks = Json(state.key_store.public_jwks());
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/jwks"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(jwks.0))
+            .mount(&mock_server)
+            .await;
+    }
+
+    async fn setup_user_with_session(
+        state: &TestState,
+        repo: &mut BoxRepository,
+        provider: &UpstreamOAuthProvider,
+        subject: String,
+    ) -> (User, UpstreamOAuthAuthorizationSession) {
+        // Create the user using the subject
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, subject.to_owned())
+            .await
+            .unwrap();
+
+        // Create OAuth Link attached to the subject
+        let link = repo
+            .upstream_oauth_link()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &provider,
+                subject.to_owned(),
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Link the OAuth Link to the created user
+        repo.upstream_oauth_link()
+            .associate_to_user(&link, &user)
+            .await
+            .unwrap();
+
+        let session = repo
+            .upstream_oauth_session()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &provider,
+                "teststate".to_owned(),
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        (user, session)
+    }
+
+    fn create_id_token(
+        state: &TestState,
+        issuer: String,
+        subject: String,
+        client_id: String,
+        additional_claims: HashMap<String, serde_json::Value>,
+    ) -> String {
+        let mut id_token_claims = HashMap::new();
+
+        // Create the default claims for the ID token
+        claims::ISS.insert(&mut id_token_claims, issuer).unwrap();
+        claims::SUB.insert(&mut id_token_claims, subject).unwrap();
+        claims::AUD.insert(&mut id_token_claims, client_id).unwrap();
+
+        let issued_at = state.clock.now();
+        claims::IAT.insert(&mut id_token_claims, issued_at).unwrap();
+
+        let expires = issued_at + Duration::try_hours(1).unwrap();
+        claims::EXP.insert(&mut id_token_claims, expires).unwrap();
+
+        // Add additional claims an upstream IDP may have provided
+        for (key, value) in additional_claims {
+            id_token_claims.insert(key, value);
+        }
+
+        // Create the ID token and sign it
+        let key = state
+            .key_store
+            .signing_key_for_algorithm(&JsonWebSignatureAlg::Rs256)
+            .unwrap();
+        let signer = key
+            .params()
+            .signing_key_for_alg(&JsonWebSignatureAlg::Rs256)
+            .unwrap();
+        let header =
+            JsonWebSignatureHeader::new(JsonWebSignatureAlg::Rs256).with_kid(key.kid().unwrap());
+        Jwt::sign_with_rng(&mut state.rng(), header, id_token_claims, &signer)
+            .unwrap()
+            .into_string()
+    }
+
+    async fn create_provider(
+        state: &TestState,
+        repo: &mut BoxRepository,
+        issuer: String,
+        client_id: String,
+        claims_imports: UpstreamOAuthProviderClaimsImports,
+    ) -> UpstreamOAuthProvider {
+        let issuer_url = Url::parse(&*issuer).unwrap();
+
+        // Create an upstream IDP
+        repo.upstream_oauth_provider()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some(issuer.clone()),
+                    human_name: Some("Example Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: client_id.to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports,
+                    authorization_endpoint_override: None,
+                    token_endpoint_override: Some(issuer_url.join("token").unwrap()),
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: Some(issuer_url.join("jwks").unwrap()),
+                    discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                },
+            )
+            .await
+            .unwrap()
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_upstream_oauth2_callback_user_can_request_admin_is_admin(pool: PgPool) {
+        setup();
+
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let cookies = CookieHelper::new();
+        let cookie_jar = state.cookie_jar();
+
+        let mock_server = MockServer::start().await;
+
+        let client_id = "test-client-id";
+        let subject = "testuser123";
+
+        let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
+        additional_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(true));
+
+        // Create an ID token with the is_admin claim set to true
+        let id_token = create_id_token(
+            &state,
+            mock_server.uri(),
+            subject.to_owned(),
+            client_id.to_owned(),
+            additional_claims,
+        );
+
+        setup_mock_server(&state, id_token, &mock_server).await;
+
+        // Create the upstream OAuth provider with the is_admin claim import
+        let provider = create_provider(
+            &state,
+            &mut repo,
+            mock_server.uri(),
+            client_id.to_owned(),
+            UpstreamOAuthProviderClaimsImports {
+                is_admin: UpstreamOAuthProviderImportPreference {
+                    action: UpstreamOAuthProviderImportAction::Force,
+                    template: Some("{{ user.is_admin }}".to_string()),
+                },
+                ..UpstreamOAuthProviderClaimsImports::default()
+            },
+        )
+        .await;
+
+        let (user, session) =
+            setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
+        // Assert the user was created with the expected username
+        assert_eq!(user.username, subject);
+
+        // Assert that initially the user can not request admin
+        assert!(!user.can_request_admin);
+
+        // Save the repository state
+        repo.save().await.unwrap();
+
+        // Set up the cookie jar for the session
+        let cookie_jar = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, session.state_str.clone(), None)
+            .save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        let callback_uri = format!(
+            "{}?state={}&code=testcode",
+            mas_router::UpstreamOAuth2Callback::new(provider.id).path(),
+            session.state_str,
+        );
+
+        // Request the callback handler with the session cookie
+        let request = cookies.with_cookies(Request::get(callback_uri).empty());
+        let response = state.request(request).await;
+
+        // Assert the response status is SEE_OTHER (303)
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Retrieve the changed user from the repository
+        let user = state
+            .repository()
+            .await
+            .unwrap()
+            .user()
+            .lookup(user.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Assert that the user can now request admin access
+        assert!(user.can_request_admin);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_upstream_oauth2_callback_user_can_request_admin_is_not_admin(pool: PgPool) {
+        setup();
+
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let cookies = CookieHelper::new();
+        let cookie_jar = state.cookie_jar();
+
+        let mock_server = MockServer::start().await;
+
+        let client_id = "test-client-id";
+        let subject = "testuser123";
+
+        let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
+        additional_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(false));
+
+        // Create an ID token with the is_admin claim set to true
+        let id_token = create_id_token(
+            &state,
+            mock_server.uri(),
+            subject.to_owned(),
+            client_id.to_owned(),
+            additional_claims,
+        );
+
+        setup_mock_server(&state, id_token, &mock_server).await;
+
+        // Create the upstream OAuth provider with the is_admin claim import
+        let provider = create_provider(
+            &state,
+            &mut repo,
+            mock_server.uri(),
+            client_id.to_owned(),
+            UpstreamOAuthProviderClaimsImports {
+                is_admin: UpstreamOAuthProviderImportPreference {
+                    action: UpstreamOAuthProviderImportAction::Force,
+                    template: Some("{{ user.is_admin }}".to_string()),
+                },
+                ..UpstreamOAuthProviderClaimsImports::default()
+            },
+        )
+            .await;
+
+        let (user, session) =
+            setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
+        // Assert the user was created with the expected username
+        assert_eq!(user.username, subject);
+
+        // Assert that initially the user can not request admin
+        assert!(!user.can_request_admin);
+
+        // Save the repository state
+        repo.save().await.unwrap();
+
+        // Set up the cookie jar for the session
+        let cookie_jar = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, session.state_str.clone(), None)
+            .save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        let callback_uri = format!(
+            "{}?state={}&code=testcode",
+            mas_router::UpstreamOAuth2Callback::new(provider.id).path(),
+            session.state_str,
+        );
+
+        // Request the callback handler with the session cookie
+        let request = cookies.with_cookies(Request::get(callback_uri).empty());
+        let response = state.request(request).await;
+
+        // Assert the response status is SEE_OTHER (303)
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Retrieve the changed user from the repository
+        let user = state
+            .repository()
+            .await
+            .unwrap()
+            .user()
+            .lookup(user.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Assert that the user can now request admin access
+        assert!(!user.can_request_admin);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_upstream_oauth2_callback_user_can_request_admin_default(pool: PgPool) {
+        setup();
+
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let cookies = CookieHelper::new();
+        let cookie_jar = state.cookie_jar();
+
+        let mock_server = MockServer::start().await;
+
+        let client_id = "test-client-id";
+        let subject = "testuser123";
+
+        let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
+        additional_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(true));
+
+        // Create an ID token with the is_admin claim set to true
+        let id_token = create_id_token(
+            &state,
+            mock_server.uri(),
+            subject.to_owned(),
+            client_id.to_owned(),
+            additional_claims,
+        );
+
+        setup_mock_server(&state, id_token, &mock_server).await;
+
+        // Create the upstream OAuth provider with the is_admin claim import
+        let provider = create_provider(
+            &state,
+            &mut repo,
+            mock_server.uri(),
+            client_id.to_owned(),
+            UpstreamOAuthProviderClaimsImports {
+                ..UpstreamOAuthProviderClaimsImports::default()
+            },
+        )
+            .await;
+
+        let (user, session) =
+            setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
+        // Assert the user was created with the expected username
+        assert_eq!(user.username, subject);
+
+        // Assert that initially the user can not request admin
+        assert!(!user.can_request_admin);
+
+        // Save the repository state
+        repo.save().await.unwrap();
+
+        // Set up the cookie jar for the session
+        let cookie_jar = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, session.state_str.clone(), None)
+            .save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        let callback_uri = format!(
+            "{}?state={}&code=testcode",
+            mas_router::UpstreamOAuth2Callback::new(provider.id).path(),
+            session.state_str,
+        );
+
+        // Request the callback handler with the session cookie
+        let request = cookies.with_cookies(Request::get(callback_uri).empty());
+        let response = state.request(request).await;
+
+        // Assert the response status is SEE_OTHER (303)
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Retrieve the changed user from the repository
+        let user = state
+            .repository()
+            .await
+            .unwrap()
+            .user()
+            .lookup(user.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Assert that the user can now request admin access
+        assert!(!user.can_request_admin);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_config_claim(pool: PgPool) {
+        setup();
+
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let cookies = CookieHelper::new();
+        let cookie_jar = state.cookie_jar();
+
+        let mock_server = MockServer::start().await;
+
+        let client_id = "test-client-id";
+        let subject = "testuser123";
+
+        let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
+        additional_claims.insert("is_admin".to_owned(), serde_json::Value::Bool(true));
+
+        // Create an ID token with the is_admin claim set to true
+        let id_token = create_id_token(
+            &state,
+            mock_server.uri(),
+            subject.to_owned(),
+            client_id.to_owned(),
+            additional_claims,
+        );
+
+        setup_mock_server(&state, id_token, &mock_server).await;
+
+        // Create the upstream OAuth provider with the is_admin claim import
+        let provider = create_provider(
+            &state,
+            &mut repo,
+            mock_server.uri(),
+            client_id.to_owned(),
+            UpstreamOAuthProviderClaimsImports {
+                is_admin: UpstreamOAuthProviderImportPreference {
+                    action: UpstreamOAuthProviderImportAction::Force,
+                    template: Some("{{ user.some_random_value }}".to_string()),
+                },
+                ..UpstreamOAuthProviderClaimsImports::default()
+            },
+        )
+            .await;
+
+        let (user, session) =
+            setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
+        // Assert the user was created with the expected username
+        assert_eq!(user.username, subject);
+
+        // Assert that initially the user can not request admin
+        assert!(!user.can_request_admin);
+
+        // Save the repository state
+        repo.save().await.unwrap();
+
+        // Set up the cookie jar for the session
+        let cookie_jar = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, session.state_str.clone(), None)
+            .save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        let callback_uri = format!(
+            "{}?state={}&code=testcode",
+            mas_router::UpstreamOAuth2Callback::new(provider.id).path(),
+            session.state_str,
+        );
+
+        // Request the callback handler with the session cookie
+        let request = cookies.with_cookies(Request::get(callback_uri).empty());
+        let response = state.request(request).await;
+
+        // Assert the response status is SEE_OTHER (303)
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Retrieve the changed user from the repository
+        let user = state
+            .repository()
+            .await
+            .unwrap()
+            .user()
+            .lookup(user.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Assert that the user can now request admin access
+        assert!(!user.can_request_admin);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_upstream_oauth2_callback_user_can_request_admin_invalid_upstream_claim(pool: PgPool) {
+        setup();
+
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let cookies = CookieHelper::new();
+        let cookie_jar = state.cookie_jar();
+
+        let mock_server = MockServer::start().await;
+
+        let client_id = "test-client-id";
+        let subject = "testuser123";
+
+        let mut additional_claims: HashMap<String, serde_json::Value> = HashMap::new();
+        additional_claims.insert("is_this_user_admin".to_owned(), serde_json::Value::Bool(true));
+
+        // Create an ID token with the is_admin claim set to true
+        let id_token = create_id_token(
+            &state,
+            mock_server.uri(),
+            subject.to_owned(),
+            client_id.to_owned(),
+            additional_claims,
+        );
+
+        setup_mock_server(&state, id_token, &mock_server).await;
+
+        // Create the upstream OAuth provider with the is_admin claim import
+        let provider = create_provider(
+            &state,
+            &mut repo,
+            mock_server.uri(),
+            client_id.to_owned(),
+            UpstreamOAuthProviderClaimsImports {
+                is_admin: UpstreamOAuthProviderImportPreference {
+                    action: UpstreamOAuthProviderImportAction::Force,
+                    template: Some("{{ user.is_admin }}".to_string()),
+                },
+                ..UpstreamOAuthProviderClaimsImports::default()
+            },
+        )
+            .await;
+
+        let (user, session) =
+            setup_user_with_session(&state, &mut repo, &provider, subject.to_owned()).await;
+        // Assert the user was created with the expected username
+        assert_eq!(user.username, subject);
+
+        // Assert that initially the user can not request admin
+        assert!(!user.can_request_admin);
+
+        // Save the repository state
+        repo.save().await.unwrap();
+
+        // Set up the cookie jar for the session
+        let cookie_jar = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, session.state_str.clone(), None)
+            .save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        let callback_uri = format!(
+            "{}?state={}&code=testcode",
+            mas_router::UpstreamOAuth2Callback::new(provider.id).path(),
+            session.state_str,
+        );
+
+        // Request the callback handler with the session cookie
+        let request = cookies.with_cookies(Request::get(callback_uri).empty());
+        let response = state.request(request).await;
+
+        // Assert the response status is SEE_OTHER (303)
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Retrieve the changed user from the repository
+        let user = state
+            .repository()
+            .await
+            .unwrap()
+            .user()
+            .lookup(user.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Assert that the user can now request admin access
+        assert!(!user.can_request_admin);
     }
 }
