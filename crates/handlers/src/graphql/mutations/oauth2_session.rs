@@ -212,11 +212,10 @@ impl OAuth2SessionMutations {
         repo.user().acquire_lock_for_sync(&user).await?;
 
         // Look for devices to provision
-        let mxid = homeserver.mxid(&user.username);
         for scope in &*session.scope {
             if let Some(device) = Device::from_scope_token(scope) {
                 homeserver
-                    .create_device(&mxid, device.as_str(), None)
+                    .create_device(&user.username, device.as_str(), None)
                     .await
                     .context("Failed to provision device")?;
             }
@@ -331,11 +330,10 @@ impl OAuth2SessionMutations {
             .await?;
 
         // Update the device on the homeserver side
-        let mxid = homeserver.mxid(&user.username);
         for scope in &*session.scope {
             if let Some(device) = Device::from_scope_token(scope) {
                 homeserver
-                    .update_device_display_name(&mxid, device.as_str(), &input.human_name)
+                    .update_device_display_name(&user.username, device.as_str(), &input.human_name)
                     .await
                     .context("Failed to provision device")?;
             }

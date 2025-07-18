@@ -166,10 +166,7 @@ pub async fn handler(
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
     homeserver
-        .provision_user(&ProvisionRequest::new(
-            homeserver.mxid(&user.username),
-            &user.sub,
-        ))
+        .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
         .await
         .map_err(RouteError::Homeserver)?;
 
@@ -222,8 +219,7 @@ mod tests {
         assert_eq!(user.username, "alice");
 
         // Check that the user was created on the homeserver
-        let mxid = state.homeserver_connection.mxid("alice");
-        let result = state.homeserver_connection.query_user(&mxid).await;
+        let result = state.homeserver_connection.query_user("alice").await;
         assert!(result.is_ok());
     }
 

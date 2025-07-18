@@ -187,10 +187,9 @@ impl CompatSessionMutations {
             .await?;
 
         // Update the device on the homeserver side
-        let mxid = homeserver.mxid(&user.username);
         if let Some(device) = session.device.as_ref() {
             homeserver
-                .update_device_display_name(&mxid, device.as_str(), &input.human_name)
+                .update_device_display_name(&user.username, device.as_str(), &input.human_name)
                 .await
                 .context("Failed to provision device")?;
         }

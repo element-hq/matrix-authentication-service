@@ -634,10 +634,9 @@ mod tests {
             .await
             .unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -835,10 +834,9 @@ mod tests {
             .await
             .unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 

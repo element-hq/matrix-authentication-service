@@ -93,7 +93,6 @@ impl MatrixMutations {
         repo.cancel().await?;
 
         let conn = state.homeserver_connection();
-        let mxid = conn.mxid(&user.username);
 
         if let Some(display_name) = &input.display_name {
             // Let's do some basic validation on the display name
@@ -105,11 +104,11 @@ impl MatrixMutations {
                 return Ok(SetDisplayNamePayload::Invalid);
             }
 
-            conn.set_displayname(&mxid, display_name)
+            conn.set_displayname(&user.username, display_name)
                 .await
                 .context("Failed to set display name")?;
         } else {
-            conn.unset_displayname(&mxid)
+            conn.unset_displayname(&user.username)
                 .await
                 .context("Failed to unset display name")?;
         }

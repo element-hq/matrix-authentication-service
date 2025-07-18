@@ -83,9 +83,8 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(id))?;
 
     // Call the homeserver synchronously to reactivate the user
-    let mxid = homeserver.mxid(&user.username);
     homeserver
-        .reactivate_user(&mxid)
+        .reactivate_user(&user.username)
         .await
         .map_err(RouteError::Homeserver)?;
 
@@ -127,20 +126,23 @@ mod tests {
 
         // Provision and immediately deactivate the user on the homeserver,
         // because this endpoint will try to reactivate it
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
         state
             .homeserver_connection
-            .delete_user(&mxid, true)
+            .delete_user(&user.username, true)
             .await
             .unwrap();
 
         // The user should be deactivated on the homeserver
-        let mx_user = state.homeserver_connection.query_user(&mxid).await.unwrap();
+        let mx_user = state
+            .homeserver_connection
+            .query_user(&user.username)
+            .await
+            .unwrap();
         assert!(mx_user.deactivated);
 
         let request = Request::post(format!("/api/admin/v1/users/{}/reactivate", user.id))
@@ -176,10 +178,9 @@ mod tests {
         repo.save().await.unwrap();
 
         // Provision the user on the homeserver
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 

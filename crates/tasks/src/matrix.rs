@@ -51,7 +51,6 @@ impl RunnableJob for ProvisionUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        let mxid = matrix.mxid(&user.username);
         let emails = repo
             .user_email()
             .all(&user)
@@ -60,7 +59,8 @@ impl RunnableJob for ProvisionUserJob {
             .into_iter()
             .map(|email| email.email)
             .collect();
-        let mut request = ProvisionRequest::new(mxid.clone(), user.sub.clone()).set_emails(emails);
+        let mut request =
+            ProvisionRequest::new(user.username.clone(), user.sub.clone()).set_emails(emails);
 
         if let Some(display_name) = self.display_name_to_set() {
             request = request.set_displayname(display_name.to_owned());
@@ -71,6 +71,7 @@ impl RunnableJob for ProvisionUserJob {
             .await
             .map_err(JobError::retry)?;
 
+        let mxid = matrix.mxid(&user.username);
         if created {
             info!(%user.id, %mxid, "User created");
         } else {
@@ -241,9 +242,8 @@ impl RunnableJob for SyncDevicesJob {
             }
         }
 
-        let mxid = matrix.mxid(&user.username);
         matrix
-            .sync_devices(&mxid, devices)
+            .sync_devices(&user.username, devices)
             .await
             .map_err(JobError::retry)?;
 

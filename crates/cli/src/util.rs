@@ -17,7 +17,7 @@ use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
-use mas_matrix_synapse::SynapseConnection;
+use mas_matrix_synapse::{LegacySynapseConnection, SynapseConnection};
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepositoryFactory, RepositoryAccess, RepositoryFactory};
@@ -469,14 +469,22 @@ pub fn homeserver_connection_from_config(
     http_client: reqwest::Client,
 ) -> Arc<dyn HomeserverConnection> {
     match config.kind {
-        HomeserverKind::Synapse => Arc::new(SynapseConnection::new(
+        HomeserverKind::Synapse | HomeserverKind::SynapseLegacy => {
+            Arc::new(LegacySynapseConnection::new(
+                config.homeserver.clone(),
+                config.endpoint.clone(),
+                config.secret.clone(),
+                http_client,
+            ))
+        }
+        HomeserverKind::SynapseModern => Arc::new(SynapseConnection::new(
             config.homeserver.clone(),
             config.endpoint.clone(),
             config.secret.clone(),
             http_client,
         )),
         HomeserverKind::SynapseReadOnly => {
-            let connection = SynapseConnection::new(
+            let connection = LegacySynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
                 config.secret.clone(),
