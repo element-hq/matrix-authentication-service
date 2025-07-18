@@ -11,7 +11,6 @@ use mas_storage::{
     compat::{CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
 };
-use oauth2_types::scope::Scope;
 
 use crate::graphql::{
     UserId,
@@ -77,20 +76,11 @@ impl SessionQuery {
             ))));
         }
 
-        // Then, try to find an OAuth 2.0 session. Because we don't have any dedicated
-        // device column, we're looking up using the device scope.
-        // All device IDs can't necessarily be encoded as a scope. If it's not the case,
-        // we'll skip looking for OAuth 2.0 sessions.
-        let Ok(scope_token) = device.to_scope_token() else {
-            repo.cancel().await?;
-
-            return Ok(None);
-        };
-        let scope = Scope::from_iter([scope_token]);
+        // Then, try to find an OAuth 2.0 session.
         let filter = OAuth2SessionFilter::new()
             .for_user(&user)
             .active_only()
-            .with_scope(&scope);
+            .for_device(&device);
         let sessions = repo.oauth2_session().list(filter, pagination).await?;
 
         // It's possible to have multiple active OAuth 2.0 sessions. For now, we just
