@@ -9,6 +9,16 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use thiserror::Error;
 
+/// Encountered when trying to register a user ID which has been taken.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_USER_IN_USE: &str = "M_USER_IN_USE";
+/// Encountered when trying to register a user ID which is not valid.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_INVALID_USERNAME: &str = "M_INVALID_USERNAME";
+/// Encountered when trying to register a user ID reserved by an appservice.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_EXCLUSIVE: &str = "M_EXCLUSIVE";
+
 /// Represents a Matrix error
 /// Ref: <https://spec.matrix.org/v1.10/client-server-api/#standard-error-response>
 #[derive(Debug, Deserialize)]
