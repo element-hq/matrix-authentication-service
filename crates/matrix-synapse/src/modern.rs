@@ -122,8 +122,8 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
+        struct Request<'a> {
+            localpart: &'a str,
             #[serde(skip_serializing_if = "Option::is_none")]
             set_displayname: Option<String>,
             #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -139,7 +139,7 @@ impl HomeserverConnection for SynapseConnection {
         }
 
         let mut body = Request {
-            localpart: request.localpart().to_owned(),
+            localpart: request.localpart(),
             set_displayname: None,
             unset_displayname: false,
             set_avatar_url: None,
@@ -243,17 +243,17 @@ impl HomeserverConnection for SynapseConnection {
         initial_display_name: Option<&str>,
     ) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
-            device_id: String,
+        struct Request<'a> {
+            localpart: &'a str,
+            device_id: &'a str,
             #[serde(skip_serializing_if = "Option::is_none")]
-            display_name: Option<String>,
+            display_name: Option<&'a str>,
         }
 
         let body = Request {
-            localpart: localpart.to_owned(),
-            device_id: device_id.to_owned(),
-            display_name: initial_display_name.map(ToOwned::to_owned),
+            localpart,
+            device_id,
+            display_name: initial_display_name,
         };
 
         let response = self
@@ -288,16 +288,16 @@ impl HomeserverConnection for SynapseConnection {
         display_name: &str,
     ) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
-            device_id: String,
-            display_name: String,
+        struct Request<'a> {
+            localpart: &'a str,
+            device_id: &'a str,
+            display_name: &'a str,
         }
 
         let body = Request {
-            localpart: localpart.to_owned(),
-            device_id: device_id.to_owned(),
-            display_name: display_name.to_owned(),
+            localpart,
+            device_id,
+            display_name,
         };
 
         let response = self
@@ -327,14 +327,14 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn delete_device(&self, localpart: &str, device_id: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
-            device_id: String,
+        struct Request<'a> {
+            localpart: &'a str,
+            device_id: &'a str,
         }
 
         let body = Request {
-            localpart: localpart.to_owned(),
-            device_id: device_id.to_owned(),
+            localpart,
+            device_id,
         };
 
         let response = self
@@ -368,15 +368,12 @@ impl HomeserverConnection for SynapseConnection {
         devices: HashSet<String>,
     ) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
-            devices: Vec<String>,
+        struct Request<'a> {
+            localpart: &'a str,
+            devices: HashSet<String>,
         }
 
-        let body = Request {
-            localpart: localpart.to_owned(),
-            devices: devices.into_iter().collect(),
-        };
+        let body = Request { localpart, devices };
 
         let response = self
             .post("_synapse/mas/sync_devices")
@@ -405,15 +402,12 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn delete_user(&self, localpart: &str, erase: bool) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
+        struct Request<'a> {
+            localpart: &'a str,
             erase: bool,
         }
 
-        let body = Request {
-            localpart: localpart.to_owned(),
-            erase,
-        };
+        let body = Request { localpart, erase };
 
         let response = self
             .post("_synapse/mas/delete_user")
@@ -441,13 +435,11 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn reactivate_user(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
+        struct Request<'a> {
+            localpart: &'a str,
         }
 
-        let body = Request {
-            localpart: localpart.to_owned(),
-        };
+        let body = Request { localpart };
 
         let response = self
             .post("_synapse/mas/reactivate_user")
@@ -479,14 +471,14 @@ impl HomeserverConnection for SynapseConnection {
         displayname: &str,
     ) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
-            displayname: String,
+        struct Request<'a> {
+            localpart: &'a str,
+            displayname: &'a str,
         }
 
         let body = Request {
-            localpart: localpart.to_owned(),
-            displayname: displayname.to_owned(),
+            localpart,
+            displayname,
         };
 
         let response = self
@@ -515,13 +507,11 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn unset_displayname(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
+        struct Request<'a> {
+            localpart: &'a str,
         }
 
-        let body = Request {
-            localpart: localpart.to_owned(),
-        };
+        let body = Request { localpart };
 
         let response = self
             .post("_synapse/mas/unset_displayname")
@@ -549,13 +539,11 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn allow_cross_signing_reset(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
-        struct Request {
-            localpart: String,
+        struct Request<'a> {
+            localpart: &'a str,
         }
 
-        let body = Request {
-            localpart: localpart.to_owned(),
-        };
+        let body = Request { localpart };
 
         let response = self
             .post("_synapse/mas/allow_cross_signing_reset")
