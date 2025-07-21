@@ -653,10 +653,11 @@ pub(crate) async fn post(
         }
 
         (None, None, FormData::Link) => {
-            // User already exists, but it is not linked, neither logged in
-            // Proceed by associating the link and log in the user
-            // Upstream_session is used to re-render the username as it is the only source
-            // of truth
+            // There is an existing user with the same username, but no link.
+            // If the configuration allows it, the user is prompted to link the
+            // existing account. Note that we cannot trust the user input here,
+            // which is why we have to re-calculate the localpart, instead of
+            // passing it through form data.
 
             let id_token = upstream_session.id_token().map(Jwt::try_from).transpose()?;
 
