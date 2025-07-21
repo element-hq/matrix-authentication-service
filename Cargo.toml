@@ -473,7 +473,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.125"
+version = "2.1.126"
 
 # Prometheus metrics
 [workspace.dependencies.prometheus]
