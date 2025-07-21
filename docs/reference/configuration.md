@@ -257,8 +257,10 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry must have a unique (and arbitrary) `kid`, plus the key itself.
-The key can either be specified inline (with the `key` property), or loaded from a file (with the `key_file` property).
+Each entry must have a unique `kid`, plus the key itself. The `kid` can be any
+case-sensitive string value as long as it is unique to this list; `kid` values
+must not be stable across restarts. The key can either be specified inline (with
+the `key` property), or loaded from a file (with the `key_file` property).
 The following key formats are supported:
 
 - PKCS#1 PEM or DER-encoded RSA private key
