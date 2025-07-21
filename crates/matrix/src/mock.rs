@@ -54,9 +54,10 @@ impl crate::HomeserverConnection for HomeserverConnection {
         &self.homeserver
     }
 
-    async fn query_user(&self, mxid: &str) -> Result<MatrixUser, anyhow::Error> {
+    async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let users = self.users.read().await;
-        let user = users.get(mxid).context("User not found")?;
+        let user = users.get(&mxid).context("User not found")?;
         Ok(MatrixUser {
             displayname: user.displayname.clone(),
             avatar_url: user.avatar_url.clone(),
@@ -66,8 +67,9 @@ impl crate::HomeserverConnection for HomeserverConnection {
 
     async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         let mut users = self.users.write().await;
-        let inserted = !users.contains_key(request.mxid());
-        let user = users.entry(request.mxid().to_owned()).or_insert(MockUser {
+        let mxid = self.mxid(request.localpart());
+        let inserted = !users.contains_key(&mxid);
+        let user = users.entry(mxid).or_insert(MockUser {
             sub: request.sub().to_owned(),
             avatar_url: None,
             displayname: None,
@@ -107,51 +109,56 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(!users.contains_key(&mxid))
     }
 
-    async fn create_device(
+    async fn upsert_device(
         &self,
-        mxid: &str,
+        localpart: &str,
         device_id: &str,
         _initial_display_name: Option<&str>,
     ) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.devices.insert(device_id.to_owned());
         Ok(())
     }
 
     async fn update_device_display_name(
         &self,
-        mxid: &str,
+        localpart: &str,
         device_id: &str,
         _display_name: &str,
     ) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.devices.get(device_id).context("Device not found")?;
         Ok(())
     }
 
-    async fn delete_device(&self, mxid: &str, device_id: &str) -> Result<(), anyhow::Error> {
+    async fn delete_device(&self, localpart: &str, device_id: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.devices.remove(device_id);
         Ok(())
     }
 
     async fn sync_devices(
         &self,
-        mxid: &str,
+        localpart: &str,
         devices: HashSet<String>,
     ) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.devices = devices;
         Ok(())
     }
 
-    async fn delete_user(&self, mxid: &str, erase: bool) -> Result<(), anyhow::Error> {
+    async fn delete_user(&self, localpart: &str, erase: bool) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.devices.clear();
         user.emails = None;
         user.deactivated = true;
@@ -163,31 +170,39 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(())
     }
 
-    async fn reactivate_user(&self, mxid: &str) -> Result<(), anyhow::Error> {
+    async fn reactivate_user(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.deactivated = false;
 
         Ok(())
     }
 
-    async fn set_displayname(&self, mxid: &str, displayname: &str) -> Result<(), anyhow::Error> {
+    async fn set_displayname(
+        &self,
+        localpart: &str,
+        displayname: &str,
+    ) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.displayname = Some(displayname.to_owned());
         Ok(())
     }
 
-    async fn unset_displayname(&self, mxid: &str) -> Result<(), anyhow::Error> {
+    async fn unset_displayname(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.displayname = None;
         Ok(())
     }
 
-    async fn allow_cross_signing_reset(&self, mxid: &str) -> Result<(), anyhow::Error> {
+    async fn allow_cross_signing_reset(&self, localpart: &str) -> Result<(), anyhow::Error> {
+        let mxid = self.mxid(localpart);
         let mut users = self.users.write().await;
-        let user = users.get_mut(mxid).context("User not found")?;
+        let user = users.get_mut(&mxid).context("User not found")?;
         user.cross_signing_reset_allowed = true;
         Ok(())
     }
@@ -207,11 +222,11 @@ mod tests {
         assert_eq!(conn.homeserver(), "example.org");
         assert_eq!(conn.mxid("test"), mxid);
 
-        assert!(conn.query_user(mxid).await.is_err());
-        assert!(conn.create_device(mxid, device, None).await.is_err());
-        assert!(conn.delete_device(mxid, device).await.is_err());
+        assert!(conn.query_user("test").await.is_err());
+        assert!(conn.upsert_device("test", device, None).await.is_err());
+        assert!(conn.delete_device("test", device).await.is_err());
 
-        let request = ProvisionRequest::new("@test:example.org", "test")
+        let request = ProvisionRequest::new("test", "test")
             .set_displayname("Test User".into())
             .set_avatar_url("mxc://example.org/1234567890".into())
             .set_emails(vec!["test@example.org".to_owned()]);
@@ -219,33 +234,33 @@ mod tests {
         let inserted = conn.provision_user(&request).await.unwrap();
         assert!(inserted);
 
-        let user = conn.query_user(mxid).await.unwrap();
+        let user = conn.query_user("test").await.unwrap();
         assert_eq!(user.displayname, Some("Test User".into()));
         assert_eq!(user.avatar_url, Some("mxc://example.org/1234567890".into()));
 
         // Set the displayname again
-        assert!(conn.set_displayname(mxid, "John").await.is_ok());
+        assert!(conn.set_displayname("test", "John").await.is_ok());
 
-        let user = conn.query_user(mxid).await.unwrap();
+        let user = conn.query_user("test").await.unwrap();
         assert_eq!(user.displayname, Some("John".into()));
 
         // Unset the displayname
-        assert!(conn.unset_displayname(mxid).await.is_ok());
+        assert!(conn.unset_displayname("test").await.is_ok());
 
-        let user = conn.query_user(mxid).await.unwrap();
+        let user = conn.query_user("test").await.unwrap();
         assert_eq!(user.displayname, None);
 
         // Deleting a non-existent device should not fail
-        assert!(conn.delete_device(mxid, device).await.is_ok());
+        assert!(conn.delete_device("test", device).await.is_ok());
 
         // Create the device
-        assert!(conn.create_device(mxid, device, None).await.is_ok());
+        assert!(conn.upsert_device("test", device, None).await.is_ok());
         // Create the same device again
-        assert!(conn.create_device(mxid, device, None).await.is_ok());
+        assert!(conn.upsert_device("test", device, None).await.is_ok());
 
         // XXX: there is no API to query devices yet in the trait
         // Delete the device
-        assert!(conn.delete_device(mxid, device).await.is_ok());
+        assert!(conn.delete_device("test", device).await.is_ok());
 
         // The user we just created should be not available
         assert!(!conn.is_localpart_available("test").await.unwrap());
