@@ -423,10 +423,3 @@ pub enum OnConflict {
     /// existing link or not
     Add,
 }
-
-impl OnConflict {
-    #[must_use]
-    pub fn is_add(&self) -> bool {
-        matches!(self, Self::Add)
-    }
-}
