@@ -254,7 +254,7 @@ pub trait HomeserverConnection: Send + Sync {
     ///
     /// Returns an error if the homeserver is unreachable or the device could
     /// not be created.
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
@@ -396,14 +396,14 @@ impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
         initial_display_name: Option<&str>,
     ) -> Result<(), anyhow::Error> {
         (**self)
-            .create_device(localpart, device_id, initial_display_name)
+            .upsert_device(localpart, device_id, initial_display_name)
             .await
     }
 
@@ -474,14 +474,14 @@ impl<T: HomeserverConnection + ?Sized> HomeserverConnection for Arc<T> {
         (**self).is_localpart_available(localpart).await
     }
 
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
         initial_display_name: Option<&str>,
     ) -> Result<(), anyhow::Error> {
         (**self)
-            .create_device(localpart, device_id, initial_display_name)
+            .upsert_device(localpart, device_id, initial_display_name)
             .await
     }
 

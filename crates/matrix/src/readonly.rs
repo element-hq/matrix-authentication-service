@@ -40,7 +40,7 @@ impl<C: HomeserverConnection> HomeserverConnection for ReadOnlyHomeserverConnect
         self.inner.is_localpart_available(localpart).await
     }
 
-    async fn create_device(
+    async fn upsert_device(
         &self,
         _localpart: &str,
         _device_id: &str,

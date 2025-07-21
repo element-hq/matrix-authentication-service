@@ -308,7 +308,7 @@ impl HomeserverConnection for SynapseConnection {
     }
 
     #[tracing::instrument(
-        name = "homeserver.create_device",
+        name = "homeserver.upsert_device",
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
@@ -317,7 +317,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
@@ -513,7 +513,7 @@ impl HomeserverConnection for SynapseConnection {
         // Then, create the devices that are missing. There is no batching API to do
         // this, so we do this sequentially, which is fine as the API is idempotent.
         for device_id in devices.difference(&existing_devices) {
-            self.create_device(localpart, device_id, None).await?;
+            self.upsert_device(localpart, device_id, None).await?;
         }
 
         Ok(())

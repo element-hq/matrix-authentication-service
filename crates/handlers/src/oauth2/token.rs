@@ -578,7 +578,7 @@ async fn authorization_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(
+                .upsert_device(
                     &browser_session.user.username,
                     device.as_str(),
                     Some(&device_name),
@@ -957,7 +957,7 @@ async fn device_code_grant(
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&browser_session.user.username, device.as_str(), None)
+                .upsert_device(&browser_session.user.username, device.as_str(), None)
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }

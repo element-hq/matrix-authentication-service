@@ -109,7 +109,7 @@ impl crate::HomeserverConnection for HomeserverConnection {
         Ok(!users.contains_key(&mxid))
     }
 
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(conn.mxid("test"), mxid);
 
         assert!(conn.query_user("test").await.is_err());
-        assert!(conn.create_device("test", device, None).await.is_err());
+        assert!(conn.upsert_device("test", device, None).await.is_err());
         assert!(conn.delete_device("test", device).await.is_err());
 
         let request = ProvisionRequest::new("test", "test")
@@ -254,9 +254,9 @@ mod tests {
         assert!(conn.delete_device("test", device).await.is_ok());
 
         // Create the device
-        assert!(conn.create_device("test", device, None).await.is_ok());
+        assert!(conn.upsert_device("test", device, None).await.is_ok());
         // Create the same device again
-        assert!(conn.create_device("test", device, None).await.is_ok());
+        assert!(conn.upsert_device("test", device, None).await.is_ok());
 
         // XXX: there is no API to query devices yet in the trait
         // Delete the device

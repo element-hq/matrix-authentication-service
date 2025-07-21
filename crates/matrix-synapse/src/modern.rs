@@ -227,7 +227,7 @@ impl HomeserverConnection for SynapseConnection {
     }
 
     #[tracing::instrument(
-        name = "homeserver.create_device",
+        name = "homeserver.upsert_device",
         skip_all,
         fields(
             matrix.homeserver = self.homeserver,
@@ -236,7 +236,7 @@ impl HomeserverConnection for SynapseConnection {
         ),
         err(Debug),
     )]
-    async fn create_device(
+    async fn upsert_device(
         &self,
         localpart: &str,
         device_id: &str,
@@ -257,7 +257,7 @@ impl HomeserverConnection for SynapseConnection {
         };
 
         let response = self
-            .post("_synapse/mas/create_device")
+            .post("_synapse/mas/upsert_device")
             .json(&body)
             .send_traced()
             .await

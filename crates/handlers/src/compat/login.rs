@@ -411,7 +411,7 @@ pub(crate) async fn post(
     // Now we can create the device on the homeserver, without holding the
     // transaction
     if let Err(err) = homeserver
-        .create_device(
+        .upsert_device(
             &user.username,
             device.as_str(),
             session.human_name.as_deref(),
