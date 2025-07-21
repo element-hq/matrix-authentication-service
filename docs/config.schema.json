@@ -2375,6 +2375,14 @@
         "template": {
           "description": "The Jinja2 template to use for the localpart attribute\n\nIf not provided, the default template is `{{ user.preferred_username }}`",
           "type": "string"
+        },
+        "on_conflict": {
+          "description": "How to handle conflicts on the claim, default value is `Fail`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OnConflict"
+            }
+          ]
         }
       }
     },
@@ -2407,6 +2415,25 @@
           "type": "string",
           "enum": [
             "require"
+          ]
+        }
+      ]
+    },
+    "OnConflict": {
+      "description": "How to handle an existing localpart claim",
+      "oneOf": [
+        {
+          "description": "Fails the sso login on conflict",
+          "type": "string",
+          "enum": [
+            "fail"
+          ]
+        },
+        {
+          "description": "Adds the oauth identity link, regardless of whether there is an existing link or not",
+          "type": "string",
+          "enum": [
+            "add"
           ]
         }
       ]

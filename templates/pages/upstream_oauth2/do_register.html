@@ -188,12 +188,6 @@ Please see LICENSE files in the repository root for full details.
       {% endcall %}
     {% endif %}
 
-
     {{ button.button(text=_("action.create_account")) }}
   </form>
-
-  {# Leave this for now as we don't have that fully designed yet
-    {{ field.separator() }}
-    {{ button.link_outline(text=_("mas.upstream_oauth2.register.link_existing"), href=login_link) }}
-  #}
 {% endblock content %}
