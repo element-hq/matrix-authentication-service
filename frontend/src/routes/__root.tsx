@@ -9,12 +9,14 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
   type ErrorRouteComponent,
+  HeadContent,
   Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import GenericError from "../components/GenericError";
 import Layout, { query } from "../components/Layout";
 import NotFound from "../components/NotFound";
+import i18n from "../i18n";
 
 const ErrorComponent: ErrorRouteComponent = ({ error }) => (
   <Layout>
@@ -25,8 +27,17 @@ const ErrorComponent: ErrorRouteComponent = ({ error }) => (
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
+  head: async () => {
+    await i18n.loadNamespaces("translation");
+
+    return {
+      meta: [{ title: i18n.t("frontend.account.title") }],
+    };
+  },
+
   component: () => (
     <>
+      <HeadContent />
       <Outlet />
 
       {import.meta.env.DEV &&

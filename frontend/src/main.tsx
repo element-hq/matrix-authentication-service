@@ -19,6 +19,8 @@ import "./shared.css";
 
 setupI18n();
 
+document.querySelector("title")?.remove();
+
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
