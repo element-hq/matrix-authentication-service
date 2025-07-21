@@ -125,9 +125,9 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 provider.claims_imports.localpart.action,
                 ImportAction::Force | ImportAction::Require
             ) {
-                return annotate(figment::Error::custom(
+                return Err(annotate(figment::Error::custom(
                     "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
-                ));
+                )).into());
             }
         }
 
