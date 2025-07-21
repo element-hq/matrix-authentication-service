@@ -694,9 +694,12 @@ pub(crate) async fn post(
                 .as_deref()
                 .unwrap_or(DEFAULT_LOCALPART_TEMPLATE);
 
-            let localpart = render_attribute_template(&env, template, &context, true)?;
+            let Some(localpart) = render_attribute_template(&env, template, &context, true)? else {
+                // This should never be the case at this point
+                return Err(RouteError::InvalidFormAction);
+            };
 
-            let maybe_user = repo.user().find_by_username(&localpart.unwrap()).await?;
+            let maybe_user = repo.user().find_by_username(&localpart).await?;
 
             let Some(user) = maybe_user else {
                 // user cannot be None at this stage
