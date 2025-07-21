@@ -37,6 +37,8 @@ pub enum HomeserverKind {
     ///
     /// This is meant for testing rolling out Matrix Authentication Service with
     /// no risk of writing data to the homeserver.
+    ///
+    /// This will switch to using the modern API in a few releases.
     SynapseReadOnly,
 
     /// Homeserver is Synapse, using the legacy API,

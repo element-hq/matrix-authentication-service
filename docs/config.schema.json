@@ -1714,7 +1714,7 @@
           ]
         },
         {
-          "description": "Homeserver is Synapse, using the legacy API, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
+          "description": "Homeserver is Synapse, using the legacy API, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.\n\nThis will switch to using the modern API in a few releases.",
           "type": "string",
           "enum": [
             "synapse_read_only"
