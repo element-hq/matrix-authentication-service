@@ -551,12 +551,10 @@ impl HomeserverConnection for SynapseConnection {
         #[derive(Serialize)]
         struct Request {
             localpart: String,
-            password: String, // Required by the API but not used in this context
         }
 
         let body = Request {
             localpart: localpart.to_owned(),
-            password: String::new(), // Empty password since we're using admin auth
         };
 
         let response = self
