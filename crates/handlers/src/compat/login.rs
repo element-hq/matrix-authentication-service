@@ -411,7 +411,11 @@ pub(crate) async fn post(
     // Now we can create the device on the homeserver, without holding the
     // transaction
     if let Err(err) = homeserver
-        .create_device(&user_id, device.as_str(), session.human_name.as_deref())
+        .upsert_device(
+            &user.username,
+            device.as_str(),
+            session.human_name.as_deref(),
+        )
         .await
     {
         // Something went wrong, let's end this session and schedule a device sync
@@ -829,10 +833,9 @@ mod tests {
             .add(&mut rng, &state.clock, &user, version, hash, None)
             .await
             .unwrap();
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -1133,10 +1136,9 @@ mod tests {
             .await
             .unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -1239,10 +1241,9 @@ mod tests {
         let user = repo.user().lock(&state.clock, user).await.unwrap();
         repo.save().await.unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 

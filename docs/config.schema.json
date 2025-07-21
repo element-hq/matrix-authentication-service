@@ -1707,17 +1707,31 @@
       "description": "The kind of homeserver it is.",
       "oneOf": [
         {
-          "description": "Homeserver is Synapse",
+          "description": "Homeserver is Synapse, using the legacy API\n\nThis will switch to using the modern API in a few releases.",
           "type": "string",
           "enum": [
             "synapse"
           ]
         },
         {
-          "description": "Homeserver is Synapse, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
+          "description": "Homeserver is Synapse, using the legacy API, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.\n\nThis will switch to using the modern API in a few releases.",
           "type": "string",
           "enum": [
             "synapse_read_only"
+          ]
+        },
+        {
+          "description": "Homeserver is Synapse, using the legacy API,",
+          "type": "string",
+          "enum": [
+            "synapse_legacy"
+          ]
+        },
+        {
+          "description": "Homeserver is Synapse, with the modern API available",
+          "type": "string",
+          "enum": [
+            "synapse_modern"
           ]
         }
       ]
