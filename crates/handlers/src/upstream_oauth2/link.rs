@@ -1013,7 +1013,7 @@ mod tests {
     use mas_data_model::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProviderClaimsImports,
         UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderLocalpartPreference,
-        UpstreamOAuthProviderTokenAuthMethod, User,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_jose::jwt::{JsonWebSignatureHeader, Jwt};
@@ -1219,21 +1219,8 @@ mod tests {
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_existing_account(pool: PgPool) {
-        #[allow(clippy::disallowed_methods)]
-        let timestamp = chrono::Utc::now().timestamp_millis();
-
-        //suffix timestamp to generate unique test data
-        let existing_username = format!("{}{}", "john", timestamp);
-        let existing_email = format!("{}@{}", existing_username, "example.com");
-
-        //existing username matches oidc username
-        let oidc_username = existing_username.clone();
-
-        //oidc email is different from existing email
-        let oidc_email: String = format!("{}{}@{}", "any_email", timestamp, "example.com");
-
-        //generate unique subject
-        let subject = format!("{}+{}", "subject", timestamp);
+        let existing_username = "john";
+        let subject = "subject";
 
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
@@ -1253,9 +1240,10 @@ mod tests {
             ..UpstreamOAuthProviderClaimsImports::default()
         };
 
+        //`preferred_username` matches an existing user's username
         let id_token_claims = serde_json::json!({
-            "preferred_username": oidc_username,
-            "email": oidc_email,
+            "preferred_username": existing_username,
+            "email": "any@example.com",
             "email_verified": true,
         });
 
@@ -1304,7 +1292,7 @@ mod tests {
             &state.clock,
             &mut repo,
             &provider,
-            &subject,
+            subject,
             &id_token.into_string(),
             id_token_claims,
         )
@@ -1319,15 +1307,11 @@ mod tests {
         let cookie_jar = upstream_sessions.save(cookie_jar, &state.clock);
         cookies.import(cookie_jar);
 
-        let user = create_user(
-            &mut rng,
-            &state.clock,
-            &mut repo,
-            existing_username.clone(),
-            existing_email.clone(),
-        )
-        .await
-        .unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, existing_username.to_owned())
+            .await
+            .unwrap();
 
         repo.save().await.unwrap();
 
@@ -1364,7 +1348,7 @@ mod tests {
 
         let link = repo
             .upstream_oauth_link()
-            .find_by_subject(&provider, &subject)
+            .find_by_subject(&provider, subject)
             .await
             .unwrap()
             .expect("link exists");
@@ -1374,20 +1358,7 @@ mod tests {
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_existing_account_when_not_allowed_by_default(pool: PgPool) {
-        #[allow(clippy::disallowed_methods)]
-        let timestamp = chrono::Utc::now().timestamp_millis();
-
-        //suffix timestamp to generate unique test data
-        let existing_username = format!("{}{}", "john", timestamp);
-        let existing_email = format!("{}@{}", existing_username, "example.com");
-
-        //existing username matches oidc username
-        let oidc_username = existing_username.clone();
-
-        //oidc email is different from existing email
-        let oidc_email: String = format!("{}{}@{}", "any_email", timestamp, "example.com");
-
-        let subject = format!("{}+{}", "subject", timestamp);
+        let existing_username = "john";
 
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
@@ -1407,9 +1378,10 @@ mod tests {
             ..UpstreamOAuthProviderClaimsImports::default()
         };
 
+        // `preferred_username` matches an existing user's username
         let id_token_claims = serde_json::json!({
-            "preferred_username": oidc_username,
-            "email": oidc_email,
+            "preferred_username": existing_username,
+            "email": "any@example.com",
             "email_verified": true,
         });
 
@@ -1457,22 +1429,18 @@ mod tests {
             &state.clock,
             &mut repo,
             &provider,
-            &subject,
+            "subject",
             &id_token.into_string(),
             id_token_claims,
         )
         .await
         .unwrap();
 
-        let _user = create_user(
-            &mut rng,
-            &state.clock,
-            &mut repo,
-            existing_username.clone(),
-            existing_email.clone(),
-        )
-        .await
-        .unwrap();
+        // Provision an user
+        repo.user()
+            .add(&mut rng, &state.clock, existing_username.to_owned())
+            .await
+            .unwrap();
 
         repo.save().await.unwrap();
 
@@ -1511,21 +1479,6 @@ mod tests {
         let header = JsonWebSignatureHeader::new(JsonWebSignatureAlg::Rs256);
 
         Jwt::sign_with_rng(rng, header, payload, &signer)
-    }
-
-    async fn create_user(
-        rng: &mut ChaChaRng,
-        clock: &impl mas_storage::Clock,
-        repo: &mut Box<dyn Repository<RepositoryError> + Send + Sync + 'static>,
-        username: String,
-        email: String,
-    ) -> Result<User, anyhow::Error> {
-        //create a user with an email
-        let user = repo.user().add(rng, clock, username).await.unwrap();
-
-        let _user_email = repo.user_email().add(rng, clock, &user, email).await;
-
-        Ok(user)
     }
 
     async fn add_linked_upstream_session(
