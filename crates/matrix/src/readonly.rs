@@ -28,6 +28,10 @@ impl<C: HomeserverConnection> HomeserverConnection for ReadOnlyHomeserverConnect
         self.inner.homeserver()
     }
 
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
+        self.inner.verify_token(token).await
+    }
+
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
         self.inner.query_user(localpart).await
     }
