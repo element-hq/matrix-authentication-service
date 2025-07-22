@@ -228,7 +228,7 @@ pub(crate) async fn post(
 ) -> Result<impl IntoResponse, RouteError> {
     if let Some(token) = credentials.bearer_token() {
         // If the client presented a bearer token, we check with the homeserver
-        // connection if it is allowed to use the introspection endpoint
+        // configuration if it is allowed to use the introspection endpoint
         if !homeserver
             .verify_token(token)
             .await
