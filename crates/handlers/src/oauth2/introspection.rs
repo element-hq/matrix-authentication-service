@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
@@ -15,6 +15,7 @@ use mas_axum_utils::{
 use mas_data_model::{Device, TokenFormatError, TokenType};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
 use mas_keystore::Encrypter;
+use mas_matrix::HomeserverConnection;
 use mas_storage::{
     BoxClock, BoxRepository, Clock,
     compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
@@ -102,8 +103,14 @@ pub enum RouteError {
     #[error("bad request")]
     BadRequest,
 
+    #[error("failed to verify token")]
+    FailedToVerifyToken(#[source] anyhow::Error),
+
     #[error(transparent)]
     ClientCredentialsVerification(#[from] CredentialsVerificationError),
+
+    #[error("bearer token presented is invalid")]
+    InvalidBearerToken,
 }
 
 impl IntoResponse for RouteError {
@@ -114,13 +121,15 @@ impl IntoResponse for RouteError {
                 | Self::CantLoadCompatSession(_)
                 | Self::CantLoadOAuthSession(_)
                 | Self::CantLoadUser(_)
+                | Self::FailedToVerifyToken(_)
         );
 
         let response = match self {
             e @ (Self::Internal(_)
             | Self::CantLoadCompatSession(_)
             | Self::CantLoadOAuthSession(_)
-            | Self::CantLoadUser(_)) => (
+            | Self::CantLoadUser(_)
+            | Self::FailedToVerifyToken(_)) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
                     ClientError::from(ClientErrorCode::ServerError).with_description(e.to_string()),
@@ -136,6 +145,14 @@ impl IntoResponse for RouteError {
                 StatusCode::UNAUTHORIZED,
                 Json(
                     ClientError::from(ClientErrorCode::InvalidClient)
+                        .with_description(e.to_string()),
+                ),
+            )
+                .into_response(),
+            e @ Self::InvalidBearerToken => (
+                StatusCode::UNAUTHORIZED,
+                Json(
+                    ClientError::from(ClientErrorCode::AccessDenied)
                         .with_description(e.to_string()),
                 ),
             )
@@ -195,7 +212,7 @@ const SYNAPSE_ADMIN_SCOPE: ScopeToken = ScopeToken::from_static("urn:synapse:adm
 
 #[tracing::instrument(
     name = "handlers.oauth2.introspection.post",
-    fields(client.id = client_authorization.client_id()),
+    fields(client.id = credentials.client_id()),
     skip_all,
 )]
 #[allow(clippy::too_many_lines)]
@@ -205,28 +222,41 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     activity_tracker: ActivityTracker,
     State(encrypter): State<Encrypter>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     headers: HeaderMap,
-    client_authorization: ClientAuthorization<IntrospectionRequest>,
+    ClientAuthorization { credentials, form }: ClientAuthorization<IntrospectionRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
-    let client = client_authorization
-        .credentials
-        .fetch(&mut repo)
-        .await?
-        .ok_or(RouteError::ClientNotFound)?;
-
-    let method = match &client.token_endpoint_auth_method {
-        None | Some(OAuthClientAuthenticationMethod::None) => {
-            return Err(RouteError::NotAllowed(client.id));
+    if let Some(token) = credentials.bearer_token() {
+        // If the client presented a bearer token, we check with the homeserver
+        // configuration if it is allowed to use the introspection endpoint
+        if !homeserver
+            .verify_token(token)
+            .await
+            .map_err(RouteError::FailedToVerifyToken)?
+        {
+            return Err(RouteError::InvalidBearerToken);
         }
-        Some(c) => c,
-    };
+    } else {
+        // Otherwise, it presented regular client credentials, so we verify them
+        let client = credentials
+            .fetch(&mut repo)
+            .await?
+            .ok_or(RouteError::ClientNotFound)?;
 
-    client_authorization
-        .credentials
-        .verify(&http_client, &encrypter, method, &client)
-        .await?;
+        // Only confidential clients are allowed to introspect
+        let method = match &client.token_endpoint_auth_method {
+            None | Some(OAuthClientAuthenticationMethod::None) => {
+                return Err(RouteError::NotAllowed(client.id));
+            }
+            Some(c) => c,
+        };
 
-    let Some(form) = client_authorization.form else {
+        credentials
+            .verify(&http_client, &encrypter, method, &client)
+            .await?;
+    }
+
+    let Some(form) = form else {
         return Err(RouteError::BadRequest);
     };
 
@@ -578,10 +608,11 @@ mod tests {
     use hyper::{Request, StatusCode};
     use mas_data_model::{AccessToken, RefreshToken};
     use mas_iana::oauth::OAuthTokenTypeHint;
-    use mas_matrix::{HomeserverConnection, ProvisionRequest};
+    use mas_matrix::{HomeserverConnection, MockHomeserverConnection, ProvisionRequest};
     use mas_router::{OAuth2Introspection, OAuth2RegistrationEndpoint, SimpleRoute};
     use mas_storage::Clock;
     use oauth2_types::{
+        errors::{ClientError, ClientErrorCode},
         registration::ClientRegistrationResponse,
         requests::IntrospectionResponse,
         scope::{OPENID, Scope},
@@ -983,5 +1014,30 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let response: IntrospectionResponse = response.json();
         assert!(response.active);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_introspect_with_bearer_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Check that talking to the introspection endpoint with the bearer token from
+        // the MockHomeserverConnection doens't error out
+        let request = Request::post(OAuth2Introspection::PATH)
+            .bearer(MockHomeserverConnection::VALID_BEARER_TOKEN)
+            .form(json!({ "token": "some_token" }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(!response.active);
+
+        // Check with another token, we should get a 401
+        let request = Request::post(OAuth2Introspection::PATH)
+            .bearer("another_token")
+            .form(json!({ "token": "some_token" }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let response: ClientError = response.json();
+        assert_eq!(response.error, ClientErrorCode::AccessDenied);
     }
 }

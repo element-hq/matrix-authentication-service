@@ -31,6 +31,10 @@ pub struct HomeserverConnection {
 }
 
 impl HomeserverConnection {
+    /// A valid bearer token that will be accepted by
+    /// [`crate::HomeserverConnection::verify_token`].
+    pub const VALID_BEARER_TOKEN: &str = "mock_homeserver_bearer_token";
+
     /// Create a new mock connection.
     pub fn new<H>(homeserver: H) -> Self
     where
@@ -52,6 +56,10 @@ impl HomeserverConnection {
 impl crate::HomeserverConnection for HomeserverConnection {
     fn homeserver(&self) -> &str {
         &self.homeserver
+    }
+
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
+        Ok(token == Self::VALID_BEARER_TOKEN)
     }
 
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {

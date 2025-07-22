@@ -66,6 +66,11 @@ impl HomeserverConnection for SynapseConnection {
         &self.homeserver
     }
 
+    #[tracing::instrument(name = "homeserver.verify_token", skip_all, err(Debug))]
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
+        Ok(self.access_token == token)
+    }
+
     #[tracing::instrument(
         name = "homeserver.query_user",
         skip_all,

@@ -207,6 +207,20 @@ pub trait HomeserverConnection: Send + Sync {
         Some(mxid.localpart())
     }
 
+    /// Verify a bearer token coming from the homeserver for homeserver to MAS
+    /// interactions
+    ///
+    /// Returns `true` if the token is valid, `false` otherwise.
+    ///
+    /// # Parameters
+    ///
+    /// * `token` - The token to verify.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the token failed to verify.
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error>;
+
     /// Query the state of a user on the homeserver.
     ///
     /// # Parameters
@@ -384,6 +398,10 @@ impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T
         (**self).homeserver()
     }
 
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
+        (**self).verify_token(token).await
+    }
+
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
         (**self).query_user(localpart).await
     }
@@ -460,6 +478,10 @@ impl<T: HomeserverConnection + Send + Sync + ?Sized> HomeserverConnection for &T
 impl<T: HomeserverConnection + ?Sized> HomeserverConnection for Arc<T> {
     fn homeserver(&self) -> &str {
         (**self).homeserver()
+    }
+
+    async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
+        (**self).verify_token(token).await
     }
 
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
