@@ -92,10 +92,9 @@ impl RunnableJob for DeactivateUserJob {
         // we want the user to be locked out as soon as possible
         repo.save().await.map_err(JobError::retry)?;
 
-        let mxid = matrix.mxid(&user.username);
-        info!("Deactivating user {} on homeserver", mxid);
+        info!("Deactivating user {} on homeserver", user.username);
         matrix
-            .delete_user(&mxid, self.hs_erase())
+            .delete_user(&user.username, self.hs_erase())
             .await
             .map_err(JobError::retry)?;
 
@@ -123,10 +122,9 @@ impl RunnableJob for ReactivateUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        let mxid = matrix.mxid(&user.username);
-        info!("Reactivating user {} on homeserver", mxid);
+        info!("Reactivating user {} on homeserver", user.username);
         matrix
-            .reactivate_user(&mxid)
+            .reactivate_user(&user.username)
             .await
             .map_err(JobError::retry)?;
 
