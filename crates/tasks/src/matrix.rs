@@ -192,7 +192,7 @@ impl RunnableJob for SyncDevicesJob {
         let mut devices = HashSet::new();
 
         // Cycle through all the compat sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .compat_session()
@@ -216,7 +216,7 @@ impl RunnableJob for SyncDevicesJob {
         }
 
         // Cycle though all the oauth2 sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .oauth2_session()
