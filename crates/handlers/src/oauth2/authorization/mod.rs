@@ -9,7 +9,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, record_error};
+use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, Pkce};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -53,29 +53,15 @@ pub enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_));
-        // TODO: better error pages
-        let response = match self {
-            RouteError::Internal(e) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        match self {
+            Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ (Self::ClientNotFound
+            | Self::InvalidResponseMode
+            | Self::IntoCallbackDestination(_)
+            | Self::UnknownRedirectUri(_)) => {
+                GenericError::new(StatusCode::BAD_REQUEST, e).into_response()
             }
-            RouteError::ClientNotFound => {
-                (StatusCode::BAD_REQUEST, "could not find client").into_response()
-            }
-            RouteError::InvalidResponseMode => {
-                (StatusCode::BAD_REQUEST, "invalid response mode").into_response()
-            }
-            RouteError::IntoCallbackDestination(e) => {
-                (StatusCode::BAD_REQUEST, e.to_string()).into_response()
-            }
-            RouteError::UnknownRedirectUri(e) => (
-                StatusCode::BAD_REQUEST,
-                format!("Invalid redirect URI ({e})"),
-            )
-                .into_response(),
-        };
-
-        (sentry_event_id, response).into_response()
+        }
     }
 }
 
