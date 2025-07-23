@@ -269,7 +269,7 @@ pub fn build_router(
             }
             mas_config::HttpResource::OAuth => router.merge(mas_handlers::api_router::<AppState>()),
             mas_config::HttpResource::Compat => {
-                router.merge(mas_handlers::compat_router::<AppState>())
+                router.merge(mas_handlers::compat_router::<AppState>(templates.clone()))
             }
             mas_config::HttpResource::AdminApi => {
                 let (_, api_router) = mas_handlers::admin_api_router::<AppState>();
