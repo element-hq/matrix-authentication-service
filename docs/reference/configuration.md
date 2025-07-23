@@ -259,7 +259,7 @@ The following key types are supported:
 
 Each entry must have a unique `kid`, plus the key itself.
 The `kid` can be any case-sensitive string value as long as it is unique to this list;
-`kid` values must not be stable across restarts.
+`kid` values don’t need to be stable across restarts.
 The key can either be specified inline (with the `key` property),
 or loaded from a file (with the `key_file` property).
 The following key formats are supported:
