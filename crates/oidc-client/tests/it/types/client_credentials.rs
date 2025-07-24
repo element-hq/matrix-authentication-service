@@ -188,12 +188,8 @@ async fn pass_client_secret_jwt() {
         .and(move |req: &Request| {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-            if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
-            {
-                println!("Wrong or missing client ID");
+            if query_pairs.contains_key("client_id") {
+                println!("`client_secret_jwt` client authentication should not use `client_id`");
                 return false;
             }
             if query_pairs
@@ -271,12 +267,8 @@ async fn pass_private_key_jwt() {
         .and(move |req: &Request| {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-            if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
-            {
-                println!("Wrong or missing client ID");
+            if query_pairs.contains_key("client_id") {
+                println!("`private_key_jwt` client authentication should not use `client_id`");
                 return false;
             }
             if query_pairs

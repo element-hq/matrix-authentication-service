@@ -141,7 +141,7 @@ impl ClientCredentials {
         let request = match self {
             ClientCredentials::None { client_id } => request.form(&RequestWithClientCredentials {
                 body: form,
-                client_id,
+                client_id: Some(client_id),
                 client_secret: None,
                 client_assertion: None,
                 client_assertion_type: None,
@@ -159,7 +159,7 @@ impl ClientCredentials {
                     .basic_auth(username, Some(password))
                     .form(&RequestWithClientCredentials {
                         body: form,
-                        client_id,
+                        client_id: None,
                         client_secret: None,
                         client_assertion: None,
                         client_assertion_type: None,
@@ -171,7 +171,7 @@ impl ClientCredentials {
                 client_secret,
             } => request.form(&RequestWithClientCredentials {
                 body: form,
-                client_id,
+                client_id: Some(client_id),
                 client_secret: Some(client_secret),
                 client_assertion: None,
                 client_assertion_type: None,
@@ -195,7 +195,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: None,
                     client_secret: None,
                     client_assertion: Some(jwt.as_str()),
                     client_assertion_type: Some(JwtBearerClientAssertionType),
@@ -228,7 +228,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: None,
                     client_secret: None,
                     client_assertion: Some(client_assertion.as_str()),
                     client_assertion_type: Some(JwtBearerClientAssertionType),
@@ -260,7 +260,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: Some(client_id),
                     client_secret: Some(client_secret.as_str()),
                     client_assertion: None,
                     client_assertion_type: None,
@@ -359,7 +359,8 @@ struct RequestWithClientCredentials<'a, T> {
     #[serde(flatten)]
     body: T,
 
-    client_id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_id: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     client_secret: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
