@@ -319,7 +319,7 @@ impl TestState {
         let app = crate::healthcheck_router()
             .merge(crate::discovery_router())
             .merge(crate::api_router())
-            .merge(crate::compat_router())
+            .merge(crate::compat_router(self.templates.clone()))
             .merge(crate::human_router(self.templates.clone()))
             // We enable undocumented_oauth2_access for the tests, as it is easier to query the API
             // with it

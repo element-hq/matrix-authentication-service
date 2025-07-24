@@ -257,7 +257,7 @@ where
 }
 
 #[allow(clippy::trait_duplication_in_bounds)]
-pub fn compat_router<S>() -> Router<S>
+pub fn compat_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
@@ -272,7 +272,28 @@ where
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
 {
-    Router::new()
+    // A sub-router for human-facing routes with error handling
+    let human_router = Router::new()
+        .route(
+            mas_router::CompatLoginSsoRedirect::route(),
+            get(self::compat::login_sso_redirect::get),
+        )
+        .route(
+            mas_router::CompatLoginSsoRedirectIdp::route(),
+            get(self::compat::login_sso_redirect::get),
+        )
+        .route(
+            mas_router::CompatLoginSsoRedirectSlash::route(),
+            get(self::compat::login_sso_redirect::get),
+        )
+        .layer(AndThenLayer::new(
+            async move |response: axum::response::Response| {
+                Ok::<_, Infallible>(recover_error(&templates, response))
+            },
+        ));
+
+    // A sub-router for API-facing routes with CORS
+    let api_router = Router::new()
         .route(
             mas_router::CompatLogin::route(),
             get(self::compat::login::get).post(self::compat::login::post),
@@ -289,18 +310,6 @@ where
             mas_router::CompatRefresh::route(),
             post(self::compat::refresh::post),
         )
-        .route(
-            mas_router::CompatLoginSsoRedirect::route(),
-            get(self::compat::login_sso_redirect::get),
-        )
-        .route(
-            mas_router::CompatLoginSsoRedirectIdp::route(),
-            get(self::compat::login_sso_redirect::get),
-        )
-        .route(
-            mas_router::CompatLoginSsoRedirectSlash::route(),
-            get(self::compat::login_sso_redirect::get),
-        )
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -314,7 +323,9 @@ where
                     HeaderName::from_static("x-requested-with"),
                 ])
                 .max_age(Duration::from_secs(60 * 60)),
-        )
+        );
+
+    Router::new().merge(human_router).merge(api_router)
 }
 
 #[allow(clippy::too_many_lines)]
@@ -454,20 +465,27 @@ where
         )
         .layer(AndThenLayer::new(
             async move |response: axum::response::Response| {
-                // Error responses should have an ErrorContext attached to them
-                let ext = response.extensions().get::<ErrorContext>();
-                if let Some(ctx) = ext {
-                    if let Ok(res) = templates.render_error(ctx) {
-                        let (mut parts, _original_body) = response.into_parts();
-                        parts.headers.remove(CONTENT_TYPE);
-                        parts.headers.remove(CONTENT_LENGTH);
-                        return Ok((parts, Html(res)).into_response());
-                    }
-                }
-
-                Ok::<_, Infallible>(response)
+                Ok::<_, Infallible>(recover_error(&templates, response))
             },
         ))
+}
+
+fn recover_error(
+    templates: &Templates,
+    response: axum::response::Response,
+) -> axum::response::Response {
+    // Error responses should have an ErrorContext attached to them
+    let ext = response.extensions().get::<ErrorContext>();
+    if let Some(ctx) = ext {
+        if let Ok(res) = templates.render_error(ctx) {
+            let (mut parts, _original_body) = response.into_parts();
+            parts.headers.remove(CONTENT_TYPE);
+            parts.headers.remove(CONTENT_LENGTH);
+            return (parts, Html(res)).into_response();
+        }
+    }
+
+    response
 }
 
 /// The fallback handler for all routes that don't match anything else.

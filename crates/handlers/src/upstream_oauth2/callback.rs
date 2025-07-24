@@ -13,7 +13,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, record_error};
+use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
 use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
 use mas_jose::claims::TokenHash;
 use mas_keystore::{Encrypter, Keystore};
@@ -153,15 +153,13 @@ impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_));
-        let response = match self {
-            Self::ProviderNotFound => (StatusCode::NOT_FOUND, "Provider not found").into_response(),
-            Self::SessionNotFound => (StatusCode::NOT_FOUND, "Session not found").into_response(),
-            Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            e => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
-        };
-
-        (sentry_event_id, response).into_response()
+        match self {
+            Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ (Self::ProviderNotFound | Self::SessionNotFound) => {
+                GenericError::new(StatusCode::NOT_FOUND, e).into_response()
+            }
+            e => GenericError::new(StatusCode::BAD_REQUEST, e).into_response(),
+        }
     }
 }
 
