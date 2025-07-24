@@ -347,7 +347,7 @@ impl SecretsConfig {
         let ec_p384_key = task::spawn_blocking(move || {
             let _entered = span.enter();
             let ret = PrivateKey::generate_ec_p384(key_rng);
-            info!("Done generating EC P-256 key");
+            info!("Done generating EC P-384 key");
             ret
         })
         .await
