@@ -3302,6 +3302,7 @@ dependencies = [
  "base64ct",
  "chrono",
  "crc",
+ "lettre",
  "mas-iana",
  "mas-jose",
  "oauth2-types",
