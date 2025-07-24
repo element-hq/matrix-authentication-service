@@ -235,6 +235,11 @@
       "link_mismatch": {
         "heading": "Ez a forrásfiók már egy másik fiókkal van összekötve."
       },
+      "login_link": {
+        "action": "Folytatás",
+        "description": "A felhasználónévhez (%(username)s) már létezik fiók, amely ehhez a felülről érkező fiókhoz lesz kötve.",
+        "heading": "Meglévő fiók összekötése"
+      },
       "register": {
         "choose_username": {
           "description": "Ez később nem változtatható meg.",

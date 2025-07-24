@@ -235,6 +235,11 @@
       "link_mismatch": {
         "heading": "Algse teenuse konto juba on seotud ühe teise kasutajakontoga."
       },
+      "login_link": {
+        "action": "Jätka",
+        "description": "Selle kasutajanime (%(username)s) jaoks on konto olemas, ta saab olemas seotud kasutatava teenuse kontoga.",
+        "heading": "Sinu olemasoleva kasutajakonto link"
+      },
       "register": {
         "choose_username": {
           "description": "Seda ei saa hiljem muuta.",
