@@ -52,7 +52,7 @@
     "@tanstack/react-query-devtools": "^5.83.0",
     "@tanstack/react-router-devtools": "^1.129.8",
     "@tanstack/router-plugin": "^1.129.8",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.1.0",
