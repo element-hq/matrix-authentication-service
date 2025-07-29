@@ -59,7 +59,7 @@ impl Options {
         test_mailer_in_background(&mailer, Duration::from_secs(30));
 
         let http_client = mas_http::reqwest_client();
-        let conn = homeserver_connection_from_config(&config.matrix, http_client);
+        let conn = homeserver_connection_from_config(&config.matrix, http_client).await?;
 
         drop(config);
 
