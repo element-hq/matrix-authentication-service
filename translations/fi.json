@@ -235,6 +235,11 @@
       "link_mismatch": {
         "heading": "Tämä tili on jo yhdistetty toiseen tiliin."
       },
+      "login_link": {
+        "action": "Jatka",
+        "description": "Tälle käyttäjänimelle (%(username)s) on jo olemassa tili, joka yhdistetään tähän tiliin.",
+        "heading": "Yhdistä olemassa olevaan tiliisi"
+      },
       "register": {
         "choose_username": {
           "description": "Tätä ei voi muuttaa myöhemmin.",
