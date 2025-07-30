@@ -160,7 +160,7 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
+                socket.set_tcp_nodelay(true)?;
 
                 Ok((remote_addr.into(), UnixOrTcpConnection::Tcp { stream }))
             }
@@ -198,7 +198,7 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
+                socket.set_tcp_nodelay(true)?;
 
                 Poll::Ready(Ok((
                     remote_addr.into(),
