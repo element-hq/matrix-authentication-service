@@ -333,7 +333,7 @@ pub fn build_router(
         // which is the other way around compared to `tower::ServiceBuilder`.
         // So even if the Sentry docs has an example that does
         // 'NewSentryHttpLayer then SentryHttpLayer', we must do the opposite.
-        .layer(SentryHttpLayer::with_transaction())
+        .layer(SentryHttpLayer::new().enable_transaction())
         .layer(NewSentryLayer::new_from_top())
         .with_state(state)
 }
