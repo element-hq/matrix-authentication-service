@@ -154,7 +154,7 @@ version = "0.15.11"
 
 # Cookie store
 [workspace.dependencies.cookie_store]
-version = "0.21.1"
+version = "0.22.0"
 default-features = false
 features = ["serde_json"]
 
