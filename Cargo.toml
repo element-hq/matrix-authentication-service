@@ -572,18 +572,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.37.0"
+version = "0.42.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.37.0"
+version = "0.42.0"
 features = ["http", "axum-matched-path"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.37.0"
+version = "0.42.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
@@ -645,7 +645,7 @@ features = [
 version = "2.0.12"
 
 [workspace.dependencies.thiserror-ext]
-version = "0.2.1"
+version = "0.3.0"
 
 # Async runtime
 [workspace.dependencies.tokio]
