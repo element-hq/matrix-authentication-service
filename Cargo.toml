@@ -501,7 +501,13 @@ version = "1.11.1"
 [workspace.dependencies.reqwest]
 version = "0.12.22"
 default-features = false
-features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
+features = [
+    "http2",
+    "rustls-tls-manual-roots-no-provider",
+    "charset",
+    "json",
+    "socks",
+]
 
 # RSA cryptography
 [workspace.dependencies.rsa]
@@ -518,7 +524,7 @@ version = "0.15.4"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.30"
+version = "0.23.31"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
