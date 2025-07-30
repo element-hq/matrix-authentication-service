@@ -55,7 +55,6 @@ pub(super) struct Options {
 }
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
         let mut shutdown = LifecycleManager::new()?;

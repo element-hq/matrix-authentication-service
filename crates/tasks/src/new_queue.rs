@@ -639,7 +639,7 @@ impl QueueWorker {
         let now = clock.now();
         for schedule in &self.schedules {
             // Find the schedule status from the database
-            let Some(schedule_status) = schedules_status
+            let Some(status) = schedules_status
                 .iter()
                 .find(|s| s.schedule_name == schedule.schedule_name)
             else {
@@ -651,13 +651,13 @@ impl QueueWorker {
             };
 
             // Figure out if we should schedule a new job
-            if let Some(next_time) = schedule_status.last_scheduled_at {
+            if let Some(next_time) = status.last_scheduled_at {
                 if next_time > now {
                     // We already have a job scheduled in the future, skip
                     continue;
                 }
 
-                if schedule_status.last_scheduled_job_completed == Some(false) {
+                if status.last_scheduled_job_completed == Some(false) {
                     // The last scheduled job has not completed yet, skip
                     continue;
                 }
@@ -960,7 +960,6 @@ impl JobTracker {
     /// If `blocking` is `true`, this function will block until all the jobs
     /// are finished. Otherwise, it will return as soon as it processed the
     /// already finished jobs.
-    #[allow(clippy::too_many_lines)]
     async fn process_jobs<E: std::error::Error + Send + Sync + 'static>(
         &mut self,
         rng: &mut (dyn RngCore + Send),

@@ -413,7 +413,6 @@ mod tests {
         assert_eq!(candidates.len(), 1);
     }
 
-    #[allow(clippy::too_many_lines)]
     #[test]
     fn load_keycloak_keys() {
         let jwks = serde_json::json!({

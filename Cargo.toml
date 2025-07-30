@@ -26,6 +26,7 @@ all = { level = "deny", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 
 str_to_string = "deny"
+too_many_lines = "allow"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
@@ -154,7 +155,7 @@ version = "0.15.11"
 
 # Cookie store
 [workspace.dependencies.cookie_store]
-version = "0.21.1"
+version = "0.22.0"
 default-features = false
 features = ["serde_json"]
 

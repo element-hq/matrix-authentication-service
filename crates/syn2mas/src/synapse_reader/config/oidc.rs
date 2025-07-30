@@ -193,7 +193,6 @@ impl OidcProvider {
     }
 
     /// Map this Synapse OIDC provider config to a MAS upstream provider config.
-    #[expect(clippy::too_many_lines)]
     pub(crate) fn into_mas_config(
         self,
         rng: &mut impl Rng,
