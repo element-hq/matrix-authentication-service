@@ -215,7 +215,6 @@ const SYNAPSE_ADMIN_SCOPE: ScopeToken = ScopeToken::from_static("urn:synapse:adm
     fields(client.id = credentials.client_id()),
     skip_all,
 )]
-#[allow(clippy::too_many_lines)]
 pub(crate) async fn post(
     clock: BoxClock,
     State(http_client): State<reqwest::Client>,

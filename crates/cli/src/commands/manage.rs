@@ -207,7 +207,6 @@ enum Subcommand {
 }
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         let clock = SystemClock::default();

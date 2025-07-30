@@ -109,7 +109,6 @@ fn resolve_response_mode(
     fields(client.id = %params.auth.client_id),
     skip_all,
 )]
-#[allow(clippy::too_many_lines)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,

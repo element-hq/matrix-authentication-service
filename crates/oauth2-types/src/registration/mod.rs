@@ -440,7 +440,6 @@ impl ClientMetadata {
     /// Will return `Err` if validation fails.
     ///
     /// [OpenID Connect Dynamic Client Registration Spec 1.0]: https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata
-    #[allow(clippy::too_many_lines)]
     pub fn validate(self) -> Result<VerifiedClientMetadata, ClientMetadataVerificationError> {
         let grant_types = self.grant_types();
         let has_implicit = grant_types.contains(&GrantType::Implicit);
@@ -994,7 +993,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
     fn validate_response_types() {
         let mut metadata = valid_client_metadata();
 

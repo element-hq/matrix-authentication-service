@@ -119,7 +119,7 @@ pub(crate) async fn get(
 }
 
 #[tracing::instrument(name = "handlers.views.password_register.post", skip_all)]
-#[allow(clippy::too_many_lines, clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,

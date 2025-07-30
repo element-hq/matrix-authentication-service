@@ -205,7 +205,6 @@ async fn log_response_middleware(
     response
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn build_router(
     state: AppState,
     resources: &[HttpResource],

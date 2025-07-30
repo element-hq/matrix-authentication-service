@@ -226,7 +226,7 @@ fn to_precision(number: f64, mut placeholder: Placeholder) -> String {
     }
 }
 
-#[allow(clippy::too_many_lines, clippy::match_same_arms)]
+#[allow(clippy::match_same_arms)]
 fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, FormatError> {
     match (value, &placeholder.type_specifier) {
         (Value::Number(number), ts @ TypeSpecifier::BinaryNumber) => {

@@ -625,7 +625,6 @@ mod tests {
         );
     }
 
-    #[allow(clippy::too_many_lines)]
     #[tokio::test]
     async fn hash_verify_and_upgrade() {
         // Tests the whole password manager, by hashing a password and upgrading it

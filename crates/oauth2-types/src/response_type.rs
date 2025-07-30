@@ -272,7 +272,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
     fn deserialize_response_type() {
         serde_json::from_str::<ResponseType>("\"\"").unwrap_err();
 

@@ -26,7 +26,6 @@ const DOCS_BASE: &str = "https://element-hq.github.io/matrix-authentication-serv
 pub(super) struct Options {}
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let _span = info_span!("cli.doctor").entered();
         info!(
