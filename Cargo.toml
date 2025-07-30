@@ -391,7 +391,7 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.1.6"
+version = "0.1.7"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
