@@ -91,7 +91,13 @@ impl reqwest::dns::Resolve for TracingResolver {
 #[must_use]
 pub fn client() -> reqwest::Client {
     // TODO: can/should we limit in-flight requests?
-    let tls_config = rustls::ClientConfig::with_platform_verifier();
+
+    // The explicit typing here is because `use_preconfigured_tls` accepts
+    // `Any`, but wants a `ClientConfig` under the hood. This helps us detect
+    // breaking changes in the rustls-platform-verifier API.
+    let tls_config: rustls::ClientConfig =
+        rustls::ClientConfig::with_platform_verifier().expect("failed to create TLS config");
+
     reqwest::Client::builder()
         .dns_resolver(Arc::new(TracingResolver::new()))
         .use_preconfigured_tls(tls_config)
