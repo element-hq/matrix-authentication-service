@@ -128,8 +128,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
             release: Some(VERSION.into()),
             sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
             traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
-            auto_session_tracking: true,
-            session_mode: sentry::SessionMode::Request,
             ..Default::default()
         },
     ));
