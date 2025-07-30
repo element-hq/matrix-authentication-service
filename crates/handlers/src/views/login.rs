@@ -387,13 +387,12 @@ fn handle_login_hint(
     }
 
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
-        let value = match grant.parse_login_hint(
-            homeserver.homeserver(),
-            site_config.login_with_email_allowed,
-        ) {
+        let value = match grant.parse_login_hint(homeserver.homeserver()) {
             LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
-            LoginHint::Email(email) => Some(email.to_string()),
-            LoginHint::None => None,
+            LoginHint::Email(email) if site_config.login_with_email_allowed => {
+                Some(email.to_string())
+            }
+            _ => None,
         };
         form_state.set_value(LoginFormField::Username, value);
     }

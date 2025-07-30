@@ -179,28 +179,22 @@ impl AuthorizationGrant {
     ///
     /// Returns `LoginHint::MXID` for valid mxid 'mxid:@john.doe:example.com'
     ///
-    /// Returns `LoginHint::Email` for valid email 'john.doe@example.com' if
-    /// email supports is enabled
+    /// Returns `LoginHint::Email` for valid email 'john.doe@example.com'
     ///
     /// Otherwise returns `LoginHint::None`
     #[must_use]
-    pub fn parse_login_hint(&self, homeserver: &str, login_with_email_allowed: bool) -> LoginHint {
+    pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
 
         let Some((prefix, value)) = login_hint.split_once(':') else {
-            // If email supports for login_hint is enabled
-            if login_with_email_allowed {
-                // Validate the email
-                let Ok(address) = lettre::Address::from_str(login_hint) else {
-                    // Return none if the format is incorrect
-                    return LoginHint::None;
-                };
-                return LoginHint::Email(address);
-            }
-            // Unknown hint type, treat as none
-            return LoginHint::None;
+            // Validate the email
+            let Ok(address) = lettre::Address::from_str(login_hint) else {
+                // Return none if the format is incorrect
+                return LoginHint::None;
+            };
+            return LoginHint::Email(address);
         };
 
         match prefix {
@@ -308,7 +302,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", false);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -326,7 +320,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", false);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::MXID(mxid) if mxid.localpart() == "example-user"));
     }
@@ -344,27 +338,9 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", true);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::Email(email) if email.to_string() == "example@user"));
-    }
-
-    #[test]
-    fn valid_login_hint_with_email_when_login_with_email_not_allowed() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
-
-        let grant = AuthorizationGrant {
-            login_hint: Some(String::from("example@user")),
-            ..AuthorizationGrant::sample(now, &mut rng)
-        };
-
-        let hint = grant.parse_login_hint("example.com", false);
-
-        assert!(matches!(hint, LoginHint::None));
     }
 
     #[test]
@@ -380,7 +356,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", false);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -398,7 +374,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", false);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
@@ -416,7 +392,7 @@ mod tests {
             ..AuthorizationGrant::sample(now, &mut rng)
         };
 
-        let hint = grant.parse_login_hint("example.com", false);
+        let hint = grant.parse_login_hint("example.com");
 
         assert!(matches!(hint, LoginHint::None));
     }
