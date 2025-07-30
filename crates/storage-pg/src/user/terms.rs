@@ -5,8 +5,8 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::User;
-use mas_storage::{Clock, user::UserTermsRepository};
+use mas_data_model::{Clock, User};
+use mas_storage::user::UserTermsRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;

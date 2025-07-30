@@ -26,6 +26,7 @@ url.workspace = true
 crc.workspace = true
 ulid.workspace = true
 rand.workspace = true
+rand_chacha.workspace = true
 regex.workspace = true
 woothee.workspace = true
 ruma-common.workspace = true

@@ -9,8 +9,8 @@ use std::{process::ExitCode, time::Duration};
 use clap::Parser;
 use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
+use mas_data_model::SystemClock;
 use mas_router::UrlBuilder;
-use mas_storage::SystemClock;
 use mas_storage_pg::PgRepositoryFactory;
 use tracing::{info, info_span};
 

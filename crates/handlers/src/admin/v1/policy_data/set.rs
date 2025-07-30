@@ -9,8 +9,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::BoxRng;
 use mas_policy::PolicyFactory;
-use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 

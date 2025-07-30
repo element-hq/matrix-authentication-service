@@ -21,12 +21,11 @@ mod tests {
     use chrono::Duration;
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
-        UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderTokenAuthMethod, clock::MockClock,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{
         Pagination, RepositoryAccess,
-        clock::MockClock,
         upstream_oauth2::{
             UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository, UpstreamOAuthProviderFilter,
             UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,

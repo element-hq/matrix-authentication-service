@@ -6,8 +6,8 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{AccessToken, RefreshToken, RefreshTokenState, Session};
-use mas_storage::{Clock, oauth2::OAuth2RefreshTokenRepository};
+use mas_data_model::{AccessToken, Clock, RefreshToken, RefreshTokenState, Session};
+use mas_storage::oauth2::OAuth2RefreshTokenRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;

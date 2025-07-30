@@ -7,6 +7,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
+use mas_data_model::Clock;
 use opentelemetry::trace::TraceContextExt;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ulid::Ulid;
 
 use super::Worker;
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// Represents a job in the job queue
 pub struct Job {

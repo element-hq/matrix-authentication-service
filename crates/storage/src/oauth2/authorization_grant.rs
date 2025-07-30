@@ -5,13 +5,13 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{AuthorizationCode, AuthorizationGrant, Client, Session};
+use mas_data_model::{AuthorizationCode, AuthorizationGrant, Client, Clock, Session};
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// An [`OAuth2AuthorizationGrantRepository`] helps interacting with
 /// [`AuthorizationGrant`] saved in the storage backend

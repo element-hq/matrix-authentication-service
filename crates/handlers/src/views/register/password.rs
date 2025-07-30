@@ -18,13 +18,13 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
 };
-use mas_data_model::CaptchaConfig;
+use mas_data_model::{BoxClock, BoxRng, CaptchaConfig};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     user::{UserEmailRepository, UserRepository},
 };

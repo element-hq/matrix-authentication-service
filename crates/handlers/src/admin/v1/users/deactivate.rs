@@ -8,10 +8,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::{
-    BoxRng,
-    queue::{DeactivateUserJob, QueueJobRepositoryExt as _},
-};
+use mas_data_model::BoxRng;
+use mas_storage::queue::{DeactivateUserJob, QueueJobRepositoryExt as _};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::info;
@@ -134,7 +132,8 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use insta::{allow_duplicates, assert_json_snapshot};
-    use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
+    use mas_data_model::Clock;
+    use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::{PgPool, types::Json};
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};

@@ -20,10 +20,9 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::Device;
+    use mas_data_model::{Clock, Device, clock::MockClock};
     use mas_storage::{
-        Clock, Pagination, RepositoryAccess,
-        clock::MockClock,
+        Pagination, RepositoryAccess,
         compat::{
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionFilter,
             CompatSessionRepository, CompatSsoLoginFilter,

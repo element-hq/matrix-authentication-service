@@ -17,12 +17,12 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::oauth2::LoginHint;
+use mas_data_model::{BoxClock, BoxRng, Clock, oauth2::LoginHint};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
 };

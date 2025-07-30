@@ -10,11 +10,11 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
-use mas_data_model::UpstreamOAuthProvider;
+use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProvider};
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng,
+    BoxRepository,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
 };
 use thiserror::Error;

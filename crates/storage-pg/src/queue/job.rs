@@ -8,10 +8,8 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_storage::{
-    Clock,
-    queue::{Job, QueueJobRepository, Worker},
-};
+use mas_data_model::Clock;
+use mas_storage::queue::{Job, QueueJobRepository, Worker};
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sqlx::PgConnection;

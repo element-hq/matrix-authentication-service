@@ -6,9 +6,9 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, CompatSsoLoginState};
+use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, CompatSsoLoginState};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
 };
 use rand::RngCore;

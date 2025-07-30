@@ -11,10 +11,13 @@ use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType, User};
+use mas_data_model::{
+    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType,
+    User,
+};
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, BoxRepositoryFactory, RepositoryAccess,
     compat::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,

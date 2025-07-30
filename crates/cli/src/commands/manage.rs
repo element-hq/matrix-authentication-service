@@ -15,11 +15,11 @@ use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PasswordsConfig,
 };
-use mas_data_model::{Device, TokenType, Ulid, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, Device, SystemClock, TokenType, Ulid, UpstreamOAuthProvider, User};
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    Clock, RepositoryAccess, SystemClock,
+    RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
     queue::{

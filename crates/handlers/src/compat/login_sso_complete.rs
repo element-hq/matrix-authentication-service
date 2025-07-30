@@ -17,10 +17,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::{BoxClock, BoxRng, Clock};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
-use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess, compat::CompatSsoLoginRepository,
-};
+use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
 use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;

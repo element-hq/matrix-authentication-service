@@ -8,6 +8,7 @@
 
 use thiserror::Error;
 
+pub mod clock;
 pub(crate) mod compat;
 pub mod oauth2;
 pub(crate) mod policy_data;
@@ -16,6 +17,7 @@ pub(crate) mod tokens;
 pub(crate) mod upstream_oauth2;
 pub(crate) mod user_agent;
 pub(crate) mod users;
+mod utils;
 
 /// Error when an invalid state transition is attempted.
 #[derive(Debug, Error)]
@@ -25,6 +27,7 @@ pub struct InvalidTransitionError;
 pub use ulid::Ulid;
 
 pub use self::{
+    clock::{Clock, SystemClock},
     compat::{
         CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
         CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device, ToScopeTokenError,
@@ -53,4 +56,5 @@ pub use self::{
         UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
+    utils::{BoxClock, BoxRng},
 };

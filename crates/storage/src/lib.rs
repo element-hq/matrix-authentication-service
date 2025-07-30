@@ -20,7 +20,7 @@
 //! [`SystemClock`] that uses the system time and [`MockClock`] which is useful
 //! for testing.
 //!
-//! [`MockClock`]: crate::clock::MockClock
+//! [`MockClock`]: mas_data_model::clock::MockClock
 //!
 //! # Defining a new repository
 //!
@@ -111,7 +111,6 @@
 #![deny(clippy::future_not_send, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-pub mod clock;
 pub mod pagination;
 pub(crate) mod repository;
 mod utils;
@@ -125,11 +124,10 @@ pub mod upstream_oauth2;
 pub mod user;
 
 pub use self::{
-    clock::{Clock, SystemClock},
     pagination::{Page, Pagination},
     repository::{
         BoxRepository, BoxRepositoryFactory, Repository, RepositoryAccess, RepositoryError,
         RepositoryFactory, RepositoryTransaction,
     },
-    utils::{BoxClock, BoxRng, MapErr},
+    utils::MapErr,
 };
