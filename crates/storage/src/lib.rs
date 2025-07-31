@@ -15,13 +15,6 @@
 //! without caring about the underlying storage backend, and without carrying
 //! around the generic type parameter.
 //!
-//! This crate also defines a [`Clock`] trait that can be used to abstract the
-//! way the current time is retrieved. It has two implementation:
-//! [`SystemClock`] that uses the system time and [`MockClock`] which is useful
-//! for testing.
-//!
-//! [`MockClock`]: mas_data_model::clock::MockClock
-//!
 //! # Defining a new repository
 //!
 //! To define a new repository, you have to:
@@ -86,7 +79,7 @@
 //!      and use that error type
 //!   2. Lookups return an `Result<Option<T>, Self::Error>`, because 'not found'
 //!      errors are usually cases that are handled differently
-//!   3. Operations that need to record the current type use a [`Clock`]
+//!   3. Operations that need to record the current type use a [`mas_data_model::Clock`]
 //!      parameter. Operations that need to generate new IDs also use a random
 //!      number generator.
 //!   4. All the methods use an `&mut self`. This is ensures only one operation

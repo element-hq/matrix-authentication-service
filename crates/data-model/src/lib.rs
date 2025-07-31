@@ -4,6 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+//!
+//! This crate defines a [`Clock`] trait that can be used to abstract the
+//! way the current time is retrieved. It has two implementation:
+//! [`SystemClock`] that uses the system time and [`MockClock`] which is useful
+//! for testing.
+//!
+//! [`MockClock`]: crate::clock::MockClock
+//! 
+
 #![allow(clippy::module_name_repetitions)]
 
 use thiserror::Error;
