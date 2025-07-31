@@ -285,17 +285,15 @@ impl AuthorizationGrant {
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use rand::SeedableRng;
 
     use super::*;
+    use crate::clock::{Clock, MockClock};
 
     #[test]
     fn no_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: None,
@@ -309,11 +307,8 @@ mod tests {
 
     #[test]
     fn valid_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:example.com")),
@@ -327,11 +322,8 @@ mod tests {
 
     #[test]
     fn valid_login_hint_with_email() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("example@user")),
@@ -345,11 +337,8 @@ mod tests {
 
     #[test]
     fn invalid_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("example-user")),
@@ -363,11 +352,8 @@ mod tests {
 
     #[test]
     fn valid_login_hint_for_wrong_homeserver() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:matrix.org")),
@@ -381,11 +367,8 @@ mod tests {
 
     #[test]
     fn unknown_login_hint_type() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("something:anything")),
