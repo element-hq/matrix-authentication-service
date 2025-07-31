@@ -211,6 +211,19 @@ struct FullAuthorizationRequest {
     pkce: Option<pkce::AuthorizationRequest>,
 }
 
+impl FullAuthorizationRequest {
+    /// Strip the `request_uri` field if it is set.
+    fn without_request_uri(&self) -> Self {
+        FullAuthorizationRequest {
+            inner: AuthorizationRequest {
+                request_uri: None,
+                ..self.inner.clone()
+            },
+            pkce: self.pkce.clone(),
+        }
+    }
+}
+
 /// Build the authorization request.
 fn build_authorization_request(
     authorization_data: AuthorizationRequestData,
@@ -263,10 +276,10 @@ fn build_authorization_request(
 
     let auth_request = FullAuthorizationRequest {
         inner: AuthorizationRequest {
-            response_type: OAuthAuthorizationEndpointResponseType::Code.into(),
+            response_type: Some(OAuthAuthorizationEndpointResponseType::Code.into()),
             client_id,
             redirect_uri: Some(redirect_uri.clone()),
-            scope,
+            scope: Some(scope),
             state: Some(state.clone()),
             response_mode,
             nonce: nonce.clone(),
@@ -338,22 +351,95 @@ pub fn build_authorization_url(
         build_authorization_request(authorization_data, rng)?;
 
     let authorization_query = serde_urlencoded::to_string(authorization_request)?;
+    let authorization_url = add_query(authorization_endpoint, &authorization_query);
 
-    let mut authorization_url = authorization_endpoint;
+    Ok((authorization_url, validation_data))
+}
+
+/// Build the body for pushing the authorization request to the PAR endpoint.
+///
+/// # Arguments
+///
+/// * `authorization_data` - The data necessary to build the authorization
+///   request.
+///
+/// * `rng` - A random number generator.
+///
+/// # Returns
+///
+/// A string to be used as the body of a request to the PAR endpoint where it
+/// can be exchanged for a request URI and the [`AuthorizationValidationData`]
+/// to validate this request. The request URI can then be used to build the
+/// authorization URL to be opened in a web browser where the end-user will
+/// be able to authorize the given scope.
+///
+/// # Errors
+///
+/// Returns an error if preparing the body fails.
+pub fn build_par_body(
+    authorization_data: AuthorizationRequestData,
+    rng: &mut impl Rng,
+) -> Result<(String, AuthorizationValidationData), AuthorizationError> {
+    let (authorization_request, validation_data) =
+        build_authorization_request(authorization_data, rng)?;
+
+    let authorization_query =
+        serde_urlencoded::to_string(authorization_request.without_request_uri())?;
+
+    Ok((authorization_query, validation_data))
+}
+
+/// Build the URL for authenticating at the Authorization endpoint with the PAR
+/// request URI.
+///
+/// # Arguments
+///
+/// * `authorization_endpoint` - The URL of the issuer's authorization endpoint.
+///
+/// * `client_id` - The authorizing client's ID.
+///
+/// * `request_uri` - The request URI obtained at the PAR endpoint.
+///
+/// # Returns
+///
+/// A URL to be opened in a web browser where the end-user will be able to
+/// authorize the given scope.
+///
+/// # Errors
+///
+/// Returns an error if preparing the URL fails.
+pub fn build_par_authorization_url(
+    authorization_endpoint: Url,
+    client_id: String,
+    request_uri: Url,
+) -> Result<Url, AuthorizationError> {
+    let authorization_request = FullAuthorizationRequest {
+        inner: AuthorizationRequest {
+            client_id,
+            request_uri: Some(request_uri),
+            ..Default::default()
+        },
+        pkce: None,
+    };
+    let authorization_query = serde_urlencoded::to_string(authorization_request)?;
+
+    Ok(add_query(authorization_endpoint, &authorization_query))
+}
+
+/// Safely append a query on a URL that might already have one.
+fn add_query(url: Url, query: &str) -> Url {
+    let mut url = url;
 
     // Add our parameters to the query, because the URL might already have one.
-    let mut full_query = authorization_url
-        .query()
-        .map(ToOwned::to_owned)
-        .unwrap_or_default();
+    let mut full_query = url.query().map(ToOwned::to_owned).unwrap_or_default();
     if !full_query.is_empty() {
         full_query.push('&');
     }
-    full_query.push_str(&authorization_query);
+    full_query.push_str(query);
 
-    authorization_url.set_query(Some(&full_query));
+    url.set_query(Some(&full_query));
 
-    Ok((authorization_url, validation_data))
+    url
 }
 
 /// Exchange an authorization code for an access token.

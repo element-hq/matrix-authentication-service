@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use anyhow::Context;
 use axum::{
     extract::{Form, State},
     response::{IntoResponse, Response},
@@ -44,6 +45,9 @@ pub enum RouteError {
     #[error("invalid response mode")]
     InvalidResponseMode,
 
+    #[error("invalid scope")]
+    InvalidScope,
+
     #[error("invalid parameters")]
     IntoCallbackDestination(#[from] self::callback::IntoCallbackDestinationError),
 
@@ -57,6 +61,7 @@ impl IntoResponse for RouteError {
             Self::Internal(e) => InternalError::new(e).into_response(),
             e @ (Self::ClientNotFound
             | Self::InvalidResponseMode
+            | Self::InvalidScope
             | Self::IntoCallbackDestination(_)
             | Self::UnknownRedirectUri(_)) => {
                 GenericError::new(StatusCode::BAD_REQUEST, e).into_response()
@@ -132,7 +137,11 @@ pub(crate) async fn get(
     let redirect_uri = client
         .resolve_redirect_uri(&params.auth.redirect_uri)?
         .clone();
-    let response_type = params.auth.response_type;
+    let response_type = params
+        .auth
+        .response_type
+        .context("response_type should not be missing")
+        .map_err(|_| RouteError::InvalidResponseMode)?;
     let response_mode = resolve_response_mode(&response_type, params.auth.response_mode)?;
 
     // Now we have a proper callback destination to go to on error
@@ -246,6 +255,12 @@ pub(crate) async fn get(
                 None
             };
 
+            let scope = params
+                .auth
+                .scope
+                .context("scope should not be missing")
+                .map_err(|_| RouteError::InvalidScope)?;
+
             let grant = repo
                 .oauth2_authorization_grant()
                 .add(
@@ -253,7 +268,7 @@ pub(crate) async fn get(
                     &clock,
                     &client,
                     redirect_uri.clone(),
-                    params.auth.scope,
+                    scope,
                     code,
                     params.auth.state.clone(),
                     params.auth.nonce,
