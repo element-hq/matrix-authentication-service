@@ -15,12 +15,12 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::AuthorizationGrantStage;
+use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng};
 use mas_keystore::Keystore;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng,
+    BoxRepository,
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};

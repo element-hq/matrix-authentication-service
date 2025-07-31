@@ -13,11 +13,11 @@ use axum::{
 use axum_extra::TypedHeader;
 use chrono::Duration;
 use mas_axum_utils::{InternalError, SessionInfoExt as _, cookies::CookieJar};
-use mas_data_model::SiteConfig;
+use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng,
+    BoxRepository,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     user::UserEmailFilter,
 };

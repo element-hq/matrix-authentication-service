@@ -5,11 +5,13 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProvider};
+use mas_data_model::{
+    Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProvider,
+};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Filter parameters for listing upstream OAuth sessions
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

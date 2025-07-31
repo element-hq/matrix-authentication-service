@@ -5,9 +5,9 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::UserRegistrationToken;
+use mas_data_model::{Clock, UserRegistrationToken};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
 };
 use rand::RngCore;
@@ -429,7 +429,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
-        clock: &dyn mas_storage::Clock,
+        clock: &dyn mas_data_model::Clock,
         token: String,
         usage_limit: Option<u32>,
         expires_at: Option<DateTime<Utc>>,
@@ -655,9 +655,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_storage::{
-        Clock as _, Pagination, clock::MockClock, user::UserRegistrationTokenFilter,
-    };
+    use mas_data_model::{Clock as _, clock::MockClock};
+    use mas_storage::{Pagination, user::UserRegistrationTokenFilter};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;

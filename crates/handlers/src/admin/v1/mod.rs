@@ -11,9 +11,9 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
+use mas_data_model::BoxRng;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
-use mas_storage::BoxRng;
 
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;

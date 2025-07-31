@@ -20,6 +20,7 @@ use axum::{
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
+use mas_data_model::BoxRng;
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -27,7 +28,6 @@ use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
     UrlBuilder,
 };
-use mas_storage::BoxRng;
 use mas_templates::{ApiDocContext, Templates};
 use tower_http::cors::{Any, CorsLayer};
 

@@ -16,9 +16,10 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{DeviceConsentContext, PolicyViolationContext, TemplateContext, Templates};
 use serde::Deserialize;
 use tracing::warn;

@@ -6,10 +6,6 @@
 
 //! Wrappers and useful type aliases
 
-use rand_core::CryptoRngCore;
-
-use crate::Clock;
-
 /// A wrapper which is used to map the error type of a repository to another
 pub struct MapErr<R, F> {
     pub(crate) inner: R,
@@ -29,12 +25,6 @@ impl<R, F> MapErr<R, F> {
         }
     }
 }
-
-/// A boxed [`Clock`]
-pub type BoxClock = Box<dyn Clock + Send>;
-
-/// A boxed random number generator
-pub type BoxRng = Box<dyn CryptoRngCore + Send>;
 
 /// A macro to implement a repository trait for the [`MapErr`] wrapper and for
 /// [`Box<R>`]

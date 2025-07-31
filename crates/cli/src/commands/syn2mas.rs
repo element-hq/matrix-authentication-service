@@ -13,7 +13,7 @@ use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, SyncConfig,
     UpstreamOAuth2Config,
 };
-use mas_storage::SystemClock;
+use mas_data_model::SystemClock;
 use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};

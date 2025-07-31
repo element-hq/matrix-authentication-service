@@ -8,9 +8,9 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Session, SessionState, User};
+use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
 };
 use oauth2_types::scope::{Scope, ScopeToken};

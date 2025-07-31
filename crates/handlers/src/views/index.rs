@@ -9,8 +9,9 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar, csrf::CsrfExt};
+use mas_data_model::{BoxClock, BoxRng};
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{IndexContext, TemplateContext, Templates};
 
 use crate::{

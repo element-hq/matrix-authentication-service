@@ -8,9 +8,10 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    UserEmailAuthentication, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+    Clock, UserEmailAuthentication, UserRegistration, UserRegistrationPassword,
+    UserRegistrationToken,
 };
-use mas_storage::{Clock, user::UserRegistrationRepository};
+use mas_storage::user::UserRegistrationRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -432,8 +433,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
 mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
-    use mas_data_model::UserRegistrationPassword;
-    use mas_storage::{Clock, clock::MockClock};
+    use mas_data_model::{Clock, UserRegistrationPassword, clock::MockClock};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;

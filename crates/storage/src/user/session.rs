@@ -9,14 +9,13 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Authentication, BrowserSession, Password, UpstreamOAuthAuthorizationSession, User,
+    Authentication, BrowserSession, Clock, Password, UpstreamOAuthAuthorizationSession, User,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
 
 use crate::{
-    Clock, Pagination, pagination::Page, repository_impl,
-    upstream_oauth2::UpstreamOAuthSessionFilter,
+    Pagination, pagination::Page, repository_impl, upstream_oauth2::UpstreamOAuthSessionFilter,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

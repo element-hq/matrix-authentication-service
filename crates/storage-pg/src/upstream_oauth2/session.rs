@@ -7,11 +7,11 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink,
-    UpstreamOAuthProvider,
+    Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState,
+    UpstreamOAuthLink, UpstreamOAuthProvider,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
 use rand::RngCore;
