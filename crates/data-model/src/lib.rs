@@ -11,7 +11,6 @@
 //! for testing.
 //!
 //! [`MockClock`]: crate::clock::MockClock
-//! 
 
 #![allow(clippy::module_name_repetitions)]
 

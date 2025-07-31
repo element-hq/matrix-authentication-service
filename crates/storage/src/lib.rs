@@ -79,9 +79,9 @@
 //!      and use that error type
 //!   2. Lookups return an `Result<Option<T>, Self::Error>`, because 'not found'
 //!      errors are usually cases that are handled differently
-//!   3. Operations that need to record the current type use a [`mas_data_model::Clock`]
-//!      parameter. Operations that need to generate new IDs also use a random
-//!      number generator.
+//!   3. Operations that need to record the current type use a
+//!      [`mas_data_model::Clock`] parameter. Operations that need to generate
+//!      new IDs also use a random number generator.
 //!   4. All the methods use an `&mut self`. This is ensures only one operation
 //!      is done at a time on a single repository instance.
 //!
