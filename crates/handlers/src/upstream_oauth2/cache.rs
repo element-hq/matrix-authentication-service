@@ -140,6 +140,22 @@ impl<'a> LazyProviderInfos<'a> {
 
         Ok(methods)
     }
+
+    /// Check whether the provider accepts authorization requests only via PAR.
+    pub async fn require_pushed_authorization_requests(&mut self) -> Result<bool, DiscoveryError> {
+        Ok(self.load().await?.require_pushed_authorization_requests())
+    }
+
+    /// Get the provider's pushed authorization request endpoint, if any.
+    pub async fn pushed_authorization_request_endpoint(
+        &mut self,
+    ) -> Result<Option<&Url>, DiscoveryError> {
+        Ok(self
+            .load()
+            .await?
+            .pushed_authorization_request_endpoint
+            .as_ref())
+    }
 }
 
 /// A simple OIDC metadata cache
