@@ -135,7 +135,9 @@ matrix:
 
   # Shared secret used to authenticate the service to the homeserver
   # This must be of high entropy, because leaking this secret would allow anyone to perform admin actions on the homeserver
-  secret: "SomeRandomSecret"
+  secret_file: /path/to/secret/file
+  # Alternatively, the shared secret can be passed inline.
+  # secret: "SomeRandomSecret"
 
   # URL to which the homeserver is accessible from the service
   endpoint: "http://localhost:8008"

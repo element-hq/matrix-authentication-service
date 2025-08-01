@@ -43,8 +43,8 @@ impl Options {
             r"The homeserver host in the config (`matrix.homeserver`) is not a valid domain.
 See {DOCS_BASE}/setup/homeserver.html",
         )?;
+        let admin_token = config.matrix.secret().await?;
         let hs_api = config.matrix.endpoint;
-        let admin_token = config.matrix.secret;
 
         if !issuer.starts_with("https://") {
             warn!(
