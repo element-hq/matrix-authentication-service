@@ -43,11 +43,6 @@
     "@name": {
       "context": "app.html:17:14-27, base.html:24:31-44",
       "description": "Name of the application"
-    },
-    "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
-    "@technical_description": {
-      "context": "pages/index.html:17:13-72",
-      "description": "Introduction text displayed on the home page"
     }
   },
   "branding": {

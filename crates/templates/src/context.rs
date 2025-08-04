@@ -279,16 +279,14 @@ impl TemplateContext for EmptyContext {
 
 /// Context used by the `index.html` template
 #[derive(Serialize)]
-pub struct IndexContext {
-    discovery_url: Url,
-}
+pub struct IndexContext {}
 
 impl IndexContext {
     /// Constructs the context for the index page from the OIDC discovery
     /// document URL
     #[must_use]
-    pub fn new(discovery_url: Url) -> Self {
-        Self { discovery_url }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -301,11 +299,7 @@ impl TemplateContext for IndexContext {
     where
         Self: Sized,
     {
-        vec![Self {
-            discovery_url: "https://example.com/.well-known/openid-configuration"
-                .parse()
-                .unwrap(),
-        }]
+        vec![]
     }
 }
 
