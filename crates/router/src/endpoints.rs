@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
@@ -735,6 +735,29 @@ impl Route for UpstreamOAuth2Link {
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
         format!("/upstream/link/{}", self.id).into()
+    }
+}
+
+/// `POST /upstream/backchannel-logout/{id}`
+pub struct UpstreamOAuth2BackchannelLogout {
+    id: Ulid,
+}
+
+impl UpstreamOAuth2BackchannelLogout {
+    #[must_use]
+    pub const fn new(id: Ulid) -> Self {
+        Self { id }
+    }
+}
+
+impl Route for UpstreamOAuth2BackchannelLogout {
+    type Query = ();
+    fn route() -> &'static str {
+        "/upstream/backchannel-logout/{provider_id}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/upstream/backchannel-logout/{}", self.id).into()
     }
 }
 

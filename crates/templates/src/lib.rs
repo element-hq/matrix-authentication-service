@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![deny(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
@@ -135,6 +135,10 @@ fn is_hidden(entry: &DirEntry) -> bool {
 
 impl Templates {
     /// Load the templates from the given config
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the templates could not be loaded from disk.
     #[tracing::instrument(
         name = "templates.load",
         skip_all,
@@ -254,6 +258,10 @@ impl Templates {
     }
 
     /// Reload the templates on disk
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the templates could not be reloaded from disk.
     #[tracing::instrument(
         name = "templates.reload",
         skip_all,
@@ -401,6 +409,9 @@ register_templates! {
     /// Render the upstream link mismatch message
     pub fn render_upstream_oauth2_link_mismatch(WithLanguage<WithCsrf<WithSession<UpstreamExistingLinkContext>>>) { "pages/upstream_oauth2/link_mismatch.html" }
 
+    /// Render the upstream link match
+    pub fn render_upstream_oauth2_login_link(WithLanguage<WithCsrf<UpstreamExistingLinkContext>>) { "pages/upstream_oauth2/login_link.html" }
+
     /// Render the upstream suggest link message
     pub fn render_upstream_oauth2_suggest_link(WithLanguage<WithCsrf<WithSession<UpstreamSuggestLink>>>) { "pages/upstream_oauth2/suggest_link.html" }
 
@@ -468,6 +479,7 @@ impl Templates {
         check::render_email_verification_html(self, now, rng)?;
         check::render_email_verification_subject(self, now, rng)?;
         check::render_upstream_oauth2_link_mismatch(self, now, rng)?;
+        check::render_upstream_oauth2_login_link(self, now, rng)?;
         check::render_upstream_oauth2_suggest_link(self, now, rng)?;
         check::render_upstream_oauth2_do_register(self, now, rng)?;
         check::render_device_link(self, now, rng)?;

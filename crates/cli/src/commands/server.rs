@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{collections::BTreeSet, process::ExitCode, sync::Arc, time::Duration};
 
@@ -55,11 +55,10 @@ pub(super) struct Options {
 }
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let span = info_span!("cli.run.init").entered();
         let mut shutdown = LifecycleManager::new()?;
-        let config = AppConfig::extract(figment)?;
+        let config = AppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         info!(version = crate::VERSION, "Starting up");
 
@@ -101,8 +100,10 @@ impl Options {
         } else {
             // Sync the configuration with the database
             let mut conn = pool.acquire().await?;
-            let clients_config = ClientsConfig::extract_or_default(figment)?;
-            let upstream_oauth2_config = UpstreamOAuth2Config::extract_or_default(figment)?;
+            let clients_config =
+                ClientsConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
+            let upstream_oauth2_config = UpstreamOAuth2Config::extract_or_default(figment)
+                .map_err(anyhow::Error::from_boxed)?;
 
             crate::sync::config_sync(
                 upstream_oauth2_config,
@@ -173,8 +174,9 @@ impl Options {
             test_mailer_in_background(&mailer, Duration::from_secs(30));
 
             info!("Starting task worker");
-            mas_tasks::init(
+            mas_tasks::init_and_run(
                 PgRepositoryFactory::new(pool.clone()),
+                SystemClock::default(),
                 &mailer,
                 homeserver_connection.clone(),
                 url_builder.clone(),

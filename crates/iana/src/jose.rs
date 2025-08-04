@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![allow(clippy::doc_markdown)]
 
@@ -148,7 +148,6 @@ impl schemars::JsonSchema for JsonWebSignatureAlg {
         "JsonWebSignatureAlg".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -537,7 +536,6 @@ impl schemars::JsonSchema for JsonWebEncryptionAlg {
         "JsonWebEncryptionAlg".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -887,7 +885,6 @@ impl schemars::JsonSchema for JsonWebEncryptionEnc {
         "JsonWebEncryptionEnc".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1043,7 +1040,6 @@ impl schemars::JsonSchema for JsonWebEncryptionCompressionAlgorithm {
         "JsonWebEncryptionCompressionAlgorithm".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1149,7 +1145,6 @@ impl schemars::JsonSchema for JsonWebKeyType {
         "JsonWebKeyType".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1294,7 +1289,6 @@ impl schemars::JsonSchema for JsonWebKeyEcEllipticCurve {
         "JsonWebKeyEcEllipticCurve".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1439,7 +1433,6 @@ impl schemars::JsonSchema for JsonWebKeyOkpEllipticCurve {
         "JsonWebKeyOkpEllipticCurve".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1574,7 +1567,6 @@ impl schemars::JsonSchema for JsonWebKeyUse {
         "JsonWebKeyUse".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -1713,7 +1705,6 @@ impl schemars::JsonSchema for JsonWebKeyOperation {
         "JsonWebKeyOperation".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---

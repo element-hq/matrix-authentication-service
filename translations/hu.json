@@ -217,6 +217,11 @@
       "sign_in_instead": "Bejelentkezés",
       "terms_of_service": "Elfogadom a <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Szolgáltatási feltételeket</a>"
     },
+    "registration_token": {
+      "description": "Adja meg a Matrix-kiszolgáló rendszergazdája által megadott regisztrációs tokent.",
+      "field": "Regisztrációs token",
+      "headline": "Regisztrációs token"
+    },
     "scope": {
       "edit_profile": "Profil és elérhetőségek szerkesztése",
       "manage_sessions": "Eszközök és munkamenetek kezelése",
@@ -229,6 +234,11 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Ez a forrásfiók már egy másik fiókkal van összekötve."
+      },
+      "login_link": {
+        "action": "Folytatás",
+        "description": "A felhasználónévhez (%(username)s) már létezik fiók, amely ehhez a felülről érkező fiókhoz lesz kötve.",
+        "heading": "Meglévő fiók összekötése"
       },
       "register": {
         "choose_username": {

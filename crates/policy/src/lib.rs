@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 pub mod model;
 
@@ -197,6 +197,11 @@ pub struct PolicyFactory {
 }
 
 impl PolicyFactory {
+    /// Load the policy from the given data source.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy can't be loaded or instantiated.
     #[tracing::instrument(name = "policy.load", skip(source))]
     pub async fn load(
         mut source: impl AsyncRead + std::marker::Unpin,
@@ -283,6 +288,12 @@ impl PolicyFactory {
         Ok(true)
     }
 
+    /// Create a new policy instance.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy can't be instantiated with the current
+    /// dynamic data.
     #[tracing::instrument(name = "policy.instantiate", skip_all)]
     pub async fn instantiate(&self) -> Result<Policy, InstantiateError> {
         let data = self.dynamic_data.load();
@@ -336,6 +347,11 @@ pub enum EvaluationError {
 }
 
 impl Policy {
+    /// Evaluate the 'email' entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
     #[tracing::instrument(
         name = "policy.evaluate_email",
         skip_all,
@@ -355,6 +371,11 @@ impl Policy {
         Ok(res)
     }
 
+    /// Evaluate the 'register' entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
     #[tracing::instrument(
         name = "policy.evaluate.register",
         skip_all,
@@ -376,6 +397,11 @@ impl Policy {
         Ok(res)
     }
 
+    /// Evaluate the 'client_registration' entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
     #[tracing::instrument(skip(self))]
     pub async fn evaluate_client_registration(
         &mut self,
@@ -393,6 +419,11 @@ impl Policy {
         Ok(res)
     }
 
+    /// Evaluate the 'authorization_grant' entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
     #[tracing::instrument(
         name = "policy.evaluate.authorization_grant",
         skip_all,

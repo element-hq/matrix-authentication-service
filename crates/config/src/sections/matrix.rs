@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use rand::{
     Rng,
@@ -27,15 +27,25 @@ fn default_endpoint() -> Url {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum HomeserverKind {
-    /// Homeserver is Synapse
+    /// Homeserver is Synapse, using the legacy API
+    ///
+    /// This will switch to using the modern API in a few releases.
     #[default]
     Synapse,
 
-    /// Homeserver is Synapse, in read-only mode
+    /// Homeserver is Synapse, using the legacy API, in read-only mode
     ///
     /// This is meant for testing rolling out Matrix Authentication Service with
     /// no risk of writing data to the homeserver.
+    ///
+    /// This will switch to using the modern API in a few releases.
     SynapseReadOnly,
+
+    /// Homeserver is Synapse, using the legacy API,
+    SynapseLegacy,
+
+    /// Homeserver is Synapse, with the modern API available
+    SynapseModern,
 }
 
 /// Configuration related to the Matrix homeserver

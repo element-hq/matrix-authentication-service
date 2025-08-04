@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -54,7 +54,6 @@ struct UserRegistrationTokenLookup {
 }
 
 impl Filter for UserRegistrationTokenFilter {
-    #[expect(clippy::too_many_lines)]
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
         sea_query::Condition::all()
             .add_option(self.has_been_used().map(|has_been_used| {

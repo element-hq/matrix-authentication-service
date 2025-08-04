@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Utilities to synchronize the configuration file with the database.
 
@@ -37,6 +37,19 @@ fn map_import_action(
     }
 }
 
+fn map_import_on_conflict(
+    config: mas_config::UpstreamOAuth2OnConflict,
+) -> mas_data_model::UpstreamOAuthProviderOnConflict {
+    match config {
+        mas_config::UpstreamOAuth2OnConflict::Add => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Add
+        }
+        mas_config::UpstreamOAuth2OnConflict::Fail => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Fail
+        }
+    }
+}
+
 fn map_claims_imports(
     config: &mas_config::UpstreamOAuth2ClaimsImports,
 ) -> mas_data_model::UpstreamOAuthProviderClaimsImports {
@@ -44,9 +57,10 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
-        localpart: mas_data_model::UpstreamOAuthProviderImportPreference {
+        localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),
+            on_conflict: map_import_on_conflict(config.localpart.on_conflict),
         },
         displayname: mas_data_model::UpstreamOAuthProviderImportPreference {
             action: map_import_action(config.displayname.action),
@@ -276,6 +290,18 @@ pub async fn config_sync(
                 }
             };
 
+            let on_backchannel_logout = match provider.on_backchannel_logout {
+                mas_config::UpstreamOAuth2OnBackchannelLogout::DoNothing => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutBrowserOnly => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutAll => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutAll
+                }
+            };
+
             repo.upstream_oauth_provider()
                 .upsert(
                     clock,
@@ -306,6 +332,7 @@ pub async fn config_sync(
                             .collect(),
                         forward_login_hint: provider.forward_login_hint,
                         ui_order,
+                        on_backchannel_logout,
                     },
                 )
                 .await?;

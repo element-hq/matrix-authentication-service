@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Diagnostic utility to check the health of the deployment
 //!
@@ -26,14 +26,13 @@ const DOCS_BASE: &str = "https://element-hq.github.io/matrix-authentication-serv
 pub(super) struct Options {}
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let _span = info_span!("cli.doctor").entered();
         info!(
             "💡 Running diagnostics, make sure that both MAS and Synapse are running, and that MAS is using the same configuration files as this tool."
         );
 
-        let config = RootConfig::extract(figment)?;
+        let config = RootConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         // We'll need an HTTP client
         let http_client = mas_http::reqwest_client();

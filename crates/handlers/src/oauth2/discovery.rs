@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{Json, extract::State, response::IntoResponse};
 use mas_iana::oauth::{
@@ -35,7 +35,6 @@ struct DiscoveryResponse {
 }
 
 #[tracing::instrument(name = "handlers.oauth2.discovery.get", skip_all)]
-#[allow(clippy::too_many_lines)]
 pub(crate) async fn get(
     State(key_store): State<Keystore>,
     State(url_builder): State<UrlBuilder>,

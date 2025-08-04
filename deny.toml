@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [graph]
 targets = [
     { triple = "x86_64-unknown-linux-gnu" },
@@ -14,10 +19,6 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-
-    # `paste`, as used by `aws-lc-rs` is unmaintained, but we're not concerned
-    # about it having a security vulnerability
-    "RUSTSEC-2024-0436",
 ]
 
 [licenses]
@@ -35,6 +36,7 @@ allow = [
     "OpenSSL",
     "Unicode-3.0",
     "Zlib",
+    "CDLA-Permissive-2.0",
 ]
 
 # Ring's license is a bit complicated, so we need to specify it manually
@@ -68,11 +70,18 @@ skip = [
     { name = "thiserror-impl", version = "1.0.69" },
     # axum-macros, sqlx-macros and sea-query-attr use an old version
     { name = "heck", version = "0.4.1" },
-    # wasmtime -> cranelift is depending on this old version
-    { name = "itertools", version = "0.12.1" },
     # pad depends on an old version
     { name = "unicode-width", version = "0.1.14" },
-    { name = "zerocopy", version = "0.7.35" },      # hashbrown 0.14.5 depends on this old version
+    # cron depends on this old version
+    # https://github.com/zslayton/cron/pull/137
+    { name = "winnow", version = "0.6.20" },
+    # opa-wasm -> wasmtime -> memfd depends on this old version
+    # https://github.com/lucab/memfd-rs/pull/72
+    { name = "rustix", version = "0.38.44" },
+    { name = "linux-raw-sys", version = "0.9.4" },
+
+    # This is a compatibility version of webpki-roots that depends on the 1.0 version
+    { name = "webpki-roots", version = "0.26.11" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
@@ -92,3 +101,8 @@ deny = ["oldtime"]
 unknown-registry = "warn"
 unknown-git = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+allow-git = [
+   # https://github.com/open-telemetry/opentelemetry-rust/pull/3076
+   "https://github.com/sandhose/opentelemetry-rust",
+]

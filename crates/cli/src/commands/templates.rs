@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::process::ExitCode;
 
@@ -37,13 +37,20 @@ impl Options {
             SC::Check => {
                 let _span = info_span!("cli.templates.check").entered();
 
-                let template_config = TemplatesConfig::extract_or_default(figment)?;
-                let branding_config = BrandingConfig::extract_or_default(figment)?;
-                let matrix_config = MatrixConfig::extract(figment)?;
-                let experimental_config = ExperimentalConfig::extract_or_default(figment)?;
-                let password_config = PasswordsConfig::extract_or_default(figment)?;
-                let account_config = AccountConfig::extract_or_default(figment)?;
-                let captcha_config = CaptchaConfig::extract_or_default(figment)?;
+                let template_config = TemplatesConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let branding_config = BrandingConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+                let experimental_config = ExperimentalConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let password_config = PasswordsConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let account_config = AccountConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let captcha_config = CaptchaConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
 
                 let clock = SystemClock::default();
                 // XXX: we should disallow SeedableRng::from_entropy

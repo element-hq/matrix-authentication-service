@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{process::ExitCode, time::Duration};
 
@@ -10,6 +10,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{AppConfig, ConfigurationSection};
 use mas_router::UrlBuilder;
+use mas_storage::SystemClock;
 use mas_storage_pg::PgRepositoryFactory;
 use tracing::{info, info_span};
 
@@ -28,7 +29,7 @@ impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let shutdown = LifecycleManager::new()?;
         let span = info_span!("cli.worker.init").entered();
-        let config = AppConfig::extract(figment)?;
+        let config = AppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
         // Connect to the database
         info!("Connecting to the database");
@@ -63,8 +64,9 @@ impl Options {
         drop(config);
 
         info!("Starting task scheduler");
-        mas_tasks::init(
+        mas_tasks::init_and_run(
             PgRepositoryFactory::new(pool.clone()),
+            SystemClock::default(),
             &mailer,
             conn,
             url_builder,

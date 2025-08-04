@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A [`Clock`] is a way to get the current date and time.
 //!
@@ -15,7 +15,7 @@ use std::sync::{Arc, atomic::AtomicI64};
 use chrono::{DateTime, TimeZone, Utc};
 
 /// Represents a clock which can give the current date and time
-pub trait Clock: Sync {
+pub trait Clock: Send + Sync {
     /// Get the current date and time
     fn now(&self) -> DateTime<Utc>;
 }

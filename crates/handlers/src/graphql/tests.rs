@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::http::Request;
 use hyper::StatusCode;
@@ -529,10 +529,9 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     // XXX: we don't run the task worker here, so even though the addUser mutation
     // should have scheduled a job to provision the user, it won't run in the test,
     // so we need to do it manually
-    let mxid = state.homeserver_connection.mxid("alice");
     state
         .homeserver_connection
-        .provision_user(&ProvisionRequest::new(mxid, user_id))
+        .provision_user(&ProvisionRequest::new("alice", user_id))
         .await
         .unwrap();
 

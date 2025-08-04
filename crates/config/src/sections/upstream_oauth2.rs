@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::BTreeMap;
 
@@ -33,7 +33,10 @@ impl UpstreamOAuth2Config {
 impl ConfigurationSection for UpstreamOAuth2Config {
     const PATH: Option<&'static str> = Some("upstream_oauth2");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         for (index, provider) in self.providers.iter().enumerate() {
             let annotate = |mut error: figment::Error| {
                 error.metadata = figment
@@ -45,15 +48,16 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                     "providers".to_owned(),
                     index.to_string(),
                 ];
-                Err(error)
+                error
             };
 
             if !matches!(provider.discovery_mode, DiscoveryMode::Disabled)
                 && provider.issuer.is_none()
             {
-                return annotate(figment::Error::custom(
+                return Err(annotate(figment::Error::custom(
                     "The `issuer` field is required when discovery is enabled",
-                ));
+                ))
+                .into());
             }
 
             match provider.token_endpoint_auth_method {
@@ -61,16 +65,16 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 | TokenAuthMethod::PrivateKeyJwt
                 | TokenAuthMethod::SignInWithApple => {
                     if provider.client_secret.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `client_secret` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
                 TokenAuthMethod::ClientSecretBasic
                 | TokenAuthMethod::ClientSecretPost
                 | TokenAuthMethod::ClientSecretJwt => {
                     if provider.client_secret.is_none() {
-                        return annotate(figment::Error::missing_field("client_secret"));
+                        return Err(annotate(figment::Error::missing_field("client_secret")).into());
                     }
                 }
             }
@@ -81,16 +85,17 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 | TokenAuthMethod::ClientSecretPost
                 | TokenAuthMethod::SignInWithApple => {
                     if provider.token_endpoint_auth_signing_alg.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `token_endpoint_auth_signing_alg` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
                 TokenAuthMethod::ClientSecretJwt | TokenAuthMethod::PrivateKeyJwt => {
                     if provider.token_endpoint_auth_signing_alg.is_none() {
-                        return annotate(figment::Error::missing_field(
+                        return Err(annotate(figment::Error::missing_field(
                             "token_endpoint_auth_signing_alg",
-                        ));
+                        ))
+                        .into());
                     }
                 }
             }
@@ -98,17 +103,31 @@ impl ConfigurationSection for UpstreamOAuth2Config {
             match provider.token_endpoint_auth_method {
                 TokenAuthMethod::SignInWithApple => {
                     if provider.sign_in_with_apple.is_none() {
-                        return annotate(figment::Error::missing_field("sign_in_with_apple"));
+                        return Err(
+                            annotate(figment::Error::missing_field("sign_in_with_apple")).into(),
+                        );
                     }
                 }
 
                 _ => {
                     if provider.sign_in_with_apple.is_some() {
-                        return annotate(figment::Error::custom(
+                        return Err(annotate(figment::Error::custom(
                             "Unexpected field `sign_in_with_apple` for the selected authentication method",
-                        ));
+                        )).into());
                     }
                 }
+            }
+
+            if matches!(
+                provider.claims_imports.localpart.on_conflict,
+                OnConflict::Add
+            ) && !matches!(
+                provider.claims_imports.localpart.action,
+                ImportAction::Force | ImportAction::Require
+            ) {
+                return Err(annotate(figment::Error::custom(
+                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
+                )).into());
             }
         }
 
@@ -183,6 +202,26 @@ impl ImportAction {
     }
 }
 
+/// How to handle an existing localpart claim
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the sso login on conflict
+    #[default]
+    Fail,
+
+    /// Adds the oauth identity link, regardless of whether there is an existing
+    /// link or not
+    Add,
+}
+
+impl OnConflict {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, OnConflict::Fail)
+    }
+}
+
 /// What should be done for the subject attribute
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct SubjectImportPreference {
@@ -211,6 +250,10 @@ pub struct LocalpartImportPreference {
     /// If not provided, the default template is `{{ user.preferred_username }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
+
+    /// How to handle conflicts on the claim, default value is `Fail`
+    #[serde(default, skip_serializing_if = "OnConflict::is_default")]
+    pub on_conflict: OnConflict,
 }
 
 impl LocalpartImportPreference {
@@ -408,6 +451,29 @@ fn is_default_scope(scope: &str) -> bool {
     scope == default_scope()
 }
 
+/// What to do when receiving an OIDC Backchannel logout request.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum OnBackchannelLogout {
+    /// Do nothing
+    #[default]
+    DoNothing,
+
+    /// Only log out the MAS 'browser session' started by this OIDC session
+    LogoutBrowserOnly,
+
+    /// Log out all sessions started by this OIDC session, including MAS
+    /// 'browser sessions' and client sessions
+    LogoutAll,
+}
+
+impl OnBackchannelLogout {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, OnBackchannelLogout::DoNothing)
+    }
+}
+
 /// Configuration for one upstream OAuth 2 provider.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -583,4 +649,10 @@ pub struct Provider {
     /// Defaults to `false`.
     #[serde(default)]
     pub forward_login_hint: bool,
+
+    /// What to do when receiving an OIDC Backchannel logout request.
+    ///
+    /// Defaults to "do_nothing".
+    #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
+    pub on_backchannel_logout: OnBackchannelLogout,
 }

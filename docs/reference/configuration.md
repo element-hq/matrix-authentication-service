@@ -257,8 +257,11 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry must have a unique (and arbitrary) `kid`, plus the key itself.
-The key can either be specified inline (with the `key` property), or loaded from a file (with the `key_file` property).
+Each entry must have a unique `kid`, plus the key itself.
+The `kid` can be any case-sensitive string value as long as it is unique to this list;
+a key’s `kid` value must be stable across restarts.
+The key can either be specified inline (with the `key` property),
+or loaded from a file (with the `key_file` property).
 The following key formats are supported:
 
 - PKCS#1 PEM or DER-encoded RSA private key
@@ -740,6 +743,13 @@ upstream_oauth2:
       # authorization request.
       #forward_login_hint: false
 
+      # What to do when receiving an OIDC Backchannel logout request.
+      # Possible values are:
+      #  - `do_nothing` (default): do nothing, other than validating and logging the request
+      #  - `logout_browser_only`: Only log out the MAS 'browser session' started by this OIDC session
+      #  - `logout_all`: Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions
+      #on_backchannel_logout: do_nothing
+
       # How user attributes should be mapped
       #
       # Most of those attributes have two main properties:
@@ -769,6 +779,12 @@ upstream_oauth2:
         localpart:
           #action: force
           #template: "{{ user.preferred_username }}"
+          
+          # How to handle when localpart already exists.
+          # Possible values are (default: fail):
+          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
+          # - `fail` : Fails the upstream OAuth 2.0 login.
+          #on_conflict: fail
 
         # The display name is the user's display name.
         displayname:

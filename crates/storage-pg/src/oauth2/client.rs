@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -67,7 +67,6 @@ struct OAuth2ClientLookup {
 impl TryInto<Client> for OAuth2ClientLookup {
     type Error = DatabaseInconsistencyError;
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor some of the field parsing
     fn try_into(self) -> Result<Client, Self::Error> {
         let id = Ulid::from(self.oauth2_client_id);
 
@@ -416,7 +415,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         ),
         err,
     )]
-    #[allow(clippy::too_many_lines)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),

@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use opentelemetry::KeyValue;
 use tokio::runtime::RuntimeMetrics;
@@ -9,7 +9,6 @@ use tokio::runtime::RuntimeMetrics;
 use super::METER;
 
 /// Install metrics for the tokio runtime.
-#[allow(clippy::too_many_lines)]
 pub fn observe(metrics: RuntimeMetrics) {
     {
         let metrics = metrics.clone();

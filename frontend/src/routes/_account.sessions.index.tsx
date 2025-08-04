@@ -1,11 +1,10 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { H3 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
@@ -19,11 +18,11 @@ import Separator from "../components/Separator";
 import BrowserSessionsOverview from "../components/UserSessionsOverview/BrowserSessionsOverview";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { usePages } from "../pagination";
 import {
   type AnyPagination,
   anyPaginationSchema,
   normalizePagination,
+  usePages,
 } from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
 

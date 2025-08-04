@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::{Arc, LazyLock};
 
@@ -32,7 +32,8 @@ use zeroize::Zeroizing;
 use super::{MatrixError, MatrixJsonBody};
 use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
-    passwords::PasswordManager, rate_limit::PasswordCheckLimitedError,
+    passwords::{PasswordManager, PasswordVerificationResult},
+    rate_limit::PasswordCheckLimitedError,
 };
 
 static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
@@ -193,7 +194,7 @@ pub enum RouteError {
     NoPassword,
 
     #[error("password verification failed")]
-    PasswordVerificationFailed(#[source] anyhow::Error),
+    PasswordMismatch,
 
     #[error("request rate limited")]
     RateLimited(#[from] PasswordCheckLimitedError),
@@ -204,11 +205,20 @@ pub enum RouteError {
     #[error("invalid login token")]
     InvalidLoginToken,
 
+    #[error("user is locked")]
+    UserLocked,
+
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
+
+impl From<anyhow::Error> for RouteError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Internal(err.into())
+    }
+}
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -241,13 +251,11 @@ impl IntoResponse for RouteError {
                 error: "Missing property 'identifier",
                 status: StatusCode::BAD_REQUEST,
             },
-            Self::UserNotFound | Self::NoPassword | Self::PasswordVerificationFailed(_) => {
-                MatrixError {
-                    errcode: "M_FORBIDDEN",
-                    error: "Invalid username/password",
-                    status: StatusCode::FORBIDDEN,
-                }
-            }
+            Self::UserNotFound | Self::NoPassword | Self::PasswordMismatch => MatrixError {
+                errcode: "M_FORBIDDEN",
+                error: "Invalid username/password",
+                status: StatusCode::FORBIDDEN,
+            },
             Self::LoginTookTooLong => MatrixError {
                 errcode: "M_FORBIDDEN",
                 error: "Login token expired",
@@ -257,6 +265,11 @@ impl IntoResponse for RouteError {
                 errcode: "M_FORBIDDEN",
                 error: "Invalid login token",
                 status: StatusCode::FORBIDDEN,
+            },
+            Self::UserLocked => MatrixError {
+                errcode: "M_USER_LOCKED",
+                error: "User account has been locked",
+                status: StatusCode::UNAUTHORIZED,
             },
         };
 
@@ -398,7 +411,11 @@ pub(crate) async fn post(
     // Now we can create the device on the homeserver, without holding the
     // transaction
     if let Err(err) = homeserver
-        .create_device(&user_id, device.as_str(), session.human_name.as_deref())
+        .upsert_device(
+            &user.username,
+            device.as_str(),
+            session.human_name.as_deref(),
+        )
         .await
     {
         // Something went wrong, let's end this session and schedule a device sync
@@ -501,7 +518,15 @@ async fn token_login(
             browser_session.id = %browser_session_id,
             "Attempt to exchange login token but browser session is not active"
         );
-        return Err(RouteError::InvalidLoginToken);
+        return Err(
+            if browser_session.finished_at.is_some()
+                || browser_session.user.deactivated_at.is_some()
+            {
+                RouteError::InvalidLoginToken
+            } else {
+                RouteError::UserLocked
+            },
+        );
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
@@ -560,8 +585,12 @@ async fn user_password_login(
         .user()
         .find_by_username(username)
         .await?
-        .filter(mas_data_model::User::is_valid)
+        .filter(|user| user.deactivated_at.is_none())
         .ok_or(RouteError::UserNotFound)?;
+
+    if user.locked_at.is_some() {
+        return Err(RouteError::UserLocked);
+    }
 
     // Check the rate limit
     limiter.check_password(requester, &user)?;
@@ -576,28 +605,32 @@ async fn user_password_login(
     // Verify the password
     let password = Zeroizing::new(password);
 
-    let new_password_hash = password_manager
+    match password_manager
         .verify_and_upgrade(
             &mut rng,
             user_password.version,
             password,
             user_password.hashed_password.clone(),
         )
-        .await
-        .map_err(RouteError::PasswordVerificationFailed)?;
-
-    if let Some((version, hashed_password)) = new_password_hash {
-        // Save the upgraded password if needed
-        repo.user_password()
-            .add(
-                &mut rng,
-                clock,
-                &user,
-                version,
-                hashed_password,
-                Some(&user_password),
-            )
-            .await?;
+        .await?
+    {
+        PasswordVerificationResult::Success(Some((version, hashed_password))) => {
+            // Save the upgraded password if needed
+            repo.user_password()
+                .add(
+                    &mut rng,
+                    clock,
+                    &user,
+                    version,
+                    hashed_password,
+                    Some(&user_password),
+                )
+                .await?;
+        }
+        PasswordVerificationResult::Success(None) => {}
+        PasswordVerificationResult::Failure => {
+            return Err(RouteError::PasswordMismatch);
+        }
     }
 
     // We're about to create a device, let's explicitly acquire a lock, so that
@@ -776,7 +809,12 @@ mod tests {
         "###);
     }
 
-    async fn user_with_password(state: &TestState, username: &str, password: &str) {
+    async fn user_with_password(
+        state: &TestState,
+        username: &str,
+        password: &str,
+        locked: bool,
+    ) -> User {
         let mut rng = state.rng();
         let mut repo = state.repository().await.unwrap();
 
@@ -795,14 +833,20 @@ mod tests {
             .add(&mut rng, &state.clock, &user, version, hash, None)
             .await
             .unwrap();
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
+        let user = if locked {
+            repo.user().lock(&state.clock, user).await.unwrap()
+        } else {
+            user
+        };
+
         repo.save().await.unwrap();
+        user
     }
 
     /// Test that a user can login with a password using the Matrix
@@ -812,7 +856,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        let user = user_with_password(&state, "alice", "password", true).await;
 
         // Now let's try to login with the password, without asking for a refresh token.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -824,14 +868,30 @@ mod tests {
             "password": "password",
         }));
 
+        // First try to login to a locked account
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
-          "device_id": "ZGpSvYQqlq",
+          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
+          "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -853,10 +913,10 @@ mod tests {
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
-          "device_id": "42oTpLoieH",
+          "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
+          "device_id": "Yp7FM44zJN",
           "user_id": "@alice:example.com",
-          "refresh_token": "mcr_7IvDc44woP66fRQoS9MVcHXO9OeBmR_0jDGr1",
+          "refresh_token": "mcr_LoYqtrtBUBcWlE4RX6o47chBCGkadB_9gzpc1",
           "expires_in_ms": 300000
         }
         "###);
@@ -874,8 +934,8 @@ mod tests {
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
-          "device_id": "Yp7FM44zJN",
+          "access_token": "mct_Xl3bbpfh9yNy9NzuRxyR3b3PLW0rqd_DiXAH2",
+          "device_id": "6cq7FqNSYo",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -921,6 +981,45 @@ mod tests {
         // The response should be the same as the previous one, so that we don't leak if
         // it's the user that is invalid or the password.
         assert_eq!(body, old_body);
+
+        // Try to login to a deactivated account
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        }));
+
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
+
+        // Should get the same error if the deactivated user is also locked
+        let mut repo = state.repository().await.unwrap();
+        let _user = repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid username/password"
+        }
+        "###);
     }
 
     /// Test that we can send a login request without a Content-Type header
@@ -929,7 +1028,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        user_with_password(&state, "alice", "password", false).await;
         // Try without a Content-Type header
         let mut request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
             "type": "m.login.password",
@@ -961,7 +1060,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        user_with_password(&state, "alice", "password").await;
+        let user = user_with_password(&state, "alice", "password", true).await;
 
         // Login with a full MXID as identifier
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -973,13 +1072,29 @@ mod tests {
             "password": "password",
         }));
 
+        // First try to login to a locked account
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let _ = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r###"
         {
-          "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
-          "device_id": "ZGpSvYQqlq",
+          "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
+          "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
         "###);
@@ -1021,10 +1136,9 @@ mod tests {
             .await
             .unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -1123,12 +1237,13 @@ mod tests {
             .add(&mut state.rng(), &state.clock, "alice".to_owned())
             .await
             .unwrap();
+        // Start with a locked account
+        let user = repo.user().lock(&state.clock, user).await.unwrap();
         repo.save().await.unwrap();
 
-        let mxid = state.homeserver_connection.mxid(&user.username);
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(mxid, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
             .await
             .unwrap();
 
@@ -1155,14 +1270,29 @@ mod tests {
             "type": "m.login.token",
             "token": token,
         }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::UNAUTHORIZED);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_USER_LOCKED",
+          "error": "User account has been locked"
+        }
+        "###);
+
+        // Now try again after unlocking the account
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().unlock(user).await.unwrap();
+        repo.save().await.unwrap();
+
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
         insta::assert_json_snapshot!(body, @r#"
         {
-          "access_token": "mct_bnkWh1tPmm1MZOpygPaXwygX8PfxEY_hE6do1",
-          "device_id": "O3Ju1MUh3Z",
+          "access_token": "mct_bUTa4XIh92RARTPTjqQrCZLAkq2ild_0VsYE6",
+          "device_id": "uihy4bk51g",
           "user_id": "@alice:example.com"
         }
         "#);
@@ -1201,6 +1331,41 @@ mod tests {
         {
           "errcode": "M_FORBIDDEN",
           "error": "Login token expired"
+        }
+        "###);
+
+        // Try to login to a deactivated account
+        let token = get_login_token(&state, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().deactivate(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.token",
+            "token": token,
+        }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
+        }
+        "###);
+
+        // Should get the same error if the deactivated user is also locked
+        let mut repo = state.repository().await.unwrap();
+        let _user = repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_FORBIDDEN",
+          "error": "Invalid login token"
         }
         "###);
     }

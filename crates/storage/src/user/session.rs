@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
@@ -14,7 +14,10 @@ use mas_data_model::{
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{
+    Clock, Pagination, pagination::Page, repository_impl,
+    upstream_oauth2::UpstreamOAuthSessionFilter,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BrowserSessionState {
@@ -39,6 +42,7 @@ pub struct BrowserSessionFilter<'a> {
     state: Option<BrowserSessionState>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
+    authenticated_by_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
 }
 
 impl<'a> BrowserSessionFilter<'a> {
@@ -109,6 +113,23 @@ impl<'a> BrowserSessionFilter<'a> {
     #[must_use]
     pub fn state(&self) -> Option<BrowserSessionState> {
         self.state
+    }
+
+    /// Only return browser sessions authenticated by the given upstream OAuth
+    /// sessions
+    #[must_use]
+    pub fn authenticated_by_upstream_sessions_only(
+        mut self,
+        filter: UpstreamOAuthSessionFilter<'a>,
+    ) -> Self {
+        self.authenticated_by_upstream_sessions = Some(filter);
+        self
+    }
+
+    /// Get the upstream OAuth session filter
+    #[must_use]
+    pub fn authenticated_by_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
+        self.authenticated_by_upstream_sessions
     }
 }
 

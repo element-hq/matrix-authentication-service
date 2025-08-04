@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
@@ -17,7 +17,7 @@ use mas_storage::{
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -26,7 +26,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
-    iden::{UserSessions, Users},
+    iden::{UpstreamOAuthAuthorizationSessions, UserSessionAuthentications, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -144,6 +144,30 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             }))
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
+            }))
+            .add_option(self.authenticated_by_upstream_sessions().map(|filter| {
+                // For filtering by upstream sessions, we need to hop over the
+                // `user_session_authentications` table
+                let join_expr = Expr::col((
+                    UserSessionAuthentications::Table,
+                    UserSessionAuthentications::UpstreamOAuthAuthorizationSessionId,
+                ))
+                .eq(Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
+                )));
+
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessionAuthentications::Table,
+                            UserSessionAuthentications::UserSessionId,
+                        )))
+                        .from(UserSessionAuthentications::Table)
+                        .inner_join(UpstreamOAuthAuthorizationSessions::Table, join_expr)
+                        .apply_filter(filter)
+                        .take(),
+                )
             }))
     }
 }

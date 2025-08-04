@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
@@ -105,7 +105,7 @@ const UserEmail: React.FC<{
 
   const onRemoveClick = useCallback(
     async (_e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
-      let password = undefined;
+      let password: string | undefined;
       if (shouldPromptPassword) {
         password = await promptPassword();
       }

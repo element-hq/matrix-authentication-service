@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![expect(
     clippy::disallowed_types,
@@ -19,7 +19,7 @@ use schemars::{JsonSchema, r#gen::SchemaSettings};
 fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
     let mut writer: Box<dyn std::io::Write> = if let Some(out_dir) = out_dir {
         let path = out_dir.join(file);
-        eprintln!("Writing to {path:?}");
+        eprintln!("Writing to {}", path.display());
         let file = std::fs::File::create(path).expect("Failed to create file");
         Box::new(std::io::BufWriter::new(file))
     } else {

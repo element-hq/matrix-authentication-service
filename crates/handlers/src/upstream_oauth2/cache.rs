@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{collections::HashMap, sync::Arc};
 
@@ -165,6 +165,10 @@ impl MetadataCache {
     ///
     /// This spawns a background task that will refresh the cache at the given
     /// interval.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the warm up task could not be started.
     #[tracing::instrument(name = "metadata_cache.warm_up_and_run", skip_all)]
     pub async fn warm_up_and_run<R: RepositoryAccess>(
         &self,
@@ -237,6 +241,10 @@ impl MetadataCache {
     }
 
     /// Get the metadata for the given issuer.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata could not be retrieved.
     #[tracing::instrument(name = "metadata_cache.get", fields(%issuer), skip_all)]
     pub async fn get(
         &self,
@@ -290,13 +298,12 @@ impl MetadataCache {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::too_many_lines)]
-
     // XXX: sadly, we can't test HTTPS requests with wiremock, so we can only test
     // 'insecure' discovery
 
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{Clock, clock::MockClock};
@@ -427,6 +434,7 @@ mod tests {
             claims_imports: UpstreamOAuthProviderClaimsImports::default(),
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
+            on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
         };
 
         // Without any override, it should just use discovery

@@ -1,7 +1,10 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+
+// biome-ignore-all lint/a11y/useFocusableInteractive: this is a false positive
+// biome-ignore-all lint/a11y/useAriaPropsForRole: this is a false positive
 
 import cx from "classnames";
 import { forwardRef } from "react";
@@ -14,7 +17,6 @@ type Props = {
 
 const Separator = forwardRef<HTMLDivElement, Props>(
   ({ kind, className, ...props }: Props, ref) => (
-    // biome-ignore lint/a11y/useFocusableInteractive: this is a false positive
     <div
       aria-orientation="horizontal"
       role="separator"

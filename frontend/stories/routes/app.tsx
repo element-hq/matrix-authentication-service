@@ -1,8 +1,13 @@
+// Copyright 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  RouterProvider,
   createHashHistory,
   createRouter,
+  RouterProvider,
 } from "@tanstack/react-router";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";

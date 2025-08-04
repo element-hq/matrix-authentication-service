@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
     extract::{Form, Path, State},
@@ -11,9 +11,9 @@ use axum::{
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
+    GenericError, InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
-    record_error,
 };
 use mas_data_model::AuthorizationGrantStage;
 use mas_keystore::Keystore;
@@ -64,13 +64,15 @@ impl_from_error_for_route!(super::callback::CallbackDestinationError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::NoSuchClient(_));
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            sentry_event_id,
-            self.to_string(),
-        )
-            .into_response()
+        match self {
+            Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ Self::NoSuchClient(_) => InternalError::new(Box::new(e)).into_response(),
+            e @ Self::GrantNotFound => GenericError::new(StatusCode::NOT_FOUND, e).into_response(),
+            e @ Self::GrantNotPending(_) => {
+                GenericError::new(StatusCode::CONFLICT, e).into_response()
+            }
+            e @ Self::Csrf(_) => GenericError::new(StatusCode::BAD_REQUEST, e).into_response(),
+        }
     }
 }
 

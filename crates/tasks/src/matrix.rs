@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashSet;
 
@@ -51,7 +51,6 @@ impl RunnableJob for ProvisionUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        let mxid = matrix.mxid(&user.username);
         let emails = repo
             .user_email()
             .all(&user)
@@ -60,7 +59,8 @@ impl RunnableJob for ProvisionUserJob {
             .into_iter()
             .map(|email| email.email)
             .collect();
-        let mut request = ProvisionRequest::new(mxid.clone(), user.sub.clone()).set_emails(emails);
+        let mut request =
+            ProvisionRequest::new(user.username.clone(), user.sub.clone()).set_emails(emails);
 
         if let Some(display_name) = self.display_name_to_set() {
             request = request.set_displayname(display_name.to_owned());
@@ -71,6 +71,7 @@ impl RunnableJob for ProvisionUserJob {
             .await
             .map_err(JobError::retry)?;
 
+        let mxid = matrix.mxid(&user.username);
         if created {
             info!(%user.id, %mxid, "User created");
         } else {
@@ -80,7 +81,7 @@ impl RunnableJob for ProvisionUserJob {
         // Schedule a device sync job
         let sync_device_job = SyncDevicesJob::new(&user);
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, sync_device_job)
+            .schedule_job(&mut rng, clock, sync_device_job)
             .await
             .map_err(JobError::retry)?;
 
@@ -118,7 +119,7 @@ impl RunnableJob for ProvisionDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
@@ -154,7 +155,7 @@ impl RunnableJob for DeleteDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
@@ -191,7 +192,7 @@ impl RunnableJob for SyncDevicesJob {
         let mut devices = HashSet::new();
 
         // Cycle through all the compat sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .compat_session()
@@ -215,7 +216,7 @@ impl RunnableJob for SyncDevicesJob {
         }
 
         // Cycle though all the oauth2 sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .oauth2_session()
@@ -241,9 +242,8 @@ impl RunnableJob for SyncDevicesJob {
             }
         }
 
-        let mxid = matrix.mxid(&user.username);
         matrix
-            .sync_devices(&mxid, devices)
+            .sync_devices(&user.username, devices)
             .await
             .map_err(JobError::retry)?;
 

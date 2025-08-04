@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::process::ExitCode;
 
@@ -30,7 +30,8 @@ enum Subcommand {
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         let _span = info_span!("cli.database.migrate").entered();
-        let config = DatabaseConfig::extract_or_default(figment)?;
+        let config =
+            DatabaseConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
         let mut conn = database_connection_from_config(&config).await?;
 
         // Run pending migrations

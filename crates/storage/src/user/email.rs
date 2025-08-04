@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use mas_data_model::{
@@ -36,6 +36,8 @@ impl<'a> UserEmailFilter<'a> {
     }
 
     /// Filter for emails matching a specific email address
+    ///
+    /// The email address is case-insensitive
     #[must_use]
     pub fn for_email(mut self, email: &'a str) -> Self {
         self.email = Some(email);
@@ -81,6 +83,8 @@ pub trait UserEmailRepository: Send + Sync {
 
     /// Lookup an [`UserEmail`] by its email address for a [`User`]
     ///
+    /// The email address is case-insensitive
+    ///
     /// Returns `None` if no matching [`UserEmail`] was found
     ///
     /// # Parameters
@@ -94,6 +98,8 @@ pub trait UserEmailRepository: Send + Sync {
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error>;
 
     /// Lookup an [`UserEmail`] by its email address
+    ///
+    /// The email address is case-insensitive
     ///
     /// Returns `None` if no matching [`UserEmail`] was found or if multiple
     /// [`UserEmail`] are found

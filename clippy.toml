@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 doc-valid-idents = ["OpenID", "OAuth", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
@@ -10,7 +15,6 @@ disallowed-methods = [
 ]
 
 disallowed-types = [
-    "rand::OsRng",
     { path = "std::path::PathBuf", reason = "use camino::Utf8PathBuf instead" },
     { path = "std::path::Path", reason = "use camino::Utf8Path instead" },
 ]

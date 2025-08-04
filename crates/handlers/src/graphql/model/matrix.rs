@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_graphql::SimpleObject;
 use mas_matrix::HomeserverConnection;
@@ -27,9 +27,9 @@ impl MatrixUser {
         conn: &C,
         user: &str,
     ) -> Result<MatrixUser, anyhow::Error> {
-        let mxid = conn.mxid(user);
+        let info = conn.query_user(user).await?;
 
-        let info = conn.query_user(&mxid).await?;
+        let mxid = conn.mxid(user);
 
         Ok(MatrixUser {
             mxid,

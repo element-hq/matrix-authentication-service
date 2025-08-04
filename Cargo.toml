@@ -1,11 +1,16 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [workspace]
 default-members = ["crates/cli"]
 members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "0.17.0-rc.0"
-package.license = "AGPL-3.0-only"
+package.version = "0.20.0"
+package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
 package.homepage = "https://element-hq.github.io/matrix-authentication-service/"
@@ -21,6 +26,7 @@ all = { level = "deny", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 
 str_to_string = "deny"
+too_many_lines = "allow"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
@@ -28,35 +34,35 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=0.17.0-rc.0" }
-mas-cli = { path = "./crates/cli/", version = "=0.17.0-rc.0" }
-mas-config = { path = "./crates/config/", version = "=0.17.0-rc.0" }
-mas-context = { path = "./crates/context/", version = "=0.17.0-rc.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=0.17.0-rc.0" }
-mas-email = { path = "./crates/email/", version = "=0.17.0-rc.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=0.17.0-rc.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=0.17.0-rc.0" }
-mas-http = { path = "./crates/http/", version = "=0.17.0-rc.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=0.17.0-rc.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=0.17.0-rc.0" }
-mas-iana = { path = "./crates/iana/", version = "=0.17.0-rc.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=0.17.0-rc.0" }
-mas-jose = { path = "./crates/jose/", version = "=0.17.0-rc.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=0.17.0-rc.0" }
-mas-listener = { path = "./crates/listener/", version = "=0.17.0-rc.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=0.17.0-rc.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=0.17.0-rc.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=0.17.0-rc.0" }
-mas-policy = { path = "./crates/policy/", version = "=0.17.0-rc.0" }
-mas-router = { path = "./crates/router/", version = "=0.17.0-rc.0" }
-mas-spa = { path = "./crates/spa/", version = "=0.17.0-rc.0" }
-mas-storage = { path = "./crates/storage/", version = "=0.17.0-rc.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=0.17.0-rc.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=0.17.0-rc.0" }
-mas-templates = { path = "./crates/templates/", version = "=0.17.0-rc.0" }
-mas-tower = { path = "./crates/tower/", version = "=0.17.0-rc.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=0.17.0-rc.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=0.17.0-rc.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=0.20.0" }
+mas-cli = { path = "./crates/cli/", version = "=0.20.0" }
+mas-config = { path = "./crates/config/", version = "=0.20.0" }
+mas-context = { path = "./crates/context/", version = "=0.20.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=0.20.0" }
+mas-email = { path = "./crates/email/", version = "=0.20.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=0.20.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=0.20.0" }
+mas-http = { path = "./crates/http/", version = "=0.20.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=0.20.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=0.20.0" }
+mas-iana = { path = "./crates/iana/", version = "=0.20.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=0.20.0" }
+mas-jose = { path = "./crates/jose/", version = "=0.20.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=0.20.0" }
+mas-listener = { path = "./crates/listener/", version = "=0.20.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=0.20.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=0.20.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=0.20.0" }
+mas-policy = { path = "./crates/policy/", version = "=0.20.0" }
+mas-router = { path = "./crates/router/", version = "=0.20.0" }
+mas-spa = { path = "./crates/spa/", version = "=0.20.0" }
+mas-storage = { path = "./crates/storage/", version = "=0.20.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=0.20.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=0.20.0" }
+mas-templates = { path = "./crates/templates/", version = "=0.20.0" }
+mas-tower = { path = "./crates/tower/", version = "=0.20.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=0.20.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=0.20.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
@@ -149,7 +155,7 @@ version = "0.15.11"
 
 # Cookie store
 [workspace.dependencies.cookie_store]
-version = "0.21.1"
+version = "0.22.0"
 default-features = false
 features = ["serde_json"]
 
@@ -161,7 +167,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.40"
+version = "4.5.42"
 features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
@@ -268,7 +274,7 @@ features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.14"
+version = "0.1.16"
 features = [
     "client",
     "server",
@@ -315,7 +321,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.9.0"
+version = "2.10.0"
 features = ["serde"]
 
 # Indented string literals
@@ -348,10 +354,12 @@ features = ["serde"]
 
 # Email sending
 [workspace.dependencies.lettre]
-version = "0.11.15"
+version = "0.11.18"
 default-features = false
 features = [
-    "tokio1-rustls-tls",
+    "tokio1-rustls",
+    "rustls-platform-verifier",
+    "aws-lc-rs",
     "hostname",
     "builder",
     "tracing",
@@ -370,12 +378,12 @@ version = "0.3.17"
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.10.2"
+version = "2.11.0"
 features = ["loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.10.2"
+version = "2.11.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -384,40 +392,42 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.1.5"
+version = "0.1.7"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
-version = "0.29.1"
+version = "0.30.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry-http]
-version = "0.29.0"
+version = "0.30.0"
 features = ["reqwest"]
 [workspace.dependencies.opentelemetry-jaeger-propagator]
-version = "0.29.0"
+version = "0.30.0"
 [workspace.dependencies.opentelemetry-otlp]
-version = "0.29.0"
+version = "0.30.0"
 default-features = false
 features = ["trace", "metrics", "http-proto"]
 [workspace.dependencies.opentelemetry-prometheus]
-version = "0.29.1"
+# https://github.com/open-telemetry/opentelemetry-rust/pull/3076
+git = "https://github.com/sandhose/opentelemetry-rust.git"
+branch = "otel-prometheus-0.30"
 [workspace.dependencies.opentelemetry-resource-detectors]
-version = "0.8.0"
+version = "0.9.0"
 [workspace.dependencies.opentelemetry-semantic-conventions]
-version = "0.29.0"
+version = "0.30.0"
 features = ["semconv_experimental"]
 [workspace.dependencies.opentelemetry-stdout]
-version = "0.29.0"
+version = "0.30.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry_sdk]
-version = "0.29.0"
+version = "0.30.0"
 features = [
     "experimental_trace_batch_span_processor_with_async_runtime",
     "experimental_metrics_periodicreader_with_async_runtime",
     "rt-tokio",
 ]
 [workspace.dependencies.tracing-opentelemetry]
-version = "0.30.0"
+version = "0.31.0"
 default-features = false
 
 # P256 elliptic curve
@@ -446,11 +456,11 @@ features = ["std"]
 
 # Parser generator
 [workspace.dependencies.pest]
-version = "2.8.0"
+version = "2.8.1"
 
 # Pest derive macros
 [workspace.dependencies.pest_derive]
-version = "2.8.0"
+version = "2.8.1"
 
 # Pin projection
 [workspace.dependencies.pin-project-lite]
@@ -468,7 +478,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.120"
+version = "2.1.127"
 
 # Prometheus metrics
 [workspace.dependencies.prometheus]
@@ -492,9 +502,15 @@ version = "1.11.1"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
-version = "0.12.20"
+version = "0.12.22"
 default-features = false
-features = ["http2", "rustls-tls-manual-roots", "charset", "json", "socks"]
+features = [
+    "http2",
+    "rustls-tls-manual-roots-no-provider",
+    "charset",
+    "json",
+    "socks",
+]
 
 # RSA cryptography
 [workspace.dependencies.rsa]
@@ -507,11 +523,11 @@ version = "2.1.1"
 
 # Matrix-related types
 [workspace.dependencies.ruma-common]
-version = "0.15.2"
+version = "0.15.4"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.27"
+version = "0.23.31"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
@@ -523,7 +539,7 @@ version = "1.12.0"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
-version = "0.5.3"
+version = "0.6.0"
 
 # systemd service status notification
 [workspace.dependencies.sd-notify]
@@ -557,18 +573,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.37.0"
+version = "0.42.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.37.0"
+version = "0.42.0"
 features = ["http", "axum-matched-path"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.37.0"
+version = "0.42.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
@@ -577,7 +593,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.140"
+version = "1.0.142"
 features = ["preserve_order"]
 
 # URL encoded form serialization
@@ -586,7 +602,7 @@ version = "0.7.1"
 
 # Custom serialization helpers
 [workspace.dependencies.serde_with]
-version = "3.12.0"
+version = "3.14.0"
 features = ["hex", "chrono"]
 
 # YAML serialization
@@ -604,7 +620,7 @@ version = "2.2.0"
 
 # Low-level socket manipulation
 [workspace.dependencies.socket2]
-version = "0.5.10"
+version = "0.6.0"
 
 # Subject Public Key Info
 [workspace.dependencies.spki]
@@ -630,11 +646,11 @@ features = [
 version = "2.0.12"
 
 [workspace.dependencies.thiserror-ext]
-version = "0.2.1"
+version = "0.3.0"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.45.1"
+version = "1.47.1"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]
@@ -713,7 +729,7 @@ version = "2.5.0"
 
 # HTTP mock server
 [workspace.dependencies.wiremock]
-version = "0.6.3"
+version = "0.6.4"
 
 # User-agent parser
 [workspace.dependencies.woothee]

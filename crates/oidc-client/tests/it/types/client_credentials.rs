@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashMap;
 
@@ -188,12 +188,8 @@ async fn pass_client_secret_jwt() {
         .and(move |req: &Request| {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-            if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
-            {
-                println!("Wrong or missing client ID");
+            if query_pairs.contains_key("client_id") {
+                println!("`client_secret_jwt` client authentication should not use `client_id`");
                 return false;
             }
             if query_pairs
@@ -271,12 +267,8 @@ async fn pass_private_key_jwt() {
         .and(move |req: &Request| {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-            if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
-            {
-                println!("Wrong or missing client ID");
+            if query_pairs.contains_key("client_id") {
+                println!("`private_key_jwt` client authentication should not use `client_id`");
                 return false;
             }
             if query_pairs

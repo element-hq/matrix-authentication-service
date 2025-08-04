@@ -235,6 +235,9 @@
       "link_mismatch": {
         "heading": "Ce compte est déjà associé à un autre compte."
       },
+      "login_link": {
+        "action": "Continuer"
+      },
       "register": {
         "choose_username": {
           "description": "Cela ne peut pas être modifié ultérieurement.",

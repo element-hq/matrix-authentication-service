@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Repositories to interact with entities related to user accounts
 
@@ -244,6 +244,19 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
 
+    /// Reactivate a [`User`]
+    ///
+    /// Returns the reactivated [`User`]
+    ///
+    /// # Parameters
+    ///
+    /// * `user`: The [`User`] to reactivate
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
+
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -315,6 +328,7 @@ repository_impl!(UserRepository:
     async fn lock(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
+    async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,

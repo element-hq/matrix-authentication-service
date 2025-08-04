@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![allow(clippy::module_name_repetitions)]
 
@@ -341,8 +341,7 @@ pub async fn post(
 
     let request = async_graphql::http::receive_body(
         content_type,
-        body.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
-            .into_async_read(),
+        body.map_err(std::io::Error::other).into_async_read(),
         MultipartOptions::default(),
     )
     .await?

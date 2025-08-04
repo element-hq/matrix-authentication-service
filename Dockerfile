@@ -1,4 +1,8 @@
 # syntax = docker/dockerfile:1.7.1
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
 
 # Builds a minimal image with the binary only. It is multi-arch capable,
 # cross-building to aarch64 and x86_64. When cross-compiling, Docker sets two
@@ -8,7 +12,7 @@
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
-ARG RUSTC_VERSION=1.86.0
+ARG RUSTC_VERSION=1.87.0
 ARG NODEJS_VERSION=20.15.0
 ARG OPA_VERSION=1.1.0
 ARG CARGO_AUDITABLE_VERSION=0.6.6

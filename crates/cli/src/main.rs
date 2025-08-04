@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![allow(clippy::module_name_repetitions)]
 
@@ -115,8 +115,9 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     // Load the base configuration files
     let figment = opts.figment();
 
-    let telemetry_config =
-        TelemetryConfig::extract_or_default(&figment).context("Failed to load telemetry config")?;
+    let telemetry_config = TelemetryConfig::extract_or_default(&figment)
+        .map_err(anyhow::Error::from_boxed)
+        .context("Failed to load telemetry config")?;
 
     // Setup Sentry
     let sentry = sentry::init((
@@ -127,8 +128,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
             release: Some(VERSION.into()),
             sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
             traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
-            auto_session_tracking: true,
-            session_mode: sentry::SessionMode::Request,
             ..Default::default()
         },
     ));

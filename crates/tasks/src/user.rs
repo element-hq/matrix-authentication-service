@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context;
 use async_trait::async_trait;
@@ -41,17 +41,10 @@ impl RunnableJob for DeactivateUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        // Let's first lock & deactivate the user
+        // Let's first deactivate the user
         let user = repo
             .user()
-            .lock(&clock, user)
-            .await
-            .context("Failed to lock user")
-            .map_err(JobError::retry)?;
-
-        let user = repo
-            .user()
-            .deactivate(&clock, user)
+            .deactivate(clock, user)
             .await
             .context("Failed to deactivate user")
             .map_err(JobError::retry)?;
@@ -60,7 +53,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .browser_session()
             .finish_bulk(
-                &clock,
+                clock,
                 BrowserSessionFilter::new().for_user(&user).active_only(),
             )
             .await
@@ -70,7 +63,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .oauth2_session()
             .finish_bulk(
-                &clock,
+                clock,
                 OAuth2SessionFilter::new().for_user(&user).active_only(),
             )
             .await
@@ -80,7 +73,7 @@ impl RunnableJob for DeactivateUserJob {
         let n = repo
             .compat_session()
             .finish_bulk(
-                &clock,
+                clock,
                 CompatSessionFilter::new().for_user(&user).active_only(),
             )
             .await
@@ -99,10 +92,9 @@ impl RunnableJob for DeactivateUserJob {
         // we want the user to be locked out as soon as possible
         repo.save().await.map_err(JobError::retry)?;
 
-        let mxid = matrix.mxid(&user.username);
-        info!("Deactivating user {} on homeserver", mxid);
+        info!("Deactivating user {} on homeserver", user.username);
         matrix
-            .delete_user(&mxid, self.hs_erase())
+            .delete_user(&user.username, self.hs_erase())
             .await
             .map_err(JobError::retry)?;
 
@@ -130,16 +122,19 @@ impl RunnableJob for ReactivateUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        let mxid = matrix.mxid(&user.username);
-        info!("Reactivating user {} on homeserver", mxid);
+        info!("Reactivating user {} on homeserver", user.username);
         matrix
-            .reactivate_user(&mxid)
+            .reactivate_user(&user.username)
             .await
             .map_err(JobError::retry)?;
 
-        // We want to unlock the user from our side only once it has been reactivated on
-        // the homeserver
-        let _user = repo.user().unlock(user).await.map_err(JobError::retry)?;
+        // We want to reactivate the user from our side only once it has been
+        // reactivated on the homeserver
+        let _user = repo
+            .user()
+            .reactivate(user)
+            .await
+            .map_err(JobError::retry)?;
         repo.save().await.map_err(JobError::retry)?;
 
         Ok(())

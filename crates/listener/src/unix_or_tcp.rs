@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A listener which can listen on either TCP sockets or on UNIX domain sockets
 
@@ -152,7 +152,6 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
 
                 Ok((remote_addr.into(), UnixOrTcpConnection::Unix { stream }))
             }
@@ -161,7 +160,7 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
+                socket.set_tcp_nodelay(true)?;
 
                 Ok((remote_addr.into(), UnixOrTcpConnection::Tcp { stream }))
             }
@@ -188,7 +187,6 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
 
                 Poll::Ready(Ok((
                     remote_addr.into(),
@@ -200,7 +198,7 @@ impl UnixOrTcpListener {
 
                 let socket = socket2::SockRef::from(&stream);
                 socket.set_keepalive(true)?;
-                socket.set_nodelay(true)?;
+                socket.set_tcp_nodelay(true)?;
 
                 Poll::Ready(Ok((
                     remote_addr.into(),

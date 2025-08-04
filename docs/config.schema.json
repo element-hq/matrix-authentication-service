@@ -1707,17 +1707,31 @@
       "description": "The kind of homeserver it is.",
       "oneOf": [
         {
-          "description": "Homeserver is Synapse",
+          "description": "Homeserver is Synapse, using the legacy API\n\nThis will switch to using the modern API in a few releases.",
           "type": "string",
           "enum": [
             "synapse"
           ]
         },
         {
-          "description": "Homeserver is Synapse, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
+          "description": "Homeserver is Synapse, using the legacy API, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.\n\nThis will switch to using the modern API in a few releases.",
           "type": "string",
           "enum": [
             "synapse_read_only"
+          ]
+        },
+        {
+          "description": "Homeserver is Synapse, using the legacy API,",
+          "type": "string",
+          "enum": [
+            "synapse_legacy"
+          ]
+        },
+        {
+          "description": "Homeserver is Synapse, with the modern API available",
+          "type": "string",
+          "enum": [
+            "synapse_modern"
           ]
         }
       ]
@@ -2136,6 +2150,14 @@
           "description": "Whether the `login_hint` should be forwarded to the provider in the authorization request.\n\nDefaults to `false`.",
           "default": false,
           "type": "boolean"
+        },
+        "on_backchannel_logout": {
+          "description": "What to do when receiving an OIDC Backchannel logout request.\n\nDefaults to \"do_nothing\".",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OnBackchannelLogout"
+            }
+          ]
         }
       }
     },
@@ -2353,6 +2375,14 @@
         "template": {
           "description": "The Jinja2 template to use for the localpart attribute\n\nIf not provided, the default template is `{{ user.preferred_username }}`",
           "type": "string"
+        },
+        "on_conflict": {
+          "description": "How to handle conflicts on the claim, default value is `Fail`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OnConflict"
+            }
+          ]
         }
       }
     },
@@ -2385,6 +2415,25 @@
           "type": "string",
           "enum": [
             "require"
+          ]
+        }
+      ]
+    },
+    "OnConflict": {
+      "description": "How to handle an existing localpart claim",
+      "oneOf": [
+        {
+          "description": "Fails the sso login on conflict",
+          "type": "string",
+          "enum": [
+            "fail"
+          ]
+        },
+        {
+          "description": "Adds the oauth identity link, regardless of whether there is an existing link or not",
+          "type": "string",
+          "enum": [
+            "add"
           ]
         }
       ]
@@ -2434,6 +2483,32 @@
           "type": "string"
         }
       }
+    },
+    "OnBackchannelLogout": {
+      "description": "What to do when receiving an OIDC Backchannel logout request.",
+      "oneOf": [
+        {
+          "description": "Do nothing",
+          "type": "string",
+          "enum": [
+            "do_nothing"
+          ]
+        },
+        {
+          "description": "Only log out the MAS 'browser session' started by this OIDC session",
+          "type": "string",
+          "enum": [
+            "logout_browser_only"
+          ]
+        },
+        {
+          "description": "Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions",
+          "type": "string",
+          "enum": [
+            "logout_all"
+          ]
+        }
+      ]
     },
     "BrandingConfig": {
       "description": "Configuration section for tweaking the branding of the service",

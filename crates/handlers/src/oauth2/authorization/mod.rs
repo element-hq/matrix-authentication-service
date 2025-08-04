@@ -1,15 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
     extract::{Form, State},
     response::{IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, record_error};
+use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, Pkce};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -53,29 +53,15 @@ pub enum RouteError {
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_));
-        // TODO: better error pages
-        let response = match self {
-            RouteError::Internal(e) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        match self {
+            Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ (Self::ClientNotFound
+            | Self::InvalidResponseMode
+            | Self::IntoCallbackDestination(_)
+            | Self::UnknownRedirectUri(_)) => {
+                GenericError::new(StatusCode::BAD_REQUEST, e).into_response()
             }
-            RouteError::ClientNotFound => {
-                (StatusCode::BAD_REQUEST, "could not find client").into_response()
-            }
-            RouteError::InvalidResponseMode => {
-                (StatusCode::BAD_REQUEST, "invalid response mode").into_response()
-            }
-            RouteError::IntoCallbackDestination(e) => {
-                (StatusCode::BAD_REQUEST, e.to_string()).into_response()
-            }
-            RouteError::UnknownRedirectUri(e) => (
-                StatusCode::BAD_REQUEST,
-                format!("Invalid redirect URI ({e})"),
-            )
-                .into_response(),
-        };
-
-        (sentry_event_id, response).into_response()
+        }
     }
 }
 
@@ -123,7 +109,6 @@ fn resolve_response_mode(
     fields(client.id = %params.auth.client_id),
     skip_all,
 )]
-#[allow(clippy::too_many_lines)]
 pub(crate) async fn get(
     mut rng: BoxRng,
     clock: BoxClock,

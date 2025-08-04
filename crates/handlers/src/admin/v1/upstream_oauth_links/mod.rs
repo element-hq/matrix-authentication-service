@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 mod add;
 mod delete;
@@ -19,7 +19,8 @@ pub use self::{
 mod test_utils {
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
@@ -49,6 +50,7 @@ mod test_utils {
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
             ui_order: 0,
+            on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
         }
     }
 }

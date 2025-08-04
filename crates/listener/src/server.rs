@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     pin::Pin,
@@ -290,7 +290,6 @@ where
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub async fn run_servers<S, B>(
     listeners: impl IntoIterator<Item = Server<S>>,
     soft_shutdown_token: CancellationToken,

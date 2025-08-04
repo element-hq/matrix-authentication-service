@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
@@ -78,7 +78,7 @@ pub struct EndOAuth2SessionInput {
 /// The payload of the `endOauth2Session` mutation.
 pub enum EndOAuth2SessionPayload {
     NotFound,
-    Ended(mas_data_model::Session),
+    Ended(Box<mas_data_model::Session>),
 }
 
 /// The status of the `endOauth2Session` mutation.
@@ -104,7 +104,7 @@ impl EndOAuth2SessionPayload {
     /// Returns the ended session.
     async fn oauth2_session(&self) -> Option<OAuth2Session> {
         match self {
-            Self::Ended(session) => Some(OAuth2Session(session.clone())),
+            Self::Ended(session) => Some(OAuth2Session(*session.clone())),
             Self::NotFound => None,
         }
     }
@@ -126,7 +126,7 @@ pub enum SetOAuth2SessionNamePayload {
     NotFound,
 
     /// The session was updated.
-    Updated(mas_data_model::Session),
+    Updated(Box<mas_data_model::Session>),
 }
 
 /// The status of the `setOauth2SessionName` mutation.
@@ -152,7 +152,7 @@ impl SetOAuth2SessionNamePayload {
     /// The session that was updated.
     async fn oauth2_session(&self) -> Option<OAuth2Session> {
         match self {
-            Self::Updated(session) => Some(OAuth2Session(session.clone())),
+            Self::Updated(session) => Some(OAuth2Session(*session.clone())),
             Self::NotFound => None,
         }
     }
@@ -212,11 +212,10 @@ impl OAuth2SessionMutations {
         repo.user().acquire_lock_for_sync(&user).await?;
 
         // Look for devices to provision
-        let mxid = homeserver.mxid(&user.username);
         for scope in &*session.scope {
             if let Some(device) = Device::from_scope_token(scope) {
                 homeserver
-                    .create_device(&mxid, device.as_str(), None)
+                    .upsert_device(&user.username, device.as_str(), None)
                     .await
                     .context("Failed to provision device")?;
             }
@@ -293,7 +292,7 @@ impl OAuth2SessionMutations {
 
         repo.save().await?;
 
-        Ok(EndOAuth2SessionPayload::Ended(session))
+        Ok(EndOAuth2SessionPayload::Ended(Box::new(session)))
     }
 
     async fn set_oauth2_session_name(
@@ -331,11 +330,10 @@ impl OAuth2SessionMutations {
             .await?;
 
         // Update the device on the homeserver side
-        let mxid = homeserver.mxid(&user.username);
         for scope in &*session.scope {
             if let Some(device) = Device::from_scope_token(scope) {
                 homeserver
-                    .update_device_display_name(&mxid, device.as_str(), &input.human_name)
+                    .update_device_display_name(&user.username, device.as_str(), &input.human_name)
                     .await
                     .context("Failed to provision device")?;
             }
@@ -343,6 +341,6 @@ impl OAuth2SessionMutations {
 
         repo.save().await?;
 
-        Ok(SetOAuth2SessionNamePayload::Updated(session))
+        Ok(SetOAuth2SessionNamePayload::Updated(Box::new(session)))
     }
 }

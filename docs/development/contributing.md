@@ -4,7 +4,7 @@ This document aims to get you started with contributing to the Matrix Authentica
 
 ## 1. Who can contribute to MAS?
 
-Everyone is welcome to contribute code to [Synapse](https://github.com/element-hq/matrix-authentication-service), provided that they are willing to license their contributions to Element under a [Contributor License Agreement](https://cla-assistant.io/element-hq/matrix-authentication-service) (CLA). This ensures that their contribution will be made available under an OSI-approved open-source license, currently Affero General Public License v3 (AGPLv3).
+Everyone is welcome to contribute code to [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service), provided that they are willing to license their contributions to Element under a [Contributor License Agreement](https://cla-assistant.io/element-hq/matrix-authentication-service) (CLA). This ensures that their contribution will be made available under an OSI-approved open-source license, currently Affero General Public License v3 (AGPLv3).
 
 Please see the [Element blog post](https://element.io/blog/synapse-now-lives-at-github-com-element-hq-synapse/) for the full rationale.
 

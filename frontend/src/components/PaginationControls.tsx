@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { Button } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
@@ -39,9 +39,9 @@ const PaginationControls: React.FC<Props> = ({
         {t("common.previous")}
       </Button>
       <div className="text-center">
-        {count !== undefined ? (
-          <>{t("frontend.pagination_controls.total", { totalCount: count })}</>
-        ) : null}
+        {count !== undefined
+          ? t("frontend.pagination_controls.total", { totalCount: count })
+          : null}
       </div>
       <Button
         kind="secondary"

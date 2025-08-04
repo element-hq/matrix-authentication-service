@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::fmt::Formatter;
 
@@ -226,7 +226,7 @@ fn to_precision(number: f64, mut placeholder: Placeholder) -> String {
     }
 }
 
-#[allow(clippy::too_many_lines, clippy::match_same_arms)]
+#[allow(clippy::match_same_arms)]
 fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, FormatError> {
     match (value, &placeholder.type_specifier) {
         (Value::Number(number), ts @ TypeSpecifier::BinaryNumber) => {

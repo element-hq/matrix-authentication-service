@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Contexts used in templates
 
@@ -21,9 +21,9 @@ use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
     DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
-    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
-    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
+    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod, User,
+    UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -1332,7 +1332,7 @@ impl TemplateContext for RecoveryFinishContext {
     }
 }
 
-/// Context used by the `pages/upstream_oauth2/{link_mismatch,do_login}.html`
+/// Context used by the `pages/upstream_oauth2/{link_mismatch,login_link}.html`
 /// templates
 #[derive(Serialize)]
 pub struct UpstreamExistingLinkContext {
@@ -1543,6 +1543,7 @@ impl TemplateContext for UpstreamRegister {
                 forward_login_hint: false,
                 created_at: now,
                 disabled_at: None,
+                on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             },
         )]
     }

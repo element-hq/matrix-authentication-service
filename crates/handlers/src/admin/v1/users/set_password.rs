@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
@@ -145,7 +145,7 @@ mod tests {
     use zeroize::Zeroizing;
 
     use crate::{
-        passwords::PasswordManager,
+        passwords::{PasswordManager, PasswordVerificationResult},
         test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
 
@@ -185,7 +185,7 @@ mod tests {
         let mut repo = state.repository().await.unwrap();
         let user_password = repo.user_password().active(&user).await.unwrap().unwrap();
         let password = Zeroizing::new(String::from("this is a good enough password"));
-        state
+        let res = state
             .password_manager
             .verify(
                 user_password.version,
@@ -194,6 +194,7 @@ mod tests {
             )
             .await
             .unwrap();
+        assert_eq!(res, PasswordVerificationResult::Success(()));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -244,7 +245,7 @@ mod tests {
         let mut repo = state.repository().await.unwrap();
         let user_password = repo.user_password().active(&user).await.unwrap().unwrap();
         let password = Zeroizing::new("password".to_owned());
-        state
+        let res = state
             .password_manager
             .verify(
                 user_password.version,
@@ -253,6 +254,7 @@ mod tests {
             )
             .await
             .unwrap();
+        assert_eq!(res, PasswordVerificationResult::Success(()));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

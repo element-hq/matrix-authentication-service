@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
@@ -563,7 +563,7 @@ impl UserMutations {
         Ok(LockUserPayload::Locked(user))
     }
 
-    /// Unlock a user. This is only available to administrators.
+    /// Unlock and reactivate a user. This is only available to administrators.
     async fn unlock_user(
         &self,
         ctx: &Context<'_>,
@@ -585,11 +585,11 @@ impl UserMutations {
             return Ok(UnlockUserPayload::NotFound);
         };
 
-        // Call the homeserver synchronously to unlock the user
-        let mxid = matrix.mxid(&user.username);
-        matrix.reactivate_user(&mxid).await?;
+        // Call the homeserver synchronously to reactivate the user
+        matrix.reactivate_user(&user.username).await?;
 
-        // Now unlock the user in our database
+        // Now reactivate & unlock the user in our database
+        let user = repo.user().reactivate(user).await?;
         let user = repo.user().unlock(user).await?;
 
         repo.save().await?;
@@ -653,9 +653,7 @@ impl UserMutations {
         };
 
         let conn = state.homeserver_connection();
-        let mxid = conn.mxid(&user.username);
-
-        conn.allow_cross_signing_reset(&mxid)
+        conn.allow_cross_signing_reset(&user.username)
             .await
             .context("Failed to allow cross-signing reset")?;
 

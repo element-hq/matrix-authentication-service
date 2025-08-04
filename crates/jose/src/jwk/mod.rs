@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Ref: <https://www.rfc-editor.org/rfc/rfc7517.html>
 
@@ -413,7 +413,6 @@ mod tests {
         assert_eq!(candidates.len(), 1);
     }
 
-    #[allow(clippy::too_many_lines)]
     #[test]
     fn load_keycloak_keys() {
         let jwks = serde_json::json!({

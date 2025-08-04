@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Types to interact with the [OpenID Connect] specification.
 //!
@@ -647,7 +647,10 @@ impl ProviderMetadata {
         let metadata = self.insecure_verify_metadata()?;
 
         if metadata.issuer() != issuer {
-            return Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch);
+            return Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch {
+                expected: issuer.to_owned(),
+                actual: metadata.issuer().to_owned(),
+            });
         }
 
         validate_url(
@@ -1064,8 +1067,13 @@ pub enum ProviderMetadataVerificationError {
     UrlWithFragment(&'static str, Url),
 
     /// The issuer URL doesn't match the one that was discovered.
-    #[error("issuer URLs don't match")]
-    IssuerUrlsDontMatch,
+    #[error("issuer URLs don't match: expected {expected:?}, got {actual:?}")]
+    IssuerUrlsDontMatch {
+        /// The expected issuer URL.
+        expected: String,
+        /// The issuer URL that was discovered.
+        actual: String,
+    },
 
     /// `openid` is missing from the supported scopes.
     #[error("missing openid scope")]
@@ -1314,7 +1322,7 @@ mod tests {
         metadata.issuer = Some("https://example.com/".to_owned());
         assert_matches!(
             metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch)
+            Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch { .. })
         );
 
         // Err - Not https

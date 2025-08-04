@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
@@ -27,7 +27,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt, StatementWithJoinsExt},
-    iden::{CompatSessions, CompatSsoLogins},
+    iden::{CompatSessions, CompatSsoLogins, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -189,6 +189,18 @@ impl Filter for CompatSessionFilter<'_> {
             .add_option(self.browser_session().map(|browser_session| {
                 Expr::col((CompatSessions::Table, CompatSessions::UserSessionId))
                     .eq(Uuid::from(browser_session.id))
+            }))
+            .add_option(self.browser_session_filter().map(|browser_session_filter| {
+                Expr::col((CompatSessions::Table, CompatSessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessions::Table,
+                            UserSessions::UserSessionId,
+                        )))
+                        .apply_filter(browser_session_filter)
+                        .from(UserSessions::Table)
+                        .take(),
+                )
             }))
             .add_option(self.state().map(|state| {
                 if state.is_active() {

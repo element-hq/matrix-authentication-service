@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     convert::Infallible,
@@ -29,6 +29,7 @@ use mas_axum_utils::{
 };
 use mas_config::RateLimitingConfig;
 use mas_data_model::SiteConfig;
+use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_matrix::{HomeserverConnection, MockHomeserverConnection};
@@ -39,6 +40,7 @@ use mas_storage::{
     clock::MockClock,
 };
 use mas_storage_pg::PgRepositoryFactory;
+use mas_tasks::QueueWorker;
 use mas_templates::{SiteConfigExt, Templates};
 use oauth2_types::{registration::ClientRegistrationResponse, requests::AccessTokenResponse};
 use rand::SeedableRng;
@@ -113,6 +115,7 @@ pub(crate) struct TestState {
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
     pub task_tracker: TaskTracker,
+    queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
@@ -235,6 +238,27 @@ impl TestState {
             shutdown_token.child_token(),
         );
 
+        let mailer = Mailer::new(
+            templates.clone(),
+            MailTransport::blackhole(),
+            "hello@example.com".parse().unwrap(),
+            "hello@example.com".parse().unwrap(),
+        );
+
+        let queue_worker = mas_tasks::init(
+            PgRepositoryFactory::new(pool.clone()),
+            Arc::clone(&clock),
+            &mailer,
+            homeserver_connection.clone(),
+            url_builder.clone(),
+            &site_config,
+            shutdown_token.child_token(),
+        )
+        .await
+        .unwrap();
+
+        let queue_worker = Arc::new(tokio::sync::Mutex::new(queue_worker));
+
         Ok(Self {
             repository_factory: PgRepositoryFactory::new(pool),
             templates,
@@ -254,8 +278,17 @@ impl TestState {
             rng,
             http_client,
             task_tracker,
+            queue_worker,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
+    }
+
+    /// Run all the available jobs in the queue.
+    ///
+    /// Panics if it fails to run the jobs (but not on job failures!)
+    pub async fn run_jobs_in_queue(&self) {
+        let mut queue = self.queue_worker.lock().await;
+        queue.process_all_jobs_in_tests().await.unwrap();
     }
 
     /// Reset the test utils to a fresh state, with the same configuration.
@@ -286,7 +319,7 @@ impl TestState {
         let app = crate::healthcheck_router()
             .merge(crate::discovery_router())
             .merge(crate::api_router())
-            .merge(crate::compat_router())
+            .merge(crate::compat_router(self.templates.clone()))
             .merge(crate::human_router(self.templates.clone()))
             // We enable undocumented_oauth2_access for the tests, as it is easier to query the API
             // with it

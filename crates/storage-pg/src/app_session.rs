@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A module containing PostgreSQL implementation of repositories for sessions
 
@@ -82,7 +82,6 @@ use priv_::{AppSessionLookup, AppSessionLookupIden};
 impl TryFrom<AppSessionLookup> for AppSession {
     type Error = DatabaseError;
 
-    #[allow(clippy::too_many_lines)]
     fn try_from(value: AppSessionLookup) -> Result<Self, Self::Error> {
         // This is annoying to do, but we have to match on all the fields to determine
         // whether it's a compat session or an oauth2 session
@@ -257,7 +256,6 @@ fn split_filter(
 impl AppSessionRepository for PgAppSessionRepository<'_> {
     type Error = DatabaseError;
 
-    #[allow(clippy::too_many_lines)]
     #[tracing::instrument(
         name = "db.app_session.list",
         fields(

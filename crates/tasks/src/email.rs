@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::Duration;
@@ -100,7 +100,7 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
             .user_email()
             .add_authentication_code(
                 &mut rng,
-                &clock,
+                clock,
                 Duration::minutes(5), // TODO: make this configurable
                 &user_email_authentication,
                 code,

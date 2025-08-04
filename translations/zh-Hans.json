@@ -6,6 +6,7 @@
     "create_account": "创建账户",
     "sign_in": "登录",
     "sign_out": "注销",
+    "skip": "跳过",
     "start_over": "重新开始",
     "submit": "提交"
   },
@@ -37,6 +38,20 @@
     "unexpected": "意外错误"
   },
   "mas": {
+    "account": {
+      "deactivated": {
+        "description": "此账户（<em>%(mxid)s</em>）已被删除。如果这并非预期，请联系服务器管理员。",
+        "heading": "账户已删除"
+      },
+      "locked": {
+        "description": "此账户（<em>%(mxid)s</em>）已被锁定。如果这并非预期，请联系服务器管理员。",
+        "heading": "账户已锁定"
+      },
+      "logged_out": {
+        "description": "此会话已被终止。注销以重新登录",
+        "heading": "会话已终止"
+      }
+    },
     "add_email": {
       "description": "输入电子邮件地址，以便在失去访问权限时恢复账户。",
       "heading": "添加电子邮件地址"
@@ -52,6 +67,10 @@
       "description": "这将更改您账户的密码。",
       "heading": "更改我的密码",
       "new": "新密码"
+    },
+    "choose_display_name": {
+      "description": "这是能被其他人看到的名称，你可以随时更改。",
+      "headline": "选择显示名称"
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> 在 <span>%(redirect_uri)s</span> 希望访问您的账户。",
@@ -81,12 +100,22 @@
         "heading": "已授予访问权限"
       }
     },
+    "device_display_name": {
+      "client_on_device": "运行在 %(device_name)s 的 %(client_name)s",
+      "name_for_platform": "%(name)s %(platform)s",
+      "unknown_device": "未知设备"
+    },
+    "email_in_use": {
+      "description": "如果你忘记了账户凭证，你可以恢复账户。你也可以使用另一邮件地址重新开始。",
+      "title": "此邮件地址 <span>%(email)s</span> 已被使用"
+    },
     "emails": {
       "greeting": "%(username)s 你好，",
       "recovery": {
         "click_button": "点击下面的按钮创建新密码：",
         "copy_link": "复制以下链接并粘贴到浏览器中以创建新密码：",
         "create_new_password": "创建新密码",
+        "fallback": "此按钮对你无效？",
         "headline": "您请求重置您在 %(server_name)s 的账户密码。",
         "subject": "重置账户密码 (%(mxid)s)",
         "you_can_ignore": "如果您没有请求重置密码，可以忽略此邮件。您当前的密码仍然有效。"
@@ -100,11 +129,21 @@
     "errors": {
       "captcha": "验证码验证失败，请重试",
       "denied_policy": "被该策略拒绝：%(policy)s",
+      "email_banned": "由于服务器策略，邮件已被禁止",
+      "email_domain_banned": "由于服务器策略，邮件所属的域已被禁止",
+      "email_domain_not_allowed": "由于服务器策略，邮件域不被允许",
+      "email_not_allowed": "由于服务器策略，邮件不被允许",
       "field_required": "此字段为必填项",
       "invalid_credentials": "无效的凭据",
       "password_mismatch": "密码字段不匹配",
       "rate_limit_exceeded": "您在短时间内发出了过多请求。请等待几分钟后重试。",
-      "username_taken": "此用户名已被使用"
+      "username_all_numeric": "用户名不能仅由数字组成",
+      "username_banned": "由于服务器策略，用户名已被禁止",
+      "username_invalid_chars": "用户名包含无效字符。仅能使用小写字母、数字、短横线或下划线。",
+      "username_not_allowed": "由于服务器策略，用户名不被允许",
+      "username_taken": "此用户名已被使用",
+      "username_too_long": "用户名太长",
+      "username_too_short": "用户名太短"
     },
     "login": {
       "call_to_register": "还没有账户？",
@@ -117,7 +156,8 @@
         "headline": "登录以链接"
       },
       "no_login_methods": "没有可用的登录途径。",
-      "separator": "或"
+      "separator": "或",
+      "username_or_email": "用户名或邮件地址"
     },
     "navbar": {
       "my_account": "我的账户",
@@ -169,12 +209,18 @@
     },
     "register": {
       "call_to_login": "已有账户？",
+      "continue_with_email": "使用邮件地址继续",
       "create_account": {
         "description": "请创建一个账户以开始使用：",
         "heading": "创建账户"
       },
       "sign_in_instead": "去登录",
       "terms_of_service": "我同意<a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">条款与条件 </a>"
+    },
+    "registration_token": {
+      "description": "输入由服务器管理员提供的注册 Token。",
+      "field": "注册 Token",
+      "headline": "注册 Token"
     },
     "scope": {
       "edit_profile": "编辑个人资料和联系方式",
@@ -204,7 +250,12 @@
           "heading": "导入数据"
         },
         "imported_from_upstream": "从上游账户导入",
+        "imported_from_upstream_with_name": "已从您的 %(human_name)s 账户导入",
         "link_existing": "链接到现有账户",
+        "provider_name": "%(human_name)s 账户",
+        "signup_with_upstream": {
+          "heading": "使用 %(human_name)s 账户继续注册"
+        },
         "suggested_display_name": "导入显示名称",
         "suggested_email": "导入电子邮件地址",
         "use": "使用"

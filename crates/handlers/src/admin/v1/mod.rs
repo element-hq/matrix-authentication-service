@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::Arc;
 
@@ -27,7 +27,6 @@ mod user_registration_tokens;
 mod user_sessions;
 mod users;
 
-#[allow(clippy::too_many_lines)]
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -93,6 +92,10 @@ where
         .api_route(
             "/users/{id}/deactivate",
             post_with(self::users::deactivate, self::users::deactivate_doc),
+        )
+        .api_route(
+            "/users/{id}/reactivate",
+            post_with(self::users::reactivate, self::users::reactivate_doc),
         )
         .api_route(
             "/users/{id}/lock",

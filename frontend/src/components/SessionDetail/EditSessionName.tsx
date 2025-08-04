@@ -1,8 +1,9 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
+import type { UseMutationResult } from "@tanstack/react-query";
 import IconEdit from "@vector-im/compound-design-tokens/assets/web/icons/edit";
 import { Button, Form, IconButton, Tooltip } from "@vector-im/compound-web";
 import {
@@ -11,11 +12,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import * as Dialog from "../Dialog";
 import LoadingSpinner from "../LoadingSpinner";
-
-import type { UseMutationResult } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 
 // This needs to be its own component because else props and refs aren't passed properly in the trigger
 const EditButton = forwardRef<

@@ -1,10 +1,10 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
-use figment::{Figment, error::Error as FigmentError};
+use figment::Figment;
 use serde::de::DeserializeOwned;
 
 /// Trait implemented by all configuration section to help loading specific part
@@ -18,7 +18,10 @@ pub trait ConfigurationSection: Sized + DeserializeOwned {
     /// # Errors
     ///
     /// Returns an error if the configuration is invalid
-    fn validate(&self, _figment: &Figment) -> Result<(), FigmentError> {
+    fn validate(
+        &self,
+        _figment: &Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         Ok(())
     }
 
@@ -27,7 +30,9 @@ pub trait ConfigurationSection: Sized + DeserializeOwned {
     /// # Errors
     ///
     /// Returns an error if the configuration could not be loaded
-    fn extract(figment: &Figment) -> Result<Self, FigmentError> {
+    fn extract(
+        figment: &Figment,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let this: Self = if let Some(path) = Self::PATH {
             figment.extract_inner(path)?
         } else {
@@ -49,7 +54,9 @@ pub trait ConfigurationSectionExt: ConfigurationSection + Default {
     /// # Errors
     ///
     /// Returns an error if the configuration section is invalid.
-    fn extract_or_default(figment: &Figment) -> Result<Self, figment::Error> {
+    fn extract_or_default(
+        figment: &Figment,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let this: Self = if let Some(path) = Self::PATH {
             // If the configuration section is not present, we return the default value
             if !figment.contains(path) {

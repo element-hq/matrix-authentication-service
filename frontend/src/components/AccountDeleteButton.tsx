@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { useMutation } from "@tanstack/react-query";
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
@@ -70,7 +70,10 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
     mutationFn: ({
       password,
       hsErase,
-    }: { password: string | null; hsErase: boolean }) =>
+    }: {
+      password: string | null;
+      hsErase: boolean;
+    }) =>
       graphqlRequest({
         query: MUTATION,
         variables: { password, hsErase },

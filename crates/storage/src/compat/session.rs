@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
@@ -12,7 +12,7 @@ use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, Device, User
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Page, Pagination, repository_impl};
+use crate::{Clock, Page, Pagination, repository_impl, user::BrowserSessionFilter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompatSessionState {
@@ -59,6 +59,7 @@ impl CompatSessionType {
 pub struct CompatSessionFilter<'a> {
     user: Option<&'a User>,
     browser_session: Option<&'a BrowserSession>,
+    browser_session_filter: Option<BrowserSessionFilter<'a>>,
     state: Option<CompatSessionState>,
     auth_type: Option<CompatSessionType>,
     device: Option<&'a Device>,
@@ -106,10 +107,26 @@ impl<'a> CompatSessionFilter<'a> {
         self
     }
 
+    /// Set the browser sessions filter
+    #[must_use]
+    pub fn for_browser_sessions(
+        mut self,
+        browser_session_filter: BrowserSessionFilter<'a>,
+    ) -> Self {
+        self.browser_session_filter = Some(browser_session_filter);
+        self
+    }
+
     /// Get the browser session filter
     #[must_use]
     pub fn browser_session(&self) -> Option<&'a BrowserSession> {
         self.browser_session
+    }
+
+    /// Get the browser sessions filter
+    #[must_use]
+    pub fn browser_session_filter(&self) -> Option<BrowserSessionFilter<'a>> {
+        self.browser_session_filter
     }
 
     /// Only return sessions with a last active time before the given time
