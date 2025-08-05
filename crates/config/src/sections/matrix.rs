@@ -29,24 +29,20 @@ fn default_endpoint() -> Url {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum HomeserverKind {
-    /// Homeserver is Synapse, using the legacy API
-    ///
-    /// This will switch to using the modern API in a few releases.
+    /// Homeserver is Synapse, version 1.135.0 or newer
     #[default]
     Synapse,
 
-    /// Homeserver is Synapse, using the legacy API, in read-only mode
+    /// Homeserver is Synapse, version 1.135.0 or newer, in read-only mode
     ///
     /// This is meant for testing rolling out Matrix Authentication Service with
     /// no risk of writing data to the homeserver.
-    ///
-    /// This will switch to using the modern API in a few releases.
     SynapseReadOnly,
 
-    /// Homeserver is Synapse, using the legacy API,
+    /// Homeserver is Synapse, using the legacy API
     SynapseLegacy,
 
-    /// Homeserver is Synapse, with the modern API available
+    /// Homeserver is Synapse, with the modern API available (>= 1.135.0)
     SynapseModern,
 }
 
