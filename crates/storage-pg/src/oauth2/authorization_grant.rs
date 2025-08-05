@@ -60,7 +60,6 @@ struct GrantLookup {
 impl TryFrom<GrantLookup> for AuthorizationGrant {
     type Error = DatabaseInconsistencyError;
 
-    #[allow(clippy::too_many_lines)]
     fn try_from(value: GrantLookup) -> Result<Self, Self::Error> {
         let id = value.oauth2_authorization_grant_id.into();
         let scope: Scope = value.scope.parse().map_err(|e| {

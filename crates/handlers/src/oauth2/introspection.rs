@@ -4,7 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::sync::{Arc, LazyLock};
+use std::{
+    collections::BTreeSet,
+    sync::{Arc, LazyLock},
+};
 
 use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
@@ -25,7 +28,7 @@ use mas_storage::{
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     requests::{IntrospectionRequest, IntrospectionResponse},
-    scope::ScopeToken,
+    scope::{Scope, ScopeToken},
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use thiserror::Error;
@@ -207,15 +210,38 @@ const INACTIVE: IntrospectionResponse = IntrospectionResponse {
     device_id: None,
 };
 
-const API_SCOPE: ScopeToken = ScopeToken::from_static("urn:matrix:org.matrix.msc2967.client:api:*");
+const UNSTABLE_API_SCOPE: ScopeToken =
+    ScopeToken::from_static("urn:matrix:org.matrix.msc2967.client:api:*");
+const STABLE_API_SCOPE: ScopeToken = ScopeToken::from_static("urn:matrix:client:api:*");
 const SYNAPSE_ADMIN_SCOPE: ScopeToken = ScopeToken::from_static("urn:synapse:admin:*");
+
+/// Normalize a scope by adding the stable and unstable API scopes equivalents
+/// if missing
+fn normalize_scope(mut scope: Scope) -> Scope {
+    // Here we abuse the fact that the scope is a BTreeSet to not care about
+    // duplicates
+    let mut to_add = BTreeSet::new();
+    for token in &*scope {
+        if token == &STABLE_API_SCOPE {
+            to_add.insert(UNSTABLE_API_SCOPE);
+        } else if token == &UNSTABLE_API_SCOPE {
+            to_add.insert(STABLE_API_SCOPE);
+        } else if let Some(device) = Device::from_scope_token(token) {
+            let tokens = device
+                .to_scope_token()
+                .expect("from/to scope token rountrip should never fail");
+            to_add.extend(tokens);
+        }
+    }
+    scope.append(&mut to_add);
+    scope
+}
 
 #[tracing::instrument(
     name = "handlers.oauth2.introspection.post",
     fields(client.id = credentials.client_id()),
     skip_all,
 )]
-#[allow(clippy::too_many_lines)]
 pub(crate) async fn post(
     clock: BoxClock,
     State(http_client): State<reqwest::Client>,
@@ -341,9 +367,11 @@ pub(crate) async fn post(
                 ],
             );
 
+            let scope = normalize_scope(session.scope);
+
             IntrospectionResponse {
                 active: true,
-                scope: Some(session.scope),
+                scope: Some(scope),
                 client_id: Some(session.client_id.to_string()),
                 username,
                 token_type: Some(OAuthTokenTypeHint::AccessToken),
@@ -412,9 +440,11 @@ pub(crate) async fn post(
                 ],
             );
 
+            let scope = normalize_scope(session.scope);
+
             IntrospectionResponse {
                 active: true,
-                scope: Some(session.scope),
+                scope: Some(scope),
                 client_id: Some(session.client_id.to_string()),
                 username,
                 token_type: Some(OAuthTokenTypeHint::RefreshToken),
@@ -476,9 +506,9 @@ pub(crate) async fn post(
                     .transpose()?
             };
 
-            let scope = [API_SCOPE]
+            let scope = [STABLE_API_SCOPE, UNSTABLE_API_SCOPE]
                 .into_iter()
-                .chain(device_scope_opt)
+                .chain(device_scope_opt.into_iter().flatten())
                 .chain(synapse_admin_scope_opt)
                 .collect();
 
@@ -560,9 +590,9 @@ pub(crate) async fn post(
                     .transpose()?
             };
 
-            let scope = [API_SCOPE]
+            let scope = [STABLE_API_SCOPE, UNSTABLE_API_SCOPE]
                 .into_iter()
-                .chain(device_scope_opt)
+                .chain(device_scope_opt.into_iter().flatten())
                 .chain(synapse_admin_scope_opt)
                 .collect();
 
@@ -908,7 +938,7 @@ mod tests {
         let refresh_token = response["refresh_token"].as_str().unwrap();
         let device_id = response["device_id"].as_str().unwrap();
         let expected_scope: Scope =
-            format!("urn:matrix:org.matrix.msc2967.client:api:* urn:matrix:org.matrix.msc2967.client:device:{device_id}")
+            format!("urn:matrix:org.matrix.msc2967.client:api:* urn:matrix:org.matrix.msc2967.client:device:{device_id} urn:matrix:client:api:* urn:matrix:client:device:{device_id}")
                 .parse()
                 .unwrap();
 
@@ -941,7 +971,7 @@ mod tests {
         assert_eq!(response.token_type, Some(OAuthTokenTypeHint::AccessToken));
         assert_eq!(
             response.scope.map(|s| s.to_string()),
-            Some("urn:matrix:org.matrix.msc2967.client:api:*".to_owned())
+            Some("urn:matrix:client:api:* urn:matrix:org.matrix.msc2967.client:api:*".to_owned())
         );
         assert_eq!(response.device_id.as_deref(), Some(device_id));
 

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    UPDATE oauth2_sessions\n                    SET finished_at = $4\n                    WHERE user_id = $1\n                      AND ($2 = ANY(scope_list) OR $3 = ANY(scope_list))\n                      AND finished_at IS NULL\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5da7a197e0008f100ad4daa78f4aa6515f0fc9eb54075e8d6d15520d25b75172"
+}

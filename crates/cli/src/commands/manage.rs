@@ -207,7 +207,6 @@ enum Subcommand {
 }
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         let clock = SystemClock::default();
@@ -323,6 +322,10 @@ impl Options {
             } => {
                 let database_config = DatabaseConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+                let http_client = mas_http::reqwest_client();
+                let homeserver = homeserver_connection_from_config(&matrix_config, http_client);
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -338,6 +341,24 @@ impl Options {
                 } else {
                     Device::generate(&mut rng)
                 };
+
+                if let Err(e) = homeserver
+                    .upsert_device(&user.username, device.as_str(), None)
+                    .await
+                {
+                    error!(
+                        error = &*e,
+                        "Could not create the device on the homeserver, aborting"
+                    );
+
+                    // Schedule a device sync job to remove the potential leftover device
+                    repo.queue_job()
+                        .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+                        .await?;
+
+                    repo.into_inner().commit().await?;
+                    return Ok(ExitCode::FAILURE);
+                }
 
                 let compat_session = repo
                     .compat_session()

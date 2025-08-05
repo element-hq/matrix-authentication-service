@@ -328,7 +328,6 @@ where
     Router::new().merge(human_router).merge(api_router)
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn human_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,

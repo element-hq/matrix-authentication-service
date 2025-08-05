@@ -368,7 +368,6 @@ where
 {
     type Rejection = ClientAuthorizationError;
 
-    #[allow(clippy::too_many_lines)]
     async fn from_request(
         req: Request<axum::body::Body>,
         state: &S,

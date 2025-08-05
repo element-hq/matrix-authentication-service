@@ -172,7 +172,8 @@ clients:
   # Confidential client
   - client_id: 000000000000000000000FIRST
     client_auth_method: client_secret_post
-    client_secret: secret
+    client_secret_file: secret
+    # OR client_secret: c1!3n753c237
     # List of authorized redirect URIs
     redirect_uris:
       - http://localhost:1234/callback

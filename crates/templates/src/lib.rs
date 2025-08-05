@@ -135,6 +135,10 @@ fn is_hidden(entry: &DirEntry) -> bool {
 
 impl Templates {
     /// Load the templates from the given config
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the templates could not be loaded from disk.
     #[tracing::instrument(
         name = "templates.load",
         skip_all,
@@ -254,6 +258,10 @@ impl Templates {
     }
 
     /// Reload the templates on disk
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the templates could not be reloaded from disk.
     #[tracing::instrument(
         name = "templates.reload",
         skip_all,

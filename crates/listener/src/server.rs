@@ -290,7 +290,6 @@ where
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub async fn run_servers<S, B>(
     listeners: impl IntoIterator<Item = Server<S>>,
     soft_shutdown_token: CancellationToken,

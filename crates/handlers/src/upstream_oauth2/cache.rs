@@ -165,6 +165,10 @@ impl MetadataCache {
     ///
     /// This spawns a background task that will refresh the cache at the given
     /// interval.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the warm up task could not be started.
     #[tracing::instrument(name = "metadata_cache.warm_up_and_run", skip_all)]
     pub async fn warm_up_and_run<R: RepositoryAccess>(
         &self,
@@ -237,6 +241,10 @@ impl MetadataCache {
     }
 
     /// Get the metadata for the given issuer.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata could not be retrieved.
     #[tracing::instrument(name = "metadata_cache.get", fields(%issuer), skip_all)]
     pub async fn get(
         &self,
@@ -290,8 +298,6 @@ impl MetadataCache {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::too_many_lines)]
-
     // XXX: sadly, we can't test HTTPS requests with wiremock, so we can only test
     // 'insecure' discovery
 

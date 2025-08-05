@@ -130,7 +130,6 @@ impl ClientCredentials {
 
     /// Apply these [`ClientCredentials`] to the given request with the given
     /// form.
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn authenticated_form<T: Serialize>(
         &self,
         request: reqwest::RequestBuilder,

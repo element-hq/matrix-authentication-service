@@ -15,7 +15,10 @@ use mas_storage::{
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
-use sea_query::{Expr, PgFunc, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
+use sea_query::{
+    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    extension::postgres::PgExpr,
+};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -126,12 +129,19 @@ impl Filter for OAuth2SessionFilter<'_> {
                         .ne(Expr::all(static_clients))
                 }
             }))
-            .add_option(self.device().map(|device| {
-                if let Ok(scope_token) = device.to_scope_token() {
-                    Expr::val(scope_token.to_string()).eq(PgFunc::any(Expr::col((
-                        OAuth2Sessions::Table,
-                        OAuth2Sessions::ScopeList,
-                    ))))
+            .add_option(self.device().map(|device| -> SimpleExpr {
+                if let Ok([stable_scope_token, unstable_scope_token]) = device.to_scope_token() {
+                    Condition::any()
+                        .add(
+                            Expr::val(stable_scope_token.to_string()).eq(PgFunc::any(Expr::col((
+                                OAuth2Sessions::Table,
+                                OAuth2Sessions::ScopeList,
+                            )))),
+                        )
+                        .add(Expr::val(unstable_scope_token.to_string()).eq(PgFunc::any(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::ScopeList)),
+                        )))
+                        .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
                     Expr::val(false).into()

@@ -9,7 +9,6 @@ use tokio::runtime::RuntimeMetrics;
 use super::METER;
 
 /// Install metrics for the tokio runtime.
-#[allow(clippy::too_many_lines)]
 pub fn observe(metrics: RuntimeMetrics) {
     {
         let metrics = metrics.clone();

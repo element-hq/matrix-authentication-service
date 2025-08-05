@@ -83,7 +83,6 @@ impl schemars::JsonSchema for OAuthAccessTokenType {
         "OAuthAccessTokenType".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -215,7 +214,6 @@ impl schemars::JsonSchema for OAuthAuthorizationEndpointResponseType {
         "OAuthAuthorizationEndpointResponseType".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -351,7 +349,6 @@ impl schemars::JsonSchema for OAuthTokenTypeHint {
         "OAuthTokenTypeHint".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -477,7 +474,6 @@ impl schemars::JsonSchema for OAuthClientAuthenticationMethod {
         "OAuthClientAuthenticationMethod".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---
@@ -602,7 +598,6 @@ impl schemars::JsonSchema for PkceCodeChallengeMethod {
         "PkceCodeChallengeMethod".to_owned()
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let enums = vec![
             // ---

@@ -169,7 +169,6 @@ pub fn json_schema_impl(
         "{}".to_owned()
     }}
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {{
         let enums = vec!["#,
         section.key, section.key,

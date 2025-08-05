@@ -27,7 +27,6 @@ mod user_registration_tokens;
 mod user_sessions;
 mod users;
 
-#[allow(clippy::too_many_lines)]
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,

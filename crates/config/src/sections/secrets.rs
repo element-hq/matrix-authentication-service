@@ -303,6 +303,7 @@ impl ConfigurationSection for SecretsConfig {
 }
 
 impl SecretsConfig {
+    #[expect(clippy::similar_names, reason = "Key type names are very similar")]
     #[tracing::instrument(skip_all)]
     pub(crate) async fn generate<R>(mut rng: R) -> anyhow::Result<Self>
     where

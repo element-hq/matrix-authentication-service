@@ -67,7 +67,6 @@ struct OAuth2ClientLookup {
 impl TryInto<Client> for OAuth2ClientLookup {
     type Error = DatabaseInconsistencyError;
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor some of the field parsing
     fn try_into(self) -> Result<Client, Self::Error> {
         let id = Ulid::from(self.oauth2_client_id);
 
@@ -416,7 +415,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         ),
         err,
     )]
-    #[allow(clippy::too_many_lines)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
