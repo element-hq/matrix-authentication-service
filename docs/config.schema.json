@@ -1677,9 +1677,6 @@
     "MatrixConfig": {
       "description": "Configuration related to the Matrix homeserver",
       "type": "object",
-      "required": [
-        "secret"
-      ],
       "properties": {
         "kind": {
           "description": "The kind of homeserver it is.",
@@ -1695,15 +1692,17 @@
           "default": "localhost:8008",
           "type": "string"
         },
-        "secret": {
-          "description": "Shared secret to use for calls to the admin API",
-          "type": "string"
-        },
         "endpoint": {
           "description": "The base URL of the homeserver's client API",
           "default": "http://localhost:8008/",
           "type": "string",
           "format": "uri"
+        },
+        "secret_file": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
         }
       }
     },

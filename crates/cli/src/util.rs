@@ -464,36 +464,36 @@ pub async fn load_policy_factory_dynamic_data(
 
 /// Create a clonable, type-erased [`HomeserverConnection`] from the
 /// configuration
-pub fn homeserver_connection_from_config(
+pub async fn homeserver_connection_from_config(
     config: &MatrixConfig,
     http_client: reqwest::Client,
-) -> Arc<dyn HomeserverConnection> {
-    match config.kind {
+) -> anyhow::Result<Arc<dyn HomeserverConnection>> {
+    Ok(match config.kind {
         HomeserverKind::Synapse | HomeserverKind::SynapseModern => {
             Arc::new(SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
-                config.secret.clone(),
+                config.secret().await?,
                 http_client,
             ))
         }
         HomeserverKind::SynapseLegacy => Arc::new(LegacySynapseConnection::new(
             config.homeserver.clone(),
             config.endpoint.clone(),
-            config.secret.clone(),
+            config.secret().await?,
             http_client,
         )),
         HomeserverKind::SynapseReadOnly => {
             let connection = SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
-                config.secret.clone(),
+                config.secret().await?,
                 http_client,
             );
             let readonly = ReadOnlyHomeserverConnection::new(connection);
             Arc::new(readonly)
         }
-    }
+    })
 }
 
 #[cfg(test)]
