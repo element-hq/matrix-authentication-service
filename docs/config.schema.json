@@ -243,10 +243,6 @@
           "description": "Name of the `OAuth2` client",
           "type": "string"
         },
-        "client_secret": {
-          "description": "The client secret, used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods",
-          "type": "string"
-        },
         "jwks": {
           "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication method. Mutually exclusive with `jwks_uri`",
           "allOf": [
@@ -267,6 +263,14 @@
             "type": "string",
             "format": "uri"
           }
+        },
+        "client_secret_file": {
+          "description": "Path to the file containing the client secret. The client secret is used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly from the config.",
+          "type": "string"
         }
       }
     },
