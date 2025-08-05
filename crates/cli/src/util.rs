@@ -469,22 +469,22 @@ pub fn homeserver_connection_from_config(
     http_client: reqwest::Client,
 ) -> Arc<dyn HomeserverConnection> {
     match config.kind {
-        HomeserverKind::Synapse | HomeserverKind::SynapseLegacy => {
-            Arc::new(LegacySynapseConnection::new(
+        HomeserverKind::Synapse | HomeserverKind::SynapseModern => {
+            Arc::new(SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
                 config.secret.clone(),
                 http_client,
             ))
         }
-        HomeserverKind::SynapseModern => Arc::new(SynapseConnection::new(
+        HomeserverKind::SynapseLegacy => Arc::new(LegacySynapseConnection::new(
             config.homeserver.clone(),
             config.endpoint.clone(),
             config.secret.clone(),
             http_client,
         )),
         HomeserverKind::SynapseReadOnly => {
-            let connection = LegacySynapseConnection::new(
+            let connection = SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
                 config.secret.clone(),
