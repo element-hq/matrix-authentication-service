@@ -135,7 +135,9 @@ matrix:
 
   # Shared secret used to authenticate the service to the homeserver
   # This must be of high entropy, because leaking this secret would allow anyone to perform admin actions on the homeserver
-  secret: "SomeRandomSecret"
+  secret_file: /path/to/secret/file
+  # Alternatively, the shared secret can be passed inline.
+  # secret: "SomeRandomSecret"
 
   # URL to which the homeserver is accessible from the service
   endpoint: "http://localhost:8008"
@@ -170,7 +172,8 @@ clients:
   # Confidential client
   - client_id: 000000000000000000000FIRST
     client_auth_method: client_secret_post
-    client_secret: secret
+    client_secret_file: secret
+    # OR client_secret: c1!3n753c237
     # List of authorized redirect URIs
     redirect_uris:
       - http://localhost:1234/callback

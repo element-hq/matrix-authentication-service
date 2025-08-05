@@ -385,7 +385,7 @@ pub async fn config_sync(
                 continue;
             }
 
-            let client_secret = client.client_secret.as_deref();
+            let client_secret = client.client_secret().await?;
             let client_name = client.client_name.as_ref();
             let client_auth_method = client.client_auth_method();
             let jwks = client.jwks.as_ref();

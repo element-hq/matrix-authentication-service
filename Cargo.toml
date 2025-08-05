@@ -593,7 +593,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.141"
+version = "1.0.142"
 features = ["preserve_order"]
 
 # URL encoded form serialization
@@ -650,7 +650,7 @@ version = "0.3.0"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.47.0"
+version = "1.47.1"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]

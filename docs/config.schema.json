@@ -243,10 +243,6 @@
           "description": "Name of the `OAuth2` client",
           "type": "string"
         },
-        "client_secret": {
-          "description": "The client secret, used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods",
-          "type": "string"
-        },
         "jwks": {
           "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication method. Mutually exclusive with `jwks_uri`",
           "allOf": [
@@ -267,6 +263,14 @@
             "type": "string",
             "format": "uri"
           }
+        },
+        "client_secret_file": {
+          "description": "Path to the file containing the client secret. The client secret is used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly from the config.",
+          "type": "string"
         }
       }
     },
@@ -1673,9 +1677,6 @@
     "MatrixConfig": {
       "description": "Configuration related to the Matrix homeserver",
       "type": "object",
-      "required": [
-        "secret"
-      ],
       "properties": {
         "kind": {
           "description": "The kind of homeserver it is.",
@@ -1691,15 +1692,17 @@
           "default": "localhost:8008",
           "type": "string"
         },
-        "secret": {
-          "description": "Shared secret to use for calls to the admin API",
-          "type": "string"
-        },
         "endpoint": {
           "description": "The base URL of the homeserver's client API",
           "default": "http://localhost:8008/",
           "type": "string",
           "format": "uri"
+        },
+        "secret_file": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
         }
       }
     },
@@ -1707,28 +1710,28 @@
       "description": "The kind of homeserver it is.",
       "oneOf": [
         {
-          "description": "Homeserver is Synapse, using the legacy API\n\nThis will switch to using the modern API in a few releases.",
+          "description": "Homeserver is Synapse, version 1.135.0 or newer",
           "type": "string",
           "enum": [
             "synapse"
           ]
         },
         {
-          "description": "Homeserver is Synapse, using the legacy API, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.\n\nThis will switch to using the modern API in a few releases.",
+          "description": "Homeserver is Synapse, version 1.135.0 or newer, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
           "type": "string",
           "enum": [
             "synapse_read_only"
           ]
         },
         {
-          "description": "Homeserver is Synapse, using the legacy API,",
+          "description": "Homeserver is Synapse, using the legacy API",
           "type": "string",
           "enum": [
             "synapse_legacy"
           ]
         },
         {
-          "description": "Homeserver is Synapse, with the modern API available",
+          "description": "Homeserver is Synapse, with the modern API available (>= 1.135.0)",
           "type": "string",
           "enum": [
             "synapse_modern"
