@@ -539,7 +539,7 @@ version = "1.12.0"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
-version = "0.6.0"
+version = "0.6.1"
 
 # systemd service status notification
 [workspace.dependencies.sd-notify]
