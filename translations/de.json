@@ -230,6 +230,10 @@
       "link_mismatch": {
         "heading": "Dieses Konto ist bereits mit einem anderen Konto verknüpft."
       },
+      "login_link": {
+        "action": "Weiter",
+        "heading": "Mit Ihrem bestehenden Konto verknüpfen"
+      },
       "register": {
         "choose_username": {
           "description": "Dies kann später nicht mehr geändert werden.",

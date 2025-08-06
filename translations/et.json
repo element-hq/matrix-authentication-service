@@ -238,7 +238,7 @@
       "login_link": {
         "action": "Jätka",
         "description": "Selle kasutajanime (%(username)s) jaoks on konto olemas, ta saab olemas seotud kasutatava teenuse kontoga.",
-        "heading": "Sinu olemasoleva kasutajakonto link"
+        "heading": "Seo oma olemasoleva kasutajakontoga"
       },
       "register": {
         "choose_username": {
