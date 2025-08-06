@@ -666,7 +666,7 @@ version = "0.4.4"
 
 # Useful async utilities
 [workspace.dependencies.tokio-util]
-version = "0.7.15"
+version = "0.7.16"
 features = ["rt"]
 
 # Tower services
