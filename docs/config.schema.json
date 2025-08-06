@@ -1528,14 +1528,6 @@
       "description": "Application secrets",
       "type": "object",
       "properties": {
-        "keys": {
-          "description": "List of private keys to use for signing and encrypting payloads",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyConfig"
-          }
-        },
         "encryption_file": {
           "description": "File containing the encryption key for secure cookies.",
           "type": "string"
@@ -1547,6 +1539,17 @@
           ],
           "type": "string",
           "pattern": "[0-9a-fA-F]{64}"
+        },
+        "keys": {
+          "description": "List of private keys to use for signing and encrypting payloads.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyConfig"
+          }
+        },
+        "keys_dir": {
+          "description": "Directory of private keys to use for signing and encrypting payloads.",
+          "type": "string"
         }
       }
     },
