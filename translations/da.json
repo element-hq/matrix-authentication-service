@@ -235,6 +235,10 @@
       "link_mismatch": {
         "heading": "Denne upstream-konto er allerede knyttet til en anden konto."
       },
+      "login_link": {
+        "action": "Fortsæt",
+        "heading": "Forbind til din eksisterende konto"
+      },
       "register": {
         "choose_username": {
           "description": "Dette kan ikke ændres senere.",

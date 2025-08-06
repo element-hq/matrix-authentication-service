@@ -235,6 +235,11 @@
       "link_mismatch": {
         "heading": "Tento nadřazený účet je již propojen s jiným účtem."
       },
+      "login_link": {
+        "action": "Pokračovat",
+        "description": "Pro toto uživatelské jméno existuje účet (%(username)s), který bude propojen s tímto upstream účtem.",
+        "heading": "Propojení s vaším stávajícím účtem"
+      },
       "register": {
         "choose_username": {
           "description": "To nelze později změnit.",

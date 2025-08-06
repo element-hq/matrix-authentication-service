@@ -41,6 +41,9 @@
       "confirm": "Bevestig wachtwoord",
       "current": "Huidig wachtwoord"
     },
+    "device_display_name": {
+      "unknown_device": "Onbekend apparaat"
+    },
     "errors": {
       "invalid_credentials": "Ongeldige gegevens"
     },
@@ -54,6 +57,9 @@
     },
     "or_separator": "Of",
     "upstream_oauth2": {
+      "login_link": {
+        "action": "Doorgaan"
+      },
       "register": {
         "choose_username": {
           "heading": "Kies uw gebruikersnaam"
