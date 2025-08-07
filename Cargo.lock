@@ -4173,7 +4173,7 @@ dependencies = [
 [[package]]
 name = "opentelemetry-prometheus"
 version = "0.29.1"
-source = "git+https://github.com/sandhose/opentelemetry-rust.git?branch=otel-prometheus-0.30#193906c7577b4f8ee642aa771191c7d80b14a297"
+source = "git+https://github.com/sandhose/opentelemetry-rust.git?branch=otel-prometheus-0.30#17c7fec220a0037030ca7fc5fd627f87d5989b68"
 dependencies = [
  "once_cell",
  "opentelemetry",
@@ -5180,7 +5180,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5259,7 +5259,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6092,7 +6092,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "psm",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6235,7 +6235,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.0.8",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -7366,7 +7366,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
