@@ -89,7 +89,9 @@ While you're developing and before submitting a patch, you'll want to test your 
 
 ### Run the tests
 
-- Run the tests to the backend by running `cargo test --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
+If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installation/pre-built-binaries/).
+
+- Run the tests to the backend by running `cargo-nextest nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
 - Run the tests to the frontend by running `npm run test` in the `frontend` directory.
 
 ## 8. Submit a pull request
