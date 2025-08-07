@@ -4,21 +4,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use anyhow::Context;
 use axum::{
     extract::{Path, Query, State},
+    http,
     response::{IntoResponse, Redirect},
 };
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
 use mas_data_model::UpstreamOAuthProvider;
+use mas_http::RequestBuilderExt;
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxClock, BoxRepository, BoxRng,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
 };
+use oauth2_types::requests::PushedAuthorizationResponse;
 use thiserror::Error;
 use ulid::Ulid;
+use url::Url;
 
 use super::{UpstreamSessionsCookie, cache::LazyProviderInfos};
 use crate::{
@@ -113,11 +118,58 @@ pub(crate) async fn get(
     };
 
     // Build an authorization request for it
-    let (mut url, data) = mas_oidc_client::requests::authorization_code::build_authorization_url(
-        lazy_metadata.authorization_endpoint().await?.clone(),
-        data,
-        &mut rng,
-    )?;
+    let (mut url, data) = if lazy_metadata
+        .require_pushed_authorization_requests()
+        .await?
+    {
+        // The upstream provider enforces Pushed Authorization Requests (PAR)
+        let url = lazy_metadata
+            .pushed_authorization_request_endpoint()
+            .await?
+            .context("provider should have a PAR endpoint")
+            .map_err(|e| RouteError::Internal(e.into()))?
+            .clone();
+
+        // Construct the body for the PAR request
+        let client_id = data.client_id.clone();
+        let (query, validation_data) =
+            mas_oidc_client::requests::authorization_code::build_par_body(data, &mut rng)?;
+
+        // POST to the PAR endpoint
+        let response = http_client
+            .post(url)
+            .header(
+                http::header::CONTENT_TYPE,
+                mime::APPLICATION_WWW_FORM_URLENCODED.as_ref(),
+            )
+            .body(query)
+            .send_traced()
+            .await
+            .map_err(|e| RouteError::Internal(e.into()))?;
+
+        // Extract the request_uri from the response
+        let json = response
+            .json::<PushedAuthorizationResponse>()
+            .await
+            .map_err(|e| RouteError::Internal(e.into()))?;
+        let request_uri =
+            Url::parse(&json.request_uri).map_err(|e| RouteError::Internal(e.into()))?;
+
+        // Build the final authorization URL
+        let url = mas_oidc_client::requests::authorization_code::build_par_authorization_url(
+            lazy_metadata.authorization_endpoint().await?.clone(),
+            client_id,
+            request_uri,
+        )?;
+
+        (url, validation_data)
+    } else {
+        mas_oidc_client::requests::authorization_code::build_authorization_url(
+            lazy_metadata.authorization_endpoint().await?.clone(),
+            data,
+            &mut rng,
+        )?
+    };
 
     // We do that in a block because params borrows url mutably
     {
