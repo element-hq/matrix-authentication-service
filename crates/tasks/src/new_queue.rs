@@ -9,8 +9,9 @@ use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use cron::Schedule;
 use mas_context::LogContext;
+use mas_data_model::Clock;
 use mas_storage::{
-    Clock, RepositoryAccess, RepositoryError,
+    RepositoryAccess, RepositoryError,
     queue::{InsertableJob, Job, JobMetadata, Worker},
 };
 use mas_storage_pg::{DatabaseError, PgRepository};

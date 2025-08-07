@@ -7,7 +7,7 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::BoxRng;
+use mas_data_model::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use ulid::Ulid;

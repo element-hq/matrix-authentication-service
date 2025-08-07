@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use async_trait::async_trait;
-use mas_data_model::Client;
+use mas_data_model::{Client, Clock};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
@@ -15,7 +15,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
 /// storage backend

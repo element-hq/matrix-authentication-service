@@ -13,8 +13,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng, RepositoryAccess, user::UserEmailRepository};
+use mas_storage::{BoxRepository, RepositoryAccess, user::UserEmailRepository};
 use mas_templates::{
     FieldError, RegisterStepsVerifyEmailContext, RegisterStepsVerifyEmailFormField,
     TemplateContext, Templates, ToFormState,

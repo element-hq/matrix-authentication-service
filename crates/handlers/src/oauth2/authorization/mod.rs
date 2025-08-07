@@ -10,10 +10,10 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
-use mas_data_model::{AuthorizationCode, Pkce};
+use mas_data_model::{AuthorizationCode, BoxClock, BoxRng, Pkce};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng,
+    BoxRepository,
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::Templates;

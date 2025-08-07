@@ -8,12 +8,12 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Device, Session, User};
+use mas_data_model::{BrowserSession, Client, Clock, Device, Session, User};
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl, user::BrowserSessionFilter};
+use crate::{Pagination, pagination::Page, repository_impl, user::BrowserSessionFilter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OAuth2SessionState {

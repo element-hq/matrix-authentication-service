@@ -6,11 +6,11 @@
 
 use std::sync::{Arc, LazyLock};
 
-use mas_data_model::SiteConfig;
+use mas_data_model::{Clock, SiteConfig};
 use mas_email::Mailer;
 use mas_matrix::HomeserverConnection;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxRepository, Clock, RepositoryError, RepositoryFactory};
+use mas_storage::{BoxRepository, RepositoryError, RepositoryFactory};
 use mas_storage_pg::PgRepositoryFactory;
 use new_queue::QueueRunnerError;
 use opentelemetry::metrics::Meter;

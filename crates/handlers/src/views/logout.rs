@@ -13,8 +13,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::BoxClock;
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
+use mas_storage::{BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
 

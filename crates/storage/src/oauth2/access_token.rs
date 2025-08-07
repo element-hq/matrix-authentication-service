@@ -6,11 +6,11 @@
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_data_model::{AccessToken, Session};
+use mas_data_model::{AccessToken, Clock, Session};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// An [`OAuth2AccessTokenRepository`] helps interacting with [`AccessToken`]
 /// saved in the storage backend

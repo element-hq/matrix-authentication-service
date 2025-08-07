@@ -6,8 +6,7 @@
 
 use std::net::IpAddr;
 
-use mas_data_model::{BrowserSession, CompatSession, Session};
-use mas_storage::Clock;
+use mas_data_model::{BrowserSession, Clock, CompatSession, Session};
 
 use crate::activity_tracker::ActivityTracker;
 

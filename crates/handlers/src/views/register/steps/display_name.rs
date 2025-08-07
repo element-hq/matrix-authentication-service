@@ -14,8 +14,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{
     FieldError, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
     TemplateContext as _, Templates, ToFormState,

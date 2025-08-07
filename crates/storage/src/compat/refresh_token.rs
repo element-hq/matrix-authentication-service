@@ -5,11 +5,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{CompatAccessToken, CompatRefreshToken, CompatSession};
+use mas_data_model::{Clock, CompatAccessToken, CompatRefreshToken, CompatSession};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`CompatRefreshTokenRepository`] helps interacting with
 /// [`CompatRefreshToken`] saved in the storage backend

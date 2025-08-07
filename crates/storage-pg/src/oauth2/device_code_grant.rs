@@ -8,11 +8,8 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, DeviceCodeGrant, DeviceCodeGrantState, Session};
-use mas_storage::{
-    Clock,
-    oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository},
-};
+use mas_data_model::{BrowserSession, Clock, DeviceCodeGrant, DeviceCodeGrantState, Session};
+use mas_storage::oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository};
 use oauth2_types::scope::Scope;
 use rand::RngCore;
 use sqlx::PgConnection;

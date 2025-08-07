@@ -7,8 +7,8 @@
 //! storage.
 
 use async_trait::async_trait;
-use mas_data_model::PolicyData;
-use mas_storage::{Clock, policy_data::PolicyDataRepository};
+use mas_data_model::{Clock, PolicyData};
+use mas_storage::policy_data::PolicyDataRepository;
 use rand::RngCore;
 use serde_json::Value;
 use sqlx::{PgConnection, types::Json};
@@ -151,7 +151,8 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
 
 #[cfg(test)]
 mod tests {
-    use mas_storage::{clock::MockClock, policy_data::PolicyDataRepository};
+    use mas_data_model::clock::MockClock;
+    use mas_storage::policy_data::PolicyDataRepository;
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use serde_json::json;

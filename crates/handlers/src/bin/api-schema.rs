@@ -50,8 +50,8 @@ macro_rules! impl_from_ref {
 }
 
 impl_from_request_parts!(mas_storage::BoxRepository);
-impl_from_request_parts!(mas_storage::BoxClock);
-impl_from_request_parts!(mas_storage::BoxRng);
+impl_from_request_parts!(mas_data_model::BoxClock);
+impl_from_request_parts!(mas_data_model::BoxRng);
 impl_from_request_parts!(mas_handlers::BoundActivityTracker);
 impl_from_ref!(mas_router::UrlBuilder);
 impl_from_ref!(mas_templates::Templates);

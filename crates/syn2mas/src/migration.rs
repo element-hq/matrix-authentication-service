@@ -16,7 +16,7 @@ use std::time::Instant;
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
-use mas_storage::Clock;
+use mas_data_model::Clock;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
