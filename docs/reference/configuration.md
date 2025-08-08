@@ -273,6 +273,8 @@ The following key formats are supported:
 
 For PKCS#8 encoded keys, the `password` or `password_file` properties can be used to decrypt the key.
 
+The order of keys in the list is of no significance.
+
 ## `passwords`
 
 Settings related to the local password database
