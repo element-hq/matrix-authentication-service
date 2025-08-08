@@ -191,7 +191,7 @@ impl PrivateKey {
     /// # Errors
     ///
     /// Errors if the DER representation of the public key can’t be derived.
-    pub fn fingerprint(&self) -> Result<[u8; 32], pkcs8::Error> {
+    pub fn fingerprint(&self) -> pkcs8::spki::Result<[u8; 32]> {
         let bytes = match self {
             PrivateKey::Rsa(key) => key.to_public_key().to_public_key_der()?,
             PrivateKey::EcP256(key) => key.public_key().to_public_key_der()?,
