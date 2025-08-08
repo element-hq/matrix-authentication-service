@@ -905,6 +905,13 @@
             "socket": {
               "description": "Path to the socket",
               "type": "string"
+            },
+            "mode": {
+              "description": "Socket file mode. A string representing UNIX permission bits, in octal integer format.",
+              "examples": [
+                "660"
+              ],
+              "type": "string"
             }
           }
         },
