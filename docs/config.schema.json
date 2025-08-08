@@ -1553,11 +1553,9 @@
     "KeyConfig": {
       "description": "A single key with its key ID and optional password.",
       "type": "object",
-      "required": [
-        "kid"
-      ],
       "properties": {
         "kid": {
+          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be derived from the key by hex-encoding the first four bytes of the key’s fingerprint.",
           "type": "string"
         },
         "password_file": {
