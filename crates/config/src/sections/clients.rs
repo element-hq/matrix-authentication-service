@@ -6,8 +6,6 @@
 
 use std::ops::Deref;
 
-use anyhow::bail;
-use camino::Utf8PathBuf;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::jwk::PublicJsonWebKeySet;
 use schemars::JsonSchema;
@@ -16,7 +14,7 @@ use serde_with::serde_as;
 use ulid::Ulid;
 use url::Url;
 
-use super::ConfigurationSection;
+use super::{ClientSecret, ClientSecretRaw, ConfigurationSection};
 
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -28,66 +26,6 @@ pub enum JwksOrJwksUri {
 impl From<PublicJsonWebKeySet> for JwksOrJwksUri {
     fn from(jwks: PublicJsonWebKeySet) -> Self {
         Self::Jwks(jwks)
-    }
-}
-
-/// Client secret config option.
-///
-/// It either holds the client secret value directly or references a file where
-/// the client secret is stored.
-#[derive(Clone, Debug)]
-pub enum ClientSecret {
-    File(Utf8PathBuf),
-    Value(String),
-}
-
-/// Client secret fields as serialized in JSON.
-#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
-struct ClientSecretRaw {
-    /// Path to the file containing the client secret. The client secret is used
-    /// by the `client_secret_basic`, `client_secret_post` and
-    /// `client_secret_jwt` authentication methods.
-    #[schemars(with = "Option<String>")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    client_secret_file: Option<Utf8PathBuf>,
-
-    /// Alternative to `client_secret_file`: Reads the client secret directly
-    /// from the config.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    client_secret: Option<String>,
-}
-
-impl TryFrom<ClientSecretRaw> for Option<ClientSecret> {
-    type Error = anyhow::Error;
-
-    fn try_from(value: ClientSecretRaw) -> Result<Self, Self::Error> {
-        match (value.client_secret, value.client_secret_file) {
-            (None, None) => Ok(None),
-            (None, Some(path)) => Ok(Some(ClientSecret::File(path))),
-            (Some(client_secret), None) => Ok(Some(ClientSecret::Value(client_secret))),
-            (Some(_), Some(_)) => {
-                bail!("Cannot specify both `client_secret` and `client_secret_file`")
-            }
-        }
-    }
-}
-
-impl From<Option<ClientSecret>> for ClientSecretRaw {
-    fn from(value: Option<ClientSecret>) -> Self {
-        match value {
-            Some(ClientSecret::File(path)) => ClientSecretRaw {
-                client_secret_file: Some(path),
-                client_secret: None,
-            },
-            Some(ClientSecret::Value(client_secret)) => ClientSecretRaw {
-                client_secret_file: None,
-                client_secret: Some(client_secret),
-            },
-            None => ClientSecretRaw {
-                client_secret_file: None,
-                client_secret: None,
-            },
-        }
     }
 }
 
@@ -273,8 +211,7 @@ impl ClientConfig {
     /// Returns an error when the client secret could not be read from file.
     pub async fn client_secret(&self) -> anyhow::Result<Option<String>> {
         Ok(match &self.client_secret {
-            Some(ClientSecret::File(path)) => Some(tokio::fs::read_to_string(path).await?),
-            Some(ClientSecret::Value(client_secret)) => Some(client_secret.clone()),
+            Some(client_secret) => Some(client_secret.value().await?),
             None => None,
         })
     }
