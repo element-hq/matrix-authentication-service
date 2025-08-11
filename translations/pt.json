@@ -235,6 +235,10 @@
       "link_mismatch": {
         "heading": "Esta conta upstream já está vinculada a outra conta."
       },
+      "login_link": {
+        "action": "Continuar",
+        "heading": "Vincular à sua conta existente"
+      },
       "register": {
         "choose_username": {
           "description": "Isto não pode ser alterado posteriormente.",

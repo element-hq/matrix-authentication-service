@@ -64,7 +64,7 @@
       "change": "更改密码",
       "confirm": "确认密码",
       "current": "当前密码",
-      "description": "这将更改您账户的密码。",
+      "description": "这将更改账户的密码。",
       "heading": "更改我的密码",
       "new": "新密码"
     },
@@ -73,11 +73,11 @@
       "headline": "选择显示名称"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> 在 <span>%(redirect_uri)s</span> 希望访问您的账户。",
-      "heading": "允许访问您的账户？",
-      "make_sure_you_trust": "请确保您信任 <span>%(client_name)s</span> 。",
+      "client_wants_access": "<span>%(client_name)s</span> 位于 <span>%(redirect_uri)s</span>，请求访问您的账户。",
+      "heading": "允许访问你的账户？",
+      "make_sure_you_trust": "请确保你信任 <span>%(client_name)s</span> 。",
       "this_will_allow": "这将允许 <span>%(client_name)s</span> ：",
-      "you_may_be_sharing": "您可能正在与本网站或应用程序共享敏感信息。"
+      "you_may_be_sharing": "你可能正在与本网站或 app 分享敏感信息。"
     },
     "device_card": {
       "access_requested": "已请求访问权限",
@@ -90,13 +90,13 @@
       "headline": "输入设备上显示的代码"
     },
     "device_consent": {
-      "another_device_access": "另一个设备想要访问您的账户。",
+      "another_device_access": "另一个设备想要访问你的账户。",
       "denied": {
-        "description": "您拒绝了%(client_name)s 的访问。您可以关闭此窗口。",
+        "description": "你已拒绝%(client_name)s 的访问。你可以关闭此窗口。",
         "heading": "访问被拒绝"
       },
       "granted": {
-        "description": "您已授权 %(client_name)s 访问。您可以关闭此窗口。",
+        "description": "您已授予 %(client_name)s 访问权限。您可以关闭此窗口。",
         "heading": "已授予访问权限"
       }
     },
@@ -116,14 +116,14 @@
         "copy_link": "复制以下链接并粘贴到浏览器中以创建新密码：",
         "create_new_password": "创建新密码",
         "fallback": "此按钮对你无效？",
-        "headline": "您请求重置您在 %(server_name)s 的账户密码。",
+        "headline": "您已请求重置您在 %(server_name)s 的密码。",
         "subject": "重置账户密码 (%(mxid)s)",
-        "you_can_ignore": "如果您没有请求重置密码，可以忽略此邮件。您当前的密码仍然有效。"
+        "you_can_ignore": "如果你没有请求过重置密码可以忽略此邮件。当前密码仍然有效。"
       },
       "verify": {
         "body_html": "确认此电子邮件地址的验证码是： <strong>%(code)s</strong>",
         "body_text": "确认此电子邮件地址的验证码是： %(code)s",
-        "subject": "您的邮箱验证码是：%(code)s"
+        "subject": "你的邮箱验证码为：%(code)s"
       }
     },
     "errors": {
@@ -136,7 +136,7 @@
       "field_required": "此字段为必填项",
       "invalid_credentials": "无效的凭据",
       "password_mismatch": "密码字段不匹配",
-      "rate_limit_exceeded": "您在短时间内发出了过多请求。请等待几分钟后重试。",
+      "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。",
       "username_all_numeric": "用户名不能仅由数字组成",
       "username_banned": "由于服务器策略，用户名已被禁止",
       "username_invalid_chars": "用户名包含无效字符。仅能使用小写字母、数字、短横线或下划线。",
@@ -152,7 +152,7 @@
       "forgot_password": "忘记密码？",
       "headline": "登录",
       "link": {
-        "description": "关联您的 <span class=\"break-keep text-links\">%(provider)s</span> 账户",
+        "description": "正在链接您的<span class=\"break-keep text-links\">%(provider)s</span>账户",
         "headline": "登录以链接"
       },
       "no_login_methods": "没有可用的登录途径。",
@@ -165,7 +165,7 @@
       "signed_in_as": "登录为 <span class=\"font-semibold\">%(username)s</span>。"
     },
     "not_found": {
-      "description": "您要查找的页面不存在或已被移动",
+      "description": "你要查找的页面不存在或已被移动",
       "heading": "页面未找到"
     },
     "not_you": "不是 %(username)s？",
@@ -181,7 +181,7 @@
         "heading": "重置密码的链接已被使用"
       },
       "disabled": {
-        "description": "如果您丢失了凭据，请联系管理员以恢复您的账户。",
+        "description": "如果你丢失了凭据，请联系管理员以恢复账户。",
         "heading": "账户恢复已禁用"
       },
       "expired": {
@@ -191,7 +191,7 @@
       },
       "finish": {
         "confirm": "再次输入新密码",
-        "description": "为您的账户选择一个新密码。",
+        "description": "为账户指定一个新密码。",
         "heading": "重置密码",
         "new": "新密码",
         "save_and_continue": "保存并继续"
@@ -226,7 +226,7 @@
       "edit_profile": "编辑个人资料和联系方式",
       "manage_sessions": "管理设备和会话",
       "mas_admin": "管理 matrix-authentication-service 上的用户",
-      "send_messages": "代您发送新消息",
+      "send_messages": "以你的名义发送新消息",
       "synapse_admin": "管理 Synapse 服务器",
       "view_messages": "查看现有信息和数据",
       "view_profile": "查看个人资料信息和联系方式"
@@ -234,6 +234,10 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "此上游账户已与另一个账户关联。"
+      },
+      "login_link": {
+        "action": "继续",
+        "heading": "链接到现有账户"
       },
       "register": {
         "choose_username": {
@@ -250,7 +254,7 @@
           "heading": "导入数据"
         },
         "imported_from_upstream": "从上游账户导入",
-        "imported_from_upstream_with_name": "已从您的 %(human_name)s 账户导入",
+        "imported_from_upstream_with_name": "已从你的 %(human_name)s 账户导入",
         "link_existing": "链接到现有账户",
         "provider_name": "%(human_name)s 账户",
         "signup_with_upstream": {

@@ -333,7 +333,7 @@
       "delete_button_confirmation_modal": {
         "action": "Slet e-mail",
         "body": "Slet denne e-mail?",
-        "incorrect_password": "Forkert adgangskode, prøv igen",
+        "incorrect_password": "Forkert adgangskode, prøv venligst igen",
         "password_confirmation": "Bekræft adgangskoden til din konto for at slette denne e-mail-adresse"
       },
       "delete_button_title": "Fjern e-mailadresse",

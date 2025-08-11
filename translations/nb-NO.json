@@ -235,6 +235,11 @@
       "link_mismatch": {
         "heading": "Denne oppstrømskontoen er allerede knyttet til en annen konto."
       },
+      "login_link": {
+        "action": "Fortsett",
+        "description": "Det finnes en konto for dette brukernavnet (%(username)s). Den vil bli lenket til denne oppstrømskontoen.",
+        "heading": "Koble til din eksisterende konto"
+      },
       "register": {
         "choose_username": {
           "description": "Dette kan ikke endres senere.",

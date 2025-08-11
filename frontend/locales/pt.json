@@ -46,7 +46,7 @@
         "dialog_description": "<text>Confirme que pretende eliminar a conta:</text>\n<profile />\n<list>\n<item>Não será possível reativar a conta</item>\n<item>Deixará de poder iniciar sessão</item>\n<item>Ninguém poderá reutilizar o seu nome de utilizador (MXID), incluindo o próprio</item>\n<item>Deixará todas as salas e mensagens diretas em que participa</item>\n<item>Será removido do servidor de identidade e ninguém o poderá encontrar com o seu e-mail ou número de telefone</item>\n</list>\n<text>As suas mensagens antigas continuarão visíveis para as pessoas que as receberam. Gostaria de ocultar as suas mensagens enviadas a pessoas que entrem em salas no futuro?</text>",
         "dialog_title": "Eliminar esta conta?",
         "erase_checkbox_label": "Sim, ocultar todas as minhas mensagens de novos marceneiros",
-        "incorrect_password": "Palavra-passe incorrecta, tente novamente",
+        "incorrect_password": "Palavra-passe incorreta, tente novamente",
         "mxid_label": "Confirme o seu ID do Matrix ({{ mxid }})",
         "mxid_mismatch": "Este valor não corresponde ao seu ID da matrix",
         "password_label": "Introduza a sua palavra-passe para continuar"
@@ -333,7 +333,7 @@
       "delete_button_confirmation_modal": {
         "action": "Excluir e-mail",
         "body": "Excluir este e-mail?",
-        "incorrect_password": "Palavra-passe incorrecta, tente novamente",
+        "incorrect_password": "Palavra-passe incorreta, tente novamente",
         "password_confirmation": "Confirme a palavra-passe da sua conta para eliminar este endereço de correio eletrónico"
       },
       "delete_button_title": "Remover endereço de e-mail",

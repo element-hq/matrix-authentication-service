@@ -236,7 +236,9 @@
         "heading": "Ce compte est déjà associé à un autre compte."
       },
       "login_link": {
-        "action": "Continuer"
+        "action": "Continuer",
+        "description": "Un compte existe pour ce nom d'utilisateur (%(username)s), il sera associé à ce compte en amont.",
+        "heading": "Associer votre compte existant"
       },
       "register": {
         "choose_username": {
