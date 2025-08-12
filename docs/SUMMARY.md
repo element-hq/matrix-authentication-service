@@ -21,6 +21,7 @@
 - [Policy engine](./topics/policy.md)
 - [Authorization and sessions](./topics/authorization.md)
 - [Use the Admin API](./topics/admin-api.md)
+- [Get an access token](./topics/access-token.md)
 
 # Reference
 
