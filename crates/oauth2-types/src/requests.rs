@@ -213,11 +213,11 @@ impl core::str::FromStr for Prompt {
 /// [Authorization Endpoint]: https://www.rfc-editor.org/rfc/rfc6749.html#section-3.1
 #[skip_serializing_none]
 #[serde_as]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct AuthorizationRequest {
     /// OAuth 2.0 Response Type value that determines the authorization
     /// processing flow to be used.
-    pub response_type: ResponseType,
+    pub response_type: Option<ResponseType>,
 
     /// OAuth 2.0 Client Identifier valid at the Authorization Server.
     pub client_id: String,
@@ -233,7 +233,7 @@ pub struct AuthorizationRequest {
     /// The scope of the access request.
     ///
     /// OpenID Connect requests must contain the `openid` scope value.
-    pub scope: Scope,
+    pub scope: Option<Scope>,
 
     /// Opaque value used to maintain state between the request and the
     /// callback.
@@ -313,10 +313,10 @@ impl AuthorizationRequest {
     #[must_use]
     pub fn new(response_type: ResponseType, client_id: String, scope: Scope) -> Self {
         Self {
-            response_type,
+            response_type: Some(response_type),
             client_id,
             redirect_uri: None,
-            scope,
+            scope: Some(scope),
             state: None,
             response_mode: None,
             nonce: None,
