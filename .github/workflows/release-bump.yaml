@@ -33,7 +33,7 @@ jobs:
         run: exit 1
 
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -76,7 +76,7 @@ jobs:
     needs: [tag, compute-version]
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             .github/scripts
