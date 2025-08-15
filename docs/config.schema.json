@@ -1528,14 +1528,6 @@
       "description": "Application secrets",
       "type": "object",
       "properties": {
-        "keys": {
-          "description": "List of private keys to use for signing and encrypting payloads",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyConfig"
-          }
-        },
         "encryption_file": {
           "description": "File containing the encryption key for secure cookies.",
           "type": "string"
@@ -1547,17 +1539,26 @@
           ],
           "type": "string",
           "pattern": "[0-9a-fA-F]{64}"
+        },
+        "keys": {
+          "description": "List of private keys to use for signing and encrypting payloads.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyConfig"
+          }
+        },
+        "keys_dir": {
+          "description": "Directory of private keys to use for signing and encrypting payloads.",
+          "type": "string"
         }
       }
     },
     "KeyConfig": {
       "description": "A single key with its key ID and optional password.",
       "type": "object",
-      "required": [
-        "kid"
-      ],
       "properties": {
         "kid": {
+          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be derived from the key by hex-encoding the first four bytes of the key’s fingerprint.",
           "type": "string"
         },
         "password_file": {
