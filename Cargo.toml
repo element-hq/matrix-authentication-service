@@ -239,7 +239,7 @@ version = "0.14.7"
 
 # Rate-limiting
 [workspace.dependencies.governor]
-version = "0.10.0"
+version = "0.10.1"
 default-features = false
 features = ["std", "dashmap", "quanta"]
 
