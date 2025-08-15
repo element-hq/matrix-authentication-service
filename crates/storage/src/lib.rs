@@ -15,13 +15,6 @@
 //! without caring about the underlying storage backend, and without carrying
 //! around the generic type parameter.
 //!
-//! This crate also defines a [`Clock`] trait that can be used to abstract the
-//! way the current time is retrieved. It has two implementation:
-//! [`SystemClock`] that uses the system time and [`MockClock`] which is useful
-//! for testing.
-//!
-//! [`MockClock`]: crate::clock::MockClock
-//!
 //! # Defining a new repository
 //!
 //! To define a new repository, you have to:
@@ -86,9 +79,9 @@
 //!      and use that error type
 //!   2. Lookups return an `Result<Option<T>, Self::Error>`, because 'not found'
 //!      errors are usually cases that are handled differently
-//!   3. Operations that need to record the current type use a [`Clock`]
-//!      parameter. Operations that need to generate new IDs also use a random
-//!      number generator.
+//!   3. Operations that need to record the current type use a
+//!      [`mas_data_model::Clock`] parameter. Operations that need to generate
+//!      new IDs also use a random number generator.
 //!   4. All the methods use an `&mut self`. This is ensures only one operation
 //!      is done at a time on a single repository instance.
 //!
@@ -111,7 +104,6 @@
 #![deny(clippy::future_not_send, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-pub mod clock;
 pub mod pagination;
 pub(crate) mod repository;
 mod utils;
@@ -125,11 +117,10 @@ pub mod upstream_oauth2;
 pub mod user;
 
 pub use self::{
-    clock::{Clock, SystemClock},
     pagination::{Page, Pagination},
     repository::{
         BoxRepository, BoxRepositoryFactory, Repository, RepositoryAccess, RepositoryError,
         RepositoryFactory, RepositoryTransaction,
     },
-    utils::{BoxClock, BoxRng, MapErr},
+    utils::MapErr,
 };

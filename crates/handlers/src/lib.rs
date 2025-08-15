@@ -42,7 +42,7 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Route, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng};
+use mas_storage::{BoxRepository, BoxRepositoryFactory};
 use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
@@ -94,6 +94,7 @@ macro_rules! impl_from_error_for_route {
 }
 
 pub use mas_axum_utils::{ErrorWrapper, cookies::CookieManager};
+use mas_data_model::{BoxClock, BoxRng};
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},

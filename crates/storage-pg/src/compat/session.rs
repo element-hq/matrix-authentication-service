@@ -9,11 +9,11 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device,
-    User,
+    BrowserSession, Clock, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState,
+    Device, User,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     compat::{CompatSessionFilter, CompatSessionRepository},
 };
 use rand::RngCore;

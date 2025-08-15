@@ -7,10 +7,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::{
-    BoxRng,
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-};
+use mas_data_model::BoxRng;
+use mas_storage::queue::{ProvisionUserJob, QueueJobRepositoryExt as _};
 use ulid::Ulid;
 
 use crate::{

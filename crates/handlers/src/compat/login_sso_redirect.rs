@@ -10,8 +10,9 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError};
+use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng, compat::CompatSsoLoginRepository};
+use mas_storage::{BoxRepository, compat::CompatSsoLoginRepository};
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Deserialize;
 use serde_with::serde;

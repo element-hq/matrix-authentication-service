@@ -302,11 +302,10 @@ mod tests {
     // 'insecure' discovery
 
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
-        UpstreamOAuthProviderTokenAuthMethod,
+        Clock, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod, clock::MockClock,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
-    use mas_storage::{Clock, clock::MockClock};
     use oauth2_types::scope::{OPENID, Scope};
     use ulid::Ulid;
     use wiremock::{

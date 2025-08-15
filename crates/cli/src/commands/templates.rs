@@ -12,7 +12,7 @@ use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt,
     ExperimentalConfig, MatrixConfig, PasswordsConfig, TemplatesConfig,
 };
-use mas_storage::{Clock, SystemClock};
+use mas_data_model::{Clock, SystemClock};
 use rand::SeedableRng;
 use tracing::info_span;
 

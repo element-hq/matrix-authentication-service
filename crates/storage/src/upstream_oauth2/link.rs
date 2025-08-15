@@ -5,11 +5,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{UpstreamOAuthLink, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Filter parameters for listing upstream OAuth links
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

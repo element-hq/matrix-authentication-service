@@ -9,8 +9,9 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
+use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{AppContext, TemplateContext, Templates};
 use serde::Deserialize;
 

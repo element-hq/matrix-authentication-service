@@ -7,10 +7,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Pkce, Session,
+    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Clock, Pkce, Session,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
-use mas_storage::{Clock, oauth2::OAuth2AuthorizationGrantRepository};
+use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand::RngCore;
 use sqlx::PgConnection;
