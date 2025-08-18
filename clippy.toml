@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 # Please see LICENSE files in the repository root for full details.
 
-doc-valid-idents = ["OpenID", "OAuth", "..", "PostgreSQL", "SQLite"]
+doc-valid-idents = ["OpenID", "OAuth", "UserInfo", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
     { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },

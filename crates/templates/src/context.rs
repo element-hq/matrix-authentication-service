@@ -1637,7 +1637,7 @@ impl TemplateContext for DeviceConsentContext {
                     device_code: Alphanumeric.sample_string(rng, 32),
                     created_at: now - Duration::try_minutes(5).unwrap(),
                     expires_at: now + Duration::try_minutes(25).unwrap(),
-                    ip_address: Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
+                    ip_address: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                     user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
                 };
                 Self { grant, client }

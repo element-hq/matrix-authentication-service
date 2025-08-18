@@ -24,7 +24,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// The error type returned by the repository
     type Error;
 
-    /// Lookup an OAuth2 client by its ID
+    /// Lookup an OAuth client by its ID
     ///
     /// Returns `None` if the client does not exist
     ///
@@ -37,7 +37,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Client>, Self::Error>;
 
-    /// Find an OAuth2 client by its client ID
+    /// Find an OAuth client by its client ID
     async fn find_by_client_id(&mut self, client_id: &str) -> Result<Option<Client>, Self::Error> {
         let Ok(id) = client_id.parse() else {
             return Ok(None);
@@ -45,7 +45,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         self.lookup(id).await
     }
 
-    /// Find an OAuth2 client by its metadata digest
+    /// Find an OAuth client by its metadata digest
     ///
     /// Returns `None` if the client does not exist
     ///
@@ -62,7 +62,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         digest: &str,
     ) -> Result<Option<Client>, Self::Error>;
 
-    /// Load a batch of OAuth2 clients by their IDs
+    /// Load a batch of OAuth clients by their IDs
     ///
     /// Returns a map of client IDs to clients. If a client does not exist, it
     /// is not present in the map.
@@ -79,7 +79,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         ids: BTreeSet<Ulid>,
     ) -> Result<BTreeMap<Ulid, Client>, Self::Error>;
 
-    /// Add a new OAuth2 client
+    /// Add a new OAuth client
     ///
     /// Returns the client that was added
     ///

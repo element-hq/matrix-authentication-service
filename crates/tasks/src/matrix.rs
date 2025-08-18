@@ -29,7 +29,7 @@ use crate::{
 
 /// Job to provision a user on the Matrix homeserver.
 /// This works by doing a PUT request to the
-/// /_synapse/admin/v2/users/{user_id} endpoint.
+/// `/_synapse/admin/v2/users/{user_id}` endpoint.
 #[async_trait]
 impl RunnableJob for ProvisionUserJob {
     #[tracing::instrument(

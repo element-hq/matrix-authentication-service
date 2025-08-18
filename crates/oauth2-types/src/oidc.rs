@@ -577,7 +577,7 @@ pub struct ProviderMetadata {
     pub require_request_uri_registration: Option<bool>,
 
     /// Indicates where authorization request needs to be protected as [Request
-    /// Object] and provided through either request or request_uri parameter.
+    /// Object] and provided through either request or `request_uri` parameter.
     ///
     /// Defaults to `false`.
     ///
