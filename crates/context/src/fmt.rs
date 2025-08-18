@@ -129,31 +129,31 @@ where
         field_fromatter.format_fields(writer.by_ref(), event)?;
 
         // If we have a OTEL span, we can add the trace ID to the end of the log line
-        if let Some(span) = ctx.lookup_current() {
-            if let Some(otel) = span.extensions().get::<OtelData>() {
-                let parent_cx_span = otel.parent_cx.span();
-                let sc = parent_cx_span.span_context();
+        if let Some(span) = ctx.lookup_current()
+            && let Some(otel) = span.extensions().get::<OtelData>()
+        {
+            let parent_cx_span = otel.parent_cx.span();
+            let sc = parent_cx_span.span_context();
 
-                // Check if the span is sampled, first from the span builder,
-                // then from the parent context if nothing is set there
-                if otel
-                    .builder
-                    .sampling_result
-                    .as_ref()
-                    .map_or(sc.is_sampled(), |r| {
-                        r.decision == SamplingDecision::RecordAndSample
-                    })
-                {
-                    // If it is the root span, the trace ID will be in the span builder. Else, it
-                    // will be in the parent OTEL context
-                    let trace_id = otel.builder.trace_id.unwrap_or(sc.trace_id());
-                    if trace_id != TraceId::INVALID {
-                        let label = Style::new()
-                            .italic()
-                            .force_styling(ansi)
-                            .apply_to("trace.id");
-                        write!(&mut writer, " {label}={trace_id}")?;
-                    }
+            // Check if the span is sampled, first from the span builder,
+            // then from the parent context if nothing is set there
+            if otel
+                .builder
+                .sampling_result
+                .as_ref()
+                .map_or(sc.is_sampled(), |r| {
+                    r.decision == SamplingDecision::RecordAndSample
+                })
+            {
+                // If it is the root span, the trace ID will be in the span builder. Else, it
+                // will be in the parent OTEL context
+                let trace_id = otel.builder.trace_id.unwrap_or(sc.trace_id());
+                if trace_id != TraceId::INVALID {
+                    let label = Style::new()
+                        .italic()
+                        .force_styling(ansi)
+                        .apply_to("trace.id");
+                    write!(&mut writer, " {label}={trace_id}")?;
                 }
             }
         }

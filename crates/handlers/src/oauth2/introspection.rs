@@ -288,10 +288,10 @@ pub(crate) async fn post(
 
     let token = &form.token;
     let token_type = TokenType::check(token)?;
-    if let Some(hint) = form.token_type_hint {
-        if token_type != hint {
-            return Err(RouteError::UnexpectedTokenType);
-        }
+    if let Some(hint) = form.token_type_hint
+        && token_type != hint
+    {
+        return Err(RouteError::UnexpectedTokenType);
     }
 
     // Not all device IDs can be encoded as scope. On OAuth 2.0 sessions, we

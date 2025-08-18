@@ -275,10 +275,10 @@ fn infer_client_ip(
 
     let peer = if let Some(info) = connection_info {
         // We can always trust the proxy protocol to give us the correct IP address
-        if let Some(proxy) = info.get_proxy_ref() {
-            if let Some(source) = proxy.source() {
-                return Some(source.ip());
-            }
+        if let Some(proxy) = info.get_proxy_ref()
+            && let Some(source) = proxy.source()
+        {
+            return Some(source.ip());
         }
 
         info.get_peer_addr().map(|addr| addr.ip())

@@ -223,17 +223,17 @@ impl UserRegistrationToken {
         }
 
         // Check if expired
-        if let Some(expires_at) = self.expires_at {
-            if now >= expires_at {
-                return false;
-            }
+        if let Some(expires_at) = self.expires_at
+            && now >= expires_at
+        {
+            return false;
         }
 
         // Check if usage limit exceeded
-        if let Some(usage_limit) = self.usage_limit {
-            if self.times_used >= usage_limit {
-                return false;
-            }
+        if let Some(usage_limit) = self.usage_limit
+            && self.times_used >= usage_limit
+        {
+            return false;
         }
 
         true

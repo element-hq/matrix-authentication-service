@@ -680,10 +680,10 @@ impl ProviderMetadata {
             validate_url("registration_endpoint", url, ExtraUrlRestrictions::None)?;
         }
 
-        if let Some(scopes) = &metadata.scopes_supported {
-            if !scopes.iter().any(|s| s == "openid") {
-                return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
-            }
+        if let Some(scopes) = &metadata.scopes_supported
+            && !scopes.iter().any(|s| s == "openid")
+        {
+            return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
         }
 
         validate_signing_alg_values_supported(

@@ -187,10 +187,10 @@ where
         };
 
         // If there is a user for this session, check that it is not locked
-        if let Some(user) = &user {
-            if !user.is_valid() {
-                return Err(Rejection::UserLocked);
-            }
+        if let Some(user) = &user
+            && !user.is_valid()
+        {
+            return Err(Rejection::UserLocked);
         }
 
         if !session.is_valid() {
