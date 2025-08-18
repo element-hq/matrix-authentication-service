@@ -24,8 +24,8 @@ ignore = [
 [licenses]
 version = 2
 allow = [
+    "LicenseRef-Element-Commercial",
     "0BSD",
-    "AGPL-3.0",
     "Apache-2.0 WITH LLVM-exception",
     "Apache-2.0",
     "BSD-2-Clause",
@@ -80,9 +80,6 @@ skip = [
     { name = "rustix", version = "0.38.44" },
     { name = "linux-raw-sys", version = "0.9.4" },
 
-    # This is a compatibility version of webpki-roots that depends on the 1.0 version
-    { name = "webpki-roots", version = "0.26.11" },
-
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
     { name = "rand_chacha", version = "0.3.1" },
@@ -103,6 +100,6 @@ unknown-git = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 
 allow-git = [
-   # https://github.com/open-telemetry/opentelemetry-rust/pull/3076
-   "https://github.com/sandhose/opentelemetry-rust",
+    # https://github.com/open-telemetry/opentelemetry-rust/pull/3076
+    "https://github.com/sandhose/opentelemetry-rust",
 ]
