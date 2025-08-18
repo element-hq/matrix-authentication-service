@@ -250,7 +250,8 @@ pub async fn synapse_config_check_against_mas_config(
 ///
 /// - If there is some database connection error, or the given database is not a
 ///   Synapse database.
-/// - If the OAuth2 section of the MAS configuration could not be parsed.
+/// - If the Upstream OAuth section of the MAS configuration could not be
+///   parsed.
 #[tracing::instrument(skip_all)]
 pub async fn synapse_database_check(
     synapse_connection: &mut PgConnection,

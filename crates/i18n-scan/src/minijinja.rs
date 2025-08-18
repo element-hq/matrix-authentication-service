@@ -110,36 +110,36 @@ fn find_in_call<'a>(
     call: &'a Spanned<Call<'a>>,
 ) -> Result<(), minijinja::Error> {
     let span = call.span();
-    if let Expr::Var(var_) = &call.expr {
-        if var_.id == context.func() {
-            let key = call
-                .args
-                .first()
-                .and_then(as_const)
-                .and_then(|const_| const_.value.as_str())
-                .ok_or(minijinja::Error::new(
-                    ErrorKind::UndefinedError,
-                    "t() first argument must be a string literal",
-                ))?;
+    if let Expr::Var(var_) = &call.expr
+        && var_.id == context.func()
+    {
+        let key = call
+            .args
+            .first()
+            .and_then(as_const)
+            .and_then(|const_| const_.value.as_str())
+            .ok_or(minijinja::Error::new(
+                ErrorKind::UndefinedError,
+                "t() first argument must be a string literal",
+            ))?;
 
-            let has_count = call
-                .args
-                .iter()
-                .any(|arg| matches!(arg, CallArg::Kwarg("count", _)));
+        let has_count = call
+            .args
+            .iter()
+            .any(|arg| matches!(arg, CallArg::Kwarg("count", _)));
 
-            let key = Key::new(
-                if has_count {
-                    crate::key::Kind::Plural
-                } else {
-                    crate::key::Kind::Message
-                },
-                key.to_owned(),
-            );
+        let key = Key::new(
+            if has_count {
+                crate::key::Kind::Plural
+            } else {
+                crate::key::Kind::Message
+            },
+            key.to_owned(),
+        );
 
-            let key = context.set_key_location(key, span);
+        let key = context.set_key_location(key, span);
 
-            context.record(key);
-        }
+        context.record(key);
     }
 
     find_in_expr(context, &call.expr)?;

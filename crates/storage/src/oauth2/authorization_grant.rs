@@ -38,7 +38,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// * `response_mode`: The response mode the client requested
     /// * `response_type_id_token`: Whether the `id_token` `response_type` was
     ///   requested
-    /// * `login_hint`: The login_hint the client sent, if set
+    /// * `login_hint`: The `login_hint` the client sent, if set
     /// * `locale`: The locale the detected when the user asked for the
     ///   authorization grant
     ///

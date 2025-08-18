@@ -12,13 +12,13 @@ fn main() -> anyhow::Result<()> {
     // At build time, we override the version through the environment variable
     // VERGEN_GIT_DESCRIBE. In some contexts, it means this variable is set but
     // empty, so we unset it here.
-    if let Ok(ver) = std::env::var("VERGEN_GIT_DESCRIBE") {
-        if ver.is_empty() {
-            #[allow(unsafe_code)]
-            // SAFETY: This is safe because the build script is running a single thread
-            unsafe {
-                std::env::remove_var("VERGEN_GIT_DESCRIBE");
-            }
+    if let Ok(ver) = std::env::var("VERGEN_GIT_DESCRIBE")
+        && ver.is_empty()
+    {
+        #[allow(unsafe_code)]
+        // SAFETY: This is safe because the build script is running a single thread
+        unsafe {
+            std::env::remove_var("VERGEN_GIT_DESCRIBE");
         }
     }
 

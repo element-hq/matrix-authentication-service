@@ -279,11 +279,11 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut this = self.project();
 
-        if let Poll::Ready(()) = this.cancellation_future.poll(cx) {
-            if !*this.did_start_shutdown {
-                *this.did_start_shutdown = true;
-                this.connection.as_mut().graceful_shutdown();
-            }
+        if let Poll::Ready(()) = this.cancellation_future.poll(cx)
+            && !*this.did_start_shutdown
+        {
+            *this.did_start_shutdown = true;
+            this.connection.as_mut().graceful_shutdown();
         }
 
         this.connection.poll(cx)

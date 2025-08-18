@@ -652,7 +652,7 @@ pub struct Provider {
 
     /// What to do when receiving an OIDC Backchannel logout request.
     ///
-    /// Defaults to "do_nothing".
+    /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
 }

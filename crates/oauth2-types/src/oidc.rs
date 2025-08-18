@@ -577,7 +577,7 @@ pub struct ProviderMetadata {
     pub require_request_uri_registration: Option<bool>,
 
     /// Indicates where authorization request needs to be protected as [Request
-    /// Object] and provided through either request or request_uri parameter.
+    /// Object] and provided through either request or `request_uri` parameter.
     ///
     /// Defaults to `false`.
     ///
@@ -680,10 +680,10 @@ impl ProviderMetadata {
             validate_url("registration_endpoint", url, ExtraUrlRestrictions::None)?;
         }
 
-        if let Some(scopes) = &metadata.scopes_supported {
-            if !scopes.iter().any(|s| s == "openid") {
-                return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
-            }
+        if let Some(scopes) = &metadata.scopes_supported
+            && !scopes.iter().any(|s| s == "openid")
+        {
+            return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
         }
 
         validate_signing_alg_values_supported(

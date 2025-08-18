@@ -34,7 +34,7 @@ fn id_token(
     issuer: &str,
     flag: Option<IdTokenFlag>,
     auth_time: Option<DateTime<Utc>>,
-) -> (IdToken, PublicJsonWebKeySet) {
+) -> (IdToken<'_>, PublicJsonWebKeySet) {
     let signing_alg = ID_TOKEN_SIGNING_ALG;
 
     let keystore = keystore(&signing_alg);
