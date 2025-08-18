@@ -290,7 +290,10 @@ Error details: {e}
             match result {
                 Ok(response) => {
                     let status = response.status();
-                    // We're missing the localpart parameter, so expect a 400
+                    // We intentionally omit the required 'localpart' parameter in this request.
+                    // If authentication is successful, Synapse returns a 400 Bad Request because of the missing parameter.
+                    // If authentication fails, Synapse will return a 403 Forbidden.
+                    // If the MAS integration isn't enabled, Synapse will return a 404 Not found.
                     if status == StatusCode::BAD_REQUEST {
                         info!(
                             r#"✅ The Synapse admin API is reachable with authentication at "{mas_api}"."#

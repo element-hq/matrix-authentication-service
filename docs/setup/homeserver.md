@@ -66,4 +66,4 @@ To do so, you need to:
    - `enabled: true`
    - `endpoint` set to the URL of the authentication service
    - `secret` set to the same secret as the `admin_token` that was set in the `msc3861` section
- - Optionally, remove the client provisionned for Synapse in the `clients` section of the MAS configuration
+ - Optionally, remove the client provisioned for Synapse in the `clients` section of the MAS configuration
