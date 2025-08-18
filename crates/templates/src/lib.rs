@@ -328,7 +328,7 @@ register_templates! {
     /// Render the Swagger API reference
     pub fn render_swagger(ApiDocContext) { "swagger/doc.html" }
 
-    /// Render the Swagger OAuth2 callback page
+    /// Render the Swagger OAuth callback page
     pub fn render_swagger_callback(ApiDocContext) { "swagger/oauth2-redirect.html" }
 
     /// Render the login page
@@ -382,7 +382,7 @@ register_templates! {
     /// Render the account recovery disabled page
     pub fn render_recovery_disabled(WithLanguage<EmptyContext>) { "pages/recovery/disabled.html" }
 
-    /// Render the form used by the form_post response mode
+    /// Render the form used by the `form_post` response mode
     pub fn render_form_post<T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
 
     /// Render the HTML error page

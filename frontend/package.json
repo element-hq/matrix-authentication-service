@@ -34,7 +34,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-i18next": "^15.6.1",
-    "swagger-ui-dist": "^5.27.0",
+    "swagger-ui-dist": "^5.27.1",
     "valibot": "^1.1.0",
     "vaul": "^1.1.2"
   },
@@ -76,7 +76,7 @@
     "storybook": "^9.0.1",
     "storybook-react-i18next": "4.0.11",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "vite": "6.3.5",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-graphql-codegen": "^3.6.1",

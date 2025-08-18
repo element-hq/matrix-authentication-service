@@ -348,7 +348,7 @@ async fn test_oauth2_admin(pool: PgPool) {
 }
 
 /// Test that we can query the GraphQL endpoint with a token from a
-/// client_credentials grant.
+/// `client_credentials` grant.
 #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
 async fn test_oauth2_client_credentials(pool: PgPool) {
     setup();

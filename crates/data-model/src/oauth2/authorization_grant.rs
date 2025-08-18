@@ -183,7 +183,7 @@ impl AuthorizationGrant {
     ///
     /// Otherwise returns `LoginHint::None`
     #[must_use]
-    pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint {
+    pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint<'_> {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };

@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           # Need a full clone so that `git describe` reports the right version
           fetch-depth: 0
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/build-frontend
       - uses: ./.github/actions/build-policies
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -162,19 +162,19 @@ jobs:
 
     steps:
       - name: Download assets
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: assets
           path: assets-dist
 
       - name: Download binary x86_64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: binary-x86_64-unknown-linux-gnu
           path: binary-x86_64
 
       - name: Download binary aarch64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: binary-aarch64-unknown-linux-gnu
           path: binary-aarch64
@@ -320,7 +320,7 @@ jobs:
       - build-image
     steps:
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: mas-cli-*
           path: artifacts
@@ -376,13 +376,13 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             .github/scripts
 
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: mas-cli-*
           path: artifacts
@@ -454,7 +454,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             .github/scripts

@@ -198,34 +198,34 @@ impl ConfigurationSection for TelemetryConfig {
         &self,
         _figment: &figment::Figment,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-        if let Some(sample_rate) = self.sentry.sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Sentry sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("sentry.sample_rate")
-                .into());
-            }
+        if let Some(sample_rate) = self.sentry.sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Sentry sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("sentry.sample_rate")
+            .into());
         }
 
-        if let Some(sample_rate) = self.sentry.traces_sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Sentry sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("sentry.traces_sample_rate")
-                .into());
-            }
+        if let Some(sample_rate) = self.sentry.traces_sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Sentry sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("sentry.traces_sample_rate")
+            .into());
         }
 
-        if let Some(sample_rate) = self.tracing.sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Tracing sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("tracing.sample_rate")
-                .into());
-            }
+        if let Some(sample_rate) = self.tracing.sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Tracing sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("tracing.sample_rate")
+            .into());
         }
 
         Ok(())

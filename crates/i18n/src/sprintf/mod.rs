@@ -72,6 +72,7 @@ pub(crate) use sprintf;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
+#[allow(dead_code)]
 enum Error {
     Format(#[from] self::formatter::FormatError),
     Parse(Box<self::parser::Error>),

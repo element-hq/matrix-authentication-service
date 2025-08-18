@@ -88,32 +88,31 @@ impl UserAgent {
 
     #[must_use]
     pub fn parse(user_agent: String) -> Self {
-        if !user_agent.contains("Mozilla/") {
-            if let Some((name, version, model, os, os_version)) =
+        if !user_agent.contains("Mozilla/")
+            && let Some((name, version, model, os, os_version)) =
                 UserAgent::parse_custom(&user_agent)
-            {
-                let mut device_type = DeviceType::Unknown;
+        {
+            let mut device_type = DeviceType::Unknown;
 
-                // Handle mobile simple mobile devices
-                if os == "Android" || os == "iOS" {
-                    device_type = DeviceType::Mobile;
-                }
-
-                // Handle iPads
-                if model.contains("iPad") {
-                    device_type = DeviceType::Tablet;
-                }
-
-                return Self {
-                    name: Some(name.to_owned()),
-                    version: Some(version.to_owned()),
-                    os: Some(os.to_owned()),
-                    os_version: os_version.map(std::borrow::ToOwned::to_owned),
-                    model: Some(model.to_owned()),
-                    device_type,
-                    raw: user_agent,
-                };
+            // Handle mobile simple mobile devices
+            if os == "Android" || os == "iOS" {
+                device_type = DeviceType::Mobile;
             }
+
+            // Handle iPads
+            if model.contains("iPad") {
+                device_type = DeviceType::Tablet;
+            }
+
+            return Self {
+                name: Some(name.to_owned()),
+                version: Some(version.to_owned()),
+                os: Some(os.to_owned()),
+                os_version: os_version.map(std::borrow::ToOwned::to_owned),
+                model: Some(model.to_owned()),
+                device_type,
+                raw: user_agent,
+            };
         }
 
         let mut model = None;
@@ -205,11 +204,11 @@ impl UserAgent {
         }
 
         // Special handling for Electron applications e.g. Element Desktop
-        if user_agent.contains("Electron/") {
-            if let Some(app) = UserAgent::parse_electron(&user_agent) {
-                result.name = app.0;
-                result.version = app.1;
-            }
+        if user_agent.contains("Electron/")
+            && let Some(app) = UserAgent::parse_electron(&user_agent)
+        {
+            result.name = app.0;
+            result.version = app.1;
         }
 
         Self {

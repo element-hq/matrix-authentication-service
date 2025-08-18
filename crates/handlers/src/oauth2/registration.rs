@@ -242,34 +242,34 @@ pub(crate) async fn post(
 
     // Some extra validation that is hard to do in OPA and not done by the
     // `validate` method either
-    if let Some(client_uri) = &metadata.client_uri {
-        if localised_url_has_public_suffix(client_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("client_uri"));
-        }
+    if let Some(client_uri) = &metadata.client_uri
+        && localised_url_has_public_suffix(client_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("client_uri"));
     }
 
-    if let Some(logo_uri) = &metadata.logo_uri {
-        if localised_url_has_public_suffix(logo_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("logo_uri"));
-        }
+    if let Some(logo_uri) = &metadata.logo_uri
+        && localised_url_has_public_suffix(logo_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("logo_uri"));
     }
 
-    if let Some(policy_uri) = &metadata.policy_uri {
-        if localised_url_has_public_suffix(policy_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("policy_uri"));
-        }
+    if let Some(policy_uri) = &metadata.policy_uri
+        && localised_url_has_public_suffix(policy_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("policy_uri"));
     }
 
-    if let Some(tos_uri) = &metadata.tos_uri {
-        if localised_url_has_public_suffix(tos_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("tos_uri"));
-        }
+    if let Some(tos_uri) = &metadata.tos_uri
+        && localised_url_has_public_suffix(tos_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("tos_uri"));
     }
 
-    if let Some(initiate_login_uri) = &metadata.initiate_login_uri {
-        if host_is_public_suffix(initiate_login_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("initiate_login_uri"));
-        }
+    if let Some(initiate_login_uri) = &metadata.initiate_login_uri
+        && host_is_public_suffix(initiate_login_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("initiate_login_uri"));
     }
 
     for redirect_uri in metadata.redirect_uris() {

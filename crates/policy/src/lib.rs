@@ -397,7 +397,7 @@ impl Policy {
         Ok(res)
     }
 
-    /// Evaluate the 'client_registration' entrypoint.
+    /// Evaluate the `client_registration` entrypoint.
     ///
     /// # Errors
     ///
@@ -419,7 +419,7 @@ impl Policy {
         Ok(res)
     }
 
-    /// Evaluate the 'authorization_grant' entrypoint.
+    /// Evaluate the `authorization_grant` entrypoint.
     ///
     /// # Errors
     ///

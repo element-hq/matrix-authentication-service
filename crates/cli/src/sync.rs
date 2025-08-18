@@ -209,11 +209,11 @@ pub async fn config_sync(
                     // private key to hold the content of the private key file.
                     // private key (raw) takes precedence so both can be defined
                     // without issues
-                    if siwa.private_key.is_none() {
-                        if let Some(private_key_file) = siwa.private_key_file.take() {
-                            let key = tokio::fs::read_to_string(private_key_file).await?;
-                            siwa.private_key = Some(key);
-                        }
+                    if siwa.private_key.is_none()
+                        && let Some(private_key_file) = siwa.private_key_file.take()
+                    {
+                        let key = tokio::fs::read_to_string(private_key_file).await?;
+                        siwa.private_key = Some(key);
                     }
                     let encoded = serde_json::to_vec(&siwa)?;
                     Some(encrypter.encrypt_to_string(&encoded)?)

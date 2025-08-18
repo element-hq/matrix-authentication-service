@@ -120,14 +120,14 @@ impl Config {
     pub fn all_oidc_providers(&self) -> BTreeMap<String, OidcProvider> {
         let mut out = BTreeMap::new();
 
-        if let Some(provider) = &self.oidc_config {
-            if provider.has_required_fields() {
-                let mut provider = provider.clone();
-                // The legacy configuration has an implied IdP ID of `oidc`.
-                let idp_id = provider.idp_id.take().unwrap_or("oidc".to_owned());
-                provider.idp_id = Some(idp_id.clone());
-                out.insert(idp_id, provider);
-            }
+        if let Some(provider) = &self.oidc_config
+            && provider.has_required_fields()
+        {
+            let mut provider = provider.clone();
+            // The legacy configuration has an implied IdP ID of `oidc`.
+            let idp_id = provider.idp_id.take().unwrap_or("oidc".to_owned());
+            provider.idp_id = Some(idp_id.clone());
+            out.insert(idp_id, provider);
         }
 
         for provider in &self.oidc_providers {

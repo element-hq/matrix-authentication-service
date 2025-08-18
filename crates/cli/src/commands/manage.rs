@@ -619,13 +619,12 @@ impl Options {
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
 
-                if let Some(password) = &password {
-                    if !ignore_password_complexity
-                        && !password_manager.is_password_complex_enough(password)?
-                    {
-                        error!("That password is too weak.");
-                        return Ok(ExitCode::from(1));
-                    }
+                if let Some(password) = &password
+                    && !ignore_password_complexity
+                    && !password_manager.is_password_complex_enough(password)?
+                {
+                    error!("That password is too weak.");
+                    return Ok(ExitCode::from(1));
                 }
 
                 // If the username is provided, check if it's available and normalize it.

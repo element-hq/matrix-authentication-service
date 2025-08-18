@@ -911,7 +911,8 @@ pub struct ClientRegistrationResponse {
     #[serde_as(as = "Option<TimestampSeconds<i64>>")]
     pub client_id_issued_at: Option<DateTime<Utc>>,
 
-    /// Time at which the client_secret will expire or 0 if it will not expire.
+    /// Time at which the `client_secret` will expire or 0 if it will not
+    /// expire.
     ///
     /// Required if `client_secret` is issued.
     #[serde(default)]

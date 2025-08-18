@@ -524,7 +524,7 @@ mod tests {
                 &mut rng,
                 &clock,
                 "alice".to_owned(),
-                Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
+                Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                 Some("Mozilla/5.0".to_owned()),
                 Some(serde_json::json!({"action": "continue_compat_sso_login", "id": "01FSHN9AG0MKGTBNZ16RDR3PVY"})),
             )
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(registration.user_agent, Some("Mozilla/5.0".to_owned()));
         assert_eq!(
             registration.ip_address,
-            Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
+            Some(IpAddr::V4(Ipv4Addr::LOCALHOST))
         );
         assert_eq!(
             registration.post_auth_action,
