@@ -188,31 +188,15 @@ impl AuthorizationGrant {
             return LoginHint::None;
         };
 
-        let Some((prefix, value)) = login_hint.split_once(':') else {
-            // Validate the email
-            let Ok(address) = lettre::Address::from_str(login_hint) else {
-                // Return none if the format is incorrect
-                return LoginHint::None;
-            };
-            return LoginHint::Email(address);
-        };
-
-        match prefix {
-            "mxid" => {
-                // Instead of erroring just return none
-                let Ok(mxid) = <&UserId>::try_from(value) else {
-                    return LoginHint::None;
-                };
-
-                // Only handle MXIDs for current homeserver
-                if mxid.server_name() != homeserver {
-                    return LoginHint::None;
-                }
-
-                LoginHint::MXID(mxid)
-            }
-            // Unknown hint type, treat as none
-            _ => LoginHint::None,
+        if let Some(value) = login_hint.strip_prefix("mxid:")
+            && let Ok(mxid) = <&UserId>::try_from(value)
+            && mxid.server_name() == homeserver
+        {
+            LoginHint::MXID(mxid)
+        } else if let Ok(email) = lettre::Address::from_str(login_hint) {
+            LoginHint::Email(email)
+        } else {
+            LoginHint::None
         }
     }
 
