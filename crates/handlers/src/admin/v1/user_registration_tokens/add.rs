@@ -9,7 +9,7 @@ use axum::{Json, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::BoxRng;
+use mas_data_model::BoxRng;
 use rand::distributions::{Alphanumeric, DistString};
 use schemars::JsonSchema;
 use serde::Deserialize;

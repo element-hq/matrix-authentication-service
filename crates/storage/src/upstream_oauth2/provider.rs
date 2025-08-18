@@ -8,9 +8,10 @@ use std::marker::PhantomData;
 
 use async_trait::async_trait;
 use mas_data_model::{
-    UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-    UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
-    UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
+    Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
+    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
+    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
+    UpstreamOAuthProviderTokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
@@ -18,7 +19,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Structure which holds parameters when inserting or updating an upstream
 /// OAuth 2.0 provider

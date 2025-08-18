@@ -24,10 +24,9 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::AuthorizationCode;
+    use mas_data_model::{AuthorizationCode, Clock, clock::MockClock};
     use mas_storage::{
-        Clock, Pagination,
-        clock::MockClock,
+        Pagination,
         oauth2::{OAuth2DeviceCodeGrantParams, OAuth2SessionFilter, OAuth2SessionRepository},
     };
     use oauth2_types::{

@@ -8,8 +8,8 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::{UserEmail, UserRecoverySession, UserRecoveryTicket};
-use mas_storage::{Clock, user::UserRecoveryRepository};
+use mas_data_model::{Clock, UserEmail, UserRecoverySession, UserRecoveryTicket};
+use mas_storage::user::UserRecoveryRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;

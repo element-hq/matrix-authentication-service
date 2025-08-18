@@ -5,10 +5,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{Password, User};
+use mas_data_model::{Clock, Password, User};
 use rand_core::RngCore;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`UserPasswordRepository`] helps interacting with [`Password`] saved in
 /// the storage backend

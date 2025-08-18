@@ -12,7 +12,9 @@ use axum::{
 };
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderOnBackchannelLogout};
+use mas_data_model::{
+    BoxClock, BoxRng, UpstreamOAuthProvider, UpstreamOAuthProviderOnBackchannelLogout,
+};
 use mas_jose::{
     claims::{self, Claim, TimeOptions},
     jwt::JwtDecodeError,
@@ -22,7 +24,7 @@ use mas_oidc_client::{
     requests::jose::{JwtVerificationData, verify_signed_jwt},
 };
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Pagination,
+    BoxRepository, Pagination,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},

@@ -10,10 +10,11 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::{BoxClock, BoxRng};
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
 use mas_policy::{EvaluationResult, Policy};
-use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
+use mas_storage::{BoxRepository, oauth2::OAuth2ClientRepository};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     registration::{

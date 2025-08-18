@@ -11,7 +11,7 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSection, RootConfig, SyncConfig};
-use mas_storage::{Clock as _, SystemClock};
+use mas_data_model::{Clock as _, SystemClock};
 use mas_storage_pg::MIGRATOR;
 use rand::SeedableRng;
 use tokio::io::AsyncWriteExt;

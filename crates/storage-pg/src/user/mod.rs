@@ -8,11 +8,8 @@
 //! repositories
 
 use async_trait::async_trait;
-use mas_data_model::User;
-use mas_storage::{
-    Clock,
-    user::{UserFilter, UserRepository},
-};
+use mas_data_model::{Clock, User};
+use mas_storage::user::{UserFilter, UserRepository};
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;

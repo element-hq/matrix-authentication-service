@@ -15,13 +15,14 @@ use mas_axum_utils::{
     record_error,
     user_authorization::{AuthorizationVerificationError, UserAuthorization},
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_jose::{
     constraints::Constrainable,
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
+use mas_storage::{BoxRepository, oauth2::OAuth2ClientRepository};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use thiserror::Error;

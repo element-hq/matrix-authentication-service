@@ -16,9 +16,9 @@ use axum::{
 use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
 use headers::{Authorization, Header, HeaderMapExt, HeaderName, authorization::Bearer};
 use http::{HeaderMap, HeaderValue, Request, StatusCode, header::WWW_AUTHENTICATE};
-use mas_data_model::Session;
+use mas_data_model::{Clock, Session};
 use mas_storage::{
-    Clock, RepositoryAccess,
+    RepositoryAccess,
     oauth2::{OAuth2AccessTokenRepository, OAuth2SessionRepository},
 };
 use serde::{Deserialize, de::DeserializeOwned};

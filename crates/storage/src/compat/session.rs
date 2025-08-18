@@ -8,11 +8,11 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, Device, User};
+use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, Device, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Page, Pagination, repository_impl, user::BrowserSessionFilter};
+use crate::{Page, Pagination, repository_impl, user::BrowserSessionFilter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompatSessionState {

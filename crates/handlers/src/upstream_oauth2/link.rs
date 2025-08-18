@@ -19,13 +19,13 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     record_error,
 };
-use mas_data_model::UpstreamOAuthProviderOnConflict;
+use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProviderOnConflict};
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository},
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
@@ -1483,7 +1483,7 @@ mod tests {
 
     async fn add_linked_upstream_session(
         rng: &mut ChaChaRng,
-        clock: &impl mas_storage::Clock,
+        clock: &impl mas_data_model::Clock,
         repo: &mut Box<dyn Repository<RepositoryError> + Send + Sync + 'static>,
         provider: &mas_data_model::UpstreamOAuthProvider,
         subject: &str,
