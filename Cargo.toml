@@ -88,7 +88,7 @@ version = "0.1.89"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
-version = "1.0.98"
+version = "1.0.99"
 
 # Assert that a value matches a pattern
 [workspace.dependencies.assert_matches]
