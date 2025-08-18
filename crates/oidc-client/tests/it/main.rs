@@ -74,7 +74,7 @@ fn keystore(alg: &JsonWebSignatureAlg) -> Keystore {
 }
 
 /// Generate an ID token.
-fn id_token(issuer: &str) -> (IdToken, PublicJsonWebKeySet) {
+fn id_token(issuer: &str) -> (IdToken<'_>, PublicJsonWebKeySet) {
     let signing_alg = ID_TOKEN_SIGNING_ALG;
 
     let keystore = keystore(&signing_alg);
