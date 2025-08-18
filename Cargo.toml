@@ -407,10 +407,8 @@ version = "0.30.0"
 version = "0.30.0"
 default-features = false
 features = ["trace", "metrics", "http-proto"]
-[workspace.dependencies.opentelemetry-prometheus]
-# https://github.com/open-telemetry/opentelemetry-rust/pull/3076
-git = "https://github.com/sandhose/opentelemetry-rust.git"
-branch = "otel-prometheus-0.30"
+[workspace.dependencies.opentelemetry-prometheus-text-exporter]
+version = "0.2.0"
 [workspace.dependencies.opentelemetry-resource-detectors]
 version = "0.9.0"
 [workspace.dependencies.opentelemetry-semantic-conventions]
@@ -479,10 +477,6 @@ features = ["std", "pkcs5", "encryption"]
 # Public Suffix List
 [workspace.dependencies.psl]
 version = "2.1.128"
-
-# Prometheus metrics
-[workspace.dependencies.prometheus]
-version = "0.14.0"
 
 # High-precision clock
 [workspace.dependencies.quanta]

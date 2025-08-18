@@ -23,7 +23,7 @@ use opentelemetry::{
     trace::TracerProvider as _,
 };
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
-use opentelemetry_prometheus::PrometheusExporter;
+use opentelemetry_prometheus_text_exporter::PrometheusExporter;
 use opentelemetry_sdk::{
     Resource,
     metrics::{ManualReader, SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
@@ -33,7 +33,6 @@ use opentelemetry_sdk::{
     },
 };
 use opentelemetry_semantic_conventions as semcov;
-use prometheus::Registry;
 use url::Url;
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
@@ -49,7 +48,7 @@ pub static METER: LazyLock<Meter> =
 pub static TRACER: OnceLock<Tracer> = OnceLock::new();
 static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
 static TRACER_PROVIDER: OnceLock<SdkTracerProvider> = OnceLock::new();
-static PROMETHEUS_REGISTRY: OnceLock<Registry> = OnceLock::new();
+static PROMETHEUS_EXPORTER: OnceLock<PrometheusExporter> = OnceLock::new();
 
 pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     let propagator = propagator(&config.tracing.propagators);
@@ -180,21 +179,30 @@ type PromServiceFuture =
 
 #[allow(clippy::needless_pass_by_value)]
 fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
-    use prometheus::{Encoder, TextEncoder};
+    let response = if let Some(exporter) = PROMETHEUS_EXPORTER.get() {
+        // We'll need some space for this, so we preallocate a bit
+        let mut buffer = Vec::with_capacity(1024);
 
-    let response = if let Some(registry) = PROMETHEUS_REGISTRY.get() {
-        let mut buffer = Vec::new();
-        let encoder = TextEncoder::new();
-        let metric_families = registry.gather();
+        if let Err(err) = exporter.export(&mut buffer) {
+            tracing::error!(
+                error = &err as &dyn std::error::Error,
+                "Failed to export Prometheus metrics"
+            );
 
-        // That shouldn't panic, unless we're constructing invalid labels
-        encoder.encode(&metric_families, &mut buffer).unwrap();
-
-        Response::builder()
-            .status(200)
-            .header(CONTENT_TYPE, encoder.format_type())
-            .body(Full::new(Bytes::from(buffer)))
-            .unwrap()
+            Response::builder()
+                .status(500)
+                .header(CONTENT_TYPE, "text/plain")
+                .body(Full::new(Bytes::from_static(
+                    b"Failed to export Prometheus metrics, see logs for details",
+                )))
+                .unwrap()
+        } else {
+            Response::builder()
+                .status(200)
+                .header(CONTENT_TYPE, "text/plain;version=1.0.0")
+                .body(Full::new(Bytes::from(buffer)))
+                .unwrap()
+        }
     } else {
         Response::builder()
             .status(500)
@@ -209,7 +217,7 @@ fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
 }
 
 pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFuture> {
-    if PROMETHEUS_REGISTRY.get().is_none() {
+    if PROMETHEUS_EXPORTER.get().is_none() {
         tracing::warn!(
             "A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config"
         );
@@ -219,16 +227,11 @@ pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFut
 }
 
 fn prometheus_metric_reader() -> anyhow::Result<PrometheusExporter> {
-    let registry = Registry::new();
+    let exporter = PrometheusExporter::builder().without_scope_info().build();
 
-    PROMETHEUS_REGISTRY
-        .set(registry.clone())
-        .map_err(|_| anyhow::anyhow!("PROMETHEUS_REGISTRY was set twice"))?;
-
-    let exporter = opentelemetry_prometheus::exporter()
-        .with_registry(registry)
-        .without_scope_info()
-        .build()?;
+    PROMETHEUS_EXPORTER
+        .set(exporter.clone())
+        .map_err(|_| anyhow::anyhow!("PROMETHEUS_EXPORTER was set twice"))?;
 
     Ok(exporter)
 }

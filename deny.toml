@@ -98,8 +98,3 @@ deny = ["oldtime"]
 unknown-registry = "warn"
 unknown-git = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-
-allow-git = [
-    # https://github.com/open-telemetry/opentelemetry-rust/pull/3076
-    "https://github.com/sandhose/opentelemetry-rust",
-]
