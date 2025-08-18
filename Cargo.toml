@@ -84,7 +84,7 @@ version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
-version = "0.1.88"
+version = "0.1.89"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
