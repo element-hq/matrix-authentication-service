@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           # Need a full clone so that `git describe` reports the right version
           fetch-depth: 0
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/build-frontend
       - uses: ./.github/actions/build-policies
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -376,7 +376,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             .github/scripts
@@ -454,7 +454,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             .github/scripts
