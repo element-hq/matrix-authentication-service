@@ -339,7 +339,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let rsa_key = KeyConfig {
-            kid: Some(Alphanumeric.sample_string(&mut rng, 10)),
+            kid: None,
             password: None,
             key: Key::Value(rsa_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -355,7 +355,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_p256_key = KeyConfig {
-            kid: Some(Alphanumeric.sample_string(&mut rng, 10)),
+            kid: None,
             password: None,
             key: Key::Value(ec_p256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -371,7 +371,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_p384_key = KeyConfig {
-            kid: Some(Alphanumeric.sample_string(&mut rng, 10)),
+            kid: None,
             password: None,
             key: Key::Value(ec_p384_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -387,7 +387,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_k256_key = KeyConfig {
-            kid: Some(Alphanumeric.sample_string(&mut rng, 10)),
+            kid: None,
             password: None,
             key: Key::Value(ec_k256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -400,7 +400,7 @@ impl SecretsConfig {
 
     pub(crate) fn test() -> Self {
         let rsa_key = KeyConfig {
-            kid: Some("abcdef".to_owned()),
+            kid: None,
             password: None,
             key: Key::Value(
                 indoc::indoc! {r"
@@ -419,7 +419,7 @@ impl SecretsConfig {
             ),
         };
         let ecdsa_key = KeyConfig {
-            kid: Some("ghijkl".to_owned()),
+            kid: None,
             password: None,
             key: Key::Value(
                 indoc::indoc! {r"
