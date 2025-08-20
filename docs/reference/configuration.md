@@ -197,35 +197,7 @@ secrets:
   # Signing keys
   keys:
     # It needs at least an RSA key to work properly
-    - kid: "ahM2bien"
-      key: |
-        -----BEGIN RSA PRIVATE KEY-----
-        MIIEowIBAAKCAQEAuf28zPUp574jDRdX6uN0d7niZCIUpACFo+Po/13FuIGsrpze
-        yMX6CYWVPalgXW9FCrhxL+4toJRy5npjkgsLFsknL5/zXbWKFgt69cMwsWJ9Ra57
-        bonSlI7SoCuHhtw7j+sAlHAlqTOCAVz6P039Y/AGvO6xbC7f+9XftWlbbDcjKFcb
-        pQilkN9qtkdEH7TLayMAFOsgNvBlwF9+oj9w5PIk3veRTdBXI4GlHjhhzqGZKiRp
-        oP9HnycHHveyT+C33vuhQso5a3wcUNuvDVOixSqR4kvSt4UVWNK/KmEQmlWU1/m9
-        ClIwrs8Q79q0xkGaSa0iuG60nvm7tZez9TFkxwIDAQABAoIBAHA5YkppQ7fJSm0D
-        wNDCHeyABNJWng23IuwZAOXVNxB1bjSOAv8yNgS4zaw/Hx5BnW8yi1lYZb+W0x2u
-        i5X7g91j0nkyEi5g88kJdFAGTsM5ok0BUwkHsEBjTUPIACanjGjya48lfBP0OGWK
-        LJU2Acbjda1aeUPFpPDXw/w6bieEthQwroq3DHCMnk6i9bsxgIOXeN04ij9XBmsH
-        KPCP2hAUnZSlx5febYfHK7/W95aJp22qa//eHS8cKQZCJ0+dQuZwLhlGosTFqLUm
-        qhPlt/b1EvPPY0cq5rtUc2W31L0YayVEHVOQx1fQIkH2VIUNbAS+bfVy+o6WCRk6
-        s1XDhsECgYEA30tykVTN5LncY4eQIww2mW8v1j1EG6ngVShN3GuBTuXXaEOB8Duc
-        yT7yJt1ZhmaJwMk4agmZ1/f/ZXBtfLREGVzVvuwqRZ+LHbqIyhi0wQJA0aezPote
-        uTQnFn+IveHGtpQNDYGL/UgkexuCxbc2HOZG51JpunCK0TdtVfO/9OUCgYEA1TuS
-        2WAXzNudRG3xd/4OgtkLD9AvfSvyjw2LkwqCMb3A5UEqw7vubk/xgnRvqrAgJRWo
-        jndgRrRnikHCavDHBO0GAO/kzrFRfw+e+r4jcLl0Yadke8ndCc7VTnx4wQCrMi5H
-        7HEeRwaZONoj5PAPyA5X+N/gT0NNDA7KoQT45DsCgYBt+QWa6A5jaNpPNpPZfwlg
-        9e60cAYcLcUri6cVOOk9h1tYoW7cdy+XueWfGIMf+1460Z90MfhP8ncZaY6yzUGA
-        0EUBO+Tx10q3wIfgKNzU9hwgZZyU4CUtx668mOEqy4iHoVDwZu4gNyiobPsyDzKa
-        dxtSkDc8OHNV6RtzKpJOtQKBgFoRGcwbnLH5KYqX7eDDPRnj15pMU2LJx2DJVeU8
-        ERY1kl7Dke6vWNzbg6WYzPoJ/unrJhFXNyFmXj213QsSvN3FyD1pFvp/R28mB/7d
-        hVa93vzImdb3wxe7d7n5NYBAag9+IP8sIJ/bl6i9619uTxwvgtUqqzKPuOGY9dnh
-        oce1AoGBAKZyZc/NVgqV2KgAnnYlcwNn7sRSkM8dcq0/gBMNuSZkfZSuEd4wwUzR
-        iFlYp23O2nHWggTkzimuBPtD7Kq4jBey3ZkyGye+sAdmnKkOjNILNbpIZlT6gK3z
-        fBaFmJGRJinKA+BJeH79WFpYN6SBZ/c3s5BusAbEU7kE5eInyazP
-        -----END RSA PRIVATE KEY-----
+    - key_file: keys/rsa_key
     - kid: "iv1aShae"
       key: |
         -----BEGIN EC PRIVATE KEY-----
@@ -260,9 +232,7 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry must have a unique `kid`, plus the key itself.
-The `kid` can be any case-sensitive string value as long as it is unique to this list;
-a key’s `kid` value must be stable across restarts.
+Each entry in the list corresponds to one signing key used by MAS.
 The key can either be specified inline (with the `key` property),
 or loaded from a file (with the `key_file` property).
 The following key formats are supported:
@@ -271,7 +241,14 @@ The following key formats are supported:
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
 
+A [JWK Key ID] is automatically derived from each key.
+To override this default, set `kid` to a custom value.
+The `kid` can be any case-sensitive string value as long as it is unique to this list;
+a key’s `kid` value must be stable across restarts.
+
 For PKCS#8 encoded keys, the `password` or `password_file` properties can be used to decrypt the key.
+
+[JWK Key ID]: <https://datatracker.ietf.org/doc/html/rfc7517#section-4.5>
 
 ## `passwords`
 

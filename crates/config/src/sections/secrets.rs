@@ -9,13 +9,9 @@ use std::borrow::Cow;
 use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
 use futures_util::future::{try_join, try_join_all};
-use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
+use mas_jose::jwk::{JsonWebKey, JsonWebKeySet, Thumbprint};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
-use rand::{
-    Rng, SeedableRng,
-    distributions::{Alphanumeric, DistString, Standard},
-    prelude::Distribution as _,
-};
+use rand::{Rng, SeedableRng, distributions::Standard, prelude::Distribution as _};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -132,7 +128,11 @@ impl From<Key> for KeyRaw {
 #[serde_as]
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct KeyConfig {
-    kid: String,
+    /// The key ID `kid` of the key as used by JWKs.
+    ///
+    /// If not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    kid: Option<String>,
 
     #[schemars(with = "PasswordRaw")]
     #[serde_as(as = "serde_with::TryFromInto<PasswordRaw>")]
@@ -178,8 +178,13 @@ impl KeyConfig {
             None => PrivateKey::load(&key)?,
         };
 
+        let kid = match self.kid.clone() {
+            Some(kid) => kid,
+            None => private_key.thumbprint_sha256_base64(),
+        };
+
         Ok(JsonWebKey::new(private_key)
-            .with_kid(self.kid.clone())
+            .with_kid(kid)
             .with_use(mas_iana::jose::JsonWebKeyUse::Sig))
     }
 }
@@ -322,7 +327,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let rsa_key = KeyConfig {
-            kid: Alphanumeric.sample_string(&mut rng, 10),
+            kid: None,
             password: None,
             key: Key::Value(rsa_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -338,7 +343,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_p256_key = KeyConfig {
-            kid: Alphanumeric.sample_string(&mut rng, 10),
+            kid: None,
             password: None,
             key: Key::Value(ec_p256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -354,7 +359,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_p384_key = KeyConfig {
-            kid: Alphanumeric.sample_string(&mut rng, 10),
+            kid: None,
             password: None,
             key: Key::Value(ec_p384_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -370,7 +375,7 @@ impl SecretsConfig {
         .await
         .context("could not join blocking task")?;
         let ec_k256_key = KeyConfig {
-            kid: Alphanumeric.sample_string(&mut rng, 10),
+            kid: None,
             password: None,
             key: Key::Value(ec_k256_key.to_pem(pem_rfc7468::LineEnding::LF)?.to_string()),
         };
@@ -383,7 +388,7 @@ impl SecretsConfig {
 
     pub(crate) fn test() -> Self {
         let rsa_key = KeyConfig {
-            kid: "abcdef".to_owned(),
+            kid: None,
             password: None,
             key: Key::Value(
                 indoc::indoc! {r"
@@ -402,7 +407,7 @@ impl SecretsConfig {
             ),
         };
         let ecdsa_key = KeyConfig {
-            kid: "ghijkl".to_owned(),
+            kid: None,
             password: None,
             key: Key::Value(
                 indoc::indoc! {r"
@@ -420,5 +425,70 @@ impl SecretsConfig {
             encryption: Encryption::Value([0xEA; 32]),
             keys: vec![rsa_key, ecdsa_key],
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use figment::{
+        Figment, Jail,
+        providers::{Format, Yaml},
+    };
+    use mas_jose::constraints::Constrainable;
+    use tokio::{runtime::Handle, task};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn load_config_inline_secrets() {
+        task::spawn_blocking(|| {
+            Jail::expect_with(|jail| {
+                jail.create_file(
+                    "config.yaml",
+                    indoc::indoc! {r"
+                        secrets:
+                          encryption: >-
+                            0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff
+                          keys:
+                            - kid: lekid0
+                              key: |
+                                -----BEGIN EC PRIVATE KEY-----
+                                MHcCAQEEIOtZfDuXZr/NC0V3sisR4Chf7RZg6a2dpZesoXMlsPeRoAoGCCqGSM49
+                                AwEHoUQDQgAECfpqx64lrR85MOhdMxNmIgmz8IfmM5VY9ICX9aoaArnD9FjgkBIl
+                                fGmQWxxXDSWH6SQln9tROVZaduenJqDtDw==
+                                -----END EC PRIVATE KEY-----
+                            - key: |
+                                -----BEGIN EC PRIVATE KEY-----
+                                MHcCAQEEIKlZz/GnH0idVH1PnAF4HQNwRafgBaE2tmyN1wjfdOQqoAoGCCqGSM49
+                                AwEHoUQDQgAEHrgPeG+Mt8eahih1h4qaPjhl7jT25cdzBkg3dbVks6gBR2Rx4ug9
+                                h27LAir5RqxByHvua2XsP46rSTChof78uw==
+                                -----END EC PRIVATE KEY-----
+                    "},
+                )?;
+
+                let config = Figment::new()
+                    .merge(Yaml::file("config.yaml"))
+                    .extract_inner::<SecretsConfig>("secrets")?;
+
+                Handle::current().block_on(async move {
+                    assert_eq!(
+                        config.encryption().await.unwrap(),
+                        [
+                            0, 0, 17, 17, 34, 34, 51, 51, 68, 68, 85, 85, 102, 102, 119, 119, 136,
+                            136, 153, 153, 170, 170, 187, 187, 204, 204, 221, 221, 238, 238, 255,
+                            255
+                        ]
+                    );
+
+                    let key_store = config.key_store().await.unwrap();
+                    assert!(key_store.iter().any(|k| k.kid() == Some("lekid0")));
+                    assert!(key_store.iter().any(|k| k.kid() == Some("ONUCn80fsiISFWKrVMEiirNVr-QEvi7uQI0QH9q9q4o")));
+                });
+
+                Ok(())
+            });
+        })
+        .await
+        .unwrap();
     }
 }
