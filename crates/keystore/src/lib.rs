@@ -9,16 +9,12 @@
 use std::{ops::Deref, sync::Arc};
 
 use der::{Decode, Encode, EncodePem, zeroize::Zeroizing};
-use elliptic_curve::{
-    pkcs8::{EncodePrivateKey, EncodePublicKey},
-    sec1::ToEncodedPoint,
-};
-use k256::sha2::{Digest, Sha256};
+use elliptic_curve::{pkcs8::EncodePrivateKey, sec1::ToEncodedPoint};
 use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_jose::{
     jwa::{AsymmetricSigningKey, AsymmetricVerifyingKey},
-    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet},
+    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet, Thumbprint},
 };
 use pem_rfc7468::PemLabel;
 use pkcs1::EncodeRsaPrivateKey;
@@ -181,24 +177,6 @@ impl PrivateKey {
             k256::Secp256k1::OID => Ok(Self::EcK256(Box::new(key.try_into()?))),
             oid => Err(LoadError::UnknownEllipticCurveOid { oid }),
         }
-    }
-
-    /// Returns the fingerprint of the private key.
-    ///
-    /// The fingerprint is calculated as the SHA256 sum over the PKCS#8 ASN.1
-    /// DER-encoded bytes of the private key’s corresponding public key.
-    ///
-    /// # Errors
-    ///
-    /// Errors if the DER representation of the public key can’t be derived.
-    pub fn fingerprint(&self) -> pkcs8::spki::Result<[u8; 32]> {
-        let bytes = match self {
-            PrivateKey::Rsa(key) => key.to_public_key().to_public_key_der()?,
-            PrivateKey::EcP256(key) => key.public_key().to_public_key_der()?,
-            PrivateKey::EcP384(key) => key.public_key().to_public_key_der()?,
-            PrivateKey::EcK256(key) => key.public_key().to_public_key_der()?,
-        };
-        Ok(Sha256::digest(bytes).into())
     }
 
     /// Serialize the key as a DER document
@@ -618,6 +596,12 @@ impl ParametersInfo for PrivateKey {
             PrivateKey::EcP384(_) => &[JsonWebSignatureAlg::Es384],
             PrivateKey::EcK256(_) => &[JsonWebSignatureAlg::Es256K],
         }
+    }
+}
+
+impl Thumbprint for PrivateKey {
+    fn thumbprint_prehashed(&self) -> String {
+        JsonWebKeyPublicParameters::from(self).thumbprint_prehashed()
     }
 }
 

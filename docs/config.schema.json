@@ -1555,7 +1555,7 @@
       "type": "object",
       "properties": {
         "kid": {
-          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be derived from the key by hex-encoding the first four bytes of the key’s fingerprint.",
+          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
           "type": "string"
         },
         "password_file": {

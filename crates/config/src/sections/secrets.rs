@@ -9,13 +9,9 @@ use std::borrow::Cow;
 use anyhow::{Context, bail};
 use camino::Utf8PathBuf;
 use futures_util::future::{try_join, try_join_all};
-use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
+use mas_jose::jwk::{JsonWebKey, JsonWebKeySet, Thumbprint};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
-use rand::{
-    Rng, SeedableRng,
-    distributions::{Alphanumeric, DistString, Standard},
-    prelude::Distribution as _,
-};
+use rand::{Rng, SeedableRng, distributions::Standard, prelude::Distribution as _};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -134,8 +130,7 @@ impl From<Key> for KeyRaw {
 pub struct KeyConfig {
     /// The key ID `kid` of the key as used by JWKs.
     ///
-    /// If not given, `kid` will be derived from the key by hex-encoding the
-    /// first four bytes of the key’s fingerprint.
+    /// If not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.
     #[serde(skip_serializing_if = "Option::is_none")]
     kid: Option<String>,
 
@@ -185,20 +180,13 @@ impl KeyConfig {
 
         let kid = match self.kid.clone() {
             Some(kid) => kid,
-            None => kid_from_key(&private_key)?,
+            None => private_key.thumbprint_sha256_base64(),
         };
 
         Ok(JsonWebKey::new(private_key)
             .with_kid(kid)
             .with_use(mas_iana::jose::JsonWebKeyUse::Sig))
     }
-}
-
-/// Returns a kid derived from the given key.
-fn kid_from_key(private_key: &PrivateKey) -> anyhow::Result<String> {
-    let fingerprint = private_key.fingerprint()?;
-    let head = fingerprint.first_chunk::<4>().unwrap();
-    Ok(hex::encode(head))
 }
 
 /// Encryption config option.
@@ -494,7 +482,7 @@ mod tests {
 
                     let key_store = config.key_store().await.unwrap();
                     assert!(key_store.iter().any(|k| k.kid() == Some("lekid0")));
-                    assert!(key_store.iter().any(|k| k.kid() == Some("040b0ab8")));
+                    assert!(key_store.iter().any(|k| k.kid() == Some("ONUCn80fsiISFWKrVMEiirNVr-QEvi7uQI0QH9q9q4o")));
                 });
 
                 Ok(())
