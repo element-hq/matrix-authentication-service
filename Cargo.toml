@@ -227,7 +227,7 @@ features = ["env", "yaml", "test"]
 
 # URL form encoding
 [workspace.dependencies.form_urlencoded]
-version = "1.2.1"
+version = "1.2.2"
 
 # Utilities for dealing with futures
 [workspace.dependencies.futures-util]
