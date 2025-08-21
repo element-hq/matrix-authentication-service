@@ -30,10 +30,10 @@
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
-    "i18next": "^25.3.6",
+    "i18next": "^25.4.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-i18next": "^15.6.1",
+    "react-i18next": "^15.7.1",
     "swagger-ui-dist": "^5.27.1",
     "valibot": "^1.1.0",
     "vaul": "^1.1.2"
