@@ -27,6 +27,7 @@
 
 extern crate tracing;
 use mas_data_model::TchapConfig;
+use mas_storage::BoxRepository;
 use tracing::info;
 
 mod identity_client;
@@ -232,6 +233,80 @@ pub async fn is_email_allowed(
         }
     }
 }
+
+/// Search for a user by email with fallback rules
+///
+/// # Parameters
+/// * `repo` - Repository access
+/// * `email` - The email to search for
+/// * `fallback_rules` - Fallback rules for email transformation
+///
+/// # Returns
+/// Option<`mas_data_model::User`> - The found user if any
+pub async fn search_user_by_email(
+    repo: &mut BoxRepository,
+    email: &str,
+    tchap_config: &TchapConfig,
+) -> Result<Option<mas_data_model::User>, mas_storage::RepositoryError> {
+    tracing::info!("Matching oidc identity by email:{}", email);
+    let maybe_user_email = repo.user_email().find_by_email(email).await?;
+
+    if let Some(user_email) = maybe_user_email {
+        let maybe_user_found: Option<mas_data_model::User> =
+            repo.user().lookup(user_email.user_id).await?;
+        return Ok(maybe_user_found);
+    }
+
+    tracing::info!(
+        "Email not found, Matching oidc identity by email using fallback rules:{}",
+        email
+    );
+    let fallback_rules = &tchap_config.email_lookup_fallback_rules;
+    // let fallback_rules: Value =
+    //     serde_json::from_str(r#"[{"match":"@numerique.gouv.fr",
+    // "search":"@beta.gouv.fr"}]"#)         .unwrap();
+
+    // Iterate on fallback_rules, if a rule 'match' matches the email,
+    // replace by value of 'search' and lookup again the email
+    for rule in fallback_rules {
+        let match_pattern = &rule.match_with;
+        let search_value = &rule.search;
+        tracing::info!(
+            "Checking fallback rules {} : {}",
+            match_pattern,
+            search_value
+        );
+
+        // Check if email contains the match pattern
+        if email.contains(match_pattern) {
+            // Replace match pattern with search value
+            let transformed_email = email.replace(match_pattern, search_value);
+            tracing::debug!(
+                "Search by transformed email fallback rules {}",
+                transformed_email
+            );
+
+            // Look up the transformed email
+            let maybe_transformed_user_email =
+                repo.user_email().find_by_email(&transformed_email).await?;
+
+            if let Some(transformed_user_email) = maybe_transformed_user_email {
+                let user_found: Option<mas_data_model::User> =
+                    repo.user().lookup(transformed_user_email.user_id).await?;
+                tracing::info!(
+                    "User found with fallback rules {} : {}",
+                    match_pattern,
+                    search_value
+                );
+
+                return Ok(user_found);
+            }
+        }
+    }
+
+    Ok(None)
+}
+//:tchap: end
 
 pub use self::test_utils::*;
 

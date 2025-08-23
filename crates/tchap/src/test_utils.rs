@@ -29,5 +29,6 @@ use url::Url;
 pub fn test_tchap_config() -> TchapConfig {
     TchapConfig {
         identity_server_url: Url::parse("http://localhost:8091").unwrap(),
+        email_lookup_fallback_rules: vec![],
     }
 }

@@ -31,4 +31,13 @@ use url::Url;
 pub struct TchapConfig {
     /// Identity Server Url
     pub identity_server_url: Url,
+
+    /// Fallback Rules to use when linking an upstream account
+    pub email_lookup_fallback_rules: Vec<EmailLookupFallbackRule>,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct EmailLookupFallbackRule {
+    pub match_with: String,
+    pub search: String,
 }

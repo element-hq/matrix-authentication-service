@@ -6235,6 +6235,7 @@ name = "tchap"
 version = "0.1.0"
 dependencies = [
  "mas-data-model",
+ "mas-storage",
  "reqwest",
  "serde",
  "serde_json",

@@ -41,6 +41,24 @@ pub struct TchapAppConfig {
     /// Identity Server Url
     #[serde(default = "default_identity_server_url")]
     pub identity_server_url: Url,
+
+    /// Fallback Rules to use when linking an upstream account
+    #[serde(default)]
+    pub email_lookup_fallback_rules: Vec<EmailLookupFallbackRule>,
+}
+
+/// When linking the localpart, the email can be used to find the correct
+/// localpart. By using the fallback rule, we can search for a Matrix account
+/// with the `search` email pattern for an upstream account matching with the
+/// `match_with` pattern
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug, Default, JsonSchema)]
+pub struct EmailLookupFallbackRule {
+    /// The upstream email pattern to match with when linking the localpart by
+    /// email
+    pub match_with: String,
+    /// The email pattern to use for the search when linking the localpart by
+    /// email
+    pub search: String,
 }
 
 impl ConfigurationSection for TchapAppConfig {
@@ -72,6 +90,9 @@ mod tests {
                 r"
                     tchap:
                       identity_server_url: http://localhost:8091
+                      email_lookup_fallback_rules:
+                        - match_with : '@upstream.domain.tld'
+                          search: '@matrix.domain.tld'
                 ",
             )?;
 
@@ -82,6 +103,14 @@ mod tests {
             assert_eq!(
                 &config.identity_server_url.as_str().to_owned(),
                 "http://localhost:8091/"
+            );
+
+            assert_eq!(
+                config.email_lookup_fallback_rules,
+                vec![EmailLookupFallbackRule {
+                    match_with: "@upstream.domain.tld".to_string(),
+                    search: "@matrix.domain.tld".to_string(),
+                }]
             );
 
             Ok(())
