@@ -1,44 +1,35 @@
+//
+// MIT License
+//
+// Copyright (c) 2025, Direction interministérielle du numérique - Gouvernement
+// Français
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+
 //! This module provides utilities for interacting with the Matrix identity
 //! server API.
 
 use std::time::Duration;
 
+use mas_data_model::TchapConfig;
 use tracing::info;
-use url::Url;
-
-fn default_identity_server_url() -> Url {
-    // Try to read the TCHAP_IDENTITY_SERVER_URL environment variable
-    match std::env::var("TCHAP_IDENTITY_SERVER_URL") {
-        Ok(url_str) => {
-            // Attempt to parse the URL from the environment variable
-            match Url::parse(&url_str) {
-                Ok(url) => {
-                    // Success: use the URL from the environment variable
-                    return url;
-                }
-                Err(err) => {
-                    // Parsing error: log a warning and use the default value
-                    tracing::warn!(
-                        "The TCHAP_IDENTITY_SERVER_URL environment variable contains an invalid URL: {}. Using default value.",
-                        err
-                    );
-                }
-            }
-        }
-        Err(std::env::VarError::NotPresent) => {
-            // Variable not defined: use the default value without warning
-        }
-        Err(std::env::VarError::NotUnicode(_)) => {
-            // Variable contains non-Unicode characters: log a warning
-            tracing::warn!(
-                "The TCHAP_IDENTITY_SERVER_URL environment variable contains non-Unicode characters. Using default value."
-            );
-        }
-    }
-
-    // Default value if the environment variable is not defined or invalid
-    Url::parse("http://localhost:8090").unwrap()
-}
 
 /// Queries the identity server for information about an email address
 ///
@@ -48,8 +39,11 @@ fn default_identity_server_url() -> Url {
 /// # Returns
 ///
 /// A Result containing either the JSON response or an error
-pub async fn query_identity_server(email: &str) -> Result<serde_json::Value, reqwest::Error> {
-    let identity_server_url = default_identity_server_url();
+pub async fn query_identity_server(
+    email: &str,
+    tchap_config: &TchapConfig,
+) -> Result<serde_json::Value, reqwest::Error> {
+    let identity_server_url = &tchap_config.identity_server_url;
 
     // Construct the URL with the email address
     let url = format!(

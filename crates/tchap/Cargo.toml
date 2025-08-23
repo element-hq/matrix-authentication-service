@@ -13,3 +13,5 @@ tracing.workspace = true
 tokio.workspace = true
 url.workspace = true
 serde.workspace = true
+
+mas-data-model.workspace = true

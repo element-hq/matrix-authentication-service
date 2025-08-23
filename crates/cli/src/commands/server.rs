@@ -11,10 +11,21 @@ use clap::Parser;
 use figment::Figment;
 use itertools::Itertools;
 use mas_config::{
-    AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
+    AppConfig,
+    ClientsConfig,
+    ConfigurationSection,
+    ConfigurationSectionExt,
+    //:tchap:
+    TchapAppConfig,
+    // :tchap: end
+    UpstreamOAuth2Config,
 };
 use mas_context::LogContext;
-use mas_data_model::SystemClock;
+use mas_data_model::{
+    SystemClock,
+    //:tchap:
+    TchapConfig, // :tchap: end
+};
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
@@ -59,6 +70,10 @@ impl Options {
         let span = info_span!("cli.run.init").entered();
         let mut shutdown = LifecycleManager::new()?;
         let config = AppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+        //:tchap:
+        let tchap_app_config =
+            TchapAppConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+        //:tchap: end
 
         info!(version = crate::VERSION, "Starting up");
 
@@ -159,6 +174,10 @@ impl Options {
             &config.captcha,
         )?;
 
+        //:tchap:
+        let tchap_config = tchap_config_from_tchap_app_config(&tchap_app_config);
+        //:tchap: end
+
         // Load and compile the templates
         let templates =
             templates_from_config(&config.templates, &site_config, &url_builder).await?;
@@ -246,6 +265,9 @@ impl Options {
                 activity_tracker,
                 trusted_proxies,
                 limiter,
+                //:tchap:
+                tchap_config,
+                //:tchap:end
             };
             s.init_metrics();
             s.init_metadata_cache();
@@ -334,3 +356,11 @@ impl Options {
         Ok(exit_code)
     }
 }
+
+//:tchap:
+fn tchap_config_from_tchap_app_config(tchap_app_config: &TchapAppConfig) -> TchapConfig {
+    TchapConfig {
+        identity_server_url: tchap_app_config.identity_server_url.clone(),
+    }
+}
+//:tchap: end

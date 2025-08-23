@@ -1,14 +1,36 @@
-// Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// MIT License
+//
+// Copyright (c) 2025, Direction interministérielle du numérique - Gouvernement
+// Français
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 
 //! Tchap-specific functionality for Matrix Authentication Service
 
 extern crate tracing;
+use mas_data_model::TchapConfig;
 use tracing::info;
 
 mod identity_client;
+mod test_utils;
 
 /// Capitalise parts of a name containing different words, including those
 /// separated by hyphens.
@@ -164,9 +186,13 @@ pub enum EmailAllowedResult {
 /// An `EmailAllowedResult` indicating whether the email is allowed and if not,
 /// why
 #[must_use]
-pub async fn is_email_allowed(email: &str, server_name: &str) -> EmailAllowedResult {
+pub async fn is_email_allowed(
+    email: &str,
+    server_name: &str,
+    tchap_config: &TchapConfig,
+) -> EmailAllowedResult {
     // Query the identity server
-    match identity_client::query_identity_server(email).await {
+    match identity_client::query_identity_server(email, tchap_config).await {
         Ok(json) => {
             let hs = json.get("hs");
 
@@ -206,6 +232,8 @@ pub async fn is_email_allowed(email: &str, server_name: &str) -> EmailAllowedRes
         }
     }
 }
+
+pub use self::test_utils::*;
 
 #[cfg(test)]
 mod tests {

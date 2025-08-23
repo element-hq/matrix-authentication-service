@@ -19,7 +19,14 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
     record_error,
 };
-use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProviderOnConflict};
+use mas_data_model::{
+    BoxClock,
+    BoxRng,
+    //:tchap:
+    TchapConfig,
+    //:tchap:end
+    UpstreamOAuthProviderOnConflict,
+};
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -231,6 +238,9 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    //:tchap:
+    State(tchap_config): State<TchapConfig>,
+    //:tchap:end
     cookie_jar: CookieJar,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -450,7 +460,8 @@ pub(crate) async fn get(
                     Some(value) => {
                         //:tchap:
                         let server_name = homeserver.homeserver();
-                        let email_result = check_email_allowed(&value, server_name).await;
+                        let email_result =
+                            check_email_allowed(&value, server_name, &tchap_config).await;
 
                         match email_result {
                             EmailAllowedResult::Allowed => {
@@ -1052,12 +1063,20 @@ pub(crate) async fn post(
 //:tchap:
 ///real function used when not testing
 #[cfg(not(test))]
-async fn check_email_allowed(email: &str, server_name: &str) -> EmailAllowedResult {
-    tchap::is_email_allowed(email, server_name).await
+async fn check_email_allowed(
+    email: &str,
+    server_name: &str,
+    tchap_config: &TchapConfig,
+) -> EmailAllowedResult {
+    tchap::is_email_allowed(email, server_name, tchap_config).await
 }
 ///mock function used when testing
 #[cfg(test)]
-async fn check_email_allowed(_email: &str, _server_name: &str) -> EmailAllowedResult {
+async fn check_email_allowed(
+    _email: &str,
+    _server_name: &str,
+    _tchap_config: &TchapConfig,
+) -> EmailAllowedResult {
     EmailAllowedResult::Allowed
 }
 //:tchap:end
