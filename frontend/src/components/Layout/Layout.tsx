@@ -7,6 +7,10 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import cx from "classnames";
 import { Suspense } from "react";
+//:tchap:
+import FooterTchap from "../../../tchap/components/Footer";
+import HeaderTchap from "../../../tchap/components/Header";
+//:tchap: end
 import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import Footer from "../Footer";
@@ -49,9 +53,15 @@ const Layout: React.FC<{
   wide?: boolean;
 }> = ({ children, wide }) => (
   <div className={cx(styles.layoutContainer, wide && styles.wide)}>
+    {/* :tchap: */}
+    <HeaderTchap />
+    {/* :tchap: end */}
     {children}
     <Suspense fallback={null}>
-      <AsyncFooter />
+      {/* :tchap: */}
+      {/* <AsyncFooter /> */}
+      <FooterTchap />
+      {/* :tchap: end */}
     </Suspense>
   </div>
 );
