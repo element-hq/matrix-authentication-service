@@ -729,7 +729,7 @@ version = "2.5.0"
 
 # HTTP mock server
 [workspace.dependencies.wiremock]
-version = "0.6.4"
+version = "0.6.5"
 
 # User-agent parser
 [workspace.dependencies.woothee]
