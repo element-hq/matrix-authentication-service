@@ -474,7 +474,7 @@ features = ["std"]
 # PKCS#8 encoding
 [workspace.dependencies.pkcs8]
 version = "0.10.2"
-features = ["std", "pkcs5", "encryption"]
+features = ["alloc", "std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
