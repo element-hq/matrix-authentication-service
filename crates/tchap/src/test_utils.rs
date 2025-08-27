@@ -23,12 +23,15 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-use mas_data_model::TchapConfig;
+use mas_data_model::{EmailLookupFallbackRule, TchapConfig};
 use url::Url;
 
 pub fn test_tchap_config() -> TchapConfig {
     TchapConfig {
         identity_server_url: Url::parse("http://localhost:8091").unwrap(),
-        email_lookup_fallback_rules: vec![],
+        email_lookup_fallback_rules: vec![EmailLookupFallbackRule {
+            match_with: "@numerique.gouv.fr".to_string(),
+            search: "@beta.gouv.fr".to_string(),
+        }],
     }
 }
