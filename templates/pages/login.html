@@ -9,6 +9,7 @@ Please see LICENSE files in the repository root for full details.
 {% extends "base.html" %}
 
 {% from "components/idp_brand.html" import logo %}
+{% from "components/password_field.html" import password_field %}
 
 {% block content %}
   <form method="POST" class="flex flex-col gap-10">
@@ -52,11 +53,11 @@ Please see LICENSE files in the repository root for full details.
         {% endcall %}
       {% endif %}
 
-      {% if features.password_login %}
+       {% if features.password_login %}
         {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
+          <!-- <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />         -->
+          {{ password_field(input_attributes=field.attributes(f), input_autocomplete="password") }}
         {% endcall %}
-
         {% if features.account_recovery %}
           {{ button.link_text(text=_("mas.login.forgot_password"), href="/recover", class="self-center") }}
         {% endif %}
