@@ -53,8 +53,9 @@ pub use self::{
     user_agent::{DeviceType, UserAgent},
     users::{
         Authentication, AuthenticationMethod, BrowserSession, Password, User, UserEmail,
-        UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
-        UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+        UserEmailAuthentication, UserEmailAuthenticationCode, UserPasskey, UserPasskeyChallenge,
+        UserRecoverySession, UserRecoveryTicket, UserRegistration, UserRegistrationPassword,
+        UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},
 };

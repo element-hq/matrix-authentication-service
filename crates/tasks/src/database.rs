@@ -7,7 +7,9 @@
 //! Database-related tasks
 
 use async_trait::async_trait;
-use mas_storage::queue::{CleanupExpiredTokensJob, PruneStalePolicyDataJob};
+use mas_storage::queue::{
+    CleanupExpiredTokensJob, CleanupOldPasskeyChallenges, PruneStalePolicyDataJob,
+};
 use tracing::{debug, info};
 
 use crate::{
@@ -58,6 +60,30 @@ impl RunnableJob for PruneStalePolicyDataJob {
             debug!("no stale policy data to prune");
         } else {
             info!(count, "pruned stale policy data");
+        }
+
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOldPasskeyChallenges {
+    #[tracing::instrument(name = "job.cleanup_old_passkey_challenges", skip_all, err)]
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let clock = state.clock();
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+        let count = repo
+            .user_passkey()
+            .cleanup_challenges(clock)
+            .await
+            .map_err(JobError::retry)?;
+        repo.save().await.map_err(JobError::retry)?;
+
+        if count == 0 {
+            debug!("no challenges to clean up");
+        } else {
+            info!(count, "cleaned up old challenges");
         }
 
         Ok(())

@@ -2657,6 +2657,14 @@
         "plan_management_iframe_uri": {
           "description": "Experimental feature to show a plan management tab and iframe. This value is passed through \"as is\" to the client without any validation.",
           "type": "string"
+        },
+        "passkeys": {
+          "description": "Experimental passkey support\n\nDisabled by default",
+          "allOf": [
+            {
+              "$ref": "#/definitions/PasskeysConfig"
+            }
+          ]
         }
       }
     },
@@ -2688,6 +2696,30 @@
           "description": "Should user sessions expire after inactivity",
           "default": true,
           "type": "boolean"
+        }
+      }
+    },
+    "PasskeysConfig": {
+      "description": "Configuration options for passkeys",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether passkeys are enabled or not",
+          "default": false,
+          "type": "boolean"
+        },
+        "rpid": {
+          "description": "Relying Party Identifier to use\n\nIf not set, the host from `public_base` is used",
+          "default": null,
+          "type": "string"
+        },
+        "allowed_origins": {
+          "description": "Additional allowed origins. `rpid` and `public_base` are already allowed",
+          "default": null,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
