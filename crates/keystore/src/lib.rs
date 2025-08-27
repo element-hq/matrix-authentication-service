@@ -14,7 +14,7 @@ use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_jose::{
     jwa::{AsymmetricSigningKey, AsymmetricVerifyingKey},
-    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet},
+    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet, Thumbprint},
 };
 use pem_rfc7468::PemLabel;
 use pkcs1::EncodeRsaPrivateKey;
@@ -596,6 +596,12 @@ impl ParametersInfo for PrivateKey {
             PrivateKey::EcP384(_) => &[JsonWebSignatureAlg::Es384],
             PrivateKey::EcK256(_) => &[JsonWebSignatureAlg::Es256K],
         }
+    }
+}
+
+impl Thumbprint for PrivateKey {
+    fn thumbprint_prehashed(&self) -> String {
+        JsonWebKeyPublicParameters::from(self).thumbprint_prehashed()
     }
 }
 
