@@ -20,6 +20,9 @@ runs:
       shell: sh
 
     - name: Build the frontend assets
+      #:tchap:
+      # run: npm run build
       run: npm run build-tchap
+      #:tchap:
       working-directory: ./frontend
       shell: sh
