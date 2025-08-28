@@ -1,0 +1,50 @@
+{#
+Copyright 2024 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% set _ = translator(lang) %}
+
+{% import "components/button.html" as button %}
+{% import "components/field.html" as field %}
+{% import "components/back_to_client.html" as back_to_client %}
+{% import "components/logout.html" as logout %}
+{% import "components/errors.html" as errors %}
+{% import "components/icon.html" as icon %}
+{% import "components/scope.html" as scope %}
+{% import "components/captcha.html" as captcha %}
+
+
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{{ _("app.name") }}{% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{ include_asset('src/shared.css') | indent(4) | safe }}
+    {{ include_asset('src/templates.css') | indent(4) | safe }}
+
+    <!-- :tchap: -->
+    {{ include_asset('tchap/css/tchap.css') | indent(4) | safe }}
+    {{ include_asset('node_modules/@gouvfr-lasuite/integration/dist/css/homepage-full.css') | indent(4) | safe }}
+    <script id="lasuite-gaufre-script" async defer src="https://integration.lasuite.numerique.gouv.fr/api/v1/gaufre.js"></script>
+    <!-- :tchap: -->
+    {{ captcha.head() }}
+  </head>
+  <body>
+    <!-- :tchap: add lasuite header -->
+    {% include "tchap/header.html" %}
+
+    <div class="layout-container{% if consent_page %} consent{% endif %}">
+      {% block content %}{% endblock content %}
+      
+      <!-- :tchap: remove default footer {% include "components/footer.html" %} -->
+    </div>
+
+    <!-- :tchap: add lasuite footer -->
+    {% include "tchap/footer.html" %}
+  </body>
+</html>

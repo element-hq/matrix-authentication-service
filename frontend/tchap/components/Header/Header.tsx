@@ -23,14 +23,14 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import React from "react";
+import type React from "react";
 import styles from "./Header.module.css";
 
 const Header: React.FC = () => (
   <header className={styles.headerTchap}>
     <div className={styles.logoContainer}>
-      <img 
-        className={styles.logo} 
+      <img
+        className={styles.logo}
         src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
         alt="Logo Tchap"
       />
