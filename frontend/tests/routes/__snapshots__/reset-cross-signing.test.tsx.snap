@@ -6,6 +6,24 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
     class="_layoutContainer_4402d3"
   >
     <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
+    <header
       class="_pageHeading_5ba6c3"
     >
       <div
@@ -44,41 +62,33 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
       If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.
     </p>
     <footer
-      class="_legalFooter_acfd2c"
+      class="lasuite fr-footer"
+      role="contentinfo"
     >
-      <nav>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/policy"
-          rel="noreferrer noopener"
-          title="Link to the service privacy policy"
-        >
-          Privacy Policy
-        </a>
-        <div
-          aria-hidden="true"
-          class="_separator_acfd2c"
-        >
-          •
-        </div>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/tos"
-          rel="noreferrer noopener"
-          title="Link to the service terms and conditions"
-        >
-          Terms & Conditions
-        </a>
-      </nav>
-      <p
-        class="_imprint_acfd2c"
+      <div
+        class="fr-container lasuite-container"
       >
-        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
-      </p>
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 </DocumentFragment>
@@ -89,6 +99,24 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
   <div
     class="_layoutContainer_4402d3"
   >
+    <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
     <header
       class="_pageHeading_5ba6c3"
     >
@@ -217,41 +245,33 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
       Cancel
     </a>
     <footer
-      class="_legalFooter_acfd2c"
+      class="lasuite fr-footer"
+      role="contentinfo"
     >
-      <nav>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/policy"
-          rel="noreferrer noopener"
-          title="Link to the service privacy policy"
-        >
-          Privacy Policy
-        </a>
-        <div
-          aria-hidden="true"
-          class="_separator_acfd2c"
-        >
-          •
-        </div>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/tos"
-          rel="noreferrer noopener"
-          title="Link to the service terms and conditions"
-        >
-          Terms & Conditions
-        </a>
-      </nav>
-      <p
-        class="_imprint_acfd2c"
+      <div
+        class="fr-container lasuite-container"
       >
-        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
-      </p>
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 </DocumentFragment>
@@ -262,6 +282,24 @@ exports[`Reset cross signing > renders the errored page 1`] = `
   <div
     class="_layoutContainer_4402d3"
   >
+    <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
     <header
       class="_pageHeading_5ba6c3"
     >
@@ -305,41 +343,33 @@ exports[`Reset cross signing > renders the errored page 1`] = `
       Back
     </button>
     <footer
-      class="_legalFooter_acfd2c"
+      class="lasuite fr-footer"
+      role="contentinfo"
     >
-      <nav>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/policy"
-          rel="noreferrer noopener"
-          title="Link to the service privacy policy"
-        >
-          Privacy Policy
-        </a>
-        <div
-          aria-hidden="true"
-          class="_separator_acfd2c"
-        >
-          •
-        </div>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/tos"
-          rel="noreferrer noopener"
-          title="Link to the service terms and conditions"
-        >
-          Terms & Conditions
-        </a>
-      </nav>
-      <p
-        class="_imprint_acfd2c"
+      <div
+        class="fr-container lasuite-container"
       >
-        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
-      </p>
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 </DocumentFragment>
@@ -350,6 +380,24 @@ exports[`Reset cross signing > renders the page 1`] = `
   <div
     class="_layoutContainer_4402d3"
   >
+    <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
     <header
       class="_pageHeading_5ba6c3"
     >
@@ -478,41 +526,33 @@ exports[`Reset cross signing > renders the page 1`] = `
       Back
     </a>
     <footer
-      class="_legalFooter_acfd2c"
+      class="lasuite fr-footer"
+      role="contentinfo"
     >
-      <nav>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/policy"
-          rel="noreferrer noopener"
-          title="Link to the service privacy policy"
-        >
-          Privacy Policy
-        </a>
-        <div
-          aria-hidden="true"
-          class="_separator_acfd2c"
-        >
-          •
-        </div>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/tos"
-          rel="noreferrer noopener"
-          title="Link to the service terms and conditions"
-        >
-          Terms & Conditions
-        </a>
-      </nav>
-      <p
-        class="_imprint_acfd2c"
+      <div
+        class="fr-container lasuite-container"
       >
-        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
-      </p>
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 </DocumentFragment>
@@ -524,47 +564,23 @@ exports[`Reset cross signing > renders the success page 1`] = `
     class="_layoutContainer_4402d3"
   >
     <header
-      class="_pageHeading_5ba6c3"
+      class="_headerTchap_a01974"
     >
       <div
-        class="_icon_5ba6c3 _success_5ba6c3"
+        class="_logoContainer_a01974"
       >
-        <svg
-          fill="currentColor"
-          height="1em"
-          viewBox="0 0 24 24"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="m10.6 13.8-2.15-2.15a.95.95 0 0 0-.7-.275.95.95 0 0 0-.7.275.95.95 0 0 0-.275.7q0 .425.275.7L9.9 15.9q.3.3.7.3t.7-.3l5.65-5.65a.95.95 0 0 0 .275-.7.95.95 0 0 0-.275-.7.95.95 0 0 0-.7-.275.95.95 0 0 0-.7.275zM12 22a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
-          />
-        </svg>
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
       </div>
       <div
-        class="_header_5ba6c3"
+        class="_title_a01974"
       >
-        <h1
-          class="_title_5ba6c3"
-        >
-          Identity reset successfully. Go back to the app to finish the process.
-        </h1>
+        Tchap
       </div>
     </header>
-    <p
-      class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-center text-secondary"
-    >
-      The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
-    </p>
-  </div>
-</DocumentFragment>
-`;
-
-exports[`Reset cross signing > renders the success page 2`] = `
-<DocumentFragment>
-  <div
-    class="_layoutContainer_4402d3"
-  >
     <header
       class="_pageHeading_5ba6c3"
     >
@@ -598,6 +614,124 @@ exports[`Reset cross signing > renders the success page 2`] = `
     >
       The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
     </p>
+    <footer
+      class="lasuite fr-footer"
+      role="contentinfo"
+    >
+      <div
+        class="fr-container lasuite-container"
+      >
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Reset cross signing > renders the success page 2`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_4402d3"
+  >
+    <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
+    <header
+      class="_pageHeading_5ba6c3"
+    >
+      <div
+        class="_icon_5ba6c3 _success_5ba6c3"
+      >
+        <svg
+          fill="currentColor"
+          height="1em"
+          viewBox="0 0 24 24"
+          width="1em"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m10.6 13.8-2.15-2.15a.95.95 0 0 0-.7-.275.95.95 0 0 0-.7.275.95.95 0 0 0-.275.7q0 .425.275.7L9.9 15.9q.3.3.7.3t.7-.3l5.65-5.65a.95.95 0 0 0 .275-.7.95.95 0 0 0-.275-.7.95.95 0 0 0-.7-.275.95.95 0 0 0-.7.275zM12 22a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
+          />
+        </svg>
+      </div>
+      <div
+        class="_header_5ba6c3"
+      >
+        <h1
+          class="_title_5ba6c3"
+        >
+          Identity reset successfully. Go back to the app to finish the process.
+        </h1>
+      </div>
+    </header>
+    <p
+      class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-center text-secondary"
+    >
+      The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
+    </p>
+    <footer
+      class="lasuite fr-footer"
+      role="contentinfo"
+    >
+      <div
+        class="fr-container lasuite-container"
+      >
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 </DocumentFragment>
 `;

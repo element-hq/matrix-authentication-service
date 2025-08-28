@@ -297,6 +297,24 @@ exports[`Account home page > renders the page 1`] = `
   <div
     class="_layoutContainer_4402d3 _wide_4402d3"
   >
+    <header
+      class="_headerTchap_a01974"
+    >
+      <div
+        class="_logoContainer_a01974"
+      >
+        <img
+          alt="Logo Tchap"
+          class="_logo_a01974"
+          src="https://www.tchap.gouv.fr/themes/tchap/img/logos/tchap-logo.svg"
+        />
+      </div>
+      <div
+        class="_title_a01974"
+      >
+        Tchap
+      </div>
+    </header>
     <div
       class="flex flex-col gap-10"
     >
@@ -738,41 +756,33 @@ exports[`Account home page > renders the page 1`] = `
       />
     </div>
     <footer
-      class="_legalFooter_acfd2c"
+      class="lasuite fr-footer"
+      role="contentinfo"
     >
-      <nav>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/policy"
-          rel="noreferrer noopener"
-          title="Link to the service privacy policy"
-        >
-          Privacy Policy
-        </a>
-        <div
-          aria-hidden="true"
-          class="_separator_acfd2c"
-        >
-          •
-        </div>
-        <a
-          class="_link_1v5rz_8"
-          data-kind="primary"
-          data-size="medium"
-          href="https://matrix.org/tos"
-          rel="noreferrer noopener"
-          title="Link to the service terms and conditions"
-        >
-          Terms & Conditions
-        </a>
-      </nav>
-      <p
-        class="_imprint_acfd2c"
+      <div
+        class="fr-container lasuite-container"
       >
-        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
-      </p>
+        <div
+          class="fr-footer__body"
+        >
+          <div
+            class="fr-footer__brand fr-enlarge-link"
+          >
+            <a
+              href="/"
+              title="Retour à l'accueil - Tchap"
+            >
+              <p
+                class="fr-logo"
+              >
+                République
+                <br />
+                Française
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 </DocumentFragment>
