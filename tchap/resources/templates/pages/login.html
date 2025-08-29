@@ -1,0 +1,136 @@
+{#
+Copyright 2024 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% from "components/idp_brand.html" import logo %}
+
+{% block content %}
+  <form method="POST" class="flex flex-col gap-10">
+    <header class="page-heading">
+      <!--
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
+      -->
+      {% if next and next.kind == "link_upstream" %}
+        <div class="header">
+          <h1 class="title">{{ _("mas.login.link.headline") }}</h1>
+          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+          <p class="text">{{ _("mas.login.link.description", provider=name) }}</p>
+        </div>
+      {% else %}
+        <div class="header">
+          <h1 class="title">{{ _("mas.login.headline") }}</h1>
+          <!-- <p class="text">{{ _("mas.login.description") }}</p> -->
+        </div>
+      {% endif %}
+    </header>
+
+    <!-- #tchap# -->
+    {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+    {% for provider in providers %}
+    {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+
+    <!-- #tchap# add .lasuite class to add lasuite fonts -->
+    <div class="cpd-form-root lasuite">
+      <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';">
+          <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+        </button>
+        <p>
+          <a
+          href="https://www.proconnect.gouv.fr/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
+          >
+          Qu’est-ce que ProConnect ?
+        </a>
+      </p>
+    </div>
+    {% endfor %}
+ <!-- #tchap# end -->
+ <!--
+    {% if providers %}
+    {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+    {% for provider in providers %}
+    {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+      
+      <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+        {{ logo(provider.brand_name) }}
+        {{ _("mas.login.continue_with_provider", provider=name) }}
+      </a>
+      {% endfor %}
+      {% endif %}
+      --> 
+      
+  
+  {{ field.separator() }}
+
+
+    <div class="cpd-form-root">
+      {% if form.errors is not empty %}
+        {% for error in form.errors %}
+          <div class="text-critical font-medium">
+            {{ errors.form_error_message(error=error) }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+
+      {% if features.login_with_email_allowed %}
+        {% call(f) field.field(label=_("mas.login.username_or_email"), name="username", form_state=form) %}
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
+        {% endcall %}
+      {% else %}
+        {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
+        {% endcall %}
+      {% endif %}
+
+      {% if features.password_login %}
+        {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
+        {% endcall %}
+
+        {% if features.account_recovery %}
+          {{ button.link_text(text=_("mas.login.forgot_password"), href="/recover", class="self-center") }}
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="cpd-form-root">
+      {% if features.password_login %}
+        {{ button.button(text=_("action.continue")) }}
+      {% endif %}
+
+
+
+     
+    </div>
+
+    {% if (not next or next.kind != "link_upstream") and features.password_registration %}
+      <div class="flex gap-1 justify-center items-center cpd-text-body-md-regular">
+        <p class="cpd-text-secondary">
+          {{ _("mas.login.call_to_register") }}
+        </p>
+
+
+        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+        {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
+      </div>
+    {% endif %}
+
+    {% if not providers and not features.password_login %}
+      <div class="text-center">
+        {{ _("mas.login.no_login_methods") }}
+      </div>
+    {% endif %}
+  </form>
+{% endblock content %}

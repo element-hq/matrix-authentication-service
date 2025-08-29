@@ -81,6 +81,10 @@ jobs:
           cp -r frontend/dist/ assets-dist/share/assets
           cp -r templates/ assets-dist/share/templates
           cp -r translations/ assets-dist/share/translations
+          #:tchap:
+          cp -r tchap/resources/templates/ assets-dist/share/templates
+          cp -r tchap/resources/translations/ assets-dist/share/translations
+          #:tchap:
           cp LICENSE assets-dist/LICENSE
           chmod -R u=rwX,go=rX assets-dist/
 
