@@ -130,10 +130,12 @@ impl MatrixConfig {
     ///
     /// Returns an error when the shared secret could not be read from file.
     pub async fn secret(&self) -> anyhow::Result<String> {
-        Ok(match &self.secret {
+        let raw = match &self.secret {
             Secret::File(path) => tokio::fs::read_to_string(path).await?,
             Secret::Value(secret) => secret.clone(),
-        })
+        };
+
+        Ok(raw.trim().to_string())
     }
 
     pub(crate) fn generate<R>(mut rng: R) -> Self
