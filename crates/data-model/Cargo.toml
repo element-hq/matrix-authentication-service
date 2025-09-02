@@ -31,6 +31,7 @@ regex.workspace = true
 woothee.workspace = true
 ruma-common.workspace = true
 lettre.workspace = true
+webauthn_rp.workspace = true
 
 mas-iana.workspace = true
 mas-jose.workspace = true

@@ -188,3 +188,18 @@ pub enum UserRegistrationTokens {
     ExpiresAt,
     RevokedAt,
 }
+
+#[derive(sea_query::Iden)]
+pub enum UserPasskeys {
+    Table,
+    UserPasskeyId,
+    UserId,
+    CredentialId,
+    Name,
+    Transports,
+    StaticState,
+    DynamicState,
+    Metadata,
+    LastUsedAt,
+    CreatedAt,
+}
