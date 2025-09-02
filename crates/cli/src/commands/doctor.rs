@@ -44,7 +44,7 @@ impl Options {
             r"The homeserver host in the config (`matrix.homeserver`) is not a valid domain.
 See {DOCS_BASE}/setup/homeserver.html",
         )?;
-        let admin_token = config.matrix.secret().await?;
+        let secret = config.matrix.secret().await?;
         let hs_api = config.matrix.endpoint;
 
         if !issuer.starts_with("https://") {
@@ -280,49 +280,50 @@ Error details: {e}
                 ),
             }
 
-            // Try to reach an authenticated admin API endpoint
+            // Try to reach an authenticated MAS API endpoint
             let mas_api = hs_api.join("/_synapse/mas/is_localpart_available")?;
             let result = http_client
                 .get(mas_api.as_str())
-                .bearer_auth(&admin_token)
+                .bearer_auth(&secret)
                 .send_traced()
                 .await;
             match result {
                 Ok(response) => {
                     let status = response.status();
-                    // We intentionally omit the required 'localpart' parameter in this request.
-                    // If authentication is successful, Synapse returns a 400 Bad Request because of
-                    // the missing parameter. If authentication fails, Synapse
-                    // will return a 403 Forbidden. If the MAS integration isn't
-                    // enabled, Synapse will return a 404 Not found.
+                    // We intentionally omit the required 'localpart' parameter
+                    // in this request. If authentication is successful, Synapse
+                    // returns a 400 Bad Request because of the missing
+                    // parameter. If authentication fails, Synapse will return a
+                    // 403 Forbidden. If the MAS integration isn't enabled,
+                    // Synapse will return a 404 Not found.
                     if status == StatusCode::BAD_REQUEST {
                         info!(
-                            r#"✅ The Synapse admin API is reachable with authentication at "{mas_api}"."#
+                            r#"✅ The Synapse MAS API is reachable with authentication at "{mas_api}"."#
                         );
                     } else {
                         error!(
-                            r#"❌ A Synapse admin API endpoint at "{mas_api}" replied with {status}.
+                            r#"❌ A Synapse MAS API endpoint at "{mas_api}" replied with {status}.
 Make sure the homeserver is running, and that the MAS config has the correct `matrix.secret`.
-It should match the `admin_token` set in the Synapse config.
+It should match the `secret` set in the Synapse config.
 
   matrix_authentication_service:
     enabled: true
     endpoint: {issuer:?}
     # This must exactly match the secret in the MAS config:
-    secret: {admin_token:?}
+    secret: {secret:?}
 
 And in the MAS config:
 
   matrix:
     homeserver: "{matrix_domain}"
     endpoint: "{hs_api}"
-    secret: {admin_token:?}
+    secret: {secret:?}
 "#
                         );
                     }
                 }
                 Err(e) => error!(
-                    r#"❌ Can't reach the Synapse admin API at "{mas_api}".
+                    r#"❌ Can't reach the Synapse MAS API at "{mas_api}".
 Make sure the homeserver is running, and that the MAS config has the correct `matrix.secret`.
 
 Error details: {e}
