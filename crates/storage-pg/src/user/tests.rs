@@ -5,10 +5,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use chrono::Duration;
+use mas_data_model::{Clock, clock::MockClock};
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_storage::{
-    Clock, Pagination, RepositoryAccess,
-    clock::MockClock,
+    Pagination, RepositoryAccess,
     upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,

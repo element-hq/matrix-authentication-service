@@ -10,8 +10,8 @@ mod worker;
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, Session};
-use mas_storage::{BoxRepositoryFactory, Clock};
+use mas_data_model::{BrowserSession, Clock, CompatSession, Session};
+use mas_storage::BoxRepositoryFactory;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use ulid::Ulid;
 

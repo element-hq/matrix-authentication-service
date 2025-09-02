@@ -6,9 +6,9 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports};
+use mas_data_model::{Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     upstream_oauth2::{
         UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
     },

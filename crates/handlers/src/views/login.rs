@@ -17,12 +17,12 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::oauth2::LoginHint;
+use mas_data_model::{BoxClock, BoxRng, Clock, oauth2::LoginHint};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
 };
@@ -123,6 +123,7 @@ pub(crate) async fn get(
         &mut rng,
         &templates,
         &homeserver,
+        &site_config,
     )
     .await
 }
@@ -178,6 +179,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     }
@@ -188,7 +190,7 @@ pub(crate) async fn post(
         .unwrap_or(&form.username);
 
     // First, lookup the user
-    let Some(user) = get_user_by_email_or_by_username(site_config, &mut repo, username).await?
+    let Some(user) = get_user_by_email_or_by_username(&site_config, &mut repo, username).await?
     else {
         tracing::warn!(username, "User not found");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
@@ -203,6 +205,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     };
@@ -222,6 +225,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     }
@@ -243,6 +247,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     };
@@ -287,6 +292,7 @@ pub(crate) async fn post(
                 &mut rng,
                 &templates,
                 &homeserver,
+                &site_config,
             )
             .await;
         }
@@ -346,7 +352,7 @@ pub(crate) async fn post(
 }
 
 async fn get_user_by_email_or_by_username<R: RepositoryAccess>(
-    site_config: SiteConfig,
+    site_config: &SiteConfig,
     repo: &mut R,
     username_or_email: &str,
 ) -> Result<Option<mas_data_model::User>, R::Error> {
@@ -371,6 +377,7 @@ fn handle_login_hint(
     mut ctx: LoginContext,
     next: &PostAuthContext,
     homeserver: &dyn HomeserverConnection,
+    site_config: &SiteConfig,
 ) -> LoginContext {
     let form_state = ctx.form_state_mut();
 
@@ -382,7 +389,10 @@ fn handle_login_hint(
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
         let value = match grant.parse_login_hint(homeserver.homeserver()) {
             LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
-            LoginHint::None => None,
+            LoginHint::Email(email) if site_config.login_with_email_allowed => {
+                Some(email.to_string())
+            }
+            _ => None,
         };
         form_state.set_value(LoginFormField::Username, value);
     }
@@ -400,6 +410,7 @@ async fn render(
     rng: impl Rng,
     templates: &Templates,
     homeserver: &dyn HomeserverConnection,
+    site_config: &SiteConfig,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
@@ -413,7 +424,7 @@ async fn render(
         .await
         .map_err(InternalError::from_anyhow)?;
     let ctx = if let Some(next) = next {
-        let ctx = handle_login_hint(ctx, &next, homeserver);
+        let ctx = handle_login_hint(ctx, &next, homeserver, site_config);
         ctx.with_post_action(next)
     } else {
         ctx

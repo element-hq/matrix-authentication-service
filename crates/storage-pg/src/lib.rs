@@ -22,7 +22,7 @@
 //! # use async_trait::async_trait;
 //! # use ulid::Ulid;
 //! # use rand::RngCore;
-//! # use mas_storage::Clock;
+//! # use mas_data_model::Clock;
 //! # use mas_storage_pg::{DatabaseError, ExecuteExt};
 //! # use sqlx::PgConnection;
 //! # use uuid::Uuid;

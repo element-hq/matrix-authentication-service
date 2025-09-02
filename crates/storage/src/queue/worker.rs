@@ -7,10 +7,11 @@
 
 use async_trait::async_trait;
 use chrono::Duration;
+use mas_data_model::Clock;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A worker is an entity which can execute jobs.
 pub struct Worker {

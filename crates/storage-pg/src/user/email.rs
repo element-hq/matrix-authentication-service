@@ -7,11 +7,11 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
     UserRegistration,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;

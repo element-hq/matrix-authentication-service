@@ -10,9 +10,9 @@ use axum_extra::typed_header::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::TokenType;
+use mas_data_model::{BoxClock, BoxRng, Clock, TokenType};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
 };

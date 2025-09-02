@@ -16,8 +16,8 @@ use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{Session, User};
-use mas_storage::{BoxClock, BoxRepository, RepositoryError};
+use mas_data_model::{BoxClock, Session, User};
+use mas_storage::{BoxRepository, RepositoryError};
 use ulid::Ulid;
 
 use super::response::ErrorResponse;

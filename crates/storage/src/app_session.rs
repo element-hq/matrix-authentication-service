@@ -8,9 +8,9 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, Device, Session, User};
+use mas_data_model::{BrowserSession, Clock, CompatSession, Device, Session, User};
 
-use crate::{Clock, Page, Pagination, repository_impl};
+use crate::{Page, Pagination, repository_impl};
 
 /// The state of a session
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
