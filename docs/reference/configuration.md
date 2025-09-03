@@ -179,6 +179,7 @@ clients:
       - http://localhost:1234/callback
   # Public client
   - client_id: 00000000000000000000SEC0ND
+    client_name: "Public OIDC client"
     client_auth_method: none
 ```
 
