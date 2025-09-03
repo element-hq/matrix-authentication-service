@@ -9,6 +9,10 @@
 # implicit BUILDARG: BUILDPLATFORM being the host platform and TARGETPLATFORM
 # being the platform being built.
 
+#:tchap:
+# tchap files are added to this image (templates, translations, css)
+#:tchap:
+
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
@@ -32,7 +36,9 @@ RUN --network=default \
 COPY ./frontend/ /app/frontend/
 COPY ./templates/ /app/templates/
 RUN --network=none \
-  npm run build
+  #:tchap:
+  npm run build-tchap
+  #:tchap:
 
 # Move the built files
 RUN --network=none \
@@ -140,6 +146,12 @@ COPY --from=frontend /share /share
 COPY --from=policy /app/policies/policy.wasm /share/policy.wasm
 COPY ./templates/ /share/templates
 COPY ./translations/ /share/translations
+
+#:tchap:
+COPY ./tchap/resources/templates/ /share/templates/
+COPY ./tchap/resources/translations/ /share/translations/
+#:tchap:
+
 
 ##################################
 ## Runtime stage, debug variant ##

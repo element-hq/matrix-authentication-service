@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 # Please see LICENSE files in the repository root for full details.
 
+
+#:tchap:
+# the only job used by tchap are `compute-version` and `build-image`
+#:tchap:
+
 name: Build
 
 on:
@@ -81,10 +86,6 @@ jobs:
           cp -r frontend/dist/ assets-dist/share/assets
           cp -r templates/ assets-dist/share/templates
           cp -r translations/ assets-dist/share/translations
-          #:tchap:
-          cp -r tchap/resources/templates/* assets-dist/share/templates/
-          cp -r tchap/resources/translations/* assets-dist/share/translations/
-          #:tchap: end
           cp LICENSE assets-dist/LICENSE
           chmod -R u=rwX,go=rX assets-dist/
 
