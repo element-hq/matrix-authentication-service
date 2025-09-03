@@ -24,11 +24,10 @@ As such, they usually can be bypassed through the admin API or the CLI if needed
 
 ### User attributes
 
-The policy is evaluated in three different scenarios:
+The policy is evaluated in the following different scenarios:
 
- - [`register.rego`]: During user registration, either with password credentials or with an upstream OAuth 2.0 provider. This calls the [`email.rego`] and [`password.rego`] policies as well.
+ - [`register.rego`]: During user registration, either with password credentials or with an upstream OAuth 2.0 provider. This calls the [`email.rego`] policy as well.
  - [`email.rego`]: When a user adds a new email address to their account.
- - [`password.rego`]: When a user changes their password.
 
 ### Client registration
 
@@ -69,8 +68,7 @@ This is especially important as in the future it will make it possible to implem
 To understand the authorization process and how sessions are created, refer to the [authorization and sessions](./authorization.md) section.
 
 
-[`register.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/register.rego 
-[`email.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/email.rego 
-[`password.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/password.rego 
-[`client_registration.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/client_registration.rego 
-[`authorization_grant.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/authorization_grant.rego
+[`register.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/register/register.rego 
+[`email.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/email/email.rego 
+[`client_registration.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/client_registration/client_registration.rego 
+[`authorization_grant.rego`]: https://github.com/element-hq/matrix-authentication-service/blob/main/policies/authorization_grant/authorization_grant.rego
