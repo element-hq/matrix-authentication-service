@@ -217,7 +217,7 @@ test_web_redirect_uri if {
 	client_registration.allow with input.client_metadata as {
 		"application_type": "web",
 		"client_uri": "https://example.com/",
-		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback", "https://example.com/callback?query=value"],
+		"redirect_uris": ["https://example.com/second/callback", "https://example.com/callback", "https://example.com/callback?query=value", "https://example.com/callback~path_with_extra_chars"],
 	}
 
 	client_registration.allow with input.client_metadata as {
