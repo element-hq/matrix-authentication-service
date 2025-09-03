@@ -1,0 +1,251 @@
+http:
+  listeners:
+    - name: web
+      resources:
+        - name: discovery
+        - name: human
+        - name: oauth
+        - name: compat
+        - name: graphql
+        - name: assets
+      # for api admin calls
+        - name: adminapi
+      binds:
+        - address: '[::]:8080'
+      proxy_protocol: false
+    - name: internal
+      resources:
+        - name: health
+        # for api admin calls
+        - name: adminapi
+      binds:
+        - host: localhost
+          port: 8081
+      proxy_protocol: false
+  trusted_proxies:
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+    - 10.0.0.0/10
+    - 127.0.0.1/8
+    - fd00::/8
+    - ::1/128
+  #  public_base: http://[::]:8080/
+  #  issuer: http://[::]:8080/
+  public_base: https://auth.tchapgouv.com/
+  issuer: https://auth.tchapgouv.com/
+database:
+  uri: postgresql://postgres:postgres@localhost/postgres
+  max_connections: 10
+  min_connections: 0
+  connect_timeout: 30
+  idle_timeout: 600
+  max_lifetime: 1800
+email:
+  from: '"Authentication Service" <auth@tchapgouv.com>'
+  reply_to: '"Authentication Service" <auth@tchapgouv.com>'
+  transport: smtp
+  mode: plain
+  hostname: 127.0.0.1
+  port: 1025
+
+secrets:
+  encryption: eb38b8b9087842b3345269f3c6ca92b2a8d6aa63e3a773d23ed1c9cb45c5ef83
+  keys:
+    - kid: dyrZtIyXSA
+      key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEogIBAAKCAQEAukLyWSv9KOeBsmIG4ntL/BP+wj5L4GbOyAOEzRBBO0ZbBYVn
+        1L/aYQ65cQpQKK0MzH5cn7TvIY0JBh/ZsSm3e7DdhGJzoqPrW6E0/6QqXEl4gN1q
+        DUCMj2CwAcT9OX1Wt6cNq70+gbqp6+yT+Nn++KPylHa/V9wRxkaV3fyM+XYVeddB
+        amDR+fBjHgVXQ3xk2ezUBS3AmyKBgETnHufKCkxJ5mXdU9HT0ewg8J2PrgiRBwDj
+        XP7C5Zif/+NfYPO2mM/b0Y91pl9aXuUHX+/zlqtpcwX/WprEsCaRUa9qWHuiftMf
+        uelsflCgZ0KumZjzr3wPDEfu8n7WbVEObNxF+QIDAQABAoIBAEl82mNGUMbPuEMq
+        G+9FmDAnr27x5zvtNA6EHORPUn1Rf94IyXOOEloS1iV8XS3/QLp57I9ycpq5K2NI
+        M7qLbAIYQP3XXipAJD7ttpxaKABrWGj3cr0xx4NWMXsxPnttMUaaWXF14/CJNjuI
+        BsW7NLbi8HWU+F9wy26AMOb5mqFdQfk15H3LaM3L3hMuV5DOcA467luwHmuGGTji
+        VjZg3yZZF2ROtTwwVSB7UCokmW3FZys/U4SyzXSrboUxF9T3PW3Hxm9e1JfFQuLh
+        rn85Q4IDpRtK2O5ECmKjY0cyvQOVItQytTeVXtSEzgMfK5VpnYMefdCFvhExcsuV
+        JHT1c/UCgYEAziAPCJYNTXsvo3yEW1iWnAjfi6R7g9aluNDjf4xmva5DTOdZSH1d
+        AJkzXZtPYXXlR42RT4FzE/ICdjo81aDMrMHwoIiH9p1n7IdDTt3GONYi3VPKGvZd
+        Ghgdq5jgdedDhF9MximZcWdZOZLCymKME61RuCg18p/MMIJ/FRNBE38CgYEA51R6
+        CjNc93qO7hL7AGu+evs3/PVrHsg5iBf8GcGeyNNGkA5TJcYTO075VBDQuWsMZbvx
+        d0jBjROs8U2AJzgbh6+N/rZACflk8W4LyD3Pw+1coIcckH4hmgN37vkh63qiGX8K
+        YVe8CrbGliBB2OccXsdJVDe0f45kte0eJh6cAocCgYAH9d7+wuTCoEZHtxBZgsNW
+        RVV0zCZlAg4mZBLVIzP4kVlSCAE/tm+4DTKZo9zd87KmH8aD3oj2NTt5G2isC2i8
+        J0VGvd8aXBveW57y1cfI/CQejhTZE7imwFWtAdtxUjweSZvqb0LYyVf9zDgvnryw
+        KdplFVB4DUnSece0pai2uwKBgDzV335dQZ6nsXz0quPScfZ/qJqyo+gledPLkvXn
+        EG35+f2ads1hSN95BmLQRUPt3gXHJlpbXONQAFQ5MHGf9MV7KpmIrlCxMJW5fgm8
+        D66T9p8UyTNKqGWLcff7tqrpxkV0PnOZEg+zP4htlUOIi9J1EFjAiYxeEygw4pPd
+        yuNzAoGAI0lLE32iIm+j5byFCKRuS6cQmDBzUJxZiCuLsuZEINYdz2nxKZqd9VtA
+        rOXzo8vJuGLF1hjf1/C66F3EnPxcclPL10vLCE8RbfQYVwBxw7MG9BLJXIlMjb2V
+        7CjVDE4Gaa96tChg1pepuJcOEuWez3o3Ard9oZ4Z9sm7VJzmuoY=
+        -----END RSA PRIVATE KEY-----
+    - kid: O1hkajPW2v
+      key: |
+        -----BEGIN EC PRIVATE KEY-----
+        MHcCAQEEINsgMBFDIrIzqOIWuR94TCi5MTH1FS8wfgatu9BsO2jVoAoGCCqGSM49
+        AwEHoUQDQgAEldEtvZaXtblpUdHpKKQiH7z9ADC55H0yrCYyQsLXbt14lI2NuseX
+        MWsvSLBzkbEetDxkmKh0bhOfrdwv9x5SwA==
+        -----END EC PRIVATE KEY-----
+    - kid: 2nhe3z2925
+      key: |
+        -----BEGIN EC PRIVATE KEY-----
+        MIGkAgEBBDDTVngHypOwUnPOGXeskQJhdSLLPBCM+mkSvzr2SZ7Kjm3hftvs2s7J
+        gZBOZwXyoaKgBwYFK4EEACKhZANiAAQ3WGOQs3EqO2x4X7PBWs6Lw3qdmRLHqblc
+        Zplh3wYPDOoUMvD99Snxz43t5sK6kphLBL262/srx/UPT1McLUxBMlBvBUbBEKHX
+        a8icrL13yIwflquj0EHrE7czFJw1txs=
+        -----END EC PRIVATE KEY-----
+    - kid: 50aRR3QVqx
+      key: |
+        -----BEGIN EC PRIVATE KEY-----
+        MHQCAQEEIN8bErXY1sWEJ1y9KoYcpcUImIjpS/ay3pEugYPfr3Y/oAcGBSuBBAAK
+        oUQDQgAEMHcshHVFbMSEyyt3ptIdAhnrg+XlQskZ33hZvdtzm6I0wW8H8zslMp+I
+        t0KYCeIQ7HTPtgJAOsKxEPBfmVXZmA==
+        -----END EC PRIVATE KEY-----
+passwords:
+  enabled: true
+  schemes:
+    - version: 1
+      algorithm: bcrypt
+      secret: "secret01"
+    - version: 2
+      algorithm: argon2id
+  minimum_complexity: 3
+matrix:
+  homeserver: tchapgouv.com
+  secret: '/DjWc4D3yyqgjYN8tum65g'
+  endpoint: https://matrix.tchapgouv.com/
+
+clients:
+  - client_id: 0000000000000000000SYNAPSE
+    client_auth_method: client_secret_basic
+    client_secret: '/DjWc4D3yyqgjYN8tum65g'
+  
+  # for api admin calls
+  - client_id: 01J44RKQYM4G3TNVANTMTDYTX6
+    client_auth_method: client_secret_basic
+    client_secret: phoo8ahneir3ohY2eigh4xuu6Oodaewi
+
+
+policy:
+  data:
+    admin_clients:
+      # for api admin calls
+      - 01J44RKQYM4G3TNVANTMTDYTX6
+
+account:
+  # Whether users are allowed to change their email addresses.
+  #
+  # Defaults to `true`.
+  email_change_allowed: false
+
+  # Whether users are allowed to change their display names
+  #
+  # Defaults to `true`.
+  # This should be in sync with the policy in the homeserver configuration.
+  displayname_change_allowed: false
+
+  # Whether to enable self-service password registration
+  #
+  # Defaults to `false`.
+  # This has no effect if password login is disabled.
+  password_registration_enabled: true
+
+  # Whether users are allowed to change their passwords
+  #
+  # Defaults to `true`.
+  # This has no effect if password login is disabled.
+  password_change_allowed: true
+
+  # Whether email-based password recovery is enabled
+  #
+  # Defaults to `false`.
+  # This has no effect if password login is disabled.
+  password_recovery_enabled: true
+
+  # Whether users can log in with their email address.
+  #
+  # Defaults to `false`.
+  # This has no effect if password login is disabled.
+  login_with_email_allowed: true
+
+templates:
+  # From where to load the templates
+  # This is relative to the current working directory, *not* the config file
+  path: "WILL BE REPLACED BY build_conf.sh"
+
+  # Path to the frontend assets manifest file
+  # assets_manifest: "/to/manifest.json"
+
+  # # From where to load the translation files
+  # # Default in Docker distribution: `/usr/local/share/mas-cli/translations/`
+  # # Default in pre-built binaries: `./share/translations/`
+  # # Default in locally-built binaries: `./translations/`
+  translations_path: "WILL BE REPLACED BY build_conf.sh"
+
+upstream_oauth2:
+  providers:
+    - id: "01JK5MR1SD21MAQY4PWMFG283W"
+      human_name: Proconnect (mock)
+      issuer: "https://sso.tchapgouv.com/realms/proconnect-mock"
+      token_endpoint_auth_method: client_secret_basic
+      client_id: "matrix-authentication-service"
+      client_secret: "HrJ1NZ0AbkHuWWjyRHh7X2lzn3S8eagt"
+      scope: "openid profile email"
+      claims_imports:
+        localpart:
+          action: force 
+          #template: "{{ user.preferred_username }}"
+          on_conflict: add
+          #action: require
+          template: "{{ user.email | email_to_mxid_localpart }}"
+        displayname:
+          action: require
+          #template: "{{ user.name }}"
+          template: "{{ user.email | email_to_display_name }}"
+        email:
+          action: require
+          template: "{{ user.email }}"
+          set_email_verification: always
+
+telemetry:
+  tracing:
+  #   # List of propagators to use for extracting and injecting trace contexts
+  #   propagators:
+  #     # Propagate according to the W3C Trace Context specification
+  #     - tracecontext
+  #     # Propagate according to the W3C Baggage specification
+  #     - baggage
+  #     # Propagate trace context with Jaeger compatible headers
+  #     - jaeger
+
+  #   # The default: don't export traces
+    exporter: none
+
+    # Export traces to an OTLP-compatible endpoint
+    #exporter: otlp
+    #endpoint: https://localhost:4318
+  metrics:
+    # The default: don't export metrics
+    exporter: none
+
+    # Export metrics to an OTLP-compatible endpoint
+    #exporter: otlp
+    #endpoint: https://localhost:4317
+
+    # Export metrics by exposing a Prometheus endpoint
+    # This requires mounting the `prometheus` resource to an HTTP listener
+    #exporter: prometheus
+
+  # sentry:
+  #   # DSN to use for sending errors and crashes to Sentry
+  #   dsn: https://public@host:port/1
+
+tchap:
+  identity_server_url: "http://localhost:8083"
+  email_lookup_fallback_rules: 
+  # match : the new email pattern
+  # search : the old email pattern
+  # old email in mail.numerique.gouv.fr
+  - match_with : '@numerique.gouv.fr'
+    search: '@beta.gouv.fr'
