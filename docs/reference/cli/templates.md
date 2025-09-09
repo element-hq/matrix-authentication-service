@@ -17,3 +17,12 @@ INFO mas_core::templates::check: Rendering template name="register.html" context
 INFO mas_core::templates::check: Rendering template name="index.html" context={"csrf_token":"fake_csrf_token","current_session":{"active":true,"created_at":"2021-09-24T13:26:52.962135085Z","id":1,"last_authd_at":"2021-09-24T13:26:52.962135316Z","user_id":2,"username":"john"},"discovery_url":"https://example.com/.well-known/openid-configuration"}
 ...
 ```
+
+What is checked:
+- the Jinja templates are syntactically valid
+- all translation keys exist
+
+What is not checked:
+- the validity of the generated HTML (you can forget closing tags, or otherwise create invalid HTML output)
+- undefined variables (`{{ undefined_variable }}` will render as an empty string and not raise an error)
+- all translation keys exist *in your intended language(s)* (so some translation keys may fall back to English)
