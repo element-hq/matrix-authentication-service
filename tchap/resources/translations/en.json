@@ -82,9 +82,7 @@
       "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:38:33-58, pages/upstream_oauth2/do_register.html:114:37-62"
     },
     "hide": "",
-    "@hide": {
-      "context": "components/password_field.html:25:43-59"
-    },
+    "@hide": {},
     "loading": "Loading…",
     "@loading": {
       "context": "form_post.html:14:27-46"
@@ -102,9 +100,7 @@
       "context": "pages/register/password.html:46:33-61"
     },
     "show": "",
-    "@show": {
-      "context": "components/password_field.html:21:43-59, components/password_field.html:8:96-112"
-    },
+    "@show": {},
     "username": "Username",
     "@username": {
       "context": "pages/login.html:92:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
@@ -795,11 +791,11 @@
       "suggest_link": {
         "action": "Link",
         "@action": {
-          "context": "pages/upstream_oauth2/do_login.html:28:28-72, pages/upstream_oauth2/suggest_link.html:27:28-72"
+          "context": "pages/upstream_oauth2/suggest_link.html:27:28-72"
         },
         "heading": "Link to your existing account",
         "@heading": {
-          "context": "pages/upstream_oauth2/do_login.html:18:27-72, pages/upstream_oauth2/suggest_link.html:18:27-72"
+          "context": "pages/upstream_oauth2/suggest_link.html:18:27-72"
         }
       }
     },
