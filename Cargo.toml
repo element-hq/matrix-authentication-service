@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "1.2.0-rc.0"
+package.version = "1.2.0"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -34,35 +34,35 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.2.0-rc.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.2.0-rc.0" }
-mas-config = { path = "./crates/config/", version = "=1.2.0-rc.0" }
-mas-context = { path = "./crates/context/", version = "=1.2.0-rc.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=1.2.0-rc.0" }
-mas-email = { path = "./crates/email/", version = "=1.2.0-rc.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.2.0-rc.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=1.2.0-rc.0" }
-mas-http = { path = "./crates/http/", version = "=1.2.0-rc.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=1.2.0-rc.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.2.0-rc.0" }
-mas-iana = { path = "./crates/iana/", version = "=1.2.0-rc.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.2.0-rc.0" }
-mas-jose = { path = "./crates/jose/", version = "=1.2.0-rc.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=1.2.0-rc.0" }
-mas-listener = { path = "./crates/listener/", version = "=1.2.0-rc.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=1.2.0-rc.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.2.0-rc.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.2.0-rc.0" }
-mas-policy = { path = "./crates/policy/", version = "=1.2.0-rc.0" }
-mas-router = { path = "./crates/router/", version = "=1.2.0-rc.0" }
-mas-spa = { path = "./crates/spa/", version = "=1.2.0-rc.0" }
-mas-storage = { path = "./crates/storage/", version = "=1.2.0-rc.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.2.0-rc.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=1.2.0-rc.0" }
-mas-templates = { path = "./crates/templates/", version = "=1.2.0-rc.0" }
-mas-tower = { path = "./crates/tower/", version = "=1.2.0-rc.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=1.2.0-rc.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=1.2.0-rc.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.2.0" }
+mas-cli = { path = "./crates/cli/", version = "=1.2.0" }
+mas-config = { path = "./crates/config/", version = "=1.2.0" }
+mas-context = { path = "./crates/context/", version = "=1.2.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=1.2.0" }
+mas-email = { path = "./crates/email/", version = "=1.2.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=1.2.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=1.2.0" }
+mas-http = { path = "./crates/http/", version = "=1.2.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=1.2.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.2.0" }
+mas-iana = { path = "./crates/iana/", version = "=1.2.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.2.0" }
+mas-jose = { path = "./crates/jose/", version = "=1.2.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=1.2.0" }
+mas-listener = { path = "./crates/listener/", version = "=1.2.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=1.2.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.2.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.2.0" }
+mas-policy = { path = "./crates/policy/", version = "=1.2.0" }
+mas-router = { path = "./crates/router/", version = "=1.2.0" }
+mas-spa = { path = "./crates/spa/", version = "=1.2.0" }
+mas-storage = { path = "./crates/storage/", version = "=1.2.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.2.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=1.2.0" }
+mas-templates = { path = "./crates/templates/", version = "=1.2.0" }
+mas-tower = { path = "./crates/tower/", version = "=1.2.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=1.2.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=1.2.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
