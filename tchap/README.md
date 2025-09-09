@@ -23,6 +23,22 @@ Tchap custom React components are located in a [subdirectory](../frontend/tchap)
 
 For building the Docker image, the [`build` github action](../.github/workflows/build.yaml) packages all MAS resources enhanced with Tchap customizations.
 
+## Web dev
+
+- start your docker engine, on Macos Docker Desktop
+
+- [install rust](https://www.rust-lang.org/tools/install) : curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+- on MacOs install `brew install fswatch`
+
+- run `start.sh`, if you work on templates: `start-with-hot-reload.sh`
+
+- edit templates in `./tchap/resources/templates`
+
+If Synapse integration is needed, install the environment from element-docker-demo and run it (see README.md)
+
+Copy synapse secret from `element-docker-demo/data/mas/config.yaml` to .env file : HOMESERVER_SECRET=
+
 
 # Important knowledge
 
