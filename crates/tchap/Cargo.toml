@@ -16,3 +16,7 @@ serde.workspace = true
 
 mas-data-model.workspace = true
 mas-storage.workspace = true
+mas-http.workspace = true
+
+[dev-dependencies]
+wiremock.workspace = true

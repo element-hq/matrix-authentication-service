@@ -6235,6 +6235,7 @@ name = "tchap"
 version = "0.1.0"
 dependencies = [
  "mas-data-model",
+ "mas-http",
  "mas-storage",
  "reqwest",
  "serde",
@@ -6242,6 +6243,7 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
+ "wiremock",
 ]
 
 [[package]]

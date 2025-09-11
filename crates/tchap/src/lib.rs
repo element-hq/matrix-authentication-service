@@ -312,6 +312,13 @@ pub use self::test_utils::*;
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+    use url::Url;
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path, query_param},
+    };
+
     use super::*;
 
     #[test]
@@ -381,5 +388,145 @@ mod tests {
             email_to_mxid_localpart("user!#$%^&*()@domain.com"),
             "user-domain.com"
         );
+    }
+
+    #[tokio::test]
+    async fn test_is_email_allowed() {
+        let email = "user@example.org";
+        let server_name = "homeserver1";
+        let allowed = true;
+
+        let mock_server = MockServer::start().await;
+
+        let expected_calls = 1;
+
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/_matrix/identity/api/v1/internal-info"))
+            .and(query_param("medium", "email"))
+            .and(query_param("address", email))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "hs": server_name,
+                "requires_invite": true,
+                "invited": allowed
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
+
+        // Fake config
+        let url = mock_server.uri() + "/";
+        let config = TchapConfig {
+            identity_server_url: Url::parse(url.as_str()).unwrap(),
+            email_lookup_fallback_rules: vec![],
+        };
+
+        let result = is_email_allowed(email, server_name, &config).await;
+
+        assert_eq!(result, EmailAllowedResult::Allowed);
+    }
+
+    #[tokio::test]
+    async fn test_is_email_allowed_no_invitation() {
+        let email = "user@example.org";
+        let server_name = "homeserver1";
+        let allowed = false;
+
+        let mock_server = MockServer::start().await;
+
+        let expected_calls = 1;
+
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/_matrix/identity/api/v1/internal-info"))
+            .and(query_param("medium", "email"))
+            .and(query_param("address", email))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "hs": server_name,
+                "requires_invite": true,
+                "invited": allowed
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
+
+        // Fake config
+        let url = mock_server.uri() + "/";
+        let config = TchapConfig {
+            identity_server_url: Url::parse(url.as_str()).unwrap(),
+            email_lookup_fallback_rules: vec![],
+        };
+
+        let result = is_email_allowed(email, server_name, &config).await;
+
+        assert_eq!(result, EmailAllowedResult::InvitationMissing);
+    }
+
+    #[tokio::test]
+    async fn test_is_email_allowed_wrong_server() {
+        let email = "user@example.org";
+        let server_name = "homeserver1";
+        let allowed = true;
+
+        let mock_server = MockServer::start().await;
+
+        let expected_calls = 1;
+
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/_matrix/identity/api/v1/internal-info"))
+            .and(query_param("medium", "email"))
+            .and(query_param("address", email))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "hs": "homeserver2",
+                "requires_invite": true,
+                "invited": allowed
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
+
+        // Fake config
+        let url = mock_server.uri() + "/";
+        let config = TchapConfig {
+            identity_server_url: Url::parse(url.as_str()).unwrap(),
+            email_lookup_fallback_rules: vec![],
+        };
+
+        let result = is_email_allowed(email, server_name, &config).await;
+
+        assert_eq!(result, EmailAllowedResult::WrongServer);
+    }
+
+    #[tokio::test]
+    async fn test_is_email_allowed_with_special_character() {
+        let email = "user+1@example.org";
+        let server_name = "homeserver1";
+        let allowed = true;
+
+        let mock_server = MockServer::start().await;
+
+        let expected_calls = 1;
+
+        let _mock_guard = Mock::given(method("GET"))
+            .and(path("/_matrix/identity/api/v1/internal-info"))
+            .and(query_param("medium", "email"))
+            .and(query_param("address", email))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "hs": server_name,
+                "requires_invite": true,
+                "invited": allowed
+            })))
+            .expect(expected_calls)
+            .mount(&mock_server)
+            .await;
+
+        // Fake config
+        let url = mock_server.uri() + "/";
+        let config = TchapConfig {
+            identity_server_url: Url::parse(url.as_str()).unwrap(),
+            email_lookup_fallback_rules: vec![],
+        };
+
+        let result = is_email_allowed(email, server_name, &config).await;
+
+        assert_eq!(result, EmailAllowedResult::Allowed);
     }
 }

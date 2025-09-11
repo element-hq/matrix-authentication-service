@@ -26,9 +26,8 @@
 //! This module provides utilities for interacting with the Matrix identity
 //! server API.
 
-use std::time::Duration;
-
 use mas_data_model::TchapConfig;
+use mas_http::RequestBuilderExt;
 use tracing::info;
 
 /// Queries the identity server for information about an email address
@@ -47,22 +46,21 @@ pub async fn query_identity_server(
 
     // Construct the URL with the email address
     let url = format!(
-        "{}_matrix/identity/api/v1/internal-info?medium=email&address={}",
-        identity_server_url, email
+        "{}_matrix/identity/api/v1/internal-info",
+        identity_server_url
     );
+    let query_params = [("medium", "email"), ("address", email)];
 
     info!("Making request to identity server: {}", url);
 
-    // Create a client with a timeout
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()
-        .unwrap_or_default();
+    let http_client = mas_http::reqwest_client();
 
     // Make the HTTP request asynchronously
-    // should use mas-http instead like SynapseConnection
-    #[allow(clippy::disallowed_methods)]
-    let response = client.get(&url).send().await?;
+    let response = http_client
+        .get(url)
+        .query(&query_params)
+        .send_traced()
+        .await?;
 
     // Parse the JSON response
     let json = response.json::<serde_json::Value>().await?;
