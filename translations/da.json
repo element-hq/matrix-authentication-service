@@ -237,6 +237,7 @@
       },
       "login_link": {
         "action": "Fortsæt",
+        "description": "Der findes allerede en konto med dette brugernavn (%(username)s), den vil blive forbundet til denne upstream-konto.",
         "heading": "Forbind til din eksisterende konto"
       },
       "register": {
