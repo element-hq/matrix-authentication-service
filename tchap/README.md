@@ -60,3 +60,15 @@ See in the logs
 2025-06-03T12:28:33.967776Z  INFO mas_cli::commands::server:297 Listening on http://[::]:8080 with resources [Discovery, Human, OAuth, Compat, GraphQL { playground: false, undocumented_oauth2_access: false }, Assets { path: "./frontend/dist/" }, AdminApi] 
 
 ```
+
+# troubleshoot
+
+
+### error : This endpoint must only be called by MAS
+
+hint : your HOMESERVER_SECRET is probably not correct
+
+`
+M_UNKNOWN: This endpoint must only be called by MAS
+HTTP status client error (403 Forbidden) for url (https://matrix.tchapgouv.com/_synapse/mas/is_localpart_available?localpart=olivierdelcroix)
+`

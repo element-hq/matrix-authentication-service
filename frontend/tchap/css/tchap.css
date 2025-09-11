@@ -24,6 +24,42 @@
  */
 
 /* used by the html templates */
+
+/*Align button style with LaSuite UI Kit*/
+button.cpd-button,
+a.cpd-button,
+.cpd-text-control {
+  border-radius: 4px;
+}
+
+/*Other fixes*/
+.lasuite-header {
+  border-top: 0 !important;
+}
+.cpd-form-root.lasuite {
+  align-items: center;
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.cpd-form-root.lasuite a {
+  font-size: 90%;
+}
+p.cpd-text-secondary,
+.cpd-link {
+  font-size: 95%;
+}
+footer {
+  border-top: 2px solid #313178;
+}
+.fr-footer__body {
+  padding: 3rem 1.625rem 1rem;
+}
+.layout-container {
+  padding-bottom: 8em;
+}
+
 /* proconnect button */
 .proconnect-sr-only {
   position: absolute;
@@ -45,6 +81,7 @@
   width: 214px;
   height: 56px;
   border: none;
+  border-radius: 4px;
 }
 
 .proconnect-button:hover {

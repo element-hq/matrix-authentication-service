@@ -757,7 +757,6 @@ exports[`Account home page > renders the page 1`] = `
     </div>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"

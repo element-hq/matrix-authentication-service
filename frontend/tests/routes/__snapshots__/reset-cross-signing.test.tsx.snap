@@ -63,7 +63,6 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
     </p>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
@@ -246,7 +245,6 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     </a>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
@@ -344,7 +342,6 @@ exports[`Reset cross signing > renders the errored page 1`] = `
     </button>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
@@ -527,7 +524,6 @@ exports[`Reset cross signing > renders the page 1`] = `
     </a>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
@@ -616,7 +612,6 @@ exports[`Reset cross signing > renders the success page 1`] = `
     </p>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
@@ -705,7 +700,6 @@ exports[`Reset cross signing > renders the success page 2`] = `
     </p>
     <footer
       class="lasuite fr-footer"
-      role="contentinfo"
     >
       <div
         class="fr-container lasuite-container"
