@@ -3371,12 +3371,8 @@ dependencies = [
  "serde_with",
  "sha2",
  "sqlx",
-<<<<<<< HEAD
  "tchap",
- "thiserror 2.0.12",
-=======
  "thiserror 2.0.16",
->>>>>>> v1.2.0
  "tokio",
  "tokio-util",
  "tower",
