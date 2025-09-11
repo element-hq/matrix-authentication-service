@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "1.0.0"
+package.version = "1.2.0"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -34,6 +34,7 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
+<<<<<<< HEAD
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.0.0" }
 mas-cli = { path = "./crates/cli/", version = "=1.0.0" }
 mas-config = { path = "./crates/config/", version = "=1.0.0" }
@@ -64,6 +65,37 @@ mas-tower = { path = "./crates/tower/", version = "=1.0.0" }
 oauth2-types = { path = "./crates/oauth2-types/", version = "=1.0.0" }
 syn2mas = { path = "./crates/syn2mas", version = "=1.0.0" }
 tchap = { path = "./crates/tchap", version = "=0.1.0" }
+=======
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.2.0" }
+mas-cli = { path = "./crates/cli/", version = "=1.2.0" }
+mas-config = { path = "./crates/config/", version = "=1.2.0" }
+mas-context = { path = "./crates/context/", version = "=1.2.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=1.2.0" }
+mas-email = { path = "./crates/email/", version = "=1.2.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=1.2.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=1.2.0" }
+mas-http = { path = "./crates/http/", version = "=1.2.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=1.2.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.2.0" }
+mas-iana = { path = "./crates/iana/", version = "=1.2.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.2.0" }
+mas-jose = { path = "./crates/jose/", version = "=1.2.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=1.2.0" }
+mas-listener = { path = "./crates/listener/", version = "=1.2.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=1.2.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.2.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.2.0" }
+mas-policy = { path = "./crates/policy/", version = "=1.2.0" }
+mas-router = { path = "./crates/router/", version = "=1.2.0" }
+mas-spa = { path = "./crates/spa/", version = "=1.2.0" }
+mas-storage = { path = "./crates/storage/", version = "=1.2.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.2.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=1.2.0" }
+mas-templates = { path = "./crates/templates/", version = "=1.2.0" }
+mas-tower = { path = "./crates/tower/", version = "=1.2.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=1.2.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=1.2.0" }
+>>>>>>> v1.2.0
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
@@ -85,11 +117,11 @@ version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
-version = "0.1.88"
+version = "0.1.89"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
-version = "1.0.98"
+version = "1.0.99"
 
 # Assert that a value matches a pattern
 [workspace.dependencies.assert_matches]
@@ -125,12 +157,12 @@ features = ["std"]
 
 # Bcrypt password hashing
 [workspace.dependencies.bcrypt]
-version = "0.17.0"
+version = "0.17.1"
 default-features = true
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.9.1"
+version = "2.9.3"
 
 # Bytes
 [workspace.dependencies.bytes]
@@ -168,7 +200,7 @@ features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.45"
+version = "4.5.46"
 features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
@@ -228,7 +260,7 @@ features = ["env", "yaml", "test"]
 
 # URL form encoding
 [workspace.dependencies.form_urlencoded]
-version = "1.2.1"
+version = "1.2.2"
 
 # Utilities for dealing with futures
 [workspace.dependencies.futures-util]
@@ -270,7 +302,7 @@ version = "0.1.3"
 
 # HTTP client and server
 [workspace.dependencies.hyper]
-version = "1.6.0"
+version = "1.7.0"
 features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
@@ -322,7 +354,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.10.0"
+version = "2.11.0"
 features = ["serde"]
 
 # Indented string literals
@@ -379,12 +411,12 @@ version = "0.3.17"
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.11.0"
+version = "2.12.0"
 features = ["urlencode", "loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.11.0"
+version = "2.12.0"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values
@@ -479,7 +511,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.128"
+version = "2.1.136"
 
 # Prometheus metrics
 [workspace.dependencies.prometheus]
@@ -499,11 +531,11 @@ version = "0.6.4"
 
 # Regular expressions
 [workspace.dependencies.regex]
-version = "1.11.1"
+version = "1.11.2"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
-version = "0.12.22"
+version = "0.12.23"
 default-features = false
 features = [
     "http2",
@@ -594,7 +626,7 @@ features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.142"
+version = "1.0.143"
 features = ["preserve_order"]
 
 # URL encoded form serialization
@@ -644,7 +676,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.12"
+version = "2.0.16"
 
 [workspace.dependencies.thiserror-ext]
 version = "0.3.0"
@@ -692,14 +724,14 @@ features = ["cors", "fs", "add-extension", "set-header"]
 [workspace.dependencies.tracing]
 version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
-version = "0.3.19"
+version = "0.3.20"
 features = ["env-filter"]
 [workspace.dependencies.tracing-appender]
 version = "0.2.3"
 
 # URL manipulation
 [workspace.dependencies.url]
-version = "2.5.4"
+version = "2.5.7"
 features = ["serde"]
 
 # URL encoding
@@ -713,7 +745,7 @@ features = ["serde", "uuid"]
 
 # UUID support
 [workspace.dependencies.uuid]
-version = "1.17.0"
+version = "1.18.0"
 
 # HTML escaping
 [workspace.dependencies.v_htmlescape]
@@ -730,7 +762,7 @@ version = "2.5.0"
 
 # HTTP mock server
 [workspace.dependencies.wiremock]
-version = "0.6.4"
+version = "0.6.5"
 
 # User-agent parser
 [workspace.dependencies.woothee]

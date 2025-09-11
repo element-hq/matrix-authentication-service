@@ -13,6 +13,7 @@ use mas_iana::jose::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use sha2::{Digest, Sha256};
 use url::Url;
 
 use crate::{
@@ -236,6 +237,28 @@ impl<P> JsonWebKey<P> {
     #[must_use]
     pub const fn params(&self) -> &P {
         &self.parameters
+    }
+}
+
+/// Methods to calculate RFC 7638 JWK Thumbprints.
+pub trait Thumbprint {
+    /// Returns the RFC 7638 JWK Thumbprint JSON string.
+    fn thumbprint_prehashed(&self) -> String;
+
+    /// Returns the RFC 7638 SHA256-hashed JWK Thumbprint.
+    fn thumbprint_sha256(&self) -> [u8; 32] {
+        Sha256::digest(self.thumbprint_prehashed()).into()
+    }
+
+    /// Returns the RFC 7638 SHA256-hashed JWK Thumbprint as base64url string.
+    fn thumbprint_sha256_base64(&self) -> String {
+        Base64UrlNoPad::new(self.thumbprint_sha256().into()).encode()
+    }
+}
+
+impl<P: Thumbprint> Thumbprint for JsonWebKey<P> {
+    fn thumbprint_prehashed(&self) -> String {
+        self.parameters.thumbprint_prehashed()
     }
 }
 
