@@ -16,6 +16,40 @@
     }
   ],
   "paths": {
+    "/api/admin/v1/site-config": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Get informations about the configuration of this MAS instance",
+        "operationId": "siteConfig",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteConfig"
+                },
+                "example": {
+                  "server_name": "example.com",
+                  "password_login_enabled": true,
+                  "password_registration_enabled": true,
+                  "registration_token_required": true,
+                  "email_change_allowed": true,
+                  "displayname_change_allowed": true,
+                  "password_change_allowed": true,
+                  "account_recovery_allowed": true,
+                  "account_deactivation_allowed": true,
+                  "captcha_enabled": true,
+                  "minimum_password_complexity": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/compat-sessions": {
       "get": {
         "tags": [
@@ -3186,6 +3220,71 @@
       }
     },
     "schemas": {
+      "SiteConfig": {
+        "type": "object",
+        "required": [
+          "account_deactivation_allowed",
+          "account_recovery_allowed",
+          "captcha_enabled",
+          "displayname_change_allowed",
+          "email_change_allowed",
+          "minimum_password_complexity",
+          "password_change_allowed",
+          "password_login_enabled",
+          "password_registration_enabled",
+          "registration_token_required",
+          "server_name"
+        ],
+        "properties": {
+          "server_name": {
+            "description": "The Matrix server name for which this instance is configured",
+            "type": "string"
+          },
+          "password_login_enabled": {
+            "description": "Whether password login is enabled.",
+            "type": "boolean"
+          },
+          "password_registration_enabled": {
+            "description": "Whether password registration is enabled.",
+            "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.",
+            "type": "boolean"
+          },
+          "email_change_allowed": {
+            "description": "Whether users can change their email.",
+            "type": "boolean"
+          },
+          "displayname_change_allowed": {
+            "description": "Whether users can change their display name.",
+            "type": "boolean"
+          },
+          "password_change_allowed": {
+            "description": "Whether users can change their password.",
+            "type": "boolean"
+          },
+          "account_recovery_allowed": {
+            "description": "Whether users can recover their account via email.",
+            "type": "boolean"
+          },
+          "account_deactivation_allowed": {
+            "description": "Whether users can delete their own account.",
+            "type": "boolean"
+          },
+          "captcha_enabled": {
+            "description": "Whether CAPTCHA during registration is enabled.",
+            "type": "boolean"
+          },
+          "minimum_password_complexity": {
+            "description": "Minimum password complexity, between 0 and 4. This is a score from zxcvbn.",
+            "type": "integer",
+            "format": "uint8",
+            "maximum": 4.0,
+            "minimum": 0.0
+          }
+        }
+      },
       "PaginationParams": {
         "type": "object",
         "properties": {
@@ -4586,6 +4685,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "server",
+      "description": "Information about the server"
+    },
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"

@@ -20,7 +20,7 @@ use axum::{
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
-use mas_data_model::BoxRng;
+use mas_data_model::{BoxRng, SiteConfig};
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -43,6 +43,11 @@ use crate::passwords::PasswordManager;
 
 fn finish(t: TransformOpenApi) -> TransformOpenApi {
     t.title("Matrix Authentication Service admin API")
+        .tag(Tag {
+            name: "server".to_owned(),
+            description: Some("Information about the server".to_owned()),
+            ..Tag::default()
+        })
         .tag(Tag {
             name: "compat-session".to_owned(),
             description: Some("Manage compatibility sessions from legacy clients".to_owned()),
@@ -153,6 +158,7 @@ where
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
+    SiteConfig: FromRef<S>,
 {
     // We *always* want to explicitly set the possible responses, beacuse the
     // infered ones are not necessarily correct
