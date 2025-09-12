@@ -9,7 +9,7 @@ PODMAN := 0
 # Keep in sync with Dockerfile and .github/actions/build-policies/action.yml
 OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.8.0-debug
 # Keep in sync with .github/workflows/ci.yaml
-REGAL_DOCKER_IMAGE := ghcr.io/styrainc/regal:0.36.1
+REGAL_DOCKER_IMAGE := ghcr.io/open-policy-agent/regal:0.36.1
 
 INPUTS := \
 	common/common.rego \
