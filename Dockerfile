@@ -15,7 +15,7 @@ ARG DEBIAN_VERSION_NAME=bookworm
 ARG RUSTC_VERSION=1.89.0
 ARG NODEJS_VERSION=22.19.0
 ARG OPA_VERSION=1.1.0
-ARG CARGO_AUDITABLE_VERSION=0.6.6
+ARG CARGO_AUDITABLE_VERSION=0.7.0
 
 ##########################################
 ## Build stage that builds the frontend ##
