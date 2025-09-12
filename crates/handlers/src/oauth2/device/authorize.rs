@@ -13,9 +13,10 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_keystore::Encrypter;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2DeviceCodeGrantParams};
+use mas_storage::{BoxRepository, oauth2::OAuth2DeviceCodeGrantParams};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     requests::{DeviceAuthorizationRequest, DeviceAuthorizationResponse, GrantType},

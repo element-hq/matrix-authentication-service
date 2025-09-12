@@ -28,6 +28,7 @@ futures-util.workspace = true
 mas-config.workspace = true
 mas-iana.workspace = true
 mas-storage.workspace = true
+mas-data-model.workspace = true
 oauth2-types.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 opentelemetry.workspace = true

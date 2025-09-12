@@ -14,10 +14,10 @@ use mas_config::{
     AppConfig, ClientsConfig, ConfigurationSection, ConfigurationSectionExt, UpstreamOAuth2Config,
 };
 use mas_context::LogContext;
+use mas_data_model::SystemClock;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
-use mas_storage::SystemClock;
 use mas_storage_pg::{MIGRATOR, PgRepositoryFactory};
 use sqlx::migrate::Migrate;
 use tracing::{Instrument, info, info_span, warn};

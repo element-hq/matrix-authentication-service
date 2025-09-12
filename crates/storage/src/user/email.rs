@@ -6,13 +6,13 @@
 
 use async_trait::async_trait;
 use mas_data_model::{
-    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
     UserRegistration,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Filter parameters for listing user emails
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

@@ -15,12 +15,12 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::{Device, TokenFormatError, TokenType};
+use mas_data_model::{BoxClock, Clock, Device, TokenFormatError, TokenType};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
 use mas_keystore::Encrypter;
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    BoxClock, BoxRepository, Clock,
+    BoxRepository,
     compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
     oauth2::{OAuth2AccessTokenRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository},
     user::UserRepository,
@@ -636,11 +636,10 @@ pub(crate) async fn post(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_data_model::{AccessToken, RefreshToken};
+    use mas_data_model::{AccessToken, Clock, RefreshToken};
     use mas_iana::oauth::OAuthTokenTypeHint;
     use mas_matrix::{HomeserverConnection, MockHomeserverConnection, ProvisionRequest};
     use mas_router::{OAuth2Introspection, OAuth2RegistrationEndpoint, SimpleRoute};
-    use mas_storage::Clock;
     use oauth2_types::{
         errors::{ClientError, ClientErrorCode},
         registration::ClientRegistrationResponse,

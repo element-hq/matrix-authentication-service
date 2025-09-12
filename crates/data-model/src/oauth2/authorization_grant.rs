@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::str::FromStr as _;
+
 use chrono::{DateTime, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use oauth2_types::{
@@ -142,6 +144,7 @@ impl AuthorizationGrantStage {
 
 pub enum LoginHint<'a> {
     MXID(&'a UserId),
+    Email(lettre::Address),
     None,
 }
 
@@ -172,33 +175,28 @@ impl std::ops::Deref for AuthorizationGrant {
 }
 
 impl AuthorizationGrant {
+    /// Parse a `login_hint`
+    ///
+    /// Returns `LoginHint::MXID` for valid mxid 'mxid:@john.doe:example.com'
+    ///
+    /// Returns `LoginHint::Email` for valid email 'john.doe@example.com'
+    ///
+    /// Otherwise returns `LoginHint::None`
     #[must_use]
     pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint<'_> {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
 
-        // Return none if the format is incorrect
-        let Some((prefix, value)) = login_hint.split_once(':') else {
-            return LoginHint::None;
-        };
-
-        match prefix {
-            "mxid" => {
-                // Instead of erroring just return none
-                let Ok(mxid) = <&UserId>::try_from(value) else {
-                    return LoginHint::None;
-                };
-
-                // Only handle MXIDs for current homeserver
-                if mxid.server_name() != homeserver {
-                    return LoginHint::None;
-                }
-
-                LoginHint::MXID(mxid)
-            }
-            // Unknown hint type, treat as none
-            _ => LoginHint::None,
+        if let Some(value) = login_hint.strip_prefix("mxid:")
+            && let Ok(mxid) = <&UserId>::try_from(value)
+            && mxid.server_name() == homeserver
+        {
+            LoginHint::MXID(mxid)
+        } else if let Ok(email) = lettre::Address::from_str(login_hint) {
+            LoginHint::Email(email)
+        } else {
+            LoginHint::None
         }
     }
 
@@ -271,17 +269,15 @@ impl AuthorizationGrant {
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use rand::SeedableRng;
 
     use super::*;
+    use crate::clock::{Clock, MockClock};
 
     #[test]
     fn no_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: None,
@@ -295,11 +291,8 @@ mod tests {
 
     #[test]
     fn valid_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:example.com")),
@@ -312,12 +305,24 @@ mod tests {
     }
 
     #[test]
-    fn invalid_login_hint() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
+    fn valid_login_hint_with_email() {
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let grant = AuthorizationGrant {
+            login_hint: Some(String::from("example@user")),
+            ..AuthorizationGrant::sample(now, &mut rng)
+        };
+
+        let hint = grant.parse_login_hint("example.com");
+
+        assert!(matches!(hint, LoginHint::Email(email) if email.to_string() == "example@user"));
+    }
+
+    #[test]
+    fn invalid_login_hint() {
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("example-user")),
@@ -331,11 +336,8 @@ mod tests {
 
     #[test]
     fn valid_login_hint_for_wrong_homeserver() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:matrix.org")),
@@ -349,11 +351,8 @@ mod tests {
 
     #[test]
     fn unknown_login_hint_type() {
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
-
-        #[allow(clippy::disallowed_methods)]
-        let now = Utc::now();
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
 
         let grant = AuthorizationGrant {
             login_hint: Some(String::from("something:anything")),

@@ -5,12 +5,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, User};
+use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompatSsoLoginState {

@@ -13,12 +13,12 @@
   "app": {
     "human_name": "Matrix Authentication Service",
     "name": "matrix-authentication-service",
-    "technical_description": "Файл для обнаружения OpenID Connect: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+    "technical_description": "OpenID Connect документ обнаружения: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\"> %(discovery_url)s </a>"
   },
   "branding": {
     "privacy_policy": {
       "alt": "Ссылка на политику конфиденциальности сервиса",
-      "link": "Политикой конфидециальности"
+      "link": "Политика конфидециальности"
     },
     "terms_and_conditions": {
       "alt": "Ссылка на условия предоставления услуг",

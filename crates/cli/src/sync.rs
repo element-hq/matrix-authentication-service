@@ -9,9 +9,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use mas_config::{ClientsConfig, UpstreamOAuth2Config};
+use mas_data_model::Clock;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    Clock, Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess,
     upstream_oauth2::{UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams},
 };
 use mas_storage_pg::PgRepository;

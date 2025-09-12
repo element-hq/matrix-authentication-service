@@ -1,6 +1,6 @@
 # Get an access token
 
-The [Matrix Authentication Service repository contains a simple shell script](https://github.com/element-hq/matrix-authentication-service/blob/main/misc/device-code-grant.sh) to get interatively get an access token with arbitrary scopes.
+The [Matrix Authentication Service repository contains a simple shell script](https://github.com/element-hq/matrix-authentication-service/blob/main/misc/device-code-grant.sh) to interactively get an access token with arbitrary scopes.
 It requires `sh`, `jq` and `curl` to be installed.
 This can be run from anywhere, not necessarily from the host where MAS is running.
 
@@ -28,4 +28,4 @@ Or even both at the same time:
 sh ./misc/device-code-grant.sh https://synapse.example.com/ urn:matrix:org.matrix.msc2967.client:api:* urn:mas:admin urn:synapse:admin:*
 ```
 
-Note that the token will be valid for a short time (5 minutes by default) and needs to be revoked manually from the MAS user interface.
+Note that the token will only be valid for a short time (5 minutes by default) and needs to be revoked manually from the MAS user interface.

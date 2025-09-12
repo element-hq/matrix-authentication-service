@@ -8,9 +8,9 @@ use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{SiteConfig, TokenFormatError, TokenType};
+use mas_data_model::{BoxClock, BoxRng, Clock, SiteConfig, TokenFormatError, TokenType};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock,
+    BoxRepository,
     compat::{CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository},
 };
 use serde::{Deserialize, Serialize};

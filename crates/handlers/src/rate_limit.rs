@@ -301,8 +301,7 @@ impl Limiter {
 
 #[cfg(test)]
 mod tests {
-    use mas_data_model::User;
-    use mas_storage::{Clock, clock::MockClock};
+    use mas_data_model::{Clock, User, clock::MockClock};
     use rand::SeedableRng;
 
     use super::*;

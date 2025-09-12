@@ -92,7 +92,8 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_storage::{Clock, RepositoryAccess, user::UserRepository};
+    use mas_data_model::Clock;
+    use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};

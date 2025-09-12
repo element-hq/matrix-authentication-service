@@ -9,8 +9,7 @@ use std::collections::BTreeSet;
 
 use chrono::{DateTime, Duration, Utc};
 use mas_axum_utils::cookies::CookieJar;
-use mas_data_model::UserRegistration;
-use mas_storage::Clock;
+use mas_data_model::{Clock, UserRegistration};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;

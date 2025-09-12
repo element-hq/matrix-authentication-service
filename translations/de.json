@@ -217,6 +217,11 @@
       "sign_in_instead": "Stattdessen anmelden",
       "terms_of_service": "Ich stimme den <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Allgemeinen Geschäftsbedingungen</a> zu."
     },
+    "registration_token": {
+      "description": "Gib das Registrierungstoken ein, das du vom Homeserver-Admin bekommen hast.",
+      "field": "Registrierungstoken",
+      "headline": "Registrierungstoken"
+    },
     "scope": {
       "edit_profile": "Ihr Profil und Ihre Kontaktdaten bearbeiten",
       "manage_sessions": "Ihre Geräte und Sitzungen verwalten",
@@ -232,6 +237,7 @@
       },
       "login_link": {
         "action": "Weiter",
+        "description": "Für diesen Nutzernamen (%(username)s) gibt es schon ein Konto. Es wird mit diesem Upstream-Konto verknüpft.",
         "heading": "Mit Ihrem bestehenden Konto verknüpfen"
       },
       "register": {

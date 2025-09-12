@@ -8,10 +8,8 @@
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_storage::{
-    Clock,
-    queue::{QueueWorkerRepository, Worker},
-};
+use mas_data_model::Clock;
+use mas_storage::queue::{QueueWorkerRepository, Worker};
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;

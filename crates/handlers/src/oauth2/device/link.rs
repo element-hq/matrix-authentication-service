@@ -9,8 +9,9 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
+use mas_data_model::BoxClock;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository};
+use mas_storage::BoxRepository;
 use mas_templates::{
     DeviceLinkContext, DeviceLinkFormField, FieldError, FormState, TemplateContext, Templates,
 };

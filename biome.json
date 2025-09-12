@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "vcs": {
     "enabled": true,
@@ -32,6 +32,12 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "complexity": {
+        "noImportantStyles": "off"
+      },
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      },
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn"

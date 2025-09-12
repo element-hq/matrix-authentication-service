@@ -7,11 +7,11 @@
 //! Repositories to interact with entities related to user accounts
 
 use async_trait::async_trait;
-use mas_data_model::User;
+use mas_data_model::{Clock, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Page, Pagination, repository_impl};
+use crate::{Page, Pagination, repository_impl};
 
 mod email;
 mod password;

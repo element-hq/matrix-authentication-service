@@ -8,9 +8,9 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{InternalError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
-use mas_data_model::SiteConfig;
+use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{RegisterContext, TemplateContext, Templates};
 
 use super::shared::OptionalPostAuthAction;
