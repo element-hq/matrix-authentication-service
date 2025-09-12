@@ -458,7 +458,7 @@ version = "2.8.2"
 
 # Pest derive macros
 [workspace.dependencies.pest_derive]
-version = "2.8.1"
+version = "2.8.2"
 
 # Pin projection
 [workspace.dependencies.pin-project-lite]
