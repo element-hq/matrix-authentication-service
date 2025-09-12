@@ -321,7 +321,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.11.0"
+version = "2.11.1"
 features = ["serde"]
 
 # Indented string literals
