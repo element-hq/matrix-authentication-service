@@ -59,6 +59,7 @@ impl_from_ref!(Arc<dyn mas_matrix::HomeserverConnection>);
 impl_from_ref!(mas_keystore::Keystore);
 impl_from_ref!(mas_handlers::passwords::PasswordManager);
 impl_from_ref!(Arc<mas_policy::PolicyFactory>);
+impl_from_ref!(mas_data_model::SiteConfig);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mut api, _) = mas_handlers::admin_api_router::<DummyState>();
