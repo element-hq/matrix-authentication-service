@@ -1,7 +1,6 @@
 # Database configuration
 
 The service uses a [PostgreSQL](https://www.postgresql.org/) database to store all of its state.
-Although it may be possible to run with earlier versions, it is recommended to use **PostgreSQL 13** or later.
 Connection to the database is configured in the [`database`](../reference/configuration.md#database) section of the configuration file.
 
 ## A warning about database pooling software
@@ -34,6 +33,18 @@ createdb --owner=mas_user mas
 ```
 
 The above will create a user called `mas_user` with a password of your choice, and a database called `mas` owned by the `mas_user` user.
+
+## Compatibility
+
+Although it may be possible to run with earlier versions, it is recommended to use **PostgreSQL 13** or later.
+It requires the [`pg_trgm` extension](https://www.postgresql.org/docs/current/pgtrgm.html), which can be automatically enabled by the service on **PostgreSQL 16** or later, but may need to be enabled manually on older versions:
+
+```sh
+# Connect to the MAS database as a user with superuser privileges
+$ psql mas
+mas=> CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION
+```
 
 ## Service configuration
 
