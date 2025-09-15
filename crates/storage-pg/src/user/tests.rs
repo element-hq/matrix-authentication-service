@@ -174,6 +174,19 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
     assert_eq!(repo.user().count(deactivated).await.unwrap(), 1);
 
+    // Test the search filter
+    assert_eq!(
+        repo.user()
+            .count(all.matching_search("alice"))
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        repo.user().count(all.matching_search("JO")).await.unwrap(),
+        1
+    );
+
     // Check the list method
     let list = repo.user().list(all, Pagination::first(10)).await.unwrap();
     assert_eq!(list.edges.len(), 1);

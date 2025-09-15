@@ -917,6 +917,17 @@
           },
           {
             "in": "query",
+            "name": "filter[search]",
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+            "schema": {
+              "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+              "type": "string",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[status]",
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "schema": {
@@ -3891,6 +3902,11 @@
           "filter[legacy-guest]": {
             "description": "Retrieve users with (or without) the `legacy_guest` flag set",
             "type": "boolean",
+            "nullable": true
+          },
+          "filter[search]": {
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+            "type": "string",
             "nullable": true
           },
           "filter[status]": {
