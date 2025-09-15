@@ -906,6 +906,17 @@
           },
           {
             "in": "query",
+            "name": "filter[legacy-guest]",
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "schema": {
+              "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+              "type": "boolean",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[status]",
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "schema": {
@@ -937,7 +948,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -951,7 +963,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": true
+                        "admin": true,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
@@ -965,7 +978,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": "1970-01-01T00:00:00Z",
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": true
                       },
                       "links": {
                         "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1017,7 +1031,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1103,7 +1118,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1260,7 +1276,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1340,7 +1357,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": true
+                      "admin": true,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
@@ -1419,7 +1437,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1489,7 +1508,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1559,7 +1579,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1629,7 +1650,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -3866,6 +3888,11 @@
             "type": "boolean",
             "nullable": true
           },
+          "filter[legacy-guest]": {
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "type": "boolean",
+            "nullable": true
+          },
           "filter[status]": {
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "$ref": "#/components/schemas/UserStatus",
@@ -3941,6 +3968,7 @@
         "required": [
           "admin",
           "created_at",
+          "legacy_guest",
           "username"
         ],
         "properties": {
@@ -3967,6 +3995,10 @@
           },
           "admin": {
             "description": "Whether the user can request admin privileges.",
+            "type": "boolean"
+          },
+          "legacy_guest": {
+            "description": "Whether the user was a guest before migrating to MAS,",
             "type": "boolean"
           }
         }

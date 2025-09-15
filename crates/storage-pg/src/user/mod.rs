@@ -73,6 +73,7 @@ mod priv_ {
         pub(super) locked_at: Option<DateTime<Utc>>,
         pub(super) deactivated_at: Option<DateTime<Utc>>,
         pub(super) can_request_admin: bool,
+        pub(super) is_guest: bool,
     }
 }
 
@@ -89,6 +90,7 @@ impl From<UserLookup> for User {
             locked_at: value.locked_at,
             deactivated_at: value.deactivated_at,
             can_request_admin: value.can_request_admin,
+            is_guest: value.is_guest,
         }
     }
 }
@@ -114,6 +116,10 @@ impl Filter for UserFilter<'_> {
             .add_option(self.can_request_admin().map(|can_request_admin| {
                 Expr::col((Users::Table, Users::CanRequestAdmin)).eq(can_request_admin)
             }))
+            .add_option(
+                self.is_guest()
+                    .map(|is_guest| Expr::col((Users::Table, Users::IsGuest)).eq(is_guest)),
+            )
     }
 }
 
@@ -140,6 +146,7 @@ impl UserRepository for PgUserRepository<'_> {
                      , locked_at
                      , deactivated_at
                      , can_request_admin
+                     , is_guest
                 FROM users
                 WHERE user_id = $1
             "#,
@@ -176,6 +183,7 @@ impl UserRepository for PgUserRepository<'_> {
                      , locked_at
                      , deactivated_at
                      , can_request_admin
+                     , is_guest
                 FROM users
                 WHERE LOWER(username) = LOWER($1)
             "#,
@@ -249,6 +257,7 @@ impl UserRepository for PgUserRepository<'_> {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: false,
         })
     }
 
@@ -486,6 +495,10 @@ impl UserRepository for PgUserRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),
                 UserLookupIden::CanRequestAdmin,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::IsGuest)),
+                UserLookupIden::IsGuest,
             )
             .from(Users::Table)
             .apply_filter(filter)

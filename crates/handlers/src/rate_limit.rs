@@ -328,6 +328,7 @@ mod tests {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: true,
         };
 
         let bob = User {
@@ -338,6 +339,7 @@ mod tests {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: true,
         };
 
         // Three times the same IP address should be allowed

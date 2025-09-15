@@ -209,7 +209,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "locked_at": null,
               "deactivated_at": "2022-01-16T14:40:00Z",
-              "admin": false
+              "admin": false,
+              "legacy_guest": false
             },
             "links": {
               "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -289,7 +290,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "locked_at": "2022-01-16T14:40:00Z",
               "deactivated_at": "2022-01-16T14:41:00Z",
-              "admin": false
+              "admin": false,
+              "legacy_guest": false
             },
             "links": {
               "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"

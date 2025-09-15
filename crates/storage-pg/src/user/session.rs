@@ -61,6 +61,7 @@ struct SessionLookup {
     user_locked_at: Option<DateTime<Utc>>,
     user_deactivated_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
+    user_is_guest: bool,
 }
 
 impl TryFrom<SessionLookup> for BrowserSession {
@@ -76,6 +77,7 @@ impl TryFrom<SessionLookup> for BrowserSession {
             locked_at: value.user_locked_at,
             deactivated_at: value.user_deactivated_at,
             can_request_admin: value.user_can_request_admin,
+            is_guest: value.user_is_guest,
         };
 
         Ok(BrowserSession {
@@ -201,6 +203,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , u.locked_at             AS "user_locked_at"
                      , u.deactivated_at        AS "user_deactivated_at"
                      , u.can_request_admin     AS "user_can_request_admin"
+                     , u.is_guest              AS "user_is_guest"
                 FROM user_sessions s
                 INNER JOIN users u
                     USING (user_id)
@@ -390,6 +393,10 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),
                 SessionLookupIden::UserCanRequestAdmin,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::IsGuest)),
+                SessionLookupIden::UserIsGuest,
             )
             .from(UserSessions::Table)
             .inner_join(
