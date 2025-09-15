@@ -906,6 +906,17 @@
           },
           {
             "in": "query",
+            "name": "filter[legacy-guest]",
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "schema": {
+              "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+              "type": "boolean",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[status]",
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "schema": {
@@ -3874,6 +3885,11 @@
         "properties": {
           "filter[admin]": {
             "description": "Retrieve users with (or without) the `admin` flag set",
+            "type": "boolean",
+            "nullable": true
+          },
+          "filter[legacy-guest]": {
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
             "type": "boolean",
             "nullable": true
           },

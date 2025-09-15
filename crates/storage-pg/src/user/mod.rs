@@ -116,6 +116,10 @@ impl Filter for UserFilter<'_> {
             .add_option(self.can_request_admin().map(|can_request_admin| {
                 Expr::col((Users::Table, Users::CanRequestAdmin)).eq(can_request_admin)
             }))
+            .add_option(
+                self.is_guest()
+                    .map(|is_guest| Expr::col((Users::Table, Users::IsGuest)).eq(is_guest)),
+            )
     }
 }
 

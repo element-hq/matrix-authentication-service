@@ -54,6 +54,10 @@ pub struct FilterParams {
     #[serde(rename = "filter[admin]")]
     admin: Option<bool>,
 
+    /// Retrieve users with (or without) the `legacy_guest` flag set
+    #[serde(rename = "filter[legacy-guest]")]
+    legacy_guest: Option<bool>,
+
     /// Retrieve the items with the given status
     ///
     /// Defaults to retrieve all users, including locked ones.
@@ -73,6 +77,10 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(admin) = self.admin {
             write!(f, "{sep}filter[admin]={admin}")?;
+            sep = '&';
+        }
+        if let Some(legacy_guest) = self.legacy_guest {
+            write!(f, "{sep}filter[legacy-guest]={legacy_guest}")?;
             sep = '&';
         }
         if let Some(status) = self.status {
@@ -140,6 +148,12 @@ pub async fn handler(
     let filter = match params.admin {
         Some(true) => filter.can_request_admin_only(),
         Some(false) => filter.cannot_request_admin_only(),
+        None => filter,
+    };
+
+    let filter = match params.legacy_guest {
+        Some(true) => filter.guest_only(),
+        Some(false) => filter.non_guest_only(),
         None => filter,
     };
 
