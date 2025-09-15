@@ -11,7 +11,7 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
-use mas_data_model::BoxRng;
+use mas_data_model::{BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
 
@@ -21,6 +21,7 @@ use crate::passwords::PasswordManager;
 mod compat_sessions;
 mod oauth2_sessions;
 mod policy_data;
+mod site_config;
 mod upstream_oauth_links;
 mod user_emails;
 mod user_registration_tokens;
@@ -32,11 +33,16 @@ where
     S: Clone + Send + Sync + 'static,
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
+    SiteConfig: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
+        .api_route(
+            "/site-config",
+            get_with(self::site_config::handler, self::site_config::doc),
+        )
         .api_route(
             "/compat-sessions",
             get_with(self::compat_sessions::list, self::compat_sessions::list_doc),
