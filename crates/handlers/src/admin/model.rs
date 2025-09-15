@@ -52,6 +52,9 @@ pub struct User {
 
     /// Whether the user can request admin privileges.
     admin: bool,
+
+    /// Whether the user was a guest before migrating to MAS,
+    legacy_guest: bool,
 }
 
 impl User {
@@ -65,6 +68,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -73,6 +77,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: true,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -81,6 +86,7 @@ impl User {
                 locked_at: Some(DateTime::default()),
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: true,
             },
         ]
     }
@@ -95,6 +101,7 @@ impl From<mas_data_model::User> for User {
             locked_at: user.locked_at,
             deactivated_at: user.deactivated_at,
             admin: user.can_request_admin,
+            legacy_guest: user.is_guest,
         }
     }
 }

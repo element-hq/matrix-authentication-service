@@ -21,6 +21,7 @@ pub struct User {
     pub locked_at: Option<DateTime<Utc>>,
     pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    pub is_guest: bool,
 }
 
 impl User {
@@ -43,6 +44,7 @@ impl User {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: false,
         }]
     }
 }
