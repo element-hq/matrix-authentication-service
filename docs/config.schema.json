@@ -2035,10 +2035,6 @@
           "description": "The client ID to use when authenticating with the provider",
           "type": "string"
         },
-        "client_secret": {
-          "description": "The client secret to use when authenticating with the provider\n\nUsed by the `client_secret_basic`, `client_secret_post`, and `client_secret_jwt` methods",
-          "type": "string"
-        },
         "token_endpoint_auth_method": {
           "description": "The method to authenticate the client with the provider",
           "allOf": [
@@ -2159,6 +2155,14 @@
               "$ref": "#/definitions/OnBackchannelLogout"
             }
           ]
+        },
+        "client_secret_file": {
+          "description": "Path to the file containing the client secret. The client secret is used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods.",
+          "type": "string"
+        },
+        "client_secret": {
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly from the config.",
+          "type": "string"
         }
       }
     },
