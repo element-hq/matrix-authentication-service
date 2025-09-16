@@ -18,18 +18,18 @@ use mas_data_model::SystemClock;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
-use mas_storage_pg::{MIGRATOR, PgRepositoryFactory};
+use mas_storage_pg::PgRepositoryFactory;
 use sqlx::migrate::Migrate;
-use tracing::{Instrument, info, info_span, warn};
+use tracing::{info, info_span, warn};
 
 use crate::{
     app_state::AppState,
     lifecycle::LifecycleManager,
     util::{
-        database_pool_from_config, homeserver_connection_from_config,
+        database_pool_from_config, get_migrator, homeserver_connection_from_config,
         load_policy_factory_dynamic_data_continuously, mailer_from_config,
-        password_manager_from_config, policy_factory_from_config, site_config_from_config,
-        templates_from_config, test_mailer_in_background,
+        password_manager_from_config, policy_factory_from_config, run_migrations,
+        site_config_from_config, templates_from_config, test_mailer_in_background,
     },
 };
 
@@ -77,7 +77,8 @@ impl Options {
             let mut conn = pool.acquire().await?;
             let applied = conn.list_applied_migrations().await?;
             let applied: BTreeSet<_> = applied.into_iter().map(|m| m.version).collect();
-            let has_missing_migrations = MIGRATOR.iter().any(|m| !applied.contains(&m.version));
+            let migrator = get_migrator(&mut conn).await;
+            let has_missing_migrations = migrator.iter().any(|m| !applied.contains(&m.version));
             if has_missing_migrations {
                 // Refuse to start if there are pending migrations
                 return Err(anyhow::anyhow!(
@@ -86,11 +87,8 @@ impl Options {
             }
         } else {
             info!("Running pending database migrations");
-            MIGRATOR
-                .run(&pool)
-                .instrument(info_span!("db.migrate"))
-                .await
-                .context("could not run database migrations")?;
+            let mut conn = pool.acquire().await?;
+            run_migrations(&mut conn).await?;
         }
 
         let encrypter = config.secrets.encrypter().await?;

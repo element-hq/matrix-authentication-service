@@ -14,7 +14,6 @@ use mas_config::{
     UpstreamOAuth2Config,
 };
 use mas_data_model::SystemClock;
-use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
 use syn2mas::{
@@ -22,7 +21,9 @@ use syn2mas::{
 };
 use tracing::{Instrument, error, info, info_span};
 
-use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
+use crate::util::{
+    DatabaseConnectOptions, database_connection_from_config_with_options, run_migrations,
+};
 
 /// The exit code used by `syn2mas check` and `syn2mas migrate` when there are
 /// errors preventing migration.
@@ -122,11 +123,7 @@ impl Options {
         )
         .await?;
 
-        MIGRATOR
-            .run(&mut mas_connection)
-            .instrument(info_span!("db.migrate"))
-            .await
-            .context("could not run migrations")?;
+        run_migrations(&mut mas_connection).await?;
 
         if matches!(&self.subcommand, Subcommand::Migrate { .. }) {
             // First perform a config sync
@@ -239,7 +236,7 @@ impl Options {
                             },
                         )
                     }))
-                    .instrument(tracing::info_span!("syn2mas.mas_writer_connections"))
+                    .instrument(info_span!("syn2mas.mas_writer_connections"))
                     .await?;
                 let writer =
                     MasWriter::new(mas_connection, writer_mas_connections, dry_run).await?;

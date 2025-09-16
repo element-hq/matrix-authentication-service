@@ -7,4 +7,9 @@
 -- This enables the pg_trgm extension, which is used for search filters
 -- Starting Posgres 16, this extension is marked as "trusted", meaning it can be
 -- installed by non-superusers
+
+-- This migration is optional, and technically there is a good chance the
+-- extension will be created anyway with mas_storage_pg::ExtensionDetection,
+-- but we still create it here so that when using the static
+-- mas_storage_pg::MIGRATOR (like in tests) we still create the extension.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

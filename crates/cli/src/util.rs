@@ -21,13 +21,31 @@ use mas_matrix_synapse::{LegacySynapseConnection, SynapseConnection};
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepositoryFactory, RepositoryAccess, RepositoryFactory};
+use mas_storage_pg::ExtensionDetection;
 use mas_templates::{SiteConfigExt, Templates};
 use sqlx::{
     ConnectOptions, Executor, PgConnection, PgPool,
+    migrate::Migrator,
     postgres::{PgConnectOptions, PgPoolOptions},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{Instrument, log::LevelFilter};
+
+pub async fn get_migrator(connection: &mut PgConnection) -> Migrator {
+    let detection = ExtensionDetection::create_extensions_in_database(connection).await;
+    detection.migrator().await
+}
+
+#[tracing::instrument(name = "db.migrate", skip_all)]
+pub async fn run_migrations(connection: &mut PgConnection) -> Result<(), anyhow::Error> {
+    get_migrator(connection)
+        .await
+        .run(&mut *connection)
+        .await
+        .context("could not run migrations")?;
+
+    Ok(())
+}
 
 pub async fn password_manager_from_config(
     config: &PasswordsConfig,

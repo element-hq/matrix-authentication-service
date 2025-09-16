@@ -160,7 +160,12 @@
 #![deny(clippy::future_not_send, missing_docs)]
 #![allow(clippy::module_name_repetitions, clippy::blocks_in_conditions)]
 
-use sqlx::migrate::Migrator;
+use ::tracing::warn;
+use futures_util::{FutureExt as _, future::BoxFuture};
+use sqlx::{
+    Executor as _, PgConnection,
+    migrate::{Migration, MigrationSource, Migrator},
+};
 
 pub mod app_session;
 pub mod compat;
@@ -184,6 +189,71 @@ pub use self::{
     repository::{PgRepository, PgRepositoryFactory},
     tracing::ExecuteExt,
 };
+
+/// A [`MigrationSource`] which filters out migrations that require specific
+/// extensions
+#[derive(Debug)]
+pub struct ExtensionDetection {
+    has_pg_trgm: bool,
+}
+
+impl ExtensionDetection {
+    /// Create the required Postgres extensions in the database
+    pub async fn create_extensions_in_database(conn: &mut PgConnection) -> Self {
+        let result = conn
+            .execute("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
+            .await;
+
+        let has_pg_trgm = result.is_ok();
+
+        if let Err(err) = result {
+            warn!(
+                error = &err as &dyn std::error::Error,
+                "Failed to create the `pg_trgm` extension in the Postgres database. Some operations will be slower without this extension. Please create it manually with a user with SUPERUSER privileges on the database"
+            );
+        }
+
+        ExtensionDetection { has_pg_trgm }
+    }
+
+    /// Determine if a particular migration can run based on the extensions
+    /// available
+    fn can_run(&self, migration: &Migration) -> bool {
+        if !self.has_pg_trgm && migration.description.contains("requires_pg_trgm") {
+            return false;
+        }
+
+        true
+    }
+
+    /// Get a migrator from this extension detection result
+    #[allow(
+        clippy::missing_panics_doc,
+        reason = "Our MigrationSource is not fallible"
+    )]
+    pub async fn migrator(self) -> Migrator {
+        let mut migrator = Migrator::new(self).await.unwrap();
+        migrator.set_ignore_missing(true);
+        migrator
+    }
+}
+
+impl<'source> MigrationSource<'source> for ExtensionDetection {
+    fn resolve(
+        self,
+    ) -> BoxFuture<
+        'source,
+        Result<Vec<Migration>, Box<dyn std::error::Error + 'static + Send + Sync>>,
+    > {
+        let migrations: Vec<Migration> = MIGRATOR
+            .iter()
+            .filter(|migration| self.can_run(migration))
+            .cloned()
+            .collect();
+
+        std::future::ready(Ok(migrations)).boxed()
+    }
+}
 
 /// Embedded migrations, allowing them to run on startup
 pub static MIGRATOR: Migrator = {

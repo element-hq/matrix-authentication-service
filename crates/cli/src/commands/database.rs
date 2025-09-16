@@ -6,14 +6,12 @@
 
 use std::process::ExitCode;
 
-use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSectionExt, DatabaseConfig};
-use mas_storage_pg::MIGRATOR;
-use tracing::{Instrument, info_span};
+use tracing::info_span;
 
-use crate::util::database_connection_from_config;
+use crate::util::{database_connection_from_config, run_migrations};
 
 #[derive(Parser, Debug)]
 pub(super) struct Options {
@@ -35,11 +33,7 @@ impl Options {
         let mut conn = database_connection_from_config(&config).await?;
 
         // Run pending migrations
-        MIGRATOR
-            .run(&mut conn)
-            .instrument(info_span!("db.migrate"))
-            .await
-            .context("could not run migrations")?;
+        run_migrations(&mut conn).await?;
 
         Ok(ExitCode::SUCCESS)
     }
