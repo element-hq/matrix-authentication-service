@@ -91,7 +91,7 @@ While you're developing and before submitting a patch, you'll want to test your 
 
 If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installation/pre-built-binaries/).
 
-- Run the tests to the backend by running `cargo nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
+- Run the tests to the backend by running `cargo nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable. This also requires introspection data to be initialized by running `cargo sqlx migrate run` and `cargo sqlx prepare` from the `crates/storage-pg/` directory, or by having compiled with `SQLX_OFFLINE=1` at least once to use offline introspection data.
 - Run the tests to the frontend by running `npm run test` in the `frontend` directory.
 
 ## 8. Submit a pull request
