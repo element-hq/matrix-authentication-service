@@ -23,6 +23,32 @@ $ mas-cli manage add-email <username> <email>
 $ mas-cli manage verify-email <username> <email>
 ```
 
+## `manage promote-admin`
+
+Make a user admin.
+
+```
+$ mas-cli manage promote-admin <username>
+```
+
+**This doesn't make all the users sessions admin, but rather lets the user request admin access in administration tools.**
+
+## `manage demote-admin`
+
+Make a user non-admin.
+
+```
+$ mas-cli manage demote-admin <username>
+```
+
+## `manage list-admin-users`
+
+List all users with admin privileges.
+
+```
+$ mas-cli manage list-admins
+```
+
 ## `manage set-password`
 
 Set a user password.
