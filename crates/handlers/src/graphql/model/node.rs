@@ -29,6 +29,8 @@ pub enum NodeType {
     UserEmail,
     UserEmailAuthentication,
     UserRecoveryTicket,
+    UserPasskey,
+    UserPasskeyChallenge,
 }
 
 #[derive(Debug, Error)]
@@ -55,6 +57,8 @@ impl NodeType {
             NodeType::UserEmail => "user_email",
             NodeType::UserEmailAuthentication => "user_email_authentication",
             NodeType::UserRecoveryTicket => "user_recovery_ticket",
+            NodeType::UserPasskey => "user_passkey",
+            NodeType::UserPasskeyChallenge => "user_passkey_challenge",
         }
     }
 
@@ -72,6 +76,8 @@ impl NodeType {
             "user_email" => Some(NodeType::UserEmail),
             "user_email_authentication" => Some(NodeType::UserEmailAuthentication),
             "user_recovery_ticket" => Some(NodeType::UserRecoveryTicket),
+            "user_passkey" => Some(NodeType::UserPasskey),
+            "user_passkey_challenge" => Some(NodeType::UserPasskeyChallenge),
             _ => None,
         }
     }
