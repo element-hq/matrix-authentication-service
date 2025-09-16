@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use mas_data_model::{Clock, User};
 use mas_storage::user::{UserFilter, UserRepository};
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query, extension::postgres::PgExpr as _};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -120,6 +120,9 @@ impl Filter for UserFilter<'_> {
                 self.is_guest()
                     .map(|is_guest| Expr::col((Users::Table, Users::IsGuest)).eq(is_guest)),
             )
+            .add_option(self.search().map(|search| {
+                Expr::col((Users::Table, Users::Username)).ilike(format!("%{search}%"))
+            }))
     }
 }
 

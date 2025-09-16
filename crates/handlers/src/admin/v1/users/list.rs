@@ -58,6 +58,13 @@ pub struct FilterParams {
     #[serde(rename = "filter[legacy-guest]")]
     legacy_guest: Option<bool>,
 
+    /// Retrieve users where the username matches contains the given string
+    ///
+    /// Note that this doesn't change the ordering of the result, which are
+    /// still ordered by ID.
+    #[serde(rename = "filter[search]")]
+    search: Option<String>,
+
     /// Retrieve the items with the given status
     ///
     /// Defaults to retrieve all users, including locked ones.
@@ -81,6 +88,10 @@ impl std::fmt::Display for FilterParams {
         }
         if let Some(legacy_guest) = self.legacy_guest {
             write!(f, "{sep}filter[legacy-guest]={legacy_guest}")?;
+            sep = '&';
+        }
+        if let Some(search) = &self.search {
+            write!(f, "{sep}filter[search]={search}")?;
             sep = '&';
         }
         if let Some(status) = self.status {
@@ -154,6 +165,11 @@ pub async fn handler(
     let filter = match params.legacy_guest {
         Some(true) => filter.guest_only(),
         Some(false) => filter.non_guest_only(),
+        None => filter,
+    };
+
+    let filter = match params.search.as_deref() {
+        Some(search) => filter.matching_search(search),
         None => filter,
     };
 
