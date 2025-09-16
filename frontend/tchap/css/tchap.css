@@ -89,3 +89,51 @@ footer {
 }
 
 /* proconnect button end */
+
+@media screen and (max-width: 1024px) {
+  .fr-header__tools {
+    display: none !important;
+  }
+  :where(.lasuite) p {
+    margin: 0px 0 12px !important;
+  }
+  .lasuite-header__service-logo {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .lasuite-header__service-title {
+    display: inline-block !important;
+    font-size: 30px !important;
+    margin-left: 10px !important;
+    margin-bottom: var(--text-spacing) !important;
+  }
+  :where(.lasuite) .fr-header__brand {
+    justify-content: center !important;
+    filter: none !important;
+  }
+  .fr-header__brand-top {
+    display: none !important;
+  }
+  :where(.lasuite) .fr-header__brand:after {
+    display: none !important;
+  }
+  :where(.lasuite) .fr-header__service {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  :where(.lasuite) .fr-header__service:before {
+    display: none !important;
+  }
+  .layout-container {
+    padding: 0px 25px !important;
+  }
+  header.page-heading {
+    margin-bottom: 1rem !important;
+  }
+  .gap-10 {
+    gap: 1.4rem !important;
+  }
+  .cpd-form-root {
+    gap: 1rem !important;
+  }
+}
