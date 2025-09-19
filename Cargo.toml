@@ -521,7 +521,7 @@ version = "0.15.4"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.31"
+version = "0.23.32"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
