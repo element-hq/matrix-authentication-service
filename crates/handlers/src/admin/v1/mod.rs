@@ -23,6 +23,7 @@ mod oauth2_sessions;
 mod policy_data;
 mod site_config;
 mod upstream_oauth_links;
+mod upstream_oauth_providers;
 mod user_emails;
 mod user_registration_tokens;
 mod user_sessions;
@@ -185,6 +186,13 @@ where
             .delete_with(
                 self::upstream_oauth_links::delete,
                 self::upstream_oauth_links::delete_doc,
+            ),
+        )
+        .api_route(
+            "/upstream-oauth-providers",
+            get_with(
+                self::upstream_oauth_providers::list,
+                self::upstream_oauth_providers::list_doc,
             ),
         )
 }
