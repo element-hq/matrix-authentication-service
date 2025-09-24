@@ -137,3 +137,16 @@ footer {
     gap: 1rem !important;
   }
 }
+
+/* fix footer dark mode */
+.fr-footer {
+  background: inherit;
+  color: inherit;
+}
+
+:where(.lasuite) .fr-logo {
+  background: inherit;
+  color: inherit;
+}
+
+/* end fix footer dark mode */

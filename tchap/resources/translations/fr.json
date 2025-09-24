@@ -73,11 +73,11 @@
       "headline": "Choisissez votre pseudonyme"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> à l'adresse <span>%(redirect_uri)s</span> souhaite accéder à votre compte.",
-      "heading": "Autoriser l'accès à votre compte ?",
-      "make_sure_you_trust": "Assurez-vous de faire confiance <span>%(client_name)s</span>.",
-      "this_will_allow": "Cela va permettre à <span>%(client_name)s</span> de :",
-      "you_may_be_sharing": "Vous partagez peut-être des informations sensibles avec ce site ou cette application."
+      "client_wants_access": "Ce nouvel appareil sera visible dans la liste des vos appareils Tchap.",
+      "heading": "Connecter cet appareil à votre compte Tchap",
+      "make_sure_you_trust": "",
+      "this_will_allow": "",
+      "you_may_be_sharing": ""
     },
     "device_card": {
       "access_requested": "Accès demandé",

@@ -765,20 +765,15 @@ exports[`Account home page > renders the page 1`] = `
           class="fr-footer__body"
         >
           <div
-            class="fr-footer__brand fr-enlarge-link"
+            class="fr-footer__brand"
           >
-            <a
-              href="/"
-              title="Retour à l'accueil - Tchap"
+            <p
+              class="fr-logo"
             >
-              <p
-                class="fr-logo"
-              >
-                République
-                <br />
-                Française
-              </p>
-            </a>
+              République
+              <br />
+              Française
+            </p>
           </div>
         </div>
       </div>

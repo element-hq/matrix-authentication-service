@@ -30,14 +30,12 @@ const Footer: React.FC = () => (
   <footer className="lasuite fr-footer">
     <div className="fr-container lasuite-container">
       <div className="fr-footer__body">
-        <div className="fr-footer__brand fr-enlarge-link">
-          <a href="/" title="Retour à l'accueil - Tchap">
-            <p className="fr-logo">
-              République
-              <br />
-              Française
-            </p>
-          </a>
+        <div className="fr-footer__brand">
+          <p className="fr-logo">
+            République
+            <br />
+            Française
+          </p>
         </div>
       </div>
     </div>
