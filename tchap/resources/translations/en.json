@@ -6,11 +6,11 @@
     },
     "cancel": "Cancel",
     "@cancel": {
-      "context": "consent.html:69:11-29, pages/consent.html:79:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
+      "context": "consent.html:69:11-29, pages/consent.html:69:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
     },
     "continue": "Continue",
     "@continue": {
-      "context": "consent.html:57:28-48, form_post.html:25:28-48, pages/consent.html:64:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:110:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "consent.html:57:28-48, form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:110:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -22,7 +22,7 @@
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "index.html:37:28-48, pages/account/logged_out.html:22:28-48, pages/consent.html:75:28-48, pages/device_consent.html:136:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "index.html:37:28-48, pages/account/logged_out.html:22:28-48, pages/consent.html:65:28-48, pages/device_consent.html:136:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
@@ -195,23 +195,23 @@
     "consent": {
       "client_wants_access": "This new device will be shown in Tchap devices list.",
       "@client_wants_access": {
-        "context": "consent.html:27:11-122, pages/consent.html:31:11-122"
+        "context": "consent.html:27:11-122, pages/consent.html:27:11-122"
       },
       "heading": "Connect this new device to your Tchap account",
       "@heading": {
-        "context": "consent.html:25:27-51, pages/consent.html:29:27-51, pages/device_consent.html:28:29-53"
+        "context": "consent.html:25:27-51, pages/consent.html:25:27-51, pages/device_consent.html:28:29-53"
       },
       "make_sure_you_trust": "",
       "@make_sure_you_trust": {
-        "context": "consent.html:38:81-142, pages/consent.html:44:81-142, pages/device_consent.html:104:83-144"
+        "context": "consent.html:38:81-142, pages/consent.html:38:81-142, pages/device_consent.html:104:83-144"
       },
       "this_will_allow": "",
       "@this_will_allow": {
-        "context": "consent.html:28:11-68, pages/consent.html:32:11-68, pages/device_consent.html:94:13-70"
+        "context": "consent.html:28:11-68, pages/consent.html:28:11-68, pages/device_consent.html:94:13-70"
       },
       "you_may_be_sharing": "",
       "@you_may_be_sharing": {
-        "context": "consent.html:39:7-42, pages/consent.html:45:7-42, pages/device_consent.html:105:9-44"
+        "context": "consent.html:39:7-42, pages/consent.html:39:7-42, pages/device_consent.html:105:9-44"
       }
     },
     "device_card": {
@@ -466,13 +466,16 @@
       "my_account": "My account",
       "@my_account": {
         "context": "index.html:36:26-52, pages/index.html:27:26-52"
+        "context": "index.html:36:26-52, pages/index.html:27:26-52"
       },
       "register": "Create an account",
       "@register": {
         "context": "index.html:42:36-60, pages/index.html:33:36-60"
+        "context": "index.html:42:36-60, pages/index.html:33:36-60"
       },
       "signed_in_as": "Signed in as <span class=\"font-semibold\">%(username)s</span>.",
       "@signed_in_as": {
+        "context": "index.html:33:11-79, pages/index.html:24:11-79",
         "context": "index.html:33:11-79, pages/index.html:24:11-79",
         "description": "Displayed in the navbar when the user is signed in"
       }
@@ -489,7 +492,7 @@
     },
     "not_you": "Not %(username)s?",
     "@not_you": {
-      "context": "consent.html:62:11-67, pages/consent.html:72:11-67, pages/device_consent.html:133:13-69, pages/sso.html:42:11-67",
+      "context": "consent.html:62:11-67, pages/consent.html:62:11-67, pages/device_consent.html:133:13-69, pages/sso.html:42:11-67",
       "description": "Suggestions for the user to log in as a different user"
     },
     "or_separator": "Or",
