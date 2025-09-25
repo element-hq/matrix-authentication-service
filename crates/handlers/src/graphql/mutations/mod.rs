@@ -10,6 +10,7 @@ mod matrix;
 mod oauth2_session;
 mod user;
 mod user_email;
+mod user_passkey;
 
 use anyhow::Context as _;
 use async_graphql::MergedObject;
@@ -24,6 +25,7 @@ use crate::passwords::PasswordManager;
 #[derive(Default, MergedObject)]
 pub struct Mutation(
     user_email::UserEmailMutations,
+    user_passkey::UserPasskeyMutations,
     user::UserMutations,
     oauth2_session::OAuth2SessionMutations,
     compat_session::CompatSessionMutations,

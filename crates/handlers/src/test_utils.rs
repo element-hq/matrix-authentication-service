@@ -55,6 +55,7 @@ use crate::{
     ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
+    webauthn::Webauthn,
 };
 
 /// Setup rustcrypto and tracing for tests.
@@ -112,6 +113,7 @@ pub(crate) struct TestState {
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
     pub task_tracker: TaskTracker,
+    pub webauthn: Webauthn,
     queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
     #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
@@ -147,6 +149,7 @@ pub fn test_site_config() -> SiteConfig {
         session_expiration: None,
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
+        passkeys_enabled: false,
     }
 }
 
@@ -202,6 +205,8 @@ impl TestState {
             PasswordManager::disabled()
         };
 
+        let webauthn = Webauthn::new(&url_builder.http_base(), None)?;
+
         let policy_factory =
             policy_factory(&site_config.server_name, serde_json::json!({})).await?;
 
@@ -223,6 +228,7 @@ impl TestState {
             password_manager: password_manager.clone(),
             url_builder: url_builder.clone(),
             limiter: limiter.clone(),
+            webauthn: webauthn.clone(),
         };
         let state: crate::graphql::BoxState = Box::new(graphql_state);
 
@@ -275,6 +281,7 @@ impl TestState {
             rng,
             http_client,
             task_tracker,
+            webauthn,
             queue_worker,
             cancellation_drop_guard: Arc::new(shutdown_token.drop_guard()),
         })
@@ -436,6 +443,7 @@ struct TestGraphQLState {
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
     limiter: Limiter,
+    webauthn: Webauthn,
 }
 
 #[async_trait::async_trait]
@@ -470,6 +478,10 @@ impl graphql::State for TestGraphQLState {
 
     fn limiter(&self) -> &Limiter {
         &self.limiter
+    }
+
+    fn webauthn(&self) -> &Webauthn {
+        &self.webauthn
     }
 
     fn rng(&self) -> BoxRng {
@@ -572,6 +584,12 @@ impl FromRef<TestState> for Limiter {
 impl FromRef<TestState> for reqwest::Client {
     fn from_ref(input: &TestState) -> Self {
         input.http_client.clone()
+    }
+}
+
+impl FromRef<TestState> for Webauthn {
+    fn from_ref(input: &TestState) -> Self {
+        input.webauthn.clone()
     }
 }
 
