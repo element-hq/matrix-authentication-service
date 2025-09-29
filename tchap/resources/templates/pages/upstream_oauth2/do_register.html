@@ -1,0 +1,199 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2022-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% from "components/idp_brand.html" import logo %}
+
+{% block content %}
+  {% if force_localpart %}
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.download() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">
+          {{ _("mas.upstream_oauth2.register.import_data.heading") }}
+        </h1>
+        <p class="text">
+          {{ _("mas.upstream_oauth2.register.import_data.description", server_name=branding.server_name) }}
+        </p>
+      </div>
+    </header>
+  {% elif upstream_oauth_provider.human_name %}
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">
+          {{ _("mas.upstream_oauth2.register.signup_with_upstream.heading", human_name=upstream_oauth_provider.human_name) }}
+        </h1>
+      </div>
+    </header>
+  {% else %}
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.mention() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">
+          {{ _("mas.upstream_oauth2.register.choose_username.heading") }}
+        </h1>
+        <p class="text">
+          {{ _("mas.upstream_oauth2.register.choose_username.description") }}
+        </p>
+      </div>
+    </header>
+  {% endif %}
+
+  {% if upstream_oauth_provider.human_name %}
+    <section class="upstream-oauth2-provider-account">
+      {% if upstream_oauth_provider.brand_name %}
+        {{ logo(brand=upstream_oauth_provider.brand_name, class="brand") }}
+      {% else %}
+        {{ icon.user_profile() }}
+      {% endif %}
+
+      <div class="infos">
+        <h3 class="provider">
+          {{- _("mas.upstream_oauth2.register.provider_name", human_name=upstream_oauth_provider.human_name) -}}
+        </h3>
+        {% if upstream_oauth_link.human_account_name %}
+          <p class="account">
+            {{- upstream_oauth_link.human_account_name -}}
+          </p>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+
+  <form method="POST" class="cpd-form-root">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+    <input type="hidden" name="action" value="register" />
+
+    {% if form_state.errors is not empty %}
+      {% for error in form_state.errors %}
+        <div class="text-critical font-medium">
+          {{- errors.form_error_message(error=error) -}}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    
+    <!-- :tchap: hide localpart from display -->
+    {% if False %}
+    <!-- :tchap: -->
+    {% if force_localpart %}
+      {% call(f) field.field(label=_("common.mxid"), name="mxid") %}
+        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" value="@{{ imported_localpart }}:{{ branding.server_name }}" readonly aria-describedby="{{ f.id }}-help" />
+
+        <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
+          {{- _("mas.upstream_oauth2.register.enforced_by_policy") -}}
+        </div>
+      {% endcall %}
+    {% else %}
+      {% call(f) field.field(label=_("common.username"), name="username", form_state=form_state) %}
+        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" value="{{ imported_localpart or '' }}" aria-describedby="{{ f.id }}-help" />
+
+        {% if f.errors is empty %}
+          <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
+            @{{ imported_localpart or (_("common.username") | lower) }}:{{ branding.server_name }}
+          </div>
+        {% endif %}
+      {% endcall %}
+    {% endif %}
+    <!-- :tchap: -->
+    {% endif %}
+    <!-- :tchap: -->
+
+    {% if imported_email %}
+      <div class="flex gap-6 items-center">
+        {% call(f) field.field(label=_("common.email_address"), name="email", class="flex-1") %}
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="email" value="{{ imported_email }}" readonly aria-describedby="{{ f.id }}-help" />
+
+          <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
+            {% if upstream_oauth_provider.human_name %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream_with_name", human_name=upstream_oauth_provider.human_name) -}}
+            {% else %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% endif %}
+          </div>
+        {% endcall %}
+
+        {% if not force_email %}
+          <div class="cpd-form-inline-field">
+            <div class="cpd-form-inline-field-control">
+              <div class="cpd-checkbox-container">
+                <input class="cpd-checkbox-input" type="checkbox" name="import_email" id="import_email" checked="checked" />
+                <div class="cpd-checkbox-ui">
+                  {{ icon.check() }}
+                </div>
+              </div>
+            </div>
+            <label class="cpd-form-label" for="import_email">
+              {{- _("mas.upstream_oauth2.register.use") -}}
+            </label>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if imported_display_name %}
+      <div class="flex gap-6 items-center">
+        {% call(f) field.field(label=_("common.display_name"), name="display_name", class="flex-1") %}
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="text" value="{{ imported_display_name }}" readonly />
+
+          <div class="cpd-form-message cpd-form-help-message">
+            {% if upstream_oauth_provider.human_name %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream_with_name", human_name=upstream_oauth_provider.human_name) -}}
+            {% else %}
+              {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
+            {% endif %}
+          </div>
+        {% endcall %}
+
+        {% if not force_display_name %}
+          <div class="cpd-form-inline-field">
+            <div class="cpd-form-inline-field-control">
+              <div class="cpd-checkbox-container">
+                <input class="cpd-checkbox-input" type="checkbox" name="import_display_name" id="import_display_name" checked="checked" />
+                <div class="cpd-checkbox-ui">
+                  {{ icon.check() }}
+                </div>
+              </div>
+            </div>
+            <div class="cpd-form-inline-field-body">
+              <label class="cpd-form-label" for="import_display_name">
+                {{- _("mas.upstream_oauth2.register.use") -}}
+              </label>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if branding.tos_uri %}
+      {% call(f) field.field(label=_("mas.register.terms_of_service", tos_uri=branding.tos_uri), name="accept_terms", form_state=form_state, inline=true, class="my-4") %}
+        <div class="cpd-form-inline-field-control">
+          <div class="cpd-checkbox-container">
+            <input {{ field.attributes(f) }} class="cpd-checkbox-input" type="checkbox" required />
+            <div class="cpd-checkbox-ui">
+              {{ icon.check() }}
+            </div>
+          </div>
+        </div>
+      {% endcall %}
+    {% endif %}
+
+    {{ button.button(text=_("action.create_account")) }}
+  </form>
+{% endblock content %}
