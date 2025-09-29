@@ -99,7 +99,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let emails = UserEmail::samples();
             let pagination = mas_storage::Pagination::first(emails.len());
             let page = Page {
-                edges: emails.into(),
+                edges: emails
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -209,7 +215,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 2
@@ -225,6 +231,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-emails/01FSHN9AG09NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09NMZYX8MFYH578R9"
+                }
               }
             },
             {
@@ -237,6 +248,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-emails/01FSHN9AG0KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0KEPHYQQXW9XPTX6Z"
+                }
               }
             }
           ],
@@ -246,7 +262,7 @@ mod tests {
             "last": "/api/admin/v1/user-emails?page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by user
         let request = Request::get(format!(
@@ -258,7 +274,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -274,6 +290,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-emails/01FSHN9AG09NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09NMZYX8MFYH578R9"
+                }
               }
             }
           ],
@@ -283,7 +304,7 @@ mod tests {
             "last": "/api/admin/v1/user-emails?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by email
         let request = Request::get("/api/admin/v1/user-emails?filter[email]=alice@example.com")
@@ -292,7 +313,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -308,6 +329,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-emails/01FSHN9AG09NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09NMZYX8MFYH578R9"
+                }
               }
             }
           ],
@@ -317,6 +343,6 @@ mod tests {
             "last": "/api/admin/v1/user-emails?filter[email]=alice@example.com&page[last]=10"
           }
         }
-        "###);
+        "#);
     }
 }

@@ -267,9 +267,9 @@ pub(crate) async fn post(
                     .browser_session()
                     .list(browser_session_filter, cursor)
                     .await?;
-                for browser_session in browser_sessions.edges {
-                    user_ids.insert(browser_session.user.id);
-                    cursor = cursor.after(browser_session.id);
+                for edge in browser_sessions.edges {
+                    user_ids.insert(edge.node.user.id);
+                    cursor = cursor.after(edge.cursor);
                 }
 
                 if !browser_sessions.has_next_page {

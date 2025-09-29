@@ -112,7 +112,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let links = UpstreamOAuthLink::samples();
             let pagination = mas_storage::Pagination::first(links.len());
             let page = Page {
-                edges: links.into(),
+                edges: links
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -296,7 +302,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 3
@@ -314,6 +320,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AQZQP8DX40GD59PW"
+                }
               }
             },
             {
@@ -328,6 +339,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0PJZ6DZNTAA1XKPT4"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0PJZ6DZNTAA1XKPT4"
+                }
               }
             },
             {
@@ -342,6 +358,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0QHEHKX2JNQ2A2D07"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0QHEHKX2JNQ2A2D07"
+                }
               }
             }
           ],
@@ -351,7 +372,7 @@ mod tests {
             "last": "/api/admin/v1/upstream-oauth-links?page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by user ID
         let request = Request::get(format!(
@@ -364,7 +385,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 2
@@ -382,6 +403,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AQZQP8DX40GD59PW"
+                }
               }
             },
             {
@@ -396,6 +422,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0QHEHKX2JNQ2A2D07"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0QHEHKX2JNQ2A2D07"
+                }
               }
             }
           ],
@@ -405,7 +436,7 @@ mod tests {
             "last": "/api/admin/v1/upstream-oauth-links?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by provider
         let request = Request::get(format!(
@@ -418,7 +449,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 2
@@ -436,6 +467,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AQZQP8DX40GD59PW"
+                }
               }
             },
             {
@@ -450,6 +486,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0PJZ6DZNTAA1XKPT4"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0PJZ6DZNTAA1XKPT4"
+                }
               }
             }
           ],
@@ -459,7 +500,7 @@ mod tests {
             "last": "/api/admin/v1/upstream-oauth-links?filter[provider]=01FSHN9AG09NMZYX8MFYH578R9&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by subject
         let request = Request::get(format!(
@@ -472,7 +513,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -490,6 +531,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AQZQP8DX40GD59PW"
+                }
               }
             }
           ],
@@ -499,6 +545,6 @@ mod tests {
             "last": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[last]=10"
           }
         }
-        "###);
+        "#);
     }
 }
