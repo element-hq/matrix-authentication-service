@@ -525,29 +525,41 @@ pub(crate) async fn get(
                         // form, but this lead to poor UX. This is why we do
                         // it ahead of time here.
                         //:tchap:
-                        let mut maybe_existing_user =
-                            repo.user().find_by_username(&localpart).await?;
-                        //if not found by username, check by email
+                        let template = provider
+                            .claims_imports
+                            .email
+                            .template
+                            .as_deref()
+                            .unwrap_or(DEFAULT_EMAIL_TEMPLATE);
+
+                        let maybe_email = render_attribute_template(
+                            &env,
+                            template,
+                            &context,
+                            provider.claims_imports.email.is_required(),
+                        );
+
+                        let mut maybe_existing_user = if let Ok(Some(email)) = maybe_email {
+                            tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?
+                        } else {
+                            None
+                        };
+
                         if maybe_existing_user.is_none() {
                             let template = provider
                                 .claims_imports
-                                .email
+                                .localpart
                                 .template
                                 .as_deref()
-                                .unwrap_or(DEFAULT_EMAIL_TEMPLATE);
+                                .unwrap_or(DEFAULT_LOCALPART_TEMPLATE);
 
-                            let maybe_email = render_attribute_template(
-                                &env,
-                                template,
-                                &context,
-                                provider.claims_imports.email.is_required(),
-                            );
-
-                            if let Ok(Some(email)) = maybe_email {
-                                maybe_existing_user =
-                                    tchap::search_user_by_email(&mut repo, &email, &tchap_config)
-                                        .await?;
-                            }
+                            let Some(localpart) =
+                                render_attribute_template(&env, template, &context, true)?
+                            else {
+                                // This should never be the case at this point
+                                return Err(RouteError::InvalidFormAction);
+                            };
+                            maybe_existing_user = repo.user().find_by_username(&localpart).await?;
                         }
                         //:tchap: end
                         let is_available = homeserver
@@ -768,41 +780,40 @@ pub(crate) async fn post(
                 return Err(RouteError::InvalidFormAction);
             }
 
+            //:tchap:
             let template = provider
                 .claims_imports
-                .localpart
+                .email
                 .template
                 .as_deref()
-                .unwrap_or(DEFAULT_LOCALPART_TEMPLATE);
+                .unwrap_or(DEFAULT_EMAIL_TEMPLATE);
 
-            let Some(localpart) = render_attribute_template(&env, template, &context, true)? else {
-                // This should never be the case at this point
-                return Err(RouteError::InvalidFormAction);
+            let maybe_email = render_attribute_template(
+                &env,
+                template,
+                &context,
+                provider.claims_imports.email.is_required(),
+            );
+
+            let mut maybe_user = if let Ok(Some(email)) = maybe_email {
+                tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?
+            } else {
+                None
             };
-
-            //:tchap:
-            let mut maybe_user = repo.user().find_by_username(&localpart).await?;
-
-            //if not found by username, check by email
             if maybe_user.is_none() {
                 let template = provider
                     .claims_imports
-                    .email
+                    .localpart
                     .template
                     .as_deref()
-                    .unwrap_or(DEFAULT_EMAIL_TEMPLATE);
+                    .unwrap_or(DEFAULT_LOCALPART_TEMPLATE);
 
-                let maybe_email = render_attribute_template(
-                    &env,
-                    template,
-                    &context,
-                    provider.claims_imports.email.is_required(),
-                );
-
-                if let Ok(Some(email)) = maybe_email {
-                    maybe_user =
-                        tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?;
-                }
+                let Some(localpart) = render_attribute_template(&env, template, &context, true)?
+                else {
+                    // This should never be the case at this point
+                    return Err(RouteError::InvalidFormAction);
+                };
+                maybe_user = repo.user().find_by_username(&localpart).await?;
             }
 
             let Some(user) = maybe_user else {
