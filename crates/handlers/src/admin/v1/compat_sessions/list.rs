@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{CompatSession, Resource},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -143,10 +143,10 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             };
 
             t.description("Paginated response of compatibility sessions")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     CompatSession::PATH,
                 ))
         })
@@ -159,10 +159,11 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
 #[tracing::instrument(name = "handler.admin.v1.compat_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<CompatSession>>, RouteError> {
     let base = format!("{path}{params}", path = CompatSession::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = CompatSessionFilter::default();
 
     // Load the user from the filter
@@ -206,15 +207,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.compat_session().list(filter, pagination).await?;
-    let count = repo.compat_session().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .compat_session()
+                .list(filter, pagination)
+                .await?
+                .map(CompatSession::from);
+            let count = repo.compat_session().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .compat_session()
+                .list(filter, pagination)
+                .await?
+                .map(CompatSession::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.compat_session().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(CompatSession::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]

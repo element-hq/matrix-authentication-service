@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UserEmail},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -105,10 +105,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of user emails")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UserEmail::PATH,
                 ))
         })
@@ -121,10 +121,11 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.user_emails.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserEmail>>, RouteError> {
     let base = format!("{path}{params}", path = UserEmail::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = UserEmailFilter::default();
 
     // Load the user from the filter
@@ -150,15 +151,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.user_email().list(filter, pagination).await?;
-    let count = repo.user_email().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .user_email()
+                .list(filter, pagination)
+                .await?
+                .map(UserEmail::from);
+            let count = repo.user_email().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .user_email()
+                .list(filter, pagination)
+                .await?
+                .map(UserEmail::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.user_email().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(UserEmail::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]

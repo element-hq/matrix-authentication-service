@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UpstreamOAuthLink},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -118,10 +118,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of upstream OAuth 2.0 links")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UpstreamOAuthLink::PATH,
                 ))
         })
@@ -135,10 +135,11 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.upstream_oauth_links.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UpstreamOAuthLink>>, RouteError> {
     let base = format!("{path}{params}", path = UpstreamOAuthLink::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = UpstreamOAuthLinkFilter::default();
 
     // Load the user from the filter
@@ -183,15 +184,31 @@ pub async fn handler(
         filter
     };
 
-    let page = repo.upstream_oauth_link().list(filter, pagination).await?;
-    let count = repo.upstream_oauth_link().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .upstream_oauth_link()
+                .list(filter, pagination)
+                .await?
+                .map(UpstreamOAuthLink::from);
+            let count = repo.upstream_oauth_link().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .upstream_oauth_link()
+                .list(filter, pagination)
+                .await?
+                .map(UpstreamOAuthLink::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.upstream_oauth_link().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(UpstreamOAuthLink::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]

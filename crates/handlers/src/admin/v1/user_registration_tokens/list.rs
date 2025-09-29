@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UserRegistrationToken},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -118,10 +118,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of registration tokens")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UserRegistrationToken::PATH,
                 ))
         })
@@ -132,10 +132,11 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserRegistrationToken>>, RouteError> {
     let base = format!("{path}{params}", path = UserRegistrationToken::PATH);
+    let base = include_count.add_to_base(&base);
     let now = clock.now();
     let mut filter = UserRegistrationTokenFilter::new(now);
 
@@ -155,18 +156,31 @@ pub async fn handler(
         filter = filter.with_valid(valid);
     }
 
-    let page = repo
-        .user_registration_token()
-        .list(filter, pagination)
-        .await?;
-    let count = repo.user_registration_token().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .user_registration_token()
+                .list(filter, pagination)
+                .await?
+                .map(|token| UserRegistrationToken::new(token, now));
+            let count = repo.user_registration_token().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .user_registration_token()
+                .list(filter, pagination)
+                .await?
+                .map(|token| UserRegistrationToken::new(token, now));
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.user_registration_token().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(|token| UserRegistrationToken::new(token, now)),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]

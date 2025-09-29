@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, User},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -143,17 +143,23 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of users")
-                .example(PaginatedResponse::new(page, pagination, 42, User::PATH))
+                .example(PaginatedResponse::for_page(
+                    page,
+                    pagination,
+                    Some(42),
+                    User::PATH,
+                ))
         })
 }
 
 #[tracing::instrument(name = "handler.admin.v1.users.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<User>>, RouteError> {
     let base = format!("{path}{params}", path = User::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = UserFilter::default();
 
     let filter = match params.admin {
@@ -180,13 +186,21 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.user().list(filter, pagination).await?;
-    let count = repo.user().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo.user().list(filter, pagination).await?;
+            let count = repo.user().count(filter).await?;
+            PaginatedResponse::for_page(page.map(User::from), pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo.user().list(filter, pagination).await?;
+            PaginatedResponse::for_page(page.map(User::from), pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.user().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(User::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }

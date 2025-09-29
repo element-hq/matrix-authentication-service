@@ -109,6 +109,17 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -369,6 +380,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
               "nullable": true
             },
             "style": "form"
@@ -889,6 +911,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
               "nullable": true
             },
             "style": "form"
@@ -1754,6 +1787,17 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -2099,6 +2143,17 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -2331,6 +2386,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
               "nullable": true
             },
             "style": "form"
@@ -2884,6 +2950,17 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -3281,6 +3358,17 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[enabled]",
             "description": "Retrieve providers that are (or are not) enabled",
             "schema": {
@@ -3481,6 +3569,11 @@
             "format": "uint",
             "minimum": 1.0,
             "nullable": true
+          },
+          "count": {
+            "description": "Include the total number of items. Defaults to `true`.",
+            "$ref": "#/components/schemas/IncludeCount",
+            "nullable": true
           }
         }
       },
@@ -3493,6 +3586,31 @@
         ],
         "type": "string",
         "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
+      },
+      "IncludeCount": {
+        "oneOf": [
+          {
+            "description": "Include the total number of items (default)",
+            "type": "string",
+            "enum": [
+              "true"
+            ]
+          },
+          {
+            "description": "Do not include the total number of items",
+            "type": "string",
+            "enum": [
+              "false"
+            ]
+          },
+          {
+            "description": "Only include the total number of items, skip the items themselves",
+            "type": "string",
+            "enum": [
+              "only"
+            ]
+          }
+        ]
       },
       "CompatSessionFilter": {
         "type": "object",
@@ -3525,7 +3643,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -3539,7 +3656,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_CompatSession"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -3549,15 +3667,13 @@
       },
       "PaginationMeta": {
         "type": "object",
-        "required": [
-          "count"
-        ],
         "properties": {
           "count": {
             "description": "The total number of results",
             "type": "integer",
             "format": "uint",
-            "minimum": 0.0
+            "minimum": 0.0,
+            "nullable": true
           }
         }
       },
@@ -3678,8 +3794,6 @@
         "description": "Related links",
         "type": "object",
         "required": [
-          "first",
-          "last",
           "self"
         ],
         "properties": {
@@ -3689,11 +3803,13 @@
           },
           "first": {
             "description": "The link to the first page of results",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "last": {
             "description": "The link to the last page of results",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "next": {
             "description": "The link to the next page of results\n\nOnly present if there is a next page",
@@ -3820,7 +3936,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -3834,7 +3949,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4065,7 +4181,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4079,7 +4194,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_User"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4266,7 +4382,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4280,7 +4395,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserEmail"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4401,7 +4517,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4415,7 +4530,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserSession"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4538,7 +4654,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4552,7 +4667,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserRegistrationToken"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4727,7 +4843,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4741,7 +4856,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4869,7 +4985,6 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "data",
           "links",
           "meta"
         ],
@@ -4883,7 +4998,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
