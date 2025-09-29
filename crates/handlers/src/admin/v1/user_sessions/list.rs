@@ -416,5 +416,127 @@ mod tests {
           }
         }
         "###);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/user-sessions?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "data": [
+            {
+              "type": "user-session",
+              "id": "01FSHNB5309NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": null,
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              }
+            },
+            {
+              "type": "user-session",
+              "id": "01FSHNB530KEPHYQQXW9XPTX6Z",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": "2022-01-16T14:42:00Z",
+                "user_id": "01FSHNB530AJ6AC5HQ9X6H4RP4",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB530KEPHYQQXW9XPTX6Z"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-sessions?count=false&page[first]=10",
+            "first": "/api/admin/v1/user-sessions?count=false&page[first]=10",
+            "last": "/api/admin/v1/user-sessions?count=false&page[last]=10"
+          }
+        }
+        "###);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/user-sessions?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/user-sessions?count=only"
+          }
+        }
+        "###);
+
+        // Test count=false with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/user-sessions?count=false&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-session",
+              "id": "01FSHNB5309NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": null,
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "first": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "last": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request = Request::get("/api/admin/v1/user-sessions?count=only&filter[status]=active")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/user-sessions?filter[status]=active&count=only"
+          }
+        }
+        "#);
     }
 }

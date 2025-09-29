@@ -517,5 +517,155 @@ mod tests {
           }
         }
         "###);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/upstream-oauth-links?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0AQZQP8DX40GD59PW",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG09NMZYX8MFYH578R9",
+                "subject": "subject1",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@acme"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              }
+            },
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0PJZ6DZNTAA1XKPT4",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG09NMZYX8MFYH578R9",
+                "subject": "subject3",
+                "user_id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                "human_account_name": "bob@acme"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0PJZ6DZNTAA1XKPT4"
+              }
+            },
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0QHEHKX2JNQ2A2D07",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG0KEPHYQQXW9XPTX6Z",
+                "subject": "subject2",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@example"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0QHEHKX2JNQ2A2D07"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-links?count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-links?count=false&page[last]=10"
+          }
+        }
+        "###);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/upstream-oauth-links?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 3
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?count=only"
+          }
+        }
+        "###);
+
+        // Test count=false with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/upstream-oauth-links?count=false&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0AQZQP8DX40GD59PW",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG09NMZYX8MFYH578R9",
+                "subject": "subject1",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@acme"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              }
+            },
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0QHEHKX2JNQ2A2D07",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG0KEPHYQQXW9XPTX6Z",
+                "subject": "subject2",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@example"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0QHEHKX2JNQ2A2D07"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-links?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-links?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/upstream-oauth-links?count=only&filter[provider]={}",
+            provider1.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?filter[provider]=01FSHN9AG09NMZYX8MFYH578R9&count=only"
+          }
+        }
+        "#);
     }
 }

@@ -565,4 +565,162 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::BAD_REQUEST);
     }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_count_parameter(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let admin_token = state.token_with_scope("urn:mas:admin").await;
+        create_test_providers(&mut state).await;
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/upstream-oauth-providers?count=false")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "issuer": "https://appleid.apple.com",
+                "human_name": "Apple ID",
+                "brand_name": "apple",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "issuer": "https://login.microsoftonline.com/common/v2.0",
+                "human_name": "Microsoft",
+                "brand_name": "microsoft",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "issuer": "https://accounts.google.com",
+                "human_name": "Google",
+                "brand_name": "google",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-providers?count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-providers?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/upstream-oauth-providers?count=only")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 3
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?count=only"
+          }
+        }
+        "#);
+
+        // Test count=false with filtering
+        let request =
+            Request::get("/api/admin/v1/upstream-oauth-providers?count=false&filter[enabled]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "issuer": "https://login.microsoftonline.com/common/v2.0",
+                "human_name": "Microsoft",
+                "brand_name": "microsoft",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "issuer": "https://accounts.google.com",
+                "human_name": "Google",
+                "brand_name": "google",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request =
+            Request::get("/api/admin/v1/upstream-oauth-providers?count=only&filter[enabled]=false")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?count=only&filter[enabled]=false"
+          }
+        }
+        "#);
+    }
 }

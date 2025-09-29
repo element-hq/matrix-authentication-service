@@ -1186,4 +1186,207 @@ mod tests {
                 .contains("Invalid filter parameters")
         );
     }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_count_parameter(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let admin_token = state.token_with_scope("urn:mas:admin").await;
+        create_test_tokens(&mut state).await;
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/user-registration-tokens?count=false")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG064K8BYZXSY5G511Z",
+              "attributes": {
+                "token": "token_expired",
+                "valid": false,
+                "usage_limit": 5,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": "2022-01-15T14:40:00Z",
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "token": "token_used",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "token": "token_revoked",
+                "valid": false,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "token": "token_unused",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
+              "attributes": {
+                "token": "token_used_revoked",
+                "valid": false,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?count=false&page[first]=10",
+            "first": "/api/admin/v1/user-registration-tokens?count=false&page[first]=10",
+            "last": "/api/admin/v1/user-registration-tokens?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/user-registration-tokens?count=only")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 5
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?count=only"
+          }
+        }
+        "#);
+
+        // Test count=false with filtering
+        let request =
+            Request::get("/api/admin/v1/user-registration-tokens?count=false&filter[valid]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "token": "token_used",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "token": "token_unused",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[first]=10",
+            "first": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[first]=10",
+            "last": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request =
+            Request::get("/api/admin/v1/user-registration-tokens?count=only&filter[revoked]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?filter[revoked]=true&count=only"
+          }
+        }
+        "#);
+    }
 }

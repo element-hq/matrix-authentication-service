@@ -204,3 +204,200 @@ pub async fn handler(
 
     Ok(Json(response))
 }
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        // Provision two users
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        repo.user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Test default behavior (count=true)
+        let request = Request::get("/api/admin/v1/users").bearer(&token).empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "data": [
+            {
+              "type": "user",
+              "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+              "attributes": {
+                "username": "bob",
+                "created_at": "2022-01-16T14:40:00Z",
+                "locked_at": null,
+                "deactivated_at": null,
+                "admin": false,
+                "legacy_guest": false
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+              }
+            },
+            {
+              "type": "user",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "username": "alice",
+                "created_at": "2022-01-16T14:40:00Z",
+                "locked_at": null,
+                "deactivated_at": null,
+                "admin": false,
+                "legacy_guest": false
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/users?page[first]=10",
+            "first": "/api/admin/v1/users?page[first]=10",
+            "last": "/api/admin/v1/users?page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/users?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "data": [
+            {
+              "type": "user",
+              "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+              "attributes": {
+                "username": "bob",
+                "created_at": "2022-01-16T14:40:00Z",
+                "locked_at": null,
+                "deactivated_at": null,
+                "admin": false,
+                "legacy_guest": false
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+              }
+            },
+            {
+              "type": "user",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "username": "alice",
+                "created_at": "2022-01-16T14:40:00Z",
+                "locked_at": null,
+                "deactivated_at": null,
+                "admin": false,
+                "legacy_guest": false
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/users?count=false&page[first]=10",
+            "first": "/api/admin/v1/users?count=false&page[first]=10",
+            "last": "/api/admin/v1/users?count=false&page[last]=10"
+          }
+        }
+        "###);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/users?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/users?count=only"
+          }
+        }
+        "###);
+
+        // Test count=false with filtering
+        let request = Request::get("/api/admin/v1/users?count=false&filter[search]=alice")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "username": "alice",
+                "created_at": "2022-01-16T14:40:00Z",
+                "locked_at": null,
+                "deactivated_at": null,
+                "admin": false,
+                "legacy_guest": false
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/users?filter[search]=alice&count=false&page[first]=10",
+            "first": "/api/admin/v1/users?filter[search]=alice&count=false&page[first]=10",
+            "last": "/api/admin/v1/users?filter[search]=alice&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request = Request::get("/api/admin/v1/users?count=only&filter[search]=alice")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/users?filter[search]=alice&count=only"
+          }
+        }
+        "#);
+    }
+}

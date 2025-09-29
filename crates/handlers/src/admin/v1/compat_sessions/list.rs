@@ -471,5 +471,140 @@ mod tests {
           }
         }
         "#);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/compat-sessions?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "compat-session",
+              "id": "01FSHNB530AAPR7PEV8KNBZD5Y",
+              "attributes": {
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "device_id": "LoieH5Iecx",
+                "user_session_id": null,
+                "redirect_uri": null,
+                "created_at": "2022-01-16T14:41:00Z",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null,
+                "finished_at": null,
+                "human_name": null
+              },
+              "links": {
+                "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
+              }
+            },
+            {
+              "type": "compat-session",
+              "id": "01FSHNCZP0PPF7X0EVMJNECPZW",
+              "attributes": {
+                "user_id": "01FSHNB530AJ6AC5HQ9X6H4RP4",
+                "device_id": "ZXyvelQWW9",
+                "user_session_id": null,
+                "redirect_uri": null,
+                "created_at": "2022-01-16T14:42:00Z",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null,
+                "finished_at": "2022-01-16T14:43:00Z",
+                "human_name": null
+              },
+              "links": {
+                "self": "/api/admin/v1/compat-sessions/01FSHNCZP0PPF7X0EVMJNECPZW"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/compat-sessions?count=false&page[first]=10",
+            "first": "/api/admin/v1/compat-sessions?count=false&page[first]=10",
+            "last": "/api/admin/v1/compat-sessions?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/compat-sessions?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/compat-sessions?count=only"
+          }
+        }
+        "#);
+
+        // Test count=false with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/compat-sessions?count=false&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "compat-session",
+              "id": "01FSHNB530AAPR7PEV8KNBZD5Y",
+              "attributes": {
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "device_id": "LoieH5Iecx",
+                "user_session_id": null,
+                "redirect_uri": null,
+                "created_at": "2022-01-16T14:41:00Z",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null,
+                "finished_at": null,
+                "human_name": null
+              },
+              "links": {
+                "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/compat-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "first": "/api/admin/v1/compat-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "last": "/api/admin/v1/compat-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request =
+            Request::get("/api/admin/v1/compat-sessions?count=only&filter[status]=active")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/compat-sessions?filter[status]=active&count=only"
+          }
+        }
+        "#);
     }
 }
