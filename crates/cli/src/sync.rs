@@ -132,7 +132,8 @@ pub async fn config_sync(
         let mut existing_enabled_ids = BTreeSet::new();
         let mut existing_disabled = BTreeMap::new();
         // Process the existing providers
-        for provider in page.edges {
+        for edge in page.edges {
+            let provider = edge.node;
             if provider.enabled() {
                 if config_ids.contains(&provider.id) {
                     existing_enabled_ids.insert(provider.id);

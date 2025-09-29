@@ -203,11 +203,12 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for (compat_session, _) in page.edges {
+            for edge in page.edges {
+                let (compat_session, _) = edge.node;
                 if let Some(ref device) = compat_session.device {
                     devices.insert(device.as_str().to_owned());
                 }
-                cursor = cursor.after(compat_session.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {
@@ -227,14 +228,14 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for oauth2_session in page.edges {
-                for scope in &*oauth2_session.scope {
+            for edge in page.edges {
+                for scope in &*edge.node.scope {
                     if let Some(device) = Device::from_scope_token(scope) {
                         devices.insert(device.as_str().to_owned());
                     }
                 }
 
-                cursor = cursor.after(oauth2_session.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {
