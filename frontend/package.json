@@ -18,8 +18,8 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@fontsource/inconsolata": "^5.2.7",
-    "@fontsource/inter": "^5.2.7",
+    "@fontsource/inconsolata": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
     "@tanstack/react-query": "^5.89.0",
