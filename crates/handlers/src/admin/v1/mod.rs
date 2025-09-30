@@ -195,4 +195,11 @@ where
                 self::upstream_oauth_providers::list_doc,
             ),
         )
+        .api_route(
+            "/upstream-oauth-providers/{id}",
+            get_with(
+                self::upstream_oauth_providers::get,
+                self::upstream_oauth_providers::get_doc,
+            ),
+        )
 }
