@@ -718,7 +718,7 @@ mod tests {
             "count": 1
           },
           "links": {
-            "self": "/api/admin/v1/upstream-oauth-providers?count=only&filter[enabled]=false"
+            "self": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=false&count=only"
           }
         }
         "#);
