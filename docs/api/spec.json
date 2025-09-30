@@ -3810,13 +3810,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -3851,7 +3851,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -3873,7 +3872,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4132,13 +4132,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -4161,7 +4161,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4183,7 +4182,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4306,7 +4306,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4328,7 +4327,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4387,13 +4387,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -4416,7 +4416,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4438,7 +4437,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4593,13 +4593,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -4622,7 +4622,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4644,7 +4643,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4733,13 +4733,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -4762,7 +4762,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4784,7 +4783,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -4875,13 +4875,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -4904,7 +4904,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -4926,7 +4925,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -5069,13 +5069,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -5098,7 +5098,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -5120,7 +5119,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },
@@ -5216,13 +5216,13 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-          "links",
-          "meta"
+          "links"
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "$ref": "#/components/schemas/PaginationMeta"
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
           },
           "data": {
             "description": "The list of resources",
@@ -5245,7 +5245,6 @@
           "attributes",
           "id",
           "links",
-          "meta",
           "type"
         ],
         "properties": {
@@ -5267,7 +5266,8 @@
           },
           "meta": {
             "description": "Metadata about the resource",
-            "$ref": "#/components/schemas/SingleResourceMeta"
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
           }
         }
       },

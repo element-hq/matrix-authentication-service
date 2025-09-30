@@ -59,6 +59,7 @@ impl PaginationMeta {
 pub struct PaginatedResponse<T> {
     /// Response metadata
     #[serde(skip_serializing_if = "PaginationMeta::is_empty")]
+    #[schemars(with = "Option<PaginationMeta>")]
     meta: PaginationMeta,
 
     /// The list of resources
@@ -183,6 +184,7 @@ struct SingleResource<T> {
 
     /// Metadata about the resource
     #[serde(skip_serializing_if = "SingleResourceMeta::is_empty")]
+    #[schemars(with = "Option<SingleResourceMeta>")]
     meta: SingleResourceMeta,
 }
 
