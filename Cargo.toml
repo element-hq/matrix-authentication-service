@@ -735,7 +735,7 @@ version = "0.5.5"
 
 # Zero memory after use
 [workspace.dependencies.zeroize]
-version = "1.8.1"
+version = "1.8.2"
 
 # Password strength estimation
 [workspace.dependencies.zxcvbn]
