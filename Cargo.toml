@@ -492,7 +492,7 @@ version = "0.6.4"
 
 # Regular expressions
 [workspace.dependencies.regex]
-version = "1.11.2"
+version = "1.11.3"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
