@@ -137,7 +137,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let users = User::samples();
             let pagination = mas_storage::Pagination::first(users.len());
             let page = Page {
-                edges: users.into(),
+                edges: users
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };

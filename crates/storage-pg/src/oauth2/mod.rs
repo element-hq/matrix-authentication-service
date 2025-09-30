@@ -511,10 +511,10 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 4);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session12);
-        assert_eq!(list.edges[2], session21);
-        assert_eq!(list.edges[3], session22);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session12);
+        assert_eq!(list.edges[2].node, session21);
+        assert_eq!(list.edges[3].node, session22);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 4);
 
@@ -527,8 +527,8 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 2);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session21);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session21);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
 
@@ -541,8 +541,8 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 2);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session12);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session12);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
 
@@ -557,7 +557,7 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session22);
+        assert_eq!(list.edges[0].node, session22);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
@@ -570,8 +570,8 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 2);
-        assert_eq!(list.edges[0], session12);
-        assert_eq!(list.edges[1], session21);
+        assert_eq!(list.edges[0].node, session12);
+        assert_eq!(list.edges[1].node, session21);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
 
@@ -584,8 +584,8 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 2);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session22);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session22);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
 
@@ -598,7 +598,7 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session22);
+        assert_eq!(list.edges[0].node, session22);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
@@ -613,7 +613,7 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session22);
+        assert_eq!(list.edges[0].node, session22);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
@@ -626,7 +626,7 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session12);
+        assert_eq!(list.edges[0].node, session12);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
@@ -641,7 +641,7 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session21);
+        assert_eq!(list.edges[0].node, session21);
 
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
@@ -655,10 +655,10 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 4);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session12);
-        assert_eq!(list.edges[2], session21);
-        assert_eq!(list.edges[3], session22);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session12);
+        assert_eq!(list.edges[2].node, session21);
+        assert_eq!(list.edges[3].node, session22);
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 4);
 
         // We should get all sessions with the "openid" and "email" scope
@@ -671,8 +671,8 @@ mod tests {
             .unwrap();
         assert!(!list.has_next_page);
         assert_eq!(list.edges.len(), 2);
-        assert_eq!(list.edges[0], session11);
-        assert_eq!(list.edges[1], session12);
+        assert_eq!(list.edges[0].node, session11);
+        assert_eq!(list.edges[1].node, session12);
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
 
         // Try combining the scope filter with the user filter
@@ -685,7 +685,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0], session11);
+        assert_eq!(list.edges[0].node, session11);
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
 
         // Finish all sessions of a client in batch

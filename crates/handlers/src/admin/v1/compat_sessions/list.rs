@@ -137,7 +137,13 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             let sessions = CompatSession::samples();
             let pagination = mas_storage::Pagination::first(sessions.len());
             let page = Page {
-                edges: sessions.into(),
+                edges: sessions
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -299,6 +305,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AAPR7PEV8KNBZD5Y"
+                }
               }
             },
             {
@@ -318,6 +329,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNCZP0PPF7X0EVMJNECPZW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNCZP0PPF7X0EVMJNECPZW"
+                }
               }
             }
           ],
@@ -362,6 +378,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AAPR7PEV8KNBZD5Y"
+                }
               }
             }
           ],
@@ -403,6 +424,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNB530AAPR7PEV8KNBZD5Y"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AAPR7PEV8KNBZD5Y"
+                }
               }
             }
           ],
@@ -444,6 +470,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/compat-sessions/01FSHNCZP0PPF7X0EVMJNECPZW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNCZP0PPF7X0EVMJNECPZW"
+                }
               }
             }
           ],

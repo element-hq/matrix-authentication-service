@@ -14,6 +14,7 @@ use mas_data_model::{
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
@@ -62,6 +63,12 @@ struct SessionLookup {
     user_deactivated_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
     user_is_guest: bool,
+}
+
+impl Node<Ulid> for SessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_id.into()
+    }
 }
 
 impl TryFrom<SessionLookup> for BrowserSession {

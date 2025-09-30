@@ -171,6 +171,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -190,6 +195,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -209,6 +219,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -473,6 +488,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -492,6 +512,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -511,6 +536,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -964,6 +994,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -979,6 +1014,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -994,6 +1034,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -1798,6 +1843,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-emails/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     }
                   ],
@@ -2146,6 +2196,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -2161,6 +2216,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -2176,6 +2236,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -2408,6 +2473,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -2425,6 +2495,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     }
                   ],
@@ -2941,6 +3016,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -2955,6 +3035,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -2969,6 +3054,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -3316,6 +3406,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -3330,6 +3425,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -3344,6 +3444,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -3568,6 +3673,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -3586,6 +3692,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -3670,6 +3780,30 @@
         "properties": {
           "self": {
             "description": "The canonical link to the current resource",
+            "type": "string"
+          }
+        }
+      },
+      "SingleResourceMeta": {
+        "description": "Metadata associated with a resource",
+        "type": "object",
+        "properties": {
+          "page": {
+            "description": "Information about the pagination of the resource",
+            "$ref": "#/components/schemas/SingleResourceMetaPage",
+            "nullable": true
+          }
+        }
+      },
+      "SingleResourceMetaPage": {
+        "description": "Pagination metadata for a resource",
+        "type": "object",
+        "required": [
+          "cursor"
+        ],
+        "properties": {
+          "cursor": {
+            "description": "The cursor of this resource in the paginated result",
             "type": "string"
           }
         }
@@ -3849,6 +3983,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -3867,6 +4002,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -3989,6 +4128,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4007,6 +4147,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4094,6 +4238,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4112,6 +4257,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4295,6 +4444,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4313,6 +4463,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4430,6 +4584,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4448,6 +4603,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4567,6 +4726,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4585,6 +4745,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4756,6 +4920,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4774,6 +4939,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },
@@ -4898,6 +5067,7 @@
           "attributes",
           "id",
           "links",
+          "meta",
           "type"
         ],
         "properties": {
@@ -4916,6 +5086,10 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta"
           }
         }
       },

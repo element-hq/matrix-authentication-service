@@ -172,7 +172,7 @@ impl BrowserSession {
 
                 connection
                     .edges
-                    .extend(page.edges.into_iter().map(|s| match s {
+                    .extend(page.edges.into_iter().map(|edge| match edge.node {
                         mas_storage::app_session::AppSession::Compat(session) => Edge::new(
                             OpaqueCursor(NodeCursor(NodeType::CompatSession, session.id)),
                             AppSession::CompatSession(Box::new(CompatSession::new(*session))),

@@ -390,9 +390,10 @@ impl Options {
                 info!("The following users can request admin privileges ({total} total):");
                 loop {
                     let page = repo.user().list(filter, cursor).await?;
-                    for user in page.edges {
+                    for edge in page.edges {
+                        let user = edge.node;
                         info!(%user.id, username = %user.username);
-                        cursor = cursor.after(user.id);
+                        cursor = cursor.after(edge.cursor);
                     }
 
                     if !page.has_next_page {
