@@ -3552,6 +3552,68 @@
           }
         }
       }
+    },
+    "/api/admin/v1/upstream-oauth-providers/{id}": {
+      "get": {
+        "tags": [
+          "upstream-oauth-provider"
+        ],
+        "summary": "Get upstream OAuth provider",
+        "operationId": "getUpstreamOAuthProvider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The upstream OAuth provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthProvider"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-provider",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "issuer": "https://accounts.google.com",
+                      "human_name": "Google",
+                      "brand_name": "google",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "disabled_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Provider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5241,6 +5303,22 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "SingleResponse_for_UpstreamOAuthProvider": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
           }
         }
       }
