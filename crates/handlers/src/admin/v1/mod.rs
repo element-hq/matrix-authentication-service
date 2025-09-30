@@ -61,6 +61,13 @@ where
             get_with(self::oauth2_sessions::get, self::oauth2_sessions::get_doc),
         )
         .api_route(
+            "/oauth2-sessions/{id}/finish",
+            post_with(
+                self::oauth2_sessions::finish,
+                self::oauth2_sessions::finish_doc,
+            ),
+        )
+        .api_route(
             "/policy-data",
             post_with(self::policy_data::set, self::policy_data::set_doc),
         )
