@@ -53,6 +53,13 @@ where
             get_with(self::compat_sessions::get, self::compat_sessions::get_doc),
         )
         .api_route(
+            "/compat-sessions/{id}/finish",
+            post_with(
+                self::compat_sessions::finish,
+                self::compat_sessions::finish_doc,
+            ),
+        )
+        .api_route(
             "/oauth2-sessions",
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),
         )
