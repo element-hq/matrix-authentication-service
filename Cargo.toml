@@ -137,7 +137,7 @@ version = "1.10.1"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
-version = "1.2.0"
+version = "1.2.1"
 features = ["serde1"]
 
 # ChaCha20Poly1305 AEAD
