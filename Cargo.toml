@@ -652,7 +652,7 @@ version = "0.1.17"
 
 # Tokio rustls integration
 [workspace.dependencies.tokio-rustls]
-version = "0.26.3"
+version = "0.26.4"
 
 # Tokio test utilities
 [workspace.dependencies.tokio-test]
