@@ -20,7 +20,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UpstreamOAuthProvider},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -96,10 +96,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of upstream OAuth 2.0 providers")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UpstreamOAuthProvider::PATH,
                 ))
         })
@@ -108,10 +108,11 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.upstream_oauth_providers.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UpstreamOAuthProvider>>, RouteError> {
     let base = format!("{path}{params}", path = UpstreamOAuthProvider::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = UpstreamOAuthProviderFilter::new();
 
     let filter = match params.enabled {
@@ -120,18 +121,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo
-        .upstream_oauth_provider()
-        .list(filter, pagination)
-        .await?;
-    let count = repo.upstream_oauth_provider().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .upstream_oauth_provider()
+                .list(filter, pagination)
+                .await?
+                .map(UpstreamOAuthProvider::from);
+            let count = repo.upstream_oauth_provider().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .upstream_oauth_provider()
+                .list(filter, pagination)
+                .await?
+                .map(UpstreamOAuthProvider::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.upstream_oauth_provider().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(UpstreamOAuthProvider::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -601,5 +615,188 @@ mod tests {
 
         let response = state.request(request).await;
         response.assert_status(StatusCode::BAD_REQUEST);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_count_parameter(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let admin_token = state.token_with_scope("urn:mas:admin").await;
+        create_test_providers(&mut state).await;
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/upstream-oauth-providers?count=false")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "issuer": "https://appleid.apple.com",
+                "human_name": "Apple ID",
+                "brand_name": "apple",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "issuer": "https://login.microsoftonline.com/common/v2.0",
+                "human_name": "Microsoft",
+                "brand_name": "microsoft",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "issuer": "https://accounts.google.com",
+                "human_name": "Google",
+                "brand_name": "google",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-providers?count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-providers?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/upstream-oauth-providers?count=only")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 3
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?count=only"
+          }
+        }
+        "#);
+
+        // Test count=false with filtering
+        let request =
+            Request::get("/api/admin/v1/upstream-oauth-providers?count=false&filter[enabled]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "issuer": "https://login.microsoftonline.com/common/v2.0",
+                "human_name": "Microsoft",
+                "brand_name": "microsoft",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
+              }
+            },
+            {
+              "type": "upstream-oauth-provider",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "issuer": "https://accounts.google.com",
+                "human_name": "Google",
+                "brand_name": "google",
+                "created_at": "2022-01-16T14:40:00Z",
+                "disabled_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=true&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request =
+            Request::get("/api/admin/v1/upstream-oauth-providers?count=only&filter[enabled]=false")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json::<serde_json::Value>();
+
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-providers?filter[enabled]=false&count=only"
+          }
+        }
+        "#);
     }
 }

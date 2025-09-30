@@ -25,7 +25,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{OAuth2Session, Resource},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -204,10 +204,10 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             };
 
             t.description("Paginated response of OAuth 2.0 sessions")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     OAuth2Session::PATH,
                 ))
         })
@@ -224,10 +224,11 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
 #[tracing::instrument(name = "handler.admin.v1.oauth2_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<OAuth2Session>>, RouteError> {
     let base = format!("{path}{params}", path = OAuth2Session::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = OAuth2SessionFilter::default();
 
     // Load the user from the filter
@@ -306,15 +307,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.oauth2_session().list(filter, pagination).await?;
-    let count = repo.oauth2_session().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .oauth2_session()
+                .list(filter, pagination)
+                .await?
+                .map(OAuth2Session::from);
+            let count = repo.oauth2_session().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .oauth2_session()
+                .list(filter, pagination)
+                .await?
+                .map(OAuth2Session::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.oauth2_session().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(OAuth2Session::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -372,6 +389,67 @@ mod tests {
             "self": "/api/admin/v1/oauth2-sessions?page[first]=10",
             "first": "/api/admin/v1/oauth2-sessions?page[first]=10",
             "last": "/api/admin/v1/oauth2-sessions?page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/oauth2-sessions?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "oauth2-session",
+              "id": "01FSHN9AG0MKGTBNZ16RDR3PVY",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "finished_at": null,
+                "user_id": null,
+                "user_session_id": null,
+                "client_id": "01FSHN9AG0FAQ50MT1E9FFRPZR",
+                "scope": "urn:mas:admin",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null,
+                "human_name": null
+              },
+              "links": {
+                "self": "/api/admin/v1/oauth2-sessions/01FSHN9AG0MKGTBNZ16RDR3PVY"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MKGTBNZ16RDR3PVY"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/oauth2-sessions?count=false&page[first]=10",
+            "first": "/api/admin/v1/oauth2-sessions?count=false&page[first]=10",
+            "last": "/api/admin/v1/oauth2-sessions?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/oauth2-sessions?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/oauth2-sessions?count=only"
           }
         }
         "#);

@@ -21,10 +21,12 @@ struct PaginationLinks {
     self_: String,
 
     /// The link to the first page of results
-    first: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    first: Option<String>,
 
     /// The link to the last page of results
-    last: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last: Option<String>,
 
     /// The link to the next page of results
     ///
@@ -42,17 +44,26 @@ struct PaginationLinks {
 #[derive(Serialize, JsonSchema)]
 struct PaginationMeta {
     /// The total number of results
-    count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<usize>,
+}
+
+impl PaginationMeta {
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
 }
 
 /// A top-level response with a page of resources
 #[derive(Serialize, JsonSchema)]
 pub struct PaginatedResponse<T> {
     /// Response metadata
+    #[serde(skip_serializing_if = "PaginationMeta::is_empty")]
     meta: PaginationMeta,
 
     /// The list of resources
-    data: Vec<SingleResource<T>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<Vec<SingleResource<T>>>,
 
     /// Related links
     links: PaginationLinks,
@@ -87,16 +98,22 @@ fn url_with_pagination(base: &str, pagination: Pagination) -> String {
 }
 
 impl<T: Resource> PaginatedResponse<T> {
-    pub fn new(
+    pub fn for_page(
         page: mas_storage::Page<T>,
         current_pagination: Pagination,
-        count: usize,
+        count: Option<usize>,
         base: &str,
     ) -> Self {
         let links = PaginationLinks {
             self_: url_with_pagination(base, current_pagination),
-            first: url_with_pagination(base, Pagination::first(current_pagination.count)),
-            last: url_with_pagination(base, Pagination::last(current_pagination.count)),
+            first: Some(url_with_pagination(
+                base,
+                Pagination::first(current_pagination.count),
+            )),
+            last: Some(url_with_pagination(
+                base,
+                Pagination::last(current_pagination.count),
+            )),
             next: page.has_next_page.then(|| {
                 url_with_pagination(
                     base,
@@ -125,7 +142,23 @@ impl<T: Resource> PaginatedResponse<T> {
 
         Self {
             meta: PaginationMeta { count },
-            data,
+            data: Some(data),
+            links,
+        }
+    }
+
+    pub fn for_count_only(count: usize, base: &str) -> Self {
+        let links = PaginationLinks {
+            self_: base.to_owned(),
+            first: None,
+            last: None,
+            next: None,
+            prev: None,
+        };
+
+        Self {
+            meta: PaginationMeta { count: Some(count) },
+            data: None,
             links,
         }
     }

@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UserEmail},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -111,10 +111,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of user emails")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UserEmail::PATH,
                 ))
         })
@@ -127,10 +127,11 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.user_emails.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserEmail>>, RouteError> {
     let base = format!("{path}{params}", path = UserEmail::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = UserEmailFilter::default();
 
     // Load the user from the filter
@@ -156,15 +157,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.user_email().list(filter, pagination).await?;
-    let count = repo.user_email().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .user_email()
+                .list(filter, pagination)
+                .await?
+                .map(UserEmail::from);
+            let count = repo.user_email().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .user_email()
+                .list(filter, pagination)
+                .await?
+                .map(UserEmail::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.user_email().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(UserEmail::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -341,6 +358,137 @@ mod tests {
             "self": "/api/admin/v1/user-emails?filter[email]=alice@example.com&page[first]=10",
             "first": "/api/admin/v1/user-emails?filter[email]=alice@example.com&page[first]=10",
             "last": "/api/admin/v1/user-emails?filter[email]=alice@example.com&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/user-emails?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-email",
+              "id": "01FSHN9AG09NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "email": "alice@example.com"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-emails/01FSHN9AG09NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09NMZYX8MFYH578R9"
+                }
+              }
+            },
+            {
+              "type": "user-email",
+              "id": "01FSHN9AG0KEPHYQQXW9XPTX6Z",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "user_id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                "email": "bob@example.com"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-emails/01FSHN9AG0KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0KEPHYQQXW9XPTX6Z"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-emails?count=false&page[first]=10",
+            "first": "/api/admin/v1/user-emails?count=false&page[first]=10",
+            "last": "/api/admin/v1/user-emails?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/user-emails?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/user-emails?count=only"
+          }
+        }
+        "###);
+
+        // Test count=false with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/user-emails?count=false&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-email",
+              "id": "01FSHN9AG09NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "email": "alice@example.com"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-emails/01FSHN9AG09NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09NMZYX8MFYH578R9"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-emails?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "first": "/api/admin/v1/user-emails?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "last": "/api/admin/v1/user-emails?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/user-emails?count=only&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/user-emails?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=only"
           }
         }
         "#);

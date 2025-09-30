@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UserRegistrationToken},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -124,10 +124,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             };
 
             t.description("Paginated response of registration tokens")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UserRegistrationToken::PATH,
                 ))
         })
@@ -138,10 +138,11 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserRegistrationToken>>, RouteError> {
     let base = format!("{path}{params}", path = UserRegistrationToken::PATH);
+    let base = include_count.add_to_base(&base);
     let now = clock.now();
     let mut filter = UserRegistrationTokenFilter::new(now);
 
@@ -161,18 +162,31 @@ pub async fn handler(
         filter = filter.with_valid(valid);
     }
 
-    let page = repo
-        .user_registration_token()
-        .list(filter, pagination)
-        .await?;
-    let count = repo.user_registration_token().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .user_registration_token()
+                .list(filter, pagination)
+                .await?
+                .map(|token| UserRegistrationToken::new(token, now));
+            let count = repo.user_registration_token().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .user_registration_token()
+                .list(filter, pagination)
+                .await?
+                .map(|token| UserRegistrationToken::new(token, now));
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.user_registration_token().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(|token| UserRegistrationToken::new(token, now)),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -1332,5 +1346,243 @@ mod tests {
                 .unwrap()
                 .contains("Invalid filter parameters")
         );
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_count_parameter(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let admin_token = state.token_with_scope("urn:mas:admin").await;
+        create_test_tokens(&mut state).await;
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/user-registration-tokens?count=false")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG064K8BYZXSY5G511Z",
+              "attributes": {
+                "token": "token_expired",
+                "valid": false,
+                "usage_limit": 5,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": "2022-01-15T14:40:00Z",
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "token": "token_used",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG09AVTNSQFMSR34AJC",
+              "attributes": {
+                "token": "token_revoked",
+                "valid": false,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "token": "token_unused",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0S3ZJD8CXQ7F11KXN",
+              "attributes": {
+                "token": "token_used_revoked",
+                "valid": false,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": "2022-01-16T14:40:00Z"
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?count=false&page[first]=10",
+            "first": "/api/admin/v1/user-registration-tokens?count=false&page[first]=10",
+            "last": "/api/admin/v1/user-registration-tokens?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/user-registration-tokens?count=only")
+            .bearer(&admin_token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 5
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?count=only"
+          }
+        }
+        "#);
+
+        // Test count=false with filtering
+        let request =
+            Request::get("/api/admin/v1/user-registration-tokens?count=false&filter[valid]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG07HNEZXNQM2KNBNF6",
+              "attributes": {
+                "token": "token_used",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 1,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": "2022-01-16T14:40:00Z",
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
+              }
+            },
+            {
+              "type": "user-registration_token",
+              "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+              "attributes": {
+                "token": "token_unused",
+                "valid": true,
+                "usage_limit": 10,
+                "times_used": 0,
+                "created_at": "2022-01-16T14:40:00Z",
+                "last_used_at": null,
+                "expires_at": null,
+                "revoked_at": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[first]=10",
+            "first": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[first]=10",
+            "last": "/api/admin/v1/user-registration-tokens?filter[valid]=true&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request =
+            Request::get("/api/admin/v1/user-registration-tokens?count=only&filter[revoked]=true")
+                .bearer(&admin_token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens?filter[revoked]=true&count=only"
+          }
+        }
+        "#);
     }
 }

@@ -21,7 +21,7 @@ use crate::{
     admin::{
         call_context::CallContext,
         model::{Resource, UserSession},
-        params::Pagination,
+        params::{IncludeCount, Pagination},
         response::{ErrorResponse, PaginatedResponse},
     },
     impl_from_error_for_route,
@@ -135,10 +135,10 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             };
 
             t.description("Paginated response of user sessions")
-                .example(PaginatedResponse::new(
+                .example(PaginatedResponse::for_page(
                     page,
                     pagination,
-                    42,
+                    Some(42),
                     UserSession::PATH,
                 ))
         })
@@ -151,10 +151,11 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
 #[tracing::instrument(name = "handler.admin.v1.user_sessions.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination): Pagination,
+    Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserSession>>, RouteError> {
     let base = format!("{path}{params}", path = UserSession::PATH);
+    let base = include_count.add_to_base(&base);
     let filter = BrowserSessionFilter::default();
 
     // Load the user from the filter
@@ -181,15 +182,31 @@ pub async fn handler(
         None => filter,
     };
 
-    let page = repo.browser_session().list(filter, pagination).await?;
-    let count = repo.browser_session().count(filter).await?;
+    let response = match include_count {
+        IncludeCount::True => {
+            let page = repo
+                .browser_session()
+                .list(filter, pagination)
+                .await?
+                .map(UserSession::from);
+            let count = repo.browser_session().count(filter).await?;
+            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+        }
+        IncludeCount::False => {
+            let page = repo
+                .browser_session()
+                .list(filter, pagination)
+                .await?
+                .map(UserSession::from);
+            PaginatedResponse::for_page(page, pagination, None, &base)
+        }
+        IncludeCount::Only => {
+            let count = repo.browser_session().count(filter).await?;
+            PaginatedResponse::for_count_only(count, &base)
+        }
+    };
 
-    Ok(Json(PaginatedResponse::new(
-        page.map(UserSession::from),
-        pagination,
-        count,
-        &base,
-    )))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -427,6 +444,143 @@ mod tests {
             "self": "/api/admin/v1/user-sessions?filter[status]=finished&page[first]=10",
             "first": "/api/admin/v1/user-sessions?filter[status]=finished&page[first]=10",
             "last": "/api/admin/v1/user-sessions?filter[status]=finished&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=false
+        let request = Request::get("/api/admin/v1/user-sessions?count=false")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-session",
+              "id": "01FSHNB5309NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": null,
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            },
+            {
+              "type": "user-session",
+              "id": "01FSHNB530KEPHYQQXW9XPTX6Z",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": "2022-01-16T14:42:00Z",
+                "user_id": "01FSHNB530AJ6AC5HQ9X6H4RP4",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB530KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AJ6AC5HQ9X6H4RP4"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-sessions?count=false&page[first]=10",
+            "first": "/api/admin/v1/user-sessions?count=false&page[first]=10",
+            "last": "/api/admin/v1/user-sessions?count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only
+        let request = Request::get("/api/admin/v1/user-sessions?count=only")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r###"
+        {
+          "meta": {
+            "count": 2
+          },
+          "links": {
+            "self": "/api/admin/v1/user-sessions?count=only"
+          }
+        }
+        "###);
+
+        // Test count=false with filtering
+        let request = Request::get(format!(
+            "/api/admin/v1/user-sessions?count=false&filter[user]={}",
+            alice.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": [
+            {
+              "type": "user-session",
+              "id": "01FSHNB5309NMZYX8MFYH578R9",
+              "attributes": {
+                "created_at": "2022-01-16T14:41:00Z",
+                "finished_at": null,
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "user_agent": null,
+                "last_active_at": null,
+                "last_active_ip": null
+              },
+              "links": {
+                "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "first": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[first]=10",
+            "last": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&count=false&page[last]=10"
+          }
+        }
+        "#);
+
+        // Test count=only with filtering
+        let request = Request::get("/api/admin/v1/user-sessions?count=only&filter[status]=active")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 1
+          },
+          "links": {
+            "self": "/api/admin/v1/user-sessions?filter[status]=active&count=only"
           }
         }
         "#);
