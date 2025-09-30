@@ -123,7 +123,13 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             let sessions = UserSession::samples();
             let pagination = mas_storage::Pagination::first(sessions.len());
             let page = Page {
-                edges: sessions.into(),
+                edges: sessions
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -258,7 +264,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 2
@@ -277,6 +283,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             },
             {
@@ -292,6 +303,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB530KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AJ6AC5HQ9X6H4RP4"
+                }
               }
             }
           ],
@@ -301,7 +317,7 @@ mod tests {
             "last": "/api/admin/v1/user-sessions?page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by user
         let request = Request::get(format!(
@@ -313,7 +329,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -332,6 +348,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -341,7 +362,7 @@ mod tests {
             "last": "/api/admin/v1/user-sessions?filter[user]=01FSHN9AG0MZAA6S4AF7CTV32E&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by status (active)
         let request = Request::get("/api/admin/v1/user-sessions?filter[status]=active")
@@ -350,7 +371,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -369,6 +390,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -378,7 +404,7 @@ mod tests {
             "last": "/api/admin/v1/user-sessions?filter[status]=active&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Filter by status (finished)
         let request = Request::get("/api/admin/v1/user-sessions?filter[status]=finished")
@@ -387,7 +413,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "meta": {
             "count": 1
@@ -406,6 +432,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB530KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AJ6AC5HQ9X6H4RP4"
+                }
               }
             }
           ],
@@ -415,7 +446,7 @@ mod tests {
             "last": "/api/admin/v1/user-sessions?filter[status]=finished&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Test count=false
         let request = Request::get("/api/admin/v1/user-sessions?count=false")
@@ -424,7 +455,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": [
             {
@@ -440,6 +471,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             },
             {
@@ -455,6 +491,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB530KEPHYQQXW9XPTX6Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHNB530AJ6AC5HQ9X6H4RP4"
+                }
               }
             }
           ],
@@ -464,7 +505,7 @@ mod tests {
             "last": "/api/admin/v1/user-sessions?count=false&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Test count=only
         let request = Request::get("/api/admin/v1/user-sessions?count=only")
@@ -510,6 +551,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-sessions/01FSHNB5309NMZYX8MFYH578R9"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],

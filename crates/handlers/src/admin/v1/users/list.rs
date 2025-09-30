@@ -137,7 +137,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let users = User::samples();
             let pagination = mas_storage::Pagination::first(users.len());
             let page = Page {
-                edges: users.into(),
+                edges: users
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -255,6 +261,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/users/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                }
               }
             },
             {
@@ -270,6 +281,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -288,7 +304,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "data": [
             {
@@ -304,6 +320,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/users/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                }
               }
             },
             {
@@ -319,6 +340,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -328,7 +354,7 @@ mod tests {
             "last": "/api/admin/v1/users?count=false&page[last]=10"
           }
         }
-        "###);
+        "#);
 
         // Test count=only
         let request = Request::get("/api/admin/v1/users?count=only")
@@ -371,6 +397,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],

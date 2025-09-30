@@ -206,8 +206,8 @@ mod tests {
         assert!(!links.has_previous_page);
         assert!(!links.has_next_page);
         assert_eq!(links.edges.len(), 1);
-        assert_eq!(links.edges[0].id, link.id);
-        assert_eq!(links.edges[0].user_id, Some(user.id));
+        assert_eq!(links.edges[0].node.id, link.id);
+        assert_eq!(links.edges[0].node.user_id, Some(user.id));
 
         assert_eq!(repo.upstream_oauth_link().count(filter).await.unwrap(), 1);
 
@@ -282,7 +282,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(session_page.edges.len(), 1);
-        assert_eq!(session_page.edges[0].id, session.id);
+        assert_eq!(session_page.edges[0].node.id, session.id);
         assert!(!session_page.has_next_page);
         assert!(!session_page.has_previous_page);
 
@@ -374,7 +374,7 @@ mod tests {
 
         // It returned the first 10 items
         assert!(page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.node.id).collect();
         assert_eq!(&edge_ids, &ids[..10]);
 
         // Getting the same page with the "enabled only" filter should return the same
@@ -396,7 +396,7 @@ mod tests {
 
         // It returned the next 10 items
         assert!(!page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.node.id).collect();
         assert_eq!(&edge_ids, &ids[10..]);
 
         // Lookup the last 10 items
@@ -408,7 +408,7 @@ mod tests {
 
         // It returned the last 10 items
         assert!(page.has_previous_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.node.id).collect();
         assert_eq!(&edge_ids, &ids[10..]);
 
         // Lookup the previous 10 items
@@ -420,7 +420,7 @@ mod tests {
 
         // It returned the previous 10 items
         assert!(!page.has_previous_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.node.id).collect();
         assert_eq!(&edge_ids, &ids[..10]);
 
         // Lookup 10 items between two IDs
@@ -432,7 +432,7 @@ mod tests {
 
         // It returned the items in between
         assert!(!page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|p| p.node.id).collect();
         assert_eq!(&edge_ids, &ids[6..8]);
 
         // There should not be any disabled providers
@@ -560,7 +560,7 @@ mod tests {
 
         // It returned the first 10 items
         assert!(page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.node.id).collect();
         assert_eq!(&edge_ids, &ids[..10]);
 
         // Lookup the next 10 items
@@ -572,7 +572,7 @@ mod tests {
 
         // It returned the next 10 items
         assert!(!page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.node.id).collect();
         assert_eq!(&edge_ids, &ids[10..]);
 
         // Lookup the last 10 items
@@ -584,7 +584,7 @@ mod tests {
 
         // It returned the last 10 items
         assert!(page.has_previous_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.node.id).collect();
         assert_eq!(&edge_ids, &ids[10..]);
 
         // Lookup the previous 10 items
@@ -596,7 +596,7 @@ mod tests {
 
         // It returned the previous 10 items
         assert!(!page.has_previous_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.node.id).collect();
         assert_eq!(&edge_ids, &ids[..10]);
 
         // Lookup 5 items between two IDs
@@ -608,7 +608,7 @@ mod tests {
 
         // It returned the items in between
         assert!(!page.has_next_page);
-        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.id).collect();
+        let edge_ids: Vec<_> = page.edges.iter().map(|s| s.node.id).collect();
         assert_eq!(&edge_ids, &ids[6..11]);
 
         // Check the sub/sid filters
@@ -638,11 +638,21 @@ mod tests {
         assert_eq!(page.edges.len(), 4);
         for edge in page.edges {
             assert_eq!(
-                edge.id_token_claims().unwrap().get("sub").unwrap().as_str(),
+                edge.node
+                    .id_token_claims()
+                    .unwrap()
+                    .get("sub")
+                    .unwrap()
+                    .as_str(),
                 Some("alice")
             );
             assert_eq!(
-                edge.id_token_claims().unwrap().get("sid").unwrap().as_str(),
+                edge.node
+                    .id_token_claims()
+                    .unwrap()
+                    .get("sid")
+                    .unwrap()
+                    .as_str(),
                 Some("one")
             );
         }

@@ -6,7 +6,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use mas_storage::Pagination;
+use mas_storage::{Pagination, pagination::Edge};
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
@@ -119,7 +119,7 @@ impl<T: Resource> PaginatedResponse<T> {
                     base,
                     current_pagination
                         .clear_before()
-                        .after(page.edges.last().unwrap().id()),
+                        .after(page.edges.last().unwrap().cursor),
                 )
             }),
             prev: if page.has_previous_page {
@@ -127,14 +127,18 @@ impl<T: Resource> PaginatedResponse<T> {
                     base,
                     current_pagination
                         .clear_after()
-                        .before(page.edges.first().unwrap().id()),
+                        .before(page.edges.first().unwrap().cursor),
                 ))
             } else {
                 None
             },
         };
 
-        let data = page.edges.into_iter().map(SingleResource::new).collect();
+        let data = page
+            .edges
+            .into_iter()
+            .map(SingleResource::from_edge)
+            .collect();
 
         Self {
             meta: PaginationMeta { count },
@@ -176,6 +180,31 @@ struct SingleResource<T> {
 
     /// Related links
     links: SelfLinks,
+
+    /// Metadata about the resource
+    #[serde(skip_serializing_if = "SingleResourceMeta::is_empty")]
+    meta: SingleResourceMeta,
+}
+
+/// Metadata associated with a resource
+#[derive(Serialize, JsonSchema)]
+struct SingleResourceMeta {
+    /// Information about the pagination of the resource
+    #[serde(skip_serializing_if = "Option::is_none")]
+    page: Option<SingleResourceMetaPage>,
+}
+
+impl SingleResourceMeta {
+    fn is_empty(&self) -> bool {
+        self.page.is_none()
+    }
+}
+
+/// Pagination metadata for a resource
+#[derive(Serialize, JsonSchema)]
+struct SingleResourceMetaPage {
+    /// The cursor of this resource in the paginated result
+    cursor: String,
 }
 
 impl<T: Resource> SingleResource<T> {
@@ -186,7 +215,15 @@ impl<T: Resource> SingleResource<T> {
             id: resource.id(),
             attributes: resource,
             links: SelfLinks { self_ },
+            meta: SingleResourceMeta { page: None },
         }
+    }
+
+    fn from_edge<C: ToString>(edge: Edge<T, C>) -> Self {
+        let cursor = edge.cursor.to_string();
+        let mut resource = Self::new(edge.node);
+        resource.meta.page = Some(SingleResourceMetaPage { cursor });
+        resource
     }
 }
 

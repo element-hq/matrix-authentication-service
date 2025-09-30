@@ -12,6 +12,7 @@ use mas_data_model::{
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
 use rand::RngCore;
@@ -89,6 +90,12 @@ struct SessionLookup {
     consumed_at: Option<DateTime<Utc>>,
     extra_callback_parameters: Option<serde_json::Value>,
     unlinked_at: Option<DateTime<Utc>>,
+}
+
+impl Node<Ulid> for SessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.upstream_oauth_authorization_session_id.into()
+    }
 }
 
 impl TryFrom<SessionLookup> for UpstreamOAuthAuthorizationSession {

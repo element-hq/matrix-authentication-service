@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports};
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     upstream_oauth2::{
         UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
     },
@@ -72,6 +73,12 @@ struct ProviderLookup {
     additional_parameters: Option<Json<Vec<(String, String)>>>,
     forward_login_hint: bool,
     on_backchannel_logout: String,
+}
+
+impl Node<Ulid> for ProviderLookup {
+    fn cursor(&self) -> Ulid {
+        self.upstream_oauth_provider_id.into()
+    }
 }
 
 impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {

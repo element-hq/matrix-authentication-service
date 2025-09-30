@@ -15,6 +15,7 @@ use mas_data_model::{
 use mas_storage::{
     Page, Pagination,
     compat::{CompatSessionFilter, CompatSessionRepository},
+    pagination::Node,
 };
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
@@ -57,6 +58,12 @@ struct CompatSessionLookup {
     user_agent: Option<String>,
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
+}
+
+impl Node<Ulid> for CompatSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.compat_session_id.into()
+    }
 }
 
 impl From<CompatSessionLookup> for CompatSession {
@@ -104,6 +111,12 @@ struct CompatSessionAndSsoLoginLookup {
     compat_sso_login_created_at: Option<DateTime<Utc>>,
     compat_sso_login_fulfilled_at: Option<DateTime<Utc>>,
     compat_sso_login_exchanged_at: Option<DateTime<Utc>>,
+}
+
+impl Node<Ulid> for CompatSessionAndSsoLoginLookup {
+    fn cursor(&self) -> Ulid {
+        self.compat_session_id.into()
+    }
 }
 
 impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSsoLogin>) {

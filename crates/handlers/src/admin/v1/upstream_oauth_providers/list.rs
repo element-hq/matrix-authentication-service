@@ -84,7 +84,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let providers = UpstreamOAuthProvider::samples();
             let pagination = mas_storage::Pagination::first(providers.len());
             let page = Page {
-                edges: providers.into(),
+                edges: providers
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -305,6 +311,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -319,6 +330,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -333,6 +349,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -378,6 +399,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -392,6 +418,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -437,6 +468,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             }
           ],
@@ -483,6 +519,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -497,6 +538,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             }
           ],
@@ -539,6 +585,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -596,6 +647,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -610,6 +666,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -624,6 +685,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -678,6 +744,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -692,6 +763,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],

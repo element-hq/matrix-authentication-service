@@ -112,7 +112,13 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let tokens = UserRegistrationToken::samples();
             let pagination = mas_storage::Pagination::first(tokens.len());
             let page = Page {
-                edges: tokens.into(),
+                edges: tokens
+                    .into_iter()
+                    .map(|node| mas_storage::pagination::Edge {
+                        cursor: node.id(),
+                        node,
+                    })
+                    .collect(),
                 has_next_page: true,
                 has_previous_page: false,
             };
@@ -314,6 +320,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -331,6 +342,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -348,6 +364,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -365,6 +386,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             },
             {
@@ -382,6 +408,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -430,6 +461,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -447,6 +483,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -487,6 +528,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -504,6 +550,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -521,6 +572,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -569,6 +625,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -586,6 +647,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -626,6 +692,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -643,6 +714,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -660,6 +736,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -708,6 +789,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             }
           ],
@@ -748,6 +834,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -765,6 +856,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -782,6 +878,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             },
             {
@@ -799,6 +900,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -847,6 +953,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -864,6 +975,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -904,6 +1020,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -921,6 +1042,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -938,6 +1064,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -988,6 +1119,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -1036,6 +1172,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -1053,6 +1194,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             }
           ],
@@ -1094,6 +1240,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -1111,6 +1262,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],
@@ -1152,6 +1308,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -1219,6 +1380,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG064K8BYZXSY5G511Z"
+                }
               }
             },
             {
@@ -1236,6 +1402,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -1253,6 +1424,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG09AVTNSQFMSR34AJC"
+                }
               }
             },
             {
@@ -1270,6 +1446,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             },
             {
@@ -1287,6 +1468,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0S3ZJD8CXQ7F11KXN"
+                }
               }
             }
           ],
@@ -1342,6 +1528,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG07HNEZXNQM2KNBNF6"
+                }
               }
             },
             {
@@ -1359,6 +1550,11 @@ mod tests {
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
               }
             }
           ],

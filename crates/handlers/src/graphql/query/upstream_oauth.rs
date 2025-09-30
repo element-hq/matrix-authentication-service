@@ -130,10 +130,10 @@ impl UpstreamOAuthQuery {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(page.edges.into_iter().map(|p| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::UpstreamOAuth2Provider, p.id)),
-                        UpstreamOAuth2Provider::new(p),
+                        OpaqueCursor(NodeCursor(NodeType::UpstreamOAuth2Provider, edge.cursor)),
+                        UpstreamOAuth2Provider::new(edge.node),
                     )
                 }));
 

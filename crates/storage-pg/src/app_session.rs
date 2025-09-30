@@ -55,7 +55,9 @@ mod priv_ {
     use std::net::IpAddr;
 
     use chrono::{DateTime, Utc};
+    use mas_storage::pagination::Node;
     use sea_query::enum_def;
+    use ulid::Ulid;
     use uuid::Uuid;
 
     #[derive(sqlx::FromRow)]
@@ -76,6 +78,12 @@ mod priv_ {
         pub(super) user_agent: Option<String>,
         pub(super) last_active_at: Option<DateTime<Utc>>,
         pub(super) last_active_ip: Option<IpAddr>,
+    }
+
+    impl Node<Ulid> for AppSessionLookup {
+        fn cursor(&self) -> Ulid {
+            self.cursor.into()
+        }
     }
 }
 
@@ -592,13 +600,13 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
         assert_eq!(active_list.edges.len(), 1);
         assert_eq!(
-            active_list.edges[0],
+            active_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
@@ -618,7 +626,7 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
@@ -626,7 +634,7 @@ mod tests {
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -680,25 +688,25 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 2);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
         assert_eq!(active_list.edges.len(), 1);
         assert_eq!(
-            active_list.edges[0],
+            active_list.edges[0].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -716,11 +724,11 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 2);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
@@ -730,11 +738,11 @@ mod tests {
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 2);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
@@ -744,7 +752,7 @@ mod tests {
         let list = repo.app_session().list(filter, pagination).await.unwrap();
         assert_eq!(list.edges.len(), 1);
         assert_eq!(
-            list.edges[0],
+            list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -753,7 +761,7 @@ mod tests {
         let list = repo.app_session().list(filter, pagination).await.unwrap();
         assert_eq!(list.edges.len(), 1);
         assert_eq!(
-            list.edges[0],
+            list.edges[0].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 

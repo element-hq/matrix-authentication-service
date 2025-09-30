@@ -70,26 +70,18 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for email in page.edges {
+            for edge in page.edges {
                 let ticket = Alphanumeric.sample_string(&mut rng, 32);
 
                 let ticket = repo
                     .user_recovery()
-                    .add_ticket(&mut rng, clock, &session, &email, ticket)
+                    .add_ticket(&mut rng, clock, &session, &edge.node, ticket)
                     .await
                     .map_err(JobError::retry)?;
 
-                let user_email = repo
-                    .user_email()
-                    .lookup(email.id)
-                    .await
-                    .map_err(JobError::retry)?
-                    .context("User email not found")
-                    .map_err(JobError::fail)?;
-
                 let user = repo
                     .user()
-                    .lookup(user_email.user_id)
+                    .lookup(edge.node.user_id)
                     .await
                     .map_err(JobError::retry)?
                     .context("User not found")
@@ -97,7 +89,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
 
                 let url = url_builder.account_recovery_link(ticket.ticket);
 
-                let address: Address = user_email.email.parse().map_err(JobError::fail)?;
+                let address: Address = edge.node.email.parse().map_err(JobError::fail)?;
                 let mailbox = Mailbox::new(Some(user.username.clone()), address);
 
                 info!("Sending recovery email to {}", mailbox);
@@ -112,7 +104,7 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
                     );
                 }
 
-                cursor = cursor.after(email.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {

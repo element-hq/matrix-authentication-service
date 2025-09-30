@@ -68,7 +68,8 @@ impl SessionQuery {
             );
         }
 
-        if let Some((compat_session, sso_login)) = compat_sessions.edges.into_iter().next() {
+        if let Some(edge) = compat_sessions.edges.into_iter().next() {
+            let (compat_session, sso_login) = edge.node;
             repo.cancel().await?;
 
             return Ok(Some(Session::CompatSession(Box::new(
@@ -92,10 +93,10 @@ impl SessionQuery {
             );
         }
 
-        if let Some(session) = sessions.edges.into_iter().next() {
+        if let Some(edge) = sessions.edges.into_iter().next() {
             repo.cancel().await?;
             return Ok(Some(Session::OAuth2Session(Box::new(OAuth2Session(
-                session,
+                edge.node,
             )))));
         }
         repo.cancel().await?;
