@@ -2399,6 +2399,94 @@
         }
       }
     },
+    "/api/admin/v1/user-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "user-session"
+        ],
+        "summary": "Finish a user session",
+        "description": "Calling this endpoint will finish the user session, preventing any further use.",
+        "operationId": "finishUserSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "user_id": "040G2081040G2081040G208104",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/user-registration-tokens": {
       "get": {
         "tags": [

@@ -131,6 +131,10 @@ where
             get_with(self::user_sessions::get, self::user_sessions::get_doc),
         )
         .api_route(
+            "/user-sessions/{id}/finish",
+            post_with(self::user_sessions::finish, self::user_sessions::finish_doc),
+        )
+        .api_route(
             "/user-registration-tokens",
             get_with(
                 self::user_registration_tokens::list,
