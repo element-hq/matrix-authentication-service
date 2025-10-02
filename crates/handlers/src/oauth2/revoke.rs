@@ -10,7 +10,7 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::{BoxClock, BoxRng, TokenType};
+use mas_data_model::{BoxClock, BoxRng, BrowserSession, TokenType};
 use mas_iana::oauth::OAuthTokenTypeHint;
 use mas_keystore::Encrypter;
 use mas_storage::{
@@ -239,13 +239,63 @@ pub(crate) async fn post(
             .await?;
     }
 
+    // :tchap:
+    let maybe_user_session_id = session.user_session_id;
+    // :tchap: end
+
     // Now that we checked everything, we can end the session.
     repo.oauth2_session().finish(&clock, session).await?;
+
+    // :tchap:
+    end_browser_session(clock, &mut repo, maybe_user_session_id, activity_tracker).await?;
+    // :tchap: end
 
     repo.save().await?;
 
     Ok(())
 }
+
+// :tchap:
+/// Terminates a browser session
+///
+/// # Parameters
+/// * `clock` - Clock used for auditing actions
+/// * `repo` - Repository access
+/// * `maybe_user_session_id` - user browser session identifier
+/// * `activity_tracker` -  Tracker used to record action on the browser session
+///
+/// TODO :
+/// - this function should move in crates/tchap/lib.rs
+/// - to be able to move this function, `BoundActivityTracker` should be moved
+///   to data-model crates or another handler-model
+///
+/// # Returns
+/// Option<`mas_data_model::BrowserSession`> - The user's browser that has been
+/// terminated if exists
+pub async fn end_browser_session(
+    clock: BoxClock,
+    repo: &mut BoxRepository,
+    maybe_user_session_id: Option<Ulid>,
+    activity_tracker: BoundActivityTracker,
+) -> Result<Option<BrowserSession>, mas_storage::RepositoryError> {
+    if let Some(user_session_id) = maybe_user_session_id {
+        let maybe_session = repo.browser_session().lookup(user_session_id).await?;
+        if let Some(browser_session) = maybe_session
+            && browser_session.finished_at.is_none()
+        {
+            activity_tracker
+                .record_browser_session(&clock, &browser_session)
+                .await;
+            return Ok(Some(
+                repo.browser_session()
+                    .finish(&clock, browser_session)
+                    .await?,
+            ));
+        }
+    }
+    Ok(None)
+}
+// :tchap: end
 
 #[cfg(test)]
 mod tests {
