@@ -240,6 +240,9 @@ pub enum TokenType {
 
     /// A legacy refresh token
     CompatRefreshToken,
+
+    /// A personal access token.
+    PersonalAccessToken,
 }
 
 impl std::fmt::Display for TokenType {
@@ -249,6 +252,7 @@ impl std::fmt::Display for TokenType {
             TokenType::RefreshToken => write!(f, "refresh token"),
             TokenType::CompatAccessToken => write!(f, "compat access token"),
             TokenType::CompatRefreshToken => write!(f, "compat refresh token"),
+            TokenType::PersonalAccessToken => write!(f, "personal access token"),
         }
     }
 }
@@ -260,6 +264,7 @@ impl TokenType {
             TokenType::RefreshToken => "mar",
             TokenType::CompatAccessToken => "mct",
             TokenType::CompatRefreshToken => "mcr",
+            TokenType::PersonalAccessToken => "mpt",
         }
     }
 
@@ -269,6 +274,7 @@ impl TokenType {
             "mar" => Some(TokenType::RefreshToken),
             "mct" | "syt" => Some(TokenType::CompatAccessToken),
             "mcr" | "syr" => Some(TokenType::CompatRefreshToken),
+            "mpt" => Some(TokenType::PersonalAccessToken),
             _ => None,
         }
     }
@@ -335,7 +341,9 @@ impl PartialEq<OAuthTokenTypeHint> for TokenType {
         matches!(
             (self, other),
             (
-                TokenType::AccessToken | TokenType::CompatAccessToken,
+                TokenType::AccessToken
+                    | TokenType::CompatAccessToken
+                    | TokenType::PersonalAccessToken,
                 OAuthTokenTypeHint::AccessToken
             ) | (
                 TokenType::RefreshToken | TokenType::CompatRefreshToken,
