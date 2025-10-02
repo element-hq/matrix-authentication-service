@@ -18,6 +18,7 @@ use crate::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
+    personal::{PersonalAccessTokenRepository, PersonalSessionRepository},
     policy_data::PolicyDataRepository,
     queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
@@ -214,6 +215,16 @@ pub trait RepositoryAccess: Send {
         &'c mut self,
     ) -> Box<dyn CompatRefreshTokenRepository<Error = Self::Error> + 'c>;
 
+    /// Get a [`PersonalAccessTokenRepository`]
+    fn personal_access_token<'c>(
+        &'c mut self,
+    ) -> Box<dyn PersonalAccessTokenRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`PersonalSessionRepository`]
+    fn personal_session<'c>(
+        &'c mut self,
+    ) -> Box<dyn PersonalSessionRepository<Error = Self::Error> + 'c>;
+
     /// Get a [`QueueWorkerRepository`]
     fn queue_worker<'c>(&'c mut self) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c>;
 
@@ -247,6 +258,7 @@ mod impls {
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
             OAuth2SessionRepository,
         },
+        personal::{PersonalAccessTokenRepository, PersonalSessionRepository},
         policy_data::PolicyDataRepository,
         queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
         upstream_oauth2::{
@@ -458,6 +470,21 @@ mod impls {
             ))
         }
 
+        fn personal_access_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn PersonalAccessTokenRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(
+                self.inner.personal_access_token(),
+                &mut self.mapper,
+            ))
+        }
+
+        fn personal_session<'c>(
+            &'c mut self,
+        ) -> Box<dyn PersonalSessionRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.personal_session(), &mut self.mapper))
+        }
+
         fn queue_worker<'c>(
             &'c mut self,
         ) -> Box<dyn QueueWorkerRepository<Error = Self::Error> + 'c> {
@@ -608,6 +635,18 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn CompatRefreshTokenRepository<Error = Self::Error> + 'c> {
             (**self).compat_refresh_token()
+        }
+
+        fn personal_access_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn PersonalAccessTokenRepository<Error = Self::Error> + 'c> {
+            (**self).personal_access_token()
+        }
+
+        fn personal_session<'c>(
+            &'c mut self,
+        ) -> Box<dyn PersonalSessionRepository<Error = Self::Error> + 'c> {
+            (**self).personal_session()
         }
 
         fn queue_worker<'c>(
