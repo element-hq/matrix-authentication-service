@@ -93,6 +93,14 @@ pub enum RouteError {
     #[error("unknown compat session {0}")]
     CantLoadCompatSession(Ulid),
 
+    /// The personal access token session is not valid.
+    #[error("invalid personal access token session {0}")]
+    InvalidPersonalSession(Ulid),
+
+    /// The personal access token session could not be found in the database.
+    #[error("unknown personal access token session {0}")]
+    CantLoadPersonalSession(Ulid),
+
     /// The Device ID in the compat session can't be encoded as a scope
     #[error("device ID contains characters that are not allowed in a scope")]
     CantEncodeDeviceID(#[from] mas_data_model::ToScopeTokenError),
@@ -102,6 +110,9 @@ pub enum RouteError {
 
     #[error("unknown user {0}")]
     CantLoadUser(Ulid),
+
+    #[error("unknown OAuth2 client {0}")]
+    CantLoadOAuth2Client(Ulid),
 
     #[error("bad request")]
     BadRequest,
@@ -131,7 +142,9 @@ impl IntoResponse for RouteError {
             e @ (Self::Internal(_)
             | Self::CantLoadCompatSession(_)
             | Self::CantLoadOAuthSession(_)
+            | Self::CantLoadPersonalSession(_)
             | Self::CantLoadUser(_)
+            | Self::CantLoadOAuth2Client(_)
             | Self::FailedToVerifyToken(_)) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
@@ -167,6 +180,7 @@ impl IntoResponse for RouteError {
             | Self::InvalidUser(_)
             | Self::InvalidCompatSession(_)
             | Self::InvalidOAuthSession(_)
+            | Self::InvalidPersonalSession(_)
             | Self::InvalidTokenFormat(_)
             | Self::CantEncodeDeviceID(_) => {
                 INTROSPECTION_COUNTER.add(1, &[KeyValue::new(ACTIVE.clone(), false)]);
