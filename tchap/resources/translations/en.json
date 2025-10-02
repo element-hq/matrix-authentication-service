@@ -34,12 +34,12 @@
     }
   },
   "app": {
-    "human_name": "Matrix Authentication Service",
+    "human_name": "Tchap",
     "@human_name": {
       "context": "index.html:15:29-48, pages/index.html:15:29-48",
       "description": "Human readable name of the application"
     },
-    "name": "matrix-authentication-service",
+    "name": "Tchap",
     "@name": {
       "context": "app.html:17:14-27, base.html:25:31-44",
       "description": "Name of the application"
