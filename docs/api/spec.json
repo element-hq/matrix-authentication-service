@@ -50,6 +50,30 @@
         }
       }
     },
+    "/api/admin/v1/version": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Get the version currently running",
+        "operationId": "version",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                },
+                "example": {
+                  "version": "v1.0.0"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/compat-sessions": {
       "get": {
         "tags": [
@@ -3707,6 +3731,18 @@
             "format": "uint8",
             "maximum": 4.0,
             "minimum": 0.0
+          }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "description": "The semver version of the app",
+            "type": "string"
           }
         }
       },
