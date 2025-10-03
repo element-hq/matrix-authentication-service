@@ -25,7 +25,7 @@ use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
     iden::{UpstreamOAuthLinks, UpstreamOAuthProviders},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -334,13 +334,10 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             )
             .from(UpstreamOAuthLinks::Table)
             .apply_filter(filter)
-            .generate_pagination(
-                (
-                    UpstreamOAuthLinks::Table,
-                    UpstreamOAuthLinks::UpstreamOAuthLinkId,
-                ),
-                pagination,
-            )
+            .generate_pagination(pagination.for_ulid_column((
+                UpstreamOAuthLinks::Table,
+                UpstreamOAuthLinks::UpstreamOAuthLinkId,
+            )))
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<LinkLookup> = sqlx::query_as_with(&sql, arguments)

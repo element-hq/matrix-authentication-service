@@ -29,7 +29,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::{OAuth2Clients, OAuth2Sessions, UserSessions},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -432,8 +432,8 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             .from(OAuth2Sessions::Table)
             .apply_filter(filter)
             .generate_pagination(
-                (OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId),
-                pagination,
+                pagination
+                    .for_ulid_column((OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId)),
             )
             .build_sqlx(PostgresQueryBuilder);
 

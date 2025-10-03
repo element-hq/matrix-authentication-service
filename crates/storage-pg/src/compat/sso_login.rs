@@ -24,7 +24,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::{CompatSsoLogins, UserSessions},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -441,8 +441,8 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             .from(CompatSsoLogins::Table)
             .apply_filter(filter)
             .generate_pagination(
-                (CompatSsoLogins::Table, CompatSsoLogins::CompatSsoLoginId),
-                pagination,
+                pagination
+                    .for_ulid_column((CompatSsoLogins::Table, CompatSsoLogins::CompatSsoLoginId)),
             )
             .build_sqlx(PostgresQueryBuilder);
 

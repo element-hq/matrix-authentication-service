@@ -26,7 +26,7 @@ use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
     iden::UserEmails,
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -302,7 +302,9 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             )
             .from(UserEmails::Table)
             .apply_filter(filter)
-            .generate_pagination((UserEmails::Table, UserEmails::UserEmailId), pagination)
+            .generate_pagination(
+                pagination.for_ulid_column((UserEmails::Table, UserEmails::UserEmailId)),
+            )
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<UserEmailLookup> = sqlx::query_as_with(&sql, arguments)

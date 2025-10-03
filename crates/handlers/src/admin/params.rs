@@ -168,6 +168,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Pagination {
                 after: params.after,
                 direction,
                 count,
+                ordering: (),
             },
             params.include_count.unwrap_or_default(),
         ))

@@ -32,7 +32,7 @@ use crate::{
     errors::DatabaseInconsistencyError,
     filter::StatementExt,
     iden::{CompatSessions, OAuth2Sessions},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
 };
 
 /// An implementation of [`AppSessionRepository`] for a PostgreSQL connection
@@ -407,7 +407,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         let select = Query::select()
             .column(ColumnRef::Asterisk)
             .from(Alias::new("sessions"))
-            .generate_pagination(AppSessionLookupIden::Cursor, pagination)
+            .generate_pagination(pagination.for_ulid_column(AppSessionLookupIden::Cursor))
             .clone();
 
         let (sql, arguments) = with_clause.query(select).build_sqlx(PostgresQueryBuilder);

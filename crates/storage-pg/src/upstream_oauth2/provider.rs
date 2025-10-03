@@ -27,7 +27,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::UpstreamOAuthProviders,
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -876,13 +876,10 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             )
             .from(UpstreamOAuthProviders::Table)
             .apply_filter(filter)
-            .generate_pagination(
-                (
-                    UpstreamOAuthProviders::Table,
-                    UpstreamOAuthProviders::UpstreamOAuthProviderId,
-                ),
-                pagination,
-            )
+            .generate_pagination(pagination.for_ulid_column((
+                UpstreamOAuthProviders::Table,
+                UpstreamOAuthProviders::UpstreamOAuthProviderId,
+            )))
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<ProviderLookup> = sqlx::query_as_with(&sql, arguments)

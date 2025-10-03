@@ -14,17 +14,31 @@ use ulid::Ulid;
 #[error("Either 'first' or 'last' must be specified")]
 pub struct InvalidPagination;
 
+/// Defines a pagination ordering criteria
+pub trait Ordering {
+    /// The type of cursor for this criteria
+    type Cursor;
+}
+
+impl Ordering for () {
+    // The default ordering orders by the object primary key, which is a ULID
+    type Cursor = Ulid;
+}
+
 /// Pagination parameters
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Pagination<Cursor = Ulid> {
+pub struct Pagination<O: Ordering = ()> {
     /// The cursor to start from
-    pub before: Option<Cursor>,
+    pub before: Option<O::Cursor>,
 
     /// The cursor to end at
-    pub after: Option<Cursor>,
+    pub after: Option<O::Cursor>,
 
     /// The maximum number of items to return
     pub count: usize,
+
+    /// The criteria to order the results by
+    pub ordering: O,
 
     /// In which direction to paginate
     pub direction: PaginationDirection,
@@ -46,7 +60,7 @@ pub trait Node<C = Ulid> {
     fn cursor(&self) -> C;
 }
 
-impl<C> Pagination<C> {
+impl<O: Ordering> Pagination<O> {
     /// Creates a new [`Pagination`] from user-provided parameters.
     ///
     /// # Errors
@@ -54,11 +68,14 @@ impl<C> Pagination<C> {
     /// Either `first` or `last` must be provided, else this function will
     /// return an [`InvalidPagination`] error.
     pub fn try_new(
-        before: Option<C>,
-        after: Option<C>,
+        before: Option<O::Cursor>,
+        after: Option<O::Cursor>,
         first: Option<usize>,
         last: Option<usize>,
-    ) -> Result<Self, InvalidPagination> {
+    ) -> Result<Self, InvalidPagination>
+    where
+        O: Default,
+    {
         let (direction, count) = match (first, last) {
             (Some(first), _) => (PaginationDirection::Forward, first),
             (_, Some(last)) => (PaginationDirection::Backward, last),
@@ -70,34 +87,43 @@ impl<C> Pagination<C> {
             after,
             count,
             direction,
+            ordering: O::default(),
         })
     }
 
     /// Creates a [`Pagination`] which gets the first N items
     #[must_use]
-    pub const fn first(first: usize) -> Self {
+    pub fn first(first: usize) -> Self
+    where
+        O: Default,
+    {
         Self {
             before: None,
             after: None,
             count: first,
             direction: PaginationDirection::Forward,
+            ordering: O::default(),
         }
     }
 
     /// Creates a [`Pagination`] which gets the last N items
     #[must_use]
-    pub const fn last(last: usize) -> Self {
+    pub fn last(last: usize) -> Self
+    where
+        O: Default,
+    {
         Self {
             before: None,
             after: None,
             count: last,
             direction: PaginationDirection::Backward,
+            ordering: O::default(),
         }
     }
 
     /// Get items before the given cursor
     #[must_use]
-    pub fn before(mut self, cursor: C) -> Self {
+    pub fn before(mut self, cursor: O::Cursor) -> Self {
         self.before = Some(cursor);
         self
     }
@@ -111,7 +137,7 @@ impl<C> Pagination<C> {
 
     /// Get items after the given cursor
     #[must_use]
-    pub fn after(mut self, cursor: C) -> Self {
+    pub fn after(mut self, cursor: O::Cursor) -> Self {
         self.after = Some(cursor);
         self
     }
@@ -125,7 +151,7 @@ impl<C> Pagination<C> {
 
     /// Process a page returned by a paginated query
     #[must_use]
-    pub fn process<T: Node<C>>(&self, mut nodes: Vec<T>) -> Page<T, C> {
+    pub fn process<T: Node<O::Cursor>>(&self, mut nodes: Vec<T>) -> Page<T, O::Cursor> {
         let is_full = nodes.len() == (self.count + 1);
         if is_full {
             nodes.pop();

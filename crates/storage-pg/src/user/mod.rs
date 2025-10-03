@@ -21,7 +21,7 @@ use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
     iden::Users,
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -513,7 +513,7 @@ impl UserRepository for PgUserRepository<'_> {
             )
             .from(Users::Table)
             .apply_filter(filter)
-            .generate_pagination((Users::Table, Users::UserId), pagination)
+            .generate_pagination(pagination.for_ulid_column((Users::Table, Users::UserId)))
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<UserLookup> = sqlx::query_as_with(&sql, arguments)

@@ -28,7 +28,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
     iden::{UpstreamOAuthAuthorizationSessions, UserSessionAuthentications, UserSessions, Users},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -413,8 +413,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             )
             .apply_filter(filter)
             .generate_pagination(
-                (UserSessions::Table, UserSessions::UserSessionId),
-                pagination,
+                pagination.for_ulid_column((UserSessions::Table, UserSessions::UserSessionId)),
             )
             .build_sqlx(PostgresQueryBuilder);
 

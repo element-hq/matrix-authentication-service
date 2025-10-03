@@ -29,7 +29,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt, StatementWithJoinsExt},
     iden::{CompatSessions, CompatSsoLogins, UserSessions},
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -527,8 +527,8 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             )
             .apply_filter_with_joins(filter)
             .generate_pagination(
-                (CompatSessions::Table, CompatSessions::CompatSessionId),
-                pagination,
+                pagination
+                    .for_ulid_column((CompatSessions::Table, CompatSessions::CompatSessionId)),
             )
             .build_sqlx(PostgresQueryBuilder);
 

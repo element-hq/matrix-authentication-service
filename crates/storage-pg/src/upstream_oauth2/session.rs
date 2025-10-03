@@ -26,7 +26,7 @@ use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
     iden::UpstreamOAuthAuthorizationSessions,
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -510,13 +510,10 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             )
             .from(UpstreamOAuthAuthorizationSessions::Table)
             .apply_filter(filter)
-            .generate_pagination(
-                (
-                    UpstreamOAuthAuthorizationSessions::Table,
-                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
-                ),
-                pagination,
-            )
+            .generate_pagination(pagination.for_ulid_column((
+                UpstreamOAuthAuthorizationSessions::Table,
+                UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
+            )))
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<SessionLookup> = sqlx::query_as_with(&sql, arguments)

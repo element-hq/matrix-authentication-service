@@ -23,7 +23,7 @@ use crate::{
     errors::DatabaseError,
     filter::{Filter, StatementExt},
     iden::UserRegistrationTokens,
-    pagination::QueryBuilderExt,
+    pagination::{PaginationExt, QueryBuilderExt},
     tracing::ExecuteExt,
 };
 
@@ -293,13 +293,10 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             )
             .from(UserRegistrationTokens::Table)
             .apply_filter(filter)
-            .generate_pagination(
-                (
-                    UserRegistrationTokens::Table,
-                    UserRegistrationTokens::UserRegistrationTokenId,
-                ),
-                pagination,
-            )
+            .generate_pagination(pagination.for_ulid_column((
+                UserRegistrationTokens::Table,
+                UserRegistrationTokens::UserRegistrationTokenId,
+            )))
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<UserRegistrationTokenLookup> = sqlx::query_as_with(&sql, arguments)
