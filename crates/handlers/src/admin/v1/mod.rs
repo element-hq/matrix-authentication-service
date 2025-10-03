@@ -11,7 +11,7 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
-use mas_data_model::{BoxRng, SiteConfig};
+use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
 
@@ -28,6 +28,7 @@ mod user_emails;
 mod user_registration_tokens;
 mod user_sessions;
 mod users;
+mod version;
 
 pub fn router<S>() -> ApiRouter<S>
 where
@@ -35,6 +36,7 @@ where
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     SiteConfig: FromRef<S>,
+    AppVersion: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
@@ -43,6 +45,10 @@ where
         .api_route(
             "/site-config",
             get_with(self::site_config::handler, self::site_config::doc),
+        )
+        .api_route(
+            "/version",
+            get_with(self::version::handler, self::version::doc),
         )
         .api_route(
             "/compat-sessions",

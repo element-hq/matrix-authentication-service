@@ -18,6 +18,7 @@ pub(crate) mod upstream_oauth2;
 pub(crate) mod user_agent;
 pub(crate) mod users;
 mod utils;
+mod version;
 
 /// Error when an invalid state transition is attempted.
 #[derive(Debug, Error)]
@@ -57,4 +58,5 @@ pub use self::{
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},
+    version::AppVersion,
 };
