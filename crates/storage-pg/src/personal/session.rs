@@ -11,14 +11,29 @@ use mas_data_model::{
     Clock, User,
     personal::session::{PersonalSession, SessionState},
 };
-use mas_storage::personal::PersonalSessionRepository;
+use mas_storage::{
+    Page, Pagination,
+    personal::{PersonalSessionFilter, PersonalSessionRepository, PersonalSessionState},
+};
 use oauth2_types::scope::Scope;
 use rand::RngCore;
+use sea_query::{
+    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    extension::postgres::PgExpr as _,
+};
+use sea_query_binder::SqlxBinder as _;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
 
-use crate::{DatabaseError, errors::DatabaseInconsistencyError, tracing::ExecuteExt as _};
+use crate::{
+    DatabaseError,
+    errors::DatabaseInconsistencyError,
+    filter::{Filter, StatementExt as _},
+    iden::PersonalSessions,
+    pagination::QueryBuilderExt as _,
+    tracing::ExecuteExt as _,
+};
 
 /// An implementation of [`PersonalSessionRepository`] for a PostgreSQL
 /// connection
@@ -27,13 +42,15 @@ pub struct PgPersonalSessionRepository<'c> {
 }
 
 impl<'c> PgPersonalSessionRepository<'c> {
-    /// Create a new [`PgOAuth2SessionRepository`] from an active PostgreSQL
+    /// Create a new [`PgPersonalSessionRepository`] from an active PostgreSQL
     /// connection
     pub fn new(conn: &'c mut PgConnection) -> Self {
         Self { conn }
     }
 }
 
+#[derive(sqlx::FromRow)]
+#[enum_def]
 struct PersonalSessionLookup {
     personal_session_id: Uuid,
     owner_user_id: Uuid,
@@ -214,5 +231,152 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         session
             .finish(finished_at)
             .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.personal_session.list",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn list(
+        &mut self,
+        filter: PersonalSessionFilter<'_>,
+        pagination: Pagination,
+    ) -> Result<Page<PersonalSession>, Self::Error> {
+        let (sql, arguments) = Query::select()
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId)),
+                PersonalSessionLookupIden::PersonalSessionId,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::OwnerUserId)),
+                PersonalSessionLookupIden::OwnerUserId,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::ActorUserId)),
+                PersonalSessionLookupIden::ActorUserId,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::HumanName)),
+                PersonalSessionLookupIden::HumanName,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::ScopeList)),
+                PersonalSessionLookupIden::ScopeList,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::CreatedAt)),
+                PersonalSessionLookupIden::CreatedAt,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::RevokedAt)),
+                PersonalSessionLookupIden::RevokedAt,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveAt)),
+                PersonalSessionLookupIden::LastActiveAt,
+            )
+            .expr_as(
+                Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveIp)),
+                PersonalSessionLookupIden::LastActiveIp,
+            )
+            .from(PersonalSessions::Table)
+            .apply_filter(filter)
+            .generate_pagination(
+                (PersonalSessions::Table, PersonalSessions::PersonalSessionId),
+                pagination,
+            )
+            .build_sqlx(PostgresQueryBuilder);
+
+        let edges: Vec<PersonalSessionLookup> = sqlx::query_as_with(&sql, arguments)
+            .traced()
+            .fetch_all(&mut *self.conn)
+            .await?;
+
+        let page = pagination
+            .process(edges)
+            .try_map(PersonalSession::try_from)?;
+
+        Ok(page)
+    }
+
+    #[tracing::instrument(
+        name = "db.personal_session.count",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn count(&mut self, filter: PersonalSessionFilter<'_>) -> Result<usize, Self::Error> {
+        let (sql, arguments) = Query::select()
+            .expr(Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId)).count())
+            .from(PersonalSessions::Table)
+            .apply_filter(filter)
+            .build_sqlx(PostgresQueryBuilder);
+
+        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+            .traced()
+            .fetch_one(&mut *self.conn)
+            .await?;
+
+        count
+            .try_into()
+            .map_err(DatabaseError::to_invalid_operation)
+    }
+}
+
+impl Filter for PersonalSessionFilter<'_> {
+    fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
+        sea_query::Condition::all()
+            .add_option(self.owner_user().map(|user| {
+                Expr::col((PersonalSessions::Table, PersonalSessions::OwnerUserId))
+                    .eq(Uuid::from(user.id))
+            }))
+            .add_option(self.actor_user().map(|user| {
+                Expr::col((PersonalSessions::Table, PersonalSessions::ActorUserId))
+                    .eq(Uuid::from(user.id))
+            }))
+            .add_option(self.device().map(|device| -> SimpleExpr {
+                if let Ok([stable_scope_token, unstable_scope_token]) = device.to_scope_token() {
+                    Condition::any()
+                        .add(
+                            Expr::val(stable_scope_token.to_string()).eq(PgFunc::any(Expr::col((
+                                PersonalSessions::Table,
+                                PersonalSessions::ScopeList,
+                            )))),
+                        )
+                        .add(Expr::val(unstable_scope_token.to_string()).eq(PgFunc::any(
+                            Expr::col((PersonalSessions::Table, PersonalSessions::ScopeList)),
+                        )))
+                        .into()
+                } else {
+                    // If the device ID can't be encoded as a scope token, match no rows
+                    Expr::val(false).into()
+                }
+            }))
+            .add_option(self.state().map(|state| match state {
+                PersonalSessionState::Active => {
+                    Expr::col((PersonalSessions::Table, PersonalSessions::RevokedAt)).is_null()
+                }
+                PersonalSessionState::Revoked => {
+                    Expr::col((PersonalSessions::Table, PersonalSessions::RevokedAt)).is_not_null()
+                }
+            }))
+            .add_option(self.scope().map(|scope| {
+                let scope: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();
+                Expr::col((PersonalSessions::Table, PersonalSessions::ScopeList)).contains(scope)
+            }))
+            .add_option(self.last_active_before().map(|last_active_before| {
+                Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveAt))
+                    .lt(last_active_before)
+            }))
+            .add_option(self.last_active_after().map(|last_active_after| {
+                Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveAt))
+                    .gt(last_active_after)
+            }))
     }
 }

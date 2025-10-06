@@ -10,4 +10,7 @@
 mod access_token;
 mod session;
 
-pub use self::{access_token::PersonalAccessTokenRepository, session::PersonalSessionRepository};
+pub use self::{
+    access_token::PersonalAccessTokenRepository,
+    session::{PersonalSessionFilter, PersonalSessionRepository, PersonalSessionState},
+};
