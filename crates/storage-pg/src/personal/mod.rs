@@ -17,8 +17,10 @@ mod tests {
     use chrono::Duration;
     use mas_data_model::{Clock, Device, clock::MockClock};
     use mas_storage::{
-        RepositoryAccess,
-        personal::{PersonalAccessTokenRepository, PersonalSessionRepository},
+        Pagination, RepositoryAccess,
+        personal::{
+            PersonalAccessTokenRepository, PersonalSessionFilter, PersonalSessionRepository,
+        },
         user::UserRepository,
     };
     use oauth2_types::scope::{OPENID, PROFILE, Scope};
@@ -46,30 +48,30 @@ mod tests {
             .await
             .unwrap();
 
-        // TODO: Session filters are not implemented for personal sessions yet
-        // let all = PersonalSessionFilter::new().for_user(&user);
-        // let active = all.active_only();
-        // let finished = all.finished_only();
-        // let pagination = Pagination::first(10);
+        let all = PersonalSessionFilter::new().for_actor_user(&bot_user);
+        let active = all.active_only();
+        let finished = all.finished_only();
+        let pagination = Pagination::first(10);
 
-        // assert_eq!(repo.personal_session().count(all).await.unwrap(), 0);
-        // assert_eq!(repo.personal_session().count(active).await.unwrap(), 0);
-        // assert_eq!(repo.personal_session().count(finished).await.unwrap(), 0);
+        assert_eq!(repo.personal_session().count(all).await.unwrap(), 0);
+        assert_eq!(repo.personal_session().count(active).await.unwrap(), 0);
+        assert_eq!(repo.personal_session().count(finished).await.unwrap(), 0);
 
-        // let full_list = repo.compat_session().list(all, pagination).await.unwrap();
-        // assert!(full_list.edges.is_empty());
-        // let active_list = repo
-        //     .compat_session()
-        //     .list(active, pagination)
-        //     .await
-        //     .unwrap();
-        // assert!(active_list.edges.is_empty());
-        // let finished_list = repo
-        //     .compat_session()
-        //     .list(finished, pagination)
-        //     .await
-        //     .unwrap();
-        // assert!(finished_list.edges.is_empty());
+        // We start off with no sessions
+        let full_list = repo.personal_session().list(all, pagination).await.unwrap();
+        assert!(full_list.edges.is_empty());
+        let active_list = repo
+            .personal_session()
+            .list(active, pagination)
+            .await
+            .unwrap();
+        assert!(active_list.edges.is_empty());
+        let finished_list = repo
+            .personal_session()
+            .list(finished, pagination)
+            .await
+            .unwrap();
+        assert!(finished_list.edges.is_empty());
 
         // Start a personal session for that user
         let device = Device::generate(&mut rng);
@@ -95,27 +97,28 @@ mod tests {
         assert!(!session.is_revoked());
         assert_eq!(session.scope, scope);
 
-        // TODO
-        // assert_eq!(repo.compat_session().count(all).await.unwrap(), 1);
-        // assert_eq!(repo.compat_session().count(active).await.unwrap(), 1);
-        // assert_eq!(repo.compat_session().count(finished).await.unwrap(), 0);
+        assert_eq!(repo.personal_session().count(all).await.unwrap(), 1);
+        assert_eq!(repo.personal_session().count(active).await.unwrap(), 1);
+        assert_eq!(repo.personal_session().count(finished).await.unwrap(), 0);
 
-        // let full_list = repo.compat_session().list(all, pagination).await.unwrap();
-        // assert_eq!(full_list.edges.len(), 1);
-        // assert_eq!(full_list.edges[0].0.id, session.id);
-        // let active_list = repo
-        //     .compat_session()
-        //     .list(active, pagination)
-        //     .await
-        //     .unwrap();
-        // assert_eq!(active_list.edges.len(), 1);
-        // assert_eq!(active_list.edges[0].0.id, session.id);
-        // let finished_list = repo
-        //     .compat_session()
-        //     .list(finished, pagination)
-        //     .await
-        //     .unwrap();
-        // assert!(finished_list.edges.is_empty());
+        let full_list = repo.personal_session().list(all, pagination).await.unwrap();
+        assert_eq!(full_list.edges.len(), 1);
+        assert_eq!(full_list.edges[0].node.id, session.id);
+        assert!(full_list.edges[0].node.is_valid());
+        let active_list = repo
+            .personal_session()
+            .list(active, pagination)
+            .await
+            .unwrap();
+        assert_eq!(active_list.edges.len(), 1);
+        assert_eq!(active_list.edges[0].node.id, session.id);
+        assert!(active_list.edges[0].node.is_valid());
+        let finished_list = repo
+            .personal_session()
+            .list(finished, pagination)
+            .await
+            .unwrap();
+        assert!(finished_list.edges.is_empty());
 
         // Lookup the session and check it didn't change
         let session_lookup = repo
@@ -127,18 +130,9 @@ mod tests {
         assert_eq!(session_lookup.id, session.id);
         assert_eq!(session_lookup.owner_user_id, admin_user.id);
         assert_eq!(session_lookup.actor_user_id, bot_user.id);
+        assert_eq!(session_lookup.scope, scope);
         assert!(session_lookup.is_valid());
         assert!(!session_lookup.is_revoked());
-        assert_eq!(session_lookup.scope, scope);
-
-        // TODO
-        // assert_eq!(list.edges.len(), 1);
-        // let session_lookup = &list.edges[0].0;
-        // assert_eq!(session_lookup.id, session.id);
-        // assert_eq!(session_lookup.user_id, user.id);
-        // assert_eq!(session.device.as_ref().unwrap().as_str(), device_str);
-        // assert!(session_lookup.is_valid());
-        // assert!(!session_lookup.is_finished());
 
         // Revoke the session
         let session = repo
@@ -149,29 +143,27 @@ mod tests {
         assert!(!session.is_valid());
         assert!(session.is_revoked());
 
-        // TODO
-        // assert_eq!(repo.compat_session().count(all).await.unwrap(), 1);
-        // assert_eq!(repo.compat_session().count(active).await.unwrap(), 0);
-        // assert_eq!(repo.compat_session().count(finished).await.unwrap(), 1);
+        assert_eq!(repo.personal_session().count(all).await.unwrap(), 1);
+        assert_eq!(repo.personal_session().count(active).await.unwrap(), 0);
+        assert_eq!(repo.personal_session().count(finished).await.unwrap(), 1);
 
-        // TODO
-        // let full_list = repo.compat_session().list(all, pagination).await.unwrap();
-        // assert_eq!(full_list.edges.len(), 1);
-        // assert_eq!(full_list.edges[0].0.id, session.id);
-        // let active_list = repo
-        //     .compat_session()
-        //     .list(active, pagination)
-        //     .await
-        //     .unwrap();
-        // assert!(active_list.edges.is_empty());
-        // let finished_list = repo
-        //     .compat_session()
-        //     .list(finished, pagination)
-        //     .await
-        //     .unwrap();
-        // assert_eq!(finished_list.edges.len(), 1);
-        // assert_eq!(finished_list.edges[0].0.id, session.id);
-        // assert!(session.is_revoked());
+        let full_list = repo.personal_session().list(all, pagination).await.unwrap();
+        assert_eq!(full_list.edges.len(), 1);
+        assert_eq!(full_list.edges[0].node.id, session.id);
+        let active_list = repo
+            .personal_session()
+            .list(active, pagination)
+            .await
+            .unwrap();
+        assert!(active_list.edges.is_empty());
+        let finished_list = repo
+            .personal_session()
+            .list(finished, pagination)
+            .await
+            .unwrap();
+        assert_eq!(finished_list.edges.len(), 1);
+        assert_eq!(finished_list.edges[0].node.id, session.id);
+        assert!(finished_list.edges[0].node.is_revoked());
 
         // Reload the session and check again
         let session_lookup = repo

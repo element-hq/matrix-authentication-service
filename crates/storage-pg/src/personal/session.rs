@@ -13,6 +13,7 @@ use mas_data_model::{
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     personal::{PersonalSessionFilter, PersonalSessionRepository, PersonalSessionState},
 };
 use oauth2_types::scope::Scope;
@@ -61,6 +62,12 @@ struct PersonalSessionLookup {
     revoked_at: Option<DateTime<Utc>>,
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
+}
+
+impl Node<Ulid> for PersonalSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.personal_session_id.into()
+    }
 }
 
 impl TryFrom<PersonalSessionLookup> for PersonalSession {
@@ -296,9 +303,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .fetch_all(&mut *self.conn)
             .await?;
 
-        let page = pagination
-            .process(edges)
-            .try_map(PersonalSession::try_from)?;
+        let page = pagination.process(edges).try_map(TryFrom::try_from)?;
 
         Ok(page)
     }
