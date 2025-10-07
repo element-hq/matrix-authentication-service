@@ -237,6 +237,7 @@
       },
       "login_link": {
         "action": "继续",
+        "description": "此用户名（%(username)s）已存在于一个账户，它将与该上游账户关联。",
         "heading": "链接到现有账户"
       },
       "register": {
