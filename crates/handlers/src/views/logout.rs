@@ -31,8 +31,9 @@ pub(crate) async fn post(
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let (session_info, cookie_jar) = cookie_jar.session_info();
+    let current_session_id =  session_info.current_session_id();
 
-    if let Some(session_id) = session_info.current_session_id() {
+    if let Some(session_id) = current_session_id {
         let maybe_session = repo.browser_session().lookup(session_id).await?;
         if let Some(session) = maybe_session
             && session.finished_at.is_none()
@@ -45,6 +46,21 @@ pub(crate) async fn post(
         }
     }
 
+    let maybe_client =
+        if let Some(session_id) = current_session_id {
+            let maybe_oauth_session = repo.oauth2_session().find_by_user_session(session_id).await?;
+            if let Some(oauth_session) = maybe_oauth_session {
+                repo.oauth2_client().lookup(oauth_session.client_id).await?
+            }
+            else {
+                None
+            }
+            
+        }
+        else {
+            None
+        };
+
     repo.save().await?;
 
     // We always want to clear out the session cookie, even if the session was
@@ -54,6 +70,11 @@ pub(crate) async fn post(
     let destination = if let Some(action) = form {
         action.go_next(&url_builder)
     } else {
+        if let Some(client) = maybe_client{
+            if let Some(redirect_uri) = client.redirect_uris.first() {
+                return Ok((cookie_jar, axum::response::Redirect::to(&redirect_uri.as_str())));
+            }
+        }
         url_builder.redirect(&mas_router::Login::default())
     };
 

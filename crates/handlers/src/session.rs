@@ -64,7 +64,7 @@ pub async fn load_session_or_fallback(
     if session.user.deactivated_at.is_some() {
         // The account is deactivated, show the 'account deactivated' fallback
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
-        let ctx = AccountInactiveContext::new(session.user)
+        let ctx = AccountInactiveContext::new(session.user, )
             .with_csrf(csrf_token.form_value())
             .with_language(locale.clone());
         let fallback = templates.render_account_deactivated(&ctx)?;

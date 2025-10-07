@@ -461,6 +461,21 @@ pub trait OAuth2SessionRepository: Send + Sync {
         session: Session,
         human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
+
+
+    /// Lookup an [`Session`] by its user session id
+    ///
+    /// Returns `None` if no [`Session`] was found
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: The ID of the [`Session`] to lookup
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_by_user_session(&mut self, id: Ulid) -> Result<Option<Session>, Self::Error>;
+    
 }
 
 repository_impl!(OAuth2SessionRepository:
@@ -526,4 +541,6 @@ repository_impl!(OAuth2SessionRepository:
         session: Session,
         human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
+
+    async fn find_by_user_session(&mut self, id: Ulid) -> Result<Option<Session>, Self::Error>;
 );
