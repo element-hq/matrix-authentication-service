@@ -15,7 +15,9 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::{BoxClock, Clock, Device, TokenFormatError, TokenType};
+use mas_data_model::{
+    BoxClock, Clock, Device, TokenFormatError, TokenType, personal::session::PersonalSessionOwner,
+};
 use mas_iana::oauth::{OAuthClientAuthenticationMethod, OAuthTokenTypeHint};
 use mas_keystore::Encrypter;
 use mas_matrix::HomeserverConnection;
@@ -641,8 +643,94 @@ pub(crate) async fn post(
         }
 
         TokenType::PersonalAccessToken => {
-            // TODO
-            return Err(RouteError::UnknownToken(TokenType::PersonalAccessToken));
+            let access_token = repo
+                .personal_access_token()
+                .find_by_token(token)
+                .await?
+                .ok_or(RouteError::UnknownToken(TokenType::AccessToken))?;
+
+            if !access_token.is_valid(clock.now()) {
+                return Err(RouteError::InvalidToken(TokenType::AccessToken));
+            }
+
+            let session = repo
+                .personal_session()
+                .lookup(access_token.session_id)
+                .await?
+                .ok_or(RouteError::CantLoadPersonalSession(access_token.session_id))?;
+
+            if !session.is_valid() {
+                return Err(RouteError::InvalidPersonalSession(session.id));
+            }
+
+            let actor_user = repo
+                .user()
+                .lookup(session.actor_user_id)
+                .await?
+                .ok_or(RouteError::CantLoadUser(session.actor_user_id))?;
+
+            if !actor_user.is_valid() {
+                return Err(RouteError::InvalidUser(actor_user.id));
+            }
+
+            let client_id = match session.owner {
+                PersonalSessionOwner::User(owner_user_id) => {
+                    let owner_user = repo
+                        .user()
+                        .lookup(owner_user_id)
+                        .await?
+                        .ok_or(RouteError::CantLoadUser(owner_user_id))?;
+
+                    if !owner_user.is_valid() {
+                        return Err(RouteError::InvalidUser(owner_user.id));
+                    }
+
+                    None
+                }
+                PersonalSessionOwner::OAuth2Client(owner_client_id) => {
+                    let owner_client = repo
+                        .oauth2_client()
+                        .lookup(owner_client_id)
+                        .await?
+                        .ok_or(RouteError::CantLoadOAuth2Client(owner_client_id))?;
+
+                    // OAuth2 clients are always valid if they're in the database
+                    Some(owner_client.client_id.clone())
+                }
+            };
+
+            activity_tracker
+                .record_personal_access_token_session(&clock, &session, ip)
+                .await;
+
+            INTROSPECTION_COUNTER.add(
+                1,
+                &[
+                    KeyValue::new(KIND, "personal_access_token"),
+                    KeyValue::new(ACTIVE, true),
+                ],
+            );
+
+            let scope = normalize_scope(session.scope);
+
+            IntrospectionResponse {
+                active: true,
+                scope: Some(scope),
+                client_id,
+                username: Some(actor_user.username),
+                token_type: Some(OAuthTokenTypeHint::AccessToken),
+                exp: access_token.expires_at,
+                expires_in: access_token
+                    .expires_at
+                    .map(|expires_at| expires_at.signed_duration_since(clock.now())),
+                iat: Some(access_token.created_at),
+                nbf: Some(access_token.created_at),
+                sub: Some(actor_user.sub),
+                aud: None,
+                iss: None,
+                jti: None,
+                device_id: None,
+            }
         }
     };
 
