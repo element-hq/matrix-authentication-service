@@ -45,6 +45,7 @@ impl SiteConfigExt for SiteConfig {
     fn templates_features(&self) -> SiteFeatures {
         SiteFeatures {
             password_registration: self.password_registration_enabled,
+            password_registration_email_required: self.password_registration_email_required,
             password_login: self.password_login_enabled,
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,
