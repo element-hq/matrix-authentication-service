@@ -59,8 +59,6 @@ deny = [
 multiple-versions = "deny"
 
 skip = [
-    { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
-    { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version
     { name = "indexmap", version = "1.9.3" },        # schemars depends on this old version
     { name = "hashbrown", version = "0.12.3" },      # schemars -> indexmap depends on this old version
@@ -75,10 +73,6 @@ skip = [
     # cron depends on this old version
     # https://github.com/zslayton/cron/pull/137
     { name = "winnow", version = "0.6.20" },
-    # opa-wasm -> wasmtime -> memfd depends on this old version
-    # https://github.com/lucab/memfd-rs/pull/72
-    { name = "rustix", version = "0.38.44" },
-    { name = "linux-raw-sys", version = "0.9.4" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
@@ -98,8 +92,3 @@ deny = ["oldtime"]
 unknown-registry = "warn"
 unknown-git = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-
-allow-git = [
-    # https://github.com/open-telemetry/opentelemetry-rust/pull/3076
-    "https://github.com/sandhose/opentelemetry-rust",
-]

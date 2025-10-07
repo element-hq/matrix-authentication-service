@@ -179,7 +179,7 @@ function Sessions(): React.ReactElement {
               <CompatSession key={session.cursor} session={session.node} />
             );
           default:
-            unknownSessionType(type);
+            return unknownSessionType(type);
         }
       })}
 

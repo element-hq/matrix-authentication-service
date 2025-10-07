@@ -16,6 +16,40 @@
     }
   ],
   "paths": {
+    "/api/admin/v1/site-config": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Get informations about the configuration of this MAS instance",
+        "operationId": "siteConfig",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteConfig"
+                },
+                "example": {
+                  "server_name": "example.com",
+                  "password_login_enabled": true,
+                  "password_registration_enabled": true,
+                  "registration_token_required": true,
+                  "email_change_allowed": true,
+                  "displayname_change_allowed": true,
+                  "password_change_allowed": true,
+                  "account_recovery_allowed": true,
+                  "account_deactivation_allowed": true,
+                  "captcha_enabled": true,
+                  "minimum_password_complexity": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/compat-sessions": {
       "get": {
         "tags": [
@@ -872,6 +906,28 @@
           },
           {
             "in": "query",
+            "name": "filter[legacy-guest]",
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "schema": {
+              "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+              "type": "boolean",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[search]",
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+            "schema": {
+              "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+              "type": "string",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[status]",
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "schema": {
@@ -903,7 +959,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -917,7 +974,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": true
+                        "admin": true,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
@@ -931,7 +989,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": "1970-01-01T00:00:00Z",
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": true
                       },
                       "links": {
                         "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -983,7 +1042,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1069,7 +1129,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1226,7 +1287,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1306,7 +1368,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": true
+                      "admin": true,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
@@ -1385,7 +1448,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1455,7 +1519,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1525,7 +1590,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1595,7 +1661,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -3155,6 +3222,143 @@
           }
         }
       }
+    },
+    "/api/admin/v1/upstream-oauth-providers": {
+      "get": {
+        "tags": [
+          "upstream-oauth-provider"
+        ],
+        "summary": "List upstream OAuth 2.0 providers",
+        "operationId": "listUpstreamOAuthProviders",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[enabled]",
+            "description": "Retrieve providers that are (or are not) enabled",
+            "schema": {
+              "description": "Retrieve providers that are (or are not) enabled",
+              "type": "boolean",
+              "nullable": true
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of upstream OAuth 2.0 providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_UpstreamOAuthProvider"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "issuer": "https://accounts.google.com",
+                        "human_name": "Google",
+                        "brand_name": "google",
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "issuer": "https://appleid.apple.com",
+                        "human_name": "Apple ID",
+                        "brand_name": "apple",
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": "1970-01-01T00:00:00Z"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "issuer": null,
+                        "human_name": "Custom OAuth Provider",
+                        "brand_name": null,
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-providers?page[first]=3",
+                    "first": "/api/admin/v1/upstream-oauth-providers?page[first]=3",
+                    "last": "/api/admin/v1/upstream-oauth-providers?page[last]=3",
+                    "next": "/api/admin/v1/upstream-oauth-providers?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3186,6 +3390,71 @@
       }
     },
     "schemas": {
+      "SiteConfig": {
+        "type": "object",
+        "required": [
+          "account_deactivation_allowed",
+          "account_recovery_allowed",
+          "captcha_enabled",
+          "displayname_change_allowed",
+          "email_change_allowed",
+          "minimum_password_complexity",
+          "password_change_allowed",
+          "password_login_enabled",
+          "password_registration_enabled",
+          "registration_token_required",
+          "server_name"
+        ],
+        "properties": {
+          "server_name": {
+            "description": "The Matrix server name for which this instance is configured",
+            "type": "string"
+          },
+          "password_login_enabled": {
+            "description": "Whether password login is enabled.",
+            "type": "boolean"
+          },
+          "password_registration_enabled": {
+            "description": "Whether password registration is enabled.",
+            "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.",
+            "type": "boolean"
+          },
+          "email_change_allowed": {
+            "description": "Whether users can change their email.",
+            "type": "boolean"
+          },
+          "displayname_change_allowed": {
+            "description": "Whether users can change their display name.",
+            "type": "boolean"
+          },
+          "password_change_allowed": {
+            "description": "Whether users can change their password.",
+            "type": "boolean"
+          },
+          "account_recovery_allowed": {
+            "description": "Whether users can recover their account via email.",
+            "type": "boolean"
+          },
+          "account_deactivation_allowed": {
+            "description": "Whether users can delete their own account.",
+            "type": "boolean"
+          },
+          "captcha_enabled": {
+            "description": "Whether CAPTCHA during registration is enabled.",
+            "type": "boolean"
+          },
+          "minimum_password_complexity": {
+            "description": "Minimum password complexity, between 0 and 4. This is a score from zxcvbn.",
+            "type": "integer",
+            "format": "uint8",
+            "maximum": 4.0,
+            "minimum": 0.0
+          }
+        }
+      },
       "PaginationParams": {
         "type": "object",
         "properties": {
@@ -3767,6 +4036,16 @@
             "type": "boolean",
             "nullable": true
           },
+          "filter[legacy-guest]": {
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "type": "boolean",
+            "nullable": true
+          },
+          "filter[search]": {
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are still ordered by ID.",
+            "type": "string",
+            "nullable": true
+          },
           "filter[status]": {
             "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "$ref": "#/components/schemas/UserStatus",
@@ -3842,6 +4121,7 @@
         "required": [
           "admin",
           "created_at",
+          "legacy_guest",
           "username"
         ],
         "properties": {
@@ -3868,6 +4148,10 @@
           },
           "admin": {
             "description": "Whether the user can request admin privileges.",
+            "type": "boolean"
+          },
+          "legacy_guest": {
+            "description": "Whether the user was a guest before migrating to MAS,",
             "type": "boolean"
           }
         }
@@ -4570,6 +4854,105 @@
             "$ref": "#/components/schemas/SelfLinks"
           }
         }
+      },
+      "UpstreamOAuthProviderFilter": {
+        "type": "object",
+        "properties": {
+          "filter[enabled]": {
+            "description": "Retrieve providers that are (or are not) enabled",
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedResponse_for_UpstreamOAuthProvider": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "required": [
+          "data",
+          "links",
+          "meta"
+        ],
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/PaginationLinks"
+          }
+        }
+      },
+      "SingleResource_for_UpstreamOAuthProvider": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/UpstreamOAuthProvider"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "UpstreamOAuthProvider": {
+        "description": "An upstream OAuth 2.0 provider",
+        "type": "object",
+        "required": [
+          "created_at"
+        ],
+        "properties": {
+          "issuer": {
+            "description": "The OIDC issuer of the provider",
+            "type": "string",
+            "nullable": true
+          },
+          "human_name": {
+            "description": "A human-readable name for the provider",
+            "type": "string",
+            "nullable": true
+          },
+          "brand_name": {
+            "description": "A brand identifier, e.g. \"apple\" or \"google\"",
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "description": "When the provider was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "disabled_at": {
+            "description": "When the provider was disabled. If null, the provider is enabled.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
       }
     }
   },
@@ -4586,6 +4969,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "server",
+      "description": "Information about the server"
+    },
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"
@@ -4617,6 +5004,10 @@
     {
       "name": "upstream-oauth-link",
       "description": "Manage links between local users and identities from upstream OAuth 2.0 providers"
+    },
+    {
+      "name": "upstream-oauth-provider",
+      "description": "Manage upstream OAuth 2.0 providers"
     }
   ]
 }

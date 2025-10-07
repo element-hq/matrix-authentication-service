@@ -8,7 +8,7 @@ This can be run from anywhere, not necessarily from the host where MAS is runnin
 sh ./misc/device-code-grant.sh [synapse-url] <scope>...
 ```
 
-This will prompt you to open a URL in your browser, finish the authentication flow, and print the access token.
+This will prompt you to open a URL in your browser, finish the authentication flow, and print the access and refresh tokens.
 
 This can be used to get access to the MAS admin API:
 

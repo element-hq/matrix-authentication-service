@@ -93,16 +93,16 @@ export const Route = createFileRoute({
 
   beforeLoad({ search }) {
     switch (search.action) {
-      case "profile":
-      case "org.matrix.profile":
+      case "profile": // This is an unspecced alias for org.matrix.profile that can be removed
+      case "org.matrix.profile": // This is from unstable MSC4191
         throw redirect({ to: "/", search: {} });
 
-      case "sessions_list":
-      case "org.matrix.sessions_list":
+      case "sessions_list": // This is an unspecced alias for org.matrix.sessions_list that can be removed
+      case "org.matrix.sessions_list": // This is from unstable MSC4191
         throw redirect({ to: "/sessions" });
 
-      case "session_view":
-      case "org.matrix.session_view":
+      case "session_view": // This is an unspecced alias for org.matrix.session_view that can be removed
+      case "org.matrix.session_view": // This is from unstable MSC4191
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -110,8 +110,8 @@ export const Route = createFileRoute({
           });
         throw redirect({ to: "/sessions" });
 
-      case "session_end":
-      case "org.matrix.session_end":
+      case "session_end": // This is the unstable MSC3824 alias for org.matrix.session_end
+      case "org.matrix.session_end": // This is from unstable MSC4191
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -119,12 +119,13 @@ export const Route = createFileRoute({
           });
         throw redirect({ to: "/sessions" });
 
-      case "org.matrix.cross_signing_reset":
+      case "org.matrix.cross_signing_reset": // This is from unstable MSC4191
         throw redirect({
           to: "/reset-cross-signing",
           search: { deepLink: true },
         });
       case "org.matrix.plan_management": {
+        // This is an unspecced experimental value
         // We don't both checking if the plan management iframe is actually available and
         // instead rely on the plan tab handling it.
         throw redirect({ to: "/plan" });

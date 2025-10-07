@@ -17,9 +17,10 @@
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
 ARG RUSTC_VERSION=1.89.0
-ARG NODEJS_VERSION=20.15.0
-ARG OPA_VERSION=1.1.0
-ARG CARGO_AUDITABLE_VERSION=0.6.6
+ARG NODEJS_VERSION=22.19.0
+# Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
+ARG OPA_VERSION=1.8.0 
+ARG CARGO_AUDITABLE_VERSION=0.7.0
 
 ##########################################
 ## Build stage that builds the frontend ##
@@ -28,7 +29,7 @@ FROM --platform=${BUILDPLATFORM} docker.io/library/node:${NODEJS_VERSION}-${DEBI
 
 WORKDIR /app/frontend
 
-COPY ./frontend/package.json ./frontend/package-lock.json /app/frontend/
+COPY ./frontend/.npmrc ./frontend/package.json ./frontend/package-lock.json /app/frontend/
 # Network access: to fetch dependencies
 RUN --network=default \
   npm ci

@@ -19,14 +19,17 @@ use mas_data_model::{Clock, Device, SystemClock, TokenType, Ulid, UpstreamOAuthP
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    RepositoryAccess,
+    Pagination, RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
     queue::{
         DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _, ReactivateUserJob,
         SyncDevicesJob,
     },
-    user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
+    user::{
+        BrowserSessionFilter, UserEmailRepository, UserFilter, UserPasswordRepository,
+        UserRepository,
+    },
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{
@@ -84,6 +87,15 @@ enum Subcommand {
         #[clap(long)]
         ignore_complexity: bool,
     },
+
+    /// Make a user admin
+    PromoteAdmin { username: String },
+
+    /// Make a user non-admin
+    DemoteAdmin { username: String },
+
+    /// List all users with admin privileges
+    ListAdminUsers,
 
     /// Issue a compatibility token
     IssueCompatibilityToken {
@@ -311,6 +323,82 @@ impl Options {
                 tracing::warn!(
                     "The 'verify-email' command is deprecated and will be removed in a future version. Use 'add-email' instead."
                 );
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::PromoteAdmin { username } => {
+                let _span =
+                    info_span!("cli.manage.promote_admin", user.username = username,).entered();
+
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let user = repo
+                    .user()
+                    .find_by_username(&username)
+                    .await?
+                    .context("User not found")?;
+
+                let user = repo.user().set_can_request_admin(user, true).await?;
+
+                repo.into_inner().commit().await?;
+                info!(%user.id, %user.username, "User promoted to admin");
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::DemoteAdmin { username } => {
+                let _span =
+                    info_span!("cli.manage.demote_admin", user.username = username,).entered();
+
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let user = repo
+                    .user()
+                    .find_by_username(&username)
+                    .await?
+                    .context("User not found")?;
+
+                let user = repo.user().set_can_request_admin(user, false).await?;
+
+                repo.into_inner().commit().await?;
+                info!(%user.id, %user.username, "User is no longer admin");
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::ListAdminUsers => {
+                let _span = info_span!("cli.manage.list_admins").entered();
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let mut cursor = Pagination::first(1000);
+                let filter = UserFilter::new().can_request_admin_only();
+                let total = repo.user().count(filter).await?;
+
+                info!("The following users can request admin privileges ({total} total):");
+                loop {
+                    let page = repo.user().list(filter, cursor).await?;
+                    for user in page.edges {
+                        info!(%user.id, username = %user.username);
+                        cursor = cursor.after(user.id);
+                    }
+
+                    if !page.has_next_page {
+                        break;
+                    }
+                }
 
                 Ok(ExitCode::SUCCESS)
             }

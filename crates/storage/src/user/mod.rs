@@ -75,10 +75,11 @@ impl UserState {
 pub struct UserFilter<'a> {
     state: Option<UserState>,
     can_request_admin: Option<bool>,
-    _phantom: std::marker::PhantomData<&'a ()>,
+    is_guest: Option<bool>,
+    search: Option<&'a str>,
 }
 
-impl UserFilter<'_> {
+impl<'a> UserFilter<'a> {
     /// Create a new [`UserFilter`] with default values
     #[must_use]
     pub fn new() -> Self {
@@ -120,6 +121,27 @@ impl UserFilter<'_> {
         self
     }
 
+    /// Filter for guest users
+    #[must_use]
+    pub fn guest_only(mut self) -> Self {
+        self.is_guest = Some(true);
+        self
+    }
+
+    /// Filter for non-guest users
+    #[must_use]
+    pub fn non_guest_only(mut self) -> Self {
+        self.is_guest = Some(false);
+        self
+    }
+
+    /// Filter for users that match the given search string
+    #[must_use]
+    pub fn matching_search(mut self, search: &'a str) -> Self {
+        self.search = Some(search);
+        self
+    }
+
     /// Get the state filter
     ///
     /// Returns [`None`] if no state filter was set
@@ -134,6 +156,22 @@ impl UserFilter<'_> {
     #[must_use]
     pub fn can_request_admin(&self) -> Option<bool> {
         self.can_request_admin
+    }
+
+    /// Get the is guest filter
+    ///
+    /// Returns [`None`] if no is guest filter was set
+    #[must_use]
+    pub fn is_guest(&self) -> Option<bool> {
+        self.is_guest
+    }
+
+    /// Get the search filter
+    ///
+    /// Returns [`None`] if no search filter was set
+    #[must_use]
+    pub fn search(&self) -> Option<&'a str> {
+        self.search
     }
 }
 

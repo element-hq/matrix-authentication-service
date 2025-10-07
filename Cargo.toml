@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "1.2.0"
+package.version = "1.3.0"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -34,35 +34,35 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.2.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.2.0" }
-mas-config = { path = "./crates/config/", version = "=1.2.0" }
-mas-context = { path = "./crates/context/", version = "=1.2.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=1.2.0" }
-mas-email = { path = "./crates/email/", version = "=1.2.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.2.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=1.2.0" }
-mas-http = { path = "./crates/http/", version = "=1.2.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=1.2.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.2.0" }
-mas-iana = { path = "./crates/iana/", version = "=1.2.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.2.0" }
-mas-jose = { path = "./crates/jose/", version = "=1.2.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=1.2.0" }
-mas-listener = { path = "./crates/listener/", version = "=1.2.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=1.2.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.2.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.2.0" }
-mas-policy = { path = "./crates/policy/", version = "=1.2.0" }
-mas-router = { path = "./crates/router/", version = "=1.2.0" }
-mas-spa = { path = "./crates/spa/", version = "=1.2.0" }
-mas-storage = { path = "./crates/storage/", version = "=1.2.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.2.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=1.2.0" }
-mas-templates = { path = "./crates/templates/", version = "=1.2.0" }
-mas-tower = { path = "./crates/tower/", version = "=1.2.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=1.2.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=1.2.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.3.0" }
+mas-cli = { path = "./crates/cli/", version = "=1.3.0" }
+mas-config = { path = "./crates/config/", version = "=1.3.0" }
+mas-context = { path = "./crates/context/", version = "=1.3.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=1.3.0" }
+mas-email = { path = "./crates/email/", version = "=1.3.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=1.3.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=1.3.0" }
+mas-http = { path = "./crates/http/", version = "=1.3.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=1.3.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.3.0" }
+mas-iana = { path = "./crates/iana/", version = "=1.3.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.3.0" }
+mas-jose = { path = "./crates/jose/", version = "=1.3.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=1.3.0" }
+mas-listener = { path = "./crates/listener/", version = "=1.3.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=1.3.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.3.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.3.0" }
+mas-policy = { path = "./crates/policy/", version = "=1.3.0" }
+mas-router = { path = "./crates/router/", version = "=1.3.0" }
+mas-spa = { path = "./crates/spa/", version = "=1.3.0" }
+mas-storage = { path = "./crates/storage/", version = "=1.3.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.3.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=1.3.0" }
+mas-templates = { path = "./crates/templates/", version = "=1.3.0" }
+mas-tower = { path = "./crates/tower/", version = "=1.3.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=1.3.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=1.3.0" }
 #:tchap:
 tchap = { path = "./crates/tchap", version = "=0.1.0" }
 #:tchap:
@@ -132,7 +132,7 @@ default-features = true
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.9.3"
+version = "2.9.4"
 
 # Bytes
 [workspace.dependencies.bytes]
@@ -140,7 +140,7 @@ version = "1.10.1"
 
 # UTF-8 paths
 [workspace.dependencies.camino]
-version = "1.1.11"
+version = "1.2.0"
 features = ["serde1"]
 
 # ChaCha20Poly1305 AEAD
@@ -164,13 +164,13 @@ features = ["serde_json"]
 
 # Time utilities
 [workspace.dependencies.chrono]
-version = "0.4.41"
+version = "0.4.42"
 default-features = false
 features = ["serde", "clock"]
 
 # CLI argument parsing
 [workspace.dependencies.clap]
-version = "4.5.46"
+version = "4.5.47"
 features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
@@ -277,7 +277,7 @@ features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.16"
+version = "0.1.17"
 features = [
     "client",
     "server",
@@ -324,7 +324,7 @@ features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
-version = "2.11.0"
+version = "2.11.3"
 features = ["serde"]
 
 # Indented string literals
@@ -333,7 +333,7 @@ version = "2.0.6"
 
 # Snapshot testing
 [workspace.dependencies.insta]
-version = "1.43.1"
+version = "1.43.2"
 features = ["yaml", "json"]
 
 # IP network address types
@@ -410,10 +410,8 @@ version = "0.30.0"
 version = "0.30.0"
 default-features = false
 features = ["trace", "metrics", "http-proto"]
-[workspace.dependencies.opentelemetry-prometheus]
-# https://github.com/open-telemetry/opentelemetry-rust/pull/3076
-git = "https://github.com/sandhose/opentelemetry-rust.git"
-branch = "otel-prometheus-0.30"
+[workspace.dependencies.opentelemetry-prometheus-text-exporter]
+version = "0.2.0"
 [workspace.dependencies.opentelemetry-resource-detectors]
 version = "0.9.0"
 [workspace.dependencies.opentelemetry-semantic-conventions]
@@ -459,11 +457,11 @@ features = ["std"]
 
 # Parser generator
 [workspace.dependencies.pest]
-version = "2.8.1"
+version = "2.8.2"
 
 # Pest derive macros
 [workspace.dependencies.pest_derive]
-version = "2.8.1"
+version = "2.8.2"
 
 # Pin projection
 [workspace.dependencies.pin-project-lite]
@@ -481,11 +479,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.136"
-
-# Prometheus metrics
-[workspace.dependencies.prometheus]
-version = "0.14.0"
+version = "2.1.141"
 
 # High-precision clock
 [workspace.dependencies.quanta]
@@ -591,12 +585,12 @@ version = "0.42.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
-version = "1.0.219"
+version = "1.0.225"
 features = ["derive"] # Most of the time, if we need serde, we need derive
 
 # JSON serialization and deserialization
 [workspace.dependencies.serde_json]
-version = "1.0.143"
+version = "1.0.145"
 features = ["preserve_order"]
 
 # URL encoded form serialization
@@ -715,7 +709,7 @@ features = ["serde", "uuid"]
 
 # UUID support
 [workspace.dependencies.uuid]
-version = "1.18.0"
+version = "1.18.1"
 
 # HTML escaping
 [workspace.dependencies.v_htmlescape]

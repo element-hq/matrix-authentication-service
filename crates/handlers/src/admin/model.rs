@@ -52,6 +52,9 @@ pub struct User {
 
     /// Whether the user can request admin privileges.
     admin: bool,
+
+    /// Whether the user was a guest before migrating to MAS,
+    legacy_guest: bool,
 }
 
 impl User {
@@ -65,6 +68,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -73,6 +77,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: true,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -81,6 +86,7 @@ impl User {
                 locked_at: Some(DateTime::default()),
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: true,
             },
         ]
     }
@@ -95,6 +101,7 @@ impl From<mas_data_model::User> for User {
             locked_at: user.locked_at,
             deactivated_at: user.deactivated_at,
             admin: user.can_request_admin,
+            legacy_guest: user.is_guest,
         }
     }
 }
@@ -684,6 +691,82 @@ impl UserRegistrationToken {
                 last_used_at: None,
                 expires_at: None,
                 revoked_at: Some(DateTime::default()),
+            },
+        ]
+    }
+}
+
+/// An upstream OAuth 2.0 provider
+#[derive(Serialize, JsonSchema)]
+pub struct UpstreamOAuthProvider {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The OIDC issuer of the provider
+    issuer: Option<String>,
+
+    /// A human-readable name for the provider
+    human_name: Option<String>,
+
+    /// A brand identifier, e.g. "apple" or "google"
+    brand_name: Option<String>,
+
+    /// When the provider was created
+    created_at: DateTime<Utc>,
+
+    /// When the provider was disabled. If null, the provider is enabled.
+    disabled_at: Option<DateTime<Utc>>,
+}
+
+impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
+    fn from(provider: mas_data_model::UpstreamOAuthProvider) -> Self {
+        Self {
+            id: provider.id,
+            issuer: provider.issuer,
+            human_name: provider.human_name,
+            brand_name: provider.brand_name,
+            created_at: provider.created_at,
+            disabled_at: provider.disabled_at,
+        }
+    }
+}
+
+impl Resource for UpstreamOAuthProvider {
+    const KIND: &'static str = "upstream-oauth-provider";
+    const PATH: &'static str = "/api/admin/v1/upstream-oauth-providers";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl UpstreamOAuthProvider {
+    /// Samples of upstream OAuth 2.0 providers
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                issuer: Some("https://accounts.google.com".to_owned()),
+                human_name: Some("Google".to_owned()),
+                brand_name: Some("google".to_owned()),
+                created_at: DateTime::default(),
+                disabled_at: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                issuer: Some("https://appleid.apple.com".to_owned()),
+                human_name: Some("Apple ID".to_owned()),
+                brand_name: Some("apple".to_owned()),
+                created_at: DateTime::default(),
+                disabled_at: Some(DateTime::default()),
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                issuer: None,
+                human_name: Some("Custom OAuth Provider".to_owned()),
+                brand_name: None,
+                created_at: DateTime::default(),
+                disabled_at: None,
             },
         ]
     }

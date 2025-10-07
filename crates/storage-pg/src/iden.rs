@@ -39,6 +39,7 @@ pub enum Users {
     LockedAt,
     DeactivatedAt,
     CanRequestAdmin,
+    IsGuest,
 }
 
 #[derive(sea_query::Iden)]
