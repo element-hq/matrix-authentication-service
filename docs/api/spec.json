@@ -62,10 +62,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -73,10 +73,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -103,6 +103,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -354,10 +365,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -365,10 +376,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -395,6 +406,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -900,10 +922,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -911,10 +933,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -941,6 +963,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "$ref": "#/components/schemas/UserOrdering",
               "nullable": true
             },
             "style": "form"
@@ -1785,10 +1818,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -1796,10 +1829,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -1826,6 +1859,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -2146,10 +2190,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -2157,10 +2201,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -2187,6 +2231,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -2410,10 +2465,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -2421,10 +2476,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -2451,6 +2506,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -2978,10 +3044,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -2989,10 +3055,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -3019,6 +3085,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -3401,10 +3478,10 @@
           {
             "in": "query",
             "name": "page[before]",
-            "description": "Retrieve the items before the given ID",
+            "description": "Retrieve the items before the given cursor",
             "schema": {
-              "description": "Retrieve the items before the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items before the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -3412,10 +3489,10 @@
           {
             "in": "query",
             "name": "page[after]",
-            "description": "Retrieve the items after the given ID",
+            "description": "Retrieve the items after the given cursor",
             "schema": {
-              "description": "Retrieve the items after the given ID",
-              "$ref": "#/components/schemas/ULID",
+              "description": "Retrieve the items after the given cursor",
+              "type": "string",
               "nullable": true
             },
             "style": "form"
@@ -3442,6 +3519,17 @@
               "type": "integer",
               "format": "uint",
               "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "The ordering to use for the items",
+            "schema": {
+              "description": "The ordering to use for the items",
+              "type": "null",
               "nullable": true
             },
             "style": "form"
@@ -3710,17 +3798,17 @@
           }
         }
       },
-      "PaginationParams": {
+      "PaginationParams_for_Null": {
         "type": "object",
         "properties": {
           "page[before]": {
-            "description": "Retrieve the items before the given ID",
-            "$ref": "#/components/schemas/ULID",
+            "description": "Retrieve the items before the given cursor",
+            "type": "string",
             "nullable": true
           },
           "page[after]": {
-            "description": "Retrieve the items after the given ID",
-            "$ref": "#/components/schemas/ULID",
+            "description": "Retrieve the items after the given cursor",
+            "type": "string",
             "nullable": true
           },
           "page[first]": {
@@ -3737,22 +3825,17 @@
             "minimum": 1.0,
             "nullable": true
           },
+          "order": {
+            "description": "The ordering to use for the items",
+            "type": "null",
+            "nullable": true
+          },
           "count": {
             "description": "Include the total number of items. Defaults to `true`.",
             "$ref": "#/components/schemas/IncludeCount",
             "nullable": true
           }
         }
-      },
-      "ULID": {
-        "title": "ULID",
-        "description": "A ULID as per https://github.com/ulid/spec",
-        "examples": [
-          "01ARZ3NDEKTSV4RRFFQ69G5FAV",
-          "01J41912SC8VGAQDD50F6APK91"
-        ],
-        "type": "string",
-        "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
       },
       "IncludeCount": {
         "oneOf": [
@@ -3798,6 +3881,16 @@
             "nullable": true
           }
         }
+      },
+      "ULID": {
+        "title": "ULID",
+        "description": "A ULID as per https://github.com/ulid/spec",
+        "examples": [
+          "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+          "01J41912SC8VGAQDD50F6APK91"
+        ],
+        "type": "string",
+        "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
       },
       "CompatSessionStatus": {
         "type": "string",
@@ -4349,6 +4442,54 @@
             "description": "The policy data content"
           }
         }
+      },
+      "PaginationParams_for_UserOrdering": {
+        "type": "object",
+        "properties": {
+          "page[before]": {
+            "description": "Retrieve the items before the given cursor",
+            "type": "string",
+            "nullable": true
+          },
+          "page[after]": {
+            "description": "Retrieve the items after the given cursor",
+            "type": "string",
+            "nullable": true
+          },
+          "page[first]": {
+            "description": "Retrieve the first N items",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 1.0,
+            "nullable": true
+          },
+          "page[last]": {
+            "description": "Retrieve the last N items",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 1.0,
+            "nullable": true
+          },
+          "order": {
+            "description": "The ordering to use for the items",
+            "$ref": "#/components/schemas/UserOrdering",
+            "nullable": true
+          },
+          "count": {
+            "description": "Include the total number of items. Defaults to `true`.",
+            "$ref": "#/components/schemas/IncludeCount",
+            "nullable": true
+          }
+        }
+      },
+      "UserOrdering": {
+        "description": "Specify the ordering of the users\n\nPossible values are:\n\n- `default`: use the database default ordering - `username`: sort by username, case insensitive - `created_at`: sort by creation date",
+        "type": "string",
+        "enum": [
+          "default",
+          "username",
+          "created_at"
+        ]
       },
       "UserFilter": {
         "type": "object",

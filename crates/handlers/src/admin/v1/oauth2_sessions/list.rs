@@ -190,7 +190,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         .tag("oauth2-session")
         .response_with::<200, Json<PaginatedResponse<OAuth2Session>>, _>(|t| {
             let sessions = OAuth2Session::samples();
-            let pagination = mas_storage::Pagination::first(sessions.len());
+            let pagination = mas_storage::Pagination::<()>::first(sessions.len());
             let page = Page {
                 edges: sessions
                     .into_iter()
@@ -206,7 +206,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             t.description("Paginated response of OAuth 2.0 sessions")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     OAuth2Session::PATH,
                 ))
@@ -315,7 +315,7 @@ pub async fn handler(
                 .await?
                 .map(OAuth2Session::from);
             let count = repo.oauth2_session().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -323,7 +323,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(OAuth2Session::from);
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.oauth2_session().count(filter).await?;

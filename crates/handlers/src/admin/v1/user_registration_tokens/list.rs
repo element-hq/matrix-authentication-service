@@ -110,7 +110,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .tag("user-registration-token")
         .response_with::<200, Json<PaginatedResponse<UserRegistrationToken>>, _>(|t| {
             let tokens = UserRegistrationToken::samples();
-            let pagination = mas_storage::Pagination::first(tokens.len());
+            let pagination = mas_storage::Pagination::<()>::first(tokens.len());
             let page = Page {
                 edges: tokens
                     .into_iter()
@@ -126,7 +126,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Paginated response of registration tokens")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     UserRegistrationToken::PATH,
                 ))
@@ -170,7 +170,7 @@ pub async fn handler(
                 .await?
                 .map(|token| UserRegistrationToken::new(token, now));
             let count = repo.user_registration_token().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -178,7 +178,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(|token| UserRegistrationToken::new(token, now));
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.user_registration_token().count(filter).await?;

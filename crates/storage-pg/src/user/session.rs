@@ -65,8 +65,9 @@ struct SessionLookup {
     user_is_guest: bool,
 }
 
-impl Node<Ulid> for SessionLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for SessionLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.user_id.into()
     }
 }

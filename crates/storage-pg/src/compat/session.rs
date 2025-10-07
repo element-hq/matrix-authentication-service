@@ -60,8 +60,9 @@ struct CompatSessionLookup {
     last_active_ip: Option<IpAddr>,
 }
 
-impl Node<Ulid> for CompatSessionLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for CompatSessionLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.compat_session_id.into()
     }
 }
@@ -113,8 +114,9 @@ struct CompatSessionAndSsoLoginLookup {
     compat_sso_login_exchanged_at: Option<DateTime<Utc>>,
 }
 
-impl Node<Ulid> for CompatSessionAndSsoLoginLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for CompatSessionAndSsoLoginLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.compat_session_id.into()
     }
 }

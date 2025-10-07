@@ -55,8 +55,9 @@ struct CompatSsoLoginLookup {
     compat_session_id: Option<Uuid>,
 }
 
-impl Node<Ulid> for CompatSsoLoginLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for CompatSsoLoginLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.compat_sso_login_id.into()
     }
 }

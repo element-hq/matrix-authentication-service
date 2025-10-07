@@ -8,7 +8,7 @@
 
 use mas_storage::{
     Pagination,
-    pagination::{Ordering, PaginationDirection},
+    pagination::{InvalidCursor, Ordering, PaginationDirection},
 };
 use sea_query::{ColumnRef, Expr, IntoColumnRef, SimpleExpr};
 use ulid::Ulid;
@@ -21,6 +21,21 @@ pub struct UlidColumn {
 
 impl Ordering for UlidColumn {
     type Cursor = Ulid;
+
+    fn as_parameter(&self) -> Option<&'static str> {
+        None
+    }
+
+    fn parse_cursor(
+        &self,
+        cursor: &str,
+    ) -> Result<Self::Cursor, mas_storage::pagination::InvalidCursor> {
+        cursor.parse().map_err(|_| InvalidCursor)
+    }
+
+    fn serialize_cursor(&self, cursor: &Self::Cursor) -> String {
+        cursor.to_string()
+    }
 }
 
 pub trait PaginationExt {

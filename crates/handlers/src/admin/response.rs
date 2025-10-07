@@ -6,7 +6,10 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use mas_storage::{Pagination, pagination::Edge};
+use mas_storage::{
+    Pagination,
+    pagination::{Edge, Ordering},
+};
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
@@ -70,15 +73,17 @@ pub struct PaginatedResponse<T> {
     links: PaginationLinks,
 }
 
-fn url_with_pagination(base: &str, pagination: Pagination) -> String {
+fn url_with_pagination<O: Ordering>(base: &str, pagination: Pagination<O>) -> String {
     let (path, query) = base.split_once('?').unwrap_or((base, ""));
     let mut query = query.to_owned();
 
     if let Some(before) = pagination.before {
+        let before = pagination.ordering.serialize_cursor(&before);
         query = format!("{query}&page[before]={before}");
     }
 
     if let Some(after) = pagination.after {
+        let after = pagination.ordering.serialize_cursor(&after);
         query = format!("{query}&page[after]={after}");
     }
 
@@ -92,6 +97,10 @@ fn url_with_pagination(base: &str, pagination: Pagination) -> String {
         }
     }
 
+    if let Some(ordering) = pagination.ordering.as_parameter() {
+        query = format!("{query}&order={ordering}");
+    }
+
     // Remove the first '&'
     let query = query.trim_start_matches('&');
 
@@ -99,36 +108,44 @@ fn url_with_pagination(base: &str, pagination: Pagination) -> String {
 }
 
 impl<T: Resource> PaginatedResponse<T> {
-    pub fn for_page(
-        page: mas_storage::Page<T>,
-        current_pagination: Pagination,
+    pub fn for_page<O: Ordering>(
+        page: mas_storage::Page<T, O::Cursor>,
+        current_pagination: &Pagination<O>,
         count: Option<usize>,
         base: &str,
     ) -> Self {
         let links = PaginationLinks {
-            self_: url_with_pagination(base, current_pagination),
+            self_: url_with_pagination(base, current_pagination.clone()),
             first: Some(url_with_pagination(
                 base,
-                Pagination::first(current_pagination.count),
+                Pagination::first_with_ordering(
+                    current_pagination.count,
+                    current_pagination.ordering.clone(),
+                ),
             )),
             last: Some(url_with_pagination(
                 base,
-                Pagination::last(current_pagination.count),
+                Pagination::last_with_ordering(
+                    current_pagination.count,
+                    current_pagination.ordering.clone(),
+                ),
             )),
             next: page.has_next_page.then(|| {
                 url_with_pagination(
                     base,
                     current_pagination
+                        .clone()
                         .clear_before()
-                        .after(page.edges.last().unwrap().cursor),
+                        .after(page.edges.last().unwrap().cursor.clone()),
                 )
             }),
             prev: if page.has_previous_page {
                 Some(url_with_pagination(
                     base,
                     current_pagination
+                        .clone()
                         .clear_after()
-                        .before(page.edges.first().unwrap().cursor),
+                        .before(page.edges.first().unwrap().cursor.clone()),
                 ))
             } else {
                 None
@@ -138,7 +155,7 @@ impl<T: Resource> PaginatedResponse<T> {
         let data = page
             .edges
             .into_iter()
-            .map(SingleResource::from_edge)
+            .map(|edge| SingleResource::from_edge(&current_pagination.ordering, edge))
             .collect();
 
         Self {
@@ -221,8 +238,8 @@ impl<T: Resource> SingleResource<T> {
         }
     }
 
-    fn from_edge<C: ToString>(edge: Edge<T, C>) -> Self {
-        let cursor = edge.cursor.to_string();
+    fn from_edge<O: Ordering>(ordering: &O, edge: Edge<T, O::Cursor>) -> Self {
+        let cursor = ordering.serialize_cursor(&edge.cursor);
         let mut resource = Self::new(edge.node);
         resource.meta.page = Some(SingleResourceMetaPage { cursor });
         resource

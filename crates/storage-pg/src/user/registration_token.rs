@@ -54,8 +54,9 @@ struct UserRegistrationTokenLookup {
     revoked_at: Option<DateTime<Utc>>,
 }
 
-impl Node<Ulid> for UserRegistrationTokenLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for UserRegistrationTokenLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.user_registration_token_id.into()
     }
 }

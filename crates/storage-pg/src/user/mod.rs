@@ -9,9 +9,11 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, User};
-use mas_storage::user::{UserFilter, UserRepository};
+use mas_storage::user::{UserCursor, UserFilter, UserOrdering, UserRepository};
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, extension::postgres::PgExpr as _};
+use sea_query::{
+    Expr, Func, IntoColumnRef, PostgresQueryBuilder, Query, extension::postgres::PgExpr as _,
+};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -21,7 +23,7 @@ use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
     iden::Users,
-    pagination::{PaginationExt, QueryBuilderExt},
+    pagination::{QueryBuilderExt, SqlOrdering},
     tracing::ExecuteExt,
 };
 
@@ -61,9 +63,11 @@ mod priv_ {
     #![allow(missing_docs)]
 
     use chrono::{DateTime, Utc};
-    use mas_storage::pagination::Node;
+    use mas_storage::{
+        pagination::Node,
+        user::{UserCursor, UserOrdering},
+    };
     use sea_query::enum_def;
-    use ulid::Ulid;
     use uuid::Uuid;
 
     #[derive(Debug, Clone, sqlx::FromRow)]
@@ -78,9 +82,19 @@ mod priv_ {
         pub(super) is_guest: bool,
     }
 
-    impl Node<Ulid> for UserLookup {
-        fn cursor(&self) -> Ulid {
-            self.user_id.into()
+    impl Node for UserLookup {
+        type Ordering = UserOrdering;
+
+        fn cursor(&self, ordering: &Self::Ordering) -> UserCursor {
+            match ordering {
+                UserOrdering::Default => UserCursor::Id(self.user_id.into()),
+                UserOrdering::Username => {
+                    UserCursor::String(self.username.clone(), self.user_id.into())
+                }
+                UserOrdering::CreatedAt => {
+                    UserCursor::DateTime(self.created_at, self.user_id.into())
+                }
+            }
         }
     }
 }
@@ -131,6 +145,40 @@ impl Filter for UserFilter<'_> {
             .add_option(self.search().map(|search| {
                 Expr::col((Users::Table, Users::Username)).ilike(format!("%{search}%"))
             }))
+    }
+}
+
+impl SqlOrdering for UserOrdering {
+    fn columns(&self) -> Vec<sea_query::SimpleExpr> {
+        match self {
+            UserOrdering::Default => vec![(Users::Table, Users::UserId).into_column_ref().into()],
+            UserOrdering::Username => vec![
+                Func::lower((Users::Table, Users::Username).into_column_ref()).into(),
+                (Users::Table, Users::UserId).into_column_ref().into(),
+            ],
+            UserOrdering::CreatedAt => vec![
+                (Users::Table, Users::CreatedAt).into_column_ref().into(),
+                (Users::Table, Users::UserId).into_column_ref().into(),
+            ],
+        }
+    }
+
+    fn values(&self, cursor: Self::Cursor) -> Vec<sea_query::SimpleExpr> {
+        match (self, cursor) {
+            (UserOrdering::Default, UserCursor::Id(ulid)) => {
+                vec![Expr::value(Uuid::from(ulid))]
+            }
+            (UserOrdering::Username, UserCursor::String(username, ulid)) => {
+                vec![
+                    Func::lower(Expr::value(username)).into(),
+                    Expr::value(Uuid::from(ulid)),
+                ]
+            }
+            (UserOrdering::CreatedAt, UserCursor::DateTime(datetime, ulid)) => {
+                vec![Expr::value(datetime), Expr::value(Uuid::from(ulid))]
+            }
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -480,8 +528,8 @@ impl UserRepository for PgUserRepository<'_> {
     async fn list(
         &mut self,
         filter: UserFilter<'_>,
-        pagination: mas_storage::Pagination,
-    ) -> Result<mas_storage::Page<User>, Self::Error> {
+        pagination: mas_storage::Pagination<UserOrdering>,
+    ) -> Result<mas_storage::Page<User, UserCursor>, Self::Error> {
         let (sql, arguments) = Query::select()
             .expr_as(
                 Expr::col((Users::Table, Users::UserId)),
@@ -513,7 +561,7 @@ impl UserRepository for PgUserRepository<'_> {
             )
             .from(Users::Table)
             .apply_filter(filter)
-            .generate_pagination(pagination.for_ulid_column((Users::Table, Users::UserId)))
+            .generate_pagination(pagination.clone())
             .build_sqlx(PostgresQueryBuilder);
 
         let edges: Vec<UserLookup> = sqlx::query_as_with(&sql, arguments)

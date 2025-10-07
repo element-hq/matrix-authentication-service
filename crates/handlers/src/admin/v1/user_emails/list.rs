@@ -97,7 +97,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .tag("user-email")
         .response_with::<200, Json<PaginatedResponse<UserEmail>>, _>(|t| {
             let emails = UserEmail::samples();
-            let pagination = mas_storage::Pagination::first(emails.len());
+            let pagination = mas_storage::Pagination::<()>::first(emails.len());
             let page = Page {
                 edges: emails
                     .into_iter()
@@ -113,7 +113,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Paginated response of user emails")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     UserEmail::PATH,
                 ))
@@ -165,7 +165,7 @@ pub async fn handler(
                 .await?
                 .map(UserEmail::from);
             let count = repo.user_email().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -173,7 +173,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(UserEmail::from);
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.user_email().count(filter).await?;

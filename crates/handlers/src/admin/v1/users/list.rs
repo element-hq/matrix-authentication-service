@@ -13,7 +13,10 @@ use axum::{
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_storage::{Page, user::UserFilter};
+use mas_storage::{
+    Page,
+    user::{UserFilter, UserOrdering},
+};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -135,12 +138,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .tag("user")
         .response_with::<200, Json<PaginatedResponse<User>>, _>(|t| {
             let users = User::samples();
-            let pagination = mas_storage::Pagination::first(users.len());
+            let pagination = mas_storage::Pagination::<UserOrdering>::first(users.len());
             let page = Page {
                 edges: users
                     .into_iter()
                     .map(|node| mas_storage::pagination::Edge {
-                        cursor: node.id(),
+                        cursor: node.cursor(),
                         node,
                     })
                     .collect(),
@@ -151,7 +154,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Paginated response of users")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     User::PATH,
                 ))
@@ -161,7 +164,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 #[tracing::instrument(name = "handler.admin.v1.users.list", skip_all)]
 pub async fn handler(
     CallContext { mut repo, .. }: CallContext,
-    Pagination(pagination, include_count): Pagination,
+    Pagination(pagination, include_count): Pagination<UserOrdering>,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<User>>, RouteError> {
     let base = format!("{path}{params}", path = User::PATH);
@@ -194,13 +197,13 @@ pub async fn handler(
 
     let response = match include_count {
         IncludeCount::True => {
-            let page = repo.user().list(filter, pagination).await?;
+            let page = repo.user().list(filter, pagination.clone()).await?;
             let count = repo.user().count(filter).await?;
-            PaginatedResponse::for_page(page.map(User::from), pagination, Some(count), &base)
+            PaginatedResponse::for_page(page.map(User::from), &pagination, Some(count), &base)
         }
         IncludeCount::False => {
-            let page = repo.user().list(filter, pagination).await?;
-            PaginatedResponse::for_page(page.map(User::from), pagination, None, &base)
+            let page = repo.user().list(filter, pagination.clone()).await?;
+            PaginatedResponse::for_page(page.map(User::from), &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.user().count(filter).await?;

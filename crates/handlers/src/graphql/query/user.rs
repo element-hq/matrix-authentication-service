@@ -8,7 +8,10 @@ use async_graphql::{
     Context, Enum, ID, Object,
     connection::{Connection, Edge, OpaqueCursor, query},
 };
-use mas_storage::{Pagination, user::UserFilter};
+use mas_storage::{
+    Pagination,
+    user::{UserCursor, UserFilter},
+};
 
 use crate::graphql::{
     UserId,
@@ -106,12 +109,16 @@ impl UserQuery {
             first,
             last,
             async |after, before, first, last| {
+                // XXX
                 let after_id = after
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::User))
-                    .transpose()?;
+                    .transpose()?
+                    .map(UserCursor::Id);
+                // XXX
                 let before_id = before
                     .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::User))
-                    .transpose()?;
+                    .transpose()?
+                    .map(UserCursor::Id);
                 let pagination = Pagination::try_new(before_id, after_id, first, last)?;
 
                 // Build the query filter
@@ -144,8 +151,12 @@ impl UserQuery {
                     PreloadedTotalCount(count),
                 );
                 connection.edges.extend(page.edges.into_iter().map(|edge| {
+                    // XXX
+                    let UserCursor::Id(id) = edge.cursor else {
+                        todo!()
+                    };
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::User, edge.cursor)),
+                        OpaqueCursor(NodeCursor(NodeType::User, id)),
                         User(edge.node),
                     )
                 }));

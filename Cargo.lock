@@ -3648,6 +3648,7 @@ dependencies = [
  "oauth2-types",
  "opentelemetry",
  "rand_core 0.6.4",
+ "schemars 0.8.22",
  "serde",
  "serde_json",
  "thiserror 2.0.17",

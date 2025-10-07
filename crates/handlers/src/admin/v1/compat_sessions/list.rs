@@ -135,7 +135,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         .tag("compat-session")
         .response_with::<200, Json<PaginatedResponse<CompatSession>>, _>(|t| {
             let sessions = CompatSession::samples();
-            let pagination = mas_storage::Pagination::first(sessions.len());
+            let pagination = mas_storage::Pagination::<()>::first(sessions.len());
             let page = Page {
                 edges: sessions
                     .into_iter()
@@ -151,7 +151,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             t.description("Paginated response of compatibility sessions")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     CompatSession::PATH,
                 ))
@@ -221,7 +221,7 @@ pub async fn handler(
                 .await?
                 .map(CompatSession::from);
             let count = repo.compat_session().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -229,7 +229,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(CompatSession::from);
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.compat_session().count(filter).await?;

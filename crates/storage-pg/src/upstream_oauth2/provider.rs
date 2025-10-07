@@ -75,8 +75,9 @@ struct ProviderLookup {
     on_backchannel_logout: String,
 }
 
-impl Node<Ulid> for ProviderLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for ProviderLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.upstream_oauth_provider_id.into()
     }
 }

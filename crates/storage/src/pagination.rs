@@ -14,15 +14,45 @@ use ulid::Ulid;
 #[error("Either 'first' or 'last' must be specified")]
 pub struct InvalidPagination;
 
+/// An error returned when invalid cursor is provided
+#[derive(Debug, Error)]
+#[error("Invalid cursor")]
+pub struct InvalidCursor;
+
 /// Defines a pagination ordering criteria
-pub trait Ordering {
+pub trait Ordering: Clone {
     /// The type of cursor for this criteria
-    type Cursor;
+    type Cursor: Clone;
+
+    /// Returns the corresponding ordering parameter, if set
+    fn as_parameter(&self) -> Option<&'static str>;
+
+    /// Parse a cursor from a string
+    ///
+    /// # Errors
+    ///
+    /// Returns [`InvalidCursor`] if the cursor is invalid
+    fn parse_cursor(&self, cursor: &str) -> Result<Self::Cursor, InvalidCursor>;
+
+    /// Serialize a cursor to a string
+    fn serialize_cursor(&self, cursor: &Self::Cursor) -> String;
 }
 
 impl Ordering for () {
     // The default ordering orders by the object primary key, which is a ULID
     type Cursor = Ulid;
+
+    fn as_parameter(&self) -> Option<&'static str> {
+        None
+    }
+
+    fn parse_cursor(&self, cursor: &str) -> Result<Self::Cursor, InvalidCursor> {
+        cursor.parse().map_err(|_| InvalidCursor)
+    }
+
+    fn serialize_cursor(&self, cursor: &Self::Cursor) -> String {
+        cursor.to_string()
+    }
 }
 
 /// Pagination parameters
@@ -55,9 +85,12 @@ pub enum PaginationDirection {
 }
 
 /// A node in a page, with a cursor
-pub trait Node<C = Ulid> {
+pub trait Node {
+    /// The ordering type associated with this node type
+    type Ordering: Ordering;
+
     /// The cursor of that particular node
-    fn cursor(&self) -> C;
+    fn cursor(&self, ordering: &Self::Ordering) -> <Self::Ordering as Ordering>::Cursor;
 }
 
 impl<O: Ordering> Pagination<O> {
@@ -91,18 +124,38 @@ impl<O: Ordering> Pagination<O> {
         })
     }
 
+    /// Creates a [`Pagination`] which gets the first N items with the given
+    /// ordering
+    #[must_use]
+    pub fn first_with_ordering(first: usize, ordering: O) -> Self {
+        Self {
+            before: None,
+            after: None,
+            count: first,
+            direction: PaginationDirection::Forward,
+            ordering,
+        }
+    }
+
     /// Creates a [`Pagination`] which gets the first N items
     #[must_use]
     pub fn first(first: usize) -> Self
     where
         O: Default,
     {
+        Self::first_with_ordering(first, O::default())
+    }
+
+    /// Creates a [`Pagination`] which gets the last N items with the given
+    /// ordering
+    #[must_use]
+    pub fn last_with_ordering(last: usize, ordering: O) -> Self {
         Self {
             before: None,
             after: None,
-            count: first,
-            direction: PaginationDirection::Forward,
-            ordering: O::default(),
+            count: last,
+            direction: PaginationDirection::Backward,
+            ordering,
         }
     }
 
@@ -112,13 +165,7 @@ impl<O: Ordering> Pagination<O> {
     where
         O: Default,
     {
-        Self {
-            before: None,
-            after: None,
-            count: last,
-            direction: PaginationDirection::Backward,
-            ordering: O::default(),
-        }
+        Self::last_with_ordering(last, O::default())
     }
 
     /// Get items before the given cursor
@@ -151,7 +198,7 @@ impl<O: Ordering> Pagination<O> {
 
     /// Process a page returned by a paginated query
     #[must_use]
-    pub fn process<T: Node<O::Cursor>>(&self, mut nodes: Vec<T>) -> Page<T, O::Cursor> {
+    pub fn process<T: Node<Ordering = O>>(&self, mut nodes: Vec<T>) -> Page<T, O::Cursor> {
         let is_full = nodes.len() == (self.count + 1);
         if is_full {
             nodes.pop();
@@ -169,7 +216,7 @@ impl<O: Ordering> Pagination<O> {
         let edges = nodes
             .into_iter()
             .map(|node| Edge {
-                cursor: node.cursor(),
+                cursor: node.cursor(&self.ordering),
                 node,
             })
             .collect();

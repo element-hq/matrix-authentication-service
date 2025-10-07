@@ -62,8 +62,9 @@ struct OAuthSessionLookup {
     human_name: Option<String>,
 }
 
-impl Node<Ulid> for OAuthSessionLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for OAuthSessionLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.oauth2_session_id.into()
     }
 }

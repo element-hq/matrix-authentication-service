@@ -52,8 +52,9 @@ struct UserEmailLookup {
     created_at: DateTime<Utc>,
 }
 
-impl Node<Ulid> for UserEmailLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for UserEmailLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.user_email_id.into()
     }
 }

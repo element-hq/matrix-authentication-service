@@ -92,8 +92,9 @@ struct SessionLookup {
     unlinked_at: Option<DateTime<Utc>>,
 }
 
-impl Node<Ulid> for SessionLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for SessionLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.upstream_oauth_authorization_session_id.into()
     }
 }

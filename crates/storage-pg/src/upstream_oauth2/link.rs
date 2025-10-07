@@ -54,8 +54,9 @@ struct LinkLookup {
     created_at: DateTime<Utc>,
 }
 
-impl Node<Ulid> for LinkLookup {
-    fn cursor(&self) -> Ulid {
+impl Node for LinkLookup {
+    type Ordering = ();
+    fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
         self.upstream_oauth_link_id.into()
     }
 }

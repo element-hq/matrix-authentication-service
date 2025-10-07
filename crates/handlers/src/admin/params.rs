@@ -7,7 +7,7 @@
 // Generated code from schemars violates this rule
 #![allow(clippy::str_to_string)]
 
-use std::{borrow::Cow, num::NonZeroUsize};
+use std::{borrow::Cow, fmt::Debug, num::NonZeroUsize};
 
 use aide::OperationIo;
 use axum::{
@@ -20,9 +20,9 @@ use axum::{
 };
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
-use mas_storage::pagination::PaginationDirection;
+use mas_storage::pagination::{Ordering, PaginationDirection};
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, de::DeserializeOwned};
 use ulid::Ulid;
 
 use super::response::ErrorResponse;
@@ -92,17 +92,16 @@ impl IncludeCount {
     }
 }
 
-#[derive(Deserialize, JsonSchema, Clone, Copy)]
-struct PaginationParams {
-    /// Retrieve the items before the given ID
+#[derive(Deserialize, JsonSchema, Clone)]
+#[schemars(bound = "O: JsonSchema")]
+struct PaginationParams<O> {
+    /// Retrieve the items before the given cursor
     #[serde(rename = "page[before]")]
-    #[schemars(with = "Option<super::schema::Ulid>")]
-    before: Option<Ulid>,
+    before: Option<String>,
 
-    /// Retrieve the items after the given ID
+    /// Retrieve the items after the given cursor
     #[serde(rename = "page[after]")]
-    #[schemars(with = "Option<super::schema::Ulid>")]
-    after: Option<Ulid>,
+    after: Option<String>,
 
     /// Retrieve the first N items
     #[serde(rename = "page[first]")]
@@ -111,6 +110,10 @@ struct PaginationParams {
     /// Retrieve the last N items
     #[serde(rename = "page[last]")]
     last: Option<NonZeroUsize>,
+
+    /// The ordering to use for the items
+    #[serde(rename = "order")]
+    order: Option<O>,
 
     /// Include the total number of items. Defaults to `true`.
     #[serde(rename = "count")]
@@ -124,6 +127,12 @@ pub enum PaginationRejection {
 
     #[error("Cannot specify both `page[first]` and `page[last]` parameters")]
     FirstAndLast,
+
+    #[error("Invalid `after` cursor")]
+    InvalidAfter,
+
+    #[error("Invalid `before` cursor")]
+    InvalidBefore,
 }
 
 impl IntoResponse for PaginationRejection {
@@ -137,18 +146,25 @@ impl IntoResponse for PaginationRejection {
 }
 
 /// An extractor for pagination parameters in the query string
-#[derive(OperationIo, Debug, Clone, Copy)]
-#[aide(input_with = "Query<PaginationParams>")]
-pub struct Pagination(pub mas_storage::Pagination, pub IncludeCount);
+#[derive(OperationIo, Debug, Clone)]
+#[aide(input_with = "Query<PaginationParams<O>>")]
+pub struct Pagination<O = ()>(pub mas_storage::Pagination<O>, pub IncludeCount)
+where
+    O: Ordering + JsonSchema,
+    O::Cursor: Debug + Clone;
 
-impl<S: Send + Sync> FromRequestParts<S> for Pagination {
+impl<O, S: Send + Sync> FromRequestParts<S> for Pagination<O>
+where
+    O: Ordering + JsonSchema + DeserializeOwned + Default,
+    O::Cursor: Debug + Clone,
+{
     type Rejection = PaginationRejection;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         state: &S,
     ) -> Result<Self, Self::Rejection> {
-        let params = Query::<PaginationParams>::from_request_parts(parts, state).await?;
+        let Query(params) = Query::<PaginationParams<O>>::from_request_parts(parts, state).await?;
 
         // Figure out the direction and the count out of the first and last parameters
         let (direction, count) = match (params.first, params.last) {
@@ -162,13 +178,29 @@ impl<S: Send + Sync> FromRequestParts<S> for Pagination {
             (None, Some(last)) => (PaginationDirection::Backward, last.into()),
         };
 
+        let ordering = params.order.unwrap_or_default();
+
+        let before = params
+            .before
+            .as_deref()
+            .map(|s| ordering.parse_cursor(s))
+            .transpose()
+            .map_err(|_err| PaginationRejection::InvalidBefore)?;
+
+        let after = params
+            .after
+            .as_deref()
+            .map(|s| ordering.parse_cursor(s))
+            .transpose()
+            .map_err(|_err| PaginationRejection::InvalidAfter)?;
+
         Ok(Self(
             mas_storage::Pagination {
-                before: params.before,
-                after: params.after,
+                before,
+                after,
                 direction,
                 count,
-                ordering: (),
+                ordering,
             },
             params.include_count.unwrap_or_default(),
         ))

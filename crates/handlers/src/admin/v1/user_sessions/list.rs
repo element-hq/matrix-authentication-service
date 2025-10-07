@@ -121,7 +121,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
         .tag("user-session")
         .response_with::<200, Json<PaginatedResponse<UserSession>>, _>(|t| {
             let sessions = UserSession::samples();
-            let pagination = mas_storage::Pagination::first(sessions.len());
+            let pagination = mas_storage::Pagination::<()>::first(sessions.len());
             let page = Page {
                 edges: sessions
                     .into_iter()
@@ -137,7 +137,7 @@ Use the `filter[status]` parameter to filter the sessions by their status and `p
             t.description("Paginated response of user sessions")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     UserSession::PATH,
                 ))
@@ -190,7 +190,7 @@ pub async fn handler(
                 .await?
                 .map(UserSession::from);
             let count = repo.browser_session().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -198,7 +198,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(UserSession::from);
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.browser_session().count(filter).await?;

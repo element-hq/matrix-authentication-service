@@ -80,8 +80,9 @@ mod priv_ {
         pub(super) last_active_ip: Option<IpAddr>,
     }
 
-    impl Node<Ulid> for AppSessionLookup {
-        fn cursor(&self) -> Ulid {
+    impl Node for AppSessionLookup {
+        type Ordering = ();
+        fn cursor(&self, _ordering: &Self::Ordering) -> Ulid {
             self.cursor.into()
         }
     }

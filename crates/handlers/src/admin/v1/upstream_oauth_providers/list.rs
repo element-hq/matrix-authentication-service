@@ -82,7 +82,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .tag("upstream-oauth-provider")
         .response_with::<200, Json<PaginatedResponse<UpstreamOAuthProvider>>, _>(|t| {
             let providers = UpstreamOAuthProvider::samples();
-            let pagination = mas_storage::Pagination::first(providers.len());
+            let pagination = mas_storage::Pagination::<()>::first(providers.len());
             let page = Page {
                 edges: providers
                     .into_iter()
@@ -98,7 +98,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Paginated response of upstream OAuth 2.0 providers")
                 .example(PaginatedResponse::for_page(
                     page,
-                    pagination,
+                    &pagination,
                     Some(42),
                     UpstreamOAuthProvider::PATH,
                 ))
@@ -129,7 +129,7 @@ pub async fn handler(
                 .await?
                 .map(UpstreamOAuthProvider::from);
             let count = repo.upstream_oauth_provider().count(filter).await?;
-            PaginatedResponse::for_page(page, pagination, Some(count), &base)
+            PaginatedResponse::for_page(page, &pagination, Some(count), &base)
         }
         IncludeCount::False => {
             let page = repo
@@ -137,7 +137,7 @@ pub async fn handler(
                 .list(filter, pagination)
                 .await?
                 .map(UpstreamOAuthProvider::from);
-            PaginatedResponse::for_page(page, pagination, None, &base)
+            PaginatedResponse::for_page(page, &pagination, None, &base)
         }
         IncludeCount::Only => {
             let count = repo.upstream_oauth_provider().count(filter).await?;

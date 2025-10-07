@@ -7,11 +7,18 @@
 //! Repositories to interact with entities related to user accounts
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, User};
 use rand_core::RngCore;
+use schemars::JsonSchema;
+use serde::Deserialize;
 use ulid::Ulid;
 
-use crate::{Page, Pagination, repository_impl};
+use crate::{
+    Page, Pagination,
+    pagination::{InvalidCursor, Ordering},
+    repository_impl,
+};
 
 mod email;
 mod password;
@@ -77,6 +84,83 @@ pub struct UserFilter<'a> {
     can_request_admin: Option<bool>,
     is_guest: Option<bool>,
     search: Option<&'a str>,
+}
+
+/// Specify the ordering of the users
+///
+/// Possible values are:
+///
+///  - `default`: use the database default ordering
+///  - `username`: sort by username, case insensitive
+///  - `created_at`: sort by creation date
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Deserialize, JsonSchema,
+)]
+#[serde(rename_all = "snake_case")]
+#[expect(missing_docs, reason = "Enum variants docs leads to a bad JSON schema")]
+pub enum UserOrdering {
+    #[default]
+    Default,
+    Username,
+    CreatedAt,
+}
+
+/// A cursor for the users paginated query
+#[derive(Debug, Clone)]
+pub enum UserCursor {
+    /// Cursor only has an ID
+    Id(Ulid),
+
+    /// Cursor has a timestamp and an ID
+    DateTime(DateTime<Utc>, Ulid),
+
+    /// Cursor has a username and an ID
+    String(String, Ulid),
+}
+
+impl Ordering for UserOrdering {
+    type Cursor = UserCursor;
+
+    fn as_parameter(&self) -> Option<&'static str> {
+        match self {
+            Self::Default => None,
+            Self::Username => Some("username"),
+            Self::CreatedAt => Some("created_at"),
+        }
+    }
+
+    fn parse_cursor(&self, cursor: &str) -> Result<Self::Cursor, crate::pagination::InvalidCursor> {
+        let cursor = match self {
+            Self::Default => {
+                let id = cursor.parse().map_err(|_| InvalidCursor)?;
+                UserCursor::Id(id)
+            }
+            Self::Username => {
+                let (username, id) = cursor.rsplit_once(':').ok_or(InvalidCursor)?;
+                let id = id.parse().map_err(|_| InvalidCursor)?;
+                UserCursor::String(username.to_owned(), id)
+            }
+            Self::CreatedAt => {
+                let (timestamp, id) = cursor.rsplit_once(':').ok_or(InvalidCursor)?;
+                let timestamp = timestamp.parse().map_err(|_| InvalidCursor)?;
+                let datetime = DateTime::from_timestamp_micros(timestamp).ok_or(InvalidCursor)?;
+                let id = id.parse().map_err(|_| InvalidCursor)?;
+                UserCursor::DateTime(datetime, id)
+            }
+        };
+
+        Ok(cursor)
+    }
+
+    fn serialize_cursor(&self, cursor: &Self::Cursor) -> String {
+        match cursor {
+            UserCursor::Id(id) => id.to_string(),
+            UserCursor::DateTime(datetime, id) => {
+                format!("{timestamp}:{id}", timestamp = datetime.timestamp_micros())
+            }
+            UserCursor::String(username, id) => format!("{username}:{id}"),
+        }
+    }
 }
 
 impl<'a> UserFilter<'a> {
@@ -325,8 +409,8 @@ pub trait UserRepository: Send + Sync {
     async fn list(
         &mut self,
         filter: UserFilter<'_>,
-        pagination: Pagination,
-    ) -> Result<Page<User>, Self::Error>;
+        pagination: Pagination<UserOrdering>,
+    ) -> Result<Page<User, UserCursor>, Self::Error>;
 
     /// Count the [`User`] with the given filter
     ///
@@ -375,8 +459,8 @@ repository_impl!(UserRepository:
     async fn list(
         &mut self,
         filter: UserFilter<'_>,
-        pagination: Pagination,
-    ) -> Result<Page<User>, Self::Error>;
+        pagination: Pagination<UserOrdering>,
+    ) -> Result<Page<User, UserCursor>, Self::Error>;
     async fn count(&mut self, filter: UserFilter<'_>) -> Result<usize, Self::Error>;
     async fn acquire_lock_for_sync(&mut self, user: &User) -> Result<(), Self::Error>;
 );

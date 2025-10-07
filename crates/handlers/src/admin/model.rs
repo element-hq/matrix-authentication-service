@@ -8,6 +8,7 @@ use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
 use mas_data_model::Device;
+use mas_storage::user::UserCursor;
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
@@ -89,6 +90,10 @@ impl User {
                 legacy_guest: true,
             },
         ]
+    }
+
+    pub fn cursor(&self) -> UserCursor {
+        UserCursor::Id(self.id)
     }
 }
 
