@@ -64,9 +64,6 @@ Please see LICENSE in the repository root for full details.
       {{ button.button(text=_("action.continue")) }}
     </form>
 
-
-    <!--
-    :tchap:
     <div class="flex gap-1 justify-center items-center">
       <p class="cpd-text-secondary cpd-text-body-md-regular">
         {{ _("mas.not_you", username=current_session.user.username) }}
@@ -74,7 +71,7 @@ Please see LICENSE in the repository root for full details.
 
       {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
     </div>
-
+<!-- :tchap:
     {{ back_to_client.link(
       text=_("action.cancel"),
       kind="tertiary",
@@ -82,7 +79,6 @@ Please see LICENSE in the repository root for full details.
       mode=grant.response_mode,
       params=dict(error="access_denied", state=grant.state)
     ) }}
-    :tchap:
-    -->
+  -->
   </section>
 {% endblock content %}
