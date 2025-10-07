@@ -10,7 +10,7 @@ use oauth2_types::scope::Scope;
 use serde::Serialize;
 use ulid::Ulid;
 
-use crate::InvalidTransitionError;
+use crate::{Client, InvalidTransitionError, User};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub enum SessionState {
@@ -74,16 +74,37 @@ impl SessionState {
 pub struct PersonalSession {
     pub id: Ulid,
     pub state: SessionState,
-    pub owner_user_id: Ulid,
+    pub owner: PersonalSessionOwner,
     pub actor_user_id: Ulid,
     pub human_name: String,
-    /// The scope for the session, identical to OAuth2 sessions.
+    /// The scope for the session, identical to OAuth 2 sessions.
     /// May or may not include a device scope
     /// (personal sessions can be deviceless).
     pub scope: Scope,
     pub created_at: DateTime<Utc>,
     pub last_active_at: Option<DateTime<Utc>>,
     pub last_active_ip: Option<IpAddr>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
+pub enum PersonalSessionOwner {
+    /// The personal session is owned by the user with the given `user_id`.
+    User(Ulid),
+    /// The personal session is owned by the OAuth 2 Client with the given
+    /// `oauth2_client_id`.
+    OAuth2Client(Ulid),
+}
+
+impl<'a> From<&'a User> for PersonalSessionOwner {
+    fn from(value: &'a User) -> Self {
+        PersonalSessionOwner::User(value.id)
+    }
+}
+
+impl<'a> From<&'a Client> for PersonalSessionOwner {
+    fn from(value: &'a Client) -> Self {
+        PersonalSessionOwner::OAuth2Client(value.id)
+    }
 }
 
 impl std::ops::Deref for PersonalSession {

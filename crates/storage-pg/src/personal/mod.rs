@@ -15,7 +15,9 @@ pub use session::PgPersonalSessionRepository;
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{Clock, Device, clock::MockClock};
+    use mas_data_model::{
+        Clock, Device, clock::MockClock, personal::session::PersonalSessionOwner,
+    };
     use mas_storage::{
         Pagination, RepositoryAccess,
         personal::{
@@ -84,14 +86,14 @@ mod tests {
             .add(
                 &mut rng,
                 &clock,
-                &admin_user,
+                (&admin_user).into(),
                 &bot_user,
                 "Test Personal Session".to_owned(),
                 scope.clone(),
             )
             .await
             .unwrap();
-        assert_eq!(session.owner_user_id, admin_user.id);
+        assert_eq!(session.owner, PersonalSessionOwner::User(admin_user.id));
         assert_eq!(session.actor_user_id, bot_user.id);
         assert!(session.is_valid());
         assert!(!session.is_revoked());
@@ -128,7 +130,10 @@ mod tests {
             .unwrap()
             .expect("personal session not found");
         assert_eq!(session_lookup.id, session.id);
-        assert_eq!(session_lookup.owner_user_id, admin_user.id);
+        assert_eq!(
+            session_lookup.owner,
+            PersonalSessionOwner::User(admin_user.id)
+        );
         assert_eq!(session_lookup.actor_user_id, bot_user.id);
         assert_eq!(session_lookup.scope, scope);
         assert!(session_lookup.is_valid());
@@ -207,7 +212,7 @@ mod tests {
             .add(
                 &mut rng,
                 &clock,
-                &admin_user,
+                (&admin_user).into(),
                 &bot_user,
                 "Test Personal Session".to_owned(),
                 scope,

@@ -5,7 +5,10 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, Device, User, personal::session::PersonalSession};
+use mas_data_model::{
+    Client, Clock, Device, User,
+    personal::session::{PersonalSession, PersonalSessionOwner},
+};
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -55,7 +58,7 @@ pub trait PersonalSessionRepository: Send + Sync {
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        owner_user: &User,
+        owner: PersonalSessionOwner,
         actor_user: &User,
         human_name: String,
         scope: Scope,
@@ -115,7 +118,7 @@ repository_impl!(PersonalSessionRepository:
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        owner_user: &User,
+        owner: PersonalSessionOwner,
         actor_user: &User,
         human_name: String,
         scope: Scope,
@@ -140,6 +143,7 @@ repository_impl!(PersonalSessionRepository:
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct PersonalSessionFilter<'a> {
     owner_user: Option<&'a User>,
+    owner_oauth2_client: Option<&'a Client>,
     actor_user: Option<&'a User>,
     device: Option<&'a Device>,
     state: Option<PersonalSessionState>,
@@ -170,6 +174,21 @@ impl<'a> PersonalSessionFilter<'a> {
     #[must_use]
     pub fn for_owner_user(mut self, user: &'a User) -> Self {
         self.owner_user = Some(user);
+        self
+    }
+
+    /// Get the owner user filter
+    ///
+    /// Returns [`None`] if no user filter was set
+    #[must_use]
+    pub fn owner_oauth2_client(&self) -> Option<&'a Client> {
+        self.owner_oauth2_client
+    }
+
+    /// List sessions owned by a specific user
+    #[must_use]
+    pub fn for_owner_oauth2_client(mut self, client: &'a Client) -> Self {
+        self.owner_oauth2_client = Some(client);
         self
     }
 

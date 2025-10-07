@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Clock, User,
-    personal::session::{PersonalSession, SessionState},
+    personal::session::{PersonalSession, PersonalSessionOwner, SessionState},
 };
 use mas_storage::{
     Page, Pagination,
@@ -54,7 +54,8 @@ impl<'c> PgPersonalSessionRepository<'c> {
 #[enum_def]
 struct PersonalSessionLookup {
     personal_session_id: Uuid,
-    owner_user_id: Uuid,
+    owner_user_id: Option<Uuid>,
+    owner_oauth2_client_id: Option<Uuid>,
     actor_user_id: Uuid,
     human_name: String,
     scope_list: Vec<String>,
@@ -88,10 +89,23 @@ impl TryFrom<PersonalSessionLookup> for PersonalSession {
             Some(revoked_at) => SessionState::Revoked { revoked_at },
         };
 
+        let owner = match (value.owner_user_id, value.owner_oauth2_client_id) {
+            (Some(owner_user_id), None) => PersonalSessionOwner::User(Ulid::from(owner_user_id)),
+            (None, Some(owner_oauth2_client_id)) => {
+                PersonalSessionOwner::OAuth2Client(Ulid::from(owner_oauth2_client_id))
+            }
+            _ => {
+                // should be impossible (CHECK constraint in Postgres prevents it)
+                return Err(DatabaseInconsistencyError::on("personal_sessions")
+                    .column("owner_user_id, owner_oauth2_client_id")
+                    .row(id));
+            }
+        };
+
         Ok(PersonalSession {
             id,
             state,
-            owner_user_id: Ulid::from(value.owner_user_id),
+            owner,
             actor_user_id: Ulid::from(value.actor_user_id),
             human_name: value.human_name,
             scope,
@@ -121,6 +135,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             r#"
                 SELECT personal_session_id
                      , owner_user_id
+                     , owner_oauth2_client_id
                      , actor_user_id
                      , scope_list
                      , created_at
@@ -157,7 +172,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
-        owner_user: &User,
+        owner: PersonalSessionOwner,
         actor_user: &User,
         human_name: String,
         scope: Scope,
@@ -168,20 +183,27 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
 
         let scope_list: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();
 
+        let (owner_user_id, owner_oauth2_client_id) = match owner {
+            PersonalSessionOwner::User(ulid) => (Some(Uuid::from(ulid)), None),
+            PersonalSessionOwner::OAuth2Client(ulid) => (None, Some(Uuid::from(ulid))),
+        };
+
         sqlx::query!(
             r#"
                 INSERT INTO personal_sessions
                     ( personal_session_id
                     , owner_user_id
+                    , owner_oauth2_client_id
                     , actor_user_id
                     , human_name
                     , scope_list
                     , created_at
                     )
-                VALUES ($1, $2, $3, $4, $5, $6)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             Uuid::from(id),
-            Uuid::from(owner_user.id),
+            owner_user_id,
+            owner_oauth2_client_id,
             Uuid::from(actor_user.id),
             &human_name,
             &scope_list,
@@ -194,7 +216,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         Ok(PersonalSession {
             id,
             state: SessionState::Valid,
-            owner_user_id: owner_user.id,
+            owner,
             actor_user_id: actor_user.id,
             human_name,
             scope,
@@ -261,6 +283,13 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::OwnerUserId)),
                 PersonalSessionLookupIden::OwnerUserId,
+            )
+            .expr_as(
+                Expr::col((
+                    PersonalSessions::Table,
+                    PersonalSessions::OwnerOAuth2ClientId,
+                )),
+                PersonalSessionLookupIden::OwnerOauth2ClientId,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::ActorUserId)),
@@ -340,6 +369,13 @@ impl Filter for PersonalSessionFilter<'_> {
             .add_option(self.owner_user().map(|user| {
                 Expr::col((PersonalSessions::Table, PersonalSessions::OwnerUserId))
                     .eq(Uuid::from(user.id))
+            }))
+            .add_option(self.owner_oauth2_client().map(|client| {
+                Expr::col((
+                    PersonalSessions::Table,
+                    PersonalSessions::OwnerOAuth2ClientId,
+                ))
+                .eq(Uuid::from(client.id))
             }))
             .add_option(self.actor_user().map(|user| {
                 Expr::col((PersonalSessions::Table, PersonalSessions::ActorUserId))

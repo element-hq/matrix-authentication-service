@@ -114,6 +114,8 @@ pub enum PersonalSessions {
     Table,
     PersonalSessionId,
     OwnerUserId,
+    #[iden = "owner_oauth2_client_id"]
+    OwnerOAuth2ClientId,
     ActorUserId,
     HumanName,
     ScopeList,

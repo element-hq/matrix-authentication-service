@@ -7,7 +7,16 @@
 -- themselves, allowing tokens to be regenerated whilst still retaining a persistent identifier for them.
 CREATE TABLE personal_sessions (
     personal_session_id UUID NOT NULL PRIMARY KEY,
-    owner_user_id UUID NOT NULL REFERENCES users(user_id),
+
+    -- If this session is owned by a user, the ID of the user.
+    -- Null otherwise.
+    owner_user_id UUID REFERENCES users(user_id),
+
+    -- If this session is owned by an OAuth 2 Client (via Client Credentials grant),
+    -- the ID of the owning client.
+    -- Null otherwise.
+    owner_oauth2_client_id UUID REFERENCES oauth2_clients(oauth2_client_id),
+
     actor_user_id UUID NOT NULL REFERENCES users(user_id),
     -- A human-readable label, intended to describe what the session is for.
     human_name TEXT NOT NULL,
@@ -18,13 +27,16 @@ CREATE TABLE personal_sessions (
     -- If set, none of the tokens will be valid anymore.
     revoked_at TIMESTAMP WITH TIME ZONE,
     last_active_at TIMESTAMP WITH TIME ZONE,
-    last_active_ip INET
+    last_active_ip INET,
+
+    -- There must be exactly one owner.
+    CONSTRAINT personal_sessions_exactly_one_owner CHECK ((owner_user_id IS NULL) <> (owner_oauth2_client_id IS NULL))
 );
 
 -- Individual tokens.
 CREATE TABLE personal_access_tokens (
-    -- The family this access token belongs to.
     personal_access_token_id UUID NOT NULL PRIMARY KEY,
+    -- The session this access token belongs to.
     personal_session_id UUID NOT NULL REFERENCES personal_sessions(personal_session_id),
     -- SHA256 of the access token.
     -- This is a lightweight measure to stop a database backup (or other
@@ -51,5 +63,6 @@ CREATE UNIQUE INDEX ON personal_access_tokens (personal_session_id) WHERE revoke
 
 -- Add indices to satisfy foreign key backward checks
 -- (and likely filter queries)
-CREATE INDEX ON personal_sessions (owner_user_id);
+CREATE INDEX ON personal_sessions (owner_user_id) WHERE owner_user_id IS NOT NULL;
+CREATE INDEX ON personal_sessions (owner_oauth2_client_id) WHERE owner_oauth2_client_id IS NOT NULL;
 CREATE INDEX ON personal_sessions (actor_user_id);
