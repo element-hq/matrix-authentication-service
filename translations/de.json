@@ -40,44 +40,44 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gelöscht. Wenn dies nicht erwartet wird, wenden Sie sich an Ihren Serveradministrator.",
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde entfernt. Wenn du dies nicht erwartet hast, wende dich an den Server Admin",
         "heading": "Konto gelöscht"
       },
       "locked": {
-        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gesperrt. Wenn dies nicht erwartet wird, wenden Sie sich an Ihren Serveradministrator.",
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gesperrt. Wenn du dies nicht erwartet hast, wende dich an den Server Admin.",
         "heading": "Konto gesperrt"
       },
       "logged_out": {
-        "description": "Diese Sitzung wurde beendet. Melden Sie sich ab, um sich wieder anmelden zu können.",
+        "description": "Diese Sitzung wurde beendet. Melde dich ab, um dich wieder anmelden zu können.",
         "heading": "Sitzung beendet"
       }
     },
     "add_email": {
-      "description": "Geben Sie eine E-Mail-Adresse ein, um Ihr Konto wiederherzustellen, falls Sie den Zugriff darauf verlieren.",
+      "description": "Solltest du den Zugriff auf dein Konto verloren haben, gib bitte deine Email-Adresse ein, um das Konto wiederherzustellen.",
       "heading": "E-Mail-Adresse hinzufügen"
     },
     "back_to_homepage": "Zurück",
     "captcha": {
-      "noscript": "Dieses Formular ist durch ein CAPTCHA geschützt und erfordert die Aktivierung von JavaScript, um es abschicken zu können. Bitte aktivieren Sie JavaScript in Ihrem Browser und laden Sie diese Seite neu."
+      "noscript": "Dieses Formular ist durch ein CAPTCHA geschützt und erfordert die Aktivierung von JavaScript, um es abschicken zu können. Bitte aktiviere JavaScript im Browser und lade diese Seite neu."
     },
     "change_password": {
       "change": "Passwort ändern",
       "confirm": "Passwort wiederholen",
       "current": "Aktuelles Passwort",
-      "description": "Hiermit wird das Passwort für Ihr Konto geändert.",
+      "description": "Damit änderst du das Passwort für dein Konto.",
       "heading": "Mein Passwort ändern",
       "new": "Neues Passwort"
     },
     "choose_display_name": {
-      "description": "Das ist der Name, den andere Leute sehen werden. Sie können dies jederzeit ändern.",
-      "headline": "Wählen Sie Ihren Anzeigenamen"
+      "description": "Das ist der Name, den andere Leute sehen werden. Du kannst ihn jederzeit ändern.",
+      "headline": "Wähle deinen Anzeigenamen"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf Ihr Konto zugreifen.",
-      "heading": "Zugriff auf Ihr Konto zulassen?",
-      "make_sure_you_trust": "Stellen Sie sicher, dass Sie <span>%(client_name)s</span> vertrauen.",
+      "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf dein Konto zugreifen.",
+      "heading": "Zugriff auf dein Konto zulassen?",
+      "make_sure_you_trust": "Stelle sicher, dass du <span>%(client_name)s</span> vertraust.",
       "this_will_allow": "Dies wird <span>%(client_name)s</span> ermöglichen:",
-      "you_may_be_sharing": "Möglicherweise teilen Sie vertrauliche Informationen mit dieser Webseite oder App."
+      "you_may_be_sharing": "Du gibst vielleicht sensible Infos an diese Website oder App weiter."
     },
     "device_card": {
       "access_requested": "Zugriff beantragt",
@@ -87,16 +87,16 @@
     },
     "device_code_link": {
       "description": "Ein Gerät verknüpfen",
-      "headline": "Geben Sie den auf Ihrem Gerät angezeigten Code ein"
+      "headline": "Gib den Code ein, der auf deinem Gerät angezeigt wird."
     },
     "device_consent": {
-      "another_device_access": "Ein anderes Gerät möchte auf Ihr Konto zugreifen.",
+      "another_device_access": "Ein anderes Gerät möchte auf dein Konto zugreifen.",
       "denied": {
-        "description": "Sie haben den Zugriff auf %(client_name)s verweigert. Sie können dieses Fenster schließen.",
+        "description": "Du hast den Zugriff auf %(client_name)s abgelehnt. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff verweigert"
       },
       "granted": {
-        "description": "Sie haben Zugriff auf %(client_name)s gewährt. Sie können dieses Fenster schließen.",
+        "description": "Du hast %(client_name)s Zugriff gegeben. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff gewährt"
       }
     },
@@ -106,28 +106,28 @@
       "unknown_device": "Unbekanntes Gerät"
     },
     "email_in_use": {
-      "description": "Wenn Sie Ihre Kontoinformationen vergessen haben, können Sie Ihr Konto wiederherstellen. Sie können auch von vorne beginnen und eine andere E-Mail-Adresse verwenden.",
+      "description": "Wenn du deine Kontodaten vergessen hast, kannst du dein Konto wiederherstellen. Du kannst auch neu anfangen und eine andere E-Mail-Adresse verwenden.",
       "title": "Die E-Mail-Adresse <span> %(email)s </span> wird bereits verwendet"
     },
     "emails": {
       "greeting": "Hallo %(username)s,",
       "recovery": {
-        "click_button": "Klicken Sie auf die Schaltfläche unten, um ein neues Passwort zu erstellen:",
-        "copy_link": "Kopieren Sie den folgenden Link und fügen Sie ihn in einen Browser ein, um ein neues Passwort zu erstellen:",
+        "click_button": "Klick unten, um ein neues Passwort zu erstellen:",
+        "copy_link": "Kopier den folgenden Link und füge ihn in deinen Browser ein, um ein neues Passwort zu erstellen:",
         "create_new_password": "Neues Passwort erstellen",
         "fallback": "Funktioniert der Button bei Ihnen nicht?",
-        "headline": "Sie haben ein Zurücksetzen des Passworts für Ihr %(server_name)s Konto angefordert.",
-        "subject": "Setzen Sie Ihr Kontokennwort zurück (%(mxid)s )",
-        "you_can_ignore": "Wenn Sie nicht nach einem neuen Passwort gefragt haben, können Sie diese E-Mail ignorieren. Ihr aktuelles Passwort wird weiterhin funktionieren."
+        "headline": "Du hast das Zurücksetzen des Passworts für dein Konto bei %(server_name)s angefordert.",
+        "subject": "Setze dein Konto Passwort zurück (%(mxid)s)",
+        "you_can_ignore": "Wenn du kein neues Passwort angefordert hast, kannst du diese E-Mail einfach ignorieren. Dein aktuelles Passwort funktioniert weiterhin."
       },
       "verify": {
-        "body_html": "Ihr Code zur Bestätigung dieser E-Mail-Adresse lautet: <strong>%(code)s</strong>",
-        "body_text": "Ihr Code zur Bestätigung dieser E-Mail-Adresse lautet: %(code)s",
-        "subject": "Ihr E-Mail-Bestätigungscode lautet: %(code)s"
+        "body_html": "Dein Code zur Bestätigung dieser E-Mail-Adresse lautet: <strong>%(code)s</strong>",
+        "body_text": "Dein Code zur Bestätigung dieser E-Mail-Adresse lautet: %(code)s",
+        "subject": "Dein E-Mail-Bestätigungscode lautet: %(code)s"
       }
     },
     "errors": {
-      "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuchen Sie es erneut",
+      "captcha": "Die CAPTCHA-Überprüfung hat nicht geklappt, versuch's nochmal.",
       "denied_policy": "Abgelehnt durch Richtlinie: %(policy)s",
       "email_banned": "E-Mail ist durch die Serverrichtlinie gesperrt",
       "email_domain_banned": "Die E-Mail-Domain ist durch die Serverrichtlinie gesperrt",
@@ -136,24 +136,24 @@
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "invalid_credentials": "Ungültige Anmeldeinformationen",
       "password_mismatch": "Die Passwortfelder stimmen nicht überein",
-      "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
+      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Warte bitte ein paar Minuten und versuch's nochmal.",
       "username_all_numeric": "Der Benutzername darf nicht nur aus Zahlen bestehen",
       "username_banned": "Der Benutzername ist durch die Serverrichtlinie gesperrt",
-      "username_invalid_chars": "Der Benutzername enthält ungültige Zeichen. Verwenden Sie nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche.",
+      "username_invalid_chars": "Der Nutzername enthält ungültige Zeichen. Verwende nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche.",
       "username_not_allowed": "Der Benutzername ist gemäß der Serverrichtlinie nicht zulässig",
       "username_taken": "Dieser Benutzername ist bereits vergeben",
       "username_too_long": "Der Benutzername ist zu lang",
       "username_too_short": "Der Benutzername ist zu kurz"
     },
     "login": {
-      "call_to_register": "Sie haben noch kein Konto?",
+      "call_to_register": "Du hast noch kein Konto?",
       "continue_with_provider": "Weiter mit %(provider)s",
-      "description": "Bitte melden Sie sich an, um fortzufahren:",
+      "description": "Bitte melde dich an, um fortzufahren:",
       "forgot_password": "Passwort vergessen?",
       "headline": "Anmelden",
       "link": {
-        "description": "Ihr <span class=\"break-keep text-links\">%(provider)s</span> Konto verknüpfen",
-        "headline": "Melden Sie sich zum Verbinden an"
+        "description": "Dein <span class=\"break-keep text-links\">%(provider)s</span> Konto verknüpfen",
+        "headline": "Melde dich zum Verbinden an"
       },
       "no_login_methods": "Keine Anmeldemethoden verfügbar.",
       "separator": "Oder",
@@ -165,7 +165,7 @@
       "signed_in_as": "Angemeldet als <span class=\"font-semibold\">%(username)s</span>."
     },
     "not_found": {
-      "description": "Die Seite, nach der Sie gesucht haben, existiert nicht oder wurde verschoben",
+      "description": "Die Seite, die du gesucht hast, gibt's nicht oder wurde verschoben.",
       "heading": "Seite nicht gefunden"
     },
     "not_you": "Nicht %(username)s?",
@@ -177,41 +177,41 @@
     },
     "recovery": {
       "consumed": {
-        "description": "Um ein neues Passwort zu erstellen, beginnen Sie von vorne und wählen Sie „Passwort vergessen“.",
-        "heading": "Der Link zum Zurücksetzen Ihres Passworts wurde bereits verwendet"
+        "description": "Um ein neues Passwort zu erstellen, fang einfach von vorne an und wähle „Passwort vergessen”.",
+        "heading": "Der Link zum Zurücksetzen deines Passworts wurde bereits verwendet"
       },
       "disabled": {
-        "description": "Wenn Sie Ihre Zugangsdaten verloren haben, wenden Sie sich bitte an den Administrator, um Ihr Konto wiederherzustellen.",
+        "description": "Wenn du deine Konto Daten verloren hast, wende dich bitte an den Admin, um das Konto wiederherzustellen.",
         "heading": "Die Kontowiederherstellung ist deaktiviert"
       },
       "expired": {
-        "description": "Fordern Sie eine neue E-Mail an, die an folgende Adresse gesendet wird: <span>%(email)s</span>.",
-        "heading": "Der Link zum Zurücksetzen Ihres Passworts ist abgelaufen",
+        "description": "Bitte schick eine neue E-Mail an: <span>%(email)s</span>.",
+        "heading": "Der Link zum Zurücksetzen deines Passworts ist abgelaufen",
         "resend_email": "E-Mail erneut senden"
       },
       "finish": {
         "confirm": "Neues Passwort erneut eingeben",
-        "description": "Wählen Sie ein neues Passwort für Ihren Account.",
-        "heading": "Ihr Passwort zurücksetzen",
+        "description": "Such dir ein neues Passwort für dein Konto aus.",
+        "heading": "Setze dein Passwort zurück",
         "new": "Neues Passwort",
         "save_and_continue": "Speichern und fortfahren"
       },
       "progress": {
-        "change_email": "Versuchen Sie es mit einer anderen E-Mail",
-        "description": "Wir haben eine E-Mail mit einem Link zum Zurücksetzen Ihres Passworts gesendet, wenn es ein Konto mit <span>%(email)s</span> gibt.",
-        "heading": "Überprüfen Sie Ihre E-Mails",
+        "change_email": "Probier's mal mit einer anderen E-Mail-Adresse",
+        "description": "Eine E-Mail mit einem Link zum Zurücksetzen deines Passworts wurde versendet, wenn es ein Konto mit <span>%(email)s</span> gibt.",
+        "heading": "Überprüfe deine E-Mails!",
         "resend_email": "E-Mail erneut senden"
       },
       "start": {
-        "description": "Es wird eine E-Mail mit einem Link zum Zurücksetzen Ihres Passworts gesendet.",
-        "heading": "Geben Sie Ihre E-Mail-Adresse ein, um fortzufahren"
+        "description": "Es wird eine E-Mail mit einem Link zum Zurücksetzen deines Passworts gesendet.",
+        "heading": "Gib deine E-Mail-Adresse ein, um fortzufahren"
       }
     },
     "register": {
-      "call_to_login": "Sie haben bereits ein Konto?",
+      "call_to_login": "Du hast bereits ein Konto?",
       "continue_with_email": "Mit E-Mail-Adresse fortfahren",
       "create_account": {
-        "description": "Wählen Sie einen Benutzernamen, um fortzufahren.",
+        "description": "Wähle einen Nutzernamen, um fortzufahren.",
         "heading": "Konto erstellen"
       },
       "sign_in_instead": "Stattdessen anmelden",
@@ -223,13 +223,13 @@
       "headline": "Registrierungstoken"
     },
     "scope": {
-      "edit_profile": "Ihr Profil und Ihre Kontaktdaten bearbeiten",
-      "manage_sessions": "Ihre Geräte und Sitzungen verwalten",
+      "edit_profile": "Bearbeite dein Profil und deine Kontaktdaten",
+      "manage_sessions": "Verwalte deine Geräte und Sitzungen",
       "mas_admin": "Beliebige Benutzer verwalten",
-      "send_messages": "Nachrichten in Ihrem Namen senden",
+      "send_messages": "Neue Nachrichten in deinem Namen senden",
       "synapse_admin": "Den Synapse-Homeserver verwalten",
-      "view_messages": "Ihre vorhandenen Nachrichten und Daten anzeigen",
-      "view_profile": "Ihre Profilinformationen und Kontaktdaten anzeigen"
+      "view_messages": "Zeig deine vorhandenen Nachrichten und Daten an",
+      "view_profile": "Deine Profilinfos und Kontaktdaten anzeigen"
     },
     "upstream_oauth2": {
       "link_mismatch": {
@@ -238,12 +238,12 @@
       "login_link": {
         "action": "Weiter",
         "description": "Für diesen Nutzernamen (%(username)s) gibt es schon ein Konto. Es wird mit diesem Upstream-Konto verknüpft.",
-        "heading": "Mit Ihrem bestehenden Konto verknüpfen"
+        "heading": "Verknüpfe mit deinem bestehenden Konto"
       },
       "register": {
         "choose_username": {
           "description": "Dies kann später nicht mehr geändert werden.",
-          "heading": "Wählen Sie Ihren Benutzernamen"
+          "heading": "Wähle einen Nutzernamen"
         },
         "create_account": "Neues Konto erstellen",
         "enforced_by_policy": "Erzwungen durch Server-Richtlinie",
@@ -251,15 +251,15 @@
         "forced_email": "Verwendet die folgende E-Mail-Adresse",
         "forced_localpart": "Verwendet den folgenden Benutzernamen",
         "import_data": {
-          "description": "Bestätigen Sie die Informationen, die mit Ihrem neuen %(server_name)s Konto verknüpft werden.",
-          "heading": "Ihre Daten importieren"
+          "description": "Bestätige die Informationen, die mit dem neuen %(server_name)s Konto verknüpft werden.",
+          "heading": "Deine Daten importieren"
         },
-        "imported_from_upstream": "Von Ihrem Konto importiert",
-        "imported_from_upstream_with_name": "Importiert von Ihrem%(human_name)s Konto",
+        "imported_from_upstream": "Aus deinem Upstream-Konto importiert",
+        "imported_from_upstream_with_name": "Importiert von deinem %(human_name)s -Konto",
         "link_existing": "Mit einem bestehenden Konto verknüpfen",
         "provider_name": "%(human_name)s Konto",
         "signup_with_upstream": {
-          "heading": "Setzen Sie die Anmeldung mit Ihrem %(human_name)s Konto fort."
+          "heading": "Setze die Anmeldung mit %(human_name)s Konto fort."
         },
         "suggested_display_name": "Anzeigenamen importieren",
         "suggested_email": "E-Mail-Adresse importieren",
@@ -267,14 +267,14 @@
       },
       "suggest_link": {
         "action": "Link",
-        "heading": "Mit Ihrem bestehenden Konto verknüpfen"
+        "heading": "Verknüpfe mit deinem bestehenden Konto"
       }
     },
     "verify_email": {
       "6_digit_code": "6-stelliger Code",
       "code": "Code",
-      "description": "Geben Sie den 6-stelligen Code ein, der an <em>%(email)s</em> gesendet wurde",
-      "headline": "Bestätigen Sie Ihre E-Mail-Adresse"
+      "description": "Gib den 6-stelligen Code ein, der an <em>%(email)s</em> gesendet wurde",
+      "headline": "Bestätige deine E-Mail"
     }
   }
 }
