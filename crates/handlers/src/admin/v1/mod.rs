@@ -59,12 +59,26 @@ where
             get_with(self::compat_sessions::get, self::compat_sessions::get_doc),
         )
         .api_route(
+            "/compat-sessions/{id}/finish",
+            post_with(
+                self::compat_sessions::finish,
+                self::compat_sessions::finish_doc,
+            ),
+        )
+        .api_route(
             "/oauth2-sessions",
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),
         )
         .api_route(
             "/oauth2-sessions/{id}",
             get_with(self::oauth2_sessions::get, self::oauth2_sessions::get_doc),
+        )
+        .api_route(
+            "/oauth2-sessions/{id}/finish",
+            post_with(
+                self::oauth2_sessions::finish,
+                self::oauth2_sessions::finish_doc,
+            ),
         )
         .api_route(
             "/policy-data",
@@ -135,6 +149,10 @@ where
         .api_route(
             "/user-sessions/{id}",
             get_with(self::user_sessions::get, self::user_sessions::get_doc),
+        )
+        .api_route(
+            "/user-sessions/{id}/finish",
+            post_with(self::user_sessions::finish, self::user_sessions::finish_doc),
         )
         .api_route(
             "/user-registration-tokens",

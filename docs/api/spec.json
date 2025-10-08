@@ -367,6 +367,98 @@
         }
       }
     },
+    "/api/admin/v1/compat-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "compat-session"
+        ],
+        "summary": "Finish a compatibility session",
+        "description": "Calling this endpoint will finish the compatibility session, preventing any further use. A job will be scheduled to sync the user's devices with the homeserver.",
+        "operationId": "finishCompatSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compatibility session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_CompatSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "compat-session",
+                    "id": "02081040G2081040G2081040G2",
+                    "attributes": {
+                      "user_id": "01040G2081040G2081040G2081",
+                      "device_id": "FFGGHHIIJJ",
+                      "user_session_id": "0J289144GJ289144GJ289144GJ",
+                      "redirect_uri": null,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "1.2.3.4",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "human_name": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Compatibility session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Compatibility session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Compatibility session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/oauth2-sessions": {
       "get": {
         "tags": [
@@ -703,6 +795,98 @@
                   "errors": [
                     {
                       "title": "OAuth 2.0 session ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/oauth2-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "oauth2-session"
+        ],
+        "summary": "Finish an OAuth 2.0 session",
+        "description": "Calling this endpoint will finish the OAuth 2.0 session, preventing any further use. If the session has a user associated with it, a job will be scheduled to sync the user's devices with the homeserver.",
+        "operationId": "finishOAuth2Session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth 2.0 session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_OAuth2Session"
+                },
+                "example": {
+                  "data": {
+                    "type": "oauth2-session",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "user_id": "040G2081040G2081040G208104",
+                      "user_session_id": "050M2GA1850M2GA1850M2GA185",
+                      "client_id": "060R30C1G60R30C1G60R30C1G6",
+                      "scope": "urn:matrix:client:api:*",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1",
+                      "human_name": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "OAuth 2.0 session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 session with ID 00000000000000000000000000 not found"
                     }
                   ]
                 }
@@ -2415,6 +2599,94 @@
                   "errors": [
                     {
                       "title": "User session ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/user-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "user-session"
+        ],
+        "summary": "Finish a user session",
+        "description": "Calling this endpoint will finish the user session, preventing any further use.",
+        "operationId": "finishUserSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "user_id": "040G2081040G2081040G208104",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 not found"
                     }
                   ]
                 }
