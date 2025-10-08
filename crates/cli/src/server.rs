@@ -143,7 +143,12 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
         propagator.extract_with_context(&context, &extractor)
     });
 
-    span.set_parent(parent_context);
+    if let Err(err) = span.set_parent(parent_context) {
+        tracing::error!(
+            error = &err as &dyn std::error::Error,
+            "Failed to set parent context on span"
+        );
+    }
 
     span
 }
