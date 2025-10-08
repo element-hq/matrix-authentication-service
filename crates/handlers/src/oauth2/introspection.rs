@@ -743,7 +743,9 @@ pub(crate) async fn post(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_data_model::{AccessToken, Clock, RefreshToken};
+    use mas_data_model::{
+        AccessToken, Clock, RefreshToken, TokenType, personal::session::PersonalSessionOwner,
+    };
     use mas_iana::oauth::OAuthTokenTypeHint;
     use mas_matrix::{HomeserverConnection, MockHomeserverConnection, ProvisionRequest};
     use mas_router::{OAuth2Introspection, OAuth2RegistrationEndpoint, SimpleRoute};
@@ -1175,5 +1177,126 @@ mod tests {
         response.assert_status(StatusCode::UNAUTHORIZED);
         let response: ClientError = response.json();
         assert_eq!(response.error, ClientErrorCode::AccessDenied);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_introspect_personal_access_tokens(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Provision a client which will be used to do introspection requests
+        let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
+            "client_uri": "https://introspecting.com/",
+            "grant_types": [],
+            "token_endpoint_auth_method": "client_secret_basic",
+        }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let client: ClientRegistrationResponse = response.json();
+        let introspecting_client_id = client.client_id;
+        let introspecting_client_secret = client.client_secret.unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+
+        // Provision an owner user (who provisions the personal session)
+        let owner_user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "admin".to_owned())
+            .await
+            .unwrap();
+
+        // Provision an actor user (which the token represents)
+        let actor_user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "bruce".to_owned())
+            .await
+            .unwrap();
+
+        // admin creates a personal session to control bruce's account
+        let personal_session = repo
+            .personal_session()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                PersonalSessionOwner::User(owner_user.id),
+                &actor_user,
+                "Test Personal Access Token".to_owned(),
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Generate a personal access token with proper token format
+        let token_string = TokenType::PersonalAccessToken.generate(&mut state.rng());
+        let _personal_access_token = repo
+            .personal_access_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &personal_session,
+                &token_string,
+                Some(Duration::try_hours(1).unwrap()),
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // Now that we have a personal access token, we can introspect it
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .form(json!({ "token": token_string }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(response.active);
+        // Actor user
+        assert_eq!(response.username, Some("bruce".to_owned()));
+        // Not owned by a client
+        assert_eq!(response.client_id, None);
+        assert_eq!(response.token_type, Some(OAuthTokenTypeHint::AccessToken));
+        assert_eq!(response.scope, Some(Scope::from_iter([OPENID])));
+
+        // Do the same request, but with a token_type_hint
+        let last_active = state.clock.now();
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .form(json!({"token": token_string, "token_type_hint": "access_token"}));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(response.active);
+
+        // Do the same request, but with the wrong token_type_hint
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .form(json!({"token": token_string, "token_type_hint": "refresh_token"}));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(!response.active); // It shouldn't be active with wrong hint
+
+        // Advance the clock to invalidate the access token
+        state.clock.advance(Duration::try_hours(2).unwrap());
+
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .form(json!({ "token": token_string }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: IntrospectionResponse = response.json();
+        assert!(!response.active); // It shouldn't be active anymore
+
+        state.activity_tracker.flush().await;
+        let mut repo = state.repository().await.unwrap();
+        let session = repo
+            .personal_session()
+            .lookup(personal_session.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(session.last_active_at, Some(last_active));
+        repo.save().await.unwrap();
     }
 }
