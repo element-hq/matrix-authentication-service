@@ -39,11 +39,8 @@ test_banned_subdomain if {
 		with data.banned_domains as ["staging.element.io"]
 }
 
-test_email_required if {
-	not register.allow with input as {"username": "hello", "registration_method": "password"}
-}
-
 test_no_email if {
+	register.allow with input as {"username": "hello", "registration_method": "password"}
 	register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
 }
 

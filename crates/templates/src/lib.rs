@@ -509,6 +509,7 @@ mod tests {
         let features = SiteFeatures {
             password_login: true,
             password_registration: true,
+            password_registration_email_required: true,
             account_recovery: true,
             login_with_email_allowed: true,
         };

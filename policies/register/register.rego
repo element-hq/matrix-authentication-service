@@ -81,13 +81,6 @@ violation contains {"msg": sprintf(
 	common.requester_banned(input.requester, data.requester)
 }
 
-# Check that we supplied an email for password registration
-violation contains {"field": "email", "msg": "email required for password-based registration"} if {
-	input.registration_method == "password"
-
-	not input.email
-}
-
 # Check if the email is valid using the email policy
 # and add the email field to the violation object
 violation contains object.union({"field": "email"}, v) if {

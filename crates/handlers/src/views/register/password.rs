@@ -45,6 +45,7 @@ use crate::{
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct RegisterForm {
     username: String,
+    #[serde(default)]
     email: String,
     password: String,
     password_confirm: String,
@@ -165,9 +166,16 @@ pub(crate) async fn post(
         .await
         .is_ok();
 
+    let state = form.to_form_state();
+
+    // The email form is only shown if the server requires it
+    let email = site_config
+        .password_registration_email_required
+        .then_some(form.email);
+
     // Validate the form
     let state = {
-        let mut state = form.to_form_state();
+        let mut state = state;
 
         if !passed_captcha {
             state.add_error_on_form(FormError::Captcha);
@@ -195,13 +203,15 @@ pub(crate) async fn post(
             homeserver_denied_username = true;
         }
 
-        // Note that we don't check here if the email is already taken here, as
-        // we don't want to leak the information about other users. Instead, we will
-        // show an error message once the user confirmed their email address.
-        if form.email.is_empty() {
-            state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
-        } else if Address::from_str(&form.email).is_err() {
-            state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
+        if let Some(email) = &email {
+            // Note that we don't check here if the email is already taken here, as
+            // we don't want to leak the information about other users. Instead, we will
+            // show an error message once the user confirmed their email address.
+            if email.is_empty() {
+                state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
+            } else if Address::from_str(email).is_err() {
+                state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
+            }
         }
 
         if form.password.is_empty() {
@@ -240,7 +250,7 @@ pub(crate) async fn post(
             .evaluate_register(mas_policy::RegisterInput {
                 registration_method: mas_policy::RegistrationMethod::Password,
                 username: &form.username,
-                email: Some(&form.email),
+                email: email.as_deref(),
                 requester: mas_policy::Requester {
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
@@ -295,7 +305,9 @@ pub(crate) async fn post(
                 state.add_error_on_form(FormError::RateLimitExceeded);
             }
 
-            if let Err(e) = limiter.check_email_authentication_email(requester, &form.email) {
+            if let Some(email) = &email
+                && let Err(e) = limiter.check_email_authentication_email(requester, email)
+            {
                 tracing::warn!(error = &e as &dyn std::error::Error);
                 state.add_error_on_form(FormError::RateLimitExceeded);
             }
@@ -343,25 +355,28 @@ pub(crate) async fn post(
         registration
     };
 
-    // Create a new user email authentication session
-    let user_email_authentication = repo
-        .user_email()
-        .add_authentication_for_registration(&mut rng, &clock, form.email, &registration)
-        .await?;
+    let registration = if let Some(email) = email {
+        // Create a new user email authentication session
+        let user_email_authentication = repo
+            .user_email()
+            .add_authentication_for_registration(&mut rng, &clock, email, &registration)
+            .await?;
 
-    // Schedule a job to verify the email
-    repo.queue_job()
-        .schedule_job(
-            &mut rng,
-            &clock,
-            SendEmailAuthenticationCodeJob::new(&user_email_authentication, locale.to_string()),
-        )
-        .await?;
+        // Schedule a job to verify the email
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SendEmailAuthenticationCodeJob::new(&user_email_authentication, locale.to_string()),
+            )
+            .await?;
 
-    let registration = repo
-        .user_registration()
-        .set_email_authentication(registration, &user_email_authentication)
-        .await?;
+        repo.user_registration()
+            .set_email_authentication(registration, &user_email_authentication)
+            .await?
+    } else {
+        registration
+    };
 
     // Hash the password
     let password = Zeroizing::new(form.password);
@@ -712,5 +727,320 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         assert!(response.body().contains("This username is already taken"));
+    }
+
+    /// Test registration without email when email is not required
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_without_email_when_not_required(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        // Render the registration page and get the CSRF token
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form without email
+        let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "alice",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(LOCATION).unwrap();
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = location
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        // There should be a new registration in the database
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "alice".to_owned());
+        assert!(registration.password.is_some());
+        // Email authentication should be None when email is not required and not
+        // provided
+        assert!(registration.email_authentication_id.is_none());
+    }
+
+    /// Test registration with valid email when email is not required
+    /// (email input is ignored completely when not required)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_email_when_not_required(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        // Render the registration page and get the CSRF token
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form with valid email
+        let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "charlie",
+                "email": "charlie@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(LOCATION).unwrap();
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = location
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        // There should be a new registration in the database
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "charlie".to_owned());
+        assert!(registration.password.is_some());
+
+        // Email authentication should be None when email is not required
+        // (email input is completely ignored in this case)
+        assert!(registration.email_authentication_id.is_none());
+    }
+
+    /// Test registration fails when email is required but not provided
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_fails_without_email_when_required(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: true,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        // Render the registration page and get the CSRF token
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form without email
+        let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "david",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+
+        // Check that the response contains an error about the email field
+        let body = response.body();
+        assert!(body.contains("email") || body.contains("Email"));
+
+        // Ensure no registration was created
+        let mut repo = state.repository().await.unwrap();
+        let user_exists = repo.user().exists("david").await.unwrap();
+        assert!(!user_exists);
+    }
+
+    /// Test registration fails when email is required but empty
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_fails_with_empty_email_when_required(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: true,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        // Render the registration page and get the CSRF token
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form with empty email
+        let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "eve",
+                "email": "",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+
+        // Check that the response contains an error about the email field
+        let body = response.body();
+        assert!(body.contains("email") || body.contains("Email"));
+
+        // Ensure no registration was created
+        let mut repo = state.repository().await.unwrap();
+        let user_exists = repo.user().exists("eve").await.unwrap();
+        assert!(!user_exists);
+    }
+
+    /// Test registration fails with invalid email when email is required
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_fails_with_invalid_email_when_required(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: true,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        // Render the registration page and get the CSRF token
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form with invalid email
+        let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "grace",
+                "email": "not-an-email",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+
+        // Check that the response contains an error about the email field
+        let body = response.body();
+        assert!(body.contains("email") || body.contains("Email"));
+
+        // Ensure no registration was created
+        let mut repo = state.repository().await.unwrap();
+        let user_exists = repo.user().exists("grace").await.unwrap();
+        assert!(!user_exists);
     }
 }

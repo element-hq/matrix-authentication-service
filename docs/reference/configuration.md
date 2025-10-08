@@ -296,6 +296,12 @@ account:
   # This has no effect if password login is disabled.
   password_registration_enabled: false
 
+  # Whether self-service registrations require a valid email
+  #
+  # Defaults to `true`
+  # This has no effect if password registration is disabled.
+  password_registration_email_required: true
+
   # Whether users are allowed to change their passwords
   #
   # Defaults to `true`.
@@ -759,7 +765,7 @@ upstream_oauth2:
         localpart:
           #action: force
           #template: "{{ user.preferred_username }}"
-          
+
           # How to handle when localpart already exists.
           # Possible values are (default: fail):
           # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
