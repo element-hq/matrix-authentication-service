@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Vous avez déjà un compte ?",
       "continue_with_email": "Continuer avec une adresse e-mail",
+      "continue_with_password": "Continuer avec un mot de passe",
       "create_account": {
         "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
