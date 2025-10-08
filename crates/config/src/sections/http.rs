@@ -36,6 +36,10 @@ fn http_address_example_4() -> &'static str {
     "0.0.0.0:8080"
 }
 
+fn unix_mode_example() -> Option<String> {
+    Some("660".to_string())
+}
+
 #[cfg(not(any(feature = "docker", feature = "dist")))]
 fn http_listener_assets_path_default() -> Utf8PathBuf {
     "./frontend/dist/".into()
@@ -124,6 +128,11 @@ pub enum BindConfig {
         /// Path to the socket
         #[schemars(with = "String")]
         socket: Utf8PathBuf,
+
+        /// Socket file mode. A string representing UNIX permission bits, in octal
+        /// integer format.
+        #[schemars(example = "unix_mode_example")]
+        mode: Option<String>,
     },
 
     /// Accept connections on file descriptors passed by the parent process.
