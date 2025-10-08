@@ -75,7 +75,7 @@
     "storybook": "^9.1.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2",
-    "vite": "7.1.7",
+    "vite": "7.1.9",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-graphql-codegen": "^3.7.0",
     "vite-plugin-manifest-sri": "^0.2.0",
