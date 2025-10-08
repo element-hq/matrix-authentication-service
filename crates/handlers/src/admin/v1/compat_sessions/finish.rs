@@ -99,17 +99,14 @@ pub async fn handler(
         return Err(RouteError::AlreadyFinished(id));
     }
 
-    // Load the user to schedule a device sync job
-    let user = repo
-        .user()
-        .lookup(session.user_id)
-        .await?
-        .ok_or_else(|| RouteError::Internal("User not found for session".into()))?;
-
     // Schedule a job to sync the devices of the user with the homeserver
-    tracing::info!(user.id = %user.id, "Scheduling device sync job for user");
+    tracing::info!(user.id = %session.user_id, "Scheduling device sync job for user");
     repo.queue_job()
-        .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+        .schedule_job(
+            &mut rng,
+            &clock,
+            SyncDevicesJob::new_for_id(session.user_id),
+        )
         .await?;
 
     // Finish the session
