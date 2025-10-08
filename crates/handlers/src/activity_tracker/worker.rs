@@ -257,7 +257,9 @@ impl Worker {
         repo.compat_session()
             .record_batch_activity(compat_sessions)
             .await?;
-        // TODO: personal sessions: record
+        repo.personal_session()
+            .record_batch_activity(personal_sessions)
+            .await?;
 
         repo.save().await?;
         self.pending_records.clear();

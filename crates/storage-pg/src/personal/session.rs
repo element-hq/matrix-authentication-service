@@ -361,6 +361,56 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .try_into()
             .map_err(DatabaseError::to_invalid_operation)
     }
+
+    #[tracing::instrument(
+        name = "db.personal_session.record_batch_activity",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn record_batch_activity(
+        &mut self,
+        mut activities: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+    ) -> Result<(), Self::Error> {
+        // Sort the activity by ID, so that when batching the updates, Postgres
+        // locks the rows in a stable order, preventing deadlocks
+        activities.sort_unstable();
+        let mut ids = Vec::with_capacity(activities.len());
+        let mut last_activities = Vec::with_capacity(activities.len());
+        let mut ips = Vec::with_capacity(activities.len());
+
+        for (id, last_activity, ip) in activities {
+            ids.push(Uuid::from(id));
+            last_activities.push(last_activity);
+            ips.push(ip);
+        }
+
+        let res = sqlx::query!(
+            r#"
+                UPDATE personal_sessions
+                SET last_active_at = GREATEST(t.last_active_at, personal_sessions.last_active_at)
+                  , last_active_ip = COALESCE(t.last_active_ip, personal_sessions.last_active_ip)
+                FROM (
+                    SELECT *
+                    FROM UNNEST($1::uuid[], $2::timestamptz[], $3::inet[])
+                        AS t(personal_session_id, last_active_at, last_active_ip)
+                ) AS t
+                WHERE personal_sessions.personal_session_id = t.personal_session_id
+            "#,
+            &ids,
+            &last_activities,
+            &ips as &[Option<IpAddr>],
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, ids.len().try_into().unwrap_or(u64::MAX))?;
+
+        Ok(())
+    }
 }
 
 impl Filter for PersonalSessionFilter<'_> {
