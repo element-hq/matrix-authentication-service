@@ -454,7 +454,7 @@ features = ["std"]
 
 # Parser generator
 [workspace.dependencies.pest]
-version = "2.8.2"
+version = "2.8.3"
 
 # Pest derive macros
 [workspace.dependencies.pest_derive]
