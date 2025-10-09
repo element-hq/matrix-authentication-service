@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO personal_access_tokens\n                    (personal_access_token_id, personal_session_id, access_token_sha256, created_at, expires_at)\n                VALUES ($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bytea",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a0be6c56e470382b9470df414497e260ba8911123744980e24a52bc9b95bd056"
+}

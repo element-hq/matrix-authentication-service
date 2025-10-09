@@ -11,6 +11,7 @@ use thiserror::Error;
 pub mod clock;
 pub(crate) mod compat;
 pub mod oauth2;
+pub mod personal;
 pub(crate) mod policy_data;
 mod site_config;
 pub(crate) mod tokens;

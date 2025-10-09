@@ -625,6 +625,11 @@ pub(crate) async fn post(
                 device_id: session.device.map(Device::into),
             }
         }
+
+        TokenType::PersonalAccessToken => {
+            // TODO
+            return Err(RouteError::UnknownToken(TokenType::PersonalAccessToken));
+        }
     };
 
     repo.save().await?;

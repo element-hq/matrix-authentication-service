@@ -3676,6 +3676,7 @@ dependencies = [
  "sea-query",
  "sea-query-binder",
  "serde_json",
+ "sha2",
  "sqlx",
  "thiserror 2.0.17",
  "tracing",

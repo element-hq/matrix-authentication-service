@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT personal_access_token_id\n                     , personal_session_id\n                     , created_at\n                     , expires_at\n                     , revoked_at\n\n                FROM personal_access_tokens\n\n                WHERE personal_access_token_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "personal_access_token_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "personal_session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "e1746b33c2f0d10f26332195f78e1ef2f192ca66f8000d1385626154e5ce4f7e"
+}

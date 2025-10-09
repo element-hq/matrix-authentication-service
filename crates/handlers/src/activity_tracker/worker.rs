@@ -224,6 +224,7 @@ impl Worker {
         let mut browser_sessions = Vec::new();
         let mut oauth2_sessions = Vec::new();
         let mut compat_sessions = Vec::new();
+        let mut personal_sessions = Vec::new();
 
         for ((kind, id), record) in pending_records {
             match kind {
@@ -235,6 +236,9 @@ impl Worker {
                 }
                 SessionKind::Compat => {
                     compat_sessions.push((*id, record.end_time, record.ip));
+                }
+                SessionKind::Personal => {
+                    personal_sessions.push((*id, record.end_time, record.ip));
                 }
             }
         }
@@ -253,6 +257,7 @@ impl Worker {
         repo.compat_session()
             .record_batch_activity(compat_sessions)
             .await?;
+        // TODO: personal sessions: record
 
         repo.save().await?;
         self.pending_records.clear();

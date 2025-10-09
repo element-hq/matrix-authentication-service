@@ -109,6 +109,23 @@ pub enum OAuth2Clients {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "personal_sessions"]
+pub enum PersonalSessions {
+    Table,
+    PersonalSessionId,
+    OwnerUserId,
+    #[iden = "owner_oauth2_client_id"]
+    OwnerOAuth2ClientId,
+    ActorUserId,
+    HumanName,
+    ScopeList,
+    CreatedAt,
+    RevokedAt,
+    LastActiveAt,
+    LastActiveIp,
+}
+
+#[derive(sea_query::Iden)]
 #[iden = "upstream_oauth_providers"]
 pub enum UpstreamOAuthProviders {
     Table,

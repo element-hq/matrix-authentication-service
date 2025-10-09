@@ -14,6 +14,7 @@ use mas_storage::{
     Pagination, RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
     queue::{
         DeleteDeviceJob, ProvisionDeviceJob, ProvisionUserJob, QueueJobRepositoryExt as _,
         SyncDevicesJob,
@@ -223,6 +224,35 @@ impl RunnableJob for SyncDevicesJob {
                 .oauth2_session()
                 .list(
                     OAuth2SessionFilter::new().for_user(&user).active_only(),
+                    cursor,
+                )
+                .await
+                .map_err(JobError::retry)?;
+
+            for edge in page.edges {
+                for scope in &*edge.node.scope {
+                    if let Some(device) = Device::from_scope_token(scope) {
+                        devices.insert(device.as_str().to_owned());
+                    }
+                }
+
+                cursor = cursor.after(edge.cursor);
+            }
+
+            if !page.has_next_page {
+                break;
+            }
+        }
+
+        // Cycle through all the personal sessions of the user and get the devices
+        let mut cursor = Pagination::first(5000);
+        loop {
+            let page = repo
+                .personal_session()
+                .list(
+                    PersonalSessionFilter::new()
+                        .for_actor_user(&user)
+                        .active_only(),
                     cursor,
                 )
                 .await
