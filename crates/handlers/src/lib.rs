@@ -430,6 +430,10 @@ where
             get(self::oauth2::authorization::get),
         )
         .route(
+            mas_router::OAuth2EndSession::route(),
+            get(self::oauth2::end_session::get),
+        )
+        .route(
             mas_router::Consent::route(),
             get(self::oauth2::authorization::consent::get)
                 .post(self::oauth2::authorization::consent::post),
