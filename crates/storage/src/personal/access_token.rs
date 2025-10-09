@@ -71,7 +71,7 @@ pub trait PersonalAccessTokenRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
-        access_token: String,
+        access_token: &str,
         expires_after: Option<Duration>,
     ) -> Result<PersonalAccessToken, Self::Error>;
 
@@ -107,7 +107,7 @@ repository_impl!(PersonalAccessTokenRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
-        access_token: String,
+        access_token: &str,
         expires_after: Option<Duration>,
     ) -> Result<PersonalAccessToken, Self::Error>;
 

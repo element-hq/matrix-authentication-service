@@ -143,7 +143,7 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
-        access_token: String,
+        access_token: &str,
         expires_after: Option<chrono::Duration>,
     ) -> Result<PersonalAccessToken, Self::Error> {
         let created_at = clock.now();

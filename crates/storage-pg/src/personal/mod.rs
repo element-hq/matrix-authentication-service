@@ -227,7 +227,7 @@ mod tests {
                 &mut rng,
                 &clock,
                 &session,
-                FIRST_TOKEN.to_owned(),
+                FIRST_TOKEN,
                 Some(Duration::try_minutes(1).unwrap()),
             )
             .await
@@ -246,7 +246,7 @@ mod tests {
                         &mut rng,
                         &clock,
                         &session,
-                        FIRST_TOKEN.to_owned(),
+                        FIRST_TOKEN,
                         Some(Duration::try_minutes(1).unwrap()),
                     )
                     .await
@@ -288,7 +288,7 @@ mod tests {
         // Add a second access token, this time without expiration
         let token = repo
             .personal_access_token()
-            .add(&mut rng, &clock, &session, SECOND_TOKEN.to_owned(), None)
+            .add(&mut rng, &clock, &session, SECOND_TOKEN, None)
             .await
             .unwrap();
         assert_eq!(token.session_id, session.id);
