@@ -30,7 +30,7 @@
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
-    "i18next": "^25.5.3",
+    "i18next": "^25.6.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-i18next": "^16.0.0",
