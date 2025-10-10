@@ -25,6 +25,7 @@ use thiserror::Error;
 pub mod authorization;
 pub mod device;
 pub mod discovery;
+pub mod end_session;
 pub mod introspection;
 pub mod keys;
 pub mod registration;
