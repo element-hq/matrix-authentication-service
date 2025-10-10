@@ -20,6 +20,7 @@ use crate::passwords::PasswordManager;
 
 mod compat_sessions;
 mod oauth2_sessions;
+mod personal_sessions;
 mod policy_data;
 mod site_config;
 mod upstream_oauth_links;
@@ -78,6 +79,31 @@ where
             post_with(
                 self::oauth2_sessions::finish,
                 self::oauth2_sessions::finish_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions",
+            get_with(
+                self::personal_sessions::list,
+                self::personal_sessions::list_doc,
+            )
+            .post_with(
+                self::personal_sessions::add,
+                self::personal_sessions::add_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions/{id}",
+            get_with(
+                self::personal_sessions::get,
+                self::personal_sessions::get_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions/{id}/revoke",
+            post_with(
+                self::personal_sessions::revoke,
+                self::personal_sessions::revoke_doc,
             ),
         )
         .api_route(
