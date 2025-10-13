@@ -235,7 +235,7 @@ version = "0.3.31"
 
 # Fixed-size arrays with trait implementations
 [workspace.dependencies.generic-array]
-version = "0.14.7"
+version = "0.14.8"
 
 # Rate-limiting
 [workspace.dependencies.governor]
