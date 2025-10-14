@@ -1,0 +1,57 @@
+{#
+Copyright 2025 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="icon">
+      {{ icon.visibility_on() }}
+    </div>
+    <div class="header">
+      <h1 class="title">{{ _("mas.choose_display_name.headline") }}</h1>
+      <p class="text">{{ _("mas.choose_display_name.description") }}</p>
+    </div>
+  </header>
+
+  <div class="cpd-form-root">
+    <form method="POST" class="cpd-form-root">
+      {% if form.errors is not empty %}
+        {% for error in form.errors %}
+          <div class="text-critical font-medium">
+            {{ errors.form_error_message(error=error) }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      <input type="hidden" name="action" value="set" />
+
+      {% call(f) field.field(label=_("common.display_name"), name="display_name", form_state=form, class="mb-4") %}
+        <input {{ field.attributes(f) }}
+          id="cpd-text-control"
+          type="text"
+          maxlength="256"
+          class="cpd-text-control"
+          required 
+          readonly
+          />
+      {% endcall %}
+
+      {{ button.button(text=_("action.continue")) }}
+    </form>
+    <!-- :tchap: -->
+    <div class="hidden">
+    <!-- :tchap: -->
+      <form method="POST" class="cpd-form-root">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+        <input type="hidden" name="action" value="skip" />
+        {{ button.button(text=_("action.skip"), kind="tertiary") }}
+      </form>
+    </div>
+  </div>
+{% endblock content %}

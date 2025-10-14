@@ -26,7 +26,7 @@
     }
   },
   "common": {
-    "display_name": "Pseudonyme",
+    "display_name": "Nom d'affichage",
     "email_address": "Adresse mail",
     "loading": "Chargement…",
     "mxid": "Matrix ID",
@@ -69,8 +69,8 @@
       "new": "Nouveau mot de passe"
     },
     "choose_display_name": {
-      "description": "C'est le nom que les autres personnes verront. Vous pouvez le modifier à tout moment.",
-      "headline": "Choisissez votre pseudonyme"
+      "description": "Votre nom d'affichage ne peut pas être modifié pour éviter l'usurpation d'identité",
+      "headline": "Votre nom d'affichage"
     },
     "consent": {
       "client_wants_access": "Ce nouvel appareil sera visible dans la liste des vos appareils Tchap.",
@@ -212,7 +212,7 @@
       "continue_with_email": "Continuer avec une adresse mail",
       "create_account": {
         "description": "Choisissez un nom d'utilisateur pour continuer.",
-        "heading": "Créer un compte"
+        "heading": "Choisissez un mot de passe"
       },
       "sign_in_instead": "Se connecter",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"

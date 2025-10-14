@@ -14,7 +14,7 @@ export default {
     ".storybook/locales.ts",
     "tchap/vite.tchap.config.ts",
   ],
-  //:tchap:
+  //:tchap: end
   ignoreDependencies: [
     // This is used by the tailwind PostCSS plugin, but not detected by knip
     "postcss-nesting",

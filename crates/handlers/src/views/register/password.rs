@@ -22,7 +22,7 @@ use mas_data_model::{BoxClock, BoxRng, CaptchaConfig};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
-use mas_router::UrlBuilder;
+use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
@@ -33,6 +33,9 @@ use mas_templates::{
     Templates, ToFormState,
 };
 use serde::{Deserialize, Serialize};
+//:tchap:
+use tchap::email_to_mxid_localpart;
+//:tchap:
 use zeroize::Zeroizing;
 
 use super::cookie::UserRegistrationSessions;
@@ -104,6 +107,30 @@ pub(crate) async fn get(
         ctx = ctx.with_form_state(form_state);
     }
 
+    //:tchap:
+    //retrieve and use login_hint
+    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.action.post_auth_action
+        && let Some(login_hint) = repo
+            .oauth2_authorization_grant()
+            .lookup(*id)
+            .await?
+            .and_then(|grant| grant.login_hint)
+    {
+        tracing::trace!(
+            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
+            id,
+            login_hint
+        );
+        let username = email_to_mxid_localpart(&login_hint);
+        let mut form_state = FormState::default();
+        form_state.set_value(RegisterFormField::Username, Some(username));
+        form_state.set_value(RegisterFormField::Email, Some(login_hint));
+        ctx = ctx.with_form_state(form_state);
+    } else {
+        tracing::warn!("Missing login_hint in query.action.post_auth_action");
+    }
+    //:tchap: end
+
     let content = render(
         locale,
         ctx,
@@ -148,7 +175,10 @@ pub(crate) async fn post(
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
-    let form = cookie_jar.verify_form(&clock, form)?;
+    //:tchap:
+    //let form = cookie_jar.verify_form(&clock, form)?;
+    let mut form = cookie_jar.verify_form(&clock, form)?;
+    //:tchap:
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
@@ -164,6 +194,31 @@ pub(crate) async fn post(
         )
         .await
         .is_ok();
+
+    //:tchap:
+    //substitute values in the form
+    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action
+        && let Some(login_hint) = repo
+            .oauth2_authorization_grant()
+            .lookup(*id)
+            .await?
+            .and_then(|grant| grant.login_hint)
+    {
+        tracing::trace!(
+            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
+            id,
+            login_hint
+        );
+
+        form = RegisterForm {
+            username: email_to_mxid_localpart(&login_hint),
+            email: login_hint,
+            ..form
+        };
+    } else {
+        tracing::warn!("Missing login_hint in query.post_auth_action");
+    }
+    //:tchap: end
 
     // Validate the form
     let state = {

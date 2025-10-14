@@ -33,6 +33,8 @@ For building the Docker image, the [`build` github action](../.github/workflows/
 
 - run `start.sh`, if you work on templates: `start-with-hot-reload.sh`
 
+NOTE : if you need to the frontend app, manifest and resources, run `start.sh -f` or `start-with-hot-reload.sh -f`
+
 - edit templates in `./tchap/resources/templates`
 
 If Synapse integration is needed, install the environment from element-docker-demo and run it (see README.md)

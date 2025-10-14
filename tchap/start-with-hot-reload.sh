@@ -60,7 +60,13 @@ cleanup() {
 # Set up trap for cleanup
 trap cleanup EXIT INT TERM
 
-#Start the server
-cd "$MAS_TCHAP_HOME"
-
-./start.sh
+# Check if -f flag is present in the command line arguments
+if [[ "$*" != *"-f"* ]]; then
+    #Start the server
+    cd "$MAS_TCHAP_HOME"
+    ./start.sh
+else
+    #Start the server with -f flag
+    cd "$MAS_TCHAP_HOME"
+    ./start.sh -f
+fi

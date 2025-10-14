@@ -1,0 +1,65 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% from "components/idp_brand.html" import logo %}
+
+{% block content %}
+  <form method="GET" class="flex flex-col gap-10" action="{{ '/register/password' | prefix_url }}">
+    <header class="page-heading">
+      <div class="icon">
+        {{ icon.user_profile_solid() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">{{ _("action.create_account") }}</h1>
+        <!-- :tchap: -->
+        {% if features.password_registration and False  %}
+        <!-- :tchap: -->
+          <p class="text">{{ _("mas.register.create_account.description") }}</p>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- :tchap: -->
+    {% if features.password_registration and False %}
+    <!-- :tchap: -->
+      {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
+        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" />
+        <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
+          @username:{{ branding.server_name }}
+        </div>
+      {% endcall %}
+    {% endif %}
+
+    <div class="cpd-form-root">
+      {% for key, value in next["params"] | default({}) | items %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+      {% endfor %}
+
+      {% if features.password_registration %}
+        {{ button.button(text=_("mas.register.continue_with_email")) }}
+      {% endif %}
+
+      {% if providers %}
+        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+        {% for provider in providers %}
+          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+          <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+            {{ logo(provider.brand_name) }}
+            {{ _("mas.login.continue_with_provider", provider=name) }}
+          </a>
+        {% endfor %}
+      {% endif %}
+
+      {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+      {{ button.link_tertiary(text=_("mas.register.call_to_login"), href="/login" ~ params) }}
+    </div>
+  </form>
+{% endblock content %}

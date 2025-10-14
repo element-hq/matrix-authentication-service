@@ -18,10 +18,13 @@ use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{
-    FieldError, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+    FieldError, FormState, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
     TemplateContext as _, Templates, ToFormState,
 };
 use serde::{Deserialize, Serialize};
+//:tchap:
+use tchap::email_to_display_name;
+//:tchap:end
 use ulid::Ulid;
 
 use crate::{PreferredLanguage, views::shared::OptionalPostAuthAction};
@@ -88,9 +91,49 @@ pub(crate) async fn get(
             .into_response());
     }
 
+    //:tchap:
+    let mut ctx = RegisterStepsDisplayNameContext::default();
+
+    let post_auth_action: Option<PostAuthAction> = registration
+        .post_auth_action
+        .clone()
+        .map(serde_json::from_value)
+        .transpose()?;
+
+    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = post_auth_action
+        && let Some(login_hint) = repo
+            .oauth2_authorization_grant()
+            .lookup(id)
+            .await?
+            .and_then(|grant| grant.login_hint)
+    {
+        tracing::trace!(
+            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
+            id,
+            login_hint
+        );
+
+        let display_name = email_to_display_name(&login_hint);
+
+        let mut form_state = FormState::default();
+        form_state.set_value(
+            RegisterStepsDisplayNameFormField::DisplayName,
+            Some(display_name),
+        );
+
+        ctx = ctx.with_form_state(form_state);
+    } else {
+        tracing::warn!("Missing login_hint in post_auth_action");
+    }
+
+    let ctx = ctx.with_csrf(csrf_token.form_value()).with_language(locale);
+
+    /*
     let ctx = RegisterStepsDisplayNameContext::new()
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
+    */
+    //:tchap: end
 
     let content = templates.render_register_steps_display_name(&ctx)?;
 
@@ -138,7 +181,37 @@ pub(crate) async fn post(
             .into_response());
     }
 
-    let form = cookie_jar.verify_form(&clock, form)?;
+    //:tchap:
+    let post_auth_action: Option<PostAuthAction> = registration
+        .post_auth_action
+        .clone()
+        .map(serde_json::from_value)
+        .transpose()?;
+
+    let mut form: DisplayNameForm = cookie_jar.verify_form(&clock, form)?;
+
+    // Exécute uniquement si on a un login_hint, sinon erreur
+    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = post_auth_action
+        && let Some(login_hint) = repo
+            .oauth2_authorization_grant()
+            .lookup(id)
+            .await?
+            .and_then(|grant| grant.login_hint)
+    {
+        tracing::trace!(
+            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
+            id,
+            login_hint
+        );
+
+        form = DisplayNameForm {
+            action: form.action,
+            display_name: email_to_display_name(&login_hint),
+        };
+    } else {
+        tracing::warn!("Missing login_hint in post_auth_action");
+    }
+    //:tchap: end
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
