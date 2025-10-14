@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Sul on kasutajakonto juba olemas?",
       "continue_with_email": "Jätka e-posti aadressiga",
+      "continue_with_password": "Jätka salasõnaga",
       "create_account": {
         "description": "Jätkamiseks vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
