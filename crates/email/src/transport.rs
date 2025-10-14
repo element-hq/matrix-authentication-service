@@ -115,7 +115,6 @@ impl Transport {
     }
 }
 
-
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum Error {

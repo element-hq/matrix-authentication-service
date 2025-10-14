@@ -137,7 +137,6 @@ impl core::str::FromStr for Display {
     }
 }
 
-
 /// Value that specifies whether the Authorization Server prompts the End-User
 /// for reauthentication and consent.
 ///
