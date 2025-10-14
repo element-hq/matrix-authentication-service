@@ -6,11 +6,11 @@
     },
     "cancel": "Cancel",
     "@cancel": {
-      "context": "consent.html:69:11-29, pages/consent.html:76:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
+      "context": "pages/consent.html:76:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
     },
     "continue": "Continue",
     "@continue": {
-      "context": "consent.html:57:28-48, form_post.html:25:28-48, pages/consent.html:64:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:111:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/display_name.html:46:28-48, pages/register/password.html:81:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48, register/password.html:78:26-46"
+      "context": "form_post.html:25:28-48, pages/consent.html:64:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:111:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:81:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -18,15 +18,15 @@
     },
     "sign_in": "Sign in",
     "@sign_in": {
-      "context": "index.html:39:26-45, pages/account/deactivated.html:23:28-47, pages/account/locked.html:23:28-47, pages/index.html:30:26-45"
+      "context": "pages/account/deactivated.html:23:28-47, pages/account/locked.html:23:28-47, pages/index.html:30:26-45"
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "index.html:37:28-48, pages/account/logged_out.html:22:28-48, pages/consent.html:72:28-48, pages/device_consent.html:136:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "pages/account/logged_out.html:22:28-48, pages/consent.html:72:28-48, pages/device_consent.html:136:30-50, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/sso.html:45:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
-      "context": "pages/register/display_name.html:52:28-44, pages/register/steps/display_name.html:53:30-46"
+      "context": "pages/register/steps/display_name.html:53:30-46"
     },
     "start_over": "Start over",
     "@start_over": {
@@ -36,7 +36,7 @@
   "app": {
     "human_name": "Tchap",
     "@human_name": {
-      "context": "index.html:15:29-48, pages/index.html:15:29-48",
+      "context": "pages/index.html:15:29-48",
       "description": "Human readable name of the application"
     },
     "name": "Tchap",
@@ -46,7 +46,7 @@
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
     "@technical_description": {
-      "context": "index.html:17:13-72, pages/index.html:17:13-72",
+      "context": "pages/index.html:17:13-72",
       "description": "Introduction text displayed on the home page"
     }
   },
@@ -75,11 +75,11 @@
   "common": {
     "display_name": "Display Name",
     "@display_name": {
-      "context": "pages/register/display_name.html:34:35-59, pages/register/steps/display_name.html:34:35-59, pages/upstream_oauth2/do_register.html:152:37-61"
+      "context": "pages/register/steps/display_name.html:34:35-59, pages/upstream_oauth2/do_register.html:152:37-61"
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:44:33-58, pages/upstream_oauth2/do_register.html:120:37-62, register/password.html:41:33-58"
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:44:33-58, pages/upstream_oauth2/do_register.html:120:37-62"
     },
     "hide": "",
     "@hide": {},
@@ -93,17 +93,17 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:99:37-57, pages/reauth.html:28:35-55, pages/register/password.html:48:33-53, register/password.html:45:33-53"
+      "context": "pages/login.html:99:37-57, pages/reauth.html:28:35-55, pages/register/password.html:48:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:53:33-61, register/password.html:50:33-61"
+      "context": "pages/register/password.html:53:33-61"
     },
     "show": "",
     "@show": {},
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:93:37-57, pages/register/index.html:33:35-55, pages/register/password.html:39:45-65, pages/upstream_oauth2/do_register.html:104:35-55, pages/upstream_oauth2/do_register.html:109:39-59, register/index.html:30:35-55, register/password.html:37:33-53"
+      "context": "pages/login.html:93:37-57, pages/register/index.html:33:35-55, pages/register/password.html:39:45-65, pages/upstream_oauth2/do_register.html:104:35-55, pages/upstream_oauth2/do_register.html:109:39-59"
     }
   },
   "create_account": "",
@@ -185,35 +185,35 @@
     "choose_display_name": {
       "description": "Your display name can not be changed to avoid usurpating",
       "@description": {
-        "context": "pages/register/display_name.html:17:25-65, pages/register/steps/display_name.html:17:25-65",
+        "context": "pages/register/steps/display_name.html:17:25-65",
         "description": "During the registration flow, the user is asked to choose a display name. This is the description of that form."
       },
       "headline": "Your display name",
       "@headline": {
-        "context": "pages/register/display_name.html:16:27-64, pages/register/steps/display_name.html:16:27-64",
+        "context": "pages/register/steps/display_name.html:16:27-64",
         "description": "During the registration flow, the user is asked to choose a display name. This is the headline of that form."
       }
     },
     "consent": {
       "client_wants_access": "This new device will be shown in Tchap devices list.",
       "@client_wants_access": {
-        "context": "consent.html:27:11-122, pages/consent.html:31:11-122"
+        "context": "pages/consent.html:31:11-122"
       },
       "heading": "Connect this new device to your Tchap account",
       "@heading": {
-        "context": "consent.html:25:27-51, pages/consent.html:29:27-51, pages/device_consent.html:28:29-53"
+        "context": "pages/consent.html:29:27-51, pages/device_consent.html:28:29-53"
       },
       "make_sure_you_trust": "",
       "@make_sure_you_trust": {
-        "context": "consent.html:38:81-142, pages/consent.html:44:81-142, pages/device_consent.html:104:83-144"
+        "context": "pages/consent.html:44:81-142, pages/device_consent.html:104:83-144"
       },
       "this_will_allow": "",
       "@this_will_allow": {
-        "context": "consent.html:28:11-68, pages/consent.html:32:11-68, pages/device_consent.html:94:13-70"
+        "context": "pages/consent.html:32:11-68, pages/device_consent.html:94:13-70"
       },
       "you_may_be_sharing": "",
       "@you_may_be_sharing": {
-        "context": "consent.html:39:7-42, pages/consent.html:45:7-42, pages/device_consent.html:105:9-44"
+        "context": "pages/consent.html:45:7-42, pages/device_consent.html:105:9-44"
       }
     },
     "device_card": {
@@ -429,7 +429,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:67:11-63, pages/register/index.html:56:15-67, register/index.html:53:15-67",
+        "context": "pages/login.html:67:11-63, pages/register/index.html:56:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -467,15 +467,15 @@
     "navbar": {
       "my_account": "My account",
       "@my_account": {
-        "context": "index.html:36:26-52, pages/index.html:27:26-52"
+        "context": "pages/index.html:27:26-52"
       },
       "register": "Create an account",
       "@register": {
-        "context": "index.html:42:36-60, pages/index.html:33:36-60"
+        "context": "pages/index.html:33:36-60"
       },
       "signed_in_as": "Signed in as <span class=\"font-semibold\">%(username)s</span>.",
       "@signed_in_as": {
-        "context": "index.html:33:11-79, pages/index.html:24:11-79",
+        "context": "pages/index.html:24:11-79",
         "description": "Displayed in the navbar when the user is signed in"
       }
     },
@@ -491,7 +491,7 @@
     },
     "not_you": "Not %(username)s?",
     "@not_you": {
-      "context": "consent.html:62:11-67, pages/consent.html:69:11-67, pages/device_consent.html:133:13-69, pages/sso.html:42:11-67",
+      "context": "pages/consent.html:69:11-67, pages/device_consent.html:133:13-69, pages/sso.html:42:11-67",
       "description": "Suggestions for the user to log in as a different user"
     },
     "or_separator": "Or",
@@ -619,26 +619,26 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:62:35-66, pages/register/password.html:84:33-64, register/index.html:59:35-66, register/password.html:81:33-64",
+        "context": "pages/register/index.html:62:35-66, pages/register/password.html:84:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
       "@continue_with_email": {
-        "context": "pages/register/index.html:47:30-67, register/index.html:44:30-67"
+        "context": "pages/register/index.html:47:30-67"
       },
       "create_account": {
         "description": "Choose a username to continue.",
         "@description": {
-          "context": "pages/register/index.html:25:29-73, register/index.html:24:29-73"
+          "context": "pages/register/index.html:25:29-73"
         },
         "heading": "Choose a password",
         "@heading": {
-          "context": "pages/register/password.html:20:27-67, register/index.html:21:29-69, register/password.html:20:27-67"
+          "context": "pages/register/password.html:20:27-67"
         }
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:58:35-95, pages/upstream_oauth2/do_register.html:185:35-95, register/password.html:55:35-95"
+        "context": "pages/register/password.html:58:35-95, pages/upstream_oauth2/do_register.html:185:35-95"
       }
     },
     "registration_token": {
