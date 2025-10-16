@@ -49,6 +49,11 @@ impl<T> PasswordVerificationResult<T> {
             Self::Failure => PasswordVerificationResult::Failure,
         }
     }
+
+    #[must_use]
+    pub fn is_success(&self) -> bool {
+        matches!(self, Self::Success(_))
+    }
 }
 
 impl From<bool> for PasswordVerificationResult<()> {
