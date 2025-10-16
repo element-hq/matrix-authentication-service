@@ -36,7 +36,9 @@ pub struct Transport {
     inner: Arc<TransportInner>,
 }
 
+#[derive(Default)]
 enum TransportInner {
+    #[default]
     Blackhole,
     Smtp(AsyncSmtpTransport<Tokio1Executor>),
     Sendmail(AsyncSendmailTransport<Tokio1Executor>),
@@ -110,12 +112,6 @@ impl Transport {
         }
 
         Ok(())
-    }
-}
-
-impl Default for TransportInner {
-    fn default() -> Self {
-        Self::Blackhole
     }
 }
 

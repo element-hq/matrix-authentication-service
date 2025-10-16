@@ -7,7 +7,13 @@
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use mas_data_model::Device;
+use mas_data_model::{
+    Device,
+    personal::{
+        PersonalAccessToken as DataModelPersonalAccessToken,
+        session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
+    },
+};
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
@@ -769,5 +775,162 @@ impl UpstreamOAuthProvider {
                 disabled_at: None,
             },
         ]
+    }
+}
+
+/// A personal session (session using personal access tokens)
+#[derive(Serialize, JsonSchema)]
+pub struct PersonalSession {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the session was created
+    created_at: DateTime<Utc>,
+
+    /// When the session was revoked, if applicable
+    revoked_at: Option<DateTime<Utc>>,
+
+    /// The ID of the user who owns this session (if user-owned)
+    #[schemars(with = "super::schema::Ulid")]
+    owner_user_id: Option<Ulid>,
+
+    /// The ID of the `OAuth2` client that owns this session (if client-owned)
+    #[schemars(with = "super::schema::Ulid")]
+    owner_client_id: Option<Ulid>,
+
+    /// The ID of the user that the session acts on behalf of
+    #[schemars(with = "super::schema::Ulid")]
+    actor_user_id: Ulid,
+
+    /// Human-readable name for the session
+    human_name: String,
+
+    /// `OAuth2` scopes for this session
+    scope: String,
+
+    /// When the session was last active
+    last_active_at: Option<DateTime<Utc>>,
+
+    /// IP address of last activity
+    last_active_ip: Option<IpAddr>,
+}
+
+impl From<DataModelPersonalSession> for PersonalSession {
+    fn from(session: DataModelPersonalSession) -> Self {
+        let (owner_user_id, owner_client_id) = match session.owner {
+            PersonalSessionOwner::User(id) => (Some(id), None),
+            PersonalSessionOwner::OAuth2Client(id) => (None, Some(id)),
+        };
+
+        Self {
+            id: session.id,
+            created_at: session.created_at,
+            revoked_at: session.revoked_at(),
+            owner_user_id,
+            owner_client_id,
+            actor_user_id: session.actor_user_id,
+            human_name: session.human_name,
+            scope: session.scope.to_string(),
+            last_active_at: session.last_active_at,
+            last_active_ip: session.last_active_ip,
+        }
+    }
+}
+
+impl Resource for PersonalSession {
+    const KIND: &'static str = "personal-session";
+    const PATH: &'static str = "/api/admin/v1/personal-sessions";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl PersonalSession {
+    /// Sample personal sessions for documentation/testing
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_string("01FSHN9AG0AJ6AC5HQ9X6H4RP4").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_000, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 40:00Z */
+                revoked_at: None,
+                owner_user_id: Some(Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap()),
+                owner_client_id: None,
+                actor_user_id: Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap(),
+                human_name: "Alice's Development Token".to_owned(),
+                scope: "openid urn:matrix:org.matrix.msc2967.client:api:*".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_347_000, 0).unwrap()), /* 2022-01-16T17:10:00Z */
+                last_active_ip: Some("192.168.1.100".parse().unwrap()),
+            },
+            Self {
+                id: Ulid::from_string("01FSHN9AG0BJ6AC5HQ9X6H4RP5").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_060, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 41:00Z */
+                revoked_at: Some(DateTime::from_timestamp(1_642_350_000, 0).unwrap()), /* 2022-01-16T18:00:00Z */
+                owner_user_id: Some(Ulid::from_string("01FSHN9AG0NZAA6S4AF7CTV32F").unwrap()),
+                owner_client_id: None,
+                actor_user_id: Ulid::from_string("01FSHN9AG0NZAA6S4AF7CTV32F").unwrap(),
+                human_name: "Bob's Mobile App".to_owned(),
+                scope: "openid".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_349_000, 0).unwrap()), /* 2022-01-16T17:43:20Z */
+                last_active_ip: Some("10.0.0.50".parse().unwrap()),
+            },
+            Self {
+                id: Ulid::from_string("01FSHN9AG0CJ6AC5HQ9X6H4RP6").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_120, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 42:00Z */
+                revoked_at: None,
+                owner_user_id: None,
+                owner_client_id: Some(Ulid::from_string("01FSHN9AG0DJ6AC5HQ9X6H4RP7").unwrap()),
+                actor_user_id: Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap(),
+                human_name: "CI/CD Pipeline Token".to_owned(),
+                scope: "openid urn:mas:admin".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_348_000, 0).unwrap()), /* 2022-01-16T17:26:40Z */
+                last_active_ip: Some("203.0.113.10".parse().unwrap()),
+            },
+        ]
+    }
+}
+
+/// A personal access token
+#[derive(Serialize, JsonSchema)]
+pub struct PersonalAccessToken {
+    /// The ID of the personal session this token belongs to
+    #[schemars(with = "super::schema::Ulid")]
+    session_id: Ulid,
+
+    /// When the token was created
+    created_at: DateTime<Utc>,
+
+    /// When the token expires, if applicable
+    expires_at: Option<DateTime<Utc>>,
+
+    /// When the token was revoked, if applicable
+    revoked_at: Option<DateTime<Utc>>,
+
+    /// The actual access token (only returned on creation)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    access_token: Option<String>,
+}
+
+impl From<DataModelPersonalAccessToken> for PersonalAccessToken {
+    fn from(token: DataModelPersonalAccessToken) -> Self {
+        Self {
+            session_id: token.session_id,
+            created_at: token.created_at,
+            expires_at: token.expires_at,
+            revoked_at: token.revoked_at,
+            // Not available in data model
+            access_token: None,
+        }
+    }
+}
+
+impl PersonalAccessToken {
+    /// Add the actual token value (for use in creation responses)
+    pub fn with_token(mut self, access_token: String) -> Self {
+        self.access_token = Some(access_token);
+        self
     }
 }
