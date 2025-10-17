@@ -119,8 +119,11 @@ $ mas-cli manage lock-user <username> --deactivate
 
 Unlock a user.
 
+Options:
+- `--reactivate`: Whether to reactivate the user.
+
 ```
-$ mas-cli manage unlock-user <username>
+$ mas-cli manage unlock-user <username> --reactivate
 ```
 
 ## `manage register-user`
