@@ -86,11 +86,13 @@ impl core::str::FromStr for ResponseMode {
     Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, SerializeDisplay, DeserializeFromStr,
 )]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum Display {
     /// The Authorization Server should display the authentication and consent
     /// UI consistent with a full User Agent page view.
     ///
     /// This is the default display mode.
+    #[default]
     Page,
 
     /// The Authorization Server should display the authentication and consent
@@ -135,11 +137,6 @@ impl core::str::FromStr for Display {
     }
 }
 
-impl Default for Display {
-    fn default() -> Self {
-        Self::Page
-    }
-}
 
 /// Value that specifies whether the Authorization Server prompts the End-User
 /// for reauthentication and consent.
