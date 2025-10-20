@@ -807,6 +807,7 @@ pub struct IntrospectionResponse {
     pub jti: Option<String>,
 
     /// MAS extension: explicit device ID
+    /// Only used for compatibility access and refresh tokens.
     pub device_id: Option<String>,
 }
 

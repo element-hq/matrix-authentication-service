@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::net::IpAddr;
+
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
@@ -109,6 +111,21 @@ pub trait PersonalSessionRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn count(&mut self, filter: PersonalSessionFilter<'_>) -> Result<usize, Self::Error>;
+
+    /// Record a batch of [`PersonalSession`] activity
+    ///
+    /// # Parameters
+    ///
+    /// * `activity`: A list of tuples containing the session ID, the last
+    ///   activity timestamp and the IP address of the client
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn record_batch_activity(
+        &mut self,
+        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+    ) -> Result<(), Self::Error>;
 }
 
 repository_impl!(PersonalSessionRepository:
@@ -137,6 +154,11 @@ repository_impl!(PersonalSessionRepository:
     ) -> Result<Page<PersonalSession>, Self::Error>;
 
     async fn count(&mut self, filter: PersonalSessionFilter<'_>) -> Result<usize, Self::Error>;
+
+    async fn record_batch_activity(
+        &mut self,
+        activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
+    ) -> Result<(), Self::Error>;
 );
 
 /// Filter parameters for listing personal sessions
