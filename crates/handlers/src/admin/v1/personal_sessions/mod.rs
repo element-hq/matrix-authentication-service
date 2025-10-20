@@ -6,11 +6,13 @@
 mod add;
 mod get;
 mod list;
+mod regenerate;
 mod revoke;
 
 pub use self::{
     add::{doc as add_doc, handler as add},
     get::{doc as get_doc, handler as get},
     list::{doc as list_doc, handler as list},
+    regenerate::{doc as regenerate_doc, handler as regenerate},
     revoke::{doc as revoke_doc, handler as revoke},
 };

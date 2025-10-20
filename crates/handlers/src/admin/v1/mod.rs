@@ -107,6 +107,13 @@ where
             ),
         )
         .api_route(
+            "/personal-sessions/{id}/regenerate",
+            post_with(
+                self::personal_sessions::regenerate,
+                self::personal_sessions::regenerate_doc,
+            ),
+        )
+        .api_route(
             "/policy-data",
             post_with(self::policy_data::set, self::policy_data::set_doc),
         )
