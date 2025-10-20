@@ -105,16 +105,16 @@ mod tests {
 
         let full_list = repo.personal_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
-        assert_eq!(full_list.edges[0].node.id, session.id);
-        assert!(full_list.edges[0].node.is_valid());
+        assert_eq!(full_list.edges[0].node.0.id, session.id);
+        assert!(full_list.edges[0].node.0.is_valid());
         let active_list = repo
             .personal_session()
             .list(active, pagination)
             .await
             .unwrap();
         assert_eq!(active_list.edges.len(), 1);
-        assert_eq!(active_list.edges[0].node.id, session.id);
-        assert!(active_list.edges[0].node.is_valid());
+        assert_eq!(active_list.edges[0].node.0.id, session.id);
+        assert!(active_list.edges[0].node.0.is_valid());
         let finished_list = repo
             .personal_session()
             .list(finished, pagination)
@@ -154,7 +154,7 @@ mod tests {
 
         let full_list = repo.personal_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
-        assert_eq!(full_list.edges[0].node.id, session.id);
+        assert_eq!(full_list.edges[0].node.0.id, session.id);
         let active_list = repo
             .personal_session()
             .list(active, pagination)
@@ -167,8 +167,8 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(finished_list.edges.len(), 1);
-        assert_eq!(finished_list.edges[0].node.id, session.id);
-        assert!(finished_list.edges[0].node.is_revoked());
+        assert_eq!(finished_list.edges[0].node.0.id, session.id);
+        assert!(finished_list.edges[0].node.0.is_revoked());
 
         // Reload the session and check again
         let session_lookup = repo

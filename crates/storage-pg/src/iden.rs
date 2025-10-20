@@ -126,6 +126,18 @@ pub enum PersonalSessions {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "personal_access_tokens"]
+pub enum PersonalAccessTokens {
+    Table,
+    PersonalAccessTokenId,
+    PersonalSessionId,
+    // AccessTokenSha256,
+    CreatedAt,
+    ExpiresAt,
+    RevokedAt,
+}
+
+#[derive(sea_query::Iden)]
 #[iden = "upstream_oauth_providers"]
 pub enum UpstreamOAuthProviders {
     Table,
