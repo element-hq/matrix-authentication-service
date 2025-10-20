@@ -33,6 +33,9 @@ a.cpd-button,
 }
 
 /*Other fixes*/
+.fr-header__brand {
+  background-color: transparent !important;
+}
 .lasuite-header {
   border-top: 0 !important;
 }
@@ -42,6 +45,7 @@ a.cpd-button,
   display: flex;
   justify-content: center;
   width: 100%;
+  background-color: transparent;
 }
 .cpd-form-root.lasuite a {
   font-size: 90%;
@@ -81,7 +85,7 @@ footer {
   width: 214px;
   height: 56px;
   border: none;
-  border-radius: 4px;
+  border-radius: 4px !important;
 }
 
 .proconnect-button:hover {
@@ -90,9 +94,84 @@ footer {
 
 /* proconnect button end */
 
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .lasuite {
+    color: #eaeaea !important;
+  }
+  .fr-header, .lasuite.fr-footer {
+    background-color: #101317 !important;
+  }
+  .lasuite.fr-footer {
+    border-top: 1px solid #353535 !important;
+  }
+  .fr-header {
+    border-bottom: 1px solid #353535 !important;
+  }
+  .lasuite.fr-footer {
+    border-top: 1px solid #353535 !important;
+  }
+  .fr-footer__bottom {
+    align-items: center;
+    box-shadow: inset 0 1px 0 0 #353535 !important;
+  }
+  .fr-logo {
+    color: #ffffff !important;
+  }
+  .fr-logo:after {
+    background-position: -1.96875rem 100% !important;
+  }
+  .fr-footer__brand .fr-logo:after {
+    background-position: -3.28125rem 100% !important;
+  }
+  p.fr-footer__content-desc {
+    color: #cbcbcb !important;
+  }
+  .fr-footer__content-link {
+    color: #ffffff !important;
+  }
+  .fr-enlarge-link:hover {
+        background-color: #353535 !important;
+  }
+  .fr-footer__bottom-item:before {
+    box-shadow: inset 0 0 0 1px #353535 !important;
+}
+  button.lasuite-gaufre-btn.lasuite-gaufre-btn--vanilla.js-lasuite-gaufre-btn {
+  color: #3E5DE7 !important;
+  box-shadow: inset 0 0 0 1px #353535 !important;
+  }
+  button.cpd-button[data-kind=primary], a.cpd-button[data-kind=primary] {
+    color: #ffffff;
+    background-color: #000091;
+  }
+  button.cpd-button[data-kind=primary]:hover {
+    color: #ffffff;
+    background-color: #223E9E;
+  }
+  .separator hr {
+      border-top: 1px solid #555;
+  }
+  .fr-header__service-title.lasuite-header__service-title {
+    color: #ffffff;
+  }
+
+  @media screen and (max-width: 1024px) {
+    .fr-header {
+      border-bottom: none !important;
+    }
+  }
+
+}
+
+/* Mobile query */
+
 @media screen and (max-width: 1024px) {
   .fr-header__tools {
     display: none !important;
+  }
+  .fr-header {
+    border-bottom: none !important;
   }
   :where(.lasuite) p {
     margin: 0px 0 12px !important;
