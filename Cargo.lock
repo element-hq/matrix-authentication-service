@@ -5014,9 +5014,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-common"
-version = "0.15.4"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "387e1898e868d32ff7b205e7db327361d5dcf635c00a8ae5865068607595a9cf"
+checksum = "ac7f59b9f7639667d0d6ae3ae242c8912e9ed061cea1fbaf72710a402e83b53e"
 dependencies = [
  "as_variant",
  "base64",
@@ -5037,13 +5037,14 @@ dependencies = [
  "url",
  "web-time",
  "wildmatch",
+ "zeroize",
 ]
 
 [[package]]
 name = "ruma-identifiers-validation"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ad674b5e5368c53a2c90fde7dac7e30747004aaf7b1827b72874a25fc06d4d8"
+checksum = "14a7b93ac1e571c585f8fa5cef09c07bb8a15529775fd56b9a3eac4f9233dff2"
 dependencies = [
  "js_int",
  "thiserror 2.0.17",
@@ -5051,9 +5052,9 @@ dependencies = [
 
 [[package]]
 name = "ruma-macros"
-version = "0.15.2"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ff13fbd6045a7278533390826de316d6116d8582ed828352661337b0c422e1c"
+checksum = "0c9911c7188517f28505d2d513339511d00e0f50cec5c2dde820cd0ec7e6a833"
 dependencies = [
  "cfg-if",
  "proc-macro-crate",
