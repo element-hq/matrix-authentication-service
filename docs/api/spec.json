@@ -896,6 +896,547 @@
         }
       }
     },
+    "/api/admin/v1/personal-sessions": {
+      "get": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "List personal sessions",
+        "description": "Retrieve a list of personal sessions.\nNote that by default, all sessions, including revoked ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "operationId": "listPersonalSessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1.0,
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_user]",
+            "description": "Filter by owner user ID",
+            "schema": {
+              "description": "Filter by owner user ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_client]",
+            "description": "Filter by owner `OAuth2` client ID",
+            "schema": {
+              "description": "Filter by owner `OAuth2` client ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[actor_user]",
+            "description": "Filter by actor user ID",
+            "schema": {
+              "description": "Filter by actor user ID",
+              "$ref": "#/components/schemas/ULID",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[status]",
+            "description": "Filter by session status",
+            "schema": {
+              "description": "Filter by session status",
+              "$ref": "#/components/schemas/PersonalSessionStatus",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires_before]",
+            "description": "Filter by access token expiry date",
+            "schema": {
+              "description": "Filter by access token expiry date",
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires_after]",
+            "description": "Filter by access token expiry date",
+            "schema": {
+              "description": "Filter by access token expiry date",
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of personal sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_PersonalSession"
+                },
+                "example": {
+                  "meta": {
+                    "count": 3
+                  },
+                  "data": [
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:00:00Z",
+                        "revoked_at": null,
+                        "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "owner_client_id": null,
+                        "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "human_name": "Alice's Development Token",
+                        "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                        "last_active_at": "2022-01-16T15:30:00Z",
+                        "last_active_ip": "192.168.1.100",
+                        "expires_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                        }
+                      }
+                    },
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0BJ6AC5HQ9X6H4RP5",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:01:00Z",
+                        "revoked_at": "2022-01-16T16:20:00Z",
+                        "owner_user_id": "01FSHN9AG0NZAA6S4AF7CTV32F",
+                        "owner_client_id": null,
+                        "actor_user_id": "01FSHN9AG0NZAA6S4AF7CTV32F",
+                        "human_name": "Bob's Mobile App",
+                        "scope": "openid",
+                        "last_active_at": "2022-01-16T16:03:20Z",
+                        "last_active_ip": "10.0.0.50",
+                        "expires_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0BJ6AC5HQ9X6H4RP5"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0BJ6AC5HQ9X6H4RP5"
+                        }
+                      }
+                    },
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0CJ6AC5HQ9X6H4RP6",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:02:00Z",
+                        "revoked_at": null,
+                        "owner_user_id": null,
+                        "owner_client_id": "01FSHN9AG0DJ6AC5HQ9X6H4RP7",
+                        "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "human_name": "CI/CD Pipeline Token",
+                        "scope": "openid urn:mas:admin",
+                        "last_active_at": "2022-01-16T15:46:40Z",
+                        "last_active_ip": "203.0.113.10",
+                        "expires_at": "2022-01-24T04:36:40Z"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0CJ6AC5HQ9X6H4RP6"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0CJ6AC5HQ9X6H4RP6"
+                        }
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions?page[first]=3",
+                    "first": "/api/admin/v1/personal-sessions?page[first]=3",
+                    "last": "/api/admin/v1/personal-sessions?page[last]=3",
+                    "next": "/api/admin/v1/personal-sessions?page[after]=01FSHN9AG0CJ6AC5HQ9X6H4RP6&page[first]=3"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Client ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Create a new personal session with personal access token",
+        "operationId": "createPersonalSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Personal session and personal access token were created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid scope provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Invalid scope"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}": {
+      "get": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Get a personal session",
+        "operationId": "getPersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Personal session details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "personal-session",
+                    "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                    "attributes": {
+                      "created_at": "2022-01-16T13:00:00Z",
+                      "revoked_at": null,
+                      "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "owner_client_id": null,
+                      "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "human_name": "Alice's Development Token",
+                      "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                      "last_active_at": "2022-01-16T15:30:00Z",
+                      "last_active_ip": "192.168.1.100",
+                      "expires_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Personal session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}/revoke": {
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Revoke a personal session",
+        "operationId": "revokePersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Personal session was revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "personal-session",
+                    "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                    "attributes": {
+                      "created_at": "2022-01-16T13:00:00Z",
+                      "revoked_at": null,
+                      "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "owner_client_id": null,
+                      "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "human_name": "Alice's Development Token",
+                      "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                      "last_active_at": "2022-01-16T15:30:00Z",
+                      "last_active_ip": "192.168.1.100",
+                      "expires_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Personal session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Personal session already revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session with ID 00000000000000000000000000 is already revoked"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}/regenerate": {
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Regenerate a personal session by replacing its personal access token",
+        "operationId": "regeneratePersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegeneratePersonalSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Personal session was regenerated and a personal access token was created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/policy-data": {
       "post": {
         "tags": [
@@ -4576,6 +5117,236 @@
           },
           "links": {
             "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "PersonalSessionFilter": {
+        "type": "object",
+        "properties": {
+          "filter[owner_user]": {
+            "description": "Filter by owner user ID",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[owner_client]": {
+            "description": "Filter by owner `OAuth2` client ID",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[actor_user]": {
+            "description": "Filter by actor user ID",
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
+          },
+          "filter[status]": {
+            "description": "Filter by session status",
+            "$ref": "#/components/schemas/PersonalSessionStatus",
+            "nullable": true
+          },
+          "filter[expires_before]": {
+            "description": "Filter by access token expiry date",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "filter[expires_after]": {
+            "description": "Filter by access token expiry date",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PersonalSessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "revoked"
+        ]
+      },
+      "PaginatedResponse_for_PersonalSession": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "required": [
+          "links"
+        ],
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "$ref": "#/components/schemas/PaginationMeta",
+            "nullable": true
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_PersonalSession"
+            },
+            "nullable": true
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/PaginationLinks"
+          }
+        }
+      },
+      "SingleResource_for_PersonalSession": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "required": [
+          "attributes",
+          "id",
+          "links",
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "$ref": "#/components/schemas/PersonalSession"
+          },
+          "links": {
+            "description": "Related links",
+            "$ref": "#/components/schemas/SelfLinks"
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "$ref": "#/components/schemas/SingleResourceMeta",
+            "nullable": true
+          }
+        }
+      },
+      "PersonalSession": {
+        "description": "A personal session (session using personal access tokens)",
+        "type": "object",
+        "required": [
+          "actor_user_id",
+          "created_at",
+          "human_name",
+          "owner_client_id",
+          "owner_user_id",
+          "scope"
+        ],
+        "properties": {
+          "created_at": {
+            "description": "When the session was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "revoked_at": {
+            "description": "When the session was revoked, if applicable",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "owner_user_id": {
+            "description": "The ID of the user who owns this session (if user-owned)",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "owner_client_id": {
+            "description": "The ID of the `OAuth2` client that owns this session (if client-owned)",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "actor_user_id": {
+            "description": "The ID of the user that the session acts on behalf of",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "human_name": {
+            "description": "Human-readable name for the session",
+            "type": "string"
+          },
+          "scope": {
+            "description": "`OAuth2` scopes for this session",
+            "type": "string"
+          },
+          "last_active_at": {
+            "description": "When the session was last active",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_active_ip": {
+            "description": "IP address of last activity",
+            "type": "string",
+            "format": "ip",
+            "nullable": true
+          },
+          "expires_at": {
+            "description": "When the current token for this session expires. The session will need to be regenerated, producing a new access token, after this time. None if the current token won't expire or if the session is revoked.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "access_token": {
+            "description": "The actual access token (only returned on creation)",
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreatePersonalSessionRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/personal-sessions` endpoint",
+        "type": "object",
+        "required": [
+          "actor_user_id",
+          "human_name",
+          "scope"
+        ],
+        "properties": {
+          "actor_user_id": {
+            "description": "The user this session will act on behalf of",
+            "$ref": "#/components/schemas/ULID"
+          },
+          "human_name": {
+            "description": "Human-readable name for the session",
+            "type": "string"
+          },
+          "scope": {
+            "description": "`OAuth2` scopes for this session",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Token expiry time in seconds. If not set, the token won't expire.",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0,
+            "nullable": true
+          }
+        }
+      },
+      "SingleResponse_for_PersonalSession": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "required": [
+          "data",
+          "links"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_PersonalSession"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        }
+      },
+      "RegeneratePersonalSessionRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/personal-sessions/{id}/regenerate` endpoint",
+        "type": "object",
+        "properties": {
+          "expires_in": {
+            "description": "Token expiry time in seconds. If not set, the token will default to the same lifetime as when originally issued.",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0,
+            "nullable": true
           }
         }
       },
