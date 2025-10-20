@@ -20,6 +20,7 @@ use mas_storage::{
     personal::{PersonalSessionFilter, PersonalSessionRepository, PersonalSessionState},
 };
 use oauth2_types::scope::Scope;
+use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{
     Cond, Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
@@ -27,6 +28,7 @@ use sea_query::{
 };
 use sea_query_binder::SqlxBinder as _;
 use sqlx::PgConnection;
+use tracing::{Instrument as _, info_span};
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -311,7 +313,30 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         clock: &dyn Clock,
         session: PersonalSession,
     ) -> Result<PersonalSession, Self::Error> {
-        let finished_at = clock.now();
+        let revoked_at = clock.now();
+
+        {
+            // Revoke dependent PATs
+            let span = info_span!(
+                "db.personal_session.revoke.tokens",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    UPDATE personal_access_tokens
+                    SET revoked_at = $2
+                    WHERE personal_session_id = $1 AND revoked_at IS NULL
+                "#,
+                Uuid::from(session.id),
+                revoked_at,
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+
         let res = sqlx::query!(
             r#"
                 UPDATE personal_sessions
@@ -319,7 +344,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                 WHERE personal_session_id = $1
             "#,
             Uuid::from(session.id),
-            finished_at,
+            revoked_at,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -328,7 +353,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         session
-            .finish(finished_at)
+            .finish(revoked_at)
             .map_err(DatabaseError::to_invalid_operation)
     }
 
