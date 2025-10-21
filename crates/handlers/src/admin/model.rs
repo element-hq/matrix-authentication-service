@@ -804,11 +804,11 @@ pub struct PersonalSession {
     revoked_at: Option<DateTime<Utc>>,
 
     /// The ID of the user who owns this session (if user-owned)
-    #[schemars(with = "super::schema::Ulid")]
+    #[schemars(with = "Option<super::schema::Ulid>")]
     owner_user_id: Option<Ulid>,
 
     /// The ID of the `OAuth2` client that owns this session (if client-owned)
-    #[schemars(with = "super::schema::Ulid")]
+    #[schemars(with = "Option<super::schema::Ulid>")]
     owner_client_id: Option<Ulid>,
 
     /// The ID of the user that the session acts on behalf of
