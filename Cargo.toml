@@ -67,7 +67,7 @@ syn2mas = { path = "./crates/syn2mas", version = "=1.4.0-rc.1" }
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
 version = "0.14.2"
-features = ["axum", "axum-extra", "axum-json", "axum-query", "macros"]
+features = ["axum", "axum-extra", "axum-extra-query", "axum-json", "axum-query", "macros"]
 
 # An `Arc` that can be atomically updated
 [workspace.dependencies.arc-swap]
@@ -101,7 +101,7 @@ version = "0.8.6"
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
 version = "0.10.3"
-features = ["cookie-private", "cookie-key-expansion", "typed-header"]
+features = ["cookie-private", "cookie-key-expansion", "typed-header", "query"]
 
 # Axum macros
 [workspace.dependencies.axum-macros]
