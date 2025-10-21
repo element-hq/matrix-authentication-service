@@ -126,7 +126,7 @@ impl std::fmt::Display for FilterParams {
             sep = '&';
         }
         if let Some(expires) = self.expires {
-            write!(f, "{sep}filter[expires]={}", expires)?;
+            write!(f, "{sep}filter[expires]={expires}")?;
             sep = '&';
         }
 
