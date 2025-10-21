@@ -9,6 +9,7 @@ use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::{BoxRng, TokenType, personal::session::PersonalSessionOwner};
+use mas_storage::queue::{QueueJobRepositoryExt as _, SyncDevicesJob};
 use oauth2_types::scope::Scope;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -143,6 +144,14 @@ pub async fn handler(
                 .map(|exp_in| Duration::seconds(i64::from(exp_in))),
         )
         .await?;
+
+    if session.has_device() {
+        // If the session has a device, then we are now
+        // creating a device and should schedule a device sync.
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&actor_user))
+            .await?;
+    }
 
     repo.save().await?;
 

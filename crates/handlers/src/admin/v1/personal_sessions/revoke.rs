@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use aide::{OperationIo, transform::TransformOperation};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::BoxRng;
+use mas_storage::queue::{QueueJobRepositoryExt as _, SyncDevicesJob};
 use ulid::Ulid;
 
 use crate::{
@@ -80,6 +82,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    NoApi(mut rng): NoApi<BoxRng>,
     session_id: UlidPathParam,
 ) -> Result<Json<SingleResponse<PersonalSession>>, RouteError> {
     let session_id = *session_id;
@@ -94,6 +97,18 @@ pub async fn handler(
     }
 
     let session = repo.personal_session().revoke(&clock, session).await?;
+
+    if session.has_device() {
+        // If the session has a device, then we are now
+        // deleting a device and should schedule a device sync to clean up.
+        repo.queue_job()
+            .schedule_job(
+                &mut rng,
+                &clock,
+                SyncDevicesJob::new_for_id(session.actor_user_id),
+            )
+            .await?;
+    }
 
     repo.save().await?;
 
