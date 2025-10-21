@@ -138,7 +138,7 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
     )]
     async fn find_active_for_session(
         &mut self,
-        session_id: Ulid,
+        session: &PersonalSession,
     ) -> Result<Option<PersonalAccessToken>, Self::Error> {
         let res: Option<PersonalAccessTokenLookup> = sqlx::query_as!(
             PersonalAccessTokenLookup,
@@ -154,7 +154,7 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
                 WHERE personal_session_id = $1
                 AND revoked_at IS NULL
             "#,
-            Uuid::from(session_id),
+            Uuid::from(session.id),
         )
         .traced()
         .fetch_optional(&mut *self.conn)

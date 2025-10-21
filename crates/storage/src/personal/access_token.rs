@@ -56,14 +56,14 @@ pub trait PersonalAccessTokenRepository: Send + Sync {
     ///
     /// # Parameters
     ///
-    /// * `session_id`: The ID of the session to lookup
+    /// * `session`: The session to lookup
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn find_active_for_session(
         &mut self,
-        session_id: Ulid,
+        session: &PersonalSession,
     ) -> Result<Option<PersonalAccessToken>, Self::Error>;
 
     /// Add a new access token to the database
@@ -120,7 +120,7 @@ repository_impl!(PersonalAccessTokenRepository:
 
     async fn find_active_for_session(
         &mut self,
-        session_id: Ulid,
+        session: &PersonalSession,
     ) -> Result<Option<PersonalAccessToken>, Self::Error>;
 
     async fn add(

@@ -81,7 +81,7 @@ pub async fn handler(
         None
     } else {
         repo.personal_access_token()
-            .find_active_for_session(session.id)
+            .find_active_for_session(&session)
             .await?
     };
 

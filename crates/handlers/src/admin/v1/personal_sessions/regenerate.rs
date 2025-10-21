@@ -124,7 +124,7 @@ pub async fn handler(
     // Revoke the existing active token for the session.
     let old_token_opt = repo
         .personal_access_token()
-        .find_active_for_session(session_id)
+        .find_active_for_session(&session)
         .await?;
     let Some(old_token) = old_token_opt else {
         // This shouldn't happen
