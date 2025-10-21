@@ -140,7 +140,7 @@ pub async fn handler(
             &access_token_string,
             params
                 .expires_in
-                .map(|exp_in| Duration::seconds(i64::try_from(exp_in).unwrap_or(i64::MAX))),
+                .map(|exp_in| Duration::seconds(i64::from(exp_in))),
         )
         .await?;
 
