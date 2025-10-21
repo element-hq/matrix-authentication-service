@@ -75,6 +75,10 @@ pub struct FilterParams {
     /// Filter by access token expiry date
     #[serde(rename = "filter[expires_after]")]
     expires_after: Option<DateTime<Utc>>,
+
+    /// Filter by whether the access token has an expiry time
+    #[serde(rename = "filter[expires]")]
+    expires: Option<bool>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -111,6 +115,10 @@ impl std::fmt::Display for FilterParams {
                 "{sep}filter[expires_after]={}",
                 expires_after.format("%Y-%m-%dT%H:%M:%SZ")
             )?;
+            sep = '&';
+        }
+        if let Some(expires) = self.expires {
+            write!(f, "{sep}filter[expires]={}", expires)?;
             sep = '&';
         }
 
@@ -266,6 +274,12 @@ pub async fn handler(
 
     let filter = if let Some(expires_before) = params.expires_before {
         filter.with_expires_before(expires_before)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(expires) = params.expires {
+        filter.with_expires(expires)
     } else {
         filter
     };
@@ -514,6 +528,11 @@ mod tests {
                 &["01FSHN9AG0YQYAR04VCYTHJ8SK", "01FSPT2RG08Y11Y5BM4VZ4CN8K"],
             ),
             ("filter[status]=revoked", &["01FSM7P1G0VBGAMK9D9QMGQ5MY"]),
+            (
+                "filter[expires]=true",
+                &["01FSHN9AG0YQYAR04VCYTHJ8SK", "01FSPT2RG08Y11Y5BM4VZ4CN8K"],
+            ),
+            ("filter[expires]=false", &["01FSM7P1G0VBGAMK9D9QMGQ5MY"]),
         ];
 
         for (filter, expected_ids) in filters_and_expected {

@@ -156,6 +156,7 @@ pub struct PersonalSessionFilter<'a> {
     last_active_after: Option<DateTime<Utc>>,
     expires_before: Option<DateTime<Utc>>,
     expires_after: Option<DateTime<Utc>>,
+    expires: Option<bool>,
 }
 
 /// Filter for what state a personal session is in.
@@ -331,5 +332,21 @@ impl<'a> PersonalSessionFilter<'a> {
     #[must_use]
     pub fn expires_after(&self) -> Option<DateTime<Utc>> {
         self.expires_after
+    }
+
+    /// Only return sessions whose access tokens have, or don't have,
+    /// an expiry time set
+    #[must_use]
+    pub fn with_expires(mut self, expires: bool) -> Self {
+        self.expires = Some(expires);
+        self
+    }
+
+    /// Get the expires filter
+    ///
+    /// Returns [`None`] if no expires filter was set
+    #[must_use]
+    pub fn expires(&self) -> Option<bool> {
+        self.expires
     }
 }

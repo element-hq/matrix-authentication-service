@@ -567,5 +567,15 @@ impl Filter for PersonalSessionFilter<'_> {
                 Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt))
                     .gt(expires_after)
             }))
+            .add_option(self.expires().map(|expires| {
+                let column =
+                    Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt));
+
+                if expires {
+                    column.is_not_null()
+                } else {
+                    column.is_null()
+                }
+            }))
     }
 }
