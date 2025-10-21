@@ -16,8 +16,9 @@ use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxClock, Session, User};
+use mas_data_model::{BoxClock, Session, TokenType, User, personal::session::PersonalSession};
 use mas_storage::{BoxRepository, RepositoryError};
+use oauth2_types::scope::Scope;
 use ulid::Ulid;
 
 use super::response::ErrorResponse;
@@ -40,6 +41,10 @@ pub enum Rejection {
     /// A database operation failed
     #[error("Invalid repository operation")]
     Repository(#[from] RepositoryError),
+
+    /// The access token was not of the correct type for the Admin API
+    #[error("Invalid type of access token")]
+    InvalidAccessTokenType,
 
     /// The access token could not be found in the database
     #[error("Unknown access token")]
@@ -90,7 +95,8 @@ impl IntoResponse for Rejection {
             | Rejection::TokenExpired
             | Rejection::SessionRevoked
             | Rejection::UserLocked
-            | Rejection::MissingScope => StatusCode::UNAUTHORIZED,
+            | Rejection::MissingScope
+            | Rejection::InvalidAccessTokenType => StatusCode::UNAUTHORIZED,
 
             Rejection::RepositorySetup(_)
             | Rejection::Repository(_)
@@ -113,7 +119,7 @@ pub struct CallContext {
     pub repo: BoxRepository,
     pub clock: BoxClock,
     pub user: Option<User>,
-    pub session: Session,
+    pub session: CallerSession,
 }
 
 impl<S> FromRequestParts<S> for CallContext
@@ -154,28 +160,76 @@ where
             })?;
 
         let token = token.token();
+        let token_type = TokenType::check(token).or(Err(Rejection::InvalidAccessTokenType))?;
 
-        // Look for the access token in the database
-        let token = repo
-            .oauth2_access_token()
-            .find_by_token(token)
-            .await?
-            .ok_or(Rejection::UnknownAccessToken)?;
+        let session = match token_type {
+            TokenType::AccessToken => {
+                // Look for the access token in the database
+                let token = repo
+                    .oauth2_access_token()
+                    .find_by_token(token)
+                    .await?
+                    .ok_or(Rejection::UnknownAccessToken)?;
 
-        // Look for the associated session in the database
-        let session = repo
-            .oauth2_session()
-            .lookup(token.session_id)
-            .await?
-            .ok_or_else(|| Rejection::LoadSession(token.session_id))?;
+                // Look for the associated session in the database
+                let session = repo
+                    .oauth2_session()
+                    .lookup(token.session_id)
+                    .await?
+                    .ok_or_else(|| Rejection::LoadSession(token.session_id))?;
 
-        // Record the activity on the session
-        activity_tracker
-            .record_oauth2_session(&clock, &session)
-            .await;
+                if !session.is_valid() {
+                    return Err(Rejection::SessionRevoked);
+                }
+
+                if !token.is_valid(clock.now()) {
+                    return Err(Rejection::TokenExpired);
+                }
+
+                // Record the activity on the session
+                activity_tracker
+                    .record_oauth2_session(&clock, &session)
+                    .await;
+
+                CallerSession::OAuth2Session(session)
+            }
+            TokenType::PersonalAccessToken => {
+                // Look for the access token in the database
+                let token = repo
+                    .personal_access_token()
+                    .find_by_token(token)
+                    .await?
+                    .ok_or(Rejection::UnknownAccessToken)?;
+
+                // Look for the associated session in the database
+                let session = repo
+                    .personal_session()
+                    .lookup(token.session_id)
+                    .await?
+                    .ok_or_else(|| Rejection::LoadSession(token.session_id))?;
+
+                if !session.is_valid() {
+                    return Err(Rejection::SessionRevoked);
+                }
+
+                if !token.is_valid(clock.now()) {
+                    return Err(Rejection::TokenExpired);
+                }
+
+                // Record the activity on the session
+                activity_tracker
+                    .record_personal_session(&clock, &session)
+                    .await;
+
+                CallerSession::PersonalSession(session)
+            }
+            _other => {
+                return Err(Rejection::InvalidAccessTokenType);
+            }
+        };
 
         // Load the user if there is one
-        let user = if let Some(user_id) = session.user_id {
+        let user = if let Some(user_id) = session.user_id() {
             let user = repo
                 .user()
                 .lookup(user_id)
@@ -193,17 +247,9 @@ where
             return Err(Rejection::UserLocked);
         }
 
-        if !session.is_valid() {
-            return Err(Rejection::SessionRevoked);
-        }
-
-        if !token.is_valid(clock.now()) {
-            return Err(Rejection::TokenExpired);
-        }
-
         // For now, we only check that the session has the admin scope
         // Later we might want to check other route-specific scopes
-        if !session.scope.contains("urn:mas:admin") {
+        if !session.scope().contains("urn:mas:admin") {
             return Err(Rejection::MissingScope);
         }
 
@@ -213,5 +259,28 @@ where
             user,
             session,
         })
+    }
+}
+
+/// The session representing the caller of the Admin API;
+/// could either be an OAuth session or a personal session.
+pub enum CallerSession {
+    OAuth2Session(Session),
+    PersonalSession(PersonalSession),
+}
+
+impl CallerSession {
+    pub fn scope(&self) -> &Scope {
+        match self {
+            CallerSession::OAuth2Session(session) => &session.scope,
+            CallerSession::PersonalSession(session) => &session.scope,
+        }
+    }
+
+    pub fn user_id(&self) -> Option<Ulid> {
+        match self {
+            CallerSession::OAuth2Session(session) => session.user_id,
+            CallerSession::PersonalSession(session) => Some(session.actor_user_id),
+        }
     }
 }
