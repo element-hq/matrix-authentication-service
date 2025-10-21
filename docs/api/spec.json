@@ -999,6 +999,20 @@
           },
           {
             "in": "query",
+            "name": "filter[scope]",
+            "description": "Retrieve the items with the given scope",
+            "schema": {
+              "description": "Retrieve the items with the given scope",
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[status]",
             "description": "Filter by session status",
             "schema": {
@@ -1028,6 +1042,17 @@
               "description": "Filter by access token expiry date",
               "type": "string",
               "format": "date-time",
+              "nullable": true
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires]",
+            "description": "Filter by whether the access token has an expiry time",
+            "schema": {
+              "description": "Filter by whether the access token has an expiry time",
+              "type": "boolean",
               "nullable": true
             },
             "style": "form"
@@ -5138,6 +5163,14 @@
             "$ref": "#/components/schemas/ULID",
             "nullable": true
           },
+          "filter[scope]": {
+            "description": "Retrieve the items with the given scope",
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "filter[status]": {
             "description": "Filter by session status",
             "$ref": "#/components/schemas/PersonalSessionStatus",
@@ -5153,6 +5186,11 @@
             "description": "Filter by access token expiry date",
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "filter[expires]": {
+            "description": "Filter by whether the access token has an expiry time",
+            "type": "boolean",
             "nullable": true
           }
         }
@@ -5230,8 +5268,6 @@
           "actor_user_id",
           "created_at",
           "human_name",
-          "owner_client_id",
-          "owner_user_id",
           "scope"
         ],
         "properties": {
@@ -5248,11 +5284,13 @@
           },
           "owner_user_id": {
             "description": "The ID of the user who owns this session (if user-owned)",
-            "$ref": "#/components/schemas/ULID"
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
           },
           "owner_client_id": {
             "description": "The ID of the `OAuth2` client that owns this session (if client-owned)",
-            "$ref": "#/components/schemas/ULID"
+            "$ref": "#/components/schemas/ULID",
+            "nullable": true
           },
           "actor_user_id": {
             "description": "The ID of the user that the session acts on behalf of",
@@ -5315,7 +5353,7 @@
           "expires_in": {
             "description": "Token expiry time in seconds. If not set, the token won't expire.",
             "type": "integer",
-            "format": "uint64",
+            "format": "uint32",
             "minimum": 0.0,
             "nullable": true
           }
@@ -5342,9 +5380,9 @@
         "type": "object",
         "properties": {
           "expires_in": {
-            "description": "Token expiry time in seconds. If not set, the token will default to the same lifetime as when originally issued.",
+            "description": "Token expiry time in seconds. If not set, the token won't expire.",
             "type": "integer",
-            "format": "uint64",
+            "format": "uint32",
             "minimum": 0.0,
             "nullable": true
           }
