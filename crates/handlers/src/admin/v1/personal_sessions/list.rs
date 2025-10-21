@@ -3,17 +3,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::str::FromStr as _;
+
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{
-    Json,
-    extract::{Query, rejection::QueryRejection},
-    response::IntoResponse,
-};
+use axum::{Json, response::IntoResponse};
+use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::personal::PersonalSessionFilter;
+use oauth2_types::scope::{Scope, ScopeToken};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use ulid::Ulid;
@@ -64,6 +64,10 @@ pub struct FilterParams {
     #[schemars(with = "Option<crate::admin::schema::Ulid>")]
     actor_user: Option<Ulid>,
 
+    /// Retrieve the items with the given scope
+    #[serde(default, rename = "filter[scope]")]
+    scope: Vec<String>,
+
     /// Filter by session status
     #[serde(rename = "filter[status]")]
     status: Option<PersonalSessionStatus>,
@@ -95,6 +99,10 @@ impl std::fmt::Display for FilterParams {
         }
         if let Some(actor_user) = self.actor_user {
             write!(f, "{sep}filter[actor_user]={actor_user}")?;
+            sep = '&';
+        }
+        for scope in &self.scope {
+            write!(f, "{sep}filter[scope]={scope}")?;
             sep = '&';
         }
         if let Some(status) = self.status {
@@ -141,6 +149,9 @@ pub enum RouteError {
 
     #[error("Invalid filter parameters")]
     InvalidFilter(#[from] QueryRejection),
+
+    #[error("Invalid scope {0:?} in filter parameters")]
+    InvalidScope(String),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -153,7 +164,7 @@ impl IntoResponse for RouteError {
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserNotFound(_) | Self::ClientNotFound(_) => StatusCode::NOT_FOUND,
-            Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
+            Self::InvalidScope(_) | Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
         };
         (status, sentry_event_id, Json(error)).into_response()
     }
@@ -259,7 +270,18 @@ pub async fn handler(
         None => filter,
     };
 
-    // Apply status filter
+    let scope: Scope = params
+        .scope
+        .into_iter()
+        .map(|s| ScopeToken::from_str(&s).map_err(|_| RouteError::InvalidScope(s)))
+        .collect::<Result<_, _>>()?;
+
+    let filter = if scope.is_empty() {
+        filter
+    } else {
+        filter.with_scope(&scope)
+    };
+
     let filter = match params.status {
         Some(PersonalSessionStatus::Active) => filter.active_only(),
         Some(PersonalSessionStatus::Revoked) => filter.finished_only(),
@@ -402,7 +424,7 @@ mod tests {
                 PersonalSessionOwner::from(&user),
                 &user,
                 "Another test session".to_owned(),
-                Scope::from_iter([OPENID]),
+                Scope::from_iter([OPENID, "urn:mas:admin".parse().unwrap()]),
             )
             .await
             .unwrap();
@@ -490,7 +512,7 @@ mod tests {
                 "owner_client_id": null,
                 "actor_user_id": "01FSHN9AG09FE39KETP6F390F8",
                 "human_name": "Another test session",
-                "scope": "openid",
+                "scope": "openid urn:mas:admin",
                 "last_active_at": null,
                 "last_active_ip": null,
                 "expires_at": "2022-02-01T14:40:00Z"
@@ -533,6 +555,10 @@ mod tests {
                 &["01FSHN9AG0YQYAR04VCYTHJ8SK", "01FSPT2RG08Y11Y5BM4VZ4CN8K"],
             ),
             ("filter[expires]=false", &["01FSM7P1G0VBGAMK9D9QMGQ5MY"]),
+            (
+                "filter[scope]=urn:mas:admin",
+                &["01FSPT2RG08Y11Y5BM4VZ4CN8K"],
+            ),
         ];
 
         for (filter, expected_ids) in filters_and_expected {
