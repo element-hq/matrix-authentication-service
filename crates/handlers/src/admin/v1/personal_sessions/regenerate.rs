@@ -64,9 +64,8 @@ impl IntoResponse for RouteError {
 #[serde(rename = "RegeneratePersonalSessionRequest")]
 pub struct Request {
     /// Token expiry time in seconds.
-    /// If not set, the token will default to the same lifetime as when
-    /// originally issued.
-    expires_in: Option<u64>,
+    /// If not set, the token won't expire.
+    expires_in: Option<u32>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -132,17 +131,6 @@ pub async fn handler(
         return Err(RouteError::SessionNotValid);
     };
 
-    // Calculate the expiry time of the new token, defaulting
-    // to the token's previous lifetime
-    let expires_in = params
-        .expires_in
-        .map(|exp_in| Duration::seconds(i64::try_from(exp_in).unwrap_or(i64::MAX)))
-        .or_else(|| {
-            old_token
-                .expires_at
-                .map(|exp_at| exp_at - old_token.created_at)
-        });
-
     repo.personal_access_token()
         .revoke(&clock, old_token)
         .await?;
@@ -151,7 +139,15 @@ pub async fn handler(
     let access_token_string = TokenType::PersonalAccessToken.generate(&mut rng);
     let access_token = repo
         .personal_access_token()
-        .add(&mut rng, &clock, &session, &access_token_string, expires_in)
+        .add(
+            &mut rng,
+            &clock,
+            &session,
+            &access_token_string,
+            params
+                .expires_in
+                .map(|exp_in| Duration::seconds(i64::from(exp_in))),
+        )
         .await?;
 
     repo.save().await?;

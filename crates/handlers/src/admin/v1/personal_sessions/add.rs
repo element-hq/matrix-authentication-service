@@ -68,7 +68,7 @@ pub struct Request {
 
     /// Token expiry time in seconds.
     /// If not set, the token won't expire.
-    expires_in: Option<u64>,
+    expires_in: Option<u32>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
