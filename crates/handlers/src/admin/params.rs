@@ -12,12 +12,10 @@ use std::{borrow::Cow, num::NonZeroUsize};
 use aide::OperationIo;
 use axum::{
     Json,
-    extract::{
-        FromRequestParts, Path, Query,
-        rejection::{PathRejection, QueryRejection},
-    },
+    extract::{FromRequestParts, Path, rejection::PathRejection},
     response::IntoResponse,
 };
+use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_storage::pagination::PaginationDirection;

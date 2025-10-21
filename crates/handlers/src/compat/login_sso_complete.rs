@@ -8,9 +8,10 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use axum::{
-    extract::{Form, Path, Query, State},
+    extract::{Form, Path, State},
     response::{Html, IntoResponse, Redirect, Response},
 };
+use axum_extra::extract::Query;
 use chrono::Duration;
 use mas_axum_utils::{
     InternalError,
