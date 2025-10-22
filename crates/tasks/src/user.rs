@@ -10,6 +10,7 @@ use mas_storage::{
     RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
     queue::{DeactivateUserJob, ReactivateUserJob},
     user::{BrowserSessionFilter, UserEmailFilter, UserRepository},
 };
@@ -79,6 +80,36 @@ impl RunnableJob for DeactivateUserJob {
             .await
             .map_err(JobError::retry)?;
         info!(affected = n, "Killed all compatibility sessions for user");
+
+        let n = repo
+            .personal_session()
+            .revoke_bulk(
+                clock,
+                PersonalSessionFilter::new()
+                    .for_actor_user(&user)
+                    .active_only(),
+            )
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Killed all compatibility sessions acting as user"
+        );
+
+        let n = repo
+            .personal_session()
+            .revoke_bulk(
+                clock,
+                PersonalSessionFilter::new()
+                    .for_owner_user(&user)
+                    .active_only(),
+            )
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Killed all compatibility sessions owned by user"
+        );
 
         // Delete all the email addresses for the user
         let n = repo

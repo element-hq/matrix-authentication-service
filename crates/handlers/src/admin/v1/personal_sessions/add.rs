@@ -37,6 +37,9 @@ pub enum RouteError {
     #[error("User not found")]
     UserNotFound,
 
+    #[error("User is not active")]
+    UserDeactivated,
+
     #[error("Invalid scope")]
     InvalidScope,
 }
@@ -51,6 +54,7 @@ impl IntoResponse for RouteError {
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::UserNotFound => StatusCode::NOT_FOUND,
+            Self::UserDeactivated => StatusCode::GONE,
             Self::InvalidScope => StatusCode::BAD_REQUEST,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -113,6 +117,10 @@ pub async fn handler(
         .lookup(params.actor_user_id)
         .await?
         .ok_or(RouteError::UserNotFound)?;
+
+    if !actor_user.is_valid_actor() {
+        return Err(RouteError::UserDeactivated);
+    }
 
     let scope: Scope = params.scope.parse().map_err(|_| RouteError::InvalidScope)?;
 

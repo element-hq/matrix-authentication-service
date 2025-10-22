@@ -182,6 +182,104 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_session_revoke_bulk(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+        let alice_user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let bob_user = repo
+            .user()
+            .add(&mut rng, &clock, "bob".to_owned())
+            .await
+            .unwrap();
+
+        let session1 = repo
+            .personal_session()
+            .add(
+                &mut rng,
+                &clock,
+                (&alice_user).into(),
+                &bob_user,
+                "Test Personal Session".to_owned(),
+                "openid".parse().unwrap(),
+            )
+            .await
+            .unwrap();
+        repo.personal_access_token()
+            .add(
+                &mut rng,
+                &clock,
+                &session1,
+                "mpt_hiss",
+                Some(Duration::days(42)),
+            )
+            .await
+            .unwrap();
+
+        let session2 = repo
+            .personal_session()
+            .add(
+                &mut rng,
+                &clock,
+                (&bob_user).into(),
+                &bob_user,
+                "Test Personal Session".to_owned(),
+                "openid".parse().unwrap(),
+            )
+            .await
+            .unwrap();
+        repo.personal_access_token()
+            .add(
+                &mut rng, &clock, &session2, "mpt_meow", // No expiry
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Just one session without a token expiry time
+        assert_eq!(
+            repo.personal_session()
+                .revoke_bulk(
+                    &clock,
+                    PersonalSessionFilter::new()
+                        .active_only()
+                        .with_expires(false)
+                )
+                .await
+                .unwrap(),
+            1
+        );
+
+        // Just one session with a token expiry time
+        assert_eq!(
+            repo.personal_session()
+                .revoke_bulk(
+                    &clock,
+                    PersonalSessionFilter::new()
+                        .active_only()
+                        .with_expires(true)
+                )
+                .await
+                .unwrap(),
+            1
+        );
+
+        // No active sessions left
+        assert_eq!(
+            repo.personal_session()
+                .revoke_bulk(&clock, PersonalSessionFilter::new().active_only())
+                .await
+                .unwrap(),
+            0
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_access_token_repository(pool: PgPool) {
         const FIRST_TOKEN: &str = "first_access_token";
         const SECOND_TOKEN: &str = "second_access_token";
