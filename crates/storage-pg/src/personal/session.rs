@@ -377,6 +377,9 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .value(PersonalSessions::RevokedAt, revoked_at)
             .and_where(
                 Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId))
+                    // Because filters apply to both the session and access token tables,
+                    // Use a subquery to make it possible to use a JOIN
+                    // onto the personal access token table.
                     .in_subquery(
                         Query::select()
                             .expr(Expr::col((
@@ -387,6 +390,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                             .left_join(
                                 PersonalAccessTokens::Table,
                                 Cond::all()
+                                    // Match session ID
                                     .add(
                                         Expr::col((
                                             PersonalSessions::Table,
@@ -397,6 +401,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                                             PersonalAccessTokens::PersonalSessionId,
                                         ))),
                                     )
+                                    // Only choose the active access token for each session
                                     .add(
                                         Expr::col((
                                             PersonalAccessTokens::Table,
@@ -495,6 +500,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .left_join(
                 PersonalAccessTokens::Table,
                 Cond::all()
+                    // Match session ID
                     .add(
                         Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId))
                             .eq(Expr::col((
@@ -502,6 +508,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                                 PersonalAccessTokens::PersonalSessionId,
                             ))),
                     )
+                    // Only choose the active access token for each session
                     .add(
                         Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::RevokedAt))
                             .is_null(),
@@ -539,6 +546,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .left_join(
                 PersonalAccessTokens::Table,
                 Cond::all()
+                    // Match session ID
                     .add(
                         Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId))
                             .eq(Expr::col((
@@ -546,6 +554,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                                 PersonalAccessTokens::PersonalSessionId,
                             ))),
                     )
+                    // Only choose the active access token for each session
                     .add(
                         Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::RevokedAt))
                             .is_null(),
