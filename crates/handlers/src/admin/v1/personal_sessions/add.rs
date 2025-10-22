@@ -113,7 +113,7 @@ pub async fn handler(
         .await?
         .ok_or(RouteError::UserNotFound)?;
 
-    if actor_user.deactivated_at.is_some() {
+    if !actor_user.is_valid_actor() {
         return Err(RouteError::UserDeactivated);
     }
 
