@@ -700,7 +700,7 @@ pub(crate) async fn post(
             };
 
             activity_tracker
-                .record_personal_access_token_session(&clock, &session, ip)
+                .record_personal_session(&clock, &session, ip)
                 .await;
 
             INTROSPECTION_COUNTER.add(
