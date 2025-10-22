@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "已有账户？",
       "continue_with_email": "使用邮件地址继续",
+      "continue_with_password": "使用密码继续",
       "create_account": {
         "description": "请创建一个账户以开始使用：",
         "heading": "创建账户"
