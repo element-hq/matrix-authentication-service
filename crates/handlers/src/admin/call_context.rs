@@ -264,11 +264,20 @@ where
             None
         };
 
-        // If there is a user for this session, check that it is not locked
-        if let Some(user) = &user
-            && !user.is_valid()
-        {
-            return Err(Rejection::UserLocked);
+        if let CallerSession::PersonalSession(_) = &session {
+            // For personal sessions: check that the actor is valid enough
+            // to be an actor.
+            // unwrap: personal sessions always have an actor user
+            if !user.as_ref().unwrap().is_valid_actor() {
+                return Err(Rejection::UserLocked);
+            }
+        } else {
+            // If there is a user for this session, check that it is not locked
+            if let Some(user) = &user
+                && !user.is_valid()
+            {
+                return Err(Rejection::UserLocked);
+            }
         }
 
         // For now, we only check that the session has the admin scope
