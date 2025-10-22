@@ -16,7 +16,9 @@ use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxClock, Session, TokenType, User, personal::session::PersonalSession};
+use mas_data_model::{
+    BoxClock, Session, TokenFormatError, TokenType, User, personal::session::PersonalSession,
+};
 use mas_storage::{BoxRepository, RepositoryError};
 use oauth2_types::scope::Scope;
 use ulid::Ulid;
@@ -44,7 +46,11 @@ pub enum Rejection {
 
     /// The access token was not of the correct type for the Admin API
     #[error("Invalid type of access token")]
-    InvalidAccessTokenType,
+    InvalidAccessTokenType(
+        #[source]
+        #[from]
+        Option<TokenFormatError>,
+    ),
 
     /// The access token could not be found in the database
     #[error("Unknown access token")]
@@ -96,7 +102,7 @@ impl IntoResponse for Rejection {
             | Rejection::SessionRevoked
             | Rejection::UserLocked
             | Rejection::MissingScope
-            | Rejection::InvalidAccessTokenType => StatusCode::UNAUTHORIZED,
+            | Rejection::InvalidAccessTokenType(_) => StatusCode::UNAUTHORIZED,
 
             Rejection::RepositorySetup(_)
             | Rejection::Repository(_)
@@ -160,7 +166,7 @@ where
             })?;
 
         let token = token.token();
-        let token_type = TokenType::check(token).or(Err(Rejection::InvalidAccessTokenType))?;
+        let token_type = TokenType::check(token)?;
 
         let session = match token_type {
             TokenType::AccessToken => {
@@ -224,7 +230,7 @@ where
                 CallerSession::PersonalSession(session)
             }
             _other => {
-                return Err(Rejection::InvalidAccessTokenType);
+                return Err(Rejection::InvalidAccessTokenType(None));
             }
         };
 
