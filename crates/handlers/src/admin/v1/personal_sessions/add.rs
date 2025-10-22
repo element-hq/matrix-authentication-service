@@ -3,13 +3,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use anyhow::Context;
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxRng, TokenType, personal::session::PersonalSessionOwner};
-use mas_storage::queue::{QueueJobRepositoryExt as _, SyncDevicesJob};
+use mas_data_model::{BoxRng, Device, TokenType, personal::session::PersonalSessionOwner};
+use mas_matrix::HomeserverConnection;
 use oauth2_types::scope::Scope;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -99,6 +102,7 @@ pub async fn handler(
         ..
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
+    NoApi(State(homeserver)): NoApi<State<Arc<dyn HomeserverConnection>>>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<PersonalSession>>), RouteError> {
     let owner = if let Some(user_id) = session.user_id {
@@ -145,12 +149,26 @@ pub async fn handler(
         )
         .await?;
 
+    // If the session has a device, we should add those to the homeserver now
     if session.has_device() {
-        // If the session has a device, then we are now
-        // creating a device and should schedule a device sync.
-        repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&actor_user))
-            .await?;
+        // Lock the user sync to make sure we don't get into a race condition
+        repo.user().acquire_lock_for_sync(&actor_user).await?;
+
+        for scope in &*session.scope {
+            if let Some(device) = Device::from_scope_token(scope) {
+                // NOTE: We haven't relinquished the repo at this point,
+                // so we are holding a transaction across the homeserver
+                // operation.
+                // This is suboptimal, but simpler.
+                // Given this is an administrative endpoint, this is a tolerable
+                // compromise for now.
+                homeserver
+                    .upsert_device(&actor_user.username, device.as_str(), None)
+                    .await
+                    .context("Failed to provision device")
+                    .map_err(|e| RouteError::Internal(e.into()))?;
+            }
+        }
     }
 
     repo.save().await?;
