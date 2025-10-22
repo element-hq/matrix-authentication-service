@@ -89,8 +89,6 @@ pub trait PersonalSessionRepository: Send + Sync {
 
     /// Revoke all the [`PersonalSession`]s matching the given filter.
     ///
-    /// This will also revoke the relevant personal access tokens.
-    ///
     /// Returns the number of sessions affected
     ///
     /// # Parameters
