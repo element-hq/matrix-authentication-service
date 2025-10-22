@@ -17,7 +17,8 @@ use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::{
-    BoxClock, Session, TokenFormatError, TokenType, User, personal::session::PersonalSession,
+    BoxClock, Session, TokenFormatError, TokenType, User,
+    personal::session::{PersonalSession, PersonalSessionOwner},
 };
 use mas_storage::{BoxRepository, RepositoryError};
 use oauth2_types::scope::Scope;
@@ -220,6 +221,23 @@ where
 
                 if !token.is_valid(clock.now()) {
                     return Err(Rejection::TokenExpired);
+                }
+
+                // Check the validity of the owner of the personal session
+                match session.owner {
+                    PersonalSessionOwner::User(owner_user_id) => {
+                        let owner_user = repo
+                            .user()
+                            .lookup(owner_user_id)
+                            .await?
+                            .ok_or_else(|| Rejection::LoadUser(owner_user_id))?;
+                        if !owner_user.is_valid() {
+                            return Err(Rejection::UserLocked);
+                        }
+                    }
+                    PersonalSessionOwner::OAuth2Client(_) => {
+                        // nop: Client owners are always valid
+                    }
                 }
 
                 // Record the activity on the session
