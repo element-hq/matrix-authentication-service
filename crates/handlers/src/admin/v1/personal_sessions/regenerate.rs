@@ -8,7 +8,7 @@ use axum::{Json, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxRng, TokenType, personal::session::PersonalSessionOwner};
+use mas_data_model::{BoxRng, TokenType};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::error;
@@ -19,6 +19,7 @@ use crate::{
         model::{InconsistentPersonalSession, PersonalSession},
         params::UlidPathParam,
         response::{ErrorResponse, SingleResponse},
+        v1::personal_sessions::personal_session_owner_from_caller,
     },
     impl_from_error_for_route,
 };
@@ -111,11 +112,7 @@ pub async fn handler(
 
     // If the owner is not the current caller, then currently we reject the
     // regeneration.
-    let caller = if let Some(user_id) = caller_session.user_id {
-        PersonalSessionOwner::User(user_id)
-    } else {
-        PersonalSessionOwner::OAuth2Client(caller_session.client_id)
-    };
+    let caller = personal_session_owner_from_caller(&caller_session);
     if session.owner != caller {
         return Err(RouteError::SessionNotYours);
     }

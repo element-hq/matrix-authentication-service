@@ -11,7 +11,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxRng, Device, TokenType, personal::session::PersonalSessionOwner};
+use mas_data_model::{BoxRng, Device, TokenType};
 use mas_matrix::HomeserverConnection;
 use oauth2_types::scope::Scope;
 use schemars::JsonSchema;
@@ -23,6 +23,7 @@ use crate::{
         call_context::CallContext,
         model::{InconsistentPersonalSession, PersonalSession},
         response::{ErrorResponse, SingleResponse},
+        v1::personal_sessions::personal_session_owner_from_caller,
     },
     impl_from_error_for_route,
 };
@@ -105,13 +106,7 @@ pub async fn handler(
     NoApi(State(homeserver)): NoApi<State<Arc<dyn HomeserverConnection>>>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<PersonalSession>>), RouteError> {
-    let owner = if let Some(user_id) = session.user_id {
-        // User-owned session
-        PersonalSessionOwner::User(user_id)
-    } else {
-        // No admin user means this is a client-owned session
-        PersonalSessionOwner::OAuth2Client(session.client_id)
-    };
+    let owner = personal_session_owner_from_caller(&session);
 
     let actor_user = repo
         .user()
