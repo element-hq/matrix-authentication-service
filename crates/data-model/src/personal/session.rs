@@ -10,7 +10,7 @@ use oauth2_types::scope::Scope;
 use serde::Serialize;
 use ulid::Ulid;
 
-use crate::{Client, InvalidTransitionError, User};
+use crate::{Client, Device, InvalidTransitionError, User};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub enum SessionState {
@@ -128,5 +128,14 @@ impl PersonalSession {
     pub fn finish(mut self, revoked_at: DateTime<Utc>) -> Result<Self, InvalidTransitionError> {
         self.state = self.state.revoke(revoked_at)?;
         Ok(self)
+    }
+
+    /// Returns whether the scope of this session contains a device scope;
+    /// in other words: whether this session has a device.
+    #[must_use]
+    pub fn has_device(&self) -> bool {
+        self.scope
+            .iter()
+            .any(|scope_token| Device::from_scope_token(scope_token).is_some())
     }
 }

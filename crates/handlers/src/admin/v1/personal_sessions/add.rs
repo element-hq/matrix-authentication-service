@@ -3,12 +3,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::sync::Arc;
+
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use anyhow::Context;
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxRng, TokenType};
+use mas_data_model::{BoxRng, Device, TokenType};
+use mas_matrix::HomeserverConnection;
 use oauth2_types::scope::Scope;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -99,6 +103,7 @@ pub async fn handler(
         ..
     }: CallContext,
     NoApi(mut rng): NoApi<BoxRng>,
+    NoApi(State(homeserver)): NoApi<State<Arc<dyn HomeserverConnection>>>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<PersonalSession>>), RouteError> {
     let owner = personal_session_owner_from_caller(&session);
@@ -138,6 +143,28 @@ pub async fn handler(
                 .map(|exp_in| Duration::seconds(i64::from(exp_in))),
         )
         .await?;
+
+    // If the session has a device, we should add those to the homeserver now
+    if session.has_device() {
+        // Lock the user sync to make sure we don't get into a race condition
+        repo.user().acquire_lock_for_sync(&actor_user).await?;
+
+        for scope in &*session.scope {
+            if let Some(device) = Device::from_scope_token(scope) {
+                // NOTE: We haven't relinquished the repo at this point,
+                // so we are holding a transaction across the homeserver
+                // operation.
+                // This is suboptimal, but simpler.
+                // Given this is an administrative endpoint, this is a tolerable
+                // compromise for now.
+                homeserver
+                    .upsert_device(&actor_user.username, device.as_str(), None)
+                    .await
+                    .context("Failed to provision device")
+                    .map_err(|e| RouteError::Internal(e.into()))?;
+            }
+        }
+    }
 
     repo.save().await?;
 
