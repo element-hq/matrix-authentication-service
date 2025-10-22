@@ -47,11 +47,7 @@ pub enum Rejection {
 
     /// The access token was not of the correct type for the Admin API
     #[error("Invalid type of access token")]
-    InvalidAccessTokenType(
-        #[source]
-        #[from]
-        Option<TokenFormatError>,
-    ),
+    InvalidAccessTokenType(#[from] Option<TokenFormatError>),
 
     /// The access token could not be found in the database
     #[error("Unknown access token")]
