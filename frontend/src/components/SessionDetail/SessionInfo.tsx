@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+import IconAdmin from "@vector-im/compound-design-tokens/assets/web/icons/admin";
 import IconChat from "@vector-im/compound-design-tokens/assets/web/icons/chat";
 import IconComputer from "@vector-im/compound-design-tokens/assets/web/icons/computer";
-import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
+import IconRoom from "@vector-im/compound-design-tokens/assets/web/icons/room";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send";
 import IconUserProfile from "@vector-im/compound-design-tokens/assets/web/icons/user-profile";
 import {
@@ -68,7 +69,7 @@ export const ScopeSendMessages: React.FC = () => {
 const ScopeSynapseAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconErrorSolid} destructive>
+    <VisualListItem Icon={IconRoom} destructive>
       {t("mas.scope.synapse_admin")}
     </VisualListItem>
   );
@@ -77,7 +78,7 @@ const ScopeSynapseAdmin: React.FC = () => {
 const ScopeMasAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconErrorSolid} destructive>
+    <VisualListItem Icon={IconAdmin} destructive>
       {t("mas.scope.mas_admin")}
     </VisualListItem>
   );
