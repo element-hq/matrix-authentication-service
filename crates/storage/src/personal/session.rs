@@ -87,6 +87,26 @@ pub trait PersonalSessionRepository: Send + Sync {
         personal_session: PersonalSession,
     ) -> Result<PersonalSession, Self::Error>;
 
+    /// Revoke all the [`PersonalSession`]s matching the given filter.
+    ///
+    /// This will also revoke the relevant personal access tokens.
+    ///
+    /// Returns the number of sessions affected
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock used to generate timestamps
+    /// * `filter`: The filter to apply
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn revoke_bulk(
+        &mut self,
+        clock: &dyn Clock,
+        filter: PersonalSessionFilter<'_>,
+    ) -> Result<usize, Self::Error>;
+
     /// List [`PersonalSession`]s matching the given filter and pagination
     /// parameters
     ///
@@ -149,6 +169,12 @@ repository_impl!(PersonalSessionRepository:
         clock: &dyn Clock,
         personal_session: PersonalSession,
     ) -> Result<PersonalSession, Self::Error>;
+
+    async fn revoke_bulk(
+        &mut self,
+        clock: &dyn Clock,
+        filter: PersonalSessionFilter<'_>,
+    ) -> Result<usize, Self::Error>;
 
     async fn list(
         &mut self,
