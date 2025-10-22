@@ -255,26 +255,30 @@ where
                 .lookup(user_id)
                 .await?
                 .ok_or_else(|| Rejection::LoadUser(user_id))?;
+
+            match session {
+                CallerSession::OAuth2Session(_) => {
+                    // For OAuth2 sessions: check that the user is valid enough
+                    // to be a user.
+                    if !user.is_valid() {
+                        return Err(Rejection::UserLocked);
+                    }
+                }
+                CallerSession::PersonalSession(_) => {
+                    // For personal sessions: check that the actor is valid enough
+                    // to be an actor.
+                    if !user.is_valid_actor() {
+                        return Err(Rejection::UserLocked);
+                    }
+                }
+            }
+
             Some(user)
         } else {
+            // Double check we're not using a PersonalSession
+            assert!(matches!(session, CallerSession::OAuth2Session(_)));
             None
         };
-
-        if let CallerSession::PersonalSession(_) = &session {
-            // For personal sessions: check that the actor is valid enough
-            // to be an actor.
-            // unwrap: personal sessions always have an actor user
-            if !user.as_ref().unwrap().is_valid_actor() {
-                return Err(Rejection::UserLocked);
-            }
-        } else {
-            // If there is a user for this session, check that it is not locked
-            if let Some(user) = &user
-                && !user.is_valid()
-            {
-                return Err(Rejection::UserLocked);
-            }
-        }
 
         // For now, we only check that the session has the admin scope
         // Later we might want to check other route-specific scopes
