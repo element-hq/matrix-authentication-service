@@ -117,6 +117,16 @@
         width: var(--cpd-space-6x);
         color: var(--cpd-color-icon-quaternary);
       }
+
+      &.dangerous {
+        border: 1px solid var(--cpd-color-border-critical-subtle);
+        background-color: var(--cpd-color-bg-critical-subtle);
+        color: var(--cpd-color-text-critical-primary);
+
+        & > svg {
+          color: var(--cpd-color-icon-critical-primary);
+        }
+      }
     }
   }
 }

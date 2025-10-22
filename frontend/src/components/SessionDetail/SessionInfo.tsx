@@ -68,7 +68,7 @@ export const ScopeSendMessages: React.FC = () => {
 const ScopeSynapseAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconErrorSolid}>
+    <VisualListItem Icon={IconErrorSolid} destructive>
       {t("mas.scope.synapse_admin")}
     </VisualListItem>
   );
@@ -77,7 +77,7 @@ const ScopeSynapseAdmin: React.FC = () => {
 const ScopeMasAdmin: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <VisualListItem Icon={IconErrorSolid}>
+    <VisualListItem Icon={IconErrorSolid} destructive>
       {t("mas.scope.mas_admin")}
     </VisualListItem>
   );
