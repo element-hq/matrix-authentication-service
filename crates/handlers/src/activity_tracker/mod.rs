@@ -113,8 +113,8 @@ impl ActivityTracker {
         }
     }
 
-    /// Record activity in a personal access token session.
-    pub async fn record_personal_access_token_session(
+    /// Record activity in a personal session.
+    pub async fn record_personal_session(
         &self,
         clock: &dyn Clock,
         session: &PersonalSession,
