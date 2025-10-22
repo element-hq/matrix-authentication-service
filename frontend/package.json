@@ -33,7 +33,7 @@
     "i18next": "^25.6.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-i18next": "^16.1.0",
+    "react-i18next": "^16.1.4",
     "swagger-ui-dist": "^5.29.5",
     "valibot": "^1.1.0",
     "vaul": "^1.1.2"
