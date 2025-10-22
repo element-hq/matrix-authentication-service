@@ -9,7 +9,10 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Clock, User,
-    personal::session::{PersonalSession, PersonalSessionOwner, SessionState},
+    personal::{
+        PersonalAccessToken,
+        session::{PersonalSession, PersonalSessionOwner, SessionState},
+    },
 };
 use mas_storage::{
     Page, Pagination,
@@ -17,13 +20,15 @@ use mas_storage::{
     personal::{PersonalSessionFilter, PersonalSessionRepository, PersonalSessionState},
 };
 use oauth2_types::scope::Scope;
+use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{
-    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    Cond, Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr as _,
 };
 use sea_query_binder::SqlxBinder as _;
 use sqlx::PgConnection;
+use tracing::{Instrument as _, info_span};
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -31,7 +36,7 @@ use crate::{
     DatabaseError,
     errors::DatabaseInconsistencyError,
     filter::{Filter, StatementExt as _},
-    iden::PersonalSessions,
+    iden::{PersonalAccessTokens, PersonalSessions},
     pagination::QueryBuilderExt as _,
     tracing::ExecuteExt as _,
 };
@@ -113,6 +118,73 @@ impl TryFrom<PersonalSessionLookup> for PersonalSession {
             last_active_at: value.last_active_at,
             last_active_ip: value.last_active_ip,
         })
+    }
+}
+
+#[derive(sqlx::FromRow)]
+#[enum_def]
+struct PersonalSessionAndAccessTokenLookup {
+    personal_session_id: Uuid,
+    owner_user_id: Option<Uuid>,
+    owner_oauth2_client_id: Option<Uuid>,
+    actor_user_id: Uuid,
+    human_name: String,
+    scope_list: Vec<String>,
+    created_at: DateTime<Utc>,
+    revoked_at: Option<DateTime<Utc>>,
+    last_active_at: Option<DateTime<Utc>>,
+    last_active_ip: Option<IpAddr>,
+
+    // tokens
+    personal_access_token_id: Option<Uuid>,
+    token_created_at: Option<DateTime<Utc>>,
+    token_expires_at: Option<DateTime<Utc>>,
+}
+
+impl Node<Ulid> for PersonalSessionAndAccessTokenLookup {
+    fn cursor(&self) -> Ulid {
+        self.personal_session_id.into()
+    }
+}
+
+impl TryFrom<PersonalSessionAndAccessTokenLookup>
+    for (PersonalSession, Option<PersonalAccessToken>)
+{
+    type Error = DatabaseInconsistencyError;
+
+    fn try_from(value: PersonalSessionAndAccessTokenLookup) -> Result<Self, Self::Error> {
+        let session = PersonalSession::try_from(PersonalSessionLookup {
+            personal_session_id: value.personal_session_id,
+            owner_user_id: value.owner_user_id,
+            owner_oauth2_client_id: value.owner_oauth2_client_id,
+            actor_user_id: value.actor_user_id,
+            human_name: value.human_name,
+            scope_list: value.scope_list,
+            created_at: value.created_at,
+            revoked_at: value.revoked_at,
+            last_active_at: value.last_active_at,
+            last_active_ip: value.last_active_ip,
+        })?;
+
+        let token_opt = if let Some(id) = value.personal_access_token_id {
+            let id = Ulid::from(id);
+            Some(PersonalAccessToken {
+                id,
+                session_id: session.id,
+                // should not be possible
+                created_at: value.token_created_at.ok_or(
+                    DatabaseInconsistencyError::on("personal_sessions")
+                        .column("created_at")
+                        .row(id),
+                )?,
+                expires_at: value.token_expires_at,
+                revoked_at: None,
+            })
+        } else {
+            None
+        };
+
+        Ok((session, token_opt))
     }
 }
 
@@ -241,7 +313,30 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         clock: &dyn Clock,
         session: PersonalSession,
     ) -> Result<PersonalSession, Self::Error> {
-        let finished_at = clock.now();
+        let revoked_at = clock.now();
+
+        {
+            // Revoke dependent PATs
+            let span = info_span!(
+                "db.personal_session.revoke.tokens",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    UPDATE personal_access_tokens
+                    SET revoked_at = $2
+                    WHERE personal_session_id = $1 AND revoked_at IS NULL
+                "#,
+                Uuid::from(session.id),
+                revoked_at,
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+
         let res = sqlx::query!(
             r#"
                 UPDATE personal_sessions
@@ -249,7 +344,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                 WHERE personal_session_id = $1
             "#,
             Uuid::from(session.id),
-            finished_at,
+            revoked_at,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -258,7 +353,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         session
-            .finish(finished_at)
+            .finish(revoked_at)
             .map_err(DatabaseError::to_invalid_operation)
     }
 
@@ -274,52 +369,82 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         &mut self,
         filter: PersonalSessionFilter<'_>,
         pagination: Pagination,
-    ) -> Result<Page<PersonalSession>, Self::Error> {
+    ) -> Result<Page<(PersonalSession, Option<PersonalAccessToken>)>, Self::Error> {
         let (sql, arguments) = Query::select()
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId)),
-                PersonalSessionLookupIden::PersonalSessionId,
+                PersonalSessionAndAccessTokenLookupIden::PersonalSessionId,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::OwnerUserId)),
-                PersonalSessionLookupIden::OwnerUserId,
+                PersonalSessionAndAccessTokenLookupIden::OwnerUserId,
             )
             .expr_as(
                 Expr::col((
                     PersonalSessions::Table,
                     PersonalSessions::OwnerOAuth2ClientId,
                 )),
-                PersonalSessionLookupIden::OwnerOauth2ClientId,
+                PersonalSessionAndAccessTokenLookupIden::OwnerOauth2ClientId,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::ActorUserId)),
-                PersonalSessionLookupIden::ActorUserId,
+                PersonalSessionAndAccessTokenLookupIden::ActorUserId,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::HumanName)),
-                PersonalSessionLookupIden::HumanName,
+                PersonalSessionAndAccessTokenLookupIden::HumanName,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::ScopeList)),
-                PersonalSessionLookupIden::ScopeList,
+                PersonalSessionAndAccessTokenLookupIden::ScopeList,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::CreatedAt)),
-                PersonalSessionLookupIden::CreatedAt,
+                PersonalSessionAndAccessTokenLookupIden::CreatedAt,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::RevokedAt)),
-                PersonalSessionLookupIden::RevokedAt,
+                PersonalSessionAndAccessTokenLookupIden::RevokedAt,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveAt)),
-                PersonalSessionLookupIden::LastActiveAt,
+                PersonalSessionAndAccessTokenLookupIden::LastActiveAt,
             )
             .expr_as(
                 Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveIp)),
-                PersonalSessionLookupIden::LastActiveIp,
+                PersonalSessionAndAccessTokenLookupIden::LastActiveIp,
+            )
+            .expr_as(
+                Expr::col((
+                    PersonalAccessTokens::Table,
+                    PersonalAccessTokens::PersonalAccessTokenId,
+                )),
+                PersonalSessionAndAccessTokenLookupIden::PersonalAccessTokenId,
+            )
+            .expr_as(
+                Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::CreatedAt)),
+                PersonalSessionAndAccessTokenLookupIden::TokenCreatedAt,
+            )
+            .expr_as(
+                Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt)),
+                PersonalSessionAndAccessTokenLookupIden::TokenExpiresAt,
             )
             .from(PersonalSessions::Table)
+            .left_join(
+                PersonalAccessTokens::Table,
+                Cond::all()
+                    .add(
+                        Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId))
+                            .eq(Expr::col((
+                                PersonalAccessTokens::Table,
+                                PersonalAccessTokens::PersonalSessionId,
+                            ))),
+                    )
+                    .add(
+                        Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::RevokedAt))
+                            .is_null(),
+                    ),
+            )
             .apply_filter(filter)
             .generate_pagination(
                 (PersonalSessions::Table, PersonalSessions::PersonalSessionId),
@@ -327,7 +452,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<PersonalSessionLookup> = sqlx::query_as_with(&sql, arguments)
+        let edges: Vec<PersonalSessionAndAccessTokenLookup> = sqlx::query_as_with(&sql, arguments)
             .traced()
             .fetch_all(&mut *self.conn)
             .await?;
@@ -349,6 +474,21 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         let (sql, arguments) = Query::select()
             .expr(Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId)).count())
             .from(PersonalSessions::Table)
+            .left_join(
+                PersonalAccessTokens::Table,
+                Cond::all()
+                    .add(
+                        Expr::col((PersonalSessions::Table, PersonalSessions::PersonalSessionId))
+                            .eq(Expr::col((
+                                PersonalAccessTokens::Table,
+                                PersonalAccessTokens::PersonalSessionId,
+                            ))),
+                    )
+                    .add(
+                        Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::RevokedAt))
+                            .is_null(),
+                    ),
+            )
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
@@ -468,6 +608,24 @@ impl Filter for PersonalSessionFilter<'_> {
             .add_option(self.last_active_after().map(|last_active_after| {
                 Expr::col((PersonalSessions::Table, PersonalSessions::LastActiveAt))
                     .gt(last_active_after)
+            }))
+            .add_option(self.expires_before().map(|expires_before| {
+                Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt))
+                    .lt(expires_before)
+            }))
+            .add_option(self.expires_after().map(|expires_after| {
+                Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt))
+                    .gt(expires_after)
+            }))
+            .add_option(self.expires().map(|expires| {
+                let column =
+                    Expr::col((PersonalAccessTokens::Table, PersonalAccessTokens::ExpiresAt));
+
+                if expires {
+                    column.is_not_null()
+                } else {
+                    column.is_null()
+                }
             }))
     }
 }

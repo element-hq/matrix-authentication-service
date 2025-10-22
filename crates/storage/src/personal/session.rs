@@ -9,7 +9,10 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Client, Clock, Device, User,
-    personal::session::{PersonalSession, PersonalSessionOwner},
+    personal::{
+        PersonalAccessToken,
+        session::{PersonalSession, PersonalSessionOwner},
+    },
 };
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
@@ -99,7 +102,7 @@ pub trait PersonalSessionRepository: Send + Sync {
         &mut self,
         filter: PersonalSessionFilter<'_>,
         pagination: Pagination,
-    ) -> Result<Page<PersonalSession>, Self::Error>;
+    ) -> Result<Page<(PersonalSession, Option<PersonalAccessToken>)>, Self::Error>;
 
     /// Count [`PersonalSession`]s matching the given filter
     ///
@@ -151,7 +154,7 @@ repository_impl!(PersonalSessionRepository:
         &mut self,
         filter: PersonalSessionFilter<'_>,
         pagination: Pagination,
-    ) -> Result<Page<PersonalSession>, Self::Error>;
+    ) -> Result<Page<(PersonalSession, Option<PersonalAccessToken>)>, Self::Error>;
 
     async fn count(&mut self, filter: PersonalSessionFilter<'_>) -> Result<usize, Self::Error>;
 
@@ -161,7 +164,8 @@ repository_impl!(PersonalSessionRepository:
     ) -> Result<(), Self::Error>;
 );
 
-/// Filter parameters for listing personal sessions
+/// Filter parameters for listing personal sessions alongside personal access
+/// tokens
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct PersonalSessionFilter<'a> {
     owner_user: Option<&'a User>,
@@ -172,6 +176,9 @@ pub struct PersonalSessionFilter<'a> {
     scope: Option<&'a Scope>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
+    expires_before: Option<DateTime<Utc>>,
+    expires_after: Option<DateTime<Utc>>,
+    expires: Option<bool>,
 }
 
 /// Filter for what state a personal session is in.
@@ -317,5 +324,51 @@ impl<'a> PersonalSessionFilter<'a> {
     #[must_use]
     pub fn device(&self) -> Option<&'a Device> {
         self.device
+    }
+
+    /// Only return sessions whose access tokens expire before the given time
+    #[must_use]
+    pub fn with_expires_before(mut self, expires_before: DateTime<Utc>) -> Self {
+        self.expires_before = Some(expires_before);
+        self
+    }
+
+    /// Get the expires before filter
+    ///
+    /// Returns [`None`] if no expires before filter was set
+    #[must_use]
+    pub fn expires_before(&self) -> Option<DateTime<Utc>> {
+        self.expires_before
+    }
+
+    /// Only return sessions whose access tokens expire after the given time
+    #[must_use]
+    pub fn with_expires_after(mut self, expires_after: DateTime<Utc>) -> Self {
+        self.expires_after = Some(expires_after);
+        self
+    }
+
+    /// Get the expires after filter
+    ///
+    /// Returns [`None`] if no expires after filter was set
+    #[must_use]
+    pub fn expires_after(&self) -> Option<DateTime<Utc>> {
+        self.expires_after
+    }
+
+    /// Only return sessions whose access tokens have, or don't have,
+    /// an expiry time set
+    #[must_use]
+    pub fn with_expires(mut self, expires: bool) -> Self {
+        self.expires = Some(expires);
+        self
+    }
+
+    /// Get the expires filter
+    ///
+    /// Returns [`None`] if no expires filter was set
+    #[must_use]
+    pub fn expires(&self) -> Option<bool> {
+        self.expires
     }
 }

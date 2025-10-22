@@ -4,10 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use axum::{
-    extract::{Query, State},
-    response::IntoResponse,
-};
+use axum::{extract::State, response::IntoResponse};
+use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError};
 use mas_data_model::{BoxClock, BoxRng};

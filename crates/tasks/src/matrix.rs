@@ -259,7 +259,8 @@ impl RunnableJob for SyncDevicesJob {
                 .map_err(JobError::retry)?;
 
             for edge in page.edges {
-                for scope in &*edge.node.scope {
+                let (session, _) = &edge.node;
+                for scope in &*session.scope {
                     if let Some(device) = Device::from_scope_token(scope) {
                         devices.insert(device.as_str().to_owned());
                     }

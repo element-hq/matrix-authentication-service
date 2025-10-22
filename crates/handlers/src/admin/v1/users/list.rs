@@ -5,11 +5,8 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{
-    Json,
-    extract::{Query, rejection::QueryRejection},
-    response::IntoResponse,
-};
+use axum::{Json, response::IntoResponse};
+use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;

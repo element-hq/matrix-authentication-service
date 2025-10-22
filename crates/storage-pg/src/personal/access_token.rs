@@ -129,6 +129,43 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.personal_access_token.find_active_for_session",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn find_active_for_session(
+        &mut self,
+        session: &PersonalSession,
+    ) -> Result<Option<PersonalAccessToken>, Self::Error> {
+        let res: Option<PersonalAccessTokenLookup> = sqlx::query_as!(
+            PersonalAccessTokenLookup,
+            r#"
+                SELECT personal_access_token_id
+                     , personal_session_id
+                     , created_at
+                     , expires_at
+                     , revoked_at
+
+                FROM personal_access_tokens
+
+                WHERE personal_session_id = $1
+                AND revoked_at IS NULL
+            "#,
+            Uuid::from(session.id),
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        let Some(res) = res else { return Ok(None) };
+
+        Ok(Some(res.into()))
+    }
+
+    #[tracing::instrument(
         name = "db.personal_access_token.add",
         skip_all,
         fields(

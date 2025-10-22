@@ -5,9 +5,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use axum::{
-    extract::{Query, State},
+    extract::State,
     response::{Html, IntoResponse},
 };
+use axum_extra::extract::Query;
 use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{PostAuthAction, UrlBuilder};
