@@ -633,7 +633,7 @@
         },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/password.html:20:27-67"
+          "context": "pages/register/password.html:18:29-69"
         }
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
