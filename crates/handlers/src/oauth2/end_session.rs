@@ -5,9 +5,10 @@
 // Please see LICENSE files in the repository root for full details.
 use axum::{
     Json,
-    extract::{Query, State},
+    extract::State,
     response::{IntoResponse, Redirect, Response},
 };
+use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, record_error};
 use mas_data_model::{BoxClock, BoxRng, Clock};
