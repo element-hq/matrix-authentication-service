@@ -28,7 +28,7 @@ Please see LICENSE files in the repository root for full details.
     {{ captcha.head() }}
   </head>
   <body>
-    <div class="layout-container{% if consent_page %} consent{% endif %}">
+    <div class="layout-container{% if consent_page is defined %} consent{% endif %}">
       {% block content %}{% endblock content %}
       {% include "components/footer.html" %}
     </div>
