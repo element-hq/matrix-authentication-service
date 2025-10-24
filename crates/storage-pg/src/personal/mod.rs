@@ -384,6 +384,11 @@ mod tests {
         assert!(!token.is_valid(clock.now()));
 
         // Add a second access token, this time without expiration
+        let _token = repo
+            .personal_access_token()
+            .revoke(&clock, token)
+            .await
+            .unwrap();
         let token = repo
             .personal_access_token()
             .add(&mut rng, &clock, &session, SECOND_TOKEN, None)
