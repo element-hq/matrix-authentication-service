@@ -78,13 +78,14 @@ macro_rules! register_templates {
             /// # Errors
             ///
             /// Returns an error if any template fails to render with any of the sample.
-            pub(crate) fn all(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng) -> anyhow::Result<::std::collections::BTreeMap<&'static str, Vec<String>>> {
+            pub(crate) fn all(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
                 let mut out = ::std::collections::BTreeMap::new();
                 // TODO shouldn't the Rng be independent for each render?
                 $(
-                    out.insert(
-                        $template,
+                    out.extend(
                         $name $(::< $( $generic_default ),*  >)? (templates, now, rng)?
+                            .into_iter()
+                            .map(|(sample_identifier, rendered)| (($template, sample_identifier), rendered))
                     );
                 )*
 
@@ -102,18 +103,18 @@ macro_rules! register_templates {
                 pub(crate) fn $name
                     $(< $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ >)?
                     (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng)
-                -> anyhow::Result<Vec<String>> {
+                -> anyhow::Result<BTreeMap<SampleIdentifier, String>> {
                     let locales = templates.translator().available_locales();
-                    let samples: Vec< $param > = TemplateContext::sample(now, rng, &locales);
+                    let samples: BTreeMap<SampleIdentifier, $param > = TemplateContext::sample(now, rng, &locales);
 
                     let name = $template;
-                    let mut out = Vec::new();
-                    for (idx, sample) in samples.into_iter().enumerate() {
+                    let mut out = BTreeMap::new();
+                    for (sample_identifier, sample) in samples {
                         let context = serde_json::to_value(&sample)?;
                         ::tracing::info!(name, %context, "Rendering template");
                         let rendered = templates. $name (&sample)
-                            .with_context(|| format!("Failed to render sample template {name:?}-{idx} with context {context}"))?;
-                        out.push(rendered);
+                            .with_context(|| format!("Failed to render sample template {name:?}-{sample_identifier:?} with context {context}"))?;
+                        out.insert(sample_identifier, rendered);
                     }
 
                     Ok(out)

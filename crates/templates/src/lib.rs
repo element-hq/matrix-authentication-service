@@ -53,6 +53,7 @@ pub use self::{
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
+use crate::context::SampleIdentifier;
 
 /// Escape the given string for use in HTML
 ///
@@ -457,7 +458,7 @@ impl Templates {
         &self,
         now: chrono::DateTime<chrono::Utc>,
         rng: &mut impl Rng,
-    ) -> anyhow::Result<BTreeMap<&'static str, Vec<String>>> {
+    ) -> anyhow::Result<BTreeMap<(&'static str, SampleIdentifier), String>> {
         check::all(self, now, rng)
     }
 }

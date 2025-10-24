@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::process::ExitCode;
+use std::{collections::BTreeSet, fmt::Write, process::ExitCode};
 
 use anyhow::{Context as _, bail};
 use camino::Utf8PathBuf;
@@ -83,7 +83,7 @@ impl Options {
                             tokio::fs::read_dir(&out_dir).await.with_context(|| {
                                 format!("could not read {out_dir} to check it's empty")
                             })?;
-                        while let Some(x) = read_dir.next_entry().await? {
+                        if read_dir.next_entry().await?.is_some() {
                             bail!("Render directory {out_dir} is not empty, refusing to write.");
                         }
                     } else {
@@ -92,19 +92,49 @@ impl Options {
                             .with_context(|| format!("could not create {out_dir}"))?;
                     }
 
-                    for (template, template_renders) in &all_renders {
-                        let template_filename_base =
-                            template.trim_end_matches(".html").replace('/', "_");
-                        for (idx, render) in template_renders.iter().enumerate() {
-                            let render_path =
-                                out_dir.join(format!("{template_filename_base}-sample{idx}.html"));
+                    let all_locales: BTreeSet<&str> = all_renders
+                        .iter()
+                        .filter_map(|((_, sample_identifier), _)| {
+                            sample_identifier.locale.as_deref()
+                        })
+                        .collect();
+                    for locale in all_locales {
+                        let locale_dir = out_dir.join(locale);
+                        tokio::fs::create_dir(&locale_dir)
+                            .await
+                            .with_context(|| format!("could not create {locale_dir}"))?;
+                    }
 
-                            tokio::fs::write(&render_path, render.as_bytes())
-                                .await
-                                .with_context(|| {
-                                    format!("could not write render to {render_path}")
-                                })?;
-                        }
+                    for ((template, sample_identifier), template_render) in &all_renders {
+                        let (template_filename_base, template_ext) =
+                            template.rsplit_once('.').unwrap_or((template, "txt"));
+                        let template_filename_base = template_filename_base.replace('/', "_");
+
+                        // Make a string like:
+                        // - `-sample1`
+                        // - `-session2-sample1`
+                        let sample_suffix = {
+                            let mut s = String::new();
+                            if let Some(session_index) = sample_identifier.session_index {
+                                write!(s, "-session{session_index}")?;
+                            }
+                            write!(s, "-sample{}", sample_identifier.index)?;
+                            s
+                        };
+
+                        let locale_dir = if let Some(locale) = &sample_identifier.locale {
+                            out_dir.join(locale)
+                        } else {
+                            out_dir.clone()
+                        };
+
+                        let render_path = locale_dir.join(format!(
+                            "{template_filename_base}{sample_suffix}.{template_ext}"
+                        ));
+
+                        tokio::fs::write(&render_path, template_render.as_bytes())
+                            .await
+                            .with_context(|| format!("could not write render to {render_path}"))?;
                     }
                 }
 
