@@ -12,6 +12,7 @@ mod ext;
 mod features;
 
 use std::{
+    collections::BTreeMap,
     fmt::Formatter,
     net::{IpAddr, Ipv4Addr},
 };
@@ -105,9 +106,60 @@ pub trait TemplateContext: Serialize {
     ///
     /// This is then used to check for template validity in unit tests and in
     /// the CLI (`cargo run -- templates check`)
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized;
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SampleIdentifier {
+    /// A stable locale identifier.
+    pub locale: Option<String>,
+
+    /// A stable identifier for the session that was used in this sample.
+    pub session_index: Option<usize>,
+
+    /// A stable positional index of the sample for this context.
+    pub index: usize,
+}
+
+impl SampleIdentifier {
+    pub fn with_locale(&self, locale: String) -> Self {
+        SampleIdentifier {
+            locale: Some(locale),
+            session_index: self.session_index,
+            index: self.index,
+        }
+    }
+
+    pub fn with_session_index(self, session_index: usize) -> Self {
+        SampleIdentifier {
+            locale: self.locale,
+            session_index: Some(session_index),
+            index: self.index,
+        }
+    }
+}
+
+pub(crate) fn sample_list<T: TemplateContext>(samples: Vec<T>) -> BTreeMap<SampleIdentifier, T> {
+    samples
+        .into_iter()
+        .enumerate()
+        .map(|(index, sample)| {
+            (
+                SampleIdentifier {
+                    locale: None,
+                    session_index: None,
+                    index,
+                },
+                sample,
+            )
+        })
+        .collect()
 }
 
 impl TemplateContext for () {
@@ -115,11 +167,11 @@ impl TemplateContext for () {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        Vec::new()
+        BTreeMap::new()
     }
 }
 
@@ -148,7 +200,11 @@ impl<T> std::ops::Deref for WithLanguage<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
@@ -157,9 +213,14 @@ impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
             .flat_map(|locale| {
                 T::sample(now, rng, locales)
                     .into_iter()
-                    .map(move |inner| WithLanguage {
-                        lang: locale.to_string(),
-                        inner,
+                    .map(|(sample_id, sample)| {
+                        (
+                            sample_id.with_locale(locale.to_string()),
+                            WithLanguage {
+                                lang: locale.to_string(),
+                                inner: sample,
+                            },
+                        )
                     })
             })
             .collect()
@@ -176,15 +237,24 @@ pub struct WithCsrf<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         T::sample(now, rng, locales)
             .into_iter()
-            .map(|inner| WithCsrf {
-                csrf_token: "fake_csrf_token".into(),
-                inner,
+            .map(|(k, inner)| {
+                (
+                    k,
+                    WithCsrf {
+                        csrf_token: "fake_csrf_token".into(),
+                        inner,
+                    },
+                )
             })
             .collect()
     }
@@ -200,18 +270,28 @@ pub struct WithSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithSession<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         BrowserSession::samples(now, rng)
             .into_iter()
-            .flat_map(|session| {
+            .enumerate()
+            .flat_map(|(session_index, session)| {
                 T::sample(now, rng, locales)
                     .into_iter()
-                    .map(move |inner| WithSession {
-                        current_session: session.clone(),
-                        inner,
+                    .map(move |(k, inner)| {
+                        (
+                            k.with_session_index(session_index),
+                            WithSession {
+                                current_session: session.clone(),
+                                inner,
+                            },
+                        )
                     })
             })
             .collect()
@@ -228,7 +308,11 @@ pub struct WithOptionalSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
@@ -236,12 +320,22 @@ impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
             .into_iter()
             .map(Some) // Wrap all samples in an Option
             .chain(std::iter::once(None)) // Add the "None" option
-            .flat_map(|session| {
+            .enumerate()
+            .flat_map(|(session_index, session)| {
                 T::sample(now, rng, locales)
                     .into_iter()
-                    .map(move |inner| WithOptionalSession {
-                        current_session: session.clone(),
-                        inner,
+                    .map(move |(k, inner)| {
+                        (
+                            if session.is_some() {
+                                k.with_session_index(session_index)
+                            } else {
+                                k
+                            },
+                            WithOptionalSession {
+                                current_session: session.clone(),
+                                inner,
+                            },
+                        )
                     })
             })
             .collect()
@@ -269,11 +363,11 @@ impl TemplateContext for EmptyContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![EmptyContext]
+        sample_list(vec![EmptyContext])
     }
 }
 
@@ -297,15 +391,15 @@ impl TemplateContext for IndexContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![Self {
+        sample_list(vec![Self {
             discovery_url: "https://example.com/.well-known/openid-configuration"
                 .parse()
                 .unwrap(),
-        }]
+        }])
     }
 }
 
@@ -343,12 +437,12 @@ impl TemplateContext for AppContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        vec![Self::from_url_builder(&url_builder)]
+        sample_list(vec![Self::from_url_builder(&url_builder)])
     }
 }
 
@@ -376,12 +470,12 @@ impl TemplateContext for ApiDocContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        vec![Self::from_url_builder(&url_builder)]
+        sample_list(vec![Self::from_url_builder(&url_builder)])
     }
 }
 
@@ -468,12 +562,12 @@ impl TemplateContext for LoginContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         // TODO: samples with errors
-        vec![
+        sample_list(vec![
             LoginContext {
                 form: FormState::default(),
                 next: None,
@@ -503,7 +597,7 @@ impl TemplateContext for LoginContext {
                 next: None,
                 providers: Vec::new(),
             },
-        ]
+        ])
     }
 }
 
@@ -576,14 +670,14 @@ impl TemplateContext for RegisterContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![RegisterContext {
+        sample_list(vec![RegisterContext {
             providers: Vec::new(),
             next: None,
-        }]
+        }])
     }
 }
 
@@ -619,15 +713,15 @@ impl TemplateContext for PasswordRegisterContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         // TODO: samples with errors
-        vec![PasswordRegisterContext {
+        sample_list(vec![PasswordRegisterContext {
             form: FormState::default(),
             next: None,
-        }]
+        }])
     }
 }
 
@@ -657,24 +751,30 @@ pub struct ConsentContext {
 }
 
 impl TemplateContext for ConsentContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        Client::samples(now, rng)
-            .into_iter()
-            .map(|client| {
-                let mut grant = AuthorizationGrant::sample(now, rng);
-                let action = PostAuthAction::continue_grant(grant.id);
-                // XXX
-                grant.client_id = client.id;
-                Self {
-                    grant,
-                    client,
-                    action,
-                }
-            })
-            .collect()
+        sample_list(
+            Client::samples(now, rng)
+                .into_iter()
+                .map(|client| {
+                    let mut grant = AuthorizationGrant::sample(now, rng);
+                    let action = PostAuthAction::continue_grant(grant.id);
+                    // XXX
+                    grant.client_id = client.id;
+                    Self {
+                        grant,
+                        client,
+                        action,
+                    }
+                })
+                .collect(),
+        )
     }
 }
 
@@ -709,38 +809,44 @@ pub struct PolicyViolationContext {
 }
 
 impl TemplateContext for PolicyViolationContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        Client::samples(now, rng)
-            .into_iter()
-            .flat_map(|client| {
-                let mut grant = AuthorizationGrant::sample(now, rng);
-                // XXX
-                grant.client_id = client.id;
+        sample_list(
+            Client::samples(now, rng)
+                .into_iter()
+                .flat_map(|client| {
+                    let mut grant = AuthorizationGrant::sample(now, rng);
+                    // XXX
+                    grant.client_id = client.id;
 
-                let authorization_grant =
-                    PolicyViolationContext::for_authorization_grant(grant, client.clone());
-                let device_code_grant = PolicyViolationContext::for_device_code_grant(
-                    DeviceCodeGrant {
-                        id: Ulid::from_datetime_with_source(now.into(), rng),
-                        state: mas_data_model::DeviceCodeGrantState::Pending,
-                        client_id: client.id,
-                        scope: [OPENID].into_iter().collect(),
-                        user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
-                        device_code: Alphanumeric.sample_string(rng, 32),
-                        created_at: now - Duration::try_minutes(5).unwrap(),
-                        expires_at: now + Duration::try_minutes(25).unwrap(),
-                        ip_address: None,
-                        user_agent: None,
-                    },
-                    client,
-                );
+                    let authorization_grant =
+                        PolicyViolationContext::for_authorization_grant(grant, client.clone());
+                    let device_code_grant = PolicyViolationContext::for_device_code_grant(
+                        DeviceCodeGrant {
+                            id: Ulid::from_datetime_with_source(now.into(), rng),
+                            state: mas_data_model::DeviceCodeGrantState::Pending,
+                            client_id: client.id,
+                            scope: [OPENID].into_iter().collect(),
+                            user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                            device_code: Alphanumeric.sample_string(rng, 32),
+                            created_at: now - Duration::try_minutes(5).unwrap(),
+                            expires_at: now + Duration::try_minutes(25).unwrap(),
+                            ip_address: None,
+                            user_agent: None,
+                        },
+                        client,
+                    );
 
-                [authorization_grant, device_code_grant]
-            })
-            .collect()
+                    [authorization_grant, device_code_grant]
+                })
+                .collect(),
+        )
     }
 }
 
@@ -778,18 +884,22 @@ pub struct CompatSsoContext {
 }
 
 impl TemplateContext for CompatSsoContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let id = Ulid::from_datetime_with_source(now.into(), rng);
-        vec![CompatSsoContext::new(CompatSsoLogin {
+        sample_list(vec![CompatSsoContext::new(CompatSsoLogin {
             id,
             redirect_uri: Url::parse("https://app.element.io/").unwrap(),
             login_token: "abcdefghijklmnopqrstuvwxyz012345".into(),
             created_at: now,
             state: CompatSsoLoginState::Pending,
-        })]
+        })])
     }
 }
 
@@ -836,11 +946,15 @@ impl EmailRecoveryContext {
 }
 
 impl TemplateContext for EmailRecoveryContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        User::samples(now, rng).into_iter().map(|user| {
+        sample_list(User::samples(now, rng).into_iter().map(|user| {
             let session = UserRecoverySession {
                 id: Ulid::from_datetime_with_source(now.into(), rng),
                 email: "hello@example.com".to_owned(),
@@ -854,7 +968,7 @@ impl TemplateContext for EmailRecoveryContext {
             let link = "https://example.com/recovery/complete?ticket=abcdefghijklmnopqrstuvwxyz0123456789".parse().unwrap();
 
             Self::new(user, session, link)
-        }).collect()
+        }).collect())
     }
 }
 
@@ -897,28 +1011,37 @@ impl EmailVerificationContext {
 }
 
 impl TemplateContext for EmailVerificationContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        BrowserSession::samples(now, rng)
-            .into_iter()
-            .map(|browser_session| {
-                let authentication_code = UserEmailAuthenticationCode {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
-                    user_email_authentication_id: Ulid::from_datetime_with_source(now.into(), rng),
-                    code: "123456".to_owned(),
-                    created_at: now - Duration::try_minutes(5).unwrap(),
-                    expires_at: now + Duration::try_minutes(25).unwrap(),
-                };
+        sample_list(
+            BrowserSession::samples(now, rng)
+                .into_iter()
+                .map(|browser_session| {
+                    let authentication_code = UserEmailAuthenticationCode {
+                        id: Ulid::from_datetime_with_source(now.into(), rng),
+                        user_email_authentication_id: Ulid::from_datetime_with_source(
+                            now.into(),
+                            rng,
+                        ),
+                        code: "123456".to_owned(),
+                        created_at: now - Duration::try_minutes(5).unwrap(),
+                        expires_at: now + Duration::try_minutes(25).unwrap(),
+                    };
 
-                Self {
-                    browser_session: Some(browser_session),
-                    user_registration: None,
-                    authentication_code,
-                }
-            })
-            .collect()
+                    Self {
+                        browser_session: Some(browser_session),
+                        user_registration: None,
+                        authentication_code,
+                    }
+                })
+                .collect(),
+        )
     }
 }
 
@@ -963,7 +1086,11 @@ impl RegisterStepsVerifyEmailContext {
 }
 
 impl TemplateContext for RegisterStepsVerifyEmailContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
@@ -976,10 +1103,10 @@ impl TemplateContext for RegisterStepsVerifyEmailContext {
             completed_at: None,
         };
 
-        vec![Self {
+        sample_list(vec![Self {
             form: FormState::default(),
             authentication,
-        }]
+        }])
     }
 }
 
@@ -1003,13 +1130,13 @@ impl TemplateContext for RegisterStepsEmailInUseContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let email = "hello@example.com".to_owned();
         let action = PostAuthAction::continue_grant(Ulid::nil());
-        vec![Self::new(email, Some(action))]
+        sample_list(vec![Self::new(email, Some(action))])
     }
 }
 
@@ -1058,13 +1185,13 @@ impl TemplateContext for RegisterStepsDisplayNameContext {
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![Self {
+        sample_list(vec![Self {
             form: FormState::default(),
-        }]
+        }])
     }
 }
 
@@ -1113,13 +1240,13 @@ impl TemplateContext for RegisterStepsRegistrationTokenContext {
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![Self {
+        sample_list(vec![Self {
             form: FormState::default(),
-        }]
+        }])
     }
 }
 
@@ -1164,11 +1291,11 @@ impl TemplateContext for RecoveryStartContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![
+        sample_list(vec![
             Self::new(),
             Self::new().with_form_state(
                 FormState::default()
@@ -1178,7 +1305,7 @@ impl TemplateContext for RecoveryStartContext {
                 FormState::default()
                     .with_error_on_field(RecoveryStartFormField::Email, FieldError::Invalid),
             ),
-        ]
+        ])
     }
 }
 
@@ -1202,7 +1329,11 @@ impl RecoveryProgressContext {
 }
 
 impl TemplateContext for RecoveryProgressContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
@@ -1216,7 +1347,7 @@ impl TemplateContext for RecoveryProgressContext {
             consumed_at: None,
         };
 
-        vec![
+        sample_list(vec![
             Self {
                 session: session.clone(),
                 resend_failed_due_to_rate_limit: false,
@@ -1225,7 +1356,7 @@ impl TemplateContext for RecoveryProgressContext {
                 session,
                 resend_failed_due_to_rate_limit: true,
             },
-        ]
+        ])
     }
 }
 
@@ -1244,7 +1375,11 @@ impl RecoveryExpiredContext {
 }
 
 impl TemplateContext for RecoveryExpiredContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
@@ -1258,10 +1393,9 @@ impl TemplateContext for RecoveryExpiredContext {
             consumed_at: None,
         };
 
-        vec![Self { session }]
+        sample_list(vec![Self { session }])
     }
 }
-
 /// Fields of the account recovery finish form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1305,30 +1439,36 @@ impl RecoveryFinishContext {
 }
 
 impl TemplateContext for RecoveryFinishContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        User::samples(now, rng)
-            .into_iter()
-            .flat_map(|user| {
-                vec![
-                    Self::new(user.clone()),
-                    Self::new(user.clone()).with_form_state(
-                        FormState::default().with_error_on_field(
-                            RecoveryFinishFormField::NewPassword,
-                            FieldError::Invalid,
+        sample_list(
+            User::samples(now, rng)
+                .into_iter()
+                .flat_map(|user| {
+                    vec![
+                        Self::new(user.clone()),
+                        Self::new(user.clone()).with_form_state(
+                            FormState::default().with_error_on_field(
+                                RecoveryFinishFormField::NewPassword,
+                                FieldError::Invalid,
+                            ),
                         ),
-                    ),
-                    Self::new(user.clone()).with_form_state(
-                        FormState::default().with_error_on_field(
-                            RecoveryFinishFormField::NewPasswordConfirm,
-                            FieldError::Invalid,
+                        Self::new(user.clone()).with_form_state(
+                            FormState::default().with_error_on_field(
+                                RecoveryFinishFormField::NewPasswordConfirm,
+                                FieldError::Invalid,
+                            ),
                         ),
-                    ),
-                ]
-            })
-            .collect()
+                    ]
+                })
+                .collect(),
+        )
     }
 }
 
@@ -1348,14 +1488,20 @@ impl UpstreamExistingLinkContext {
 }
 
 impl TemplateContext for UpstreamExistingLinkContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        User::samples(now, rng)
-            .into_iter()
-            .map(|linked_user| Self { linked_user })
-            .collect()
+        sample_list(
+            User::samples(now, rng)
+                .into_iter()
+                .map(|linked_user| Self { linked_user })
+                .collect(),
+        )
     }
 }
 
@@ -1380,12 +1526,16 @@ impl UpstreamSuggestLink {
 }
 
 impl TemplateContext for UpstreamSuggestLink {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let id = Ulid::from_datetime_with_source(now.into(), rng);
-        vec![Self::for_link_id(id)]
+        sample_list(vec![Self::for_link_id(id)])
     }
 }
 
@@ -1505,11 +1655,15 @@ impl UpstreamRegister {
 }
 
 impl TemplateContext for UpstreamRegister {
-    fn sample(now: chrono::DateTime<Utc>, _rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![Self::new(
+        sample_list(vec![Self::new(
             UpstreamOAuthLink {
                 id: Ulid::nil(),
                 provider_id: Ulid::nil(),
@@ -1545,7 +1699,7 @@ impl TemplateContext for UpstreamRegister {
                 disabled_at: None,
                 on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             },
-        )]
+        )])
     }
 }
 
@@ -1591,17 +1745,17 @@ impl TemplateContext for DeviceLinkContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![
+        sample_list(vec![
             Self::new(),
             Self::new().with_form_state(
                 FormState::default()
                     .with_error_on_field(DeviceLinkFormField::Code, FieldError::Required),
             ),
-        ]
+        ])
     }
 }
 
@@ -1621,13 +1775,17 @@ impl DeviceConsentContext {
 }
 
 impl TemplateContext for DeviceConsentContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        Client::samples(now, rng)
+        sample_list(Client::samples(now, rng)
             .into_iter()
-            .map(|client| {
+            .map(|client|  {
                 let grant = DeviceCodeGrant {
                     id: Ulid::from_datetime_with_source(now.into(), rng),
                     state: mas_data_model::DeviceCodeGrantState::Pending,
@@ -1642,7 +1800,7 @@ impl TemplateContext for DeviceConsentContext {
                 };
                 Self { grant, client }
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -1662,14 +1820,20 @@ impl AccountInactiveContext {
 }
 
 impl TemplateContext for AccountInactiveContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        User::samples(now, rng)
-            .into_iter()
-            .map(|user| AccountInactiveContext { user })
-            .collect()
+        sample_list(
+            User::samples(now, rng)
+                .into_iter()
+                .map(|user| AccountInactiveContext { user })
+                .collect(),
+        )
     }
 }
 
@@ -1692,17 +1856,21 @@ impl DeviceNameContext {
 }
 
 impl TemplateContext for DeviceNameContext {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        Client::samples(now, rng)
+        sample_list(Client::samples(now, rng)
             .into_iter()
             .map(|client| DeviceNameContext {
                 client,
                 raw_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned(),
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -1714,16 +1882,25 @@ pub struct FormPostContext<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
-    fn sample(now: chrono::DateTime<Utc>, rng: &mut impl Rng, locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        now: chrono::DateTime<Utc>,
+        rng: &mut impl Rng,
+        locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
         let sample_params = T::sample(now, rng, locales);
         sample_params
             .into_iter()
-            .map(|params| FormPostContext {
-                redirect_uri: "https://example.com/callback".parse().ok(),
-                params,
+            .map(|(k, params)| {
+                (
+                    k,
+                    FormPostContext {
+                        redirect_uri: "https://example.com/callback".parse().ok(),
+                        params,
+                    },
+                )
             })
             .collect()
     }
@@ -1791,18 +1968,18 @@ impl TemplateContext for ErrorContext {
         _now: chrono::DateTime<Utc>,
         _rng: &mut impl Rng,
         _locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![
+        sample_list(vec![
             Self::new()
                 .with_code("sample_error")
                 .with_description("A fancy description".into())
                 .with_details("Something happened".into()),
             Self::new().with_code("another_error"),
             Self::new(),
-        ]
+        ])
     }
 }
 
@@ -1881,11 +2058,15 @@ impl NotFoundContext {
 }
 
 impl TemplateContext for NotFoundContext {
-    fn sample(_now: DateTime<Utc>, _rng: &mut impl Rng, _locales: &[DataLocale]) -> Vec<Self>
+    fn sample(
+        _now: DateTime<Utc>,
+        _rng: &mut impl Rng,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        vec![
+        sample_list(vec![
             Self::new(&Method::GET, Version::HTTP_11, &"/".parse().unwrap()),
             Self::new(&Method::POST, Version::HTTP_2, &"/foo/bar".parse().unwrap()),
             Self::new(
@@ -1893,6 +2074,6 @@ impl TemplateContext for NotFoundContext {
                 Version::HTTP_10,
                 &"/foo?bar=baz".parse().unwrap(),
             ),
-        ]
+        ])
     }
 }
