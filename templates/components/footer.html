@@ -7,19 +7,19 @@ Please see LICENSE files in the repository root for full details.
 -#}
 
 <footer class="legal-footer">
-  {%- if branding.policy_uri or branding.tos_uri -%}
+  {%- if branding.policy_uri is defined or branding.tos_uri is defined -%}
     <nav>
-      {%- if branding.policy_uri -%}
+      {%- if branding.policy_uri is defined -%}
         <a href="{{ branding.policy_uri }}" referrerpolicy="no-referrer" title="{{ _('branding.privacy_policy.alt') }}" class="cpd-link" data-kind="primary">
           {{- _("branding.privacy_policy.link") -}}
         </a>
       {%- endif -%}
 
-      {%- if branding.policy_uri and branding.tos_uri -%}
+      {%- if branding.policy_uri is defined and branding.tos_uri is defined -%}
         <div class="separator" aria-hidden="true">•</div>
       {%- endif -%}
 
-      {%- if branding.tos_uri -%}
+      {%- if branding.tos_uri is defined -%}
         <a href="{{ branding.tos_uri }}" referrerpolicy="no-referrer" title="{{ _('branding.terms_and_conditions.alt') }}" class="cpd-link" data-kind="primary">
           {{- _("branding.terms_and_conditions.link") -}}
         </a>
@@ -27,7 +27,7 @@ Please see LICENSE files in the repository root for full details.
     </nav>
   {%- endif -%}
 
-  {%- if branding.imprint -%}
+  {%- if branding.imprint is defined -%}
     <p class="imprint">{{ branding.imprint }}</p>
   {%- endif -%}
 </footer>
