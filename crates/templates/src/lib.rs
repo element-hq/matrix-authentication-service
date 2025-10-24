@@ -17,7 +17,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use mas_i18n::Translator;
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
-use minijinja::Value;
+use minijinja::{UndefinedBehavior, Value};
 use rand::Rng;
 use serde::Serialize;
 use thiserror::Error;
@@ -205,6 +205,8 @@ impl Templates {
             span.in_scope(move || {
                 let mut loaded: HashSet<_> = HashSet::new();
                 let mut env = minijinja::Environment::new();
+                // Don't allow use of undefined variables
+                env.set_undefined_behavior(UndefinedBehavior::Strict);
                 let root = path.canonicalize_utf8()?;
                 info!(%root, "Loading templates from filesystem");
                 for entry in walkdir::WalkDir::new(&root)
