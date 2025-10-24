@@ -31,7 +31,9 @@ macro_rules! register_templates {
             pub fn $name:ident
                 // Optional list of generics. Taken from
                 // https://newbedev.com/rust-macro-accepting-type-with-generic-parameters
-                $(< $( $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+ >)?
+                // For sample rendering, we also require a 'sample' generic parameter to be provided,
+                // using #[sample(Type)] attribute syntax
+                $(< $( #[sample( $generic_default:tt )] $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+ >)?
                 // Type of context taken by the template
                 ( $param:ty )
             {
@@ -69,8 +71,30 @@ macro_rules! register_templates {
         pub mod check {
             use super::*;
 
+            /// Check and render all templates with all samples.
+            ///
+            /// Returns the sample renders. The keys in the map are the template names.
+            ///
+            /// # Errors
+            ///
+            /// Returns an error if any template fails to render with any of the sample.
+            pub(crate) fn all(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng) -> anyhow::Result<::std::collections::BTreeMap<&'static str, Vec<String>>> {
+                let mut out = ::std::collections::BTreeMap::new();
+                // TODO shouldn't the Rng be independent for each render?
+                $(
+                    out.insert(
+                        $template,
+                        $name $(::< $( $generic_default ),*  >)? (templates, now, rng)?
+                    );
+                )*
+
+                Ok(out)
+            }
+
             $(
                 #[doc = concat!("Render the `", $template, "` template with sample contexts")]
+                ///
+                /// Returns the sample renders.
                 ///
                 /// # Errors
                 ///
