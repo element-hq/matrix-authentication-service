@@ -10,11 +10,11 @@ use camino::Utf8PathBuf;
 use mas_iana::jose::JsonWebSignatureAlg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
-use serde_with::skip_serializing_none;
+use serde_with::{serde_as, skip_serializing_none};
 use ulid::Ulid;
 use url::Url;
 
-use crate::ConfigurationSection;
+use crate::{ClientSecret, ClientSecretRaw, ConfigurationSection};
 
 /// Upstream OAuth 2.0 providers configuration
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
@@ -475,6 +475,7 @@ impl OnBackchannelLogout {
 }
 
 /// Configuration for one upstream OAuth 2 provider.
+#[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Provider {
@@ -541,8 +542,10 @@ pub struct Provider {
     ///
     /// Used by the `client_secret_basic`, `client_secret_post`, and
     /// `client_secret_jwt` methods
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_secret: Option<String>,
+    #[schemars(with = "ClientSecretRaw")]
+    #[serde_as(as = "serde_with::TryFromInto<ClientSecretRaw>")]
+    #[serde(flatten)]
+    pub client_secret: Option<ClientSecret>,
 
     /// The method to authenticate the client with the provider
     pub token_endpoint_auth_method: TokenAuthMethod,
@@ -655,4 +658,111 @@ pub struct Provider {
     /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
+}
+
+impl Provider {
+    /// Returns the client secret.
+    ///
+    /// If `client_secret_file` was given, the secret is read from that file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the client secret could not be read from file.
+    pub async fn client_secret(&self) -> anyhow::Result<Option<String>> {
+        Ok(match &self.client_secret {
+            Some(client_secret) => Some(client_secret.value().await?),
+            None => None,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use figment::{
+        Figment, Jail,
+        providers::{Format, Yaml},
+    };
+    use tokio::{runtime::Handle, task};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn load_config() {
+        task::spawn_blocking(|| {
+            Jail::expect_with(|jail| {
+                jail.create_file(
+                    "config.yaml",
+                    r#"
+                      upstream_oauth2:
+                        providers:
+                          - id: 01GFWR28C4KNE04WG3HKXB7C9R
+                            client_id: upstream-oauth2
+                            token_endpoint_auth_method: none
+
+                          - id: 01GFWR32NCQ12B8Z0J8CPXRRB6
+                            client_id: upstream-oauth2
+                            client_secret_file: secret
+                            token_endpoint_auth_method: client_secret_basic
+
+                          - id: 01GFWR3WHR93Y5HK389H28VHZ9
+                            client_id: upstream-oauth2
+                            client_secret: c1!3n753c237
+                            token_endpoint_auth_method: client_secret_post
+
+                          - id: 01GFWR43R2ZZ8HX9CVBNW9TJWG
+                            client_id: upstream-oauth2
+                            client_secret_file: secret
+                            token_endpoint_auth_method: client_secret_jwt
+
+                          - id: 01GFWR4BNFDCC4QDG6AMSP1VRR
+                            client_id: upstream-oauth2
+                            token_endpoint_auth_method: private_key_jwt
+                            jwks:
+                              keys:
+                              - kid: "03e84aed4ef4431014e8617567864c4efaaaede9"
+                                kty: "RSA"
+                                alg: "RS256"
+                                use: "sig"
+                                e: "AQAB"
+                                n: "ma2uRyBeSEOatGuDpCiV9oIxlDWix_KypDYuhQfEzqi_BiF4fV266OWfyjcABbam59aJMNvOnKW3u_eZM-PhMCBij5MZ-vcBJ4GfxDJeKSn-GP_dJ09rpDcILh8HaWAnPmMoi4DC0nrfE241wPISvZaaZnGHkOrfN_EnA5DligLgVUbrA5rJhQ1aSEQO_gf1raEOW3DZ_ACU3qhtgO0ZBG3a5h7BPiRs2sXqb2UCmBBgwyvYLDebnpE7AotF6_xBIlR-Cykdap3GHVMXhrIpvU195HF30ZoBU4dMd-AeG6HgRt4Cqy1moGoDgMQfbmQ48Hlunv9_Vi2e2CLvYECcBw"
+
+                              - kid: "d01c1abe249269f72ef7ca2613a86c9f05e59567"
+                                kty: "RSA"
+                                alg: "RS256"
+                                use: "sig"
+                                e: "AQAB"
+                                n: "0hukqytPwrj1RbMYhYoepCi3CN5k7DwYkTe_Cmb7cP9_qv4ok78KdvFXt5AnQxCRwBD7-qTNkkfMWO2RxUMBdQD0ED6tsSb1n5dp0XY8dSWiBDCX8f6Hr-KolOpvMLZKRy01HdAWcM6RoL9ikbjYHUEW1C8IJnw3MzVHkpKFDL354aptdNLaAdTCBvKzU9WpXo10g-5ctzSlWWjQuecLMQ4G1mNdsR1LHhUENEnOvgT8cDkX0fJzLbEbyBYkdMgKggyVPEB1bg6evG4fTKawgnf0IDSPxIU-wdS9wdSP9ZCJJPLi5CEp-6t6rE_sb2dGcnzjCGlembC57VwpkUvyMw"
+                    "#,
+                )?;
+                jail.create_file("secret", r"c1!3n753c237")?;
+
+                let config = Figment::new()
+                    .merge(Yaml::file("config.yaml"))
+                    .extract_inner::<UpstreamOAuth2Config>("upstream_oauth2")?;
+
+                assert_eq!(config.providers.len(), 5);
+
+                assert_eq!(
+                    config.providers[1].id,
+                    Ulid::from_str("01GFWR32NCQ12B8Z0J8CPXRRB6").unwrap()
+                );
+
+                assert!(config.providers[0].client_secret.is_none());
+                assert!(matches!(config.providers[1].client_secret, Some(ClientSecret::File(ref p)) if p == "secret"));
+                assert!(matches!(config.providers[2].client_secret, Some(ClientSecret::Value(ref v)) if v == "c1!3n753c237"));
+                assert!(matches!(config.providers[3].client_secret, Some(ClientSecret::File(ref p)) if p == "secret"));
+                assert!(config.providers[4].client_secret.is_none());
+
+                Handle::current().block_on(async move {
+                    assert_eq!(config.providers[1].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                    assert_eq!(config.providers[2].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                    assert_eq!(config.providers[3].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                });
+
+                Ok(())
+            });
+        }).await.unwrap();
+    }
 }
