@@ -78,19 +78,21 @@ macro_rules! register_templates {
                 pub(crate) fn $name
                     $(< $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ >)?
                     (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng)
-                -> anyhow::Result<()> {
+                -> anyhow::Result<Vec<String>> {
                     let locales = templates.translator().available_locales();
                     let samples: Vec< $param > = TemplateContext::sample(now, rng, &locales);
 
                     let name = $template;
-                    for sample in samples {
+                    let mut out = Vec::new();
+                    for (idx, sample) in samples.into_iter().enumerate() {
                         let context = serde_json::to_value(&sample)?;
                         ::tracing::info!(name, %context, "Rendering template");
-                        templates. $name (&sample)
-                            .with_context(|| format!("Failed to render template {:?} with context {}", name, context))?;
+                        let rendered = templates. $name (&sample)
+                            .with_context(|| format!("Failed to render sample template {name:?}-{idx} with context {context}"))?;
+                        out.push(rendered);
                     }
 
-                    Ok(())
+                    Ok(out)
                 }
             )*
         }
