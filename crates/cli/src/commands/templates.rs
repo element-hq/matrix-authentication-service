@@ -8,6 +8,7 @@ use std::{fmt::Write, process::ExitCode};
 
 use anyhow::{Context as _, bail};
 use camino::Utf8PathBuf;
+use chrono::DateTime;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{
@@ -34,6 +35,12 @@ enum Subcommand {
         /// The directory must either not exist or be empty.
         #[arg(long = "out-dir")]
         out_dir: Option<Utf8PathBuf>,
+
+        /// Attempt to remove 'unstable' template input data such as asset
+        /// hashes, in order to make renders more reproducible between
+        /// versions.
+        #[arg(long = "stabilise")]
+        stabilise: bool,
     },
 }
 
@@ -41,7 +48,7 @@ impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         match self.subcommand {
-            SC::Check { out_dir } => {
+            SC::Check { out_dir, stabilise } => {
                 let _span = info_span!("cli.templates.check").entered();
 
                 let template_config = TemplatesConfig::extract_or_default(figment)
@@ -59,9 +66,17 @@ impl Options {
                 let captcha_config = CaptchaConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
 
-                let clock = SystemClock::default();
-                // XXX: we should disallow SeedableRng::from_entropy
-                let mut rng = rand_chacha::ChaChaRng::from_entropy();
+                let now = if stabilise {
+                    DateTime::from_timestamp_secs(0).unwrap()
+                } else {
+                    SystemClock::default().now()
+                };
+                let rng = if stabilise {
+                    rand_chacha::ChaChaRng::from_seed([42; 32])
+                } else {
+                    // XXX: we should disallow SeedableRng::from_entropy
+                    rand_chacha::ChaChaRng::from_entropy()
+                };
                 let url_builder =
                     mas_router::UrlBuilder::new("https://example.com/".parse()?, None, None);
                 let site_config = site_config_from_config(
@@ -79,7 +94,7 @@ impl Options {
                     true,
                 )
                 .await?;
-                let all_renders = templates.check_render(clock.now(), &mut rng)?;
+                let all_renders = templates.check_render(now, &rng)?;
 
                 if let Some(out_dir) = out_dir {
                     // Save renders to disk.

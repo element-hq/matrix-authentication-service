@@ -471,10 +471,10 @@ impl Templates {
     /// # Errors
     ///
     /// Returns an error if any of the templates fails to render
-    pub fn check_render(
+    pub fn check_render<R: Rng + Clone>(
         &self,
         now: chrono::DateTime<chrono::Utc>,
-        rng: &mut impl Rng,
+        rng: &R,
     ) -> anyhow::Result<BTreeMap<(&'static str, SampleIdentifier), String>> {
         check::all(self, now, rng)
     }
@@ -489,7 +489,7 @@ mod tests {
         #[allow(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
         #[allow(clippy::disallowed_methods)]
-        let mut rng = rand::thread_rng();
+        let rng = rand::thread_rng();
 
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
@@ -517,6 +517,6 @@ mod tests {
         )
         .await
         .unwrap();
-        templates.check_render(now, &mut rng).unwrap();
+        templates.check_render(now, &rng).unwrap();
     }
 }
