@@ -482,14 +482,15 @@ impl Templates {
 
 #[cfg(test)]
 mod tests {
+    use rand::SeedableRng;
+
     use super::*;
 
     #[tokio::test]
     async fn check_builtin_templates() {
         #[allow(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
-        #[allow(clippy::disallowed_methods)]
-        let rng = rand::thread_rng();
+        let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
 
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
@@ -517,6 +518,11 @@ mod tests {
         )
         .await
         .unwrap();
-        templates.check_render(now, &rng).unwrap();
+
+        // Check the renders are deterministic, when given the same rng
+        let render1 = templates.check_render(now, &rng).unwrap();
+        let render2 = templates.check_render(now, &rng).unwrap();
+
+        assert_eq!(render1, render2);
     }
 }
