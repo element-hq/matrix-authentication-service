@@ -10,7 +10,7 @@
 //! Additional functions, tests and filters used in templates
 
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     fmt::Formatter,
     str::FromStr,
     sync::{Arc, atomic::AtomicUsize},
@@ -182,7 +182,8 @@ fn function_add_params_to_url(
         .unwrap_or_default();
 
     // Merge the exising and the additional parameters together
-    let params: HashMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
+    // Use a BTreeMap for determinism (because it orders keys)
+    let params: BTreeMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
 
     // Transform them back to urlencoded
     let params = serde_urlencoded::to_string(params).map_err(|e| {
