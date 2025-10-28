@@ -58,9 +58,9 @@ impl Object for SiteBranding {
     fn get_value(self: &Arc<Self>, name: &Value) -> Option<Value> {
         match name.as_str()? {
             "server_name" => Some(self.server_name.clone().into()),
-            "policy_uri" => self.policy_uri.clone().map(Value::from),
-            "tos_uri" => self.tos_uri.clone().map(Value::from),
-            "imprint" => self.imprint.clone().map(Value::from),
+            "policy_uri" => Some(Value::from(self.policy_uri.clone())),
+            "tos_uri" => Some(Value::from(self.tos_uri.clone())),
+            "imprint" => Some(Value::from(self.imprint.clone())),
             _ => None,
         }
     }

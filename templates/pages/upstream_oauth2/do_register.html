@@ -175,7 +175,7 @@ Please see LICENSE files in the repository root for full details.
       </div>
     {% endif %}
 
-    {% if branding.tos_uri is defined %}
+    {% if branding.tos_uri is not none %}
       {% call(f) field.field(label=_("mas.register.terms_of_service", tos_uri=branding.tos_uri), name="accept_terms", form_state=form_state, inline=true, class="my-4") %}
         <div class="cpd-form-inline-field-control">
           <div class="cpd-checkbox-container">
