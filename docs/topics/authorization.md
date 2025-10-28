@@ -133,7 +133,7 @@ The simplest type of client credentials is a client ID and client secret pair, b
 
 Personal access tokens are a credential that can be issued to give access to a user,
 with predefined scopes and a predefined expiry time.
-Either before or after expiry, the token can be regenerated, which produces a new
+Either before or after expiry, the owner of the token can regenerate it, which produces a new
 access token with the same scopes but a new expiry time.
 
 Personal access tokens are intended to fulfill two basic use cases:
@@ -144,7 +144,7 @@ Personal access tokens are intended to fulfill two basic use cases:
 In the future, users will be able to create their own personal access tokens, but this is currently not implemented
 so (1) is currently not supported.
 
-For now, personal access tokens must be created by administrators through the [Admin API], satisfying use case (2).
+For now, personal access tokens must be created, regenerated and revoked by administrators through the [Admin API], satisfying use case (2).
 [Element Admin](https://github.com/element-hq/element-admin), available by default in Element Server Suite, can be used to do this interactively.
 You can also use the online beta deployment at [admin-beta.element.dev](https://admin-beta.element.dev/). <!--- TODO stable deployment -->
 
