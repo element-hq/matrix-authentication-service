@@ -212,7 +212,7 @@
       "continue_with_email": "使用邮件地址继续",
       "continue_with_password": "使用密码继续",
       "create_account": {
-        "description": "请创建一个账户以开始使用：",
+        "description": "选择一个用户名以继续。",
         "heading": "创建账户"
       },
       "sign_in_instead": "去登录",
