@@ -72,7 +72,7 @@ pub struct Templates {
     url_builder: UrlBuilder,
     branding: SiteBranding,
     features: SiteFeatures,
-    vite_manifest_path: Utf8PathBuf,
+    vite_manifest_path: Option<Utf8PathBuf>,
     translations_path: Utf8PathBuf,
     path: Utf8PathBuf,
     /// Whether template rendering is in strict mode (for testing,
@@ -143,6 +143,11 @@ fn is_hidden(entry: &DirEntry) -> bool {
 impl Templates {
     /// Load the templates from the given config
     ///
+    /// # Parameters
+    ///
+    /// - `vite_manifest_path`: None if we are rendering resources for
+    ///   reproducibility, in which case a dummy Vite manifest will be used.
+    ///
     /// # Errors
     ///
     /// Returns an error if the templates could not be loaded from disk.
@@ -154,7 +159,7 @@ impl Templates {
     pub async fn load(
         path: Utf8PathBuf,
         url_builder: UrlBuilder,
-        vite_manifest_path: Utf8PathBuf,
+        vite_manifest_path: Option<Utf8PathBuf>,
         translations_path: Utf8PathBuf,
         branding: SiteBranding,
         features: SiteFeatures,
@@ -163,7 +168,7 @@ impl Templates {
         let (translator, environment) = Self::load_(
             &path,
             url_builder.clone(),
-            &vite_manifest_path,
+            vite_manifest_path.as_deref(),
             &translations_path,
             branding.clone(),
             features,
@@ -186,7 +191,7 @@ impl Templates {
     async fn load_(
         path: &Utf8Path,
         url_builder: UrlBuilder,
-        vite_manifest_path: &Utf8Path,
+        vite_manifest_path: Option<&Utf8Path>,
         translations_path: &Utf8Path,
         branding: SiteBranding,
         features: SiteFeatures,
@@ -196,13 +201,18 @@ impl Templates {
         let span = tracing::Span::current();
 
         // Read the assets manifest from disk
-        let vite_manifest = tokio::fs::read(vite_manifest_path)
-            .await
-            .map_err(TemplateLoadingError::ViteManifestIO)?;
+        let vite_manifest = if let Some(vite_manifest_path) = vite_manifest_path {
+            let raw_vite_manifest = tokio::fs::read(vite_manifest_path)
+                .await
+                .map_err(TemplateLoadingError::ViteManifestIO)?;
+
+            serde_json::from_slice::<ViteManifest>(&raw_vite_manifest)
+                .map_err(TemplateLoadingError::ViteManifest)?
+        } else {
+            ViteManifest::sample()
+        };
 
         // Parse it
-        let vite_manifest: ViteManifest =
-            serde_json::from_slice(&vite_manifest).map_err(TemplateLoadingError::ViteManifest)?;
 
         let translations_path = translations_path.to_owned();
         let translator =
@@ -291,7 +301,7 @@ impl Templates {
         let (translator, environment) = Self::load_(
             &self.path,
             self.url_builder.clone(),
-            &self.vite_manifest_path,
+            self.vite_manifest_path.as_deref(),
             &self.translations_path,
             self.branding.clone(),
             self.features,
@@ -506,23 +516,28 @@ mod tests {
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");
         let translations_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../translations");
-        let templates = Templates::load(
-            path,
-            url_builder,
-            vite_manifest_path,
-            translations_path,
-            branding,
-            features,
-            // Use strict mode in tests
-            true,
-        )
-        .await
-        .unwrap();
 
-        // Check the renders are deterministic, when given the same rng
-        let render1 = templates.check_render(now, &rng).unwrap();
-        let render2 = templates.check_render(now, &rng).unwrap();
+        for use_real_vite_manifest in [true, false] {
+            let templates = Templates::load(
+                path.clone(),
+                url_builder.clone(),
+                // Check both renders against the real vite manifest and the 'dummy' vite manifest
+                // used for reproducible renders.
+                use_real_vite_manifest.then_some(vite_manifest_path.clone()),
+                translations_path.clone(),
+                branding.clone(),
+                features,
+                // Use strict mode in tests
+                true,
+            )
+            .await
+            .unwrap();
 
-        assert_eq!(render1, render2);
+            // Check the renders are deterministic, when given the same rng
+            let render1 = templates.check_render(now, &rng).unwrap();
+            let render2 = templates.check_render(now, &rng).unwrap();
+
+            assert_eq!(render1, render2);
+        }
     }
 }

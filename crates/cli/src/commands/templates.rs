@@ -90,8 +90,10 @@ impl Options {
                 let templates = templates_from_config(
                     &template_config,
                     &site_config,
-                    &url_builder, // Use strict mode in template checks
+                    &url_builder,
+                    // Use strict mode in template checks
                     true,
+                    stabilise,
                 )
                 .await?;
                 let all_renders = templates.check_render(now, &rng)?;

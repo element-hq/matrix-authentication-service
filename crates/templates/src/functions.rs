@@ -434,10 +434,10 @@ impl Object for IncludeAsset {
 
         let path: &Utf8Path = path.into();
 
-        let (main, imported) = self.vite_manifest.find_assets(path).map_err(|_e| {
+        let (main, imported) = self.vite_manifest.find_assets(path).map_err(|e| {
             Error::new(
                 ErrorKind::InvalidOperation,
-                "Invalid assets manifest while calling function `include_asset`",
+                format!("Invalid assets manifest while calling function `include_asset` with path = {path:?}: {e}"),
             )
         })?;
 
