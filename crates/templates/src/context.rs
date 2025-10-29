@@ -117,31 +117,21 @@ pub trait TemplateContext: Serialize {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SampleIdentifier {
-    /// A stable locale identifier.
-    pub locale: Option<String>,
-
-    /// A stable identifier for the session that was used in this sample.
-    pub session_index: Option<usize>,
-
-    /// A stable positional index of the sample for this context.
-    pub index: usize,
+    pub components: Vec<(&'static str, String)>,
 }
 
 impl SampleIdentifier {
-    pub fn with_locale(&self, locale: String) -> Self {
-        SampleIdentifier {
-            locale: Some(locale),
-            session_index: self.session_index,
-            index: self.index,
+    pub fn from_index(index: usize) -> Self {
+        Self {
+            components: Vec::default(),
         }
+        .with_appended("index", format!("{index}"))
     }
 
-    pub fn with_session_index(self, session_index: usize) -> Self {
-        SampleIdentifier {
-            locale: self.locale,
-            session_index: Some(session_index),
-            index: self.index,
-        }
+    pub fn with_appended(&self, kind: &'static str, locale: String) -> Self {
+        let mut new = self.clone();
+        new.components.push((kind, locale));
+        new
     }
 }
 
@@ -149,16 +139,7 @@ pub(crate) fn sample_list<T: TemplateContext>(samples: Vec<T>) -> BTreeMap<Sampl
     samples
         .into_iter()
         .enumerate()
-        .map(|(index, sample)| {
-            (
-                SampleIdentifier {
-                    locale: None,
-                    session_index: None,
-                    index,
-                },
-                sample,
-            )
-        })
+        .map(|(index, sample)| (SampleIdentifier::from_index(index), sample))
         .collect()
 }
 
@@ -215,7 +196,7 @@ impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
                     .into_iter()
                     .map(|(sample_id, sample)| {
                         (
-                            sample_id.with_locale(locale.to_string()),
+                            sample_id.with_appended("locale", locale.to_string()),
                             WithLanguage {
                                 lang: locale.to_string(),
                                 inner: sample,
@@ -286,7 +267,7 @@ impl<T: TemplateContext> TemplateContext for WithSession<T> {
                     .into_iter()
                     .map(move |(k, inner)| {
                         (
-                            k.with_session_index(session_index),
+                            k.with_appended("browser-session", session_index.to_string()),
                             WithSession {
                                 current_session: session.clone(),
                                 inner,
@@ -327,7 +308,7 @@ impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
                     .map(move |(k, inner)| {
                         (
                             if session.is_some() {
-                                k.with_session_index(session_index)
+                                k.with_appended("browser-session", session_index.to_string())
                             } else {
                                 k
                             },

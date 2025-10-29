@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{collections::BTreeSet, fmt::Write, process::ExitCode};
+use std::{fmt::Write, process::ExitCode};
 
 use anyhow::{Context as _, bail};
 use camino::Utf8PathBuf;
@@ -92,19 +92,6 @@ impl Options {
                             .with_context(|| format!("could not create {out_dir}"))?;
                     }
 
-                    let all_locales: BTreeSet<&str> = all_renders
-                        .iter()
-                        .filter_map(|((_, sample_identifier), _)| {
-                            sample_identifier.locale.as_deref()
-                        })
-                        .collect();
-                    for locale in all_locales {
-                        let locale_dir = out_dir.join(locale);
-                        tokio::fs::create_dir(&locale_dir)
-                            .await
-                            .with_context(|| format!("could not create {locale_dir}"))?;
-                    }
-
                     for ((template, sample_identifier), template_render) in &all_renders {
                         let (template_filename_base, template_ext) =
                             template.rsplit_once('.').unwrap_or((template, "txt"));
@@ -115,20 +102,13 @@ impl Options {
                         // - `-session2-sample1`
                         let sample_suffix = {
                             let mut s = String::new();
-                            if let Some(session_index) = sample_identifier.session_index {
-                                write!(s, "-session{session_index}")?;
+                            for (k, v) in &sample_identifier.components {
+                                write!(s, "-{k}:{v}")?;
                             }
-                            write!(s, "-sample{}", sample_identifier.index)?;
                             s
                         };
 
-                        let locale_dir = if let Some(locale) = &sample_identifier.locale {
-                            out_dir.join(locale)
-                        } else {
-                            out_dir.clone()
-                        };
-
-                        let render_path = locale_dir.join(format!(
+                        let render_path = out_dir.join(format!(
                             "{template_filename_base}{sample_suffix}.{template_ext}"
                         ));
 
