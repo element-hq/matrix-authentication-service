@@ -19,7 +19,7 @@ Please see LICENSE files in the repository root for full details.
       </div>
     </header>
 
-    {% if current_session %}
+    {% if current_session is not none %}
       <p class="cpd-text-body-md-regular">
         {{ _("mas.navbar.signed_in_as", username=current_session.user.username) }}
       </p>

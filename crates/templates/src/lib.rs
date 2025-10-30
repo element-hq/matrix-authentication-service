@@ -17,7 +17,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use mas_i18n::Translator;
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
-use minijinja::Value;
+use minijinja::{UndefinedBehavior, Value};
 use rand::Rng;
 use serde::Serialize;
 use thiserror::Error;
@@ -71,6 +71,9 @@ pub struct Templates {
     vite_manifest_path: Utf8PathBuf,
     translations_path: Utf8PathBuf,
     path: Utf8PathBuf,
+    /// Whether template rendering is in strict mode (for testing,
+    /// until this can be rolled out in production.)
+    strict: bool,
 }
 
 /// There was an issue while loading the templates
@@ -151,6 +154,7 @@ impl Templates {
         translations_path: Utf8PathBuf,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<Self, TemplateLoadingError> {
         let (translator, environment) = Self::load_(
             &path,
@@ -159,6 +163,7 @@ impl Templates {
             &translations_path,
             branding.clone(),
             features,
+            strict,
         )
         .await?;
         Ok(Self {
@@ -170,6 +175,7 @@ impl Templates {
             translations_path,
             branding,
             features,
+            strict,
         })
     }
 
@@ -180,6 +186,7 @@ impl Templates {
         translations_path: &Utf8Path,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<(Arc<Translator>, Arc<minijinja::Environment<'static>>), TemplateLoadingError> {
         let path = path.to_owned();
         let span = tracing::Span::current();
@@ -205,6 +212,15 @@ impl Templates {
             span.in_scope(move || {
                 let mut loaded: HashSet<_> = HashSet::new();
                 let mut env = minijinja::Environment::new();
+                // Don't allow use of undefined variables
+                env.set_undefined_behavior(if strict {
+                    UndefinedBehavior::Strict
+                } else {
+                    // For now, allow semi-strict, because we don't have total test coverage of
+                    // tests and some tests rely on if conditions against sometimes-undefined
+                    // variables
+                    UndefinedBehavior::SemiStrict
+                });
                 let root = path.canonicalize_utf8()?;
                 info!(%root, "Loading templates from filesystem");
                 for entry in walkdir::WalkDir::new(&root)
@@ -275,6 +291,7 @@ impl Templates {
             &self.translations_path,
             self.branding.clone(),
             self.features,
+            self.strict,
         )
         .await?;
 
@@ -524,6 +541,8 @@ mod tests {
             translations_path,
             branding,
             features,
+            // Use strict mode in tests
+            true,
         )
         .await
         .unwrap();

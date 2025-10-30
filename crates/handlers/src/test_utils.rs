@@ -176,6 +176,8 @@ impl TestState {
             workspace_root.join("translations"),
             site_config.templates_branding(),
             site_config.templates_features(),
+            // Strict mode in testing
+            true,
         )
         .await?;
 
