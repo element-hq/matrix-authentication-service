@@ -305,7 +305,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Download archive
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: nextest-archive
 
