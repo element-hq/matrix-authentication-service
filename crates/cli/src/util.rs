@@ -232,6 +232,7 @@ pub async fn templates_from_config(
     config: &TemplatesConfig,
     site_config: &SiteConfig,
     url_builder: &UrlBuilder,
+    strict: bool,
 ) -> Result<Templates, anyhow::Error> {
     Templates::load(
         config.path.clone(),
@@ -240,6 +241,7 @@ pub async fn templates_from_config(
         config.translations_path.clone(),
         site_config.templates_branding(),
         site_config.templates_features(),
+        strict,
     )
     .await
     .with_context(|| format!("Failed to load the templates at {}", config.path))

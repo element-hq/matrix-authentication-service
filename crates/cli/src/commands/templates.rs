@@ -72,8 +72,13 @@ impl Options {
                     &account_config,
                     &captcha_config,
                 )?;
-                let templates =
-                    templates_from_config(&template_config, &site_config, &url_builder).await?;
+                let templates = templates_from_config(
+                    &template_config,
+                    &site_config,
+                    &url_builder, // Use strict mode in template checks
+                    true,
+                )
+                .await?;
                 let all_renders = templates.check_render(clock.now(), &mut rng)?;
 
                 if let Some(out_dir) = out_dir {
