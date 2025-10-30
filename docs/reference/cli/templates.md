@@ -21,3 +21,13 @@ INFO mas_core::templates::check: Rendering template name="index.html" context={"
 Options:
 - `--out-dir <directory>`: Render templates and emit them to the specified directory, which must either not exist or be empty.
 - `--stabilise`: Remove sources of nondeterminism from template inputs, so that renders are reproducible. Only useful with `--out-dir`.
+
+What is checked:
+- the Jinja templates are syntactically valid
+- the templates can render with a few sample values, with the branding from the MAS configuration
+  - undefined variables (`{{ undefined_variable }}`) will raise errors
+- all translation keys exist
+
+What is not checked:
+- the validity of the generated HTML (you can forget closing tags, or otherwise create invalid HTML output)
+- all translation keys exist *in your intended language(s)* (so some translation keys may fall back to English)
