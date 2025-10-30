@@ -81,6 +81,13 @@ pub struct ExperimentalConfig {
     /// validation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plan_management_iframe_uri: Option<String>,
+
+    /// Experimental feature to limit the number of application sessions per
+    /// user.
+    ///
+    /// Disabled by default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_limit: Option<SessionLimitConfig>,
 }
 
 impl Default for ExperimentalConfig {
@@ -90,6 +97,7 @@ impl Default for ExperimentalConfig {
             compat_token_ttl: default_token_ttl(),
             inactive_session_expiration: None,
             plan_management_iframe_uri: None,
+            session_limit: None,
         }
     }
 }
@@ -105,4 +113,11 @@ impl ExperimentalConfig {
 
 impl ConfigurationSection for ExperimentalConfig {
     const PATH: Option<&'static str> = Some("experimental");
+}
+
+/// Configuration options for the inactive session expiration feature
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+pub struct SessionLimitConfig {
+    pub soft_limit: u64,
+    pub hard_limit: u64,
 }

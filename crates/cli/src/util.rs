@@ -13,7 +13,7 @@ use mas_config::{
     PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
-use mas_data_model::{SessionExpirationConfig, SiteConfig};
+use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
@@ -225,6 +225,13 @@ pub fn site_config_from_config(
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
         plan_management_iframe_uri: experimental_config.plan_management_iframe_uri.clone(),
+        session_limit: experimental_config
+            .session_limit
+            .as_ref()
+            .map(|c| SessionLimitConfig {
+                soft_limit: c.soft_limit,
+                hard_limit: c.hard_limit,
+            }),
     })
 }
 

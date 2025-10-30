@@ -2659,6 +2659,14 @@
         "plan_management_iframe_uri": {
           "description": "Experimental feature to show a plan management tab and iframe. This value is passed through \"as is\" to the client without any validation.",
           "type": "string"
+        },
+        "session_limit": {
+          "description": "Experimental feature to limit the number of application sessions per user.\n\nDisabled by default.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/SessionLimitConfig"
+            }
+          ]
         }
       }
     },
@@ -2690,6 +2698,26 @@
           "description": "Should user sessions expire after inactivity",
           "default": true,
           "type": "boolean"
+        }
+      }
+    },
+    "SessionLimitConfig": {
+      "description": "Configuration options for the inactive session expiration feature",
+      "type": "object",
+      "required": [
+        "hard_limit",
+        "soft_limit"
+      ],
+      "properties": {
+        "soft_limit": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "hard_limit": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
         }
       }
     }
