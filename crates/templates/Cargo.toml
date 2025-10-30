@@ -42,3 +42,6 @@ mas-i18n.workspace = true
 mas-iana.workspace = true
 mas-router.workspace = true
 mas-spa.workspace = true
+
+[dev-dependencies]
+rand_chacha.workspace = true

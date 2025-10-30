@@ -106,9 +106,9 @@ pub trait TemplateContext: Serialize {
     ///
     /// This is then used to check for template validity in unit tests and in
     /// the CLI (`cargo run -- templates check`)
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -144,9 +144,9 @@ pub(crate) fn sample_list<T: TemplateContext>(samples: Vec<T>) -> BTreeMap<Sampl
 }
 
 impl TemplateContext for () {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -181,9 +181,9 @@ impl<T> std::ops::Deref for WithLanguage<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -192,7 +192,9 @@ impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
         locales
             .iter()
             .flat_map(|locale| {
-                T::sample(now, rng, locales)
+                // Make samples deterministic between locales
+                let mut rng = rng.clone();
+                T::sample(now, &mut rng, locales)
                     .into_iter()
                     .map(|(sample_id, sample)| {
                         (
@@ -218,9 +220,9 @@ pub struct WithCsrf<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -251,9 +253,9 @@ pub struct WithSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithSession<T> {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -289,9 +291,9 @@ pub struct WithOptionalSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -340,9 +342,9 @@ impl Serialize for EmptyContext {
 }
 
 impl TemplateContext for EmptyContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -368,9 +370,9 @@ impl IndexContext {
 }
 
 impl TemplateContext for IndexContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -414,9 +416,9 @@ impl AppContext {
 }
 
 impl TemplateContext for AppContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -447,9 +449,9 @@ impl ApiDocContext {
 }
 
 impl TemplateContext for ApiDocContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -539,9 +541,9 @@ pub struct LoginContext {
 }
 
 impl TemplateContext for LoginContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -647,9 +649,9 @@ pub struct RegisterContext {
 }
 
 impl TemplateContext for RegisterContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -690,9 +692,9 @@ pub struct PasswordRegisterContext {
 }
 
 impl TemplateContext for PasswordRegisterContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -732,9 +734,9 @@ pub struct ConsentContext {
 }
 
 impl TemplateContext for ConsentContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -790,9 +792,9 @@ pub struct PolicyViolationContext {
 }
 
 impl TemplateContext for PolicyViolationContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -865,9 +867,9 @@ pub struct CompatSsoContext {
 }
 
 impl TemplateContext for CompatSsoContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -927,9 +929,9 @@ impl EmailRecoveryContext {
 }
 
 impl TemplateContext for EmailRecoveryContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -992,9 +994,9 @@ impl EmailVerificationContext {
 }
 
 impl TemplateContext for EmailVerificationContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1067,9 +1069,9 @@ impl RegisterStepsVerifyEmailContext {
 }
 
 impl TemplateContext for RegisterStepsVerifyEmailContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1107,9 +1109,9 @@ impl RegisterStepsEmailInUseContext {
 }
 
 impl TemplateContext for RegisterStepsEmailInUseContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1162,9 +1164,9 @@ impl RegisterStepsDisplayNameContext {
 }
 
 impl TemplateContext for RegisterStepsDisplayNameContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<chrono::Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1217,9 +1219,9 @@ impl RegisterStepsRegistrationTokenContext {
 }
 
 impl TemplateContext for RegisterStepsRegistrationTokenContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<chrono::Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1268,9 +1270,9 @@ impl RecoveryStartContext {
 }
 
 impl TemplateContext for RecoveryStartContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1310,9 +1312,9 @@ impl RecoveryProgressContext {
 }
 
 impl TemplateContext for RecoveryProgressContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1356,9 +1358,9 @@ impl RecoveryExpiredContext {
 }
 
 impl TemplateContext for RecoveryExpiredContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1420,9 +1422,9 @@ impl RecoveryFinishContext {
 }
 
 impl TemplateContext for RecoveryFinishContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1469,9 +1471,9 @@ impl UpstreamExistingLinkContext {
 }
 
 impl TemplateContext for UpstreamExistingLinkContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1507,9 +1509,9 @@ impl UpstreamSuggestLink {
 }
 
 impl TemplateContext for UpstreamSuggestLink {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1636,9 +1638,9 @@ impl UpstreamRegister {
 }
 
 impl TemplateContext for UpstreamRegister {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1722,9 +1724,9 @@ impl DeviceLinkContext {
 }
 
 impl TemplateContext for DeviceLinkContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1756,9 +1758,9 @@ impl DeviceConsentContext {
 }
 
 impl TemplateContext for DeviceConsentContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1801,9 +1803,9 @@ impl AccountInactiveContext {
 }
 
 impl TemplateContext for AccountInactiveContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1837,9 +1839,9 @@ impl DeviceNameContext {
 }
 
 impl TemplateContext for DeviceNameContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1863,9 +1865,9 @@ pub struct FormPostContext<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         now: chrono::DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -1945,9 +1947,9 @@ impl std::fmt::Display for ErrorContext {
 }
 
 impl TemplateContext for ErrorContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: chrono::DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
@@ -2039,9 +2041,9 @@ impl NotFoundContext {
 }
 
 impl TemplateContext for NotFoundContext {
-    fn sample(
+    fn sample<R: Rng + Clone>(
         _now: DateTime<Utc>,
-        _rng: &mut impl Rng,
+        _rng: &mut R,
         _locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where
