@@ -40,7 +40,7 @@ Please see LICENSE in the repository root for full details.
 
     <!-- #tchap# add .lasuite class to add lasuite fonts -->
     <div class="cpd-form-root lasuite">
-      <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';">
+      <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';return false;">
           <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
         </button>
         <p>
