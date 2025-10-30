@@ -129,6 +129,33 @@ It may also be used in the future as a foundation for a new Application Service 
 This works by presenting the client credentials to get back an access token.
 The simplest type of client credentials is a client ID and client secret pair, but MAS also supports client authentication with a JWT ([RFC 7523]), which is a robust way to authenticate clients without a shared secret.
 
+## Personal sessions (personal access tokens)
+
+Personal access tokens are a credential that can be issued to give access to a user,
+with predefined scopes and a predefined expiry time.
+Either before or after expiry, the owner of the token can regenerate it, which produces a new
+access token with the same scopes but a new expiry time.
+
+Personal access tokens are intended to fulfill two basic use cases:
+
+1. an easy way to obtain a clean token for your own user, for use in automation and scripts;
+2. a way to obtain a token for administrative access of another user, either for ad-hoc administrative operations or to set up a bot or similar service.
+
+In the future, users will be able to create their own personal access tokens, but this is currently not implemented
+so (1) is currently not supported.
+
+For now, personal access tokens must be created, regenerated and revoked by administrators through the [Admin API], satisfying use case (2).
+[Element Admin](https://github.com/element-hq/element-admin), available by default in Element Server Suite, can be used to do this interactively.
+You can also use the online beta deployment at [admin-beta.element.dev](https://admin-beta.element.dev/). <!--- TODO stable deployment -->
+
+### Validity
+
+Personal sessions can be used so long as:
+
+- the owner (creator) of the token is still an active and unlocked user (or static OAuth 2 client); and
+- the actor (target user, or user being controlled by the token) has not been deactivated. Though the actor is allowed to be locked.
+
+
 [MSC4108]: https://github.com/matrix-org/matrix-spec-proposals/pull/4108
 [RFC 6749]: https://datatracker.ietf.org/doc/html/rfc6749
 [RFC 7523]: https://datatracker.ietf.org/doc/html/rfc7523
@@ -140,3 +167,4 @@ The simplest type of client credentials is a client ID and client secret pair, b
 [`urn:synapse:admin:*`]: ../reference/scopes.md#urnsynapseadmin
 [`urn:mas:graphql:*`]: ../reference/scopes.md#urnmasgraphql
 [`urn:mas:admin`]: ../reference/scopes.md#urnmasadmin
+[Admin API]: ./admin-api.md

@@ -46,7 +46,9 @@ If admin API is enabled, MAS will also serve the specification at `/api/spec.jso
 
 ## Authentication
 
-All requests to the admin API are gated using access tokens obtained using OAuth 2.0 grants.
+All requests to the admin API are gated either using access tokens obtained using OAuth 2.0 grants,
+or using personal access tokens (which must currently be issued through the Admin API).
+
 They must have the [`urn:mas:admin`](../reference/scopes.md#urnmasadmin) scope.
 
 ### User-interactive tools
