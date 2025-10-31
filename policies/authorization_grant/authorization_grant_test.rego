@@ -141,7 +141,21 @@ test_stable_device_scopes if {
 	# Not authorization_grant.allowed for the client credentials grant
 	not authorization_grant.allow with input.client as client
 		with input.grant_type as "client_credentials"
-		with input.scope as "urn:matrix:client:device:AAbbCCdd01"
+		with input.scope as "urn:matrix:client:api:* urn:matrix:client:device:AAbbCCdd01"
+}
+
+test_device_scope_only_with_cs_api_scope if {
+	not authorization_grant.allow with input.user as user
+		with input.client as client
+		with input.grant_type as "authorization_code"
+		# Requested a device scope but no C-S API scope:
+with 		input.scope as "urn:matrix:client:device:AAbbCCdd01"
+
+	not authorization_grant.allow with input.user as user
+		with input.client as client
+		with input.grant_type as "authorization_code"
+		# Requested a device scope but no C-S API scope:
+with 		input.scope as "urn:matrix:org.matrix.msc2967.client:device:AAbbCCdd01"
 }
 
 test_mix_stable_and_unstable_scopes if {
