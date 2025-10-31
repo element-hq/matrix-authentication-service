@@ -98,6 +98,26 @@ uses_stable_scopes if {
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:")}) > 0
 }
 
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 0
+}
+
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:api:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:api:")}) > 0
+}
+
 # METADATA
 # entrypoint: true
 violation contains {"msg": msg} if {
@@ -114,6 +134,12 @@ violation contains {"msg": "only one device scope is allowed at a time"} if {
 violation contains {"msg": "only one device scope is allowed at a time"} if {
 	scope_list := split(input.scope, " ")
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 1
+}
+
+# Prevent the creation of C-S API devices for sessions that don't have C-S API access.
+violation contains {"msg": "device scopes are only allowed when the client-server API scope is requested"} if {
+	has_device_scope
+	not has_cs_api_scope
 }
 
 violation contains {"msg": "request cannot mix unstable and stable scopes"} if {
