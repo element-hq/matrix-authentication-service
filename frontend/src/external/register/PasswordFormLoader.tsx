@@ -1,13 +1,9 @@
-import {
-  useSuspenseQuery,
-  queryOptions,
-} from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { Form } from "@vector-im/compound-web";
 import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
-import { Form } from "@vector-im/compound-web";
 import "../../shared.css";
 import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
-
 
 const QUERY = graphql(/* GraphQL */ `
   query PasswordChange {
@@ -30,10 +26,10 @@ const query = queryOptions({
 });
 
 export default function PasswordFormLoader({
-    forceShowNewPasswordInvalid,
-  }: {
-    forceShowNewPasswordInvalid: boolean;
-  }): React.ReactElement {
+  forceShowNewPasswordInvalid,
+}: {
+  forceShowNewPasswordInvalid: boolean;
+}): React.ReactElement {
   const {
     data: { siteConfig },
   } = useSuspenseQuery(query);
