@@ -682,8 +682,8 @@ mod tests {
             "csrf": csrf_token,
             "username": "--",
             "email": "jacques@example.com",
-            "password": "correcthorsebatterystaple",
-            "password_confirm": "correcthorsebatterystaple",
+            "new_password": "correcthorsebatterystaple",
+            "new_password_again": "correcthorsebatterystaple",
             "accept_terms": "on",
         }));
         let request = cookies.with_cookies(request);
@@ -749,8 +749,8 @@ mod tests {
                 "csrf": csrf_token,
                 "username": "john",
                 "email": "john@example.com",
-                "password": "correcthorsebatterystaple",
-                "password_confirm": "correcthorsebatterystaple",
+                "new_password": "correcthorsebatterystaple",
+                "new_password_again": "correcthorsebatterystaple",
                 "accept_terms": "on",
             }));
         let request = cookies.with_cookies(request);
@@ -819,8 +819,8 @@ mod tests {
                 "csrf": csrf_token,
                 "username": "john",
                 "email": "john@example.com",
-                "password": "hunter2",
-                "password_confirm": "mismatch",
+                "new_password": "hunter2",
+                "new_password_again": "mismatch",
                 "accept_terms": "on",
             }));
         let request = cookies.with_cookies(request);
@@ -861,8 +861,8 @@ mod tests {
                 "csrf": csrf_token,
                 "username": "a".repeat(256),
                 "email": "john@example.com",
-                "password": "hunter2",
-                "password_confirm": "hunter2",
+                "new_password": "hunter2",
+                "new_password_again": "hunter2",
                 "accept_terms": "on",
             }));
         let request = cookies.with_cookies(request);
@@ -923,8 +923,8 @@ mod tests {
                 "username": "--",
                 "email": email,
                 //:tchap:end
-                "password": "hunter2",
-                "password_confirm": "hunter2",
+                "new_password": "hunter2",
+                "new_password_again": "hunter2",
                 "accept_terms": "on",
             }));
         let request = cookies.with_cookies(request);
@@ -976,8 +976,8 @@ mod tests {
                 "csrf": csrf_token,
                 "username": "--",//:tchap:
                 "email": "john@example.com",
-                "password": "hunter2",
-                "password_confirm": "hunter2",
+                "new_password": "hunter2",
+                "new_password_again": "hunter2",
                 "accept_terms": "on",
             }));
         let request = cookies.with_cookies(request);
