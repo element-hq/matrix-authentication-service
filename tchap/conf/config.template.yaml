@@ -287,7 +287,7 @@ rate_limiting:
     # based on source IP address.
     # This can protect against brute force login attempts.
     per_ip:
-      burst: 3
+      burst: 300
       per_second: 0.05
 
     # Controls how many login attempts are permitted

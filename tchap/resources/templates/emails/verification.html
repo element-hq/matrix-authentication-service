@@ -1,0 +1,23 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+{% extends "emails/_mail-base.html" %}
+
+{%- set _ = translator(lang) -%}
+
+{%- if browser_session is defined -%}
+  {%- set username = browser_session.user.username -%}
+{%- elif user_registration is defined -%}
+  {%- set username = user_registration.username -%}
+{%- endif -%}
+
+<!-- MESSAGE PRINCIPAL -->
+{% block primaryMessage %}
+{{ _("mas.emails.greeting", username="")|replace(" ,", ",") }}<br />
+<br />
+{{ _("mas.emails.verify.body_html", code=authentication_code.code) }}<br />
+{% endblock %}

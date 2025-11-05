@@ -11,7 +11,6 @@ Please see LICENSE files in the repository root for full details.
 {% from "components/idp_brand.html" import logo %}
 
 {% block content %}
-  <form method="GET" class="flex flex-col gap-10" action="{{ '/register/password' | prefix_url }}">
     <header class="page-heading">
       <div class="icon">
         {{ icon.user_profile_solid() }}
@@ -27,6 +26,33 @@ Please see LICENSE files in the repository root for full details.
       </div>
     </header>
 
+    <!-- #tchap# -->
+    {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+    {% for provider in providers %}
+    {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+
+    <!-- #tchap# add .lasuite class to add lasuite fonts -->
+    <div class="cpd-form-root lasuite">
+        <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';">
+          <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+        </button>
+        <p>
+          <a
+          href="https://www.proconnect.gouv.fr/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
+          class="cpd-text-secondary"
+          >
+          Qu’est-ce que ProConnect ?
+        </a>
+      </p>
+    </div>
+    {% endfor %}
+
+    {{ field.separator() }}
+
+    <form method="GET" class="flex flex-col gap-10" action="{{ '/register/password' | prefix_url }}">
     <!-- :tchap: -->
     {% if features.password_registration and False %}
     <!-- :tchap: -->
@@ -44,20 +70,21 @@ Please see LICENSE files in the repository root for full details.
       {% endfor %}
 
       {% if features.password_registration %}
-        {{ button.button(text=_("mas.register.continue_with_email")) }}
+        {{ button.button(text=_("mas.register.continue_with_email"), kind="secondary") }}
       {% endif %}
-
-      {% if providers %}
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-        {% for provider in providers %}
-          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-          <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
-            {{ logo(provider.brand_name) }}
-            {{ _("mas.login.continue_with_provider", provider=name) }}
-          </a>
-        {% endfor %}
-      {% endif %}
-
+        <!-- :tchap: no providers
+              {% if providers %}
+                {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+                {% for provider in providers %}
+                  {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+                  <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+                    {{ logo(provider.brand_name) }}
+                    {{ _("mas.login.continue_with_provider", provider=name) }}
+                  </a>
+                {% endfor %}
+              {% endif %}
+        :tchap: end -->
+        
       {% set params = next["params"] | default({}) | to_params(prefix="?") %}
       {{ button.link_tertiary(text=_("mas.register.call_to_login"), href="/login" ~ params) }}
     </div>

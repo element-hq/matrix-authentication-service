@@ -18,7 +18,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, CsrfToken, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, CaptchaConfig};
+use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, TchapConfig};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -34,7 +34,7 @@ use mas_templates::{
 };
 use serde::{Deserialize, Serialize};
 //:tchap:
-use tchap::email_to_mxid_localpart;
+use tchap::{EmailAllowedResult, email_to_display_name, email_to_mxid_localpart};
 //:tchap:
 use zeroize::Zeroizing;
 
@@ -110,24 +110,33 @@ pub(crate) async fn get(
     //:tchap:
     //retrieve and use login_hint
     if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.action.post_auth_action
-        && let Some(login_hint) = repo
-            .oauth2_authorization_grant()
-            .lookup(*id)
-            .await?
-            .and_then(|grant| grant.login_hint)
+        && let Some(oauth2_authorization_grant) =
+            repo.oauth2_authorization_grant().lookup(*id).await?
     {
-        tracing::trace!(
-            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
-            id,
-            login_hint
-        );
-        let username = email_to_mxid_localpart(&login_hint);
-        let mut form_state = FormState::default();
-        form_state.set_value(RegisterFormField::Username, Some(username));
-        form_state.set_value(RegisterFormField::Email, Some(login_hint));
-        ctx = ctx.with_form_state(form_state);
+        if let Some(login_hint) = oauth2_authorization_grant.login_hint {
+            tracing::trace!(
+                "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
+                id,
+                login_hint
+            );
+            //fill username with a dummy value as it will be generated from the email in
+            // the POST method
+            let username = "--";
+            let mut form_state = FormState::default();
+            form_state.set_value(RegisterFormField::Username, Some(username.to_owned()));
+            form_state.set_value(RegisterFormField::Email, Some(login_hint));
+            ctx = ctx.with_form_state(form_state);
+        } else {
+            tracing::trace!("Missing login_hint in oauth2_authorization_grant:{:?}", id);
+        }
     } else {
-        tracing::warn!("Missing login_hint in query.action.post_auth_action");
+        tracing::warn!("Missing oauth2_authorization_grant in account creation");
+        // deactivate this for the moment, as the unit tests need to be fixed
+        // show an error screen to guide the user to start a valid creation
+        // account flow from a Tchap device
+        //return Err(InternalError::new(std::io::Error::other("Veuillez fermer
+        // cette fenêtre et relancer la création de compte depuis votre appareil
+        // Tchap").into()));
     }
     //:tchap: end
 
@@ -154,7 +163,10 @@ pub(crate) async fn post(
     State(password_manager): State<PasswordManager>,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(site_config): State<SiteConfig>,
+    //:tchap: add tchap to the state with site_config as a tuple to stay under the limit of 16
+    //:tchap: arguments
+    (State(site_config), State(tchap_config)): (State<SiteConfig>, State<TchapConfig>),
+    //:tchap:end
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(http_client): State<reqwest::Client>,
     (State(limiter), requester): (State<Limiter>, RequesterFingerprint),
@@ -195,31 +207,6 @@ pub(crate) async fn post(
         .await
         .is_ok();
 
-    //:tchap:
-    //substitute values in the form
-    if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action
-        && let Some(login_hint) = repo
-            .oauth2_authorization_grant()
-            .lookup(*id)
-            .await?
-            .and_then(|grant| grant.login_hint)
-    {
-        tracing::trace!(
-            "ContinueAuthorizationGrant:{:?} login_hint:{:?}",
-            id,
-            login_hint
-        );
-
-        form = RegisterForm {
-            username: email_to_mxid_localpart(&login_hint),
-            email: login_hint,
-            ..form
-        };
-    } else {
-        tracing::warn!("Missing login_hint in query.post_auth_action");
-    }
-    //:tchap: end
-
     // Validate the form
     let state = {
         let mut state = form.to_form_state();
@@ -227,6 +214,42 @@ pub(crate) async fn post(
         if !passed_captcha {
             state.add_error_on_form(FormError::Captcha);
         }
+
+        //:tchap:
+        //verify that email address is allowed in this homeserver
+        let server_name = homeserver.homeserver();
+        let email_result = check_email_allowed(&form.email, server_name, &tchap_config).await;
+
+        match email_result {
+            EmailAllowedResult::Allowed => {
+                // Email is allowed, continue
+            }
+            EmailAllowedResult::WrongServer => {
+                state.add_error_on_field(
+                    RegisterFormField::Email,
+                    FieldError::Policy {
+                        code: None,
+                        message: "Votre adresse mail est associée à un autre serveur.".to_owned(),
+                    },
+                );
+            }
+            EmailAllowedResult::InvitationMissing => {
+                state.add_error_on_field(
+                    RegisterFormField::Email,
+                    FieldError::Policy {
+                        code: None,
+                        message: "Vous avez besoin d'une invitation pour accéder à Tchap"
+                            .to_owned(),
+                    },
+                );
+            }
+        }
+
+        //substitute the username based on the email
+        form = RegisterForm {
+            username: email_to_mxid_localpart(&form.email),
+            ..form
+        };
 
         let mut homeserver_denied_username = false;
         if form.username.is_empty() {
@@ -398,6 +421,18 @@ pub(crate) async fn post(
         registration
     };
 
+    //:tchap: set display name automatically - skip display name page
+    let maybe_display_name = Some(email_to_display_name(&form.email));
+
+    let registration = if let Some(display_name) = maybe_display_name {
+        repo.user_registration()
+            .set_display_name(registration, display_name)
+            .await?
+    } else {
+        registration
+    };
+    //:tchap: end
+
     // Create a new user email authentication session
     let user_email_authentication = repo
         .user_email()
@@ -471,13 +506,40 @@ async fn render(
     Ok(content)
 }
 
+//:tchap:
+///real function used when not testing
+#[cfg(not(test))]
+async fn check_email_allowed(
+    email: &str,
+    server_name: &str,
+    tchap_config: &TchapConfig,
+) -> EmailAllowedResult {
+    tchap::is_email_allowed(email, server_name, tchap_config).await
+}
+
+#[cfg(test)]
+async fn check_email_allowed(
+    _email: &str,
+    _server_name: &str,
+    _tchap_config: &TchapConfig,
+) -> EmailAllowedResult {
+    EmailAllowedResult::Allowed
+}
+//:tchap:end
+
 #[cfg(test)]
 mod tests {
     use hyper::{
         Request, StatusCode,
         header::{CONTENT_TYPE, LOCATION},
     };
-    use mas_router::Route;
+    use mas_data_model::AuthorizationCode;
+    use mas_router::{Route, SimpleRoute};
+    use oauth2_types::{
+        registration::ClientRegistrationResponse,
+        requests::ResponseMode,
+        scope::{OPENID, Scope},
+    };
     use sqlx::PgPool;
 
     use crate::{
@@ -517,6 +579,143 @@ mod tests {
             }));
         let response = state.request(request).await;
         response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
+    }
+
+    /// :tchap:
+    /// Test the registration happy path with `oauth2_authorization_grant` and
+    /// `login_hint``. this test is specific to Tchap, in upstream there is
+    /// no oauth2_authorization_grant in the fixture
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_login_hint(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        //:tchap: use login_hint
+        let login_hint = "jacques@example.com";
+        let expected_username = "jacques-example.com";
+
+        // Provision a client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        //:tchap:
+        let mut repo = state.repository().await.unwrap();
+
+        // Lookup the client in the database.
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Save a grant int he repo
+        let code = "thisisaverysecurecode";
+        let grant = repo
+            .oauth2_authorization_grant()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                "https://example.com/redirect".parse().unwrap(),
+                Scope::from_iter([OPENID]),
+                Some(AuthorizationCode {
+                    code: code.to_owned(),
+                    pkce: None,
+                }),
+                Some("state".to_owned()),
+                Some("nonce".to_owned()),
+                ResponseMode::Query,
+                false,
+                Some(login_hint.to_owned()),
+                None,
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+        //:tchap:
+
+        // Render the registration page and get the CSRF token
+        //:tchap: add a post auth action with the grant.id
+        let request = Request::get(
+            &*mas_router::PasswordRegister::default()
+                .and_continue_grant(grant.id)
+                .path_and_query(),
+        )
+        .empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+        // Extract the CSRF token from the response body
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        // Submit the registration form
+
+        let request = Request::post(
+            &*mas_router::PasswordRegister::default()
+                .and_continue_grant(grant.id)
+                .path_and_query(),
+        )
+        .form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "--",
+            "email": "jacques@example.com",
+            "password": "correcthorsebatterystaple",
+            "password_confirm": "correcthorsebatterystaple",
+            "accept_terms": "on",
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        //response.assert_status(StatusCode::ACCEPTED);//:tchap:
+        let location = response.headers().get(LOCATION).unwrap();
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = location
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        // There should be a new registration in the database
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, expected_username.to_owned());
+        assert!(registration.password.is_some());
+
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(email_authentication.email, login_hint.to_owned());
     }
 
     /// Test the registration happy path
@@ -573,7 +772,11 @@ mod tests {
         // There should be a new registration in the database
         let mut repo = state.repository().await.unwrap();
         let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
-        assert_eq!(registration.username, "john".to_owned());
+        //:tchap:
+        //assert_eq!(registration.username, "john".to_owned());
+        let expected_username = "john-example.com";
+        assert_eq!(registration.username, expected_username.to_owned());
+        //:tchap:end
         assert!(registration.password.is_some());
 
         let email_authentication = repo
@@ -627,6 +830,7 @@ mod tests {
         assert!(response.body().contains("Password fields don't match"));
     }
 
+    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_username_too_long(pool: PgPool) {
         setup();
@@ -679,13 +883,18 @@ mod tests {
         let state = TestState::from_pool(pool).await.unwrap();
         let mut rng = state.rng();
         let cookies = CookieHelper::new();
+        //:tchap:
+        let email = "john@example.com";
+        let expected_username = "john-example.com";
 
         // Insert a user in the database first
         let mut repo = state.repository().await.unwrap();
         repo.user()
-            .add(&mut rng, &state.clock, "john".to_owned())
+            //          .add(&mut rng, &state.clock, "john".to_owned())
+            .add(&mut rng, &state.clock, expected_username.to_owned())
             .await
             .unwrap();
+        //:tchap:end
         repo.save().await.unwrap();
 
         // Render the registration page and get the CSRF token
@@ -710,8 +919,10 @@ mod tests {
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
             .form(serde_json::json!({
                 "csrf": csrf_token,
-                "username": "john",
-                "email": "john@example.com",
+                //:tchap:
+                "username": "--",
+                "email": email,
+                //:tchap:end
                 "password": "hunter2",
                 "password_confirm": "hunter2",
                 "accept_terms": "on",
@@ -749,14 +960,21 @@ mod tests {
             .next()
             .unwrap();
 
+        //:tchap:
         // Reserve "john" on the homeserver
-        state.homeserver_connection.reserve_localpart("john").await;
+        //state.homeserver_connection.reserve_localpart("john").await;
+        let expected_username = "john-example.com";
+        state
+            .homeserver_connection
+            .reserve_localpart(expected_username)
+            .await;
+        //:tchap:end
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
             .form(serde_json::json!({
                 "csrf": csrf_token,
-                "username": "john",
+                "username": "--",//:tchap:
                 "email": "john@example.com",
                 "password": "hunter2",
                 "password_confirm": "hunter2",

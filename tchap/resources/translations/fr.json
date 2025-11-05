@@ -212,7 +212,7 @@
       "continue_with_email": "Continuer avec une adresse mail",
       "create_account": {
         "description": "Choisissez un nom d'utilisateur pour continuer.",
-        "heading": "Choisissez un mot de passe"
+        "heading": "Créer un compte"
       },
       "sign_in_instead": "Se connecter",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"

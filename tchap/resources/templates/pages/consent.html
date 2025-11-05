@@ -6,7 +6,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 -#}
 
-{% set consent_page = true %}
+<!-- TODO remove this variable if not used anymore -->
+{% set consent_page = false %}
 
 {% extends "base.html" %}
 
@@ -27,6 +28,15 @@ Please see LICENSE in the repository root for full details.
 
     <div class="header">
       <h1 class="title">{{ _("mas.consent.heading") }}</h1>
+      {% if email %}
+      <span class="email-box">
+        {{ email }}
+      </span>
+      {% else %}
+      <span class="email-box">
+        {{ current_session.user.username }}
+      </span>
+      {% endif %}
       <p class="text [&>span]:whitespace-nowrap">
         {{ _("mas.consent.client_wants_access", client_name=client_name, redirect_uri=(grant.redirect_uri | simplify_url)) }}
         {{ _("mas.consent.this_will_allow", client_name=client_name) }}
@@ -63,13 +73,8 @@ Please see LICENSE in the repository root for full details.
       <input type="hidden" name="csrf" value="{{ csrf_token }}" />
       {{ button.button(text=_("action.continue")) }}
     </form>
-
-    <div class="flex gap-1 justify-center items-center">
-      <p class="cpd-text-secondary cpd-text-body-md-regular">
-        {{ _("mas.not_you", username=current_session.user.username) }}
-      </p>
-
-      {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
+    <div class="flex flex-col gap-6">
+    {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
     </div>
 <!-- :tchap:
     {{ back_to_client.link(

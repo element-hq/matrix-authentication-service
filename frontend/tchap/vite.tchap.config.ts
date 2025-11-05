@@ -11,6 +11,7 @@ export default defineConfig((env) =>
         rollupOptions: {
           input: [
             resolve(__dirname, "css/tchap.css"),
+            resolve(__dirname, "css/base.css"),
             //resolve(__dirname, "../node_modules/@gouvfr-lasuite/integration/dist/css/prefixed-dsfr.css"),
             resolve(
               __dirname,

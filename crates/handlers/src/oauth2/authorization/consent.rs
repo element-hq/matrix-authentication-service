@@ -159,7 +159,19 @@ pub(crate) async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
+    // :tchap:
+    let email = repo
+        .user_email()
+        .all(&session.user)
+        .await?
+        .first()
+        .map(|user_email| user_email.email.clone());
+    // :tchap: end
+
     let ctx = ConsentContext::new(grant, client)
+        // :tchap:
+        .with_email(email)
+        // :tchap: end
         .with_session(session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
