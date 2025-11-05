@@ -58,12 +58,7 @@ export default defineConfig((env) => ({
         resolve(__dirname, "src/shared.css"),
         resolve(__dirname, "src/templates.css"),
         resolve(__dirname, "src/swagger.ts"),
-        // 👇 specific component
-        resolve(__dirname, "src/external/View.tsx"),
-      ],
-      output: {
-        entryFileNames: "[name].js", // => main.js, RegisterPasswordStep.js, etc.
-      },
+      ]
     },
   },
 

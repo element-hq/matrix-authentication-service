@@ -6,7 +6,6 @@ import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import { Form } from "@vector-im/compound-web";
 import "../../shared.css";
-import { type FormEvent } from "react";
 import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
 
 
@@ -40,6 +39,8 @@ export default function PasswordFormLoader({
   } = useSuspenseQuery(query);
 
   return (
+    //Form.Root is needed because Form.Field requires to be included into a Form
+    //asChild allows to replace Form.Root component by the child, the <form> used is in the password.html
     <Form.Root asChild>
       <div>
         <PasswordCreationDoubleInput

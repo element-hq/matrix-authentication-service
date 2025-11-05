@@ -4,7 +4,6 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import Header from "./register/Header";
 import PasswordFormLoader from "./register/PasswordFormLoader";
 import { TooltipProvider } from "@vector-im/compound-web";
 import ErrorBoundary from "../components/ErrorBoundary";
