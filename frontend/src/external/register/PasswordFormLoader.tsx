@@ -25,12 +25,6 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-  // event.preventDefault();
-  // const formData = new FormData(event.currentTarget);
-  // mutation.mutate(formData);
-};
-
 const query = queryOptions({
   queryKey: ["passwordChange"],
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
@@ -46,11 +40,13 @@ export default function PasswordFormLoader({
   } = useSuspenseQuery(query);
 
   return (
-    <Form.Root onSubmit={onSubmit} method="POST">
-      <PasswordCreationDoubleInput
-        siteConfig={siteConfig}
-        forceShowNewPasswordInvalid={forceShowNewPasswordInvalid}
-      />
+    <Form.Root asChild>
+      <div>
+        <PasswordCreationDoubleInput
+          siteConfig={siteConfig}
+          forceShowNewPasswordInvalid={forceShowNewPasswordInvalid}
+        />
+      </div>
     </Form.Root>
   );
 }

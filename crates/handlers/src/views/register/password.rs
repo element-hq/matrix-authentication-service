@@ -49,8 +49,8 @@ use crate::{
 pub(crate) struct RegisterForm {
     username: String,
     email: String,
-    password: String,
-    password_confirm: String,
+    new_password: String,
+    new_password_again: String,
     #[serde(default)]
     accept_terms: String,
 
@@ -282,15 +282,15 @@ pub(crate) async fn post(
             state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
         }
 
-        if form.password.is_empty() {
+        if form.new_password.is_empty() {
             state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
         }
 
-        if form.password_confirm.is_empty() {
+        if form.new_password_again.is_empty() {
             state.add_error_on_field(RegisterFormField::PasswordConfirm, FieldError::Required);
         }
 
-        if form.password != form.password_confirm {
+        if form.new_password != form.new_password_again {
             state.add_error_on_field(RegisterFormField::Password, FieldError::Unspecified);
             state.add_error_on_field(
                 RegisterFormField::PasswordConfirm,
@@ -298,7 +298,7 @@ pub(crate) async fn post(
             );
         }
 
-        if !password_manager.is_password_complex_enough(&form.password)? {
+        if !password_manager.is_password_complex_enough(&form.new_password)? {
             // TODO localise this error
             state.add_error_on_field(
                 RegisterFormField::Password,
@@ -454,7 +454,7 @@ pub(crate) async fn post(
         .await?;
 
     // Hash the password
-    let password = Zeroizing::new(form.password);
+    let password = Zeroizing::new(form.new_password);
     let (version, hashed_password) = password_manager
         .hash(&mut rng, password)
         .await
