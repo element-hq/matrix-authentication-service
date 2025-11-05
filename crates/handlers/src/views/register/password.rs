@@ -574,8 +574,8 @@ mod tests {
                 "csrf": "abc",
                 "username": "john",
                 "email": "john@example.com",
-                "password": "hunter2",
-                "password_confirm": "hunter2",
+                "new_password": "hunter2",
+                "new_password_again": "hunter2",
             }));
         let response = state.request(request).await;
         response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
