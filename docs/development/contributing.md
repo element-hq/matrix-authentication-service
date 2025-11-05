@@ -96,7 +96,7 @@ If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installati
 - Run the tests to the backend by running `cargo nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
 - Run the tests to the frontend by running `npm run test` in the `frontend` directory.
 - To run the tests for the included policy, change to the `policies` directory and run one of:
-  - `make test` (needs OpenPolicyAgent installed)
+  - `make test` (needs Open Policy Agent installed)
   - `make PODMAN=1 test` (runs inside a container; needs Podman installed)
   - `make DOCKER=1 test` (runs inside a container; needs Docker installed)
 
