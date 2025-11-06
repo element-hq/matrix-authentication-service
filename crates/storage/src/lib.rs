@@ -20,7 +20,7 @@
 //! To define a new repository, you have to:
 //!   1. Define a new (async) repository trait, with the methods you need
 //!   2. Write an implementation of this trait for each storage backend you want
-//!      (currently only for [`mas-storage-pg`])
+//!      (currently only for `mas-storage-pg`)
 //!   3. Make it accessible via the [`RepositoryAccess`] trait
 //!
 //! The repository trait definition should look like this:
