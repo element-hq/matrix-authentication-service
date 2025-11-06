@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::num::NonZeroU64;
+
 use chrono::Duration;
 use serde::Serialize;
 use url::Url;
@@ -39,8 +41,8 @@ pub struct SessionExpirationConfig {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct SessionLimitConfig {
-    pub soft_limit: u64,
-    pub hard_limit: u64,
+    pub soft_limit: NonZeroU64,
+    pub hard_limit: NonZeroU64,
 }
 
 /// Random site configuration we want accessible in various places.
