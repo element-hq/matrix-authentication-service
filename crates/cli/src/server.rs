@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, ToSocketAddrs},
@@ -143,7 +143,12 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
         propagator.extract_with_context(&context, &extractor)
     });
 
-    span.set_parent(parent_context);
+    if let Err(err) = span.set_parent(parent_context) {
+        tracing::error!(
+            error = &err as &dyn std::error::Error,
+            "Failed to set parent context on span"
+        );
+    }
 
     span
 }
@@ -205,7 +210,6 @@ async fn log_response_middleware(
     response
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn build_router(
     state: AppState,
     resources: &[HttpResource],
@@ -269,7 +273,7 @@ pub fn build_router(
             }
             mas_config::HttpResource::OAuth => router.merge(mas_handlers::api_router::<AppState>()),
             mas_config::HttpResource::Compat => {
-                router.merge(mas_handlers::compat_router::<AppState>())
+                router.merge(mas_handlers::compat_router::<AppState>(templates.clone()))
             }
             mas_config::HttpResource::AdminApi => {
                 let (_, api_router) = mas_handlers::admin_api_router::<AppState>();
@@ -333,7 +337,7 @@ pub fn build_router(
         // which is the other way around compared to `tower::ServiceBuilder`.
         // So even if the Sentry docs has an example that does
         // 'NewSentryHttpLayer then SentryHttpLayer', we must do the opposite.
-        .layer(SentryHttpLayer::with_transaction())
+        .layer(SentryHttpLayer::new().enable_transaction())
         .layer(NewSentryLayer::new_from_top())
         .with_state(state)
 }

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -50,6 +50,13 @@ pub struct AccountConfig {
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub password_registration_enabled: bool,
 
+    /// Whether self-service password registrations require a valid email.
+    /// Defaults to `true`.
+    ///
+    /// This has no effect if password registration is disabled.
+    #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    pub password_registration_email_required: bool,
+
     /// Whether users are allowed to change their passwords. Defaults to `true`.
     ///
     /// This has no effect if password login is disabled.
@@ -89,6 +96,7 @@ impl Default for AccountConfig {
             email_change_allowed: default_true(),
             displayname_change_allowed: default_true(),
             password_registration_enabled: default_false(),
+            password_registration_email_required: default_true(),
             password_change_allowed: default_true(),
             password_recovery_enabled: default_false(),
             account_deactivation_allowed: default_true(),

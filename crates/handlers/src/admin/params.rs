@@ -1,23 +1,21 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 // Generated code from schemars violates this rule
 #![allow(clippy::str_to_string)]
 
-use std::num::NonZeroUsize;
+use std::{borrow::Cow, num::NonZeroUsize};
 
 use aide::OperationIo;
 use axum::{
     Json,
-    extract::{
-        FromRequestParts, Path, Query,
-        rejection::{PathRejection, QueryRejection},
-    },
+    extract::{FromRequestParts, Path, rejection::PathRejection},
     response::IntoResponse,
 };
+use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_storage::pagination::PaginationDirection;
@@ -64,6 +62,34 @@ impl std::ops::Deref for UlidPathParam {
 /// The default page size if not specified
 const DEFAULT_PAGE_SIZE: usize = 10;
 
+#[derive(Deserialize, JsonSchema, Clone, Copy, Default, Debug)]
+pub enum IncludeCount {
+    /// Include the total number of items (default)
+    #[default]
+    #[serde(rename = "true")]
+    True,
+
+    /// Do not include the total number of items
+    #[serde(rename = "false")]
+    False,
+
+    /// Only include the total number of items, skip the items themselves
+    #[serde(rename = "only")]
+    Only,
+}
+
+impl IncludeCount {
+    pub(crate) fn add_to_base(self, base: &str) -> Cow<'_, str> {
+        let separator = if base.contains('?') { '&' } else { '?' };
+        match self {
+            // This is the default, don't add anything
+            Self::True => Cow::Borrowed(base),
+            Self::False => format!("{base}{separator}count=false").into(),
+            Self::Only => format!("{base}{separator}count=only").into(),
+        }
+    }
+}
+
 #[derive(Deserialize, JsonSchema, Clone, Copy)]
 struct PaginationParams {
     /// Retrieve the items before the given ID
@@ -83,6 +109,10 @@ struct PaginationParams {
     /// Retrieve the last N items
     #[serde(rename = "page[last]")]
     last: Option<NonZeroUsize>,
+
+    /// Include the total number of items. Defaults to `true`.
+    #[serde(rename = "count")]
+    include_count: Option<IncludeCount>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -107,7 +137,7 @@ impl IntoResponse for PaginationRejection {
 /// An extractor for pagination parameters in the query string
 #[derive(OperationIo, Debug, Clone, Copy)]
 #[aide(input_with = "Query<PaginationParams>")]
-pub struct Pagination(pub mas_storage::Pagination);
+pub struct Pagination(pub mas_storage::Pagination, pub IncludeCount);
 
 impl<S: Send + Sync> FromRequestParts<S> for Pagination {
     type Rejection = PaginationRejection;
@@ -130,11 +160,14 @@ impl<S: Send + Sync> FromRequestParts<S> for Pagination {
             (None, Some(last)) => (PaginationDirection::Backward, last.into()),
         };
 
-        Ok(Self(mas_storage::Pagination {
-            before: params.before,
-            after: params.after,
-            direction,
-            count,
-        }))
+        Ok(Self(
+            mas_storage::Pagination {
+                before: params.before,
+                after: params.after,
+                direction,
+                count,
+            },
+            params.include_count.unwrap_or_default(),
+        ))
     }
 }

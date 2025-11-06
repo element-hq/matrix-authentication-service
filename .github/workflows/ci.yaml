@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 name: CI
 
 on:
@@ -29,14 +34,15 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/build-policies
 
       - name: Setup Regal
         uses: StyraInc/setup-regal@v1
         with:
-          version: 0.29.2
+          # Keep in sync with policies/Makefile
+          version: 0.36.1
 
       - name: Lint policies
         working-directory: ./policies
@@ -55,10 +61,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.0.0
         with:
           node-version: 22
 
@@ -79,10 +85,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.0.0
         with:
           node-version: 22
 
@@ -103,10 +109,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.0.0
         with:
           node-version: 20
 
@@ -127,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -150,10 +156,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Run `cargo-deny`
-        uses: EmbarkStudios/cargo-deny-action@v2.0.11
+        uses: EmbarkStudios/cargo-deny-action@v2.0.13
         with:
           rust-version: stable
 
@@ -166,7 +172,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         run: |
@@ -207,10 +213,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.86.0
+        uses: dtolnay/rust-toolchain@1.89.0
         with:
           components: clippy
 
@@ -232,7 +238,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -251,7 +257,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
@@ -285,7 +291,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -299,7 +305,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Download archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: nextest-archive
 

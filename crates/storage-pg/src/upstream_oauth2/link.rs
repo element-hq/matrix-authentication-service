@@ -1,14 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{UpstreamOAuthLink, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
+    pagination::Node,
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
 };
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
@@ -51,6 +52,12 @@ struct LinkLookup {
     subject: String,
     human_account_name: Option<String>,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for LinkLookup {
+    fn cursor(&self) -> Ulid {
+        self.upstream_oauth_link_id.into()
+    }
 }
 
 impl From<LinkLookup> for UpstreamOAuthLink {

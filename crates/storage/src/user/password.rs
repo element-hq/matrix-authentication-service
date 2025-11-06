@@ -1,14 +1,14 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{Password, User};
+use mas_data_model::{Clock, Password, User};
 use rand_core::RngCore;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`UserPasswordRepository`] helps interacting with [`Password`] saved in
 /// the storage backend

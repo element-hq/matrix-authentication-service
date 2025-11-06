@@ -1,12 +1,13 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Repository to interact with jobs in the job queue
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
+use mas_data_model::Clock;
 use opentelemetry::trace::TraceContextExt;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ulid::Ulid;
 
 use super::Worker;
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// Represents a job in the job queue
 pub struct Job {

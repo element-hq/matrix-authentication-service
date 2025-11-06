@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Requests and response types to interact with the [OAuth 2.0] specification.
 //!
@@ -86,11 +86,13 @@ impl core::str::FromStr for ResponseMode {
     Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, SerializeDisplay, DeserializeFromStr,
 )]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum Display {
     /// The Authorization Server should display the authentication and consent
     /// UI consistent with a full User Agent page view.
     ///
     /// This is the default display mode.
+    #[default]
     Page,
 
     /// The Authorization Server should display the authentication and consent
@@ -132,12 +134,6 @@ impl core::str::FromStr for Display {
             "wap" => Ok(Display::Wap),
             s => Ok(Display::Unknown(s.to_owned())),
         }
-    }
-}
-
-impl Default for Display {
-    fn default() -> Self {
-        Self::Page
     }
 }
 
@@ -807,6 +803,7 @@ pub struct IntrospectionResponse {
     pub jti: Option<String>,
 
     /// MAS extension: explicit device ID
+    /// Only used for compatibility access and refresh tokens.
     pub device_id: Option<String>,
 }
 

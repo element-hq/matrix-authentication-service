@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     pin::Pin,
@@ -279,18 +279,17 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut this = self.project();
 
-        if let Poll::Ready(()) = this.cancellation_future.poll(cx) {
-            if !*this.did_start_shutdown {
-                *this.did_start_shutdown = true;
-                this.connection.as_mut().graceful_shutdown();
-            }
+        if let Poll::Ready(()) = this.cancellation_future.poll(cx)
+            && !*this.did_start_shutdown
+        {
+            *this.did_start_shutdown = true;
+            this.connection.as_mut().graceful_shutdown();
         }
 
         this.connection.poll(cx)
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub async fn run_servers<S, B>(
     listeners: impl IntoIterator<Item = Server<S>>,
     soft_shutdown_token: CancellationToken,

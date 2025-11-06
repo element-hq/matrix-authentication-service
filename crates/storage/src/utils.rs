@@ -1,14 +1,10 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Wrappers and useful type aliases
-
-use rand_core::CryptoRngCore;
-
-use crate::Clock;
 
 /// A wrapper which is used to map the error type of a repository to another
 pub struct MapErr<R, F> {
@@ -29,12 +25,6 @@ impl<R, F> MapErr<R, F> {
         }
     }
 }
-
-/// A boxed [`Clock`]
-pub type BoxClock = Box<dyn Clock + Send>;
-
-/// A boxed random number generator
-pub type BoxRng = Box<dyn CryptoRngCore + Send>;
 
 /// A macro to implement a repository trait for the [`MapErr`] wrapper and for
 /// [`Box<R>`]

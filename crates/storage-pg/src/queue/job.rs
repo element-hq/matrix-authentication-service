@@ -1,17 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A module containing the PostgreSQL implementation of the
 //! [`QueueJobRepository`].
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_storage::{
-    Clock,
-    queue::{Job, QueueJobRepository, Worker},
-};
+use mas_data_model::Clock;
+use mas_storage::queue::{Job, QueueJobRepository, Worker};
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sqlx::PgConnection;

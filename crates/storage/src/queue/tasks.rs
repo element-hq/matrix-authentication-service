@@ -1,7 +1,7 @@
 // Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use chrono::{DateTime, Utc};
 use mas_data_model::{
@@ -384,7 +384,7 @@ impl ExpireInactiveOAuthSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -441,7 +441,7 @@ impl ExpireInactiveCompatSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -498,7 +498,7 @@ impl ExpireInactiveUserSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }

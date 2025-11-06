@@ -4,7 +4,7 @@ This document aims to get you started with contributing to the Matrix Authentica
 
 ## 1. Who can contribute to MAS?
 
-Everyone is welcome to contribute code to [Synapse](https://github.com/element-hq/matrix-authentication-service), provided that they are willing to license their contributions to Element under a [Contributor License Agreement](https://cla-assistant.io/element-hq/matrix-authentication-service) (CLA). This ensures that their contribution will be made available under an OSI-approved open-source license, currently Affero General Public License v3 (AGPLv3).
+Everyone is welcome to contribute code to [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service), provided that they are willing to license their contributions to Element under a [Contributor License Agreement](https://cla-assistant.io/element-hq/matrix-authentication-service) (CLA). This ensures that their contribution will be made available under an OSI-approved open-source license, currently Affero General Public License v3 (AGPLv3).
 
 Please see the [Element blog post](https://element.io/blog/synapse-now-lives-at-github-com-element-hq-synapse/) for the full rationale.
 
@@ -72,6 +72,7 @@ Make sure your code adheres to our Rust and TypeScript code style by running:
 
  - `cargo +nightly fmt` (with the nightly toolchain installed)
  - `npm run format` in the `frontend` directory
+ - `make fmt` in the `policies` directory (if changed)
 
 When updating SQL queries in the `crates/storage-pg/` crate, you may need to update the `sqlx` introspection data. To do this, make sure to install `cargo-sqlx` (`cargo install sqlx-cli`) and:
 
@@ -86,11 +87,18 @@ While you're developing and before submitting a patch, you'll want to test your 
 
 - Run `cargo clippy --workspace` to lint the Rust code.
 - Run `npm run lint` in the `frontend` directory to lint the frontend code.
+- Run `make fmt` and `make lint` in the `policies` directory to format and lint the included policy.
 
 ### Run the tests
 
-- Run the tests to the backend by running `cargo test --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
+If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installation/pre-built-binaries/).
+
+- Run the tests to the backend by running `cargo nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
 - Run the tests to the frontend by running `npm run test` in the `frontend` directory.
+- To run the tests for the included policy, change to the `policies` directory and run one of:
+  - `make test` (needs Open Policy Agent installed)
+  - `make PODMAN=1 test` (runs inside a container; needs Podman installed)
+  - `make DOCKER=1 test` (runs inside a container; needs Docker installed)
 
 ## 8. Submit a pull request
 

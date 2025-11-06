@@ -1,13 +1,23 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::fmt::Display;
 
 use async_trait::async_trait;
 use serde::Deserialize;
 use thiserror::Error;
+
+/// Encountered when trying to register a user ID which has been taken.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_USER_IN_USE: &str = "M_USER_IN_USE";
+/// Encountered when trying to register a user ID which is not valid.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_INVALID_USERNAME: &str = "M_INVALID_USERNAME";
+/// Encountered when trying to register a user ID reserved by an appservice.
+/// — <https://spec.matrix.org/v1.10/client-server-api/#other-error-codes>
+pub(crate) const M_EXCLUSIVE: &str = "M_EXCLUSIVE";
 
 /// Represents a Matrix error
 /// Ref: <https://spec.matrix.org/v1.10/client-server-api/#standard-error-response>

@@ -1,15 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashMap;
 
 use chrono::Duration;
 use mas_data_model::{
-    AccessToken, Authentication, AuthorizationGrant, BrowserSession, Client, RefreshToken, Session,
-    TokenType,
+    AccessToken, Authentication, AuthorizationGrant, BrowserSession, Client, Clock, RefreshToken,
+    Session, TokenType,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_jose::{
@@ -19,7 +19,7 @@ use mas_jose::{
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{Clock, RepositoryAccess};
+use mas_storage::RepositoryAccess;
 use thiserror::Error;
 
 pub mod authorization;

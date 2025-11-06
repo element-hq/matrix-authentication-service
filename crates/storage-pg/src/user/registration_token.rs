@@ -1,13 +1,14 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::UserRegistrationToken;
+use mas_data_model::{Clock, UserRegistrationToken};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
+    pagination::Node,
     user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
 };
 use rand::RngCore;
@@ -53,8 +54,13 @@ struct UserRegistrationTokenLookup {
     revoked_at: Option<DateTime<Utc>>,
 }
 
+impl Node<Ulid> for UserRegistrationTokenLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_registration_token_id.into()
+    }
+}
+
 impl Filter for UserRegistrationTokenFilter {
-    #[expect(clippy::too_many_lines)]
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
         sea_query::Condition::all()
             .add_option(self.has_been_used().map(|has_been_used| {
@@ -231,7 +237,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         filter: UserRegistrationTokenFilter,
         pagination: Pagination,
     ) -> Result<Page<UserRegistrationToken>, Self::Error> {
-        let (sql, values) = Query::select()
+        let (sql, arguments) = Query::select()
             .expr_as(
                 Expr::col((
                     UserRegistrationTokens::Table,
@@ -296,15 +302,14 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let tokens = sqlx::query_as_with::<_, UserRegistrationTokenLookup, _>(&sql, values)
+        let edges: Vec<UserRegistrationTokenLookup> = sqlx::query_as_with(&sql, arguments)
             .traced()
             .fetch_all(&mut *self.conn)
-            .await?
-            .into_iter()
-            .map(TryInto::try_into)
-            .collect::<Result<Vec<_>, _>>()?;
+            .await?;
 
-        let page = pagination.process(tokens);
+        let page = pagination
+            .process(edges)
+            .try_map(UserRegistrationToken::try_from)?;
 
         Ok(page)
     }
@@ -430,7 +435,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
-        clock: &dyn mas_storage::Clock,
+        clock: &dyn mas_data_model::Clock,
         token: String,
         usage_limit: Option<u32>,
         expires_at: Option<DateTime<Utc>>,
@@ -656,9 +661,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_storage::{
-        Clock as _, Pagination, clock::MockClock, user::UserRegistrationTokenFilter,
-    };
+    use mas_data_model::{Clock as _, clock::MockClock};
+    use mas_storage::{Pagination, user::UserRegistrationTokenFilter};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;
@@ -707,7 +711,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(page.edges.iter().any(|t| t.id == unrevoked_token.id));
+        assert!(page.edges.iter().any(|t| t.node.id == unrevoked_token.id));
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
@@ -869,7 +873,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(page.edges.len(), 1);
-        assert_eq!(page.edges[0].id, token2.id);
+        assert_eq!(page.edges[0].node.id, token2.id);
 
         // Test unused filter
         let unused_filter = UserRegistrationTokenFilter::new(clock.now()).with_been_used(false);
@@ -888,7 +892,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(page.edges.len(), 1);
-        assert_eq!(page.edges[0].id, token3.id);
+        assert_eq!(page.edges[0].node.id, token3.id);
 
         let not_expired_filter = UserRegistrationTokenFilter::new(clock.now()).with_expired(false);
         let page = repo
@@ -906,7 +910,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(page.edges.len(), 1);
-        assert_eq!(page.edges[0].id, token4.id);
+        assert_eq!(page.edges[0].node.id, token4.id);
 
         let not_revoked_filter = UserRegistrationTokenFilter::new(clock.now()).with_revoked(false);
         let page = repo
@@ -943,7 +947,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(page.edges.len(), 1);
-        assert_eq!(page.edges[0].id, token4.id);
+        assert_eq!(page.edges[0].node.id, token4.id);
 
         // Test pagination
         let page = repo

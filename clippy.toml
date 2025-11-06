@@ -1,4 +1,9 @@
-doc-valid-idents = ["OpenID", "OAuth", "..", "PostgreSQL", "SQLite"]
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
+doc-valid-idents = ["OpenID", "OAuth", "UserInfo", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
     { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },
@@ -10,7 +15,8 @@ disallowed-methods = [
 ]
 
 disallowed-types = [
-    "rand::OsRng",
     { path = "std::path::PathBuf", reason = "use camino::Utf8PathBuf instead" },
     { path = "std::path::Path", reason = "use camino::Utf8Path instead" },
+    { path = "axum::extract::Query", reason = "use axum_extra::extract::Query instead. The built-in version doesn't deserialise lists."},
+    { path = "axum::extract::rejection::QueryRejection", reason = "use axum_extra::extract::QueryRejection instead"}
 ]

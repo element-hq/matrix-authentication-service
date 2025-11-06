@@ -29,11 +29,12 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       >
         element.io: Unknown device
         <button
-          aria-controls="radix-«r0»"
+          aria-controls="radix-_r_0_"
           aria-expanded="false"
           aria-haspopup="dialog"
-          aria-labelledby="«r3»"
-          class="_icon-button_m2erp_8"
+          aria-labelledby="_r_3_"
+          class="_icon-button_1pz9o_8"
+          data-kind="primary"
           data-state="closed"
           role="button"
           style="--cpd-icon-button-size: var(--cpd-space-6x);"
@@ -267,7 +268,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </ul>
     </section>
     <button
-      aria-controls="radix-«r8»"
+      aria-controls="radix-_r_8_"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -325,11 +326,12 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       >
         abcd1234: Unknown device
         <button
-          aria-controls="radix-«rc»"
+          aria-controls="radix-_r_c_"
           aria-expanded="false"
           aria-haspopup="dialog"
-          aria-labelledby="«rf»"
-          class="_icon-button_m2erp_8"
+          aria-labelledby="_r_f_"
+          class="_icon-button_1pz9o_8"
+          data-kind="primary"
           data-state="closed"
           role="button"
           style="--cpd-icon-button-size: var(--cpd-space-6x);"
@@ -549,7 +551,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       </ul>
     </section>
     <button
-      aria-controls="radix-«rk»"
+      aria-controls="radix-_r_k_"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -607,11 +609,12 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       >
         element.io: Unknown device
         <button
-          aria-controls="radix-«ro»"
+          aria-controls="radix-_r_o_"
           aria-expanded="false"
           aria-haspopup="dialog"
-          aria-labelledby="«rr»"
-          class="_icon-button_m2erp_8"
+          aria-labelledby="_r_r_"
+          class="_icon-button_1pz9o_8"
+          data-kind="primary"
           data-state="closed"
           role="button"
           style="--cpd-icon-button-size: var(--cpd-space-6x);"

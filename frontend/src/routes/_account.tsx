@@ -1,11 +1,11 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Outlet, notFound } from "@tanstack/react-router";
+import { notFound, Outlet } from "@tanstack/react-router";
 import { Heading } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Database-related tasks
 
@@ -24,7 +24,7 @@ impl RunnableJob for CleanupExpiredTokensJob {
 
         let count = repo
             .oauth2_access_token()
-            .cleanup_revoked(&clock)
+            .cleanup_revoked(clock)
             .await
             .map_err(JobError::retry)?;
         repo.save().await.map_err(JobError::retry)?;

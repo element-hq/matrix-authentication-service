@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-storage-pg"
 version.workspace = true
@@ -22,6 +27,7 @@ rand.workspace = true
 sea-query-binder.workspace = true
 sea-query.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 sqlx.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

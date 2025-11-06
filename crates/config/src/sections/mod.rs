@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use rand::Rng;
 use schemars::JsonSchema;
@@ -52,7 +52,9 @@ pub use self::{
     upstream_oauth2::{
         ClaimsImports as UpstreamOAuth2ClaimsImports, DiscoveryMode as UpstreamOAuth2DiscoveryMode,
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
-        ImportAction as UpstreamOAuth2ImportAction, PkceMethod as UpstreamOAuth2PkceMethod,
+        ImportAction as UpstreamOAuth2ImportAction,
+        OnBackchannelLogout as UpstreamOAuth2OnBackchannelLogout,
+        OnConflict as UpstreamOAuth2OnConflict, PkceMethod as UpstreamOAuth2PkceMethod,
         Provider as UpstreamOAuth2Provider, ResponseMode as UpstreamOAuth2ResponseMode,
         TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
     },
@@ -128,7 +130,10 @@ pub struct RootConfig {
 }
 
 impl ConfigurationSection for RootConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.clients.validate(figment)?;
         self.http.validate(figment)?;
         self.database.validate(figment)?;
@@ -247,7 +252,10 @@ pub struct AppConfig {
 }
 
 impl ConfigurationSection for AppConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.http.validate(figment)?;
         self.database.validate(figment)?;
         self.templates.validate(figment)?;
@@ -283,7 +291,10 @@ pub struct SyncConfig {
 }
 
 impl ConfigurationSection for SyncConfig {
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         self.database.validate(figment)?;
         self.secrets.validate(figment)?;
         self.clients.validate(figment)?;

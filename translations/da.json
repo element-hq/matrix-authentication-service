@@ -210,12 +210,18 @@
     "register": {
       "call_to_login": "Har du allerede en konto?",
       "continue_with_email": "Fortsæt med e-mailadresse",
+      "continue_with_password": "Fortsæt med adgangskode",
       "create_account": {
         "description": "Vælg et brugernavn for at fortsætte.",
         "heading": "Opret en konto"
       },
       "sign_in_instead": "Log ind i stedet",
       "terms_of_service": "Jeg accepterer <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Vilkår og betingelser</a>"
+    },
+    "registration_token": {
+      "description": "Indtast et registreringstoken fra hjemmeserverens administrator.",
+      "field": "Registreringstoken",
+      "headline": "Registreringstoken"
     },
     "scope": {
       "edit_profile": "Rediger din profil og dine kontaktoplysninger",
@@ -229,6 +235,11 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Denne upstream-konto er allerede knyttet til en anden konto."
+      },
+      "login_link": {
+        "action": "Fortsæt",
+        "description": "Der findes allerede en konto med dette brugernavn (%(username)s), den vil blive forbundet til denne upstream-konto.",
+        "heading": "Forbind til din eksisterende konto"
       },
       "register": {
         "choose_username": {

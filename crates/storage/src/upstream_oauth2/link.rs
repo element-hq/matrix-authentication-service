@@ -1,15 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{UpstreamOAuthLink, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Filter parameters for listing upstream OAuth links
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

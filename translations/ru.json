@@ -13,12 +13,12 @@
   "app": {
     "human_name": "Matrix Authentication Service",
     "name": "matrix-authentication-service",
-    "technical_description": "Файл для обнаружения OpenID Connect: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+    "technical_description": "OpenID Connect документ обнаружения: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\"> %(discovery_url)s </a>"
   },
   "branding": {
     "privacy_policy": {
       "alt": "Ссылка на политику конфиденциальности сервиса",
-      "link": "Политикой конфидециальности"
+      "link": "Политика конфидециальности"
     },
     "terms_and_conditions": {
       "alt": "Ссылка на условия предоставления услуг",
@@ -99,6 +99,11 @@
         "description": "Вы предоставили доступ для %(client_name)s. Вы можете закрыть это окно.",
         "heading": "Доступ предоставлен"
       }
+    },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s на %(device_name)s",
+      "name_for_platform": "%(name)s для %(platform)s",
+      "unknown_device": "Неизвестное устройство"
     },
     "email_in_use": {
       "description": "Если вы забыли учетные данные, вы можете восстановить свою учётную запись. Вы также можете начать сначала и использовать другой адрес электронной почты.",
@@ -205,12 +210,18 @@
     "register": {
       "call_to_login": "Уже есть аккаунт?",
       "continue_with_email": "Продолжить с адресом электронной почты",
+      "continue_with_password": "Продолжить с паролем",
       "create_account": {
         "description": "Выберите имя пользователя, чтобы продолжить.",
         "heading": "Создать учётную запись"
       },
       "sign_in_instead": "Вместо этого войдите",
       "terms_of_service": "Я соглашаюсь с <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Правилами и положениями</a>"
+    },
+    "registration_token": {
+      "description": "Введите токен регистрации, предоставленный администратором сервера.",
+      "field": "Токен регистрации",
+      "headline": "Токен регистрации"
     },
     "scope": {
       "edit_profile": "Редактировать профиль и контактную информацию",
@@ -224,6 +235,11 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Этот SSO аккаунт уже связан с другим аккаунтом Matrix."
+      },
+      "login_link": {
+        "action": "Продолжить",
+        "description": "Для этого имени пользователя (%(username)s) существует учетная запись, она будет связана с этой учетной записью.",
+        "heading": "Связать с существующим аккаунтом"
       },
       "register": {
         "choose_username": {

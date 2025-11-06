@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A module containing PostgreSQL implementation of repositories for the
 //! compatibility layer
@@ -20,10 +20,9 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::Device;
+    use mas_data_model::{Clock, Device, clock::MockClock};
     use mas_storage::{
-        Clock, Pagination, RepositoryAccess,
-        clock::MockClock,
+        Pagination, RepositoryAccess,
         compat::{
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionFilter,
             CompatSessionRepository, CompatSsoLoginFilter,
@@ -93,14 +92,14 @@ mod tests {
 
         let full_list = repo.compat_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
-        assert_eq!(full_list.edges[0].0.id, session.id);
+        assert_eq!(full_list.edges[0].node.0.id, session.id);
         let active_list = repo
             .compat_session()
             .list(active, pagination)
             .await
             .unwrap();
         assert_eq!(active_list.edges.len(), 1);
-        assert_eq!(active_list.edges[0].0.id, session.id);
+        assert_eq!(active_list.edges[0].node.0.id, session.id);
         let finished_list = repo
             .compat_session()
             .list(finished, pagination)
@@ -151,7 +150,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(list.edges.len(), 1);
-        let session_lookup = &list.edges[0].0;
+        let session_lookup = &list.edges[0].node.0;
         assert_eq!(session_lookup.id, session.id);
         assert_eq!(session_lookup.user_id, user.id);
         assert_eq!(session.device.as_ref().unwrap().as_str(), device_str);
@@ -169,7 +168,7 @@ mod tests {
 
         let full_list = repo.compat_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
-        assert_eq!(full_list.edges[0].0.id, session.id);
+        assert_eq!(full_list.edges[0].node.0.id, session.id);
         let active_list = repo
             .compat_session()
             .list(active, pagination)
@@ -182,7 +181,7 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(finished_list.edges.len(), 1);
-        assert_eq!(finished_list.edges[0].0.id, session.id);
+        assert_eq!(finished_list.edges[0].node.0.id, session.id);
 
         // Reload the session and check again
         let session_lookup = repo
@@ -261,14 +260,14 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0].0.id, sso_login_session.id);
+        assert_eq!(list.edges[0].node.0.id, sso_login_session.id);
         let list = repo
             .compat_session()
             .list(unknown, pagination)
             .await
             .unwrap();
         assert_eq!(list.edges.len(), 1);
-        assert_eq!(list.edges[0].0.id, unknown_session.id);
+        assert_eq!(list.edges[0].node.0.id, unknown_session.id);
 
         // Check that combining the two filters works
         // At this point, there is one active SSO login session and one finished unknown
@@ -697,7 +696,8 @@ mod tests {
         // List all logins
         let logins = repo.compat_sso_login().list(all, pagination).await.unwrap();
         assert!(!logins.has_next_page);
-        assert_eq!(logins.edges, &[login.clone()]);
+        assert_eq!(logins.edges.len(), 1);
+        assert_eq!(logins.edges[0].node, login);
 
         // List the logins for the user
         let logins = repo
@@ -706,7 +706,8 @@ mod tests {
             .await
             .unwrap();
         assert!(!logins.has_next_page);
-        assert_eq!(logins.edges, &[login.clone()]);
+        assert_eq!(logins.edges.len(), 1);
+        assert_eq!(logins.edges[0].node, login);
 
         // List only the pending logins for the user
         let logins = repo
@@ -733,6 +734,7 @@ mod tests {
             .await
             .unwrap();
         assert!(!logins.has_next_page);
-        assert_eq!(logins.edges, &[login]);
+        assert_eq!(logins.edges.len(), 1);
+        assert_eq!(logins.edges[0].node, login);
     }
 }

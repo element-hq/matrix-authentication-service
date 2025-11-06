@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -10,10 +10,10 @@ use std::{
 };
 
 use async_trait::async_trait;
-use mas_data_model::{Client, JwksOrJwksUri};
+use mas_data_model::{Client, Clock, JwksOrJwksUri};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
-use mas_storage::{Clock, oauth2::OAuth2ClientRepository};
+use mas_storage::oauth2::OAuth2ClientRepository;
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
@@ -67,7 +67,6 @@ struct OAuth2ClientLookup {
 impl TryInto<Client> for OAuth2ClientLookup {
     type Error = DatabaseInconsistencyError;
 
-    #[allow(clippy::too_many_lines)] // TODO: refactor some of the field parsing
     fn try_into(self) -> Result<Client, Self::Error> {
         let id = Ulid::from(self.oauth2_client_id);
 
@@ -416,7 +415,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         ),
         err,
     )]
-    #[allow(clippy::too_many_lines)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -804,6 +802,49 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                 r#"
                     DELETE FROM oauth2_sessions
                     WHERE oauth2_client_id = $1
+                "#,
+                Uuid::from(id),
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+
+        // Delete any personal access tokens & sessions owned
+        // by the client
+        {
+            let span = info_span!(
+                "db.oauth2_client.delete_by_id.personal_access_tokens",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    DELETE FROM personal_access_tokens
+                    WHERE personal_session_id IN (
+                        SELECT personal_session_id
+                        FROM personal_sessions
+                        WHERE owner_oauth2_client_id = $1
+                    )
+                "#,
+                Uuid::from(id),
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+        {
+            let span = info_span!(
+                "db.oauth2_client.delete_by_id.personal_sessions",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    DELETE FROM personal_sessions
+                    WHERE owner_oauth2_client_id = $1
                 "#,
                 Uuid::from(id),
             )

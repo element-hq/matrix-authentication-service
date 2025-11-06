@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 package register_test
 
 import data.register
@@ -34,11 +39,8 @@ test_banned_subdomain if {
 		with data.banned_domains as ["staging.element.io"]
 }
 
-test_email_required if {
-	not register.allow with input as {"username": "hello", "registration_method": "password"}
-}
-
 test_no_email if {
+	register.allow with input as {"username": "hello", "registration_method": "password"}
 	register.allow with input as {"username": "hello", "registration_method": "upstream-oauth2"}
 }
 

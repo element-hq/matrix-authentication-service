@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_graphql::{Context, ID, Object, Union};
 use mas_data_model::Device;
@@ -11,7 +11,6 @@ use mas_storage::{
     compat::{CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
 };
-use oauth2_types::scope::Scope;
 
 use crate::graphql::{
     UserId,
@@ -69,7 +68,8 @@ impl SessionQuery {
             );
         }
 
-        if let Some((compat_session, sso_login)) = compat_sessions.edges.into_iter().next() {
+        if let Some(edge) = compat_sessions.edges.into_iter().next() {
+            let (compat_session, sso_login) = edge.node;
             repo.cancel().await?;
 
             return Ok(Some(Session::CompatSession(Box::new(
@@ -77,20 +77,11 @@ impl SessionQuery {
             ))));
         }
 
-        // Then, try to find an OAuth 2.0 session. Because we don't have any dedicated
-        // device column, we're looking up using the device scope.
-        // All device IDs can't necessarily be encoded as a scope. If it's not the case,
-        // we'll skip looking for OAuth 2.0 sessions.
-        let Ok(scope_token) = device.to_scope_token() else {
-            repo.cancel().await?;
-
-            return Ok(None);
-        };
-        let scope = Scope::from_iter([scope_token]);
+        // Then, try to find an OAuth 2.0 session.
         let filter = OAuth2SessionFilter::new()
             .for_user(&user)
             .active_only()
-            .with_scope(&scope);
+            .for_device(&device);
         let sessions = repo.oauth2_session().list(filter, pagination).await?;
 
         // It's possible to have multiple active OAuth 2.0 sessions. For now, we just
@@ -102,10 +93,10 @@ impl SessionQuery {
             );
         }
 
-        if let Some(session) = sessions.edges.into_iter().next() {
+        if let Some(edge) = sessions.edges.into_iter().next() {
             repo.cancel().await?;
             return Ok(Some(Session::OAuth2Session(Box::new(OAuth2Session(
-                session,
+                edge.node,
             )))));
         }
         repo.cancel().await?;

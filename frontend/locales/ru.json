@@ -17,7 +17,7 @@
   "branding": {
     "privacy_policy": {
       "alt": "Ссылка на политику конфиденциальности сервиса",
-      "link": "Политикой конфидециальности"
+      "link": "Политика конфидециальности"
     },
     "terms_and_conditions": {
       "alt": "Ссылка на условия предоставления услуг",
@@ -147,7 +147,7 @@
     },
     "nav": {
       "devices": "Устройства",
-      "plan": "Plan",
+      "plan": "Тарифный план",
       "profile": "Профиль",
       "sessions": "Сессии",
       "settings": "Настройки"
@@ -302,9 +302,9 @@
       "name_for_platform": "{{name}} для {{platform}}",
       "scopes_label": "Области",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
-        "label": "Device name",
-        "title": "Edit device name"
+        "help": "Установите имя, которое поможет вам идентифицировать это устройство.",
+        "label": "Имя устройства",
+        "title": "Переименовать устройство"
       },
       "signed_in_date": "Вошёл <datetime/>",
       "signed_in_label": "Вошёл в систему",

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Types for [Dynamic Client Registration].
 //!
@@ -440,7 +440,6 @@ impl ClientMetadata {
     /// Will return `Err` if validation fails.
     ///
     /// [OpenID Connect Dynamic Client Registration Spec 1.0]: https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata
-    #[allow(clippy::too_many_lines)]
     pub fn validate(self) -> Result<VerifiedClientMetadata, ClientMetadataVerificationError> {
         let grant_types = self.grant_types();
         let has_implicit = grant_types.contains(&GrantType::Implicit);
@@ -912,7 +911,8 @@ pub struct ClientRegistrationResponse {
     #[serde_as(as = "Option<TimestampSeconds<i64>>")]
     pub client_id_issued_at: Option<DateTime<Utc>>,
 
-    /// Time at which the client_secret will expire or 0 if it will not expire.
+    /// Time at which the `client_secret` will expire or 0 if it will not
+    /// expire.
     ///
     /// Required if `client_secret` is issued.
     #[serde(default)]
@@ -994,7 +994,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
     fn validate_response_types() {
         let mut metadata = valid_client_metadata();
 

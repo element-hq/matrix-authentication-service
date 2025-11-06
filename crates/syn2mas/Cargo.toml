@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "syn2mas"
 version.workspace = true
@@ -23,6 +28,7 @@ futures-util.workspace = true
 mas-config.workspace = true
 mas-iana.workspace = true
 mas-storage.workspace = true
+mas-data-model.workspace = true
 oauth2-types.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 opentelemetry.workspace = true

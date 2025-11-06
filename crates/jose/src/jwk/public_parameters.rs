@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use mas_iana::jose::{
     JsonWebKeyEcEllipticCurve, JsonWebKeyOkpEllipticCurve, JsonWebKeyType, JsonWebSignatureAlg,
@@ -11,7 +11,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::ParametersInfo;
-use crate::base64::Base64UrlNoPad;
+use crate::{base64::Base64UrlNoPad, jwk::Thumbprint};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kty")]
@@ -48,6 +48,22 @@ impl JsonWebKeyPublicParameters {
         match self {
             Self::Okp(params) => Some(params),
             _ => None,
+        }
+    }
+}
+
+impl Thumbprint for JsonWebKeyPublicParameters {
+    fn thumbprint_prehashed(&self) -> String {
+        match self {
+            JsonWebKeyPublicParameters::Rsa(RsaPublicParameters { n, e }) => {
+                format!("{{\"e\":\"{e}\",\"kty\":\"RSA\",\"n\":\"{n}\"}}")
+            }
+            JsonWebKeyPublicParameters::Ec(EcPublicParameters { crv, x, y }) => {
+                format!("{{\"crv\":\"{crv}\",\"kty\":\"EC\",\"x\":\"{x}\",\"y\":\"{y}\"}}")
+            }
+            JsonWebKeyPublicParameters::Okp(OkpPublicParameters { crv, x }) => {
+                format!("{{\"crv\":\"{crv}\",\"kty\":\"OKP\",\"x\":\"{x}\"}}")
+            }
         }
     }
 }
@@ -298,5 +314,33 @@ mod ec_impls {
                 y: Base64UrlNoPad::new(y.to_vec()),
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_thumbprint_rfc_example() {
+        // From https://www.rfc-editor.org/rfc/rfc7638.html#section-3.1
+        let n = Base64UrlNoPad::parse(
+            "\
+            0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAt\
+            VT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn6\
+            4tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FD\
+            W2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n9\
+            1CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINH\
+            aQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+        )
+        .unwrap();
+        let e = Base64UrlNoPad::parse("AQAB").unwrap();
+
+        let jwkpps = JsonWebKeyPublicParameters::Rsa(RsaPublicParameters { n, e });
+
+        assert_eq!(
+            jwkpps.thumbprint_sha256_base64(),
+            "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
+        );
     }
 }

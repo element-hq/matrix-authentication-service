@@ -1,20 +1,21 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     response::{IntoResponse, Redirect},
 };
+use axum_extra::extract::Query;
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, record_error};
-use mas_data_model::UpstreamOAuthProvider;
+use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
+use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProvider};
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng,
+    BoxRepository,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
 };
 use thiserror::Error;
@@ -41,13 +42,12 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_));
-        let response = match self {
-            Self::ProviderNotFound => (StatusCode::NOT_FOUND, "Provider not found").into_response(),
-            Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-        };
-
-        (sentry_event_id, response).into_response()
+        match self {
+            e @ Self::ProviderNotFound => {
+                GenericError::new(StatusCode::NOT_FOUND, e).into_response()
+            }
+            Self::Internal(e) => InternalError::new(e).into_response(),
+        }
     }
 }
 
@@ -94,17 +94,15 @@ pub(crate) async fn get(
 
     // Forward the raw login hint upstream for the provider to handle however it
     // sees fit
-    if provider.forward_login_hint {
-        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
-            if let Some(login_hint) = repo
-                .oauth2_authorization_grant()
-                .lookup(*id)
-                .await?
-                .and_then(|grant| grant.login_hint)
-            {
-                data = data.with_login_hint(login_hint);
-            }
-        }
+    if provider.forward_login_hint
+        && let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action
+        && let Some(login_hint) = repo
+            .oauth2_authorization_grant()
+            .lookup(*id)
+            .await?
+            .and_then(|grant| grant.login_hint)
+    {
+        data = data.with_login_hint(login_hint);
     }
 
     let data = if let Some(methods) = lazy_metadata.pkce_methods().await? {

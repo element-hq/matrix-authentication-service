@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Ref: <https://www.rfc-editor.org/rfc/rfc7517.html>
 
@@ -13,6 +13,7 @@ use mas_iana::jose::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use sha2::{Digest, Sha256};
 use url::Url;
 
 use crate::{
@@ -239,6 +240,28 @@ impl<P> JsonWebKey<P> {
     }
 }
 
+/// Methods to calculate RFC 7638 JWK Thumbprints.
+pub trait Thumbprint {
+    /// Returns the RFC 7638 JWK Thumbprint JSON string.
+    fn thumbprint_prehashed(&self) -> String;
+
+    /// Returns the RFC 7638 SHA256-hashed JWK Thumbprint.
+    fn thumbprint_sha256(&self) -> [u8; 32] {
+        Sha256::digest(self.thumbprint_prehashed()).into()
+    }
+
+    /// Returns the RFC 7638 SHA256-hashed JWK Thumbprint as base64url string.
+    fn thumbprint_sha256_base64(&self) -> String {
+        Base64UrlNoPad::new(self.thumbprint_sha256().into()).encode()
+    }
+}
+
+impl<P: Thumbprint> Thumbprint for JsonWebKey<P> {
+    fn thumbprint_prehashed(&self) -> String {
+        self.parameters.thumbprint_prehashed()
+    }
+}
+
 impl<P> Constrainable for JsonWebKey<P>
 where
     P: ParametersInfo,
@@ -413,7 +436,6 @@ mod tests {
         assert_eq!(candidates.len(), 1);
     }
 
-    #[allow(clippy::too_many_lines)]
     #[test]
     fn load_keycloak_keys() {
         let jwks = serde_json::json!({

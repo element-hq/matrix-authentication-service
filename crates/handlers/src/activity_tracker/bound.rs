@@ -1,13 +1,14 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
-use mas_data_model::{BrowserSession, CompatSession, Session};
-use mas_storage::Clock;
+use mas_data_model::{
+    BrowserSession, Clock, CompatSession, Session, personal::session::PersonalSession,
+};
 
 use crate::activity_tracker::ActivityTracker;
 
@@ -35,6 +36,13 @@ impl Bound {
     pub async fn record_oauth2_session(&self, clock: &dyn Clock, session: &Session) {
         self.tracker
             .record_oauth2_session(clock, session, self.ip)
+            .await;
+    }
+
+    /// Record activity in a personal session.
+    pub async fn record_personal_session(&self, clock: &dyn Clock, session: &PersonalSession) {
+        self.tracker
+            .record_personal_session(clock, session, self.ip)
             .await;
     }
 

@@ -1,14 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::marker::PhantomData;
 
 use async_trait::async_trait;
 use mas_data_model::{
-    UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+    Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
+    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
     UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
     UpstreamOAuthProviderTokenAuthMethod,
 };
@@ -18,7 +19,7 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl};
 
 /// Structure which holds parameters when inserting or updating an upstream
 /// OAuth 2.0 provider
@@ -101,6 +102,9 @@ pub struct UpstreamOAuthProviderParams {
 
     /// The position of the provider in the UI
     pub ui_order: i32,
+
+    /// The behavior when receiving a backchannel logout notification
+    pub on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout,
 }
 
 /// Filter parameters for listing upstream OAuth 2.0 providers

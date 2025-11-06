@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{sync::Arc, time::Duration};
 
@@ -17,7 +17,7 @@ use mas_data_model::{SessionExpirationConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
-use mas_matrix_synapse::SynapseConnection;
+use mas_matrix_synapse::{LegacySynapseConnection, SynapseConnection};
 use mas_policy::PolicyFactory;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepositoryFactory, RepositoryAccess, RepositoryFactory};
@@ -211,6 +211,7 @@ pub fn site_config_from_config(
         password_login_enabled: password_config.enabled(),
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,
+        password_registration_email_required: account_config.password_registration_email_required,
         registration_token_required: account_config.registration_token_required,
         email_change_allowed: account_config.email_change_allowed,
         displayname_change_allowed: account_config.displayname_change_allowed,
@@ -231,6 +232,7 @@ pub async fn templates_from_config(
     config: &TemplatesConfig,
     site_config: &SiteConfig,
     url_builder: &UrlBuilder,
+    strict: bool,
 ) -> Result<Templates, anyhow::Error> {
     Templates::load(
         config.path.clone(),
@@ -239,6 +241,7 @@ pub async fn templates_from_config(
         config.translations_path.clone(),
         site_config.templates_branding(),
         site_config.templates_features(),
+        strict,
     )
     .await
     .with_context(|| format!("Failed to load the templates at {}", config.path))
@@ -464,28 +467,36 @@ pub async fn load_policy_factory_dynamic_data(
 
 /// Create a clonable, type-erased [`HomeserverConnection`] from the
 /// configuration
-pub fn homeserver_connection_from_config(
+pub async fn homeserver_connection_from_config(
     config: &MatrixConfig,
     http_client: reqwest::Client,
-) -> Arc<dyn HomeserverConnection> {
-    match config.kind {
-        HomeserverKind::Synapse => Arc::new(SynapseConnection::new(
+) -> anyhow::Result<Arc<dyn HomeserverConnection>> {
+    Ok(match config.kind {
+        HomeserverKind::Synapse | HomeserverKind::SynapseModern => {
+            Arc::new(SynapseConnection::new(
+                config.homeserver.clone(),
+                config.endpoint.clone(),
+                config.secret().await?,
+                http_client,
+            ))
+        }
+        HomeserverKind::SynapseLegacy => Arc::new(LegacySynapseConnection::new(
             config.homeserver.clone(),
             config.endpoint.clone(),
-            config.secret.clone(),
+            config.secret().await?,
             http_client,
         )),
         HomeserverKind::SynapseReadOnly => {
             let connection = SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
-                config.secret.clone(),
+                config.secret().await?,
                 http_client,
             );
             let readonly = ReadOnlyHomeserverConnection::new(connection);
             Arc::new(readonly)
         }
-    }
+    })
 }
 
 #[cfg(test)]

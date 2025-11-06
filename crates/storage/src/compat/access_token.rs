@@ -1,19 +1,19 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_data_model::{CompatAccessToken, CompatSession};
+use mas_data_model::{Clock, CompatAccessToken, CompatSession};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`CompatAccessTokenRepository`] helps interacting with
-/// [`CompatAccessToken`] saved in the storage backend
+/// [`CompatAccessToken`] saved in the storage backend
 #[async_trait]
 pub trait CompatAccessTokenRepository: Send + Sync {
     /// The error type returned by the repository

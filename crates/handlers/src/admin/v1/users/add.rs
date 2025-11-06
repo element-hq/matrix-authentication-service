@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::Arc;
 
@@ -10,11 +10,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_matrix::HomeserverConnection;
-use mas_storage::{
-    BoxRng,
-    queue::{ProvisionUserJob, QueueJobRepositoryExt as _},
-};
+use mas_data_model::BoxRng;
+use mas_matrix::{HomeserverConnection, ProvisionRequest};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use tracing::warn;
@@ -168,9 +165,10 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
-    repo.queue_job()
-        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
-        .await?;
+    homeserver
+        .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+        .await
+        .map_err(RouteError::Homeserver)?;
 
     repo.save().await?;
 
@@ -183,6 +181,7 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_matrix::HomeserverConnection;
     use mas_storage::{RepositoryAccess, user::UserRepository};
     use sqlx::PgPool;
 
@@ -218,6 +217,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(user.username, "alice");
+
+        // Check that the user was created on the homeserver
+        let result = state.homeserver_connection.query_user("alice").await;
+        assert!(result.is_ok());
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

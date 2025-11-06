@@ -69,7 +69,7 @@
       "new": "Nova palavra-passe"
     },
     "choose_display_name": {
-      "description": "Este é o nome que as outras pessoas irão ver. Pode alterá-lo em qualquer altura.",
+      "description": "Este é o nome que as outras pessoas irão ver. Pode alterá-lo a qualquer momento.",
       "headline": "Escolha o seu pseudónimo"
     },
     "consent": {
@@ -106,8 +106,8 @@
       "unknown_device": "Dispositivo desconhecido"
     },
     "email_in_use": {
-      "description": "Se se esqueceu das suas credenciais de conta, pode recuperar a sua conta. Também pode começar de novo e utilizar um endereço de correio eletrónico diferente.",
-      "title": "O endereço de correio eletrónico <span>%(email)s</span> já está a ser utilizado"
+      "description": "Caso se tenha esquecido das credenciais da sua conta, poderá recuperá-la. Em alternativa, poderá começar de novo e utilizar um endereço de e-mail diferente.",
+      "title": "O endereço de e-mail <span>%(email)s</span> já está a ser utilizado"
     },
     "emails": {
       "greeting": "Olá %(username)s,",
@@ -139,7 +139,7 @@
       "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente.",
       "username_all_numeric": "O nome de utilizador não pode ser constituído apenas por números",
       "username_banned": "O nome de utilizador é proibido pela política do servidor",
-      "username_invalid_chars": "O nome de utilizador contém caracteres inválidos. Utilize apenas letras minúsculas, números, traços e sublinhados.",
+      "username_invalid_chars": "O nome de utilizador contém carateres inválidos. Utilize apenas letras minúsculas, números, traços e sublinhados.",
       "username_not_allowed": "O nome de utilizador não é permitido pela política do servidor",
       "username_taken": "Este nome de utilizador já foi utilizado",
       "username_too_long": "O nome de utilizador é demasiado longo",
@@ -162,7 +162,7 @@
     "navbar": {
       "my_account": "A minha conta",
       "register": "Criar uma conta",
-      "signed_in_as": "Conectado como <span class=\"font-semibold\">%(username)s</span> ."
+      "signed_in_as": "Sessão iniciada como <span class=\"font-semibold\">%(username)s</span> ."
     },
     "not_found": {
       "description": "A página que procurava não existe ou foi movida",
@@ -217,6 +217,11 @@
       "sign_in_instead": "Em vez disso, inicie sessão",
       "terms_of_service": "Concordo com o <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Termos e Condições</a>"
     },
+    "registration_token": {
+      "description": "Introduza um token de registo fornecido pelo administrador do servidor doméstico.",
+      "field": "Token de registo",
+      "headline": "Token de registo"
+    },
     "scope": {
       "edit_profile": "Editar o seu perfil e detalhes de contacto",
       "manage_sessions": "Gerir os seus dispositivos e sessões",
@@ -229,6 +234,10 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Esta conta upstream já está vinculada a outra conta."
+      },
+      "login_link": {
+        "action": "Continuar",
+        "heading": "Vincular à sua conta existente"
       },
       "register": {
         "choose_username": {

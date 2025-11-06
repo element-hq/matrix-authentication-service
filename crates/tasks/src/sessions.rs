@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashSet;
 
@@ -39,7 +39,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveOAuthSessionsJob::new(now - ttl),
                 )
                 .await
@@ -50,7 +50,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveCompatSessionsJob::new(now - ttl),
                 )
                 .await
@@ -61,7 +61,7 @@ impl RunnableJob for ExpireInactiveSessionsJob {
             repo.queue_job()
                 .schedule_job(
                     &mut rng,
-                    &clock,
+                    clock,
                     ExpireInactiveUserSessionsJob::new(now - ttl),
                 )
                 .await
@@ -104,20 +104,20 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
 
         for edge in page.edges {
-            if let Some(user_id) = edge.user_id {
+            if let Some(user_id) = edge.node.user_id {
                 let inserted = users_synced.insert(user_id);
                 if inserted {
                     tracing::info!(user.id = %user_id, "Scheduling devices sync for user");
                     repo.queue_job()
                         .schedule_job_later(
                             &mut rng,
-                            &clock,
+                            clock,
                             SyncDevicesJob::new_for_id(user_id),
                             clock.now() + delay,
                         )
@@ -128,7 +128,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
             }
 
             repo.oauth2_session()
-                .finish(&clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -168,20 +168,20 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
 
         for edge in page.edges {
-            let inserted = users_synced.insert(edge.user_id);
+            let inserted = users_synced.insert(edge.node.user_id);
             if inserted {
-                tracing::info!(user.id = %edge.user_id, "Scheduling devices sync for user");
+                tracing::info!(user.id = %edge.node.user_id, "Scheduling devices sync for user");
                 repo.queue_job()
                     .schedule_job_later(
                         &mut rng,
-                        &clock,
-                        SyncDevicesJob::new_for_id(edge.user_id),
+                        clock,
+                        SyncDevicesJob::new_for_id(edge.node.user_id),
                         clock.now() + delay,
                     )
                     .await
@@ -190,7 +190,7 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
             }
 
             repo.compat_session()
-                .finish(&clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -223,14 +223,14 @@ impl RunnableJob for ExpireInactiveUserSessionsJob {
         if let Some(job) = self.next(&page) {
             tracing::info!("Scheduling job to expire the next batch of inactive sessions");
             repo.queue_job()
-                .schedule_job(&mut rng, &clock, job)
+                .schedule_job(&mut rng, clock, job)
                 .await
                 .map_err(JobError::retry)?;
         }
 
         for edge in page.edges {
             repo.browser_session()
-                .finish(&clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }

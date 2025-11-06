@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{collections::BTreeMap, process::ExitCode};
 
@@ -15,18 +15,21 @@ use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PasswordsConfig,
 };
-use mas_data_model::{Device, TokenType, Ulid, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, Device, SystemClock, TokenType, Ulid, UpstreamOAuthProvider, User};
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
-    Clock, RepositoryAccess, SystemClock,
+    Pagination, RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionFilter, CompatSessionRepository},
     oauth2::OAuth2SessionFilter,
     queue::{
         DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _, ReactivateUserJob,
         SyncDevicesJob,
     },
-    user::{BrowserSessionFilter, UserEmailRepository, UserPasswordRepository, UserRepository},
+    user::{
+        BrowserSessionFilter, UserEmailRepository, UserFilter, UserPasswordRepository,
+        UserRepository,
+    },
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{
@@ -84,6 +87,15 @@ enum Subcommand {
         #[clap(long)]
         ignore_complexity: bool,
     },
+
+    /// Make a user admin
+    PromoteAdmin { username: String },
+
+    /// Make a user non-admin
+    DemoteAdmin { username: String },
+
+    /// List all users with admin privileges
+    ListAdminUsers,
 
     /// Issue a compatibility token
     IssueCompatibilityToken {
@@ -149,6 +161,10 @@ enum Subcommand {
     UnlockUser {
         /// User to unlock
         username: String,
+
+        /// Whether to reactivate the user if it had been deactivated
+        #[arg(long)]
+        reactivate: bool,
     },
 
     /// Register a user
@@ -203,7 +219,6 @@ enum Subcommand {
 }
 
 impl Options {
-    #[allow(clippy::too_many_lines)]
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         let clock = SystemClock::default();
@@ -219,8 +234,10 @@ impl Options {
                 let _span =
                     info_span!("cli.manage.set_password", user.username = %username).entered();
 
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
-                let passwords_config = PasswordsConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let passwords_config = PasswordsConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
 
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let password_manager = password_manager_from_config(&passwords_config).await?;
@@ -260,7 +277,8 @@ impl Options {
                 )
                 .entered();
 
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -309,12 +327,95 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
 
+            SC::PromoteAdmin { username } => {
+                let _span =
+                    info_span!("cli.manage.promote_admin", user.username = username,).entered();
+
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let user = repo
+                    .user()
+                    .find_by_username(&username)
+                    .await?
+                    .context("User not found")?;
+
+                let user = repo.user().set_can_request_admin(user, true).await?;
+
+                repo.into_inner().commit().await?;
+                info!(%user.id, %user.username, "User promoted to admin");
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::DemoteAdmin { username } => {
+                let _span =
+                    info_span!("cli.manage.demote_admin", user.username = username,).entered();
+
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let user = repo
+                    .user()
+                    .find_by_username(&username)
+                    .await?
+                    .context("User not found")?;
+
+                let user = repo.user().set_can_request_admin(user, false).await?;
+
+                repo.into_inner().commit().await?;
+                info!(%user.id, %user.username, "User is no longer admin");
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::ListAdminUsers => {
+                let _span = info_span!("cli.manage.list_admins").entered();
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let mut cursor = Pagination::first(1000);
+                let filter = UserFilter::new().can_request_admin_only();
+                let total = repo.user().count(filter).await?;
+
+                info!("The following users can request admin privileges ({total} total):");
+                loop {
+                    let page = repo.user().list(filter, cursor).await?;
+                    for edge in page.edges {
+                        let user = edge.node;
+                        info!(%user.id, username = %user.username);
+                        cursor = cursor.after(edge.cursor);
+                    }
+
+                    if !page.has_next_page {
+                        break;
+                    }
+                }
+
+                Ok(ExitCode::SUCCESS)
+            }
+
             SC::IssueCompatibilityToken {
                 username,
                 admin,
                 device_id,
             } => {
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+                let http_client = mas_http::reqwest_client();
+                let homeserver =
+                    homeserver_connection_from_config(&matrix_config, http_client).await?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -330,6 +431,24 @@ impl Options {
                 } else {
                     Device::generate(&mut rng)
                 };
+
+                if let Err(e) = homeserver
+                    .upsert_device(&user.username, device.as_str(), None)
+                    .await
+                {
+                    error!(
+                        error = &*e,
+                        "Could not create the device on the homeserver, aborting"
+                    );
+
+                    // Schedule a device sync job to remove the potential leftover device
+                    repo.queue_job()
+                        .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+                        .await?;
+
+                    repo.into_inner().commit().await?;
+                    return Ok(ExitCode::FAILURE);
+                }
 
                 let compat_session = repo
                     .compat_session()
@@ -372,7 +491,8 @@ impl Options {
                     (Some(_), true) => unreachable!(), // This should be handled by the clap group
                 };
 
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -399,7 +519,8 @@ impl Options {
 
             SC::ProvisionAllUsers => {
                 let _span = info_span!("cli.manage.provision_all_users").entered();
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let mut txn = conn.begin().await?;
 
@@ -425,7 +546,8 @@ impl Options {
             SC::KillSessions { username, dry_run } => {
                 let _span =
                     info_span!("cli.manage.kill_sessions", user.username = username).entered();
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -497,7 +619,8 @@ impl Options {
                 deactivate,
             } => {
                 let _span = info_span!("cli.manage.lock_user", user.username = username).entered();
-                let config = DatabaseConfig::extract_or_default(figment)?;
+                let config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -527,9 +650,14 @@ impl Options {
                 Ok(ExitCode::SUCCESS)
             }
 
-            SC::UnlockUser { username } => {
-                let _span = info_span!("cli.manage.lock_user", user.username = username).entered();
-                let config = DatabaseConfig::extract_or_default(figment)?;
+            SC::UnlockUser {
+                username,
+                reactivate,
+            } => {
+                let _span =
+                    info_span!("cli.manage.unlock_user", user.username = username).entered();
+                let config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
                 let mut conn = database_connection_from_config(&config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -540,10 +668,14 @@ impl Options {
                     .await?
                     .context("User not found")?;
 
-                warn!(%user.id, "User scheduling user reactivation");
-                repo.queue_job()
-                    .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
-                    .await?;
+                if reactivate {
+                    warn!(%user.id, "Scheduling user reactivation");
+                    repo.queue_job()
+                        .schedule_job(&mut rng, &clock, ReactivateUserJob::new(&user))
+                        .await?;
+                } else {
+                    repo.user().unlock(user).await?;
+                }
 
                 repo.into_inner().commit().await?;
 
@@ -562,23 +694,26 @@ impl Options {
                 ignore_password_complexity,
             } => {
                 let http_client = mas_http::reqwest_client();
-                let password_config = PasswordsConfig::extract_or_default(figment)?;
-                let database_config = DatabaseConfig::extract_or_default(figment)?;
-                let matrix_config = MatrixConfig::extract(figment)?;
+                let password_config = PasswordsConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
                 let password_manager = password_manager_from_config(&password_config).await?;
-                let homeserver = homeserver_connection_from_config(&matrix_config, http_client);
+                let homeserver =
+                    homeserver_connection_from_config(&matrix_config, http_client).await?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
 
-                if let Some(password) = &password {
-                    if !ignore_password_complexity
-                        && !password_manager.is_password_complex_enough(password)?
-                    {
-                        error!("That password is too weak.");
-                        return Ok(ExitCode::from(1));
-                    }
+                if let Some(password) = &password
+                    && !ignore_password_complexity
+                    && !password_manager.is_password_complex_enough(password)?
+                {
+                    error!("That password is too weak.");
+                    return Ok(ExitCode::from(1));
                 }
 
                 // If the username is provided, check if it's available and normalize it.

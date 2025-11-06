@@ -1,16 +1,18 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::ops::Deref;
 
-use figment::Figment;
+use anyhow::bail;
+use camino::Utf8PathBuf;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::jwk::PublicJsonWebKeySet;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
+use serde_with::serde_as;
 use ulid::Ulid;
 use url::Url;
 
@@ -26,6 +28,66 @@ pub enum JwksOrJwksUri {
 impl From<PublicJsonWebKeySet> for JwksOrJwksUri {
     fn from(jwks: PublicJsonWebKeySet) -> Self {
         Self::Jwks(jwks)
+    }
+}
+
+/// Client secret config option.
+///
+/// It either holds the client secret value directly or references a file where
+/// the client secret is stored.
+#[derive(Clone, Debug)]
+pub enum ClientSecret {
+    File(Utf8PathBuf),
+    Value(String),
+}
+
+/// Client secret fields as serialized in JSON.
+#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
+struct ClientSecretRaw {
+    /// Path to the file containing the client secret. The client secret is used
+    /// by the `client_secret_basic`, `client_secret_post` and
+    /// `client_secret_jwt` authentication methods.
+    #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret_file: Option<Utf8PathBuf>,
+
+    /// Alternative to `client_secret_file`: Reads the client secret directly
+    /// from the config.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret: Option<String>,
+}
+
+impl TryFrom<ClientSecretRaw> for Option<ClientSecret> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: ClientSecretRaw) -> Result<Self, Self::Error> {
+        match (value.client_secret, value.client_secret_file) {
+            (None, None) => Ok(None),
+            (None, Some(path)) => Ok(Some(ClientSecret::File(path))),
+            (Some(client_secret), None) => Ok(Some(ClientSecret::Value(client_secret))),
+            (Some(_), Some(_)) => {
+                bail!("Cannot specify both `client_secret` and `client_secret_file`")
+            }
+        }
+    }
+}
+
+impl From<Option<ClientSecret>> for ClientSecretRaw {
+    fn from(value: Option<ClientSecret>) -> Self {
+        match value {
+            Some(ClientSecret::File(path)) => ClientSecretRaw {
+                client_secret_file: Some(path),
+                client_secret: None,
+            },
+            Some(ClientSecret::Value(client_secret)) => ClientSecretRaw {
+                client_secret_file: None,
+                client_secret: Some(client_secret),
+            },
+            None => ClientSecretRaw {
+                client_secret_file: None,
+                client_secret: None,
+            },
+        }
     }
 }
 
@@ -66,6 +128,7 @@ impl std::fmt::Display for ClientAuthMethodConfig {
 }
 
 /// An OAuth 2.0 client configuration
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ClientConfig {
     /// The client ID
@@ -85,8 +148,10 @@ pub struct ClientConfig {
 
     /// The client secret, used by the `client_secret_basic`,
     /// `client_secret_post` and `client_secret_jwt` authentication methods
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_secret: Option<String>,
+    #[schemars(with = "ClientSecretRaw")]
+    #[serde_as(as = "serde_with::TryFromInto<ClientSecretRaw>")]
+    #[serde(flatten)]
+    pub client_secret: Option<ClientSecret>,
 
     /// The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication
     /// method. Mutually exclusive with `jwks_uri`
@@ -104,7 +169,7 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    fn validate(&self) -> Result<(), figment::error::Error> {
+    fn validate(&self) -> Result<(), Box<figment::error::Error>> {
         let auth_method = self.client_auth_method;
         match self.client_auth_method {
             ClientAuthMethodConfig::PrivateKeyJwt => {
@@ -112,20 +177,20 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(
                         "jwks or jwks_uri is required for private_key_jwt",
                     );
-                    return Err(error.with_path("client_auth_method"));
+                    return Err(Box::new(error.with_path("client_auth_method")));
                 }
 
                 if self.jwks.is_some() && self.jwks_uri.is_some() {
                     let error =
                         figment::error::Error::custom("jwks and jwks_uri are mutually exclusive");
-                    return Err(error.with_path("jwks"));
+                    return Err(Box::new(error.with_path("jwks")));
                 }
 
                 if self.client_secret.is_some() {
                     let error = figment::error::Error::custom(
                         "client_secret is not allowed with private_key_jwt",
                     );
-                    return Err(error.with_path("client_secret"));
+                    return Err(Box::new(error.with_path("client_secret")));
                 }
             }
 
@@ -136,21 +201,21 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(format!(
                         "client_secret is required for {auth_method}"
                     ));
-                    return Err(error.with_path("client_auth_method"));
+                    return Err(Box::new(error.with_path("client_auth_method")));
                 }
 
                 if self.jwks.is_some() {
                     let error = figment::error::Error::custom(format!(
                         "jwks is not allowed with {auth_method}"
                     ));
-                    return Err(error.with_path("jwks"));
+                    return Err(Box::new(error.with_path("jwks")));
                 }
 
                 if self.jwks_uri.is_some() {
                     let error = figment::error::Error::custom(format!(
                         "jwks_uri is not allowed with {auth_method}"
                     ));
-                    return Err(error.with_path("jwks_uri"));
+                    return Err(Box::new(error.with_path("jwks_uri")));
                 }
             }
 
@@ -159,21 +224,21 @@ impl ClientConfig {
                     let error = figment::error::Error::custom(
                         "client_secret is not allowed with none authentication method",
                     );
-                    return Err(error.with_path("client_secret"));
+                    return Err(Box::new(error.with_path("client_secret")));
                 }
 
                 if self.jwks.is_some() {
                     let error = figment::error::Error::custom(
                         "jwks is not allowed with none authentication method",
                     );
-                    return Err(error);
+                    return Err(Box::new(error));
                 }
 
                 if self.jwks_uri.is_some() {
                     let error = figment::error::Error::custom(
                         "jwks_uri is not allowed with none authentication method",
                     );
-                    return Err(error);
+                    return Err(Box::new(error));
                 }
             }
         }
@@ -197,6 +262,21 @@ impl ClientConfig {
             }
             ClientAuthMethodConfig::PrivateKeyJwt => OAuthClientAuthenticationMethod::PrivateKeyJwt,
         }
+    }
+
+    /// Returns the client secret.
+    ///
+    /// If `client_secret_file` was given, the secret is read from that file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the client secret could not be read from file.
+    pub async fn client_secret(&self) -> anyhow::Result<Option<String>> {
+        Ok(match &self.client_secret {
+            Some(ClientSecret::File(path)) => Some(tokio::fs::read_to_string(path).await?),
+            Some(ClientSecret::Value(client_secret)) => Some(client_secret.clone()),
+            None => None,
+        })
     }
 }
 
@@ -232,7 +312,10 @@ impl IntoIterator for ClientsConfig {
 impl ConfigurationSection for ClientsConfig {
     const PATH: Option<&'static str> = Some("clients");
 
-    fn validate(&self, figment: &Figment) -> Result<(), figment::error::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         for (index, client) in self.0.iter().enumerate() {
             client.validate().map_err(|mut err| {
                 // Save the error location information in the error
@@ -256,75 +339,91 @@ mod tests {
         Figment, Jail,
         providers::{Format, Yaml},
     };
+    use tokio::{runtime::Handle, task};
 
     use super::*;
 
-    #[test]
-    fn load_config() {
-        Jail::expect_with(|jail| {
-            jail.create_file(
-                "config.yaml",
-                r#"
-                  clients:
-                    - client_id: 01GFWR28C4KNE04WG3HKXB7C9R
-                      client_auth_method: none
-                      redirect_uris:
-                        - https://exemple.fr/callback
+    #[tokio::test]
+    async fn load_config() {
+        task::spawn_blocking(|| {
+            Jail::expect_with(|jail| {
+                jail.create_file(
+                    "config.yaml",
+                    r#"
+                      clients:
+                        - client_id: 01GFWR28C4KNE04WG3HKXB7C9R
+                          client_auth_method: none
+                          redirect_uris:
+                            - https://exemple.fr/callback
 
-                    - client_id: 01GFWR32NCQ12B8Z0J8CPXRRB6
-                      client_auth_method: client_secret_basic
-                      client_secret: hello
+                        - client_id: 01GFWR32NCQ12B8Z0J8CPXRRB6
+                          client_auth_method: client_secret_basic
+                          client_secret_file: secret
 
-                    - client_id: 01GFWR3WHR93Y5HK389H28VHZ9
-                      client_auth_method: client_secret_post
-                      client_secret: hello
+                        - client_id: 01GFWR3WHR93Y5HK389H28VHZ9
+                          client_auth_method: client_secret_post
+                          client_secret: c1!3n753c237
 
-                    - client_id: 01GFWR43R2ZZ8HX9CVBNW9TJWG
-                      client_auth_method: client_secret_jwt
-                      client_secret: hello
+                        - client_id: 01GFWR43R2ZZ8HX9CVBNW9TJWG
+                          client_auth_method: client_secret_jwt
+                          client_secret_file: secret
 
-                    - client_id: 01GFWR4BNFDCC4QDG6AMSP1VRR
-                      client_auth_method: private_key_jwt
-                      jwks:
-                        keys:
-                        - kid: "03e84aed4ef4431014e8617567864c4efaaaede9"
-                          kty: "RSA"
-                          alg: "RS256"
-                          use: "sig"
-                          e: "AQAB"
-                          n: "ma2uRyBeSEOatGuDpCiV9oIxlDWix_KypDYuhQfEzqi_BiF4fV266OWfyjcABbam59aJMNvOnKW3u_eZM-PhMCBij5MZ-vcBJ4GfxDJeKSn-GP_dJ09rpDcILh8HaWAnPmMoi4DC0nrfE241wPISvZaaZnGHkOrfN_EnA5DligLgVUbrA5rJhQ1aSEQO_gf1raEOW3DZ_ACU3qhtgO0ZBG3a5h7BPiRs2sXqb2UCmBBgwyvYLDebnpE7AotF6_xBIlR-Cykdap3GHVMXhrIpvU195HF30ZoBU4dMd-AeG6HgRt4Cqy1moGoDgMQfbmQ48Hlunv9_Vi2e2CLvYECcBw"
+                        - client_id: 01GFWR4BNFDCC4QDG6AMSP1VRR
+                          client_auth_method: private_key_jwt
+                          jwks:
+                            keys:
+                            - kid: "03e84aed4ef4431014e8617567864c4efaaaede9"
+                              kty: "RSA"
+                              alg: "RS256"
+                              use: "sig"
+                              e: "AQAB"
+                              n: "ma2uRyBeSEOatGuDpCiV9oIxlDWix_KypDYuhQfEzqi_BiF4fV266OWfyjcABbam59aJMNvOnKW3u_eZM-PhMCBij5MZ-vcBJ4GfxDJeKSn-GP_dJ09rpDcILh8HaWAnPmMoi4DC0nrfE241wPISvZaaZnGHkOrfN_EnA5DligLgVUbrA5rJhQ1aSEQO_gf1raEOW3DZ_ACU3qhtgO0ZBG3a5h7BPiRs2sXqb2UCmBBgwyvYLDebnpE7AotF6_xBIlR-Cykdap3GHVMXhrIpvU195HF30ZoBU4dMd-AeG6HgRt4Cqy1moGoDgMQfbmQ48Hlunv9_Vi2e2CLvYECcBw"
 
-                        - kid: "d01c1abe249269f72ef7ca2613a86c9f05e59567"
-                          kty: "RSA"
-                          alg: "RS256"
-                          use: "sig"
-                          e: "AQAB"
-                          n: "0hukqytPwrj1RbMYhYoepCi3CN5k7DwYkTe_Cmb7cP9_qv4ok78KdvFXt5AnQxCRwBD7-qTNkkfMWO2RxUMBdQD0ED6tsSb1n5dp0XY8dSWiBDCX8f6Hr-KolOpvMLZKRy01HdAWcM6RoL9ikbjYHUEW1C8IJnw3MzVHkpKFDL354aptdNLaAdTCBvKzU9WpXo10g-5ctzSlWWjQuecLMQ4G1mNdsR1LHhUENEnOvgT8cDkX0fJzLbEbyBYkdMgKggyVPEB1bg6evG4fTKawgnf0IDSPxIU-wdS9wdSP9ZCJJPLi5CEp-6t6rE_sb2dGcnzjCGlembC57VwpkUvyMw"
-                "#,
-            )?;
+                            - kid: "d01c1abe249269f72ef7ca2613a86c9f05e59567"
+                              kty: "RSA"
+                              alg: "RS256"
+                              use: "sig"
+                              e: "AQAB"
+                              n: "0hukqytPwrj1RbMYhYoepCi3CN5k7DwYkTe_Cmb7cP9_qv4ok78KdvFXt5AnQxCRwBD7-qTNkkfMWO2RxUMBdQD0ED6tsSb1n5dp0XY8dSWiBDCX8f6Hr-KolOpvMLZKRy01HdAWcM6RoL9ikbjYHUEW1C8IJnw3MzVHkpKFDL354aptdNLaAdTCBvKzU9WpXo10g-5ctzSlWWjQuecLMQ4G1mNdsR1LHhUENEnOvgT8cDkX0fJzLbEbyBYkdMgKggyVPEB1bg6evG4fTKawgnf0IDSPxIU-wdS9wdSP9ZCJJPLi5CEp-6t6rE_sb2dGcnzjCGlembC57VwpkUvyMw"
+                    "#,
+                )?;
+                jail.create_file("secret", r"c1!3n753c237")?;
 
-            let config = Figment::new()
-                .merge(Yaml::file("config.yaml"))
-                .extract_inner::<ClientsConfig>("clients")?;
+                let config = Figment::new()
+                    .merge(Yaml::file("config.yaml"))
+                    .extract_inner::<ClientsConfig>("clients")?;
 
-            assert_eq!(config.0.len(), 5);
+                assert_eq!(config.0.len(), 5);
 
-            assert_eq!(
-                config.0[0].client_id,
-                Ulid::from_str("01GFWR28C4KNE04WG3HKXB7C9R").unwrap()
-            );
-            assert_eq!(
-                config.0[0].redirect_uris,
-                vec!["https://exemple.fr/callback".parse().unwrap()]
-            );
+                assert_eq!(
+                    config.0[0].client_id,
+                    Ulid::from_str("01GFWR28C4KNE04WG3HKXB7C9R").unwrap()
+                );
+                assert_eq!(
+                    config.0[0].redirect_uris,
+                    vec!["https://exemple.fr/callback".parse().unwrap()]
+                );
 
-            assert_eq!(
-                config.0[1].client_id,
-                Ulid::from_str("01GFWR32NCQ12B8Z0J8CPXRRB6").unwrap()
-            );
-            assert_eq!(config.0[1].redirect_uris, Vec::new());
+                assert_eq!(
+                    config.0[1].client_id,
+                    Ulid::from_str("01GFWR32NCQ12B8Z0J8CPXRRB6").unwrap()
+                );
+                assert_eq!(config.0[1].redirect_uris, Vec::new());
 
-            Ok(())
-        });
+                assert!(config.0[0].client_secret.is_none());
+                assert!(matches!(config.0[1].client_secret, Some(ClientSecret::File(ref p)) if p == "secret"));
+                assert!(matches!(config.0[2].client_secret, Some(ClientSecret::Value(ref v)) if v == "c1!3n753c237"));
+                assert!(matches!(config.0[3].client_secret, Some(ClientSecret::File(ref p)) if p == "secret"));
+                assert!(config.0[4].client_secret.is_none());
+
+                Handle::current().block_on(async move {
+                    assert_eq!(config.0[1].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                    assert_eq!(config.0[2].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                    assert_eq!(config.0[3].client_secret().await.unwrap().unwrap(), "c1!3n753c237");
+                });
+
+                Ok(())
+            });
+        }).await.unwrap();
     }
 }

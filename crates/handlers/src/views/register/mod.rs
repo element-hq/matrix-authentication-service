@@ -1,16 +1,17 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
-    extract::{Query, State},
+    extract::State,
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::extract::Query;
 use mas_axum_utils::{InternalError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
-use mas_data_model::SiteConfig;
+use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, BoxRng};
+use mas_storage::BoxRepository;
 use mas_templates::{RegisterContext, TemplateContext, Templates};
 
 use super::shared::OptionalPostAuthAction;

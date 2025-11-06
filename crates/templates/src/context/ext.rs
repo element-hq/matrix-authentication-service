@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use mas_data_model::SiteConfig;
 
@@ -45,6 +45,7 @@ impl SiteConfigExt for SiteConfig {
     fn templates_features(&self) -> SiteFeatures {
         SiteFeatures {
             password_registration: self.password_registration_enabled,
+            password_registration_email_required: self.password_registration_email_required,
             password_login: self.password_login_enabled,
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,

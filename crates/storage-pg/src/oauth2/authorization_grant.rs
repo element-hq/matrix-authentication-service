@@ -1,16 +1,16 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Pkce, Session,
+    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Clock, Pkce, Session,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
-use mas_storage::{Clock, oauth2::OAuth2AuthorizationGrantRepository};
+use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -60,7 +60,6 @@ struct GrantLookup {
 impl TryFrom<GrantLookup> for AuthorizationGrant {
     type Error = DatabaseInconsistencyError;
 
-    #[allow(clippy::too_many_lines)]
     fn try_from(value: GrantLookup) -> Result<Self, Self::Error> {
         let id = value.oauth2_authorization_grant_id.into();
         let scope: Scope = value.scope.parse().map_err(|e| {

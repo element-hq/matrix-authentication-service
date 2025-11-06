@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 # METADATA
 # schemas:
 #   - input: schema["client_registration_input"]
@@ -13,7 +18,7 @@ allow if {
 
 parse_uri(url) := obj if {
 	is_string(url)
-	url_regex := `^(?P<scheme>[a-z][a-z0-9+.-]*):(?://(?P<host>((?:(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])\.)*(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])|127.0.0.1|0.0.0.0|\[::1\])(?::(?P<port>[0-9]+))?))?(?P<path>/[A-Za-z0-9/.-]*)?(?P<query>\?[-a-zA-Z0-9()@:%_+.~#?&/=]*)?$`
+	url_regex := `^(?P<scheme>[a-z][a-z0-9+.-]*):(?://(?P<host>((?:(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])\.)*(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])|127.0.0.1|0.0.0.0|\[::1\])(?::(?P<port>[0-9]+))?))?(?P<path>/[A-Za-z0-9/._~-]*)?(?P<query>\?[-a-zA-Z0-9()@:%_+.~#?&/=]*)?$`
 	[matches] := regex.find_all_string_submatch_n(url_regex, url, 1)
 	obj := {"scheme": matches[1], "authority": matches[2], "host": matches[3], "port": matches[4], "path": matches[5], "query": matches[6]}
 }

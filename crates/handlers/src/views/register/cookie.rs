@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 // TODO: move that to a standalone cookie manager
 
@@ -9,8 +9,7 @@ use std::collections::BTreeSet;
 
 use chrono::{DateTime, Duration, Utc};
 use mas_axum_utils::cookies::CookieJar;
-use mas_data_model::UserRegistration;
-use mas_storage::Clock;
+use mas_data_model::{Clock, UserRegistration};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;

@@ -1,15 +1,14 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, Object};
 use chrono::{DateTime, Utc};
 use mas_storage::{oauth2::OAuth2ClientRepository, user::BrowserSessionRepository};
-use oauth2_types::{oidc::ApplicationType, scope::Scope};
-use ulid::Ulid;
+use oauth2_types::oidc::ApplicationType;
 use url::Url;
 
 use super::{BrowserSession, NodeType, SessionState, User, UserAgent};
@@ -198,35 +197,5 @@ impl OAuth2Client {
             ApplicationType::Native => Some(OAuth2ApplicationType::Native),
             ApplicationType::Unknown(_) => None,
         }
-    }
-}
-
-/// An OAuth 2.0 consent represents the scope a user consented to grant to a
-/// client.
-#[derive(Description)]
-pub struct OAuth2Consent {
-    scope: Scope,
-    client_id: Ulid,
-}
-
-#[Object(use_type_description)]
-impl OAuth2Consent {
-    /// Scope consented by the user for this client.
-    pub async fn scope(&self) -> String {
-        self.scope.to_string()
-    }
-
-    /// OAuth 2.0 client for which the user granted access.
-    pub async fn client(&self, ctx: &Context<'_>) -> Result<OAuth2Client, async_graphql::Error> {
-        let state = ctx.state();
-        let mut repo = state.repository().await?;
-        let client = repo
-            .oauth2_client()
-            .lookup(self.client_id)
-            .await?
-            .context("Could not load client")?;
-        repo.cancel().await?;
-
-        Ok(OAuth2Client(client))
     }
 }

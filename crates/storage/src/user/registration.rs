@@ -1,17 +1,17 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{UserEmailAuthentication, UserRegistration, UserRegistrationToken};
+use mas_data_model::{Clock, UserEmailAuthentication, UserRegistration, UserRegistrationToken};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`UserRegistrationRepository`] helps interacting with [`UserRegistration`]
 /// saved in the storage backend

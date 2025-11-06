@@ -1,13 +1,12 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { codecovVitePlugin } from "@codecov/vite-plugin";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
@@ -73,13 +72,6 @@ export default defineConfig((env) => ({
     }),
 
     react(),
-
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-      bundleName: "mas-frontend",
-      uploadToken: process.env.CODECOV_TOKEN,
-      gitService: "github",
-    }),
 
     // Custom plugin to make sure that each asset has an entry in the manifest
     // This is needed so that the preloading & asset integrity generation works

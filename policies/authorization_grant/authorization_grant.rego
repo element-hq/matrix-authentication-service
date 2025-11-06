@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 # METADATA
 # schemas:
 #   - input: schema["authorization_grant_input"]
@@ -67,9 +72,50 @@ allowed_scope(scope) if {
 	regex.match(`^urn:matrix:org.matrix.msc2967.client:device:[A-Za-z0-9._~!$&'()*+,;=:@/-]{10,}$`, scope)
 }
 
+allowed_scope(scope) if {
+	# Grant access to the C-S API only if there is a user
+	interactive_grant_type(input.grant_type)
+	regex.match(`^urn:matrix:client:device:[A-Za-z0-9._~!$&'()*+,;=:@/-]{10,}$`, scope)
+}
+
+allowed_scope("urn:matrix:client:api:*") if {
+	# Grant access to the C-S API only if there is a user
+	interactive_grant_type(input.grant_type)
+}
+
 allowed_scope("urn:matrix:org.matrix.msc2967.client:api:*") if {
 	# Grant access to the C-S API only if there is a user
 	interactive_grant_type(input.grant_type)
+}
+
+uses_unstable_scopes if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:")}) > 0
+}
+
+uses_stable_scopes if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:")}) > 0
+}
+
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 0
+}
+
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:api:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:api:")}) > 0
 }
 
 # METADATA
@@ -83,6 +129,22 @@ violation contains {"msg": msg} if {
 violation contains {"msg": "only one device scope is allowed at a time"} if {
 	scope_list := split(input.scope, " ")
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")}) > 1
+}
+
+violation contains {"msg": "only one device scope is allowed at a time"} if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 1
+}
+
+# Prevent the creation of C-S API devices for sessions that don't have C-S API access.
+violation contains {"msg": "device scopes are only allowed when the client-server API scope is requested"} if {
+	has_device_scope
+	not has_cs_api_scope
+}
+
+violation contains {"msg": "request cannot mix unstable and stable scopes"} if {
+	uses_stable_scopes
+	uses_unstable_scopes
 }
 
 violation contains {"msg": sprintf(

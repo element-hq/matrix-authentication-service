@@ -1,6 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::Arc;
 
@@ -8,8 +9,8 @@ use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::BoxRng;
 use mas_policy::PolicyFactory;
-use mas_storage::BoxRng;
 use schemars::JsonSchema;
 use serde::Deserialize;
 

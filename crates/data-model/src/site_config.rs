@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use chrono::Duration;
 use url::Url;
@@ -63,6 +63,9 @@ pub struct SiteConfig {
 
     /// Whether password registration is enabled.
     pub password_registration_enabled: bool,
+
+    /// Whether a valid email address is required for password registrations.
+    pub password_registration_email_required: bool,
 
     /// Whether registration tokens are required for password registrations.
     pub registration_token_required: bool,

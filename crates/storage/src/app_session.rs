@@ -1,16 +1,16 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Repositories to interact with all kinds of sessions
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, Device, Session, User};
+use mas_data_model::{BrowserSession, Clock, CompatSession, Device, Session, User};
 
-use crate::{Clock, Page, Pagination, repository_impl};
+use crate::{Page, Pagination, repository_impl};
 
 /// The state of a session
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

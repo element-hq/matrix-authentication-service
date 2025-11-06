@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::Arc;
 
@@ -58,9 +58,9 @@ impl Object for SiteBranding {
     fn get_value(self: &Arc<Self>, name: &Value) -> Option<Value> {
         match name.as_str()? {
             "server_name" => Some(self.server_name.clone().into()),
-            "policy_uri" => self.policy_uri.clone().map(Value::from),
-            "tos_uri" => self.tos_uri.clone().map(Value::from),
-            "imprint" => self.imprint.clone().map(Value::from),
+            "policy_uri" => Some(Value::from(self.policy_uri.clone())),
+            "tos_uri" => Some(Value::from(self.tos_uri.clone())),
+            "imprint" => Some(Value::from(self.imprint.clone())),
             _ => None,
         }
     }

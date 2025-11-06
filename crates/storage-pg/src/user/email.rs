@@ -1,21 +1,22 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
+    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
     UserRegistration,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
+    pagination::Node,
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
+use sea_query::{Expr, Func, PostgresQueryBuilder, Query, SimpleExpr, enum_def};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -49,6 +50,12 @@ struct UserEmailLookup {
     user_id: Uuid,
     email: String,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for UserEmailLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_email_id.into()
+    }
 }
 
 impl From<UserEmailLookup> for UserEmail {
@@ -110,10 +117,13 @@ impl Filter for UserEmailFilter<'_> {
             .add_option(self.user().map(|user| {
                 Expr::col((UserEmails::Table, UserEmails::UserId)).eq(Uuid::from(user.id))
             }))
-            .add_option(
-                self.email()
-                    .map(|email| Expr::col((UserEmails::Table, UserEmails::Email)).eq(email)),
-            )
+            .add_option(self.email().map(|email| {
+                SimpleExpr::from(Func::lower(Expr::col((
+                    UserEmails::Table,
+                    UserEmails::Email,
+                ))))
+                .eq(Func::lower(email))
+            }))
     }
 }
 
@@ -175,7 +185,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , created_at
                 FROM user_emails
 
-                WHERE user_id = $1 AND email = $2
+                WHERE user_id = $1 AND LOWER(email) = LOWER($2)
             "#,
             Uuid::from(user.id),
             email,
@@ -209,7 +219,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
                      , email
                      , created_at
                 FROM user_emails
-                WHERE email = $1
+                WHERE LOWER(email) = LOWER($1)
             "#,
             email,
         )

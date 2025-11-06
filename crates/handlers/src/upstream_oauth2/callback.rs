@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::LazyLock;
 
@@ -13,14 +13,16 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use hyper::StatusCode;
-use mas_axum_utils::{cookies::CookieJar, record_error};
-use mas_data_model::{UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode};
+use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
+use mas_data_model::{
+    BoxClock, BoxRng, Clock, UpstreamOAuthProvider, UpstreamOAuthProviderResponseMode,
+};
 use mas_jose::claims::TokenHash;
 use mas_keystore::{Encrypter, Keystore};
 use mas_oidc_client::requests::jose::JwtVerificationData;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock,
+    BoxRepository,
     upstream_oauth2::{
         UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
         UpstreamOAuthSessionRepository,
@@ -153,15 +155,13 @@ impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
-        let sentry_event_id = record_error!(self, Self::Internal(_));
-        let response = match self {
-            Self::ProviderNotFound => (StatusCode::NOT_FOUND, "Provider not found").into_response(),
-            Self::SessionNotFound => (StatusCode::NOT_FOUND, "Session not found").into_response(),
-            Self::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            e => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
-        };
-
-        (sentry_event_id, response).into_response()
+        match self {
+            Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ (Self::ProviderNotFound | Self::SessionNotFound) => {
+                GenericError::new(StatusCode::NOT_FOUND, e).into_response()
+            }
+            e => GenericError::new(StatusCode::BAD_REQUEST, e).into_response(),
+        }
     }
 }
 
@@ -170,7 +170,7 @@ impl IntoResponse for RouteError {
     fields(upstream_oauth_provider.id = %provider_id),
     skip_all,
 )]
-#[allow(clippy::too_many_lines, clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn handler(
     mut rng: BoxRng,
     clock: BoxClock,
@@ -312,6 +312,7 @@ pub(crate) async fn handler(
     .await?;
 
     let mut jwks = None;
+    let mut id_token_claims = None;
 
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
@@ -336,6 +337,14 @@ pub(crate) async fn handler(
         )?;
 
         let (_headers, mut claims) = id_token.into_parts();
+
+        // Save a copy of the claims for later; the claims extract methods
+        // remove them from the map, and we want to store the original claims.
+        // We anyway need this to be a serde_json::Value
+        id_token_claims = Some(
+            serde_json::to_value(&claims)
+                .expect("serializing a HashMap<String, Value> into a Value should never fail"),
+        );
 
         // Access token hash must match.
         mas_jose::claims::AT_HASH
@@ -472,6 +481,7 @@ pub(crate) async fn handler(
             session,
             &link,
             token_response.id_token,
+            id_token_claims,
             params.extra_callback_parameters,
             userinfo,
         )

@@ -1,11 +1,12 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::http::Request;
 use hyper::StatusCode;
+use mas_axum_utils::SessionInfoExt;
 use mas_data_model::{AccessToken, Client, TokenType, User};
 use mas_matrix::{HomeserverConnection, ProvisionRequest};
 use mas_router::SimpleRoute;
@@ -19,11 +20,9 @@ use oauth2_types::{
     scope::{OPENID, Scope, ScopeToken},
 };
 use sqlx::PgPool;
+use zeroize::Zeroizing;
 
-use crate::{
-    test_utils,
-    test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
-};
+use crate::test_utils::{self, CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
 async fn create_test_client(state: &TestState) -> Client {
     let mut repo = state.repository().await.unwrap();
@@ -348,7 +347,7 @@ async fn test_oauth2_admin(pool: PgPool) {
 }
 
 /// Test that we can query the GraphQL endpoint with a token from a
-/// client_credentials grant.
+/// `client_credentials` grant.
 #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
 async fn test_oauth2_client_credentials(pool: PgPool) {
     setup();
@@ -529,10 +528,9 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     // XXX: we don't run the task worker here, so even though the addUser mutation
     // should have scheduled a job to provision the user, it won't run in the test,
     // so we need to do it manually
-    let mxid = state.homeserver_connection.mxid("alice");
     state
         .homeserver_connection
-        .provision_user(&ProvisionRequest::new(mxid, user_id))
+        .provision_user(&ProvisionRequest::new("alice", user_id))
         .await
         .unwrap();
 
@@ -780,5 +778,303 @@ async fn test_add_user(pool: PgPool) {
                 "user": null,
             }
         })
+    );
+}
+
+/// Test the setPassword mutation where the current password provided is
+/// wrong.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_set_password_rejected_wrong_password(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let mut rng = state.rng();
+    let mut repo = state.repository().await.unwrap();
+    let user = repo
+        .user()
+        .add(&mut rng, &state.clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let password = Zeroizing::new("current.password.123".to_owned());
+    let (version, hashed_password) = state
+        .password_manager
+        .hash(&mut rng, password)
+        .await
+        .unwrap();
+
+    repo.user_password()
+        .add(
+            &mut rng,
+            &state.clock,
+            &user,
+            version,
+            hashed_password,
+            None,
+        )
+        .await
+        .unwrap();
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &state.clock, &user, None)
+        .await
+        .unwrap();
+    repo.save().await.unwrap();
+
+    let cookie_jar = state.cookie_jar();
+    let cookie_jar = cookie_jar.set_session(&browser_session);
+
+    let user_id = user.id;
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": format!(r#"
+                mutation {{
+                    setPassword(input: {{
+                        userId: "user:{user_id}",
+                        currentPassword: "wrong.password.123",
+                        newPassword: "new.password.123"
+                    }}) {{
+                        status
+                    }}
+                }}
+            "#),
+    }));
+
+    let cookies = CookieHelper::new();
+    cookies.import(cookie_jar);
+    let request = cookies.with_cookies(request);
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["setPassword"]["status"].as_str(),
+        Some("WRONG_PASSWORD"),
+        "{:?}",
+        response.data
+    );
+}
+
+/// Test the startEmailAuthentication mutation where the current password
+/// provided is invalid.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_start_email_authentication_rejected_wrong_password(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let mut rng = state.rng();
+    let mut repo = state.repository().await.unwrap();
+    let user = repo
+        .user()
+        .add(&mut rng, &state.clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let password = Zeroizing::new("current.password.123".to_owned());
+    let (version, hashed_password) = state
+        .password_manager
+        .hash(&mut rng, password)
+        .await
+        .unwrap();
+
+    repo.user_password()
+        .add(
+            &mut rng,
+            &state.clock,
+            &user,
+            version,
+            hashed_password,
+            None,
+        )
+        .await
+        .unwrap();
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &state.clock, &user, None)
+        .await
+        .unwrap();
+    repo.save().await.unwrap();
+
+    let cookie_jar = state.cookie_jar();
+    let cookie_jar = cookie_jar.set_session(&browser_session);
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": r#"
+            mutation {
+                startEmailAuthentication(input: {
+                    email: "alice@example.org",
+                    password: "wrong.password.123"
+                }) {
+                    status
+                }
+            }
+        "#,
+    }));
+
+    let cookies = CookieHelper::new();
+    cookies.import(cookie_jar);
+    let request = cookies.with_cookies(request);
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["startEmailAuthentication"]["status"].as_str(),
+        Some("INCORRECT_PASSWORD"),
+        "{:?}",
+        response.data
+    );
+}
+
+/// Test the removeEmail mutation where the current password
+/// provided is invalid.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_remove_email_rejected_wrong_password(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let mut rng = state.rng();
+    let mut repo = state.repository().await.unwrap();
+    let user = repo
+        .user()
+        .add(&mut rng, &state.clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let password = Zeroizing::new("current.password.123".to_owned());
+    let (version, hashed_password) = state
+        .password_manager
+        .hash(&mut rng, password)
+        .await
+        .unwrap();
+
+    repo.user_password()
+        .add(
+            &mut rng,
+            &state.clock,
+            &user,
+            version,
+            hashed_password,
+            None,
+        )
+        .await
+        .unwrap();
+    let user_email_id = repo
+        .user_email()
+        .add(
+            &mut rng,
+            &state.clock,
+            &user,
+            "alice@example.org".to_owned(),
+        )
+        .await
+        .unwrap()
+        .id;
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &state.clock, &user, None)
+        .await
+        .unwrap();
+    repo.save().await.unwrap();
+
+    let cookie_jar = state.cookie_jar();
+    let cookie_jar = cookie_jar.set_session(&browser_session);
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": format!(r#"
+            mutation {{
+                removeEmail(input: {{
+                    userEmailId: "user_email:{user_email_id}",
+                    password: "wrong.password.123"
+                }}) {{
+                    status
+                }}
+            }}
+        "#),
+    }));
+
+    let cookies = CookieHelper::new();
+    cookies.import(cookie_jar);
+    let request = cookies.with_cookies(request);
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["removeEmail"]["status"].as_str(),
+        Some("INCORRECT_PASSWORD"),
+        "{:?}",
+        response.data
+    );
+}
+
+/// Test the deactivateUser mutation where the current password
+/// provided is invalid.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_deactivate_user_rejected_wrong_password(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let mut rng = state.rng();
+    let mut repo = state.repository().await.unwrap();
+    let user = repo
+        .user()
+        .add(&mut rng, &state.clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let password = Zeroizing::new("current.password.123".to_owned());
+    let (version, hashed_password) = state
+        .password_manager
+        .hash(&mut rng, password)
+        .await
+        .unwrap();
+
+    repo.user_password()
+        .add(
+            &mut rng,
+            &state.clock,
+            &user,
+            version,
+            hashed_password,
+            None,
+        )
+        .await
+        .unwrap();
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &state.clock, &user, None)
+        .await
+        .unwrap();
+    repo.save().await.unwrap();
+
+    let cookie_jar = state.cookie_jar();
+    let cookie_jar = cookie_jar.set_session(&browser_session);
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": r#"
+            mutation {
+                deactivateUser(input: {
+                    hsErase: true,
+                    password: "wrong.password.123"
+                }) {
+                    status
+                }
+            }
+        "#,
+    }));
+
+    let cookies = CookieHelper::new();
+    cookies.import(cookie_jar);
+    let request = cookies.with_cookies(request);
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["deactivateUser"]["status"].as_str(),
+        Some("INCORRECT_PASSWORD"),
+        "{:?}",
+        response.data
     );
 }

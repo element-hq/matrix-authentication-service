@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Sul on kasutajakonto juba olemas?",
       "continue_with_email": "Jätka e-posti aadressiga",
+      "continue_with_password": "Jätka salasõnaga",
       "create_account": {
         "description": "Jätkamiseks vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
@@ -234,6 +235,11 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Algse teenuse konto juba on seotud ühe teise kasutajakontoga."
+      },
+      "login_link": {
+        "action": "Jätka",
+        "description": "Selle kasutajanime (%(username)s) jaoks on konto olemas, ta saab olemas seotud kasutatava teenuse kontoga.",
+        "heading": "Seo oma olemasoleva kasutajakontoga"
       },
       "register": {
         "choose_username": {

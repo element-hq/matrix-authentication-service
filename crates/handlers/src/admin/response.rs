@@ -1,12 +1,12 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![allow(clippy::module_name_repetitions)]
 
-use mas_storage::Pagination;
+use mas_storage::{Pagination, pagination::Edge};
 use schemars::JsonSchema;
 use serde::Serialize;
 use ulid::Ulid;
@@ -21,10 +21,12 @@ struct PaginationLinks {
     self_: String,
 
     /// The link to the first page of results
-    first: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    first: Option<String>,
 
     /// The link to the last page of results
-    last: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last: Option<String>,
 
     /// The link to the next page of results
     ///
@@ -42,17 +44,27 @@ struct PaginationLinks {
 #[derive(Serialize, JsonSchema)]
 struct PaginationMeta {
     /// The total number of results
-    count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<usize>,
+}
+
+impl PaginationMeta {
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
 }
 
 /// A top-level response with a page of resources
 #[derive(Serialize, JsonSchema)]
 pub struct PaginatedResponse<T> {
     /// Response metadata
+    #[serde(skip_serializing_if = "PaginationMeta::is_empty")]
+    #[schemars(with = "Option<PaginationMeta>")]
     meta: PaginationMeta,
 
     /// The list of resources
-    data: Vec<SingleResource<T>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<Vec<SingleResource<T>>>,
 
     /// Related links
     links: PaginationLinks,
@@ -87,22 +99,28 @@ fn url_with_pagination(base: &str, pagination: Pagination) -> String {
 }
 
 impl<T: Resource> PaginatedResponse<T> {
-    pub fn new(
+    pub fn for_page(
         page: mas_storage::Page<T>,
         current_pagination: Pagination,
-        count: usize,
+        count: Option<usize>,
         base: &str,
     ) -> Self {
         let links = PaginationLinks {
             self_: url_with_pagination(base, current_pagination),
-            first: url_with_pagination(base, Pagination::first(current_pagination.count)),
-            last: url_with_pagination(base, Pagination::last(current_pagination.count)),
+            first: Some(url_with_pagination(
+                base,
+                Pagination::first(current_pagination.count),
+            )),
+            last: Some(url_with_pagination(
+                base,
+                Pagination::last(current_pagination.count),
+            )),
             next: page.has_next_page.then(|| {
                 url_with_pagination(
                     base,
                     current_pagination
                         .clear_before()
-                        .after(page.edges.last().unwrap().id()),
+                        .after(page.edges.last().unwrap().cursor),
                 )
             }),
             prev: if page.has_previous_page {
@@ -110,18 +128,38 @@ impl<T: Resource> PaginatedResponse<T> {
                     base,
                     current_pagination
                         .clear_after()
-                        .before(page.edges.first().unwrap().id()),
+                        .before(page.edges.first().unwrap().cursor),
                 ))
             } else {
                 None
             },
         };
 
-        let data = page.edges.into_iter().map(SingleResource::new).collect();
+        let data = page
+            .edges
+            .into_iter()
+            .map(SingleResource::from_edge)
+            .collect();
 
         Self {
             meta: PaginationMeta { count },
-            data,
+            data: Some(data),
+            links,
+        }
+    }
+
+    pub fn for_count_only(count: usize, base: &str) -> Self {
+        let links = PaginationLinks {
+            self_: base.to_owned(),
+            first: None,
+            last: None,
+            next: None,
+            prev: None,
+        };
+
+        Self {
+            meta: PaginationMeta { count: Some(count) },
+            data: None,
             links,
         }
     }
@@ -143,6 +181,32 @@ struct SingleResource<T> {
 
     /// Related links
     links: SelfLinks,
+
+    /// Metadata about the resource
+    #[serde(skip_serializing_if = "SingleResourceMeta::is_empty")]
+    #[schemars(with = "Option<SingleResourceMeta>")]
+    meta: SingleResourceMeta,
+}
+
+/// Metadata associated with a resource
+#[derive(Serialize, JsonSchema)]
+struct SingleResourceMeta {
+    /// Information about the pagination of the resource
+    #[serde(skip_serializing_if = "Option::is_none")]
+    page: Option<SingleResourceMetaPage>,
+}
+
+impl SingleResourceMeta {
+    fn is_empty(&self) -> bool {
+        self.page.is_none()
+    }
+}
+
+/// Pagination metadata for a resource
+#[derive(Serialize, JsonSchema)]
+struct SingleResourceMetaPage {
+    /// The cursor of this resource in the paginated result
+    cursor: String,
 }
 
 impl<T: Resource> SingleResource<T> {
@@ -153,7 +217,15 @@ impl<T: Resource> SingleResource<T> {
             id: resource.id(),
             attributes: resource,
             links: SelfLinks { self_ },
+            meta: SingleResourceMeta { page: None },
         }
+    }
+
+    fn from_edge<C: ToString>(edge: Edge<T, C>) -> Self {
+        let cursor = edge.cursor.to_string();
+        let mut resource = Self::new(edge.node);
+        resource.meta.page = Some(SingleResourceMetaPage { cursor });
+        resource
     }
 }
 

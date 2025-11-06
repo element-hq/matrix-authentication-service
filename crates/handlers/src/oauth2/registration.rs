@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::LazyLock;
 
@@ -10,10 +10,11 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::{BoxClock, BoxRng};
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
 use mas_policy::{EvaluationResult, Policy};
-use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
+use mas_storage::{BoxRepository, oauth2::OAuth2ClientRepository};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     registration::{
@@ -241,34 +242,34 @@ pub(crate) async fn post(
 
     // Some extra validation that is hard to do in OPA and not done by the
     // `validate` method either
-    if let Some(client_uri) = &metadata.client_uri {
-        if localised_url_has_public_suffix(client_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("client_uri"));
-        }
+    if let Some(client_uri) = &metadata.client_uri
+        && localised_url_has_public_suffix(client_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("client_uri"));
     }
 
-    if let Some(logo_uri) = &metadata.logo_uri {
-        if localised_url_has_public_suffix(logo_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("logo_uri"));
-        }
+    if let Some(logo_uri) = &metadata.logo_uri
+        && localised_url_has_public_suffix(logo_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("logo_uri"));
     }
 
-    if let Some(policy_uri) = &metadata.policy_uri {
-        if localised_url_has_public_suffix(policy_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("policy_uri"));
-        }
+    if let Some(policy_uri) = &metadata.policy_uri
+        && localised_url_has_public_suffix(policy_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("policy_uri"));
     }
 
-    if let Some(tos_uri) = &metadata.tos_uri {
-        if localised_url_has_public_suffix(tos_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("tos_uri"));
-        }
+    if let Some(tos_uri) = &metadata.tos_uri
+        && localised_url_has_public_suffix(tos_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("tos_uri"));
     }
 
-    if let Some(initiate_login_uri) = &metadata.initiate_login_uri {
-        if host_is_public_suffix(initiate_login_uri) {
-            return Err(RouteError::UrlIsPublicSuffix("initiate_login_uri"));
-        }
+    if let Some(initiate_login_uri) = &metadata.initiate_login_uri
+        && host_is_public_suffix(initiate_login_uri)
+    {
+        return Err(RouteError::UrlIsPublicSuffix("initiate_login_uri"));
     }
 
     for redirect_uri in metadata.redirect_uris() {

@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::process::ExitCode;
 
@@ -41,13 +41,16 @@ impl Options {
         match self.subcommand {
             SC::Policy { with_dynamic_data } => {
                 let _span = info_span!("cli.debug.policy").entered();
-                let config = PolicyConfig::extract_or_default(figment)?;
-                let matrix_config = MatrixConfig::extract(figment)?;
+                let config =
+                    PolicyConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
+                let matrix_config =
+                    MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 info!("Loading and compiling the policy module");
                 let policy_factory = policy_factory_from_config(&config, &matrix_config).await?;
 
                 if with_dynamic_data {
-                    let database_config = DatabaseConfig::extract(figment)?;
+                    let database_config =
+                        DatabaseConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                     let pool = database_pool_from_config(&database_config).await?;
                     let repository_factory = PgRepositoryFactory::new(pool.clone());
                     load_policy_factory_dynamic_data(&policy_factory, &repository_factory).await?;

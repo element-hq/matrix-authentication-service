@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{net::IpAddr, sync::Arc, time::Duration};
 
@@ -301,8 +301,7 @@ impl Limiter {
 
 #[cfg(test)]
 mod tests {
-    use mas_data_model::User;
-    use mas_storage::{Clock, clock::MockClock};
+    use mas_data_model::{Clock, User, clock::MockClock};
     use rand::SeedableRng;
 
     use super::*;
@@ -329,6 +328,7 @@ mod tests {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: true,
         };
 
         let bob = User {
@@ -339,6 +339,7 @@ mod tests {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: true,
         };
 
         // Three times the same IP address should be allowed

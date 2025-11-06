@@ -1,23 +1,24 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Authentication, AuthenticationMethod, BrowserSession, Password,
+    Authentication, AuthenticationMethod, BrowserSession, Clock, Password,
     UpstreamOAuthAuthorizationSession, User,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
+    pagination::Node,
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -26,7 +27,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
-    iden::{UserSessions, Users},
+    iden::{UpstreamOAuthAuthorizationSessions, UserSessionAuthentications, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -61,6 +62,13 @@ struct SessionLookup {
     user_locked_at: Option<DateTime<Utc>>,
     user_deactivated_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
+    user_is_guest: bool,
+}
+
+impl Node<Ulid> for SessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_id.into()
+    }
 }
 
 impl TryFrom<SessionLookup> for BrowserSession {
@@ -76,6 +84,7 @@ impl TryFrom<SessionLookup> for BrowserSession {
             locked_at: value.user_locked_at,
             deactivated_at: value.user_deactivated_at,
             can_request_admin: value.user_can_request_admin,
+            is_guest: value.user_is_guest,
         };
 
         Ok(BrowserSession {
@@ -145,6 +154,30 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
             }))
+            .add_option(self.authenticated_by_upstream_sessions().map(|filter| {
+                // For filtering by upstream sessions, we need to hop over the
+                // `user_session_authentications` table
+                let join_expr = Expr::col((
+                    UserSessionAuthentications::Table,
+                    UserSessionAuthentications::UpstreamOAuthAuthorizationSessionId,
+                ))
+                .eq(Expr::col((
+                    UpstreamOAuthAuthorizationSessions::Table,
+                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
+                )));
+
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessionAuthentications::Table,
+                            UserSessionAuthentications::UserSessionId,
+                        )))
+                        .from(UserSessionAuthentications::Table)
+                        .inner_join(UpstreamOAuthAuthorizationSessions::Table, join_expr)
+                        .apply_filter(filter)
+                        .take(),
+                )
+            }))
     }
 }
 
@@ -177,6 +210,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , u.locked_at             AS "user_locked_at"
                      , u.deactivated_at        AS "user_deactivated_at"
                      , u.can_request_admin     AS "user_can_request_admin"
+                     , u.is_guest              AS "user_is_guest"
                 FROM user_sessions s
                 INNER JOIN users u
                     USING (user_id)
@@ -366,6 +400,10 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),
                 SessionLookupIden::UserCanRequestAdmin,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::IsGuest)),
+                SessionLookupIden::UserIsGuest,
             )
             .from(UserSessions::Table)
             .inner_join(

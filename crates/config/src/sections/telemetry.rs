@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error as _};
@@ -182,32 +182,38 @@ impl TelemetryConfig {
 impl ConfigurationSection for TelemetryConfig {
     const PATH: Option<&'static str> = Some("telemetry");
 
-    fn validate(&self, _figment: &figment::Figment) -> Result<(), figment::Error> {
-        if let Some(sample_rate) = self.sentry.sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Sentry sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("sentry.sample_rate"));
-            }
+    fn validate(
+        &self,
+        _figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+        if let Some(sample_rate) = self.sentry.sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Sentry sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("sentry.sample_rate")
+            .into());
         }
 
-        if let Some(sample_rate) = self.sentry.traces_sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Sentry sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("sentry.traces_sample_rate"));
-            }
+        if let Some(sample_rate) = self.sentry.traces_sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Sentry sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("sentry.traces_sample_rate")
+            .into());
         }
 
-        if let Some(sample_rate) = self.tracing.sample_rate {
-            if !(0.0..=1.0).contains(&sample_rate) {
-                return Err(figment::error::Error::custom(
-                    "Tracing sample rate must be between 0.0 and 1.0",
-                )
-                .with_path("tracing.sample_rate"));
-            }
+        if let Some(sample_rate) = self.tracing.sample_rate
+            && !(0.0..=1.0).contains(&sample_rate)
+        {
+            return Err(figment::error::Error::custom(
+                "Tracing sample rate must be between 0.0 and 1.0",
+            )
+            .with_path("tracing.sample_rate")
+            .into());
         }
 
         Ok(())

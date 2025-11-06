@@ -86,6 +86,9 @@
         "heading": "Åtkomst beviljad"
       }
     },
+    "device_display_name": {
+      "unknown_device": "Okänd enhet"
+    },
     "email_in_use": {
       "description": "Om du har glömt dina kontouppgifter kan du återställa ditt konto. Du kan också börja om och använda en annan e-postadress.",
       "title": "E-postadressen <span>%(email)s</span> är redan i bruk"
@@ -204,6 +207,10 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Detta upstream-konto är redan kopplat till ett annat konto."
+      },
+      "login_link": {
+        "action": "Fortsätt",
+        "heading": "Länka till ditt befintliga konto"
       },
       "register": {
         "choose_username": {

@@ -1,8 +1,8 @@
-/* Copyright 2024 New Vector Ltd.
-* Copyright 2024 The Matrix.org Foundation C.I.C.
-*
-* SPDX-License-Identifier: AGPL-3.0-only
-* Please see LICENSE in the repository root for full details.
+/* Copyright 2024, 2025 New Vector Ltd.
+ * Copyright 2024 The Matrix.org Foundation C.I.C.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+ * Please see LICENSE files in the repository root for full details.
  */
 
 .overlay,
@@ -95,6 +95,7 @@
 
   /* Cap the block size */
   max-block-size: calc(100vh - var(--cpd-space-4x));
+  /* biome-ignore lint/suspicious/noDuplicateProperties: this isn't a real duplicate */
   max-block-size: calc(100svh - var(--cpd-space-4x));
 
   /* Drawer comes in the Android style by default */

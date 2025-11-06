@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! A crate to store keys which can then be used to sign and verify JWTs.
 
@@ -14,7 +14,7 @@ use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_jose::{
     jwa::{AsymmetricSigningKey, AsymmetricVerifyingKey},
-    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet},
+    jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet, Thumbprint},
 };
 use pem_rfc7468::PemLabel;
 use pkcs1::EncodeRsaPrivateKey;
@@ -596,6 +596,12 @@ impl ParametersInfo for PrivateKey {
             PrivateKey::EcP384(_) => &[JsonWebSignatureAlg::Es384],
             PrivateKey::EcK256(_) => &[JsonWebSignatureAlg::Es256K],
         }
+    }
+}
+
+impl Thumbprint for PrivateKey {
+    fn thumbprint_prehashed(&self) -> String {
+        JsonWebKeyPublicParameters::from(self).thumbprint_prehashed()
     }
 }
 

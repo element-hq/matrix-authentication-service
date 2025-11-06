@@ -1,19 +1,19 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Device, Session, User};
+use mas_data_model::{BrowserSession, Client, Clock, Device, Session, User};
 use oauth2_types::scope::Scope;
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Pagination, pagination::Page, repository_impl};
+use crate::{Pagination, pagination::Page, repository_impl, user::BrowserSessionFilter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OAuth2SessionState {
@@ -49,6 +49,7 @@ pub struct OAuth2SessionFilter<'a> {
     user: Option<&'a User>,
     any_user: Option<bool>,
     browser_session: Option<&'a BrowserSession>,
+    browser_session_filter: Option<BrowserSessionFilter<'a>>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
     client_kind: Option<ClientKind>,
@@ -109,12 +110,30 @@ impl<'a> OAuth2SessionFilter<'a> {
         self
     }
 
+    /// List sessions started by a set of browser sessions
+    #[must_use]
+    pub fn for_browser_sessions(
+        mut self,
+        browser_session_filter: BrowserSessionFilter<'a>,
+    ) -> Self {
+        self.browser_session_filter = Some(browser_session_filter);
+        self
+    }
+
     /// Get the browser session filter
     ///
     /// Returns [`None`] if no browser session filter was set
     #[must_use]
     pub fn browser_session(&self) -> Option<&'a BrowserSession> {
         self.browser_session
+    }
+
+    /// Get the browser sessions filter
+    ///
+    /// Returns [`None`] if no browser session filter was set
+    #[must_use]
+    pub fn browser_session_filter(&self) -> Option<BrowserSessionFilter<'a>> {
+        self.browser_session_filter
     }
 
     /// List sessions for a specific client

@@ -10,11 +10,11 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:74:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:76:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:192:26-52"
+      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:191:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -79,7 +79,7 @@
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:38:33-58, pages/upstream_oauth2/do_register.html:114:37-62"
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:39:35-60, pages/upstream_oauth2/do_register.html:114:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -91,11 +91,11 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:42:33-53"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:44:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:46:33-61"
+      "context": "pages/register/password.html:48:33-61"
     },
     "username": "Username",
     "@username": {
@@ -423,7 +423,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:81:15-67, pages/register/index.html:53:15-67",
+        "context": "pages/login.html:81:15-67, pages/register/index.html:57:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -613,12 +613,16 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:59:35-66, pages/register/password.html:77:33-64",
+        "context": "pages/register/index.html:63:35-66, pages/register/password.html:79:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
       "@continue_with_email": {
-        "context": "pages/register/index.html:44:30-67"
+        "context": "pages/register/index.html:45:32-69"
+      },
+      "continue_with_password": "Continue with password",
+      "@continue_with_password": {
+        "context": "pages/register/index.html:47:32-72"
       },
       "create_account": {
         "description": "Choose a username to continue.",
@@ -632,7 +636,7 @@
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:51:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
+        "context": "pages/register/password.html:53:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
       }
     },
     "registration_token": {
@@ -662,7 +666,7 @@
       },
       "mas_admin": "Administer any user on the matrix-authentication-service",
       "@mas_admin": {
-        "context": "components/scope.html:23:42-66",
+        "context": "components/scope.html:23:54-78",
         "description": "Displayed when the 'urn:mas:admin' scope is requested"
       },
       "send_messages": "Send new messages on your behalf",
@@ -671,7 +675,7 @@
       },
       "synapse_admin": "Administer the Synapse homeserver",
       "@synapse_admin": {
-        "context": "components/scope.html:21:42-70",
+        "context": "components/scope.html:21:53-81",
         "description": "Displayed when the 'urn:synapse:admin:*' scope is requested"
       },
       "view_messages": "View your existing messages and data",
@@ -691,6 +695,20 @@
         "@heading": {
           "context": "pages/upstream_oauth2/link_mismatch.html:19:11-57",
           "description": "Page shown when the user tries to link an upstream account that is already linked to another account"
+        }
+      },
+      "login_link": {
+        "action": "Continue",
+        "@action": {
+          "context": "pages/upstream_oauth2/login_link.html:27:28-70"
+        },
+        "description": "An account exists for this username (%(username)s), it will be linked to this upstream account.",
+        "@description": {
+          "context": "pages/upstream_oauth2/login_link.html:21:7-85"
+        },
+        "heading": "Link to your existing account",
+        "@heading": {
+          "context": "pages/upstream_oauth2/login_link.html:17:27-70"
         }
       },
       "register": {

@@ -1,15 +1,15 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Repositories to interact with the policy data saved in the storage backend.
 
 use async_trait::async_trait;
-use mas_data_model::PolicyData;
+use mas_data_model::{Clock, PolicyData};
 use rand_core::RngCore;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A [`PolicyDataRepository`] helps interacting with the policy data saved in
 /// the storage backend.

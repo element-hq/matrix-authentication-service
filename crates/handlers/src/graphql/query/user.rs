@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_graphql::{
     Context, Enum, ID, Object,
@@ -143,11 +143,12 @@ impl UserQuery {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(
-                    page.edges.into_iter().map(|p| {
-                        Edge::new(OpaqueCursor(NodeCursor(NodeType::User, p.id)), User(p))
-                    }),
-                );
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
+                    Edge::new(
+                        OpaqueCursor(NodeCursor(NodeType::User, edge.cursor)),
+                        User(edge.node),
+                    )
+                }));
 
                 Ok::<_, async_graphql::Error>(connection)
             },

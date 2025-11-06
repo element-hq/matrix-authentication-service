@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashMap;
 
@@ -74,7 +74,7 @@ fn keystore(alg: &JsonWebSignatureAlg) -> Keystore {
 }
 
 /// Generate an ID token.
-fn id_token(issuer: &str) -> (IdToken, PublicJsonWebKeySet) {
+fn id_token(issuer: &str) -> (IdToken<'_>, PublicJsonWebKeySet) {
     let signing_alg = ID_TOKEN_SIGNING_ALG;
 
     let keystore = keystore(&signing_alg);

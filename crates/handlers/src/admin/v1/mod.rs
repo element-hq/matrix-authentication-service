@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::Arc;
 
@@ -11,33 +11,46 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
+use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
-use mas_storage::BoxRng;
 
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
 mod compat_sessions;
 mod oauth2_sessions;
+mod personal_sessions;
 mod policy_data;
+mod site_config;
 mod upstream_oauth_links;
+mod upstream_oauth_providers;
 mod user_emails;
 mod user_registration_tokens;
 mod user_sessions;
 mod users;
+mod version;
 
-#[allow(clippy::too_many_lines)]
 pub fn router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
+    SiteConfig: FromRef<S>,
+    AppVersion: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
+        .api_route(
+            "/site-config",
+            get_with(self::site_config::handler, self::site_config::doc),
+        )
+        .api_route(
+            "/version",
+            get_with(self::version::handler, self::version::doc),
+        )
         .api_route(
             "/compat-sessions",
             get_with(self::compat_sessions::list, self::compat_sessions::list_doc),
@@ -47,12 +60,58 @@ where
             get_with(self::compat_sessions::get, self::compat_sessions::get_doc),
         )
         .api_route(
+            "/compat-sessions/{id}/finish",
+            post_with(
+                self::compat_sessions::finish,
+                self::compat_sessions::finish_doc,
+            ),
+        )
+        .api_route(
             "/oauth2-sessions",
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),
         )
         .api_route(
             "/oauth2-sessions/{id}",
             get_with(self::oauth2_sessions::get, self::oauth2_sessions::get_doc),
+        )
+        .api_route(
+            "/oauth2-sessions/{id}/finish",
+            post_with(
+                self::oauth2_sessions::finish,
+                self::oauth2_sessions::finish_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions",
+            get_with(
+                self::personal_sessions::list,
+                self::personal_sessions::list_doc,
+            )
+            .post_with(
+                self::personal_sessions::add,
+                self::personal_sessions::add_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions/{id}",
+            get_with(
+                self::personal_sessions::get,
+                self::personal_sessions::get_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions/{id}/revoke",
+            post_with(
+                self::personal_sessions::revoke,
+                self::personal_sessions::revoke_doc,
+            ),
+        )
+        .api_route(
+            "/personal-sessions/{id}/regenerate",
+            post_with(
+                self::personal_sessions::regenerate,
+                self::personal_sessions::regenerate_doc,
+            ),
         )
         .api_route(
             "/policy-data",
@@ -95,6 +154,10 @@ where
             post_with(self::users::deactivate, self::users::deactivate_doc),
         )
         .api_route(
+            "/users/{id}/reactivate",
+            post_with(self::users::reactivate, self::users::reactivate_doc),
+        )
+        .api_route(
             "/users/{id}/lock",
             post_with(self::users::lock, self::users::lock_doc),
         )
@@ -119,6 +182,10 @@ where
         .api_route(
             "/user-sessions/{id}",
             get_with(self::user_sessions::get, self::user_sessions::get_doc),
+        )
+        .api_route(
+            "/user-sessions/{id}/finish",
+            post_with(self::user_sessions::finish, self::user_sessions::finish_doc),
         )
         .api_route(
             "/user-registration-tokens",
@@ -176,6 +243,20 @@ where
             .delete_with(
                 self::upstream_oauth_links::delete,
                 self::upstream_oauth_links::delete_doc,
+            ),
+        )
+        .api_route(
+            "/upstream-oauth-providers",
+            get_with(
+                self::upstream_oauth_providers::list,
+                self::upstream_oauth_providers::list_doc,
+            ),
+        )
+        .api_route(
+            "/upstream-oauth-providers/{id}",
+            get_with(
+                self::upstream_oauth_providers::get,
+                self::upstream_oauth_providers::get_doc,
             ),
         )
 }

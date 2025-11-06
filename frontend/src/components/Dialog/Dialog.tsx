@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import {
   Close,
@@ -102,4 +102,4 @@ export const Title: React.FC<PropsWithChildren> = ({ children }) => (
   <DialogTitle className={styles.title}>{children}</DialogTitle>
 );
 
-export { Description, Close } from "@radix-ui/react-dialog";
+export { Close, Description } from "@radix-ui/react-dialog";

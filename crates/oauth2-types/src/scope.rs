@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Types to define an [access token's scope].
 //!
@@ -10,7 +10,13 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{borrow::Cow, collections::BTreeSet, iter::FromIterator, ops::Deref, str::FromStr};
+use std::{
+    borrow::Cow,
+    collections::BTreeSet,
+    iter::FromIterator,
+    ops::{Deref, DerefMut},
+    str::FromStr,
+};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -118,6 +124,12 @@ impl Deref for Scope {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for Scope {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -248,6 +260,7 @@ mod tests {
         );
 
         assert!(Scope::from_str("http://example.com").is_ok());
-        assert!(Scope::from_str("urn:matrix:org.matrix.msc2967.client:*").is_ok());
+        assert!(Scope::from_str("urn:matrix:client:api:*").is_ok());
+        assert!(Scope::from_str("urn:matrix:org.matrix.msc2967.client:api:*").is_ok());
     }
 }

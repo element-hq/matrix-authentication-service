@@ -16,6 +16,65 @@
     }
   ],
   "paths": {
+    "/api/admin/v1/site-config": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Get informations about the configuration of this MAS instance",
+        "operationId": "siteConfig",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteConfig"
+                },
+                "example": {
+                  "server_name": "example.com",
+                  "password_login_enabled": true,
+                  "password_registration_enabled": true,
+                  "password_registration_email_required": true,
+                  "registration_token_required": true,
+                  "email_change_allowed": true,
+                  "displayname_change_allowed": true,
+                  "password_change_allowed": true,
+                  "account_recovery_allowed": true,
+                  "account_deactivation_allowed": true,
+                  "captcha_enabled": true,
+                  "minimum_password_complexity": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/version": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Get the version currently running",
+        "operationId": "version",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                },
+                "example": {
+                  "version": "v1.0.0"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/compat-sessions": {
       "get": {
         "tags": [
@@ -86,6 +145,23 @@
               ],
               "format": "uint",
               "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -171,6 +247,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -190,6 +271,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -209,6 +295,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/compat-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -316,6 +407,98 @@
         }
       }
     },
+    "/api/admin/v1/compat-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "compat-session"
+        ],
+        "summary": "Finish a compatibility session",
+        "description": "Calling this endpoint will finish the compatibility session, preventing any further use. A job will be scheduled to sync the user's devices with the homeserver.",
+        "operationId": "finishCompatSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compatibility session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_CompatSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "compat-session",
+                    "id": "02081040G2081040G2081040G2",
+                    "attributes": {
+                      "user_id": "01040G2081040G2081040G2081",
+                      "device_id": "FFGGHHIIJJ",
+                      "user_session_id": "0J289144GJ289144GJ289144GJ",
+                      "redirect_uri": null,
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "1.2.3.4",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "human_name": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/compat-sessions/02081040G2081040G2081040G2/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Compatibility session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Compatibility session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Compatibility session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/oauth2-sessions": {
       "get": {
         "tags": [
@@ -386,6 +569,23 @@
               ],
               "format": "uint",
               "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -519,6 +719,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -538,6 +743,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -549,7 +759,7 @@
                         "user_id": "040G2081040G2081040G208104",
                         "user_session_id": "050M2GA1850M2GA1850M2GA185",
                         "client_id": "060R30C1G60R30C1G60R30C1G6",
-                        "scope": "urn:matrix:org.matrix.msc2967.client:api:*",
+                        "scope": "urn:matrix:client:api:*",
                         "user_agent": "Mozilla/5.0",
                         "last_active_at": "1970-01-01T00:00:00Z",
                         "last_active_ip": "127.0.0.1",
@@ -557,6 +767,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -672,6 +887,716 @@
                   "errors": [
                     {
                       "title": "OAuth 2.0 session ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/oauth2-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "oauth2-session"
+        ],
+        "summary": "Finish an OAuth 2.0 session",
+        "description": "Calling this endpoint will finish the OAuth 2.0 session, preventing any further use. If the session has a user associated with it, a job will be scheduled to sync the user's devices with the homeserver.",
+        "operationId": "finishOAuth2Session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth 2.0 session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_OAuth2Session"
+                },
+                "example": {
+                  "data": {
+                    "type": "oauth2-session",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "user_id": "040G2081040G2081040G208104",
+                      "user_session_id": "050M2GA1850M2GA1850M2GA185",
+                      "client_id": "060R30C1G60R30C1G60R30C1G6",
+                      "scope": "urn:matrix:client:api:*",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1",
+                      "human_name": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/oauth2-sessions/030C1G60R30C1G60R30C1G60R3/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "OAuth 2.0 session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions": {
+      "get": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "List personal sessions",
+        "description": "Retrieve a list of personal sessions.\nNote that by default, all sessions, including revoked ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "operationId": "listPersonalSessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_user]",
+            "description": "Filter by owner user ID",
+            "schema": {
+              "description": "Filter by owner user ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[owner_client]",
+            "description": "Filter by owner `OAuth2` client ID",
+            "schema": {
+              "description": "Filter by owner `OAuth2` client ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[actor_user]",
+            "description": "Filter by actor user ID",
+            "schema": {
+              "description": "Filter by actor user ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[scope]",
+            "description": "Retrieve the items with the given scope",
+            "schema": {
+              "description": "Retrieve the items with the given scope",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[status]",
+            "description": "Filter by session status",
+            "schema": {
+              "description": "Filter by session status",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PersonalSessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires_before]",
+            "description": "Filter by access token expiry date",
+            "schema": {
+              "description": "Filter by access token expiry date",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires_after]",
+            "description": "Filter by access token expiry date",
+            "schema": {
+              "description": "Filter by access token expiry date",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[expires]",
+            "description": "Filter by whether the access token has an expiry time",
+            "schema": {
+              "description": "Filter by whether the access token has an expiry time",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of personal sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_PersonalSession"
+                },
+                "example": {
+                  "meta": {
+                    "count": 3
+                  },
+                  "data": [
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:00:00Z",
+                        "revoked_at": null,
+                        "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "owner_client_id": null,
+                        "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "human_name": "Alice's Development Token",
+                        "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                        "last_active_at": "2022-01-16T15:30:00Z",
+                        "last_active_ip": "192.168.1.100",
+                        "expires_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                        }
+                      }
+                    },
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0BJ6AC5HQ9X6H4RP5",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:01:00Z",
+                        "revoked_at": "2022-01-16T16:20:00Z",
+                        "owner_user_id": "01FSHN9AG0NZAA6S4AF7CTV32F",
+                        "owner_client_id": null,
+                        "actor_user_id": "01FSHN9AG0NZAA6S4AF7CTV32F",
+                        "human_name": "Bob's Mobile App",
+                        "scope": "openid",
+                        "last_active_at": "2022-01-16T16:03:20Z",
+                        "last_active_ip": "10.0.0.50",
+                        "expires_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0BJ6AC5HQ9X6H4RP5"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0BJ6AC5HQ9X6H4RP5"
+                        }
+                      }
+                    },
+                    {
+                      "type": "personal-session",
+                      "id": "01FSHN9AG0CJ6AC5HQ9X6H4RP6",
+                      "attributes": {
+                        "created_at": "2022-01-16T13:02:00Z",
+                        "revoked_at": null,
+                        "owner_user_id": null,
+                        "owner_client_id": "01FSHN9AG0DJ6AC5HQ9X6H4RP7",
+                        "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                        "human_name": "CI/CD Pipeline Token",
+                        "scope": "openid urn:mas:admin",
+                        "last_active_at": "2022-01-16T15:46:40Z",
+                        "last_active_ip": "203.0.113.10",
+                        "expires_at": "2022-01-24T04:36:40Z"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/personal-sessions/01FSHN9AG0CJ6AC5HQ9X6H4RP6"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01FSHN9AG0CJ6AC5HQ9X6H4RP6"
+                        }
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions?page[first]=3",
+                    "first": "/api/admin/v1/personal-sessions?page[first]=3",
+                    "last": "/api/admin/v1/personal-sessions?page[last]=3",
+                    "next": "/api/admin/v1/personal-sessions?page[after]=01FSHN9AG0CJ6AC5HQ9X6H4RP6&page[first]=3"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Client ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Create a new personal session with personal access token",
+        "operationId": "createPersonalSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Personal session and personal access token were created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid scope provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Invalid scope"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}": {
+      "get": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Get a personal session",
+        "operationId": "getPersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Personal session details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "personal-session",
+                    "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                    "attributes": {
+                      "created_at": "2022-01-16T13:00:00Z",
+                      "revoked_at": null,
+                      "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "owner_client_id": null,
+                      "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "human_name": "Alice's Development Token",
+                      "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                      "last_active_at": "2022-01-16T15:30:00Z",
+                      "last_active_ip": "192.168.1.100",
+                      "expires_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Personal session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}/revoke": {
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Revoke a personal session",
+        "operationId": "revokePersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Personal session was revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "personal-session",
+                    "id": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+                    "attributes": {
+                      "created_at": "2022-01-16T13:00:00Z",
+                      "revoked_at": null,
+                      "owner_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "owner_client_id": null,
+                      "actor_user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                      "human_name": "Alice's Development Token",
+                      "scope": "openid urn:matrix:org.matrix.msc2967.client:api:*",
+                      "last_active_at": "2022-01-16T15:30:00Z",
+                      "last_active_ip": "192.168.1.100",
+                      "expires_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/personal-sessions/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Personal session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Personal session already revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Personal session with ID 00000000000000000000000000 is already revoked"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/personal-sessions/{id}/regenerate": {
+      "post": {
+        "tags": [
+          "personal-session"
+        ],
+        "summary": "Regenerate a personal session by replacing its personal access token",
+        "operationId": "regeneratePersonalSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegeneratePersonalSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Personal session was regenerated and a personal access token was created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_PersonalSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User not found"
                     }
                   ]
                 }
@@ -957,12 +1882,55 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[admin]",
             "description": "Retrieve users with (or without) the `admin` flag set",
             "schema": {
               "description": "Retrieve users with (or without) the `admin` flag set",
               "type": [
                 "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[legacy-guest]",
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "schema": {
+              "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[search]",
+            "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
+            "schema": {
+              "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
+              "type": [
+                "string",
                 "null"
               ]
             },
@@ -1007,10 +1975,16 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -1021,10 +1995,16 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": null,
                         "deactivated_at": null,
-                        "admin": true
+                        "admin": true,
+                        "legacy_guest": false
                       },
                       "links": {
                         "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -1035,10 +2015,16 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "locked_at": "1970-01-01T00:00:00Z",
                         "deactivated_at": null,
-                        "admin": false
+                        "admin": false,
+                        "legacy_guest": true
                       },
                       "links": {
                         "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -1087,7 +2073,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1173,7 +2160,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1330,7 +2318,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1410,7 +2399,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": true
+                      "admin": true,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
@@ -1449,7 +2439,7 @@
           "user"
         ],
         "summary": "Deactivate a user",
-        "description": "Calling this endpoint will lock and deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
+        "description": "Calling this endpoint will deactivate the user, preventing them from doing any action.\nThis invalidates any existing session, and will ask the homeserver to make them leave all rooms.",
         "operationId": "deactivateUser",
         "parameters": [
           {
@@ -1463,6 +2453,15 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateUserRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "User was deactivated",
@@ -1480,7 +2479,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1488,6 +2488,77 @@
                   },
                   "links": {
                     "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3/deactivate"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User ID not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/users/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Reactivate a user",
+        "description": "Calling this endpoint will reactivate a deactivated user.\nThis DOES NOT unlock a locked user, which is still prevented from doing any action until it is explicitly unlocked.",
+        "operationId": "reactivateUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User was reactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_User"
+                },
+                "example": {
+                  "data": {
+                    "type": "user",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "username": "alice",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "locked_at": null,
+                      "deactivated_at": null,
+                      "admin": false,
+                      "legacy_guest": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/users/01040G2081040G2081040G2081/reactivate"
                   }
                 }
               }
@@ -1550,7 +2621,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": "1970-01-01T00:00:00Z",
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": true
                     },
                     "links": {
                       "self": "/api/admin/v1/users/030C1G60R30C1G60R30C1G60R3"
@@ -1589,6 +2661,7 @@
           "user"
         ],
         "summary": "Unlock a user",
+        "description": "Calling this endpoint will lift restrictions on user actions that had imposed by locking.\nThis DOES NOT reactivate a deactivated user, which will remain unavailable until it is explicitly reactivated.",
         "operationId": "unlockUser",
         "parameters": [
           {
@@ -1619,7 +2692,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "locked_at": null,
                       "deactivated_at": null,
-                      "admin": false
+                      "admin": false,
+                      "legacy_guest": false
                     },
                     "links": {
                       "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
@@ -1727,6 +2801,23 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -1779,6 +2870,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-emails/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     }
                   ],
@@ -2096,6 +3192,23 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -2155,6 +3268,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -2170,6 +3288,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -2185,6 +3308,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -2288,6 +3416,94 @@
         }
       }
     },
+    "/api/admin/v1/user-sessions/{id}/finish": {
+      "post": {
+        "tags": [
+          "user-session"
+        ],
+        "summary": "Finish a user session",
+        "description": "Calling this endpoint will finish the user session, preventing any further use.",
+        "operationId": "finishUserSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User session was finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSession"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session",
+                    "id": "030C1G60R30C1G60R30C1G60R3",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "finished_at": "1970-01-01T00:00:00Z",
+                      "user_id": "040G2081040G2081040G208104",
+                      "user_agent": "Mozilla/5.0",
+                      "last_active_at": "1970-01-01T00:00:00Z",
+                      "last_active_ip": "127.0.0.1"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-sessions/030C1G60R30C1G60R30C1G60R3/finish"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is already finished",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 is already finished"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session with ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/user-registration-tokens": {
       "get": {
         "tags": [
@@ -2357,6 +3573,23 @@
               ],
               "format": "uint",
               "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "style": "form"
           },
@@ -2441,6 +3674,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -2458,6 +3696,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     }
                   ],
@@ -2933,6 +4176,23 @@
           },
           {
             "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[user]",
             "description": "Retrieve the items for the given user",
             "schema": {
@@ -3004,6 +4264,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
                       }
                     },
                     {
@@ -3018,6 +4283,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
                       }
                     },
                     {
@@ -3032,6 +4302,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-links/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
                       }
                     }
                   ],
@@ -3285,6 +4560,255 @@
           }
         }
       }
+    },
+    "/api/admin/v1/upstream-oauth-providers": {
+      "get": {
+        "tags": [
+          "upstream-oauth-provider"
+        ],
+        "summary": "List upstream OAuth 2.0 providers",
+        "operationId": "listUpstreamOAuthProviders",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[enabled]",
+            "description": "Retrieve providers that are (or are not) enabled",
+            "schema": {
+              "description": "Retrieve providers that are (or are not) enabled",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of upstream OAuth 2.0 providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_UpstreamOAuthProvider"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "issuer": "https://accounts.google.com",
+                        "human_name": "Google",
+                        "brand_name": "google",
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "issuer": "https://appleid.apple.com",
+                        "human_name": "Apple ID",
+                        "brand_name": "apple",
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": "1970-01-01T00:00:00Z"
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
+                      }
+                    },
+                    {
+                      "type": "upstream-oauth-provider",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "issuer": null,
+                        "human_name": "Custom OAuth Provider",
+                        "brand_name": null,
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "disabled_at": null
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-providers?page[first]=3",
+                    "first": "/api/admin/v1/upstream-oauth-providers?page[first]=3",
+                    "last": "/api/admin/v1/upstream-oauth-providers?page[last]=3",
+                    "next": "/api/admin/v1/upstream-oauth-providers?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/upstream-oauth-providers/{id}": {
+      "get": {
+        "tags": [
+          "upstream-oauth-provider"
+        ],
+        "summary": "Get upstream OAuth provider",
+        "operationId": "getUpstreamOAuthProvider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The upstream OAuth provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UpstreamOAuthProvider"
+                },
+                "example": {
+                  "data": {
+                    "type": "upstream-oauth-provider",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "issuer": "https://accounts.google.com",
+                      "human_name": "Google",
+                      "brand_name": "google",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "disabled_at": null
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Provider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3316,6 +4840,88 @@
       }
     },
     "schemas": {
+      "SiteConfig": {
+        "type": "object",
+        "properties": {
+          "server_name": {
+            "description": "The Matrix server name for which this instance is configured",
+            "type": "string"
+          },
+          "password_login_enabled": {
+            "description": "Whether password login is enabled.",
+            "type": "boolean"
+          },
+          "password_registration_enabled": {
+            "description": "Whether password registration is enabled.",
+            "type": "boolean"
+          },
+          "password_registration_email_required": {
+            "description": "Whether a valid email address is required for password registrations.",
+            "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.",
+            "type": "boolean"
+          },
+          "email_change_allowed": {
+            "description": "Whether users can change their email.",
+            "type": "boolean"
+          },
+          "displayname_change_allowed": {
+            "description": "Whether users can change their display name.",
+            "type": "boolean"
+          },
+          "password_change_allowed": {
+            "description": "Whether users can change their password.",
+            "type": "boolean"
+          },
+          "account_recovery_allowed": {
+            "description": "Whether users can recover their account via email.",
+            "type": "boolean"
+          },
+          "account_deactivation_allowed": {
+            "description": "Whether users can delete their own account.",
+            "type": "boolean"
+          },
+          "captcha_enabled": {
+            "description": "Whether CAPTCHA during registration is enabled.",
+            "type": "boolean"
+          },
+          "minimum_password_complexity": {
+            "description": "Minimum password complexity, between 0 and 4.\n This is a score from zxcvbn.",
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0,
+            "maximum": 4
+          }
+        },
+        "required": [
+          "server_name",
+          "password_login_enabled",
+          "password_registration_enabled",
+          "password_registration_email_required",
+          "registration_token_required",
+          "email_change_allowed",
+          "displayname_change_allowed",
+          "password_change_allowed",
+          "account_recovery_allowed",
+          "account_deactivation_allowed",
+          "captcha_enabled",
+          "minimum_password_complexity"
+        ]
+      },
+      "Version": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "description": "The semver version of the app",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
       "PaginationParams": {
         "type": "object",
         "properties": {
@@ -3360,6 +4966,20 @@
             "format": "uint",
             "minimum": 1,
             "nullable": true
+          },
+          "count": {
+            "description": "Include the total number of items. Defaults to `true`.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IncludeCount"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         }
       },
@@ -3369,6 +4989,31 @@
         "type": "string",
         "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$",
         "example": "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+      },
+      "IncludeCount": {
+        "oneOf": [
+          {
+            "description": "Include the total number of items (default)",
+            "type": "string",
+            "enum": [
+              "true"
+            ]
+          },
+          {
+            "description": "Do not include the total number of items",
+            "type": "string",
+            "enum": [
+              "false"
+            ]
+          },
+          {
+            "description": "Only include the total number of items, skip the items themselves",
+            "type": "string",
+            "enum": [
+              "only"
+            ]
+          }
+        ]
       },
       "CompatSessionFilter": {
         "type": "object",
@@ -3430,9 +5075,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -3441,7 +5092,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_CompatSession"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -3453,8 +5105,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -3465,12 +5115,10 @@
             "description": "The total number of results",
             "type": "integer",
             "format": "uint",
-            "minimum": 0
+            "minimum": 0,
+            "nullable": true
           }
-        },
-        "required": [
-          "count"
-        ]
+        }
       },
       "SingleResource_for_CompatSession": {
         "description": "A single resource, with its type, ID, attributes and related links",
@@ -3501,6 +5149,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -3607,6 +5269,39 @@
           "self"
         ]
       },
+      "SingleResourceMeta": {
+        "description": "Metadata associated with a resource",
+        "type": "object",
+        "properties": {
+          "page": {
+            "description": "Information about the pagination of the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMetaPage"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "SingleResourceMetaPage": {
+        "description": "Pagination metadata for a resource",
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "description": "The cursor of this resource in the paginated result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cursor"
+        ]
+      },
       "PaginationLinks": {
         "description": "Related links",
         "type": "object",
@@ -3617,11 +5312,13 @@
           },
           "first": {
             "description": "The link to the first page of results",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "last": {
             "description": "The link to the last page of results",
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "next": {
             "description": "The link to the next page of results\n\n Only present if there is a next page",
@@ -3635,9 +5332,7 @@
           }
         },
         "required": [
-          "self",
-          "first",
-          "last"
+          "self"
         ]
       },
       "ErrorResponse": {
@@ -3804,9 +5499,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -3815,7 +5516,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -3827,8 +5529,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -3861,6 +5561,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -3972,6 +5686,345 @@
           "links"
         ]
       },
+      "PersonalSessionFilter": {
+        "type": "object",
+        "properties": {
+          "filter[owner_user]": {
+            "description": "Filter by owner user ID",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "filter[owner_client]": {
+            "description": "Filter by owner `OAuth2` client ID",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "filter[actor_user]": {
+            "description": "Filter by actor user ID",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "filter[scope]": {
+            "description": "Retrieve the items with the given scope",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "filter[status]": {
+            "description": "Filter by session status",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonalSessionStatus"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "filter[expires_before]": {
+            "description": "Filter by access token expiry date",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "filter[expires_after]": {
+            "description": "Filter by access token expiry date",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "filter[expires]": {
+            "description": "Filter by whether the access token has an expiry time",
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "PersonalSessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "revoked"
+        ]
+      },
+      "PaginatedResponse_for_PersonalSession": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_PersonalSession"
+            },
+            "nullable": true
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
+          }
+        },
+        "required": [
+          "links"
+        ]
+      },
+      "SingleResource_for_PersonalSession": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalSession"
+              }
+            ]
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
+      },
+      "PersonalSession": {
+        "description": "A personal session (session using personal access tokens)",
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "description": "When the session was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "revoked_at": {
+            "description": "When the session was revoked, if applicable",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "owner_user_id": {
+            "description": "The ID of the user who owns this session (if user-owned)",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "owner_client_id": {
+            "description": "The ID of the `OAuth2` client that owns this session (if client-owned)",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "actor_user_id": {
+            "description": "The ID of the user that the session acts on behalf of",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "human_name": {
+            "description": "Human-readable name for the session",
+            "type": "string"
+          },
+          "scope": {
+            "description": "`OAuth2` scopes for this session",
+            "type": "string"
+          },
+          "last_active_at": {
+            "description": "When the session was last active",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_active_ip": {
+            "description": "IP address of last activity",
+            "type": "string",
+            "format": "ip",
+            "nullable": true
+          },
+          "expires_at": {
+            "description": "When the current token for this session expires.\n The session will need to be regenerated, producing a new access token,\n after this time.\n None if the current token won't expire or if the session is revoked.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "access_token": {
+            "description": "The actual access token (only returned on creation)",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "created_at",
+          "actor_user_id",
+          "human_name",
+          "scope"
+        ]
+      },
+      "CreatePersonalSessionRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/personal-sessions` endpoint",
+        "type": "object",
+        "properties": {
+          "actor_user_id": {
+            "description": "The user this session will act on behalf of",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "human_name": {
+            "description": "Human-readable name for the session",
+            "type": "string"
+          },
+          "scope": {
+            "description": "`OAuth2` scopes for this session",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "required": [
+          "actor_user_id",
+          "human_name",
+          "scope"
+        ]
+      },
+      "SingleResponse_for_PersonalSession": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_PersonalSession"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
+      },
+      "RegeneratePersonalSessionRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/personal-sessions/{id}/regenerate` endpoint",
+        "type": "object",
+        "properties": {
+          "expires_in": {
+            "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0,
+            "nullable": true
+          }
+        }
+      },
       "SetPolicyDataRequest": {
         "title": "JSON payload for the `POST /api/admin/v1/policy-data`",
         "type": "object",
@@ -4035,6 +6088,20 @@
                 "$ref": "#/components/schemas/SelfLinks"
               }
             ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
           }
         },
         "required": [
@@ -4070,6 +6137,16 @@
             "type": "boolean",
             "nullable": true
           },
+          "filter[legacy-guest]": {
+            "description": "Retrieve users with (or without) the `legacy_guest` flag set",
+            "type": "boolean",
+            "nullable": true
+          },
+          "filter[search]": {
+            "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
+            "type": "string",
+            "nullable": true
+          },
           "filter[status]": {
             "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
             "anyOf": [
@@ -4100,9 +6177,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -4111,7 +6194,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_User"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4123,8 +6207,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -4157,6 +6239,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -4196,12 +6292,17 @@
           "admin": {
             "description": "Whether the user can request admin privileges.",
             "type": "boolean"
+          },
+          "legacy_guest": {
+            "description": "Whether the user was a guest before migrating to MAS,",
+            "type": "boolean"
           }
         },
         "required": [
           "username",
           "created_at",
-          "admin"
+          "admin",
+          "legacy_guest"
         ]
       },
       "AddUserRequest": {
@@ -4282,6 +6383,17 @@
           "admin"
         ]
       },
+      "DeactivateUserRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/users/:id/deactivate` endpoint",
+        "type": "object",
+        "properties": {
+          "skip_erase": {
+            "description": "Whether to skip requesting the homeserver to GDPR-erase the user upon\n deactivation.",
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "UserEmailFilter": {
         "type": "object",
         "properties": {
@@ -4312,9 +6424,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -4323,7 +6441,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserEmail"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4335,8 +6454,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -4369,6 +6486,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -4493,9 +6624,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -4504,7 +6641,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserSession"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4516,8 +6654,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -4550,6 +6686,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -4654,9 +6804,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -4665,7 +6821,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserRegistrationToken"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4677,8 +6834,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -4711,6 +6866,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -4881,9 +7050,15 @@
         "properties": {
           "meta": {
             "description": "Response metadata",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           },
@@ -4892,7 +7067,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
-            }
+            },
+            "nullable": true
           },
           "links": {
             "description": "Related links",
@@ -4904,8 +7080,6 @@
           }
         },
         "required": [
-          "meta",
-          "data",
           "links"
         ]
       },
@@ -4938,6 +7112,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
               }
             ]
           }
@@ -5047,6 +7235,160 @@
           "data",
           "links"
         ]
+      },
+      "UpstreamOAuthProviderFilter": {
+        "type": "object",
+        "properties": {
+          "filter[enabled]": {
+            "description": "Retrieve providers that are (or are not) enabled",
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedResponse_for_UpstreamOAuthProvider": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
+            },
+            "nullable": true
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
+          }
+        },
+        "required": [
+          "links"
+        ]
+      },
+      "SingleResource_for_UpstreamOAuthProvider": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpstreamOAuthProvider"
+              }
+            ]
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "nullable": true,
+                "enum": [
+                  null
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
+      },
+      "UpstreamOAuthProvider": {
+        "description": "An upstream OAuth 2.0 provider",
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "description": "The OIDC issuer of the provider",
+            "type": "string",
+            "nullable": true
+          },
+          "human_name": {
+            "description": "A human-readable name for the provider",
+            "type": "string",
+            "nullable": true
+          },
+          "brand_name": {
+            "description": "A brand identifier, e.g. \"apple\" or \"google\"",
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "description": "When the provider was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "disabled_at": {
+            "description": "When the provider was disabled. If null, the provider is enabled.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "created_at"
+        ]
+      },
+      "SingleResponse_for_UpstreamOAuthProvider": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
       }
     }
   },
@@ -5063,6 +7405,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "server",
+      "description": "Information about the server"
+    },
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"
@@ -5094,6 +7440,10 @@
     {
       "name": "upstream-oauth-link",
       "description": "Manage links between local users and identities from upstream OAuth 2.0 providers"
+    },
+    {
+      "name": "upstream-oauth-provider",
+      "description": "Manage upstream OAuth 2.0 providers"
     }
   ]
 }

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::LazyLock;
 
@@ -11,9 +11,9 @@ use axum_extra::typed_header::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::TokenType;
+use mas_data_model::{BoxClock, BoxRng, Clock, TokenType};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     compat::{CompatAccessTokenRepository, CompatSessionRepository},
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
 };

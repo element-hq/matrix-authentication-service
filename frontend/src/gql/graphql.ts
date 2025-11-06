@@ -2,7 +2,7 @@
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { graphql, type GraphQLResponseResolver, type RequestHandlerOptions } from 'msw'
 export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
+export type InputMaybe<T> = T | null | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
@@ -604,7 +604,7 @@ export type Mutation = {
   setPrimaryEmail: SetPrimaryEmailPayload;
   /** Start a new email authentication flow */
   startEmailAuthentication: StartEmailAuthenticationPayload;
-  /** Unlock a user. This is only available to administrators. */
+  /** Unlock and reactivate a user. This is only available to administrators. */
   unlockUser: UnlockUserPayload;
 };
 
@@ -1838,10 +1838,13 @@ export type UserEmailListQueryVariables = Exact<{
 }>;
 
 
-export type UserEmailListQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
-          { __typename?: 'UserEmail' }
-          & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
-        ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } };
+export type UserEmailListQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | { __typename: 'User', emails: { __typename?: 'UserEmailConnection', totalCount: number, edges: Array<{ __typename?: 'UserEmailEdge', cursor: string, node: (
+            { __typename?: 'UserEmail' }
+            & { ' $fragmentRefs'?: { 'UserEmail_EmailFragment': UserEmail_EmailFragment } }
+          ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } }
+   };
 
 export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boolean } & { ' $fragmentName'?: 'UserEmailList_UserFragment' };
 
@@ -1852,10 +1855,14 @@ export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: st
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserProfileQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: (
-      { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
-      & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
-    ) } | { __typename: 'Oauth2Session' }, siteConfig: (
+export type UserProfileQuery = { __typename?: 'Query', viewerSession:
+    | { __typename: 'Anonymous' }
+    | { __typename: 'BrowserSession', id: string, user: (
+        { __typename?: 'User', hasPassword: boolean, emails: { __typename?: 'UserEmailConnection', totalCount: number } }
+        & { ' $fragmentRefs'?: { 'AddEmailForm_UserFragment': AddEmailForm_UserFragment;'UserEmailList_UserFragment': UserEmailList_UserFragment;'AccountDeleteButton_UserFragment': AccountDeleteButton_UserFragment } }
+      ) }
+    | { __typename: 'Oauth2Session' }
+  , siteConfig: (
     { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean, accountDeactivationAllowed: boolean }
     & { ' $fragmentRefs'?: { 'AddEmailForm_SiteConfigFragment': AddEmailForm_SiteConfigFragment;'UserEmailList_SiteConfigFragment': UserEmailList_SiteConfigFragment;'PasswordChange_SiteConfigFragment': PasswordChange_SiteConfigFragment;'AccountDeleteButton_SiteConfigFragment': AccountDeleteButton_SiteConfigFragment } }
   ) };
@@ -1874,18 +1881,25 @@ export type BrowserSessionListQueryVariables = Exact<{
 }>;
 
 
-export type BrowserSessionListQuery = { __typename?: 'Query', viewerSession: { __typename: 'Anonymous' } | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number, edges: Array<{ __typename?: 'BrowserSessionEdge', cursor: string, node: (
-            { __typename?: 'BrowserSession', id: string }
-            & { ' $fragmentRefs'?: { 'BrowserSession_SessionFragment': BrowserSession_SessionFragment } }
-          ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } } | { __typename: 'Oauth2Session' } };
+export type BrowserSessionListQuery = { __typename?: 'Query', viewerSession:
+    | { __typename: 'Anonymous' }
+    | { __typename: 'BrowserSession', id: string, user: { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number, edges: Array<{ __typename?: 'BrowserSessionEdge', cursor: string, node: (
+              { __typename?: 'BrowserSession', id: string }
+              & { ' $fragmentRefs'?: { 'BrowserSession_SessionFragment': BrowserSession_SessionFragment } }
+            ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } }
+    | { __typename: 'Oauth2Session' }
+   };
 
 export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SessionsOverviewQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
-    { __typename: 'User', id: string }
-    & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
-  ) };
+export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | (
+      { __typename: 'User', id: string }
+      & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
+    )
+   };
 
 export type AppSessionsListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1896,21 +1910,30 @@ export type AppSessionsListQueryVariables = Exact<{
 }>;
 
 
-export type AppSessionsListQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node: (
-          { __typename: 'CompatSession' }
-          & { ' $fragmentRefs'?: { 'CompatSession_SessionFragment': CompatSession_SessionFragment } }
-        ) | (
-          { __typename: 'Oauth2Session' }
-          & { ' $fragmentRefs'?: { 'OAuth2Session_SessionFragment': OAuth2Session_SessionFragment } }
-        ) }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } } };
+export type AppSessionsListQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node:
+            | (
+              { __typename: 'CompatSession' }
+              & { ' $fragmentRefs'?: { 'CompatSession_SessionFragment': CompatSession_SessionFragment } }
+            )
+            | (
+              { __typename: 'Oauth2Session' }
+              & { ' $fragmentRefs'?: { 'OAuth2Session_SessionFragment': OAuth2Session_SessionFragment } }
+            )
+           }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } }
+   };
 
 export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous' } | (
-    { __typename: 'User' }
-    & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
-  ), siteConfig: (
+export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | (
+      { __typename: 'User' }
+      & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
+    )
+  , siteConfig: (
     { __typename?: 'SiteConfig', planManagementIframeUri?: string | null }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
@@ -1928,7 +1951,10 @@ export type OAuth2ClientQuery = { __typename?: 'Query', oauth2Client?: (
 export type CurrentViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CurrentViewerQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string } };
+export type CurrentViewerQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous', id: string }
+    | { __typename: 'User', id: string }
+   };
 
 export type DeviceRedirectQueryVariables = Exact<{
   deviceId: Scalars['String']['input'];
@@ -1936,7 +1962,10 @@ export type DeviceRedirectQueryVariables = Exact<{
 }>;
 
 
-export type DeviceRedirectQuery = { __typename?: 'Query', session?: { __typename: 'CompatSession', id: string } | { __typename: 'Oauth2Session', id: string } | null };
+export type DeviceRedirectQuery = { __typename?: 'Query', session?:
+    | { __typename: 'CompatSession', id: string }
+    | { __typename: 'Oauth2Session', id: string }
+   | null };
 
 export type VerifyEmailQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1973,7 +2002,10 @@ export type ChangePasswordMutation = { __typename?: 'Mutation', setPassword: { _
 export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PasswordChangeQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string }, siteConfig: (
+export type PasswordChangeQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous', id: string }
+    | { __typename: 'User', id: string }
+  , siteConfig: (
     { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
   ) };
@@ -2025,22 +2057,41 @@ export type SessionDetailQueryVariables = Exact<{
 }>;
 
 
-export type SessionDetailQuery = { __typename?: 'Query', viewerSession: { __typename?: 'Anonymous', id: string } | { __typename?: 'BrowserSession', id: string } | { __typename?: 'Oauth2Session', id: string }, node?: { __typename: 'Anonymous', id: string } | { __typename: 'Authentication', id: string } | (
-    { __typename: 'BrowserSession', id: string }
-    & { ' $fragmentRefs'?: { 'BrowserSession_DetailFragment': BrowserSession_DetailFragment } }
-  ) | (
-    { __typename: 'CompatSession', id: string }
-    & { ' $fragmentRefs'?: { 'CompatSession_DetailFragment': CompatSession_DetailFragment } }
-  ) | { __typename: 'CompatSsoLogin', id: string } | { __typename: 'Oauth2Client', id: string } | (
-    { __typename: 'Oauth2Session', id: string }
-    & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
-  ) | { __typename: 'SiteConfig', id: string } | { __typename: 'UpstreamOAuth2Link', id: string } | { __typename: 'UpstreamOAuth2Provider', id: string } | { __typename: 'User', id: string } | { __typename: 'UserEmail', id: string } | { __typename: 'UserEmailAuthentication', id: string } | { __typename: 'UserRecoveryTicket', id: string } | null };
+export type SessionDetailQuery = { __typename?: 'Query', viewerSession:
+    | { __typename?: 'Anonymous', id: string }
+    | { __typename?: 'BrowserSession', id: string }
+    | { __typename?: 'Oauth2Session', id: string }
+  , node?:
+    | { __typename: 'Anonymous', id: string }
+    | { __typename: 'Authentication', id: string }
+    | (
+      { __typename: 'BrowserSession', id: string }
+      & { ' $fragmentRefs'?: { 'BrowserSession_DetailFragment': BrowserSession_DetailFragment } }
+    )
+    | (
+      { __typename: 'CompatSession', id: string }
+      & { ' $fragmentRefs'?: { 'CompatSession_DetailFragment': CompatSession_DetailFragment } }
+    )
+    | { __typename: 'CompatSsoLogin', id: string }
+    | { __typename: 'Oauth2Client', id: string }
+    | (
+      { __typename: 'Oauth2Session', id: string }
+      & { ' $fragmentRefs'?: { 'OAuth2Session_DetailFragment': OAuth2Session_DetailFragment } }
+    )
+    | { __typename: 'SiteConfig', id: string }
+    | { __typename: 'UpstreamOAuth2Link', id: string }
+    | { __typename: 'UpstreamOAuth2Provider', id: string }
+    | { __typename: 'User', id: string }
+    | { __typename: 'UserEmail', id: string }
+    | { __typename: 'UserEmailAuthentication', id: string }
+    | { __typename: 'UserRecoveryTicket', id: string }
+   | null };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
 {
-  __apiType?: DocumentTypeDecoration<TResult, TVariables>['__apiType'];
+  __apiType?: NonNullable<DocumentTypeDecoration<TResult, TVariables>['__apiType']>;
   private value: string;
   public __meta__?: Record<string, any> | undefined;
 
@@ -2050,7 +2101,7 @@ export class TypedDocumentString<TResult, TVariables>
     this.__meta__ = __meta__;
   }
 
-  toString(): string & DocumentTypeDecoration<TResult, TVariables> {
+  override toString(): string & DocumentTypeDecoration<TResult, TVariables> {
     return this.value;
   }
 }

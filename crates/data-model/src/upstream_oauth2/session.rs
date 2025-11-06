@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -19,6 +19,7 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         completed_at: DateTime<Utc>,
         link_id: Ulid,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     },
@@ -27,6 +28,7 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         consumed_at: DateTime<Utc>,
         link_id: Ulid,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     },
@@ -35,6 +37,7 @@ pub enum UpstreamOAuthAuthorizationSessionState {
         consumed_at: Option<DateTime<Utc>>,
         unlinked_at: DateTime<Utc>,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
     },
 }
 
@@ -52,6 +55,7 @@ impl UpstreamOAuthAuthorizationSessionState {
         completed_at: DateTime<Utc>,
         link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     ) -> Result<Self, InvalidTransitionError> {
@@ -60,6 +64,7 @@ impl UpstreamOAuthAuthorizationSessionState {
                 completed_at,
                 link_id: link.id,
                 id_token,
+                id_token_claims,
                 extra_callback_parameters,
                 userinfo,
             }),
@@ -83,6 +88,7 @@ impl UpstreamOAuthAuthorizationSessionState {
                 completed_at,
                 link_id,
                 id_token,
+                id_token_claims,
                 extra_callback_parameters,
                 userinfo,
             } => Ok(Self::Consumed {
@@ -90,6 +96,7 @@ impl UpstreamOAuthAuthorizationSessionState {
                 link_id,
                 consumed_at,
                 id_token,
+                id_token_claims,
                 extra_callback_parameters,
                 userinfo,
             }),
@@ -143,6 +150,29 @@ impl UpstreamOAuthAuthorizationSessionState {
             Self::Completed { id_token, .. }
             | Self::Consumed { id_token, .. }
             | Self::Unlinked { id_token, .. } => id_token.as_deref(),
+        }
+    }
+
+    /// Get the ID token claims for the upstream OAuth 2.0 authorization
+    /// session.
+    ///
+    /// Returns `None` if the upstream OAuth 2.0 authorization session state is
+    /// not [`Pending`].
+    ///
+    /// [`Pending`]: UpstreamOAuthAuthorizationSessionState::Pending
+    #[must_use]
+    pub fn id_token_claims(&self) -> Option<&serde_json::Value> {
+        match self {
+            Self::Pending => None,
+            Self::Completed {
+                id_token_claims, ..
+            }
+            | Self::Consumed {
+                id_token_claims, ..
+            }
+            | Self::Unlinked {
+                id_token_claims, ..
+            } => id_token_claims.as_ref(),
         }
     }
 
@@ -277,6 +307,7 @@ impl UpstreamOAuthAuthorizationSession {
         completed_at: DateTime<Utc>,
         link: &UpstreamOAuthLink,
         id_token: Option<String>,
+        id_token_claims: Option<serde_json::Value>,
         extra_callback_parameters: Option<serde_json::Value>,
         userinfo: Option<serde_json::Value>,
     ) -> Result<Self, InvalidTransitionError> {
@@ -284,6 +315,7 @@ impl UpstreamOAuthAuthorizationSession {
             completed_at,
             link,
             id_token,
+            id_token_claims,
             extra_callback_parameters,
             userinfo,
         )?;

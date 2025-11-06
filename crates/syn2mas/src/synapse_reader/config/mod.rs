@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 mod oidc;
 
@@ -94,7 +94,9 @@ impl Config {
     ///
     /// - If there is a problem reading any of the files.
     /// - If the configuration is not valid.
-    pub fn load(files: &[Utf8PathBuf]) -> Result<Config, figment::Error> {
+    pub fn load(
+        files: &[Utf8PathBuf],
+    ) -> Result<Config, Box<dyn std::error::Error + Send + Sync + 'static>> {
         let mut figment = figment::Figment::new();
         for file in files {
             // TODO this is not exactly correct behaviour — Synapse does not merge anything
@@ -103,7 +105,8 @@ impl Config {
             // https://github.com/element-hq/synapse/blob/develop/synapse/config/_base.py?rgh-link-date=2025-01-20T17%3A02%3A56Z#L870
             figment = figment.merge(Yaml::file(file));
         }
-        figment.extract::<Config>()
+        let config = figment.extract::<Config>()?;
+        Ok(config)
     }
 
     /// Returns a map of all OIDC providers from the Synapse configuration.
@@ -117,14 +120,14 @@ impl Config {
     pub fn all_oidc_providers(&self) -> BTreeMap<String, OidcProvider> {
         let mut out = BTreeMap::new();
 
-        if let Some(provider) = &self.oidc_config {
-            if provider.has_required_fields() {
-                let mut provider = provider.clone();
-                // The legacy configuration has an implied IdP ID of `oidc`.
-                let idp_id = provider.idp_id.take().unwrap_or("oidc".to_owned());
-                provider.idp_id = Some(idp_id.clone());
-                out.insert(idp_id, provider);
-            }
+        if let Some(provider) = &self.oidc_config
+            && provider.has_required_fields()
+        {
+            let mut provider = provider.clone();
+            // The legacy configuration has an implied IdP ID of `oidc`.
+            let idp_id = provider.idp_id.take().unwrap_or("oidc".to_owned());
+            provider.idp_id = Some(idp_id.clone());
+            out.insert(idp_id, provider);
         }
 
         for provider in &self.oidc_providers {

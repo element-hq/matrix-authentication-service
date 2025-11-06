@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{collections::HashMap, error::Error};
 
@@ -16,9 +16,9 @@ use axum::{
 use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
 use headers::{Authorization, Header, HeaderMapExt, HeaderName, authorization::Bearer};
 use http::{HeaderMap, HeaderValue, Request, StatusCode, header::WWW_AUTHENTICATE};
-use mas_data_model::Session;
+use mas_data_model::{Clock, Session};
 use mas_storage::{
-    Clock, RepositoryAccess,
+    RepositoryAccess,
     oauth2::{OAuth2AccessTokenRepository, OAuth2SessionRepository},
 };
 use serde::{Deserialize, de::DeserializeOwned};

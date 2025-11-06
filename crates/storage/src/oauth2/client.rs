@@ -1,13 +1,13 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use async_trait::async_trait;
-use mas_data_model::Client;
+use mas_data_model::{Client, Clock};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
@@ -15,16 +15,16 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
-/// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
+/// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
 /// storage backend
 #[async_trait]
 pub trait OAuth2ClientRepository: Send + Sync {
     /// The error type returned by the repository
     type Error;
 
-    /// Lookup an OAuth2 client by its ID
+    /// Lookup an OAuth client by its ID
     ///
     /// Returns `None` if the client does not exist
     ///
@@ -37,7 +37,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Client>, Self::Error>;
 
-    /// Find an OAuth2 client by its client ID
+    /// Find an OAuth client by its client ID
     async fn find_by_client_id(&mut self, client_id: &str) -> Result<Option<Client>, Self::Error> {
         let Ok(id) = client_id.parse() else {
             return Ok(None);
@@ -45,7 +45,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         self.lookup(id).await
     }
 
-    /// Find an OAuth2 client by its metadata digest
+    /// Find an OAuth client by its metadata digest
     ///
     /// Returns `None` if the client does not exist
     ///
@@ -62,7 +62,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         digest: &str,
     ) -> Result<Option<Client>, Self::Error>;
 
-    /// Load a batch of OAuth2 clients by their IDs
+    /// Load a batch of OAuth clients by their IDs
     ///
     /// Returns a map of client IDs to clients. If a client does not exist, it
     /// is not present in the map.
@@ -79,7 +79,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         ids: BTreeSet<Ulid>,
     ) -> Result<BTreeMap<Ulid, Client>, Self::Error>;
 
-    /// Add a new OAuth2 client
+    /// Add a new OAuth client
     ///
     /// Returns the client that was added
     ///

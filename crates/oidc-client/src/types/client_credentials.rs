@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Types and methods for client credentials.
 
@@ -130,7 +130,6 @@ impl ClientCredentials {
 
     /// Apply these [`ClientCredentials`] to the given request with the given
     /// form.
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn authenticated_form<T: Serialize>(
         &self,
         request: reqwest::RequestBuilder,
@@ -141,7 +140,7 @@ impl ClientCredentials {
         let request = match self {
             ClientCredentials::None { client_id } => request.form(&RequestWithClientCredentials {
                 body: form,
-                client_id,
+                client_id: Some(client_id),
                 client_secret: None,
                 client_assertion: None,
                 client_assertion_type: None,
@@ -159,7 +158,7 @@ impl ClientCredentials {
                     .basic_auth(username, Some(password))
                     .form(&RequestWithClientCredentials {
                         body: form,
-                        client_id,
+                        client_id: None,
                         client_secret: None,
                         client_assertion: None,
                         client_assertion_type: None,
@@ -171,7 +170,7 @@ impl ClientCredentials {
                 client_secret,
             } => request.form(&RequestWithClientCredentials {
                 body: form,
-                client_id,
+                client_id: Some(client_id),
                 client_secret: Some(client_secret),
                 client_assertion: None,
                 client_assertion_type: None,
@@ -195,7 +194,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: None,
                     client_secret: None,
                     client_assertion: Some(jwt.as_str()),
                     client_assertion_type: Some(JwtBearerClientAssertionType),
@@ -228,7 +227,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: None,
                     client_secret: None,
                     client_assertion: Some(client_assertion.as_str()),
                     client_assertion_type: Some(JwtBearerClientAssertionType),
@@ -260,7 +259,7 @@ impl ClientCredentials {
 
                 request.form(&RequestWithClientCredentials {
                     body: form,
-                    client_id,
+                    client_id: Some(client_id),
                     client_secret: Some(client_secret.as_str()),
                     client_assertion: None,
                     client_assertion_type: None,
@@ -359,7 +358,8 @@ struct RequestWithClientCredentials<'a, T> {
     #[serde(flatten)]
     body: T,
 
-    client_id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_id: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     client_secret: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]

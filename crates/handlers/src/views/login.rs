@@ -1,28 +1,28 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::{Arc, LazyLock};
 
 use axum::{
-    extract::{Form, Query, State},
+    extract::{Form, State},
     response::{Html, IntoResponse, Response},
 };
-use axum_extra::typed_header::TypedHeader;
+use axum_extra::{extract::Query, typed_header::TypedHeader};
 use hyper::StatusCode;
 use mas_axum_utils::{
     InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::oauth2::LoginHint;
+use mas_data_model::{BoxClock, BoxRng, Clock, oauth2::LoginHint};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
 };
@@ -38,7 +38,7 @@ use zeroize::Zeroizing;
 use super::shared::OptionalPostAuthAction;
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
-    passwords::PasswordManager,
+    passwords::{PasswordManager, PasswordVerificationResult},
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
@@ -123,6 +123,7 @@ pub(crate) async fn get(
         &mut rng,
         &templates,
         &homeserver,
+        &site_config,
     )
     .await
 }
@@ -166,6 +167,7 @@ pub(crate) async fn post(
     }
 
     if !form_state.is_valid() {
+        tracing::warn!("Invalid login form: {form_state:?}");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
             locale,
@@ -177,6 +179,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     }
@@ -187,8 +190,9 @@ pub(crate) async fn post(
         .unwrap_or(&form.username);
 
     // First, lookup the user
-    let Some(user) = get_user_by_email_or_by_username(site_config, &mut repo, username).await?
+    let Some(user) = get_user_by_email_or_by_username(&site_config, &mut repo, username).await?
     else {
+        tracing::warn!(username, "User not found");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -201,13 +205,14 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     };
 
     // Check the rate limit
     if let Err(e) = limiter.check_password(requester, &user) {
-        tracing::warn!(error = &e as &dyn std::error::Error);
+        tracing::warn!(error = &e as &dyn std::error::Error, "ratelimit exceeded");
         let form_state = form_state.with_error_on_form(FormError::RateLimitExceeded);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -220,6 +225,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     }
@@ -228,6 +234,7 @@ pub(crate) async fn post(
     let Some(user_password) = repo.user_password().active(&user).await? else {
         // There is no password for this user, but we don't want to disclose that. Show
         // a generic 'invalid credentials' error instead
+        tracing::warn!(username, "No password for user");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         return render(
@@ -240,6 +247,7 @@ pub(crate) async fn post(
             &mut rng,
             &templates,
             &homeserver,
+            &site_config,
         )
         .await;
     };
@@ -256,7 +264,7 @@ pub(crate) async fn post(
         )
         .await
     {
-        Ok(Some((version, new_password_hash))) => {
+        Ok(PasswordVerificationResult::Success(Some((version, new_password_hash)))) => {
             // Save the upgraded password
             repo.user_password()
                 .add(
@@ -269,10 +277,11 @@ pub(crate) async fn post(
                 )
                 .await?
         }
-        Ok(None) => user_password,
-        Err(_) => {
+        Ok(PasswordVerificationResult::Success(None)) => user_password,
+        Ok(PasswordVerificationResult::Failure) => {
+            tracing::warn!(username, "Failed to verify/upgrade password for user");
             let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
-            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+            PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "mismatch")]);
             return render(
                 locale,
                 cookie_jar,
@@ -283,14 +292,17 @@ pub(crate) async fn post(
                 &mut rng,
                 &templates,
                 &homeserver,
+                &site_config,
             )
             .await;
         }
+        Err(err) => return Err(InternalError::from_anyhow(err)),
     };
 
     // Now that we have checked the user password, we now want to show an error if
     // the user is locked or deactivated
     if user.deactivated_at.is_some() {
+        tracing::warn!(username, "User is deactivated");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
@@ -301,6 +313,7 @@ pub(crate) async fn post(
     }
 
     if user.locked_at.is_some() {
+        tracing::warn!(username, "User is locked");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
@@ -339,7 +352,7 @@ pub(crate) async fn post(
 }
 
 async fn get_user_by_email_or_by_username<R: RepositoryAccess>(
-    site_config: SiteConfig,
+    site_config: &SiteConfig,
     repo: &mut R,
     username_or_email: &str,
 ) -> Result<Option<mas_data_model::User>, R::Error> {
@@ -364,6 +377,7 @@ fn handle_login_hint(
     mut ctx: LoginContext,
     next: &PostAuthContext,
     homeserver: &dyn HomeserverConnection,
+    site_config: &SiteConfig,
 ) -> LoginContext {
     let form_state = ctx.form_state_mut();
 
@@ -375,7 +389,10 @@ fn handle_login_hint(
     if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
         let value = match grant.parse_login_hint(homeserver.homeserver()) {
             LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
-            LoginHint::None => None,
+            LoginHint::Email(email) if site_config.login_with_email_allowed => {
+                Some(email.to_string())
+            }
+            _ => None,
         };
         form_state.set_value(LoginFormField::Username, value);
     }
@@ -393,6 +410,7 @@ async fn render(
     rng: impl Rng,
     templates: &Templates,
     homeserver: &dyn HomeserverConnection,
+    site_config: &SiteConfig,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
@@ -406,7 +424,7 @@ async fn render(
         .await
         .map_err(InternalError::from_anyhow)?;
     let ctx = if let Some(next) = next {
-        let ctx = handle_login_hint(ctx, &next, homeserver);
+        let ctx = handle_login_hint(ctx, &next, homeserver, site_config);
         ctx.with_post_action(next)
     } else {
         ctx
@@ -424,7 +442,8 @@ mod test {
         header::{CONTENT_TYPE, LOCATION},
     };
     use mas_data_model::{
-        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_router::Route;
@@ -500,6 +519,7 @@ mod test {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await
@@ -542,6 +562,7 @@ mod test {
                     additional_authorization_parameters: Vec::new(),
                     forward_login_hint: false,
                     ui_order: 1,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                 },
             )
             .await

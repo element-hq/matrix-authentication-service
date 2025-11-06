@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashSet;
 
@@ -14,6 +14,7 @@ use mas_storage::{
     Pagination, RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
     queue::{
         DeleteDeviceJob, ProvisionDeviceJob, ProvisionUserJob, QueueJobRepositoryExt as _,
         SyncDevicesJob,
@@ -29,7 +30,7 @@ use crate::{
 
 /// Job to provision a user on the Matrix homeserver.
 /// This works by doing a PUT request to the
-/// /_synapse/admin/v2/users/{user_id} endpoint.
+/// `/_synapse/admin/v2/users/{user_id}` endpoint.
 #[async_trait]
 impl RunnableJob for ProvisionUserJob {
     #[tracing::instrument(
@@ -51,7 +52,6 @@ impl RunnableJob for ProvisionUserJob {
             .context("User not found")
             .map_err(JobError::fail)?;
 
-        let mxid = matrix.mxid(&user.username);
         let emails = repo
             .user_email()
             .all(&user)
@@ -60,7 +60,8 @@ impl RunnableJob for ProvisionUserJob {
             .into_iter()
             .map(|email| email.email)
             .collect();
-        let mut request = ProvisionRequest::new(mxid.clone(), user.sub.clone()).set_emails(emails);
+        let mut request =
+            ProvisionRequest::new(user.username.clone(), user.sub.clone()).set_emails(emails);
 
         if let Some(display_name) = self.display_name_to_set() {
             request = request.set_displayname(display_name.to_owned());
@@ -71,6 +72,7 @@ impl RunnableJob for ProvisionUserJob {
             .await
             .map_err(JobError::retry)?;
 
+        let mxid = matrix.mxid(&user.username);
         if created {
             info!(%user.id, %mxid, "User created");
         } else {
@@ -80,7 +82,7 @@ impl RunnableJob for ProvisionUserJob {
         // Schedule a device sync job
         let sync_device_job = SyncDevicesJob::new(&user);
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, sync_device_job)
+            .schedule_job(&mut rng, clock, sync_device_job)
             .await
             .map_err(JobError::retry)?;
 
@@ -118,7 +120,7 @@ impl RunnableJob for ProvisionDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
@@ -154,7 +156,7 @@ impl RunnableJob for DeleteDeviceJob {
 
         // Schedule a device sync job
         repo.queue_job()
-            .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
+            .schedule_job(&mut rng, clock, SyncDevicesJob::new(&user))
             .await
             .map_err(JobError::retry)?;
 
@@ -191,7 +193,7 @@ impl RunnableJob for SyncDevicesJob {
         let mut devices = HashSet::new();
 
         // Cycle through all the compat sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .compat_session()
@@ -202,11 +204,12 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for (compat_session, _) in page.edges {
+            for edge in page.edges {
+                let (compat_session, _) = edge.node;
                 if let Some(ref device) = compat_session.device {
                     devices.insert(device.as_str().to_owned());
                 }
-                cursor = cursor.after(compat_session.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {
@@ -215,7 +218,7 @@ impl RunnableJob for SyncDevicesJob {
         }
 
         // Cycle though all the oauth2 sessions of the user, and grab the devices
-        let mut cursor = Pagination::first(100);
+        let mut cursor = Pagination::first(5000);
         loop {
             let page = repo
                 .oauth2_session()
@@ -226,14 +229,14 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for oauth2_session in page.edges {
-                for scope in &*oauth2_session.scope {
+            for edge in page.edges {
+                for scope in &*edge.node.scope {
                     if let Some(device) = Device::from_scope_token(scope) {
                         devices.insert(device.as_str().to_owned());
                     }
                 }
 
-                cursor = cursor.after(oauth2_session.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {
@@ -241,9 +244,38 @@ impl RunnableJob for SyncDevicesJob {
             }
         }
 
-        let mxid = matrix.mxid(&user.username);
+        // Cycle through all the personal sessions of the user and get the devices
+        let mut cursor = Pagination::first(5000);
+        loop {
+            let page = repo
+                .personal_session()
+                .list(
+                    PersonalSessionFilter::new()
+                        .for_actor_user(&user)
+                        .active_only(),
+                    cursor,
+                )
+                .await
+                .map_err(JobError::retry)?;
+
+            for edge in page.edges {
+                let (session, _) = &edge.node;
+                for scope in &*session.scope {
+                    if let Some(device) = Device::from_scope_token(scope) {
+                        devices.insert(device.as_str().to_owned());
+                    }
+                }
+
+                cursor = cursor.after(edge.cursor);
+            }
+
+            if !page.has_next_page {
+                break;
+            }
+        }
+
         matrix
-            .sync_devices(&mxid, devices)
+            .sync_devices(&user.username, devices)
             .await
             .map_err(JobError::retry)?;
 

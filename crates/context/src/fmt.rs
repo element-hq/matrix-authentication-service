@@ -1,13 +1,10 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use console::{Color, Style};
-use opentelemetry::{
-    TraceId,
-    trace::{SamplingDecision, TraceContextExt},
-};
+use opentelemetry::TraceId;
 use tracing::{Level, Subscriber};
 use tracing_opentelemetry::OtelData;
 use tracing_subscriber::{
@@ -129,33 +126,16 @@ where
         field_fromatter.format_fields(writer.by_ref(), event)?;
 
         // If we have a OTEL span, we can add the trace ID to the end of the log line
-        if let Some(span) = ctx.lookup_current() {
-            if let Some(otel) = span.extensions().get::<OtelData>() {
-                let parent_cx_span = otel.parent_cx.span();
-                let sc = parent_cx_span.span_context();
-
-                // Check if the span is sampled, first from the span builder,
-                // then from the parent context if nothing is set there
-                if otel
-                    .builder
-                    .sampling_result
-                    .as_ref()
-                    .map_or(sc.is_sampled(), |r| {
-                        r.decision == SamplingDecision::RecordAndSample
-                    })
-                {
-                    // If it is the root span, the trace ID will be in the span builder. Else, it
-                    // will be in the parent OTEL context
-                    let trace_id = otel.builder.trace_id.unwrap_or(sc.trace_id());
-                    if trace_id != TraceId::INVALID {
-                        let label = Style::new()
-                            .italic()
-                            .force_styling(ansi)
-                            .apply_to("trace.id");
-                        write!(&mut writer, " {label}={trace_id}")?;
-                    }
-                }
-            }
+        if let Some(span) = ctx.lookup_current()
+            && let Some(otel) = span.extensions().get::<OtelData>()
+            && let Some(trace_id) = otel.trace_id()
+            && trace_id != TraceId::INVALID
+        {
+            let label = Style::new()
+                .italic()
+                .force_styling(ansi)
+                .apply_to("trace.id");
+            write!(&mut writer, " {label}={trace_id}")?;
         }
 
         writeln!(&mut writer)

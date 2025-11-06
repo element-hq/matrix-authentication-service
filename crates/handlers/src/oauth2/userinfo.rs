@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
     Json,
@@ -15,13 +15,14 @@ use mas_axum_utils::{
     record_error,
     user_authorization::{AuthorizationVerificationError, UserAuthorization},
 };
+use mas_data_model::{BoxClock, BoxRng};
 use mas_jose::{
     constraints::Constrainable,
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxClock, BoxRepository, BoxRng, oauth2::OAuth2ClientRepository};
+use mas_storage::{BoxRepository, oauth2::OAuth2ClientRepository};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use thiserror::Error;

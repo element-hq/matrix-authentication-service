@@ -1,17 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 // @vitest-environment happy-dom
 
+import { TooltipProvider } from "@vector-im/compound-web";
 import { beforeAll, describe, expect, it } from "vitest";
-
 import { makeFragmentData } from "../../gql";
 import { mockLocale } from "../../test-utils/mockLocale";
-
-import { TooltipProvider } from "@vector-im/compound-web";
 import render from "../../test-utils/render";
 import OAuth2SessionDetail, { FRAGMENT } from "./OAuth2SessionDetail";
 

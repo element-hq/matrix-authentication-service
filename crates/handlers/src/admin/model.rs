@@ -1,15 +1,22 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use mas_data_model::Device;
+use mas_data_model::{
+    Device,
+    personal::{
+        PersonalAccessToken as DataModelPersonalAccessToken,
+        session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
+    },
+};
 use schemars::JsonSchema;
 use serde::Serialize;
+use thiserror::Error;
 use ulid::Ulid;
 use url::Url;
 
@@ -52,6 +59,9 @@ pub struct User {
 
     /// Whether the user can request admin privileges.
     admin: bool,
+
+    /// Whether the user was a guest before migrating to MAS,
+    legacy_guest: bool,
 }
 
 impl User {
@@ -65,6 +75,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -73,6 +84,7 @@ impl User {
                 locked_at: None,
                 deactivated_at: None,
                 admin: true,
+                legacy_guest: false,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -81,6 +93,7 @@ impl User {
                 locked_at: Some(DateTime::default()),
                 deactivated_at: None,
                 admin: false,
+                legacy_guest: true,
             },
         ]
     }
@@ -95,6 +108,7 @@ impl From<mas_data_model::User> for User {
             locked_at: user.locked_at,
             deactivated_at: user.deactivated_at,
             admin: user.can_request_admin,
+            legacy_guest: user.is_guest,
         }
     }
 }
@@ -375,7 +389,7 @@ impl OAuth2Session {
                 user_id: Some(Ulid::from_bytes([0x04; 16])),
                 user_session_id: Some(Ulid::from_bytes([0x05; 16])),
                 client_id: Ulid::from_bytes([0x06; 16]),
-                scope: "urn:matrix:org.matrix.msc2967.client:api:*".to_owned(),
+                scope: "urn:matrix:client:api:*".to_owned(),
                 user_agent: Some("Mozilla/5.0".to_owned()),
                 last_active_at: Some(DateTime::default()),
                 last_active_ip: Some("127.0.0.1".parse().unwrap()),
@@ -686,5 +700,257 @@ impl UserRegistrationToken {
                 revoked_at: Some(DateTime::default()),
             },
         ]
+    }
+}
+
+/// An upstream OAuth 2.0 provider
+#[derive(Serialize, JsonSchema)]
+pub struct UpstreamOAuthProvider {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The OIDC issuer of the provider
+    issuer: Option<String>,
+
+    /// A human-readable name for the provider
+    human_name: Option<String>,
+
+    /// A brand identifier, e.g. "apple" or "google"
+    brand_name: Option<String>,
+
+    /// When the provider was created
+    created_at: DateTime<Utc>,
+
+    /// When the provider was disabled. If null, the provider is enabled.
+    disabled_at: Option<DateTime<Utc>>,
+}
+
+impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
+    fn from(provider: mas_data_model::UpstreamOAuthProvider) -> Self {
+        Self {
+            id: provider.id,
+            issuer: provider.issuer,
+            human_name: provider.human_name,
+            brand_name: provider.brand_name,
+            created_at: provider.created_at,
+            disabled_at: provider.disabled_at,
+        }
+    }
+}
+
+impl Resource for UpstreamOAuthProvider {
+    const KIND: &'static str = "upstream-oauth-provider";
+    const PATH: &'static str = "/api/admin/v1/upstream-oauth-providers";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl UpstreamOAuthProvider {
+    /// Samples of upstream OAuth 2.0 providers
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                issuer: Some("https://accounts.google.com".to_owned()),
+                human_name: Some("Google".to_owned()),
+                brand_name: Some("google".to_owned()),
+                created_at: DateTime::default(),
+                disabled_at: None,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                issuer: Some("https://appleid.apple.com".to_owned()),
+                human_name: Some("Apple ID".to_owned()),
+                brand_name: Some("apple".to_owned()),
+                created_at: DateTime::default(),
+                disabled_at: Some(DateTime::default()),
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                issuer: None,
+                human_name: Some("Custom OAuth Provider".to_owned()),
+                brand_name: None,
+                created_at: DateTime::default(),
+                disabled_at: None,
+            },
+        ]
+    }
+}
+
+/// An error that shouldn't happen in practice, but suggests database
+/// inconsistency.
+#[derive(Debug, Error)]
+#[error(
+    "personal session {session_id} in inconsistent state: not revoked but no valid access token"
+)]
+pub struct InconsistentPersonalSession {
+    pub session_id: Ulid,
+}
+
+// Note: we don't expose a separate concept of personal access tokens to the
+// admin API; we merge the relevant attributes into the personal session.
+/// A personal session (session using personal access tokens)
+#[derive(Serialize, JsonSchema)]
+pub struct PersonalSession {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the session was created
+    created_at: DateTime<Utc>,
+
+    /// When the session was revoked, if applicable
+    revoked_at: Option<DateTime<Utc>>,
+
+    /// The ID of the user who owns this session (if user-owned)
+    #[schemars(with = "Option<super::schema::Ulid>")]
+    owner_user_id: Option<Ulid>,
+
+    /// The ID of the `OAuth2` client that owns this session (if client-owned)
+    #[schemars(with = "Option<super::schema::Ulid>")]
+    owner_client_id: Option<Ulid>,
+
+    /// The ID of the user that the session acts on behalf of
+    #[schemars(with = "super::schema::Ulid")]
+    actor_user_id: Ulid,
+
+    /// Human-readable name for the session
+    human_name: String,
+
+    /// `OAuth2` scopes for this session
+    scope: String,
+
+    /// When the session was last active
+    last_active_at: Option<DateTime<Utc>>,
+
+    /// IP address of last activity
+    last_active_ip: Option<IpAddr>,
+
+    /// When the current token for this session expires.
+    /// The session will need to be regenerated, producing a new access token,
+    /// after this time.
+    /// None if the current token won't expire or if the session is revoked.
+    expires_at: Option<DateTime<Utc>>,
+
+    /// The actual access token (only returned on creation)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    access_token: Option<String>,
+}
+
+impl
+    TryFrom<(
+        DataModelPersonalSession,
+        Option<DataModelPersonalAccessToken>,
+    )> for PersonalSession
+{
+    type Error = InconsistentPersonalSession;
+
+    fn try_from(
+        (session, token): (
+            DataModelPersonalSession,
+            Option<DataModelPersonalAccessToken>,
+        ),
+    ) -> Result<Self, InconsistentPersonalSession> {
+        let expires_at = if let Some(token) = token {
+            token.expires_at
+        } else {
+            if !session.is_revoked() {
+                // No active token, but the session is not revoked.
+                return Err(InconsistentPersonalSession {
+                    session_id: session.id,
+                });
+            }
+            None
+        };
+
+        let (owner_user_id, owner_client_id) = match session.owner {
+            PersonalSessionOwner::User(id) => (Some(id), None),
+            PersonalSessionOwner::OAuth2Client(id) => (None, Some(id)),
+        };
+
+        Ok(Self {
+            id: session.id,
+            created_at: session.created_at,
+            revoked_at: session.revoked_at(),
+            owner_user_id,
+            owner_client_id,
+            actor_user_id: session.actor_user_id,
+            human_name: session.human_name,
+            scope: session.scope.to_string(),
+            last_active_at: session.last_active_at,
+            last_active_ip: session.last_active_ip,
+            expires_at,
+            // If relevant, the caller will populate using `with_token` afterwards.
+            access_token: None,
+        })
+    }
+}
+
+impl Resource for PersonalSession {
+    const KIND: &'static str = "personal-session";
+    const PATH: &'static str = "/api/admin/v1/personal-sessions";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl PersonalSession {
+    /// Sample personal sessions for documentation/testing
+    pub fn samples() -> [Self; 3] {
+        [
+            Self {
+                id: Ulid::from_string("01FSHN9AG0AJ6AC5HQ9X6H4RP4").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_000, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 40:00Z */
+                revoked_at: None,
+                owner_user_id: Some(Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap()),
+                owner_client_id: None,
+                actor_user_id: Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap(),
+                human_name: "Alice's Development Token".to_owned(),
+                scope: "openid urn:matrix:org.matrix.msc2967.client:api:*".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_347_000, 0).unwrap()), /* 2022-01-16T17:10:00Z */
+                last_active_ip: Some("192.168.1.100".parse().unwrap()),
+                expires_at: None,
+                access_token: None,
+            },
+            Self {
+                id: Ulid::from_string("01FSHN9AG0BJ6AC5HQ9X6H4RP5").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_060, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 41:00Z */
+                revoked_at: Some(DateTime::from_timestamp(1_642_350_000, 0).unwrap()), /* 2022-01-16T18:00:00Z */
+                owner_user_id: Some(Ulid::from_string("01FSHN9AG0NZAA6S4AF7CTV32F").unwrap()),
+                owner_client_id: None,
+                actor_user_id: Ulid::from_string("01FSHN9AG0NZAA6S4AF7CTV32F").unwrap(),
+                human_name: "Bob's Mobile App".to_owned(),
+                scope: "openid".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_349_000, 0).unwrap()), /* 2022-01-16T17:43:20Z */
+                last_active_ip: Some("10.0.0.50".parse().unwrap()),
+                expires_at: None,
+                access_token: None,
+            },
+            Self {
+                id: Ulid::from_string("01FSHN9AG0CJ6AC5HQ9X6H4RP6").unwrap(),
+                created_at: DateTime::from_timestamp(1_642_338_120, 0).unwrap(), /* 2022-01-16T14:
+                                                                                  * 42:00Z */
+                revoked_at: None,
+                owner_user_id: None,
+                owner_client_id: Some(Ulid::from_string("01FSHN9AG0DJ6AC5HQ9X6H4RP7").unwrap()),
+                actor_user_id: Ulid::from_string("01FSHN9AG0MZAA6S4AF7CTV32E").unwrap(),
+                human_name: "CI/CD Pipeline Token".to_owned(),
+                scope: "openid urn:mas:admin".to_owned(),
+                last_active_at: Some(DateTime::from_timestamp(1_642_348_000, 0).unwrap()), /* 2022-01-16T17:26:40Z */
+                last_active_ip: Some("203.0.113.10".parse().unwrap()),
+                expires_at: Some(DateTime::from_timestamp(1_642_999_000, 0).unwrap()),
+                access_token: None,
+            },
+        ]
+    }
+
+    /// Add the actual token value (for use in creation responses)
+    pub fn with_token(mut self, access_token: String) -> Self {
+        self.access_token = Some(access_token);
+        self
     }
 }

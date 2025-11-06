@@ -1,10 +1,10 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay } from "msw";
+import { delay, HttpResponse } from "msw";
 import {
   mockAllowCrossSigningResetMutation,
   mockCurrentViewerQuery,

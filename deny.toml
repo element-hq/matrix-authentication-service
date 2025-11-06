@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [graph]
 targets = [
     { triple = "x86_64-unknown-linux-gnu" },
@@ -14,17 +19,13 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-
-    # `paste`, as used by `aws-lc-rs` is unmaintained, but we're not concerned
-    # about it having a security vulnerability
-    "RUSTSEC-2024-0436",
 ]
 
 [licenses]
 version = 2
 allow = [
+    "LicenseRef-Element-Commercial",
     "0BSD",
-    "AGPL-3.0",
     "Apache-2.0 WITH LLVM-exception",
     "Apache-2.0",
     "BSD-2-Clause",
@@ -35,6 +36,7 @@ allow = [
     "OpenSSL",
     "Unicode-3.0",
     "Zlib",
+    "CDLA-Permissive-2.0",
 ]
 
 # Ring's license is a bit complicated, so we need to specify it manually
@@ -57,8 +59,6 @@ deny = [
 multiple-versions = "deny"
 
 skip = [
-    { name = "regex-syntax", version = "0.6.29" },   # tracing-subscriber[env-filter] -> matchers depends on the old version
-    { name = "regex-automata", version = "0.1.10" }, # ^
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version
     { name = "hashbrown", version = "0.14.5" },      # a few crates depend on this old version
     # a few dependencies depend on the 1.x version of thiserror
@@ -66,11 +66,11 @@ skip = [
     { name = "thiserror-impl", version = "1.0.69" },
     # axum-macros, sqlx-macros and sea-query-attr use an old version
     { name = "heck", version = "0.4.1" },
-    # wasmtime -> cranelift is depending on this old version
-    { name = "itertools", version = "0.12.1" },
     # pad depends on an old version
     { name = "unicode-width", version = "0.1.14" },
-    { name = "zerocopy", version = "0.7.35" },      # hashbrown 0.14.5 depends on this old version
+    # cron depends on this old version
+    # https://github.com/zslayton/cron/pull/137
+    { name = "winnow", version = "0.6.20" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },

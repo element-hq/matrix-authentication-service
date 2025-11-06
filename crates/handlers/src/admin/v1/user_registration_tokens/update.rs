@@ -1,7 +1,8 @@
+// Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
@@ -142,7 +143,7 @@ pub async fn handler(
 mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
-    use mas_storage::Clock as _;
+    use mas_data_model::Clock as _;
     use serde_json::json;
     use sqlx::PgPool;
 

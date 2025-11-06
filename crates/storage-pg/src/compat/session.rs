@@ -1,20 +1,21 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device,
-    User,
+    BrowserSession, Clock, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState,
+    Device, User,
 };
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     compat::{CompatSessionFilter, CompatSessionRepository},
+    pagination::Node,
 };
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
@@ -27,7 +28,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt, StatementWithJoinsExt},
-    iden::{CompatSessions, CompatSsoLogins},
+    iden::{CompatSessions, CompatSsoLogins, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -57,6 +58,12 @@ struct CompatSessionLookup {
     user_agent: Option<String>,
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
+}
+
+impl Node<Ulid> for CompatSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.compat_session_id.into()
+    }
 }
 
 impl From<CompatSessionLookup> for CompatSession {
@@ -104,6 +111,12 @@ struct CompatSessionAndSsoLoginLookup {
     compat_sso_login_created_at: Option<DateTime<Utc>>,
     compat_sso_login_fulfilled_at: Option<DateTime<Utc>>,
     compat_sso_login_exchanged_at: Option<DateTime<Utc>>,
+}
+
+impl Node<Ulid> for CompatSessionAndSsoLoginLookup {
+    fn cursor(&self) -> Ulid {
+        self.compat_session_id.into()
+    }
 }
 
 impl TryFrom<CompatSessionAndSsoLoginLookup> for (CompatSession, Option<CompatSsoLogin>) {
@@ -189,6 +202,18 @@ impl Filter for CompatSessionFilter<'_> {
             .add_option(self.browser_session().map(|browser_session| {
                 Expr::col((CompatSessions::Table, CompatSessions::UserSessionId))
                     .eq(Uuid::from(browser_session.id))
+            }))
+            .add_option(self.browser_session_filter().map(|browser_session_filter| {
+                Expr::col((CompatSessions::Table, CompatSessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessions::Table,
+                            UserSessions::UserSessionId,
+                        )))
+                        .apply_filter(browser_session_filter)
+                        .from(UserSessions::Table)
+                        .take(),
+                )
             }))
             .add_option(self.state().map(|state| {
                 if state.is_active() {

@@ -135,7 +135,9 @@ matrix:
 
   # Shared secret used to authenticate the service to the homeserver
   # This must be of high entropy, because leaking this secret would allow anyone to perform admin actions on the homeserver
-  secret: "SomeRandomSecret"
+  secret_file: /path/to/secret/file
+  # Alternatively, the shared secret can be passed inline.
+  # secret: "SomeRandomSecret"
 
   # URL to which the homeserver is accessible from the service
   endpoint: "http://localhost:8008"
@@ -170,7 +172,8 @@ clients:
   # Confidential client
   - client_id: 000000000000000000000FIRST
     client_auth_method: client_secret_post
-    client_secret: secret
+    client_secret_file: secret
+    # OR client_secret: c1!3n753c237
     # List of authorized redirect URIs
     redirect_uris:
       - http://localhost:1234/callback
@@ -194,35 +197,7 @@ secrets:
   # Signing keys
   keys:
     # It needs at least an RSA key to work properly
-    - kid: "ahM2bien"
-      key: |
-        -----BEGIN RSA PRIVATE KEY-----
-        MIIEowIBAAKCAQEAuf28zPUp574jDRdX6uN0d7niZCIUpACFo+Po/13FuIGsrpze
-        yMX6CYWVPalgXW9FCrhxL+4toJRy5npjkgsLFsknL5/zXbWKFgt69cMwsWJ9Ra57
-        bonSlI7SoCuHhtw7j+sAlHAlqTOCAVz6P039Y/AGvO6xbC7f+9XftWlbbDcjKFcb
-        pQilkN9qtkdEH7TLayMAFOsgNvBlwF9+oj9w5PIk3veRTdBXI4GlHjhhzqGZKiRp
-        oP9HnycHHveyT+C33vuhQso5a3wcUNuvDVOixSqR4kvSt4UVWNK/KmEQmlWU1/m9
-        ClIwrs8Q79q0xkGaSa0iuG60nvm7tZez9TFkxwIDAQABAoIBAHA5YkppQ7fJSm0D
-        wNDCHeyABNJWng23IuwZAOXVNxB1bjSOAv8yNgS4zaw/Hx5BnW8yi1lYZb+W0x2u
-        i5X7g91j0nkyEi5g88kJdFAGTsM5ok0BUwkHsEBjTUPIACanjGjya48lfBP0OGWK
-        LJU2Acbjda1aeUPFpPDXw/w6bieEthQwroq3DHCMnk6i9bsxgIOXeN04ij9XBmsH
-        KPCP2hAUnZSlx5febYfHK7/W95aJp22qa//eHS8cKQZCJ0+dQuZwLhlGosTFqLUm
-        qhPlt/b1EvPPY0cq5rtUc2W31L0YayVEHVOQx1fQIkH2VIUNbAS+bfVy+o6WCRk6
-        s1XDhsECgYEA30tykVTN5LncY4eQIww2mW8v1j1EG6ngVShN3GuBTuXXaEOB8Duc
-        yT7yJt1ZhmaJwMk4agmZ1/f/ZXBtfLREGVzVvuwqRZ+LHbqIyhi0wQJA0aezPote
-        uTQnFn+IveHGtpQNDYGL/UgkexuCxbc2HOZG51JpunCK0TdtVfO/9OUCgYEA1TuS
-        2WAXzNudRG3xd/4OgtkLD9AvfSvyjw2LkwqCMb3A5UEqw7vubk/xgnRvqrAgJRWo
-        jndgRrRnikHCavDHBO0GAO/kzrFRfw+e+r4jcLl0Yadke8ndCc7VTnx4wQCrMi5H
-        7HEeRwaZONoj5PAPyA5X+N/gT0NNDA7KoQT45DsCgYBt+QWa6A5jaNpPNpPZfwlg
-        9e60cAYcLcUri6cVOOk9h1tYoW7cdy+XueWfGIMf+1460Z90MfhP8ncZaY6yzUGA
-        0EUBO+Tx10q3wIfgKNzU9hwgZZyU4CUtx668mOEqy4iHoVDwZu4gNyiobPsyDzKa
-        dxtSkDc8OHNV6RtzKpJOtQKBgFoRGcwbnLH5KYqX7eDDPRnj15pMU2LJx2DJVeU8
-        ERY1kl7Dke6vWNzbg6WYzPoJ/unrJhFXNyFmXj213QsSvN3FyD1pFvp/R28mB/7d
-        hVa93vzImdb3wxe7d7n5NYBAag9+IP8sIJ/bl6i9619uTxwvgtUqqzKPuOGY9dnh
-        oce1AoGBAKZyZc/NVgqV2KgAnnYlcwNn7sRSkM8dcq0/gBMNuSZkfZSuEd4wwUzR
-        iFlYp23O2nHWggTkzimuBPtD7Kq4jBey3ZkyGye+sAdmnKkOjNILNbpIZlT6gK3z
-        fBaFmJGRJinKA+BJeH79WFpYN6SBZ/c3s5BusAbEU7kE5eInyazP
-        -----END RSA PRIVATE KEY-----
+    - key_file: keys/rsa_key
     - kid: "iv1aShae"
       key: |
         -----BEGIN EC PRIVATE KEY-----
@@ -257,15 +232,23 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry must have a unique (and arbitrary) `kid`, plus the key itself.
-The key can either be specified inline (with the `key` property), or loaded from a file (with the `key_file` property).
+Each entry in the list corresponds to one signing key used by MAS.
+The key can either be specified inline (with the `key` property),
+or loaded from a file (with the `key_file` property).
 The following key formats are supported:
 
 - PKCS#1 PEM or DER-encoded RSA private key
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
 
+A [JWK Key ID] is automatically derived from each key.
+To override this default, set `kid` to a custom value.
+The `kid` can be any case-sensitive string value as long as it is unique to this list;
+a key’s `kid` value must be stable across restarts.
+
 For PKCS#8 encoded keys, the `password` or `password_file` properties can be used to decrypt the key.
+
+[JWK Key ID]: <https://datatracker.ietf.org/doc/html/rfc7517#section-4.5>
 
 ## `passwords`
 
@@ -312,6 +295,12 @@ account:
   # Defaults to `false`.
   # This has no effect if password login is disabled.
   password_registration_enabled: false
+
+  # Whether self-service registrations require a valid email
+  #
+  # Defaults to `true`
+  # This has no effect if password registration is disabled.
+  password_registration_email_required: true
 
   # Whether users are allowed to change their passwords
   #
@@ -740,6 +729,13 @@ upstream_oauth2:
       # authorization request.
       #forward_login_hint: false
 
+      # What to do when receiving an OIDC Backchannel logout request.
+      # Possible values are:
+      #  - `do_nothing` (default): do nothing, other than validating and logging the request
+      #  - `logout_browser_only`: Only log out the MAS 'browser session' started by this OIDC session
+      #  - `logout_all`: Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions
+      #on_backchannel_logout: do_nothing
+
       # How user attributes should be mapped
       #
       # Most of those attributes have two main properties:
@@ -770,6 +766,12 @@ upstream_oauth2:
           #action: force
           #template: "{{ user.preferred_username }}"
 
+          # How to handle when localpart already exists.
+          # Possible values are (default: fail):
+          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
+          # - `fail` : Fails the upstream OAuth 2.0 login.
+          #on_conflict: fail
+
         # The display name is the user's display name.
         displayname:
           #action: suggest
@@ -793,6 +795,37 @@ upstream_oauth2:
         # This helps end user identify what account they are using
         account_name:
           #template: "@{{ user.preferred_username }}"
+```
+
+## `branding`
+
+Configuration section for tweaking the branding of the service.
+
+```yaml
+branding:
+  # A human-readable name. Defaults to the server's address.
+  #service_name:
+
+  # Link to a privacy policy, displayed in the footer of web pages and
+  # emails. It is also advertised to clients through the `op_policy_uri`
+  # OIDC provider metadata.
+  #policy_uri:
+
+  # Link to a terms of service document, displayed in the footer of web
+  # pages and emails. It is also advertised to clients through the
+  # `op_tos_uri` OIDC provider metadata.
+  #
+  # This also adds a mandatory checkbox during registration. The value of
+  # this config item will be stored in the `user_terms` table to indicate
+  # which ToS document the user accepted. Note that currently changing this
+  # value will not force existing users to re-accept terms.
+  #tos_uri:
+
+  # Legal imprint, displayed in the footer in the footer of web pages and emails.
+  #imprint:
+
+  # Logo displayed in some web pages.
+  #logo_uri:
 ```
 
 ## `experimental`

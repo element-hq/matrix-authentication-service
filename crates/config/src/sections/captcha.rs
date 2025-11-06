@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
@@ -51,7 +51,10 @@ impl CaptchaConfig {
 impl ConfigurationSection for CaptchaConfig {
     const PATH: Option<&'static str> = Some("captcha");
 
-    fn validate(&self, figment: &figment::Figment) -> Result<(), figment::Error> {
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let metadata = figment.find_metadata(Self::PATH.unwrap());
 
         let error_on_field = |mut error: figment::error::Error, field: &'static str| {
@@ -67,11 +70,11 @@ impl ConfigurationSection for CaptchaConfig {
 
         if let Some(CaptchaServiceKind::RecaptchaV2) = self.service {
             if self.site_key.is_none() {
-                return Err(missing_field("site_key"));
+                return Err(missing_field("site_key").into());
             }
 
             if self.secret_key.is_none() {
-                return Err(missing_field("secret_key"));
+                return Err(missing_field("secret_key").into());
             }
         }
 

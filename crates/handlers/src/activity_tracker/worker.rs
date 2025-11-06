@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{collections::HashMap, net::IpAddr};
 
@@ -224,6 +224,7 @@ impl Worker {
         let mut browser_sessions = Vec::new();
         let mut oauth2_sessions = Vec::new();
         let mut compat_sessions = Vec::new();
+        let mut personal_sessions = Vec::new();
 
         for ((kind, id), record) in pending_records {
             match kind {
@@ -235,6 +236,9 @@ impl Worker {
                 }
                 SessionKind::Compat => {
                     compat_sessions.push((*id, record.end_time, record.ip));
+                }
+                SessionKind::Personal => {
+                    personal_sessions.push((*id, record.end_time, record.ip));
                 }
             }
         }
@@ -252,6 +256,9 @@ impl Worker {
             .await?;
         repo.compat_session()
             .record_batch_activity(compat_sessions)
+            .await?;
+        repo.personal_session()
+            .record_batch_activity(personal_sessions)
             .await?;
 
         repo.save().await?;

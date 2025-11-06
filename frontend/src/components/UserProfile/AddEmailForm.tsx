@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -32,11 +32,9 @@ export const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
 
 const ADD_EMAIL_MUTATION = graphql(/* GraphQL */ `
   mutation AddEmail($email: String!, $password: String, $language: String!) {
-    startEmailAuthentication(input: {
-      email: $email,
-      password: $password,
-      language: $language
-    }) {
+    startEmailAuthentication(
+      input: { email: $email, password: $password, language: $language }
+    ) {
       status
       violations
       authentication {
@@ -64,7 +62,11 @@ const AddEmailForm: React.FC<{
       email,
       password,
       language,
-    }: { email: string; password?: string; language: string }) =>
+    }: {
+      email: string;
+      password?: string;
+      language: string;
+    }) =>
       graphqlRequest({
         query: ADD_EMAIL_MUTATION,
         variables: { email, password, language },
@@ -92,7 +94,7 @@ const AddEmailForm: React.FC<{
 
       const formData = new FormData(e.currentTarget);
       const email = formData.get("input") as string;
-      let password = undefined;
+      let password: string | undefined;
       if (shouldPromptPassword) {
         password = await promptPassword();
       }

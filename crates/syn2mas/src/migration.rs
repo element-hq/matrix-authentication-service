@@ -1,7 +1,7 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! # Migration
 //!
@@ -16,7 +16,7 @@ use std::time::Instant;
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
-use mas_storage::Clock;
+use mas_data_model::Clock;
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;

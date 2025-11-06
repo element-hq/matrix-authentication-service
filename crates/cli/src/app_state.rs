@@ -1,15 +1,15 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::{convert::Infallible, net::IpAddr, sync::Arc};
 
 use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
 use mas_context::LogContext;
-use mas_data_model::SiteConfig;
+use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, SystemClock};
 use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
     MetadataCache, RequesterFingerprint, passwords::PasswordManager,
@@ -19,9 +19,7 @@ use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
-use mas_storage::{
-    BoxClock, BoxRepository, BoxRepositoryFactory, BoxRng, RepositoryFactory, SystemClock,
-};
+use mas_storage::{BoxRepository, BoxRepositoryFactory, RepositoryFactory};
 use mas_storage_pg::PgRepositoryFactory;
 use mas_templates::Templates;
 use opentelemetry::KeyValue;
@@ -29,7 +27,7 @@ use rand::SeedableRng;
 use sqlx::PgPool;
 use tracing::Instrument;
 
-use crate::telemetry::METER;
+use crate::{VERSION, telemetry::METER};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -216,6 +214,12 @@ impl FromRef<AppState> for Arc<dyn HomeserverConnection> {
     }
 }
 
+impl FromRef<AppState> for AppVersion {
+    fn from_ref(_input: &AppState) -> Self {
+        AppVersion(VERSION)
+    }
+}
+
 impl FromRequestParts<AppState> for BoxClock {
     type Rejection = Infallible;
 
@@ -275,10 +279,10 @@ fn infer_client_ip(
 
     let peer = if let Some(info) = connection_info {
         // We can always trust the proxy protocol to give us the correct IP address
-        if let Some(proxy) = info.get_proxy_ref() {
-            if let Some(source) = proxy.source() {
-                return Some(source.ip());
-            }
+        if let Some(proxy) = info.get_proxy_ref()
+            && let Some(source) = proxy.source()
+        {
+            return Some(source.ip());
         }
 
         info.get_peer_addr().map(|addr| addr.ip())

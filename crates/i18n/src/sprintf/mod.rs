@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![allow(unused_macros)]
 
@@ -72,6 +72,7 @@ pub(crate) use sprintf;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
+#[allow(dead_code)]
 enum Error {
     Format(#[from] self::formatter::FormatError),
     Parse(Box<self::parser::Error>),

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::sync::{Arc, LazyLock};
 
@@ -16,7 +16,8 @@ use mas_axum_utils::{
     record_error,
 };
 use mas_data_model::{
-    AuthorizationGrantStage, Client, Device, DeviceCodeGrantState, SiteConfig, TokenType,
+    AuthorizationGrantStage, BoxClock, BoxRng, Client, Clock, Device, DeviceCodeGrantState,
+    SiteConfig, TokenType,
 };
 use mas_i18n::DataLocale;
 use mas_keystore::{Encrypter, Keystore};
@@ -25,7 +26,7 @@ use mas_oidc_client::types::scope::ScopeToken;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository,
         OAuth2RefreshTokenRepository, OAuth2SessionRepository,
@@ -409,7 +410,6 @@ pub(crate) async fn post(
     Ok((headers, Json(reply)))
 }
 
-#[allow(clippy::too_many_lines)] // TODO: refactor some parts out
 async fn authorization_code_grant(
     mut rng: &mut BoxRng,
     clock: &impl Clock,
@@ -575,11 +575,14 @@ async fn authorization_code_grant(
         .await?;
 
     // Look for device to provision
-    let mxid = homeserver.mxid(&browser_session.user.username);
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str(), Some(&device_name))
+                .upsert_device(
+                    &browser_session.user.username,
+                    device.as_str(),
+                    Some(&device_name),
+                )
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -599,7 +602,6 @@ async fn authorization_code_grant(
     Ok((params, repo))
 }
 
-#[allow(clippy::too_many_lines)]
 async fn refresh_token_grant(
     rng: &mut BoxRng,
     clock: &impl Clock,
@@ -951,11 +953,10 @@ async fn device_code_grant(
         .await?;
 
     // Look for device to provision
-    let mxid = homeserver.mxid(&browser_session.user.username);
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
             homeserver
-                .create_device(&mxid, device.as_str(), None)
+                .upsert_device(&browser_session.user.username, device.as_str(), None)
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }

@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 name: Build the frontend assets
 description: Installs Node.js and builds the frontend assets from the frontend directory
 
@@ -7,7 +12,7 @@ runs:
     - name: Install Node
       uses: actions/setup-node@v4.2.0
       with:
-        node-version: '22'
+        node-version: "22"
 
     - name: Install dependencies
       run: npm ci

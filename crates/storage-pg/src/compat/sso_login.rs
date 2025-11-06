@@ -1,15 +1,16 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, CompatSession, CompatSsoLogin, CompatSsoLoginState};
+use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, CompatSsoLoginState};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
+    pagination::Node,
 };
 use rand::RngCore;
 use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
@@ -52,6 +53,12 @@ struct CompatSsoLoginLookup {
     exchanged_at: Option<DateTime<Utc>>,
     user_session_id: Option<Uuid>,
     compat_session_id: Option<Uuid>,
+}
+
+impl Node<Ulid> for CompatSsoLoginLookup {
+    fn cursor(&self) -> Ulid {
+        self.compat_sso_login_id.into()
+    }
 }
 
 impl TryFrom<CompatSsoLoginLookup> for CompatSsoLogin {

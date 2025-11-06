@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 # METADATA
 # schemas:
 #   - input: schema["register_input"]
@@ -74,13 +79,6 @@ violation contains {"msg": sprintf(
 	[common.format_requester(input.requester)],
 )} if {
 	common.requester_banned(input.requester, data.requester)
-}
-
-# Check that we supplied an email for password registration
-violation contains {"field": "email", "msg": "email required for password-based registration"} if {
-	input.registration_method == "password"
-
-	not input.email
 }
 
 # Check if the email is valid using the email policy

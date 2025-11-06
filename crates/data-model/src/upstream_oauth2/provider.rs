@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use chrono::{DateTime, Utc};
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -216,6 +216,48 @@ impl std::str::FromStr for TokenAuthMethod {
 #[error("Invalid upstream OAuth 2.0 token auth method: {0}")]
 pub struct InvalidUpstreamOAuth2TokenAuthMethod(String);
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum OnBackchannelLogout {
+    DoNothing,
+    LogoutBrowserOnly,
+    LogoutAll,
+}
+
+impl OnBackchannelLogout {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DoNothing => "do_nothing",
+            Self::LogoutBrowserOnly => "logout_browser_only",
+            Self::LogoutAll => "logout_all",
+        }
+    }
+}
+
+impl std::fmt::Display for OnBackchannelLogout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for OnBackchannelLogout {
+    type Err = InvalidUpstreamOAuth2OnBackchannelLogout;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "do_nothing" => Ok(Self::DoNothing),
+            "logout_browser_only" => Ok(Self::LogoutBrowserOnly),
+            "logout_all" => Ok(Self::LogoutAll),
+            s => Err(InvalidUpstreamOAuth2OnBackchannelLogout(s.to_owned())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("Invalid upstream OAuth 2.0 'on backchannel logout': {0}")]
+pub struct InvalidUpstreamOAuth2OnBackchannelLogout(String);
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
@@ -242,11 +284,12 @@ pub struct UpstreamOAuthProvider {
     pub claims_imports: ClaimsImports,
     pub additional_authorization_parameters: Vec<(String, String)>,
     pub forward_login_hint: bool,
+    pub on_backchannel_logout: OnBackchannelLogout,
 }
 
 impl PartialOrd for UpstreamOAuthProvider {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.id.cmp(&other.id))
+        Some(self.cmp(other))
     }
 }
 
@@ -270,7 +313,7 @@ pub struct ClaimsImports {
     pub subject: SubjectPreference,
 
     #[serde(default)]
-    pub localpart: ImportPreference,
+    pub localpart: LocalpartPreference,
 
     #[serde(default)]
     pub displayname: ImportPreference,
@@ -287,6 +330,26 @@ pub struct ClaimsImports {
 pub struct SubjectPreference {
     #[serde(default)]
     pub template: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct LocalpartPreference {
+    #[serde(default)]
+    pub action: ImportAction,
+
+    #[serde(default)]
+    pub template: Option<String>,
+
+    #[serde(default)]
+    pub on_conflict: OnConflict,
+}
+
+impl std::ops::Deref for LocalpartPreference {
+    type Target = ImportAction;
+
+    fn deref(&self) -> &Self::Target {
+        &self.action
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -325,7 +388,7 @@ pub enum ImportAction {
 
 impl ImportAction {
     #[must_use]
-    pub fn is_forced(&self) -> bool {
+    pub fn is_forced_or_required(&self) -> bool {
         matches!(self, Self::Force | Self::Require)
     }
 
@@ -347,4 +410,16 @@ impl ImportAction {
             Self::Force | Self::Require => true,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum OnConflict {
+    /// Fails the upstream OAuth 2.0 login
+    #[default]
+    Fail,
+
+    /// Adds the upstream account link, regardless of whether there is an
+    /// existing link or not
+    Add,
 }

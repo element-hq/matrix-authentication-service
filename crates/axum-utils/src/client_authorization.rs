@@ -1,21 +1,20 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashMap;
 
 use axum::{
     BoxError, Json,
     extract::{
-        Form, FromRequest, FromRequestParts,
+        Form, FromRequest,
         rejection::{FailedToDeserializeForm, FormRejection},
     },
     response::IntoResponse,
 };
-use axum_extra::typed_header::{TypedHeader, TypedHeaderRejectionReason};
-use headers::{Authorization, authorization::Basic};
+use headers::authorization::{Basic, Bearer, Credentials as _};
 use http::{Request, StatusCode};
 use mas_data_model::{Client, JwksOrJwksUri};
 use mas_http::RequestBuilderExt;
@@ -60,17 +59,30 @@ pub enum Credentials {
         client_id: String,
         jwt: Box<Jwt<'static, HashMap<String, serde_json::Value>>>,
     },
+    BearerToken {
+        token: String,
+    },
 }
 
 impl Credentials {
     /// Get the `client_id` of the credentials
     #[must_use]
-    pub fn client_id(&self) -> &str {
+    pub fn client_id(&self) -> Option<&str> {
         match self {
             Credentials::None { client_id }
             | Credentials::ClientSecretBasic { client_id, .. }
             | Credentials::ClientSecretPost { client_id, .. }
-            | Credentials::ClientAssertionJwtBearer { client_id, .. } => client_id,
+            | Credentials::ClientAssertionJwtBearer { client_id, .. } => Some(client_id),
+            Credentials::BearerToken { .. } => None,
+        }
+    }
+
+    /// Get the bearer token from the credentials.
+    #[must_use]
+    pub fn bearer_token(&self) -> Option<&str> {
+        match self {
+            Credentials::BearerToken { token } => Some(token),
+            _ => None,
         }
     }
 
@@ -89,6 +101,7 @@ impl Credentials {
             | Credentials::ClientSecretBasic { client_id, .. }
             | Credentials::ClientSecretPost { client_id, .. }
             | Credentials::ClientAssertionJwtBearer { client_id, .. } => client_id,
+            Credentials::BearerToken { .. } => return Ok(None),
         };
 
         repo.oauth2_client().find_by_client_id(client_id).await
@@ -239,7 +252,7 @@ pub struct ClientAuthorization<F = ()> {
 impl<F> ClientAuthorization<F> {
     /// Get the `client_id` from the credentials.
     #[must_use]
-    pub fn client_id(&self) -> &str {
+    pub fn client_id(&self) -> Option<&str> {
         self.credentials.client_id()
     }
 }
@@ -355,30 +368,40 @@ where
 {
     type Rejection = ClientAuthorizationError;
 
-    #[allow(clippy::too_many_lines)]
     async fn from_request(
         req: Request<axum::body::Body>,
         state: &S,
     ) -> Result<Self, Self::Rejection> {
-        // Split the request into parts so we can extract some headers
-        let (mut parts, body) = req.into_parts();
+        enum Authorization {
+            Basic(String, String),
+            Bearer(String),
+        }
 
-        let header =
-            TypedHeader::<Authorization<Basic>>::from_request_parts(&mut parts, state).await;
+        // Sadly, the typed-header 'Authorization' doesn't let us check for both
+        // Basic and Bearer at the same time, so we need to parse them manually
+        let authorization = if let Some(header) = req.headers().get(http::header::AUTHORIZATION) {
+            let bytes = header.as_bytes();
+            if bytes.len() >= 6 && bytes[..6].eq_ignore_ascii_case(b"Basic ") {
+                let Some(decoded) = Basic::decode(header) else {
+                    return Err(ClientAuthorizationError::InvalidHeader);
+                };
 
-        // Take the Authorization header
-        let credentials_from_header = match header {
-            Ok(header) => Some((header.username().to_owned(), header.password().to_owned())),
-            Err(err) => match err.reason() {
-                // If it's missing it is fine
-                TypedHeaderRejectionReason::Missing => None,
-                // If the header could not be parsed, return the error
-                _ => return Err(ClientAuthorizationError::InvalidHeader),
-            },
+                Some(Authorization::Basic(
+                    decoded.username().to_owned(),
+                    decoded.password().to_owned(),
+                ))
+            } else if bytes.len() >= 7 && bytes[..7].eq_ignore_ascii_case(b"Bearer ") {
+                let Some(decoded) = Bearer::decode(header) else {
+                    return Err(ClientAuthorizationError::InvalidHeader);
+                };
+
+                Some(Authorization::Bearer(decoded.token().to_owned()))
+            } else {
+                return Err(ClientAuthorizationError::InvalidHeader);
+            }
+        } else {
+            None
         };
-
-        // Reconstruct the request from the parts
-        let req = Request::from_parts(parts, body);
 
         // Take the form value
         let (
@@ -407,13 +430,19 @@ where
 
         // And now, figure out the actual auth method
         let credentials = match (
-            credentials_from_header,
+            authorization,
             client_id_from_form,
             client_secret_from_form,
             client_assertion_type,
             client_assertion,
         ) {
-            (Some((client_id, client_secret)), client_id_from_form, None, None, None) => {
+            (
+                Some(Authorization::Basic(client_id, client_secret)),
+                client_id_from_form,
+                None,
+                None,
+                None,
+            ) => {
                 if let Some(client_id_from_form) = client_id_from_form {
                     // If the client_id was in the body, verify it matches with the header
                     if client_id != client_id_from_form {
@@ -481,6 +510,11 @@ where
                 return Err(ClientAuthorizationError::UnsupportedClientAssertion {
                     client_assertion_type,
                 });
+            }
+
+            (Some(Authorization::Bearer(token)), None, None, None, None) => {
+                // Got a bearer token
+                Credentials::BearerToken { token }
             }
 
             (None, None, None, None, None) => {
@@ -676,5 +710,30 @@ mod tests {
         assert_eq!(client_id, "client-id");
         jwt.verify_with_shared_secret(b"client-secret".to_vec())
             .unwrap();
+    }
+
+    #[tokio::test]
+    async fn bearer_token_test() {
+        let req = Request::builder()
+            .method(Method::POST)
+            .header(
+                http::header::CONTENT_TYPE,
+                mime::APPLICATION_WWW_FORM_URLENCODED.as_ref(),
+            )
+            .header(http::header::AUTHORIZATION, "Bearer token")
+            .body(Body::new("foo=bar".to_owned()))
+            .unwrap();
+
+        assert_eq!(
+            ClientAuthorization::<serde_json::Value>::from_request(req, &())
+                .await
+                .unwrap(),
+            ClientAuthorization {
+                credentials: Credentials::BearerToken {
+                    token: "token".to_owned(),
+                },
+                form: Some(serde_json::json!({"foo": "bar"})),
+            }
+        );
     }
 }

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{
     extract::{Form, State},
@@ -13,8 +13,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::BoxClock;
 use mas_router::{PostAuthAction, UrlBuilder};
-use mas_storage::{BoxClock, BoxRepository, user::BrowserSessionRepository};
+use mas_storage::{BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
 
@@ -33,14 +34,14 @@ pub(crate) async fn post(
 
     if let Some(session_id) = session_info.current_session_id() {
         let maybe_session = repo.browser_session().lookup(session_id).await?;
-        if let Some(session) = maybe_session {
-            if session.finished_at.is_none() {
-                activity_tracker
-                    .record_browser_session(&clock, &session)
-                    .await;
+        if let Some(session) = maybe_session
+            && session.finished_at.is_none()
+        {
+            activity_tracker
+                .record_browser_session(&clock, &session)
+                .await;
 
-                repo.browser_session().finish(&clock, session).await?;
-            }
+            repo.browser_session().finish(&clock, session).await?;
         }
     }
 

@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
@@ -21,6 +21,7 @@ pub struct User {
     pub locked_at: Option<DateTime<Utc>>,
     pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    pub is_guest: bool,
 }
 
 impl User {
@@ -28,6 +29,20 @@ impl User {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.locked_at.is_none() && self.deactivated_at.is_none()
+    }
+
+    /// Returns `true` if the user is a valid actor, for example
+    /// of a personal session.
+    ///
+    /// Currently: this is `true` unless the user is deactivated.
+    ///
+    /// This is a weaker form of validity: `is_valid` always implies
+    /// `is_valid_actor`, but some users (currently: locked users)
+    /// can be valid actors for personal sessions but aren't valid
+    /// except through administrative access.
+    #[must_use]
+    pub fn is_valid_actor(&self) -> bool {
+        self.deactivated_at.is_none()
     }
 }
 
@@ -43,6 +58,7 @@ impl User {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: false,
         }]
     }
 }
@@ -223,17 +239,17 @@ impl UserRegistrationToken {
         }
 
         // Check if expired
-        if let Some(expires_at) = self.expires_at {
-            if now >= expires_at {
-                return false;
-            }
+        if let Some(expires_at) = self.expires_at
+            && now >= expires_at
+        {
+            return false;
         }
 
         // Check if usage limit exceeded
-        if let Some(usage_limit) = self.usage_limit {
-            if self.times_used >= usage_limit {
-                return false;
-            }
+        if let Some(usage_limit) = self.usage_limit
+            && self.times_used >= usage_limit
+        {
+            return false;
         }
 
         true

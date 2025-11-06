@@ -1,17 +1,18 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Utilities to synchronize the configuration file with the database.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use mas_config::{ClientsConfig, UpstreamOAuth2Config};
+use mas_data_model::Clock;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    Clock, Pagination, RepositoryAccess,
+    Pagination, RepositoryAccess,
     upstream_oauth2::{UpstreamOAuthProviderFilter, UpstreamOAuthProviderParams},
 };
 use mas_storage_pg::PgRepository;
@@ -37,6 +38,19 @@ fn map_import_action(
     }
 }
 
+fn map_import_on_conflict(
+    config: mas_config::UpstreamOAuth2OnConflict,
+) -> mas_data_model::UpstreamOAuthProviderOnConflict {
+    match config {
+        mas_config::UpstreamOAuth2OnConflict::Add => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Add
+        }
+        mas_config::UpstreamOAuth2OnConflict::Fail => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Fail
+        }
+    }
+}
+
 fn map_claims_imports(
     config: &mas_config::UpstreamOAuth2ClaimsImports,
 ) -> mas_data_model::UpstreamOAuthProviderClaimsImports {
@@ -44,9 +58,10 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
-        localpart: mas_data_model::UpstreamOAuthProviderImportPreference {
+        localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),
+            on_conflict: map_import_on_conflict(config.localpart.on_conflict),
         },
         displayname: mas_data_model::UpstreamOAuthProviderImportPreference {
             action: map_import_action(config.displayname.action),
@@ -117,7 +132,8 @@ pub async fn config_sync(
         let mut existing_enabled_ids = BTreeSet::new();
         let mut existing_disabled = BTreeMap::new();
         // Process the existing providers
-        for provider in page.edges {
+        for edge in page.edges {
+            let provider = edge.node;
             if provider.enabled() {
                 if config_ids.contains(&provider.id) {
                     existing_enabled_ids.insert(provider.id);
@@ -194,11 +210,11 @@ pub async fn config_sync(
                     // private key to hold the content of the private key file.
                     // private key (raw) takes precedence so both can be defined
                     // without issues
-                    if siwa.private_key.is_none() {
-                        if let Some(private_key_file) = siwa.private_key_file.take() {
-                            let key = tokio::fs::read_to_string(private_key_file).await?;
-                            siwa.private_key = Some(key);
-                        }
+                    if siwa.private_key.is_none()
+                        && let Some(private_key_file) = siwa.private_key_file.take()
+                    {
+                        let key = tokio::fs::read_to_string(private_key_file).await?;
+                        siwa.private_key = Some(key);
                     }
                     let encoded = serde_json::to_vec(&siwa)?;
                     Some(encrypter.encrypt_to_string(&encoded)?)
@@ -276,6 +292,18 @@ pub async fn config_sync(
                 }
             };
 
+            let on_backchannel_logout = match provider.on_backchannel_logout {
+                mas_config::UpstreamOAuth2OnBackchannelLogout::DoNothing => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutBrowserOnly => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly
+                }
+                mas_config::UpstreamOAuth2OnBackchannelLogout::LogoutAll => {
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::LogoutAll
+                }
+            };
+
             repo.upstream_oauth_provider()
                 .upsert(
                     clock,
@@ -306,6 +334,7 @@ pub async fn config_sync(
                             .collect(),
                         forward_login_hint: provider.forward_login_hint,
                         ui_order,
+                        on_backchannel_logout,
                     },
                 )
                 .await?;
@@ -357,7 +386,7 @@ pub async fn config_sync(
                 continue;
             }
 
-            let client_secret = client.client_secret.as_deref();
+            let client_secret = client.client_secret().await?;
             let client_name = client.client_name.as_ref();
             let client_auth_method = client.client_auth_method();
             let jwks = client.jwks.as_ref();

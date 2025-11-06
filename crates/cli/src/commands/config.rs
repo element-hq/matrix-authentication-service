@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::process::ExitCode;
 
@@ -11,7 +11,7 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSection, RootConfig, SyncConfig};
-use mas_storage::{Clock as _, SystemClock};
+use mas_data_model::{Clock as _, SystemClock};
 use mas_storage_pg::MIGRATOR;
 use rand::SeedableRng;
 use tokio::io::AsyncWriteExt;
@@ -72,7 +72,7 @@ impl Options {
             SC::Dump { output } => {
                 let _span = info_span!("cli.config.dump").entered();
 
-                let config = RootConfig::extract(figment)?;
+                let config = RootConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 let config = serde_yaml::to_string(&config)?;
 
                 if let Some(output) = output {
@@ -88,7 +88,7 @@ impl Options {
             SC::Check => {
                 let _span = info_span!("cli.config.check").entered();
 
-                let _config = RootConfig::extract(figment)?;
+                let _config = RootConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 info!("Configuration file looks good");
             }
 
@@ -105,7 +105,8 @@ impl Options {
 
                 if !synapse_config.is_empty() {
                     info!("Adjusting MAS config to match Synapse config from {synapse_config:?}");
-                    let synapse_config = syn2mas::synapse_config::Config::load(&synapse_config)?;
+                    let synapse_config = syn2mas::synapse_config::Config::load(&synapse_config)
+                        .map_err(anyhow::Error::from_boxed)?;
                     config = synapse_config.adjust_mas_config(config, &mut rng, clock.now());
                 }
 
@@ -121,7 +122,7 @@ impl Options {
             }
 
             SC::Sync { prune, dry_run } => {
-                let config = SyncConfig::extract(figment)?;
+                let config = SyncConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 let clock = SystemClock::default();
                 let encrypter = config.secrets.encrypter().await?;
 

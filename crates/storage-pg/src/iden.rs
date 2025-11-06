@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Table and column identifiers used by [`sea_query`]
 
@@ -19,6 +19,18 @@ pub enum UserSessions {
 }
 
 #[derive(sea_query::Iden)]
+#[expect(dead_code)]
+pub enum UserSessionAuthentications {
+    Table,
+    UserSessionAuthenticationId,
+    UserSessionId,
+    CreatedAt,
+    UserPasswordId,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+}
+
+#[derive(sea_query::Iden)]
 pub enum Users {
     Table,
     UserId,
@@ -27,6 +39,7 @@ pub enum Users {
     LockedAt,
     DeactivatedAt,
     CanRequestAdmin,
+    IsGuest,
 }
 
 #[derive(sea_query::Iden)]
@@ -96,6 +109,35 @@ pub enum OAuth2Clients {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "personal_sessions"]
+pub enum PersonalSessions {
+    Table,
+    PersonalSessionId,
+    OwnerUserId,
+    #[iden = "owner_oauth2_client_id"]
+    OwnerOAuth2ClientId,
+    ActorUserId,
+    HumanName,
+    ScopeList,
+    CreatedAt,
+    RevokedAt,
+    LastActiveAt,
+    LastActiveIp,
+}
+
+#[derive(sea_query::Iden)]
+#[iden = "personal_access_tokens"]
+pub enum PersonalAccessTokens {
+    Table,
+    PersonalAccessTokenId,
+    PersonalSessionId,
+    // AccessTokenSha256,
+    CreatedAt,
+    ExpiresAt,
+    RevokedAt,
+}
+
+#[derive(sea_query::Iden)]
 #[iden = "upstream_oauth_providers"]
 pub enum UpstreamOAuthProviders {
     Table,
@@ -124,6 +166,7 @@ pub enum UpstreamOAuthProviders {
     TokenEndpointOverride,
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
+    OnBackchannelLogout,
 }
 
 #[derive(sea_query::Iden)]
@@ -138,6 +181,29 @@ pub enum UpstreamOAuthLinks {
     Subject,
     HumanAccountName,
     CreatedAt,
+}
+
+#[derive(sea_query::Iden)]
+#[iden = "upstream_oauth_authorization_sessions"]
+pub enum UpstreamOAuthAuthorizationSessions {
+    Table,
+    #[iden = "upstream_oauth_authorization_session_id"]
+    UpstreamOAuthAuthorizationSessionId,
+    #[iden = "upstream_oauth_provider_id"]
+    UpstreamOAuthProviderId,
+    #[iden = "upstream_oauth_link_id"]
+    UpstreamOAuthLinkId,
+    State,
+    CodeChallengeVerifier,
+    Nonce,
+    IdToken,
+    IdTokenClaims,
+    ExtraCallbackParameters,
+    Userinfo,
+    CreatedAt,
+    CompletedAt,
+    ConsumedAt,
+    UnlinkedAt,
 }
 
 #[derive(sea_query::Iden)]

@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context as _;
 use async_graphql::{
@@ -125,10 +125,10 @@ impl User {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(page.edges.into_iter().map(|u| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::CompatSsoLogin, u.id)),
-                        CompatSsoLogin(u),
+                        OpaqueCursor(NodeCursor(NodeType::CompatSsoLogin, edge.cursor)),
+                        CompatSsoLogin(edge.node),
                     )
                 }));
 
@@ -219,14 +219,13 @@ impl User {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection
-                    .edges
-                    .extend(page.edges.into_iter().map(|(session, sso_login)| {
-                        Edge::new(
-                            OpaqueCursor(NodeCursor(NodeType::CompatSession, session.id)),
-                            CompatSession::new(session).with_loaded_sso_login(sso_login),
-                        )
-                    }));
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
+                    let (session, sso_login) = edge.node;
+                    Edge::new(
+                        OpaqueCursor(NodeCursor(NodeType::CompatSession, session.id)),
+                        CompatSession::new(session).with_loaded_sso_login(sso_login),
+                    )
+                }));
 
                 Ok::<_, async_graphql::Error>(connection)
             },
@@ -305,10 +304,10 @@ impl User {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(page.edges.into_iter().map(|u| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::BrowserSession, u.id)),
-                        BrowserSession(u),
+                        OpaqueCursor(NodeCursor(NodeType::BrowserSession, edge.cursor)),
+                        BrowserSession(edge.node),
                     )
                 }));
 
@@ -373,10 +372,10 @@ impl User {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(page.edges.into_iter().map(|u| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::UserEmail, u.id)),
-                        UserEmail(u),
+                        OpaqueCursor(NodeCursor(NodeType::UserEmail, edge.cursor)),
+                        UserEmail(edge.node),
                     )
                 }));
 
@@ -480,10 +479,10 @@ impl User {
                     PreloadedTotalCount(count),
                 );
 
-                connection.edges.extend(page.edges.into_iter().map(|s| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::OAuth2Session, s.id)),
-                        OAuth2Session(s),
+                        OpaqueCursor(NodeCursor(NodeType::OAuth2Session, edge.cursor)),
+                        OAuth2Session(edge.node),
                     )
                 }));
 
@@ -547,10 +546,10 @@ impl User {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(page.edges.into_iter().map(|s| {
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
                     Edge::new(
-                        OpaqueCursor(NodeCursor(NodeType::UpstreamOAuth2Link, s.id)),
-                        UpstreamOAuth2Link::new(s),
+                        OpaqueCursor(NodeCursor(NodeType::UpstreamOAuth2Link, edge.cursor)),
+                        UpstreamOAuth2Link::new(edge.node),
                     )
                 }));
 
@@ -689,13 +688,13 @@ impl User {
 
                 connection
                     .edges
-                    .extend(page.edges.into_iter().map(|s| match s {
+                    .extend(page.edges.into_iter().map(|edge| match edge.node {
                         mas_storage::app_session::AppSession::Compat(session) => Edge::new(
-                            OpaqueCursor(NodeCursor(NodeType::CompatSession, session.id)),
+                            OpaqueCursor(NodeCursor(NodeType::CompatSession, edge.cursor)),
                             AppSession::CompatSession(Box::new(CompatSession::new(*session))),
                         ),
                         mas_storage::app_session::AppSession::OAuth2(session) => Edge::new(
-                            OpaqueCursor(NodeCursor(NodeType::OAuth2Session, session.id)),
+                            OpaqueCursor(NodeCursor(NodeType::OAuth2Session, edge.cursor)),
                             AppSession::OAuth2Session(Box::new(OAuth2Session(*session))),
                         ),
                     }));

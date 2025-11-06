@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-handlers"
 version.workspace = true
@@ -67,6 +72,7 @@ mas-axum-utils.workspace = true
 mas-config.workspace = true
 mas-context.workspace = true
 mas-data-model.workspace = true
+mas-email.workspace = true
 mas-http.workspace = true
 mas-i18n.workspace = true
 mas-iana.workspace = true
@@ -78,6 +84,7 @@ mas-policy.workspace = true
 mas-router.workspace = true
 mas-storage.workspace = true
 mas-storage-pg.workspace = true
+mas-tasks.workspace = true
 mas-templates.workspace = true
 oauth2-types.workspace = true
 zxcvbn.workspace = true

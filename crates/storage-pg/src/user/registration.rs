@@ -1,16 +1,17 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    UserEmailAuthentication, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+    Clock, UserEmailAuthentication, UserRegistration, UserRegistrationPassword,
+    UserRegistrationToken,
 };
-use mas_storage::{Clock, user::UserRegistrationRepository};
+use mas_storage::user::UserRegistrationRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -432,8 +433,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
 mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
-    use mas_data_model::UserRegistrationPassword;
-    use mas_storage::{Clock, clock::MockClock};
+    use mas_data_model::{Clock, UserRegistrationPassword, clock::MockClock};
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;
@@ -524,7 +524,7 @@ mod tests {
                 &mut rng,
                 &clock,
                 "alice".to_owned(),
-                Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
+                Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                 Some("Mozilla/5.0".to_owned()),
                 Some(serde_json::json!({"action": "continue_compat_sso_login", "id": "01FSHN9AG0MKGTBNZ16RDR3PVY"})),
             )
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(registration.user_agent, Some("Mozilla/5.0".to_owned()));
         assert_eq!(
             registration.ip_address,
-            Some(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
+            Some(IpAddr::V4(Ipv4Addr::LOCALHOST))
         );
         assert_eq!(
             registration.post_auth_action,

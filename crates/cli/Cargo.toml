@@ -1,3 +1,8 @@
+# Copyright 2025 New Vector Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
 [package]
 name = "mas-cli"
 version.workspace = true
@@ -54,12 +59,11 @@ opentelemetry.workspace = true
 opentelemetry-http.workspace = true
 opentelemetry-jaeger-propagator.workspace = true
 opentelemetry-otlp.workspace = true
-opentelemetry-prometheus.workspace = true
+opentelemetry-prometheus-text-exporter.workspace = true
 opentelemetry-resource-detectors.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 opentelemetry-stdout.workspace = true
 opentelemetry_sdk.workspace = true
-prometheus.workspace = true
 sentry.workspace = true
 sentry-tracing.workspace = true
 sentry-tower.workspace = true

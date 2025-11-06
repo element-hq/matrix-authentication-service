@@ -1,21 +1,25 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Session, SessionState, User};
+use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User};
 use mas_storage::{
-    Clock, Page, Pagination,
+    Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
+    pagination::Node,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
-use sea_query::{Expr, PgFunc, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
+use sea_query::{
+    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    extension::postgres::PgExpr,
+};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -24,7 +28,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
-    iden::{OAuth2Clients, OAuth2Sessions},
+    iden::{OAuth2Clients, OAuth2Sessions, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -56,6 +60,12 @@ struct OAuthSessionLookup {
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
     human_name: Option<String>,
+}
+
+impl Node<Ulid> for OAuthSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.oauth2_session_id.into()
+    }
 }
 
 impl TryFrom<OAuthSessionLookup> for Session {
@@ -126,12 +136,19 @@ impl Filter for OAuth2SessionFilter<'_> {
                         .ne(Expr::all(static_clients))
                 }
             }))
-            .add_option(self.device().map(|device| {
-                if let Ok(scope_token) = device.to_scope_token() {
-                    Expr::val(scope_token.to_string()).eq(PgFunc::any(Expr::col((
-                        OAuth2Sessions::Table,
-                        OAuth2Sessions::ScopeList,
-                    ))))
+            .add_option(self.device().map(|device| -> SimpleExpr {
+                if let Ok([stable_scope_token, unstable_scope_token]) = device.to_scope_token() {
+                    Condition::any()
+                        .add(
+                            Expr::val(stable_scope_token.to_string()).eq(PgFunc::any(Expr::col((
+                                OAuth2Sessions::Table,
+                                OAuth2Sessions::ScopeList,
+                            )))),
+                        )
+                        .add(Expr::val(unstable_scope_token.to_string()).eq(PgFunc::any(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::ScopeList)),
+                        )))
+                        .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
                     Expr::val(false).into()
@@ -140,6 +157,18 @@ impl Filter for OAuth2SessionFilter<'_> {
             .add_option(self.browser_session().map(|browser_session| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserSessionId))
                     .eq(Uuid::from(browser_session.id))
+            }))
+            .add_option(self.browser_session_filter().map(|browser_session_filter| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserSessionId)).in_subquery(
+                    Query::select()
+                        .expr(Expr::col((
+                            UserSessions::Table,
+                            UserSessions::UserSessionId,
+                        )))
+                        .apply_filter(browser_session_filter)
+                        .from(UserSessions::Table)
+                        .take(),
+                )
             }))
             .add_option(self.state().map(|state| {
                 if state.is_active() {

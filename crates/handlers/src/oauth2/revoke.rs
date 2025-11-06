@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
@@ -10,11 +10,11 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::TokenType;
+use mas_data_model::{BoxClock, BoxRng, TokenType};
 use mas_iana::oauth::OAuthTokenTypeHint;
 use mas_keystore::Encrypter;
 use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, RepositoryAccess,
+    BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
 };
 use oauth2_types::{

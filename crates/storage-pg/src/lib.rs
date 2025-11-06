@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! An implementation of the storage traits for a PostgreSQL database
 //!
@@ -22,7 +22,7 @@
 //! # use async_trait::async_trait;
 //! # use ulid::Ulid;
 //! # use rand::RngCore;
-//! # use mas_storage::Clock;
+//! # use mas_data_model::Clock;
 //! # use mas_storage_pg::{DatabaseError, ExecuteExt};
 //! # use sqlx::PgConnection;
 //! # use uuid::Uuid;
@@ -165,6 +165,7 @@ use sqlx::migrate::Migrator;
 pub mod app_session;
 pub mod compat;
 pub mod oauth2;
+pub mod personal;
 pub mod queue;
 pub mod upstream_oauth2;
 pub mod user;

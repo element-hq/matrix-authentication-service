@@ -1,26 +1,26 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use std::collections::HashMap;
 
 use anyhow::Context;
 use axum::{
-    extract::{Form, Path, Query, State},
+    extract::{Form, Path, State},
     response::{Html, IntoResponse, Redirect, Response},
 };
+use axum_extra::extract::Query;
 use chrono::Duration;
 use mas_axum_utils::{
     InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
+use mas_data_model::{BoxClock, BoxRng, Clock};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
-use mas_storage::{
-    BoxClock, BoxRepository, BoxRng, Clock, RepositoryAccess, compat::CompatSsoLoginRepository,
-};
+use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
 use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;

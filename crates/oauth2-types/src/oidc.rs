@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Types to interact with the [OpenID Connect] specification.
 //!
@@ -577,7 +577,7 @@ pub struct ProviderMetadata {
     pub require_request_uri_registration: Option<bool>,
 
     /// Indicates where authorization request needs to be protected as [Request
-    /// Object] and provided through either request or request_uri parameter.
+    /// Object] and provided through either request or `request_uri` parameter.
     ///
     /// Defaults to `false`.
     ///
@@ -647,7 +647,10 @@ impl ProviderMetadata {
         let metadata = self.insecure_verify_metadata()?;
 
         if metadata.issuer() != issuer {
-            return Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch);
+            return Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch {
+                expected: issuer.to_owned(),
+                actual: metadata.issuer().to_owned(),
+            });
         }
 
         validate_url(
@@ -677,20 +680,16 @@ impl ProviderMetadata {
             validate_url("registration_endpoint", url, ExtraUrlRestrictions::None)?;
         }
 
-        if let Some(scopes) = &metadata.scopes_supported {
-            if !scopes.iter().any(|s| s == "openid") {
-                return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
-            }
+        if let Some(scopes) = &metadata.scopes_supported
+            && !scopes.iter().any(|s| s == "openid")
+        {
+            return Err(ProviderMetadataVerificationError::ScopesMissingOpenid);
         }
 
         validate_signing_alg_values_supported(
             "token_endpoint",
             metadata
                 .token_endpoint_auth_signing_alg_values_supported
-                .iter()
-                .flatten(),
-            metadata
-                .token_endpoint_auth_methods_supported
                 .iter()
                 .flatten(),
         )?;
@@ -705,33 +704,18 @@ impl ProviderMetadata {
                 .revocation_endpoint_auth_signing_alg_values_supported
                 .iter()
                 .flatten(),
-            metadata
-                .revocation_endpoint_auth_methods_supported
-                .iter()
-                .flatten(),
         )?;
 
         if let Some(url) = &metadata.introspection_endpoint {
             validate_url("introspection_endpoint", url, ExtraUrlRestrictions::None)?;
         }
 
-        // The list can also contain token types so remove them as we don't need to
-        // check them.
-        let introspection_methods = metadata
-            .introspection_endpoint_auth_methods_supported
-            .as_ref()
-            .map(|v| {
-                v.iter()
-                    .filter_map(AuthenticationMethodOrAccessTokenType::authentication_method)
-                    .collect::<Vec<_>>()
-            });
         validate_signing_alg_values_supported(
             "introspection_endpoint",
             metadata
                 .introspection_endpoint_auth_signing_alg_values_supported
                 .iter()
                 .flatten(),
-            introspection_methods.into_iter().flatten(),
         )?;
 
         if let Some(url) = &metadata.userinfo_endpoint {
@@ -1064,8 +1048,13 @@ pub enum ProviderMetadataVerificationError {
     UrlWithFragment(&'static str, Url),
 
     /// The issuer URL doesn't match the one that was discovered.
-    #[error("issuer URLs don't match")]
-    IssuerUrlsDontMatch,
+    #[error("issuer URLs don't match: expected {expected:?}, got {actual:?}")]
+    IssuerUrlsDontMatch {
+        /// The expected issuer URL.
+        expected: String,
+        /// The issuer URL that was discovered.
+        actual: String,
+    },
 
     /// `openid` is missing from the supported scopes.
     #[error("missing openid scope")]
@@ -1090,12 +1079,6 @@ pub enum ProviderMetadataVerificationError {
     /// `implicit` is missing from the supported grant types.
     #[error("missing `implicit` grant type")]
     GrantTypesMissingImplicit,
-
-    /// The given endpoint is missing auth signing algorithm values, but they
-    /// are required because it supports at least one of the `client_secret_jwt`
-    /// or `private_key_jwt` authentication methods.
-    #[error("{0} missing auth signing algorithm values")]
-    MissingAuthSigningAlgValues(&'static str),
 
     /// `none` is in the given endpoint's signing algorithm values, but is not
     /// allowed.
@@ -1168,32 +1151,14 @@ fn validate_url(
 fn validate_signing_alg_values_supported<'a>(
     endpoint: &'static str,
     values: impl Iterator<Item = &'a JsonWebSignatureAlg>,
-    mut methods: impl Iterator<Item = &'a OAuthClientAuthenticationMethod>,
 ) -> Result<(), ProviderMetadataVerificationError> {
-    let mut no_values = true;
-
     for value in values {
         if *value == JsonWebSignatureAlg::None {
             return Err(ProviderMetadataVerificationError::SigningAlgValuesWithNone(
                 endpoint,
             ));
         }
-
-        no_values = false;
     }
-
-    if no_values
-        && methods.any(|method| {
-            matches!(
-                method,
-                OAuthClientAuthenticationMethod::ClientSecretJwt
-                    | OAuthClientAuthenticationMethod::PrivateKeyJwt
-            )
-        })
-    {
-        return Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint));
-    }
-
     Ok(())
 }
 
@@ -1314,7 +1279,7 @@ mod tests {
         metadata.issuer = Some("https://example.com/".to_owned());
         assert_matches!(
             metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch)
+            Err(ProviderMetadataVerificationError::IssuerUrlsDontMatch { .. })
         );
 
         // Err - Not https
@@ -1535,34 +1500,30 @@ mod tests {
             Some(vec![JsonWebSignatureAlg::Rs256, JsonWebSignatureAlg::EdDsa]);
         metadata.clone().validate(&issuer).unwrap();
 
-        // Err - `client_secret_jwt` without signing alg values.
+        // Ok - `client_secret_jwt` with signing alg values.
         metadata.token_endpoint_auth_methods_supported =
             Some(vec![OAuthClientAuthenticationMethod::ClientSecretJwt]);
-        metadata.token_endpoint_auth_signing_alg_values_supported = None;
-        let endpoint = assert_matches!(
-            metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint)) => endpoint
-        );
-        assert_eq!(endpoint, "token_endpoint");
-
-        // Ok - `client_secret_jwt` with signing alg values.
         metadata.token_endpoint_auth_signing_alg_values_supported =
             Some(vec![JsonWebSignatureAlg::Rs256]);
         metadata.clone().validate(&issuer).unwrap();
 
-        // Err - `private_key_jwt` without signing alg values.
+        // Ok - `private_key_jwt` with signing alg values.
+        metadata.token_endpoint_auth_methods_supported =
+            Some(vec![OAuthClientAuthenticationMethod::PrivateKeyJwt]);
+        metadata.token_endpoint_auth_signing_alg_values_supported =
+            Some(vec![JsonWebSignatureAlg::Rs256]);
+        metadata.clone().validate(&issuer).unwrap();
+
+        // Ok - `client_secret_jwt` without signing alg values.
+        metadata.token_endpoint_auth_methods_supported =
+            Some(vec![OAuthClientAuthenticationMethod::ClientSecretJwt]);
+        metadata.token_endpoint_auth_signing_alg_values_supported = None;
+        metadata.clone().validate(&issuer).unwrap();
+
+        // Ok - `private_key_jwt` without signing alg values.
         metadata.token_endpoint_auth_methods_supported =
             Some(vec![OAuthClientAuthenticationMethod::PrivateKeyJwt]);
         metadata.token_endpoint_auth_signing_alg_values_supported = None;
-        let endpoint = assert_matches!(
-            metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint)) => endpoint
-        );
-        assert_eq!(endpoint, "token_endpoint");
-
-        // Ok - `private_key_jwt` with signing alg values.
-        metadata.token_endpoint_auth_signing_alg_values_supported =
-            Some(vec![JsonWebSignatureAlg::Rs256]);
         metadata.clone().validate(&issuer).unwrap();
 
         // Ok - Other auth methods without signing alg values.

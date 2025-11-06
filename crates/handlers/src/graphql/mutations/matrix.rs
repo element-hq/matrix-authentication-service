@@ -1,8 +1,8 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use anyhow::Context as _;
 use async_graphql::{Context, Description, Enum, ID, InputObject, Object};
@@ -93,7 +93,6 @@ impl MatrixMutations {
         repo.cancel().await?;
 
         let conn = state.homeserver_connection();
-        let mxid = conn.mxid(&user.username);
 
         if let Some(display_name) = &input.display_name {
             // Let's do some basic validation on the display name
@@ -105,11 +104,11 @@ impl MatrixMutations {
                 return Ok(SetDisplayNamePayload::Invalid);
             }
 
-            conn.set_displayname(&mxid, display_name)
+            conn.set_displayname(&user.username, display_name)
                 .await
                 .context("Failed to set display name")?;
         } else {
-            conn.unset_displayname(&mxid)
+            conn.unset_displayname(&user.username)
                 .await
                 .context("Failed to unset display name")?;
         }

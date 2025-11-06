@@ -1,7 +1,7 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Navigate, redirect } from "@tanstack/react-router";
@@ -33,10 +33,10 @@ export const Route = createFileRoute({
 
     preload(planManagementIframeUri, { as: "document" });
   },
-  component: Plan,
+  component: RouteComponent,
 });
 
-function Plan(): React.ReactElement {
+function RouteComponent(): React.ReactElement {
   const result = useSuspenseQuery(query);
   const { planManagementIframeUri } = result.data.siteConfig;
 
@@ -45,6 +45,14 @@ function Plan(): React.ReactElement {
     return <Navigate to="/" replace />;
   }
 
+  return <Plan planManagementIframeUri={planManagementIframeUri} />;
+}
+
+function Plan({
+  planManagementIframeUri,
+}: {
+  planManagementIframeUri: string;
+}): React.ReactElement {
   const ref = useRef<HTMLIFrameElement>(null);
 
   // Query the size of the iframe content and set the height
@@ -79,6 +87,24 @@ function Plan(): React.ReactElement {
     [calculateHeight],
   );
 
+  const attachObserver = useCallback(
+    (iframe: HTMLIFrameElement) => {
+      const iframeBody = iframe.contentWindow?.document.body;
+      if (!iframeBody) {
+        return;
+      }
+      // calculate the height immediately
+      calculateHeight();
+      // observe future changes to the body of the iframe
+      observer.observe(iframeBody, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
+    },
+    [calculateHeight, observer],
+  );
+
   useEffect(() => {
     const iframe = ref.current;
     if (iframe) {
@@ -86,22 +112,7 @@ function Plan(): React.ReactElement {
     }
     // Cleanup observer when the component unmounts
     return () => observer.disconnect();
-  }, [observer]);
-
-  const attachObserver = (iframe: HTMLIFrameElement) => {
-    const iframeBody = iframe.contentWindow?.document.body;
-    if (!iframeBody) {
-      return;
-    }
-    // calculate the height immediately
-    calculateHeight();
-    // observe future changes to the body of the iframe
-    observer.observe(iframeBody, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
-  };
+  }, [observer, attachObserver]);
 
   return (
     <iframe

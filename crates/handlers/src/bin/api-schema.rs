@@ -1,8 +1,8 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 #![forbid(unsafe_code)]
 #![deny(
@@ -50,8 +50,8 @@ macro_rules! impl_from_ref {
 }
 
 impl_from_request_parts!(mas_storage::BoxRepository);
-impl_from_request_parts!(mas_storage::BoxClock);
-impl_from_request_parts!(mas_storage::BoxRng);
+impl_from_request_parts!(mas_data_model::BoxClock);
+impl_from_request_parts!(mas_data_model::BoxRng);
 impl_from_request_parts!(mas_handlers::BoundActivityTracker);
 impl_from_ref!(mas_router::UrlBuilder);
 impl_from_ref!(mas_templates::Templates);
@@ -59,6 +59,8 @@ impl_from_ref!(Arc<dyn mas_matrix::HomeserverConnection>);
 impl_from_ref!(mas_keystore::Keystore);
 impl_from_ref!(mas_handlers::passwords::PasswordManager);
 impl_from_ref!(Arc<mas_policy::PolicyFactory>);
+impl_from_ref!(mas_data_model::SiteConfig);
+impl_from_ref!(mas_data_model::AppVersion);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mut api, _) = mas_handlers::admin_api_router::<DummyState>();

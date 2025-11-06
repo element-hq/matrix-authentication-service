@@ -1,17 +1,17 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 //! Repositories to interact with entities related to user accounts
 
 use async_trait::async_trait;
-use mas_data_model::User;
+use mas_data_model::{Clock, User};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, Page, Pagination, repository_impl};
+use crate::{Page, Pagination, repository_impl};
 
 mod email;
 mod password;
@@ -75,10 +75,11 @@ impl UserState {
 pub struct UserFilter<'a> {
     state: Option<UserState>,
     can_request_admin: Option<bool>,
-    _phantom: std::marker::PhantomData<&'a ()>,
+    is_guest: Option<bool>,
+    search: Option<&'a str>,
 }
 
-impl UserFilter<'_> {
+impl<'a> UserFilter<'a> {
     /// Create a new [`UserFilter`] with default values
     #[must_use]
     pub fn new() -> Self {
@@ -120,6 +121,27 @@ impl UserFilter<'_> {
         self
     }
 
+    /// Filter for guest users
+    #[must_use]
+    pub fn guest_only(mut self) -> Self {
+        self.is_guest = Some(true);
+        self
+    }
+
+    /// Filter for non-guest users
+    #[must_use]
+    pub fn non_guest_only(mut self) -> Self {
+        self.is_guest = Some(false);
+        self
+    }
+
+    /// Filter for users that match the given search string
+    #[must_use]
+    pub fn matching_search(mut self, search: &'a str) -> Self {
+        self.search = Some(search);
+        self
+    }
+
     /// Get the state filter
     ///
     /// Returns [`None`] if no state filter was set
@@ -134,6 +156,22 @@ impl UserFilter<'_> {
     #[must_use]
     pub fn can_request_admin(&self) -> Option<bool> {
         self.can_request_admin
+    }
+
+    /// Get the is guest filter
+    ///
+    /// Returns [`None`] if no is guest filter was set
+    #[must_use]
+    pub fn is_guest(&self) -> Option<bool> {
+        self.is_guest
+    }
+
+    /// Get the search filter
+    ///
+    /// Returns [`None`] if no search filter was set
+    #[must_use]
+    pub fn search(&self) -> Option<&'a str> {
+        self.search
     }
 }
 
@@ -244,6 +282,19 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
 
+    /// Reactivate a [`User`]
+    ///
+    /// Returns the reactivated [`User`]
+    ///
+    /// # Parameters
+    ///
+    /// * `user`: The [`User`] to reactivate
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
+
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -315,6 +366,7 @@ repository_impl!(UserRepository:
     async fn lock(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
+    async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,

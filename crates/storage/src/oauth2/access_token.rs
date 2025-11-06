@@ -1,16 +1,16 @@
-// Copyright 2024 New Vector Ltd.
+// Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_data_model::{AccessToken, Session};
+use mas_data_model::{AccessToken, Clock, Session};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// An [`OAuth2AccessTokenRepository`] helps interacting with [`AccessToken`]
 /// saved in the storage backend

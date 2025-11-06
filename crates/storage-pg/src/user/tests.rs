@@ -1,18 +1,21 @@
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use chrono::Duration;
+use mas_data_model::{Clock, clock::MockClock};
+use mas_iana::jose::JsonWebSignatureAlg;
 use mas_storage::{
-    Clock, Pagination, RepositoryAccess,
-    clock::MockClock,
+    Pagination, RepositoryAccess,
+    upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
     },
 };
+use oauth2_types::scope::{OPENID, Scope};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use sqlx::PgPool;
@@ -171,10 +174,23 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
     assert_eq!(repo.user().count(deactivated).await.unwrap(), 1);
 
+    // Test the search filter
+    assert_eq!(
+        repo.user()
+            .count(all.matching_search("alice"))
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        repo.user().count(all.matching_search("JO")).await.unwrap(),
+        1
+    );
+
     // Check the list method
     let list = repo.user().list(all, Pagination::first(10)).await.unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -189,7 +205,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -211,7 +227,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     repo.save().await.unwrap();
 }
@@ -265,6 +281,10 @@ async fn test_user_repo_find_by_username(pool: PgPool) {
 async fn test_user_email_repo(pool: PgPool) {
     const USERNAME: &str = "john";
     const EMAIL: &str = "john@example.com";
+    // This is what is stored in the database, making sure that:
+    //  1. we don't normalize the email address when storing it
+    //  2. looking it up is case-incensitive
+    const UPPERCASE_EMAIL: &str = "JOHN@EXAMPLE.COM";
 
     let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
     let mut rng = ChaChaRng::seed_from_u64(42);
@@ -292,12 +312,12 @@ async fn test_user_email_repo(pool: PgPool) {
 
     let user_email = repo
         .user_email()
-        .add(&mut rng, &clock, &user, EMAIL.to_owned())
+        .add(&mut rng, &clock, &user, UPPERCASE_EMAIL.to_owned())
         .await
         .unwrap();
 
     assert_eq!(user_email.user_id, user.id);
-    assert_eq!(user_email.email, EMAIL);
+    assert_eq!(user_email.email, UPPERCASE_EMAIL);
 
     // Check the counts
     assert_eq!(repo.user_email().count(all).await.unwrap(), 1);
@@ -318,7 +338,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .expect("user email was not found");
 
     assert_eq!(user_email.user_id, user.id);
-    assert_eq!(user_email.email, EMAIL);
+    assert_eq!(user_email.email, UPPERCASE_EMAIL);
 
     // Listing the user emails should work
     let emails = repo
@@ -328,7 +348,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Listing emails from the email address should work
     let emails = repo
@@ -338,7 +358,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Filtering on another email should not return anything
     let emails = repo
@@ -628,7 +648,7 @@ async fn test_user_session(pool: PgPool) {
         .unwrap();
     assert!(!session_list.has_next_page);
     assert_eq!(session_list.edges.len(), 1);
-    assert_eq!(session_list.edges[0], session);
+    assert_eq!(session_list.edges[0].node, session);
 
     let session_lookup = repo
         .browser_session()
@@ -717,6 +737,100 @@ async fn test_user_session(pool: PgPool) {
     assert_eq!(repo.browser_session().count(all_bob).await.unwrap(), 5);
     assert_eq!(repo.browser_session().count(active_bob).await.unwrap(), 0);
     assert_eq!(repo.browser_session().count(finished).await.unwrap(), 11);
+
+    // Checking the 'authenticaated by upstream sessions' filter
+    // We need a provider
+    let provider = repo
+        .upstream_oauth_provider()
+        .add(
+            &mut rng,
+            &clock,
+            UpstreamOAuthProviderParams {
+                issuer: None,
+                human_name: None,
+                brand_name: None,
+                scope: Scope::from_iter([OPENID]),
+                token_endpoint_auth_method:
+                    mas_data_model::UpstreamOAuthProviderTokenAuthMethod::None,
+                token_endpoint_signing_alg: None,
+                id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                fetch_userinfo: false,
+                userinfo_signed_response_alg: None,
+                client_id: "client".to_owned(),
+                encrypted_client_secret: None,
+                claims_imports: mas_data_model::UpstreamOAuthProviderClaimsImports::default(),
+                authorization_endpoint_override: None,
+                token_endpoint_override: None,
+                userinfo_endpoint_override: None,
+                jwks_uri_override: None,
+                discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Disabled,
+                pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Disabled,
+                response_mode: None,
+                additional_authorization_parameters: Vec::new(),
+                forward_login_hint: false,
+                ui_order: 0,
+                on_backchannel_logout:
+                    mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            },
+        )
+        .await
+        .unwrap();
+
+    // Start a authorization session
+    let upstream_oauth_session = repo
+        .upstream_oauth_session()
+        .add(&mut rng, &clock, &provider, "state".to_owned(), None, None)
+        .await
+        .unwrap();
+
+    // Start a browser session
+    let session = repo
+        .browser_session()
+        .add(&mut rng, &clock, &alice, None)
+        .await
+        .unwrap();
+
+    // Make the session from alice authenticated by this session
+    repo.browser_session()
+        .authenticate_with_upstream(&mut rng, &clock, &session, &upstream_oauth_session)
+        .await
+        .unwrap();
+
+    // This will match all authorization sessions, which matches exactly that one
+    // authorization session
+    let upstream_oauth_session_filter = UpstreamOAuthSessionFilter::new();
+    let filter = BrowserSessionFilter::new()
+        .authenticated_by_upstream_sessions_only(upstream_oauth_session_filter);
+
+    // Now try to look it up
+    let page = repo
+        .browser_session()
+        .list(filter, Pagination::first(10))
+        .await
+        .unwrap();
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node.id, session.id);
+
+    // Try counting
+    assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);
+
+    // Try finishing the session
+    let affected = repo
+        .browser_session()
+        .finish_bulk(&clock, filter)
+        .await
+        .unwrap();
+    assert_eq!(affected, 1);
+
+    // Lookup the session by its ID
+    let lookup = repo
+        .browser_session()
+        .lookup(session.id)
+        .await
+        .unwrap()
+        .expect("session to be found in the database");
+    // It should be finished
+    assert!(lookup.finished_at.is_some());
 }
 
 #[sqlx::test(migrator = "crate::MIGRATOR")]

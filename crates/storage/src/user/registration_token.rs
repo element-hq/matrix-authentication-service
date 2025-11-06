@@ -1,15 +1,15 @@
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::UserRegistrationToken;
+use mas_data_model::{Clock, UserRegistrationToken};
 use rand_core::RngCore;
 use ulid::Ulid;
 
-use crate::{Clock, repository_impl};
+use crate::repository_impl;
 
 /// A filter to apply when listing [`UserRegistrationToken`]s
 #[derive(Debug, Clone, Copy)]
