@@ -86,24 +86,30 @@ impl Entrypoints {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub struct Data {
+    base: BaseData,
+
+    // We will merge this in a custom way, so don't emit as part of the base
+    rest: Option<serde_json::Value>,
+}
+
+#[derive(Serialize, Debug)]
+struct BaseData {
     server_name: String,
 
     /// Limits on the number of application sessions that each user can have
     session_limit: Option<SessionLimitConfig>,
-
-    // We will merge this in a custom way, so don't emit as part of the base
-    #[serde(skip)]
-    rest: Option<serde_json::Value>,
 }
 
 impl Data {
     #[must_use]
     pub fn new(server_name: String, session_limit: Option<SessionLimitConfig>) -> Self {
         Self {
-            server_name,
-            session_limit,
+            base: BaseData {
+                server_name,
+                session_limit,
+            },
 
             rest: None,
         }
@@ -116,7 +122,7 @@ impl Data {
     }
 
     fn to_value(&self) -> Result<serde_json::Value, anyhow::Error> {
-        let base = serde_json::to_value(self)?;
+        let base = serde_json::to_value(&self.base)?;
 
         if let Some(rest) = &self.rest {
             merge_data(base, rest.clone())
