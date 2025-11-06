@@ -110,6 +110,7 @@ impl ExperimentalConfig {
             && is_default_token_ttl(&self.compat_token_ttl)
             && self.inactive_session_expiration.is_none()
             && self.plan_management_iframe_uri.is_none()
+            && self.session_limit.is_none()
     }
 }
 
