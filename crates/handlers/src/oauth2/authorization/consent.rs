@@ -136,9 +136,7 @@ pub(crate) async fn get(
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user)
-        .await
-        .map_err(|e| RouteError::Internal(e.into()))?;
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
@@ -240,9 +238,7 @@ pub(crate) async fn post(
         return Err(RouteError::GrantNotPending(grant.id));
     }
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &browser_session.user)
-        .await
-        .map_err(|e| RouteError::Internal(e.into()))?;
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &browser_session.user).await?;
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {

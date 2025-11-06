@@ -103,9 +103,7 @@ pub(crate) async fn get(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user)
-        .await
-        .map_err(InternalError::from_anyhow)?;
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
     // Evaluate the policy
     let res = policy
@@ -210,9 +208,7 @@ pub(crate) async fn post(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user)
-        .await
-        .map_err(InternalError::from_anyhow)?;
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
     // Evaluate the policy
     let res = policy

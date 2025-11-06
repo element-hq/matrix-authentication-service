@@ -136,7 +136,7 @@ pub async fn load_session_or_fallback(
 pub(crate) async fn count_user_sessions_for_limiting(
     repo: &mut BoxRepository,
     user: &User,
-) -> anyhow::Result<SessionCounts> {
+) -> Result<SessionCounts, RepositoryError> {
     let oauth2 = repo
         .oauth2_session()
         .count(OAuth2SessionFilter::new().active_only().for_user(user))
