@@ -168,6 +168,10 @@ pub struct AuthorizationGrantInput<'a> {
     #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
     pub user: Option<&'a User>,
 
+    /// How many sessions the user has.
+    /// Not populated if it's not a user logging in.
+    pub session_counts: Option<SessionCounts>,
+
     #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client: &'a Client,
 

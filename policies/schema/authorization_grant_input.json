@@ -14,6 +14,14 @@
       "type": "object",
       "additionalProperties": true
     },
+    "session_counts": {
+      "description": "How many sessions the user has. Not populated if it's not a user logging in.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/SessionCounts"
+        }
+      ]
+    },
     "client": {
       "type": "object",
       "additionalProperties": true
@@ -29,6 +37,38 @@
     }
   },
   "definitions": {
+    "SessionCounts": {
+      "description": "Information about how many sessions the user has",
+      "type": "object",
+      "required": [
+        "compat",
+        "oauth2",
+        "personal",
+        "total"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "oauth2": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "compat": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "personal": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      }
+    },
     "GrantType": {
       "type": "string",
       "enum": [
