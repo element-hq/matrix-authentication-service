@@ -59,7 +59,7 @@ impl<T> WithCaptcha<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<chrono::prelude::Utc>,
         rng: &mut R,
         locales: &[DataLocale],

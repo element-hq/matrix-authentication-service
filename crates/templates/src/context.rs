@@ -31,9 +31,10 @@ use mas_iana::jose::JsonWebSignatureAlg;
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
-    Rng,
+    Rng, SeedableRng,
     distributions::{Alphanumeric, DistString},
 };
+use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
 use ulid::Ulid;
 use url::Url;
@@ -106,7 +107,7 @@ pub trait TemplateContext: Serialize {
     ///
     /// This is then used to check for template validity in unit tests and in
     /// the CLI (`cargo run -- templates check`)
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -144,7 +145,7 @@ pub(crate) fn sample_list<T: TemplateContext>(samples: Vec<T>) -> BTreeMap<Sampl
 }
 
 impl TemplateContext for () {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -181,7 +182,7 @@ impl<T> std::ops::Deref for WithLanguage<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -189,12 +190,12 @@ impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
     where
         Self: Sized,
     {
+        // Create a forked RNG so we make samples deterministic between locales
+        let rng = ChaCha8Rng::from_rng(rng).unwrap();
         locales
             .iter()
             .flat_map(|locale| {
-                // Make samples deterministic between locales
-                let mut rng = rng.clone();
-                T::sample(now, &mut rng, locales)
+                T::sample(now, &mut rng.clone(), locales)
                     .into_iter()
                     .map(|(sample_id, sample)| {
                         (
@@ -220,7 +221,7 @@ pub struct WithCsrf<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -253,7 +254,7 @@ pub struct WithSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithSession<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -291,7 +292,7 @@ pub struct WithOptionalSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -342,7 +343,7 @@ impl Serialize for EmptyContext {
 }
 
 impl TemplateContext for EmptyContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -370,7 +371,7 @@ impl IndexContext {
 }
 
 impl TemplateContext for IndexContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -416,7 +417,7 @@ impl AppContext {
 }
 
 impl TemplateContext for AppContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -449,7 +450,7 @@ impl ApiDocContext {
 }
 
 impl TemplateContext for ApiDocContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -541,7 +542,7 @@ pub struct LoginContext {
 }
 
 impl TemplateContext for LoginContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -649,7 +650,7 @@ pub struct RegisterContext {
 }
 
 impl TemplateContext for RegisterContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -692,7 +693,7 @@ pub struct PasswordRegisterContext {
 }
 
 impl TemplateContext for PasswordRegisterContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -734,7 +735,7 @@ pub struct ConsentContext {
 }
 
 impl TemplateContext for ConsentContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -792,7 +793,7 @@ pub struct PolicyViolationContext {
 }
 
 impl TemplateContext for PolicyViolationContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -867,7 +868,7 @@ pub struct CompatSsoContext {
 }
 
 impl TemplateContext for CompatSsoContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -929,7 +930,7 @@ impl EmailRecoveryContext {
 }
 
 impl TemplateContext for EmailRecoveryContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -994,7 +995,7 @@ impl EmailVerificationContext {
 }
 
 impl TemplateContext for EmailVerificationContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1069,7 +1070,7 @@ impl RegisterStepsVerifyEmailContext {
 }
 
 impl TemplateContext for RegisterStepsVerifyEmailContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1109,7 +1110,7 @@ impl RegisterStepsEmailInUseContext {
 }
 
 impl TemplateContext for RegisterStepsEmailInUseContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1164,7 +1165,7 @@ impl RegisterStepsDisplayNameContext {
 }
 
 impl TemplateContext for RegisterStepsDisplayNameContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1219,7 +1220,7 @@ impl RegisterStepsRegistrationTokenContext {
 }
 
 impl TemplateContext for RegisterStepsRegistrationTokenContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1270,7 +1271,7 @@ impl RecoveryStartContext {
 }
 
 impl TemplateContext for RecoveryStartContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1312,7 +1313,7 @@ impl RecoveryProgressContext {
 }
 
 impl TemplateContext for RecoveryProgressContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1358,7 +1359,7 @@ impl RecoveryExpiredContext {
 }
 
 impl TemplateContext for RecoveryExpiredContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1422,7 +1423,7 @@ impl RecoveryFinishContext {
 }
 
 impl TemplateContext for RecoveryFinishContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1471,7 +1472,7 @@ impl UpstreamExistingLinkContext {
 }
 
 impl TemplateContext for UpstreamExistingLinkContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1509,7 +1510,7 @@ impl UpstreamSuggestLink {
 }
 
 impl TemplateContext for UpstreamSuggestLink {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1638,7 +1639,7 @@ impl UpstreamRegister {
 }
 
 impl TemplateContext for UpstreamRegister {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1724,7 +1725,7 @@ impl DeviceLinkContext {
 }
 
 impl TemplateContext for DeviceLinkContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1758,7 +1759,7 @@ impl DeviceConsentContext {
 }
 
 impl TemplateContext for DeviceConsentContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1803,7 +1804,7 @@ impl AccountInactiveContext {
 }
 
 impl TemplateContext for AccountInactiveContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1839,7 +1840,7 @@ impl DeviceNameContext {
 }
 
 impl TemplateContext for DeviceNameContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1865,7 +1866,7 @@ pub struct FormPostContext<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -1947,7 +1948,7 @@ impl std::fmt::Display for ErrorContext {
 }
 
 impl TemplateContext for ErrorContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -2041,7 +2042,7 @@ impl NotFoundContext {
 }
 
 impl TemplateContext for NotFoundContext {
-    fn sample<R: Rng + Clone>(
+    fn sample<R: Rng>(
         _now: DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
