@@ -48,8 +48,6 @@ pub(crate) enum RouteError {
     #[error("client is unauthorized")]
     UnauthorizedClient,
 
-    // #[error("unsupported token type")]
-    // UnsupportedTokenType,
     #[error("unknown token")]
     UnknownToken,
 }
@@ -78,18 +76,11 @@ impl IntoResponse for RouteError {
             )
                 .into_response(),
 
-            // Self::ClientNotAllowed |
             Self::UnauthorizedClient => (
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::UnauthorizedClient)),
             )
                 .into_response(),
-
-            // Self::UnsupportedTokenType => (
-            //     StatusCode::BAD_REQUEST,
-            //     Json(ClientError::from(ClientErrorCode::UnsupportedTokenType)),
-            // )
-            //     .into_response(),
 
             // If the token is unknown, we still return a 200 OK response.
             Self::UnknownToken => StatusCode::OK.into_response(),
