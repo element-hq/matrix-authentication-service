@@ -160,7 +160,7 @@ impl SimpleRoute for OAuth2AuthorizationEndpoint {
 pub struct OAuth2EndSession;
 
 impl SimpleRoute for OAuth2EndSession {
-    const PATH: &'static str = "/oauth2/end_session";
+    const PATH: &'static str = "/oauth2/end-session";
 }
 
 /// `GET /`
