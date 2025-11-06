@@ -47,48 +47,6 @@ pub struct Manifest {
     inner: HashMap<Utf8PathBuf, ManifestEntry>,
 }
 
-impl Manifest {
-    /// Produce a sample manifest for use in reproducible sample renders.
-    #[must_use]
-    #[allow(clippy::missing_panics_doc)]
-    pub fn sample() -> Self {
-        let mut inner = HashMap::new();
-
-        for name in &[
-            "src/shared.css",
-            "src/templates.css",
-            "src/main.tsx",
-            "src/swagger.ts",
-        ] {
-            inner.insert(
-                name.parse().unwrap(),
-                ManifestEntry {
-                    name: None,
-                    names: None,
-                    src: None,
-                    // Construct a fake but slightly plausible dummy asset name.
-                    file: name
-                        .replace('/', "__")
-                        .replace('.', "-XXXXX.")
-                        .replace(".tsx", ".js")
-                        .replace(".ts", ".js")
-                        .parse()
-                        .unwrap(),
-                    css: None,
-                    assets: None,
-                    is_entry: None,
-                    is_dynamic_entry: None,
-                    imports: None,
-                    dynamic_imports: None,
-                    integrity: None,
-                },
-            );
-        }
-
-        Manifest { inner }
-    }
-}
-
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 enum FileType {
     Script,

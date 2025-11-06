@@ -206,10 +206,12 @@ impl Templates {
                 .await
                 .map_err(TemplateLoadingError::ViteManifestIO)?;
 
-            serde_json::from_slice::<ViteManifest>(&raw_vite_manifest)
-                .map_err(TemplateLoadingError::ViteManifest)?
+            Some(
+                serde_json::from_slice::<ViteManifest>(&raw_vite_manifest)
+                    .map_err(TemplateLoadingError::ViteManifest)?,
+            )
         } else {
-            ViteManifest::sample()
+            None
         };
 
         // Parse it
