@@ -49,6 +49,9 @@ pub enum Code {
 
     /// The email address is banned.
     EmailBanned,
+
+    /// The user has reached their session limit.
+    TooManySessions,
 }
 
 impl Code {
@@ -66,6 +69,7 @@ impl Code {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
+            Self::TooManySessions => "too-many-sessions",
         }
     }
 }
