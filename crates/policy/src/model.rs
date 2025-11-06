@@ -179,6 +179,16 @@ pub struct AuthorizationGrantInput<'a> {
     pub requester: Requester,
 }
 
+/// Information about how many sessions the user has
+#[derive(Serialize, Debug, JsonSchema)]
+pub struct SessionCounts {
+    pub total: u64,
+
+    pub oauth2: u64,
+    pub compat: u64,
+    pub personal: u64,
+}
+
 /// Input for the email add policy.
 #[derive(Serialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
