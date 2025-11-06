@@ -66,7 +66,7 @@ syn2mas = { path = "./crates/syn2mas", version = "=1.6.0-rc.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.15.0"
+version = "0.15.1"
 features = ["axum", "axum-extra", "axum-extra-query", "axum-json", "macros"]
 
 # An `Arc` that can be atomically updated
