@@ -85,7 +85,7 @@ pub(crate) async fn policy_factory(
         email: "email/violation".to_owned(),
     };
 
-    let data = mas_policy::Data::new(server_name.to_owned()).with_rest(data);
+    let data = mas_policy::Data::new(server_name.to_owned(), None).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
