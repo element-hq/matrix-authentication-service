@@ -2702,7 +2702,7 @@
       }
     },
     "SessionLimitConfig": {
-      "description": "Configuration options for the inactive session expiration feature",
+      "description": "Configuration options for the session limit feature",
       "type": "object",
       "required": [
         "hard_limit",
@@ -2712,12 +2712,12 @@
         "soft_limit": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 1.0
         },
         "hard_limit": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 1.0
         }
       }
     }

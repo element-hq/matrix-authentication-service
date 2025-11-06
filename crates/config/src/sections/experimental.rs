@@ -117,7 +117,7 @@ impl ConfigurationSection for ExperimentalConfig {
     const PATH: Option<&'static str> = Some("experimental");
 }
 
-/// Configuration options for the inactive session expiration feature
+/// Configuration options for the session limit feature
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
