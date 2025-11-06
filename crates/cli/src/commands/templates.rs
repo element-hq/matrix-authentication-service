@@ -67,7 +67,7 @@ impl Options {
                     .map_err(anyhow::Error::from_boxed)?;
 
                 let now = if stabilise {
-                    DateTime::from_timestamp_secs(0).unwrap()
+                    DateTime::from_timestamp_secs(1_446_823_992).unwrap()
                 } else {
                     SystemClock::default().now()
                 };
