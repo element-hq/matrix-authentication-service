@@ -3,10 +3,6 @@
   "title": "RootConfig",
   "description": "Application configuration root",
   "type": "object",
-  "required": [
-    "matrix",
-    "secrets"
-  ],
   "properties": {
     "clients": {
       "description": "List of OAuth 2.0/OIDC clients config",
@@ -169,7 +165,7 @@
       ]
     },
     "rate_limiting": {
-      "description": "Configuration related to limiting the rate of user actions to prevent abuse",
+      "description": "Configuration related to limiting the rate of user actions to prevent\n abuse",
       "allOf": [
         {
           "$ref": "#/definitions/RateLimitingConfig"
@@ -201,7 +197,7 @@
       ]
     },
     "account": {
-      "description": "Configuration section to configure features related to account management",
+      "description": "Configuration section to configure features related to account\n management",
       "allOf": [
         {
           "$ref": "#/definitions/AccountConfig"
@@ -217,14 +213,14 @@
       ]
     }
   },
+  "required": [
+    "secrets",
+    "matrix"
+  ],
   "definitions": {
     "ClientConfig": {
       "description": "An OAuth 2.0 client configuration",
       "type": "object",
-      "required": [
-        "client_auth_method",
-        "client_id"
-      ],
       "properties": {
         "client_id": {
           "description": "A ULID as per https://github.com/ulid/spec",
@@ -241,19 +237,42 @@
         },
         "client_name": {
           "description": "Name of the `OAuth2` client",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "client_secret_file": {
+          "description": "Path to the file containing the client secret. The client secret is used\n by the `client_secret_basic`, `client_secret_post` and\n `client_secret_jwt` authentication methods.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "client_secret": {
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly\n from the config.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "jwks": {
-          "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication method. Mutually exclusive with `jwks_uri`",
-          "allOf": [
+          "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication\n method. Mutually exclusive with `jwks_uri`",
+          "anyOf": [
             {
               "$ref": "#/definitions/JsonWebKeySet_for_JsonWebKeyPublicParameters"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "jwks_uri": {
-          "description": "The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication method. Mutually exclusive with `jwks`",
-          "type": "string",
+          "description": "The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt`\n authentication method. Mutually exclusive with `jwks`",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "redirect_uris": {
@@ -263,16 +282,12 @@
             "type": "string",
             "format": "uri"
           }
-        },
-        "client_secret_file": {
-          "description": "Path to the file containing the client secret. The client secret is used by the `client_secret_basic`, `client_secret_post` and `client_secret_jwt` authentication methods.",
-          "type": "string"
-        },
-        "client_secret": {
-          "description": "Alternative to `client_secret_file`: Reads the client secret directly from the config.",
-          "type": "string"
         }
-      }
+      },
+      "required": [
+        "client_id",
+        "client_auth_method"
+      ]
     },
     "ClientAuthMethodConfig": {
       "description": "Authentication method used by clients",
@@ -280,45 +295,32 @@
         {
           "description": "`none`: No authentication",
           "type": "string",
-          "enum": [
-            "none"
-          ]
+          "const": "none"
         },
         {
-          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic authorization credentials",
+          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\n authorization credentials",
           "type": "string",
-          "enum": [
-            "client_secret_basic"
-          ]
+          "const": "client_secret_basic"
         },
         {
-          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the request body",
+          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\n request body",
           "type": "string",
-          "enum": [
-            "client_secret_post"
-          ]
+          "const": "client_secret_post"
         },
         {
-          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and signed using the `client_secret`",
+          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\n signed using the `client_secret`",
           "type": "string",
-          "enum": [
-            "client_secret_jwt"
-          ]
+          "const": "client_secret_jwt"
         },
         {
-          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and signed by an asymmetric key",
+          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\n signed by an asymmetric key",
           "type": "string",
-          "enum": [
-            "private_key_jwt"
-          ]
+          "const": "private_key_jwt"
         }
       ]
     },
     "JsonWebKeySet_for_JsonWebKeyPublicParameters": {
       "type": "object",
-      "required": [
-        "keys"
-      ],
       "properties": {
         "keys": {
           "type": "array",
@@ -326,100 +328,54 @@
             "$ref": "#/definitions/JsonWebKey_for_JsonWebKeyPublicParameters"
           }
         }
-      }
+      },
+      "required": [
+        "keys"
+      ]
     },
     "JsonWebKey_for_JsonWebKeyPublicParameters": {
       "type": "object",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "e",
-            "kty",
-            "n"
-          ],
-          "properties": {
-            "kty": {
-              "type": "string",
-              "enum": [
-                "RSA"
-              ]
-            },
-            "n": {
-              "type": "string"
-            },
-            "e": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "crv",
-            "kty",
-            "x",
-            "y"
-          ],
-          "properties": {
-            "kty": {
-              "type": "string",
-              "enum": [
-                "EC"
-              ]
-            },
-            "crv": {
-              "$ref": "#/definitions/JsonWebKeyEcEllipticCurve"
-            },
-            "x": {
-              "type": "string"
-            },
-            "y": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "crv",
-            "kty",
-            "x"
-          ],
-          "properties": {
-            "kty": {
-              "type": "string",
-              "enum": [
-                "OKP"
-              ]
-            },
-            "crv": {
-              "$ref": "#/definitions/JsonWebKeyOkpEllipticCurve"
-            },
-            "x": {
-              "type": "string"
-            }
-          }
-        }
-      ],
       "properties": {
         "use": {
-          "$ref": "#/definitions/JsonWebKeyUse"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JsonWebKeyUse"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "key_ops": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/definitions/JsonWebKeyOperation"
           }
         },
         "alg": {
-          "$ref": "#/definitions/JsonWebSignatureAlg"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JsonWebSignatureAlg"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "kid": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5u": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5c": {
           "type": "array",
@@ -428,12 +384,162 @@
           }
         },
         "x5t": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5t#S256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kty": {
+              "type": "string",
+              "const": "RSA"
+            }
+          },
+          "required": [
+            "kty"
+          ],
+          "allOf": [
+            {
+              "$ref": "#/definitions/RsaPublicParameters"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kty": {
+              "type": "string",
+              "const": "EC"
+            }
+          },
+          "required": [
+            "kty"
+          ],
+          "allOf": [
+            {
+              "$ref": "#/definitions/EcPublicParameters"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kty": {
+              "type": "string",
+              "const": "OKP"
+            }
+          },
+          "required": [
+            "kty"
+          ],
+          "allOf": [
+            {
+              "$ref": "#/definitions/OkpPublicParameters"
+            }
+          ]
+        }
+      ]
+    },
+    "RsaPublicParameters": {
+      "type": "object",
+      "properties": {
+        "n": {
+          "type": "string"
+        },
+        "e": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "n",
+        "e"
+      ]
+    },
+    "JsonWebKeyEcEllipticCurve": {
+      "description": "JSON Web Key EC Elliptic Curve",
+      "anyOf": [
+        {
+          "description": "P-256 Curve",
+          "const": "P-256"
+        },
+        {
+          "description": "P-384 Curve",
+          "const": "P-384"
+        },
+        {
+          "description": "P-521 Curve",
+          "const": "P-521"
+        },
+        {
+          "description": "SECG secp256k1 curve",
+          "const": "secp256k1"
+        }
+      ]
+    },
+    "EcPublicParameters": {
+      "type": "object",
+      "properties": {
+        "crv": {
+          "$ref": "#/definitions/JsonWebKeyEcEllipticCurve"
+        },
+        "x": {
+          "type": "string"
+        },
+        "y": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "crv",
+        "x",
+        "y"
+      ]
+    },
+    "JsonWebKeyOkpEllipticCurve": {
+      "description": "JSON Web Key OKP Elliptic Curve",
+      "anyOf": [
+        {
+          "description": "Ed25519 signature algorithm key pairs",
+          "const": "Ed25519"
+        },
+        {
+          "description": "Ed448 signature algorithm key pairs",
+          "const": "Ed448"
+        },
+        {
+          "description": "X25519 function key pairs",
+          "const": "X25519"
+        },
+        {
+          "description": "X448 function key pairs",
+          "const": "X448"
+        }
+      ]
+    },
+    "OkpPublicParameters": {
+      "type": "object",
+      "properties": {
+        "crv": {
+          "$ref": "#/definitions/JsonWebKeyOkpEllipticCurve"
+        },
+        "x": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "crv",
+        "x"
+      ]
     },
     "JsonWebKeyUse": {
       "description": "JSON Web Key Use",
@@ -558,65 +664,25 @@
         }
       ]
     },
-    "JsonWebKeyEcEllipticCurve": {
-      "description": "JSON Web Key EC Elliptic Curve",
-      "anyOf": [
-        {
-          "description": "P-256 Curve",
-          "const": "P-256"
-        },
-        {
-          "description": "P-384 Curve",
-          "const": "P-384"
-        },
-        {
-          "description": "P-521 Curve",
-          "const": "P-521"
-        },
-        {
-          "description": "SECG secp256k1 curve",
-          "const": "secp256k1"
-        }
-      ]
-    },
-    "JsonWebKeyOkpEllipticCurve": {
-      "description": "JSON Web Key OKP Elliptic Curve",
-      "anyOf": [
-        {
-          "description": "Ed25519 signature algorithm key pairs",
-          "const": "Ed25519"
-        },
-        {
-          "description": "Ed448 signature algorithm key pairs",
-          "const": "Ed448"
-        },
-        {
-          "description": "X25519 function key pairs",
-          "const": "X25519"
-        },
-        {
-          "description": "X448 function key pairs",
-          "const": "X448"
-        }
-      ]
-    },
     "HttpConfig": {
       "description": "Configuration related to the web server",
       "type": "object",
-      "required": [
-        "public_base"
-      ],
       "properties": {
         "listeners": {
           "description": "List of listeners to run",
-          "default": [],
           "type": "array",
           "items": {
             "$ref": "#/definitions/ListenerConfig"
-          }
+          },
+          "default": []
         },
         "trusted_proxies": {
-          "description": "List of trusted reverse proxies that can set the `X-Forwarded-For` header",
+          "description": "List of trusted reverse proxies that can set the `X-Forwarded-For`\n header",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "ip"
+          },
           "default": [
             "192.168.0.0/16",
             "172.16.0.0/12",
@@ -624,11 +690,7 @@
             "127.0.0.1/8",
             "fd00::/8",
             "::1/128"
-          ],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/IpNetwork"
-          }
+          ]
         },
         "public_base": {
           "description": "Public URL base from where the authentication service is reachable",
@@ -637,22 +699,27 @@
         },
         "issuer": {
           "description": "OIDC issuer URL. Defaults to `public_base` if not set.",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         }
-      }
+      },
+      "required": [
+        "public_base"
+      ]
     },
     "ListenerConfig": {
       "description": "Configuration of a listener",
       "type": "object",
-      "required": [
-        "binds",
-        "resources"
-      ],
       "properties": {
         "name": {
-          "description": "A unique name for this listener which will be shown in traces and in metrics labels",
-          "type": "string"
+          "description": "A unique name for this listener which will be shown in traces and in\n metrics labels",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "resources": {
           "description": "List of resources to mount",
@@ -663,7 +730,10 @@
         },
         "prefix": {
           "description": "HTTP prefix to mount the resources on",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "binds": {
           "description": "List of sockets to bind",
@@ -674,18 +744,25 @@
         },
         "proxy_protocol": {
           "description": "Accept `HAProxy`'s Proxy Protocol V1",
-          "default": false,
-          "type": "boolean"
+          "type": "boolean",
+          "default": false
         },
         "tls": {
           "description": "If set, makes the listener use TLS with the provided certificate and key",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/TlsConfig"
+            },
+            {
+              "type": "null"
             }
           ]
         }
-      }
+      },
+      "required": [
+        "resources",
+        "binds"
+      ]
     },
     "Resource": {
       "description": "HTTP resources to mount",
@@ -693,76 +770,59 @@
         {
           "description": "Healthcheck endpoint (/health)",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "health"
-              ]
+              "const": "health"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "Prometheus metrics endpoint (/metrics)",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "prometheus"
-              ]
+              "const": "prometheus"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "OIDC discovery endpoints",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "discovery"
-              ]
+              "const": "discovery"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "Pages destined to be viewed by humans",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "human"
-              ]
+              "const": "human"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "GraphQL endpoint",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
-            "name": {
-              "type": "string",
-              "enum": [
-                "graphql"
-              ]
-            },
             "playground": {
               "description": "Enabled the GraphQL playground",
               "type": "boolean"
@@ -770,87 +830,84 @@
             "undocumented_oauth2_access": {
               "description": "Allow access for OAuth 2.0 clients (undocumented)",
               "type": "boolean"
+            },
+            "name": {
+              "type": "string",
+              "const": "graphql"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "OAuth-related APIs",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "oauth"
-              ]
+              "const": "oauth"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "Matrix compatibility API",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "compat"
-              ]
+              "const": "compat"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "Static files",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
-            "name": {
-              "type": "string",
-              "enum": [
-                "assets"
-              ]
-            },
             "path": {
               "description": "Path to the directory to serve.",
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "const": "assets"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
           "description": "Admin API, served at `/api/admin/v1`",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "adminapi"
-              ]
+              "const": "adminapi"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         },
         {
-          "description": "Mount a \"/connection-info\" handler which helps debugging informations on the upstream connection",
+          "description": "Mount a \"/connection-info\" handler which helps debugging informations on\n the upstream connection",
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
             "name": {
               "type": "string",
-              "enum": [
-                "connection-info"
-              ]
+              "const": "connection-info"
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         }
       ]
     },
@@ -860,67 +917,71 @@
         {
           "description": "Listen on the specified host and port",
           "type": "object",
-          "required": [
-            "port"
-          ],
           "properties": {
             "host": {
-              "description": "Host on which to listen.\n\nDefaults to listening on all addresses",
-              "type": "string"
+              "description": "Host on which to listen.\n\n Defaults to listening on all addresses",
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "port": {
               "description": "Port on which to listen.",
               "type": "integer",
               "format": "uint16",
-              "minimum": 0.0
+              "minimum": 0,
+              "maximum": 65535
             }
-          }
+          },
+          "required": [
+            "port"
+          ]
         },
         {
           "description": "Listen on the specified address",
           "type": "object",
-          "required": [
-            "address"
-          ],
           "properties": {
             "address": {
               "description": "Host and port on which to listen",
+              "type": "string",
               "examples": [
                 "[::1]:8080",
                 "[::]:8080",
                 "127.0.0.1:8080",
                 "0.0.0.0:8080"
-              ],
-              "type": "string"
+              ]
             }
-          }
+          },
+          "required": [
+            "address"
+          ]
         },
         {
           "description": "Listen on a UNIX domain socket",
           "type": "object",
-          "required": [
-            "socket"
-          ],
           "properties": {
             "socket": {
               "description": "Path to the socket",
               "type": "string"
             }
-          }
+          },
+          "required": [
+            "socket"
+          ]
         },
         {
-          "description": "Accept connections on file descriptors passed by the parent process.\n\nThis is useful for grabbing sockets passed by systemd.\n\nSee <https://www.freedesktop.org/software/systemd/man/sd_listen_fds.html>",
+          "description": "Accept connections on file descriptors passed by the parent process.\n\n This is useful for grabbing sockets passed by systemd.\n\n See <https://www.freedesktop.org/software/systemd/man/sd_listen_fds.html>",
           "type": "object",
           "properties": {
             "fd": {
-              "description": "Index of the file descriptor. Note that this is offseted by 3 because of the standard input/output sockets, so setting here a value of `0` will grab the file descriptor `3`",
-              "default": 0,
+              "description": "Index of the file descriptor. Note that this is offseted by 3\n because of the standard input/output sockets, so setting\n here a value of `0` will grab the file descriptor `3`",
               "type": "integer",
               "format": "uint",
-              "minimum": 0.0
+              "minimum": 0,
+              "default": 0
             },
             "kind": {
-              "description": "Whether the socket is a TCP socket or a UNIX domain socket. Defaults to TCP.",
+              "description": "Whether the socket is a TCP socket or a UNIX domain socket. Defaults\n to TCP.",
               "default": "tcp",
               "allOf": [
                 {
@@ -938,16 +999,12 @@
         {
           "description": "UNIX domain socket",
           "type": "string",
-          "enum": [
-            "unix"
-          ]
+          "const": "unix"
         },
         {
           "description": "TCP socket",
           "type": "string",
-          "enum": [
-            "tcp"
-          ]
+          "const": "tcp"
         }
       ]
     },
@@ -956,169 +1013,201 @@
       "type": "object",
       "properties": {
         "certificate": {
-          "description": "PEM-encoded X509 certificate chain\n\nExactly one of `certificate` or `certificate_file` must be set.",
-          "type": "string"
+          "description": "PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "certificate_file": {
-          "description": "File containing the PEM-encoded X509 certificate chain\n\nExactly one of `certificate` or `certificate_file` must be set.",
-          "type": "string"
+          "description": "File containing the PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key": {
-          "description": "PEM-encoded private key\n\nExactly one of `key` or `key_file` must be set.",
-          "type": "string"
+          "description": "PEM-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key_file": {
-          "description": "File containing a PEM or DER-encoded private key\n\nExactly one of `key` or `key_file` must be set.",
-          "type": "string"
+          "description": "File containing a PEM or DER-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
-          "description": "Password used to decode the private key\n\nOne of `password` or `password_file` must be set if the key is encrypted.",
-          "type": "string"
+          "description": "Password used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password_file": {
-          "description": "Password file used to decode the private key\n\nOne of `password` or `password_file` must be set if the key is encrypted.",
-          "type": "string"
+          "description": "Password file used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
-    },
-    "IpNetwork": {
-      "oneOf": [
-        {
-          "title": "v4",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Ipv4Network"
-            }
-          ]
-        },
-        {
-          "title": "v6",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Ipv6Network"
-            }
-          ]
-        }
-      ],
-      "x-rust-type": "ipnetwork::IpNetwork"
-    },
-    "Ipv4Network": {
-      "type": "string",
-      "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(3[0-2]|[0-2]?[0-9])$",
-      "x-rust-type": "ipnetwork::Ipv4Network"
-    },
-    "Ipv6Network": {
-      "type": "string",
-      "pattern": "^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\")[/](12[0-8]|1[0-1][0-9]|[0-9]?[0-9])$",
-      "x-rust-type": "ipnetwork::Ipv6Network"
     },
     "DatabaseConfig": {
       "description": "Database connection configuration",
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Connection URI\n\nThis must not be specified if `host`, `port`, `socket`, `username`, `password`, or `database` are specified.",
-          "default": "postgresql://",
-          "type": "string",
-          "format": "uri"
+          "description": "Connection URI\n\n This must not be specified if `host`, `port`, `socket`, `username`,\n `password`, or `database` are specified.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "default": "postgresql://"
         },
         "host": {
-          "description": "Name of host to connect to\n\nThis must not be specified if `uri` is specified.",
-          "allOf": [
+          "description": "Name of host to connect to\n\n This must not be specified if `uri` is specified.",
+          "anyOf": [
             {
               "$ref": "#/definitions/Hostname"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "port": {
-          "description": "Port number to connect at the server host\n\nThis must not be specified if `uri` is specified.",
-          "type": "integer",
+          "description": "Port number to connect at the server host\n\n This must not be specified if `uri` is specified.",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint16",
-          "maximum": 65535.0,
-          "minimum": 1.0
+          "minimum": 1,
+          "maximum": 65535
         },
         "socket": {
-          "description": "Directory containing the UNIX socket to connect to\n\nThis must not be specified if `uri` is specified.",
-          "type": "string"
+          "description": "Directory containing the UNIX socket to connect to\n\n This must not be specified if `uri` is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "username": {
-          "description": "PostgreSQL user name to connect as\n\nThis must not be specified if `uri` is specified.",
-          "type": "string"
+          "description": "PostgreSQL user name to connect as\n\n This must not be specified if `uri` is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
-          "description": "Password to be used if the server demands password authentication\n\nThis must not be specified if `uri` is specified.",
-          "type": "string"
+          "description": "Password to be used if the server demands password authentication\n\n This must not be specified if `uri` is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "database": {
-          "description": "The database name\n\nThis must not be specified if `uri` is specified.",
-          "type": "string"
+          "description": "The database name\n\n This must not be specified if `uri` is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_mode": {
           "description": "How to handle SSL connections",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/PgSslMode"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "ssl_ca": {
-          "description": "The PEM-encoded root certificate for SSL connections\n\nThis must not be specified if the `ssl_ca_file` option is specified.",
-          "type": "string"
+          "description": "The PEM-encoded root certificate for SSL connections\n\n This must not be specified if the `ssl_ca_file` option is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_ca_file": {
-          "description": "Path to the root certificate for SSL connections\n\nThis must not be specified if the `ssl_ca` option is specified.",
-          "type": "string"
+          "description": "Path to the root certificate for SSL connections\n\n This must not be specified if the `ssl_ca` option is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_certificate": {
-          "description": "The PEM-encoded client certificate for SSL connections\n\nThis must not be specified if the `ssl_certificate_file` option is specified.",
-          "type": "string"
+          "description": "The PEM-encoded client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate_file` option is\n specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_certificate_file": {
-          "description": "Path to the client certificate for SSL connections\n\nThis must not be specified if the `ssl_certificate` option is specified.",
-          "type": "string"
+          "description": "Path to the client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate` option is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_key": {
-          "description": "The PEM-encoded client key for SSL connections\n\nThis must not be specified if the `ssl_key_file` option is specified.",
-          "type": "string"
+          "description": "The PEM-encoded client key for SSL connections\n\n This must not be specified if the `ssl_key_file` option is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_key_file": {
-          "description": "Path to the client key for SSL connections\n\nThis must not be specified if the `ssl_key` option is specified.",
-          "type": "string"
+          "description": "Path to the client key for SSL connections\n\n This must not be specified if the `ssl_key` option is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "max_connections": {
           "description": "Set the maximum number of connections the pool should maintain",
-          "default": 10,
           "type": "integer",
           "format": "uint32",
-          "minimum": 1.0
+          "minimum": 1,
+          "default": 10
         },
         "min_connections": {
           "description": "Set the minimum number of connections the pool should maintain",
-          "default": 0,
           "type": "integer",
           "format": "uint32",
-          "minimum": 0.0
+          "minimum": 0,
+          "default": 0
         },
         "connect_timeout": {
           "description": "Set the amount of time to attempt connecting to the database",
-          "default": 30,
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0,
+          "default": 30
         },
         "idle_timeout": {
           "description": "Set a maximum idle duration for individual connections",
-          "default": 600,
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0,
+          "default": 600
         },
         "max_lifetime": {
           "description": "Set the maximum lifetime of individual connections",
-          "default": 1800,
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0,
+          "default": 1800
         }
       }
     },
@@ -1127,49 +1216,37 @@
       "format": "hostname"
     },
     "PgSslMode": {
-      "description": "Options for controlling the level of protection provided for PostgreSQL SSL connections.",
+      "description": "Options for controlling the level of protection provided for PostgreSQL SSL\n connections.",
       "oneOf": [
         {
           "description": "Only try a non-SSL connection.",
           "type": "string",
-          "enum": [
-            "disable"
-          ]
+          "const": "disable"
         },
         {
           "description": "First try a non-SSL connection; if that fails, try an SSL connection.",
           "type": "string",
-          "enum": [
-            "allow"
-          ]
+          "const": "allow"
         },
         {
           "description": "First try an SSL connection; if that fails, try a non-SSL connection.",
           "type": "string",
-          "enum": [
-            "prefer"
-          ]
+          "const": "prefer"
         },
         {
-          "description": "Only try an SSL connection. If a root CA file is present, verify the connection in the same way as if `VerifyCa` was specified.",
+          "description": "Only try an SSL connection. If a root CA file is present, verify the\n connection in the same way as if `VerifyCa` was specified.",
           "type": "string",
-          "enum": [
-            "require"
-          ]
+          "const": "require"
         },
         {
-          "description": "Only try an SSL connection, and verify that the server certificate is issued by a trusted certificate authority (CA).",
+          "description": "Only try an SSL connection, and verify that the server certificate is\n issued by a trusted certificate authority (CA).",
           "type": "string",
-          "enum": [
-            "verify-ca"
-          ]
+          "const": "verify-ca"
         },
         {
-          "description": "Only try an SSL connection; verify that the server certificate is issued by a trusted CA and that the requested server host name matches that in the certificate.",
+          "description": "Only try an SSL connection; verify that the server certificate is issued\n by a trusted CA and that the requested server host name matches that\n in the certificate.",
           "type": "string",
-          "enum": [
-            "verify-full"
-          ]
+          "const": "verify-full"
         }
       ]
     },
@@ -1218,27 +1295,33 @@
         },
         "endpoint": {
           "description": "OTLP exporter: OTLP over HTTP compatible endpoint",
-          "default": "https://localhost:4318",
-          "type": "string",
-          "format": "uri"
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "default": "https://localhost:4318"
         },
         "propagators": {
           "description": "List of propagation formats to use for incoming and outgoing requests",
-          "default": [],
           "type": "array",
           "items": {
             "$ref": "#/definitions/Propagator"
-          }
+          },
+          "default": []
         },
         "sample_rate": {
-          "description": "Sample rate for traces\n\nDefaults to `1.0` if not set.",
+          "description": "Sample rate for traces\n\n Defaults to `1.0` if not set.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
           "examples": [
             0.5
           ],
-          "type": "number",
-          "format": "double",
-          "maximum": 1.0,
-          "minimum": 0.0
+          "minimum": 0.0,
+          "maximum": 1.0
         }
       }
     },
@@ -1248,23 +1331,17 @@
         {
           "description": "Don't export traces",
           "type": "string",
-          "enum": [
-            "none"
-          ]
+          "const": "none"
         },
         {
           "description": "Export traces to the standard output. Only useful for debugging",
           "type": "string",
-          "enum": [
-            "stdout"
-          ]
+          "const": "stdout"
         },
         {
           "description": "Export traces to an OpenTelemetry protocol compatible endpoint",
           "type": "string",
-          "enum": [
-            "otlp"
-          ]
+          "const": "otlp"
         }
       ]
     },
@@ -1274,23 +1351,17 @@
         {
           "description": "Propagate according to the W3C Trace Context specification",
           "type": "string",
-          "enum": [
-            "tracecontext"
-          ]
+          "const": "tracecontext"
         },
         {
           "description": "Propagate according to the W3C Baggage specification",
           "type": "string",
-          "enum": [
-            "baggage"
-          ]
+          "const": "baggage"
         },
         {
           "description": "Propagate trace context with Jaeger compatible headers",
           "type": "string",
-          "enum": [
-            "jaeger"
-          ]
+          "const": "jaeger"
         }
       ]
     },
@@ -1309,9 +1380,12 @@
         },
         "endpoint": {
           "description": "OTLP exporter: OTLP over HTTP compatible endpoint",
-          "default": "https://localhost:4318",
-          "type": "string",
-          "format": "uri"
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "default": "https://localhost:4318"
         }
       }
     },
@@ -1321,30 +1395,22 @@
         {
           "description": "Don't export metrics",
           "type": "string",
-          "enum": [
-            "none"
-          ]
+          "const": "none"
         },
         {
           "description": "Export metrics to stdout. Only useful for debugging",
           "type": "string",
-          "enum": [
-            "stdout"
-          ]
+          "const": "stdout"
         },
         {
           "description": "Export metrics to an OpenTelemetry protocol compatible endpoint",
           "type": "string",
-          "enum": [
-            "otlp"
-          ]
+          "const": "otlp"
         },
         {
-          "description": "Export metrics via Prometheus. An HTTP listener with the `prometheus` resource must be setup to expose the Promethes metrics.",
+          "description": "Export metrics via Prometheus. An HTTP listener with the `prometheus`\n resource must be setup to expose the Promethes metrics.",
           "type": "string",
-          "enum": [
-            "prometheus"
-          ]
+          "const": "prometheus"
         }
       ]
     },
@@ -1354,38 +1420,50 @@
       "properties": {
         "dsn": {
           "description": "Sentry DSN",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
           "examples": [
             "https://public@host:port/1"
-          ],
-          "type": "string",
-          "format": "uri"
+          ]
         },
         "environment": {
-          "description": "Environment to use when sending events to Sentry\n\nDefaults to `production` if not set.",
+          "description": "Environment to use when sending events to Sentry\n\n Defaults to `production` if not set.",
+          "type": [
+            "string",
+            "null"
+          ],
           "examples": [
             "production"
-          ],
-          "type": "string"
+          ]
         },
         "sample_rate": {
-          "description": "Sample rate for event submissions\n\nDefaults to `1.0` if not set.",
+          "description": "Sample rate for event submissions\n\n Defaults to `1.0` if not set.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
           "examples": [
             0.5
           ],
-          "type": "number",
-          "format": "float",
-          "maximum": 1.0,
-          "minimum": 0.0
+          "minimum": 0.0,
+          "maximum": 1.0
         },
         "traces_sample_rate": {
-          "description": "Sample rate for tracing transactions\n\nDefaults to `0.0` if not set.",
+          "description": "Sample rate for tracing transactions\n\n Defaults to `0.0` if not set.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
           "examples": [
             0.5
           ],
-          "type": "number",
-          "format": "float",
-          "maximum": 1.0,
-          "minimum": 0.0
+          "minimum": 0.0,
+          "maximum": 1.0
         }
       }
     },
@@ -1395,36 +1473,42 @@
       "properties": {
         "path": {
           "description": "Path to the folder which holds the templates",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "assets_manifest": {
           "description": "Path to the assets manifest",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "translations_path": {
           "description": "Path to the translations",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
     "EmailConfig": {
       "description": "Configuration related to sending emails",
       "type": "object",
-      "required": [
-        "transport"
-      ],
       "properties": {
         "from": {
           "description": "Email address to use as From when sending emails",
-          "default": "\"Authentication Service\" <root@localhost>",
           "type": "string",
-          "format": "email"
+          "format": "email",
+          "default": "\"Authentication Service\" <root@localhost>"
         },
         "reply_to": {
           "description": "Email address to use as Reply-To when sending emails",
-          "default": "\"Authentication Service\" <root@localhost>",
           "type": "string",
-          "format": "email"
+          "format": "email",
+          "default": "\"Authentication Service\" <root@localhost>"
         },
         "transport": {
           "description": "What backend should be used when sending emails",
@@ -1436,41 +1520,62 @@
         },
         "mode": {
           "description": "SMTP transport: Connection mode to the relay",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/EmailSmtpMode"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "hostname": {
           "description": "SMTP transport: Hostname to connect to",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/Hostname"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "port": {
-          "description": "SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS and 587 for `StartTLS`",
-          "type": "integer",
+          "description": "SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS\n and 587 for `StartTLS`",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint16",
-          "maximum": 65535.0,
-          "minimum": 1.0
+          "minimum": 1,
+          "maximum": 65535
         },
         "username": {
-          "description": "SMTP transport: Username for use to authenticate when connecting to the SMTP server\n\nMust be set if the `password` field is set",
-          "type": "string"
+          "description": "SMTP transport: Username for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `password` field is set",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
-          "description": "SMTP transport: Password for use to authenticate when connecting to the SMTP server\n\nMust be set if the `username` field is set",
-          "type": "string"
+          "description": "SMTP transport: Password for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `username` field is set",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "command": {
           "description": "Sendmail transport: Command to use to send emails",
-          "default": "sendmail",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": "sendmail"
         }
-      }
+      },
+      "required": [
+        "transport"
+      ]
     },
     "EmailTransportKind": {
       "description": "What backend should be used when sending emails",
@@ -1478,23 +1583,17 @@
         {
           "description": "Don't send emails anywhere",
           "type": "string",
-          "enum": [
-            "blackhole"
-          ]
+          "const": "blackhole"
         },
         {
           "description": "Send emails via an SMTP relay",
           "type": "string",
-          "enum": [
-            "smtp"
-          ]
+          "const": "smtp"
         },
         {
           "description": "Send emails by calling sendmail",
           "type": "string",
-          "enum": [
-            "sendmail"
-          ]
+          "const": "sendmail"
         }
       ]
     },
@@ -1504,23 +1603,17 @@
         {
           "description": "Plain text",
           "type": "string",
-          "enum": [
-            "plain"
-          ]
+          "const": "plain"
         },
         {
           "description": "`StartTLS` (starts as plain text then upgrade to TLS)",
           "type": "string",
-          "enum": [
-            "starttls"
-          ]
+          "const": "starttls"
         },
         {
           "description": "TLS",
           "type": "string",
-          "enum": [
-            "tls"
-          ]
+          "const": "tls"
         }
       ]
     },
@@ -1528,25 +1621,31 @@
       "description": "Application secrets",
       "type": "object",
       "properties": {
-        "keys": {
-          "description": "List of private keys to use for signing and encrypting payloads",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyConfig"
-          }
-        },
         "encryption_file": {
           "description": "File containing the encryption key for secure cookies.",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "encryption": {
           "description": "Encryption key for secure cookies.",
+          "type": [
+            "string",
+            "null"
+          ],
           "examples": [
             "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
           ],
-          "type": "string",
           "pattern": "[0-9a-fA-F]{64}"
+        },
+        "keys": {
+          "description": "List of private keys to use for signing and encrypting payloads",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyConfig"
+          },
+          "default": []
         }
       }
     },
@@ -1555,20 +1654,35 @@
       "type": "object",
       "properties": {
         "kid": {
-          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
-          "type": "string"
+          "description": "The key ID `kid` of the key as used by JWKs.\n\n If not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password_file": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key_file": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -1578,44 +1692,42 @@
       "properties": {
         "enabled": {
           "description": "Whether password-based authentication is enabled",
-          "default": true,
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "schemes": {
-          "description": "The hashing schemes to use for hashing and validating passwords\n\nThe hashing scheme with the highest version number will be used for hashing new passwords.",
+          "description": "The hashing schemes to use for hashing and validating passwords\n\n The hashing scheme with the highest version number will be used for\n hashing new passwords.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HashingScheme"
+          },
           "default": [
             {
               "version": 1,
               "algorithm": "argon2id"
             }
-          ],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/HashingScheme"
-          }
+          ]
         },
         "minimum_complexity": {
-          "description": "Score between 0 and 4 determining the minimum allowed password complexity. Scores are based on the ESTIMATED number of guesses needed to guess the password.\n\n- 0: less than 10^2 (100) - 1: less than 10^4 (10'000) - 2: less than 10^6 (1'000'000) - 3: less than 10^8 (100'000'000) - 4: any more than that",
-          "default": 3,
+          "description": "Score between 0 and 4 determining the minimum allowed password\n complexity. Scores are based on the ESTIMATED number of guesses\n needed to guess the password.\n\n - 0: less than 10^2 (100)\n - 1: less than 10^4 (10'000)\n - 2: less than 10^6 (1'000'000)\n - 3: less than 10^8 (100'000'000)\n - 4: any more than that",
           "type": "integer",
           "format": "uint8",
-          "minimum": 0.0
+          "minimum": 0,
+          "maximum": 255,
+          "default": 3
         }
       }
     },
     "HashingScheme": {
       "description": "Parameters for a password hashing scheme",
       "type": "object",
-      "required": [
-        "algorithm",
-        "version"
-      ],
       "properties": {
         "version": {
-          "description": "The version of the hashing scheme. They must be unique, and the highest version will be used for hashing new passwords.",
+          "description": "The version of the hashing scheme. They must be unique, and the highest\n version will be used for hashing new passwords.",
           "type": "integer",
           "format": "uint16",
-          "minimum": 0.0
+          "minimum": 0,
+          "maximum": 65535
         },
         "algorithm": {
           "description": "The hashing algorithm to use",
@@ -1626,25 +1738,38 @@
           ]
         },
         "unicode_normalization": {
-          "description": "Whether to apply Unicode normalization to the password before hashing\n\nDefaults to `false`, and generally recommended to stay false. This is although recommended when importing password hashs from Synapse, as it applies an NFKC normalization to the password before hashing it.",
+          "description": "Whether to apply Unicode normalization to the password before hashing\n\n Defaults to `false`, and generally recommended to stay false. This is\n although recommended when importing password hashs from Synapse, as it\n applies an NFKC normalization to the password before hashing it.",
           "type": "boolean"
         },
         "cost": {
           "description": "Cost for the bcrypt algorithm",
-          "default": 12,
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint32",
-          "minimum": 0.0
+          "minimum": 0,
+          "default": 12
         },
         "secret": {
-          "description": "An optional secret to use when hashing passwords. This makes it harder to brute-force the passwords in case of a database leak.",
-          "type": "string"
+          "description": "An optional secret to use when hashing passwords. This makes it harder\n to brute-force the passwords in case of a database leak.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "secret_file": {
           "description": "Same as `secret`, but read from a file.",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
-      }
+      },
+      "required": [
+        "version",
+        "algorithm"
+      ]
     },
     "Algorithm": {
       "description": "A hashing algorithm",
@@ -1652,23 +1777,17 @@
         {
           "description": "bcrypt",
           "type": "string",
-          "enum": [
-            "bcrypt"
-          ]
+          "const": "bcrypt"
         },
         {
           "description": "argon2id",
           "type": "string",
-          "enum": [
-            "argon2id"
-          ]
+          "const": "argon2id"
         },
         {
           "description": "PBKDF2",
           "type": "string",
-          "enum": [
-            "pbkdf2"
-          ]
+          "const": "pbkdf2"
         }
       ]
     },
@@ -1687,20 +1806,26 @@
         },
         "homeserver": {
           "description": "The server name of the homeserver.",
-          "default": "localhost:8008",
-          "type": "string"
+          "type": "string",
+          "default": "localhost:8008"
+        },
+        "secret_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secret": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "endpoint": {
           "description": "The base URL of the homeserver's client API",
-          "default": "http://localhost:8008/",
           "type": "string",
-          "format": "uri"
-        },
-        "secret_file": {
-          "type": "string"
-        },
-        "secret": {
-          "type": "string"
+          "format": "uri",
+          "default": "http://localhost:8008/"
         }
       }
     },
@@ -1710,30 +1835,22 @@
         {
           "description": "Homeserver is Synapse, version 1.135.0 or newer",
           "type": "string",
-          "enum": [
-            "synapse"
-          ]
+          "const": "synapse"
         },
         {
-          "description": "Homeserver is Synapse, version 1.135.0 or newer, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with no risk of writing data to the homeserver.",
+          "description": "Homeserver is Synapse, version 1.135.0 or newer, in read-only mode\n\n This is meant for testing rolling out Matrix Authentication Service with\n no risk of writing data to the homeserver.",
           "type": "string",
-          "enum": [
-            "synapse_read_only"
-          ]
+          "const": "synapse_read_only"
         },
         {
           "description": "Homeserver is Synapse, using the legacy API",
           "type": "string",
-          "enum": [
-            "synapse_legacy"
-          ]
+          "const": "synapse_legacy"
         },
         {
           "description": "Homeserver is Synapse, with the modern API available (>= 1.135.0)",
           "type": "string",
-          "enum": [
-            "synapse_modern"
-          ]
+          "const": "synapse_modern"
         }
       ]
     },
@@ -1811,7 +1928,7 @@
           ]
         },
         "registration": {
-          "description": "Controls how many registrations attempts are permitted based on source address.",
+          "description": "Controls how many registrations attempts are permitted\n based on source address.",
           "default": {
             "burst": 3,
             "per_second": 0.0008333333333333334
@@ -1854,7 +1971,7 @@
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many account recovery attempts are permitted based on source IP address. This can protect against causing e-mail spam to many targets.\n\nNote: this limit also applies to re-sends.",
+          "description": "Controls how many account recovery attempts are permitted\n based on source IP address.\n This can protect against causing e-mail spam to many targets.\n\n Note: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0008333333333333334
@@ -1866,7 +1983,7 @@
           ]
         },
         "per_address": {
-          "description": "Controls how many account recovery attempts are permitted based on the e-mail address entered into the recovery form. This can protect against causing e-mail spam to one target.\n\nNote: this limit also applies to re-sends.",
+          "description": "Controls how many account recovery attempts are permitted\n based on the e-mail address entered into the recovery form.\n This can protect against causing e-mail spam to one target.\n\n Note: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0002777777777777778
@@ -1881,29 +1998,29 @@
     },
     "RateLimiterConfiguration": {
       "type": "object",
-      "required": [
-        "burst",
-        "per_second"
-      ],
       "properties": {
         "burst": {
-          "description": "A one-off burst of actions that the user can perform in one go without waiting.",
+          "description": "A one-off burst of actions that the user can perform\n in one go without waiting.",
           "type": "integer",
           "format": "uint32",
-          "minimum": 1.0
+          "minimum": 1
         },
         "per_second": {
-          "description": "How quickly the allowance replenishes, in number of actions per second. Can be fractional to replenish slower.",
+          "description": "How quickly the allowance replenishes, in number of actions per second.\n Can be fractional to replenish slower.",
           "type": "number",
           "format": "double"
         }
-      }
+      },
+      "required": [
+        "burst",
+        "per_second"
+      ]
     },
     "LoginRateLimitingConfig": {
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many login attempts are permitted based on source IP address. This can protect against brute force login attempts.\n\nNote: this limit also applies to password checks when a user attempts to change their own password.",
+          "description": "Controls how many login attempts are permitted\n based on source IP address.\n This can protect against brute force login attempts.\n\n Note: this limit also applies to password checks when a user attempts to\n change their own password.",
           "default": {
             "burst": 3,
             "per_second": 0.05
@@ -1915,7 +2032,7 @@
           ]
         },
         "per_account": {
-          "description": "Controls how many login attempts are permitted based on the account that is being attempted to be logged into. This can protect against a distributed brute force attack but should be set high enough to prevent someone's account being casually locked out.\n\nNote: this limit also applies to password checks when a user attempts to change their own password.",
+          "description": "Controls how many login attempts are permitted\n based on the account that is being attempted to be logged into.\n This can protect against a distributed brute force attack\n but should be set high enough to prevent someone's account being\n casually locked out.\n\n Note: this limit also applies to password checks when a user attempts to\n change their own password.",
           "default": {
             "burst": 1800,
             "per_second": 0.5
@@ -1932,7 +2049,7 @@
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many email authentication attempts are permitted based on the source IP address. This can protect against causing e-mail spam to many targets.",
+          "description": "Controls how many email authentication attempts are permitted\n based on the source IP address.\n This can protect against causing e-mail spam to many targets.",
           "default": {
             "burst": 5,
             "per_second": 0.016666666666666666
@@ -1944,7 +2061,7 @@
           ]
         },
         "per_address": {
-          "description": "Controls how many email authentication attempts are permitted based on the e-mail address entered into the authentication form. This can protect against causing e-mail spam to one target.\n\nNote: this limit also applies to re-sends.",
+          "description": "Controls how many email authentication attempts are permitted\n based on the e-mail address entered into the authentication form.\n This can protect against causing e-mail spam to one target.\n\n Note: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0002777777777777778
@@ -1956,7 +2073,7 @@
           ]
         },
         "emails_per_session": {
-          "description": "Controls how many authentication emails are permitted to be sent per authentication session. This ensures not too many authentication codes are created for the same authentication session.",
+          "description": "Controls how many authentication emails are permitted to be sent per\n authentication session. This ensures not too many authentication codes\n are created for the same authentication session.",
           "default": {
             "burst": 2,
             "per_second": 0.0033333333333333335
@@ -1968,7 +2085,7 @@
           ]
         },
         "attempt_per_session": {
-          "description": "Controls how many code authentication attempts are permitted per authentication session. This can protect against brute-forcing the code.",
+          "description": "Controls how many code authentication attempts are permitted per\n authentication session. This can protect against brute-forcing the\n code.",
           "default": {
             "burst": 10,
             "per_second": 0.016666666666666666
@@ -1984,9 +2101,6 @@
     "UpstreamOAuth2Config": {
       "description": "Upstream OAuth 2.0 providers configuration",
       "type": "object",
-      "required": [
-        "providers"
-      ],
       "properties": {
         "providers": {
           "description": "List of OAuth 2.0 providers",
@@ -1995,19 +2109,17 @@
             "$ref": "#/definitions/Provider"
           }
         }
-      }
+      },
+      "required": [
+        "providers"
+      ]
     },
     "Provider": {
       "description": "Configuration for one upstream OAuth 2 provider.",
       "type": "object",
-      "required": [
-        "client_id",
-        "id",
-        "token_endpoint_auth_method"
-      ],
       "properties": {
         "enabled": {
-          "description": "Whether this provider is enabled.\n\nDefaults to `true`",
+          "description": "Whether this provider is enabled.\n\n Defaults to `true`",
           "type": "boolean"
         },
         "id": {
@@ -2016,28 +2128,43 @@
           "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
         },
         "synapse_idp_id": {
-          "description": "The ID of the provider that was used by Synapse. In order to perform a Synapse-to-MAS migration, this must be specified.\n\n## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n### For `oidc_providers`: This should be specified as `oidc-` followed by the ID that was configured as `idp_id` in one of the `oidc_providers` in the Synapse configuration. For example, if Synapse's configuration contained `idp_id: wombat` for this provider, then specify `oidc-wombat` here.\n\n### For `oidc_config` (legacy): Specify `oidc` here.",
-          "type": "string"
+          "description": "The ID of the provider that was used by Synapse.\n In order to perform a Synapse-to-MAS migration, this must be specified.\n\n ## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n ### For `oidc_providers`:\n This should be specified as `oidc-` followed by the ID that was\n configured as `idp_id` in one of the `oidc_providers` in the Synapse\n configuration.\n For example, if Synapse's configuration contained `idp_id: wombat` for\n this provider, then specify `oidc-wombat` here.\n\n ### For `oidc_config` (legacy):\n Specify `oidc` here.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "issuer": {
-          "description": "The OIDC issuer URL\n\nThis is required if OIDC discovery is enabled (which is the default)",
-          "type": "string"
+          "description": "The OIDC issuer URL\n\n This is required if OIDC discovery is enabled (which is the default)",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "human_name": {
           "description": "A human-readable name for the provider, that will be shown to users",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "brand_name": {
-          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`, `github`, etc.\n\nValues supported by the default template are:\n\n- `apple` - `google` - `facebook` - `github` - `gitlab` - `twitter` - `discord`",
-          "type": "string"
+          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`,\n `github`, etc.\n\n Values supported by the default template are:\n\n  - `apple`\n  - `google`\n  - `facebook`\n  - `github`\n  - `gitlab`\n  - `twitter`\n  - `discord`",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "client_id": {
           "description": "The client ID to use when authenticating with the provider",
           "type": "string"
         },
         "client_secret": {
-          "description": "The client secret to use when authenticating with the provider\n\nUsed by the `client_secret_basic`, `client_secret_post`, and `client_secret_jwt` methods",
-          "type": "string"
+          "description": "The client secret to use when authenticating with the provider\n\n Used by the `client_secret_basic`, `client_secret_post`, and\n `client_secret_jwt` methods",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "token_endpoint_auth_method": {
           "description": "The method to authenticate the client with the provider",
@@ -2049,22 +2176,28 @@
         },
         "sign_in_with_apple": {
           "description": "Additional parameters for the `sign_in_with_apple` method",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/SignInWithApple"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "token_endpoint_auth_signing_alg": {
-          "description": "The JWS algorithm to use when authenticating the client with the provider\n\nUsed by the `client_secret_jwt` and `private_key_jwt` methods",
-          "allOf": [
+          "description": "The JWS algorithm to use when authenticating the client with the\n provider\n\n Used by the `client_secret_jwt` and `private_key_jwt` methods",
+          "anyOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "id_token_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the token authentication endpoint.\n\nDefaults to `RS256`.",
+          "description": "Expected signature for the JWT payload returned by the token\n authentication endpoint.\n\n Defaults to `RS256`.",
           "allOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
@@ -2072,11 +2205,11 @@
           ]
         },
         "scope": {
-          "description": "The scopes to request from the provider\n\nDefaults to `openid`.",
+          "description": "The scopes to request from the provider\n\n Defaults to `openid`.",
           "type": "string"
         },
         "discovery_mode": {
-          "description": "How to discover the provider's configuration\n\nDefaults to `oidc`, which uses OIDC discovery with strict metadata verification",
+          "description": "How to discover the provider's configuration\n\n Defaults to `oidc`, which uses OIDC discovery with strict metadata\n verification",
           "allOf": [
             {
               "$ref": "#/definitions/DiscoveryMode"
@@ -2084,7 +2217,7 @@
           ]
         },
         "pkce_method": {
-          "description": "Whether to use proof key for code exchange (PKCE) when requesting and exchanging the token.\n\nDefaults to `auto`, which uses PKCE if the provider supports it.",
+          "description": "Whether to use proof key for code exchange (PKCE) when requesting and\n exchanging the token.\n\n Defaults to `auto`, which uses PKCE if the provider supports it.",
           "allOf": [
             {
               "$ref": "#/definitions/PkceMethod"
@@ -2092,48 +2225,66 @@
           ]
         },
         "fetch_userinfo": {
-          "description": "Whether to fetch the user profile from the userinfo endpoint, or to rely on the data returned in the `id_token` from the `token_endpoint`.\n\nDefaults to `false`.",
-          "default": false,
-          "type": "boolean"
+          "description": "Whether to fetch the user profile from the userinfo endpoint,\n or to rely on the data returned in the `id_token` from the\n `token_endpoint`.\n\n Defaults to `false`.",
+          "type": "boolean",
+          "default": false
         },
         "userinfo_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the userinfo endpoint.\n\nIf not specified, the response is expected to be an unsigned JSON payload.",
-          "allOf": [
+          "description": "Expected signature for the JWT payload returned by the userinfo\n endpoint.\n\n If not specified, the response is expected to be an unsigned JSON\n payload.",
+          "anyOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "authorization_endpoint": {
-          "description": "The URL to use for the provider's authorization endpoint\n\nDefaults to the `authorization_endpoint` provided through discovery",
-          "type": "string",
+          "description": "The URL to use for the provider's authorization endpoint\n\n Defaults to the `authorization_endpoint` provided through discovery",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "userinfo_endpoint": {
-          "description": "The URL to use for the provider's userinfo endpoint\n\nDefaults to the `userinfo_endpoint` provided through discovery",
-          "type": "string",
+          "description": "The URL to use for the provider's userinfo endpoint\n\n Defaults to the `userinfo_endpoint` provided through discovery",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "token_endpoint": {
-          "description": "The URL to use for the provider's token endpoint\n\nDefaults to the `token_endpoint` provided through discovery",
-          "type": "string",
+          "description": "The URL to use for the provider's token endpoint\n\n Defaults to the `token_endpoint` provided through discovery",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "jwks_uri": {
-          "description": "The URL to use for getting the provider's public keys\n\nDefaults to the `jwks_uri` provided through discovery",
-          "type": "string",
+          "description": "The URL to use for getting the provider's public keys\n\n Defaults to the `jwks_uri` provided through discovery",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "response_mode": {
           "description": "The response mode we ask the provider to use for the callback",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/ResponseMode"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "claims_imports": {
-          "description": "How claims should be imported from the `id_token` provided by the provider",
+          "description": "How claims should be imported from the `id_token` provided by the\n provider",
           "allOf": [
             {
               "$ref": "#/definitions/ClaimsImports"
@@ -2141,26 +2292,31 @@
           ]
         },
         "additional_authorization_parameters": {
-          "description": "Additional parameters to include in the authorization request\n\nOrders of the keys are not preserved.",
+          "description": "Additional parameters to include in the authorization request\n\n Orders of the keys are not preserved.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "forward_login_hint": {
-          "description": "Whether the `login_hint` should be forwarded to the provider in the authorization request.\n\nDefaults to `false`.",
-          "default": false,
-          "type": "boolean"
+          "description": "Whether the `login_hint` should be forwarded to the provider in the\n authorization request.\n\n Defaults to `false`.",
+          "type": "boolean",
+          "default": false
         },
         "on_backchannel_logout": {
-          "description": "What to do when receiving an OIDC Backchannel logout request.\n\nDefaults to `do_nothing`.",
+          "description": "What to do when receiving an OIDC Backchannel logout request.\n\n Defaults to `do_nothing`.",
           "allOf": [
             {
               "$ref": "#/definitions/OnBackchannelLogout"
             }
           ]
         }
-      }
+      },
+      "required": [
+        "id",
+        "client_id",
+        "token_endpoint_auth_method"
+      ]
     },
     "TokenAuthMethod": {
       "description": "Authentication methods used against the OAuth 2.0 provider",
@@ -2168,61 +2324,51 @@
         {
           "description": "`none`: No authentication",
           "type": "string",
-          "enum": [
-            "none"
-          ]
+          "const": "none"
         },
         {
-          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic authorization credentials",
+          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\n authorization credentials",
           "type": "string",
-          "enum": [
-            "client_secret_basic"
-          ]
+          "const": "client_secret_basic"
         },
         {
-          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the request body",
+          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\n request body",
           "type": "string",
-          "enum": [
-            "client_secret_post"
-          ]
+          "const": "client_secret_post"
         },
         {
-          "description": "`client_secret_jwt`: a `client_assertion` sent in the request body and signed using the `client_secret`",
+          "description": "`client_secret_jwt`: a `client_assertion` sent in the request body and\n signed using the `client_secret`",
           "type": "string",
-          "enum": [
-            "client_secret_jwt"
-          ]
+          "const": "client_secret_jwt"
         },
         {
-          "description": "`private_key_jwt`: a `client_assertion` sent in the request body and signed by an asymmetric key",
+          "description": "`private_key_jwt`: a `client_assertion` sent in the request body and\n signed by an asymmetric key",
           "type": "string",
-          "enum": [
-            "private_key_jwt"
-          ]
+          "const": "private_key_jwt"
         },
         {
           "description": "`sign_in_with_apple`: a special method for Signin with Apple",
           "type": "string",
-          "enum": [
-            "sign_in_with_apple"
-          ]
+          "const": "sign_in_with_apple"
         }
       ]
     },
     "SignInWithApple": {
       "type": "object",
-      "required": [
-        "key_id",
-        "team_id"
-      ],
       "properties": {
         "private_key_file": {
           "description": "The private key file used to sign the `id_token`",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "private_key": {
           "description": "The private key used to sign the `id_token`",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "team_id": {
           "description": "The Team ID of the Apple Developer Portal",
@@ -2232,7 +2378,11 @@
           "description": "The key ID of the Apple Developer Portal",
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "team_id",
+        "key_id"
+      ]
     },
     "DiscoveryMode": {
       "description": "How to discover the provider's configuration",
@@ -2240,49 +2390,37 @@
         {
           "description": "Use OIDC discovery with strict metadata verification",
           "type": "string",
-          "enum": [
-            "oidc"
-          ]
+          "const": "oidc"
         },
         {
           "description": "Use OIDC discovery with relaxed metadata verification",
           "type": "string",
-          "enum": [
-            "insecure"
-          ]
+          "const": "insecure"
         },
         {
           "description": "Use a static configuration",
           "type": "string",
-          "enum": [
-            "disabled"
-          ]
+          "const": "disabled"
         }
       ]
     },
     "PkceMethod": {
-      "description": "Whether to use proof key for code exchange (PKCE) when requesting and exchanging the token.",
+      "description": "Whether to use proof key for code exchange (PKCE) when requesting and\n exchanging the token.",
       "oneOf": [
         {
-          "description": "Use PKCE if the provider supports it\n\nDefaults to no PKCE if provider discovery is disabled",
+          "description": "Use PKCE if the provider supports it\n\n Defaults to no PKCE if provider discovery is disabled",
           "type": "string",
-          "enum": [
-            "auto"
-          ]
+          "const": "auto"
         },
         {
           "description": "Always use PKCE with the S256 challenge method",
           "type": "string",
-          "enum": [
-            "always"
-          ]
+          "const": "always"
         },
         {
           "description": "Never use PKCE",
           "type": "string",
-          "enum": [
-            "never"
-          ]
+          "const": "never"
         }
       ]
     },
@@ -2290,18 +2428,14 @@
       "description": "The response mode we ask the provider to use for the callback",
       "oneOf": [
         {
-          "description": "`query`: The provider will send the response as a query string in the URL search parameters",
+          "description": "`query`: The provider will send the response as a query string in the\n URL search parameters",
           "type": "string",
-          "enum": [
-            "query"
-          ]
+          "const": "query"
         },
         {
-          "description": "`form_post`: The provider will send the response as a POST request with the response parameters in the request body\n\n<https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>",
+          "description": "`form_post`: The provider will send the response as a POST request with\n the response parameters in the request body\n\n <https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>",
           "type": "string",
-          "enum": [
-            "form_post"
-          ]
+          "const": "form_post"
         }
       ]
     },
@@ -2334,7 +2468,7 @@
           ]
         },
         "email": {
-          "description": "Import the email address of the user based on the `email` and `email_verified` claims",
+          "description": "Import the email address of the user based on the `email` and\n `email_verified` claims",
           "allOf": [
             {
               "$ref": "#/definitions/EmailImportPreference"
@@ -2356,8 +2490,11 @@
       "type": "object",
       "properties": {
         "template": {
-          "description": "The Jinja2 template to use for the subject attribute\n\nIf not provided, the default template is `{{ user.sub }}`",
-          "type": "string"
+          "description": "The Jinja2 template to use for the subject attribute\n\n If not provided, the default template is `{{ user.sub }}`",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2374,8 +2511,11 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the localpart attribute\n\nIf not provided, the default template is `{{ user.preferred_username }}`",
-          "type": "string"
+          "description": "The Jinja2 template to use for the localpart attribute\n\n If not provided, the default template is `{{ user.preferred_username }}`",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "on_conflict": {
           "description": "How to handle conflicts on the claim, default value is `Fail`",
@@ -2393,30 +2533,22 @@
         {
           "description": "Ignore the claim",
           "type": "string",
-          "enum": [
-            "ignore"
-          ]
+          "const": "ignore"
         },
         {
           "description": "Suggest the claim value, but allow the user to change it",
           "type": "string",
-          "enum": [
-            "suggest"
-          ]
+          "const": "suggest"
         },
         {
           "description": "Force the claim value, but don't fail if it is missing",
           "type": "string",
-          "enum": [
-            "force"
-          ]
+          "const": "force"
         },
         {
           "description": "Force the claim value, and fail if it is missing",
           "type": "string",
-          "enum": [
-            "require"
-          ]
+          "const": "require"
         }
       ]
     },
@@ -2426,16 +2558,12 @@
         {
           "description": "Fails the sso login on conflict",
           "type": "string",
-          "enum": [
-            "fail"
-          ]
+          "const": "fail"
         },
         {
-          "description": "Adds the oauth identity link, regardless of whether there is an existing link or not",
+          "description": "Adds the oauth identity link, regardless of whether there is an existing\n link or not",
           "type": "string",
-          "enum": [
-            "add"
-          ]
+          "const": "add"
         }
       ]
     },
@@ -2452,8 +2580,11 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the displayname attribute\n\nIf not provided, the default template is `{{ user.name }}`",
-          "type": "string"
+          "description": "The Jinja2 template to use for the displayname attribute\n\n If not provided, the default template is `{{ user.name }}`",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2470,8 +2601,11 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the email address attribute\n\nIf not provided, the default template is `{{ user.email }}`",
-          "type": "string"
+          "description": "The Jinja2 template to use for the email address attribute\n\n If not provided, the default template is `{{ user.email }}`",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2480,8 +2614,11 @@
       "type": "object",
       "properties": {
         "template": {
-          "description": "The Jinja2 template to use for the account name. This name is only used for display purposes.\n\nIf not provided, it will be ignored.",
-          "type": "string"
+          "description": "The Jinja2 template to use for the account name. This name is only used\n for display purposes.\n\n If not provided, it will be ignored.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2491,23 +2628,17 @@
         {
           "description": "Do nothing",
           "type": "string",
-          "enum": [
-            "do_nothing"
-          ]
+          "const": "do_nothing"
         },
         {
           "description": "Only log out the MAS 'browser session' started by this OIDC session",
           "type": "string",
-          "enum": [
-            "logout_browser_only"
-          ]
+          "const": "logout_browser_only"
         },
         {
-          "description": "Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions",
+          "description": "Log out all sessions started by this OIDC session, including MAS\n 'browser sessions' and client sessions",
           "type": "string",
-          "enum": [
-            "logout_all"
-          ]
+          "const": "logout_all"
         }
       ]
     },
@@ -2517,25 +2648,40 @@
       "properties": {
         "service_name": {
           "description": "A human-readable name. Defaults to the server's address.",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "policy_uri": {
-          "description": "Link to a privacy policy, displayed in the footer of web pages and emails. It is also advertised to clients through the `op_policy_uri` OIDC provider metadata.",
-          "type": "string",
+          "description": "Link to a privacy policy, displayed in the footer of web pages and\n emails. It is also advertised to clients through the `op_policy_uri`\n OIDC provider metadata.",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "tos_uri": {
-          "description": "Link to a terms of service document, displayed in the footer of web pages and emails. It is also advertised to clients through the `op_tos_uri` OIDC provider metadata.",
-          "type": "string",
+          "description": "Link to a terms of service document, displayed in the footer of web\n pages and emails. It is also advertised to clients through the\n `op_tos_uri` OIDC provider metadata.",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         },
         "imprint": {
-          "description": "Legal imprint, displayed in the footer in the footer of web pages and emails.",
-          "type": "string"
+          "description": "Legal imprint, displayed in the footer in the footer of web pages and\n emails.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "logo_uri": {
           "description": "Logo displayed in some web pages.",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri"
         }
       }
@@ -2546,19 +2692,28 @@
       "properties": {
         "service": {
           "description": "Which service should be used for CAPTCHA protection",
-          "allOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/CaptchaServiceKind"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "site_key": {
           "description": "The site key to use",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "secret_key": {
           "description": "The secret key to use",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2568,23 +2723,17 @@
         {
           "description": "Use Google's reCAPTCHA v2 API",
           "type": "string",
-          "enum": [
-            "recaptcha_v2"
-          ]
+          "const": "recaptcha_v2"
         },
         {
           "description": "Use Cloudflare Turnstile",
           "type": "string",
-          "enum": [
-            "cloudflare_turnstile"
-          ]
+          "const": "cloudflare_turnstile"
         },
         {
           "description": "Use ``HCaptcha``",
           "type": "string",
-          "enum": [
-            "hcaptcha"
-          ]
+          "const": "hcaptcha"
         }
       ]
     },
@@ -2593,105 +2742,111 @@
       "type": "object",
       "properties": {
         "email_change_allowed": {
-          "description": "Whether users are allowed to change their email addresses. Defaults to `true`.",
+          "description": "Whether users are allowed to change their email addresses. Defaults to\n `true`.",
           "type": "boolean"
         },
         "displayname_change_allowed": {
-          "description": "Whether users are allowed to change their display names. Defaults to `true`.\n\nThis should be in sync with the policy in the homeserver configuration.",
+          "description": "Whether users are allowed to change their display names. Defaults to\n `true`.\n\n This should be in sync with the policy in the homeserver configuration.",
           "type": "boolean"
         },
         "password_registration_enabled": {
-          "description": "Whether to enable self-service password registration. Defaults to `false` if password authentication is enabled.\n\nThis has no effect if password login is disabled.",
+          "description": "Whether to enable self-service password registration. Defaults to\n `false` if password authentication is enabled.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
         "password_registration_email_required": {
-          "description": "Whether self-service password registrations require a valid email. Defaults to `true`.\n\nThis has no effect if password registration is disabled.",
+          "description": "Whether self-service password registrations require a valid email.\n Defaults to `true`.\n\n This has no effect if password registration is disabled.",
           "type": "boolean"
         },
         "password_change_allowed": {
-          "description": "Whether users are allowed to change their passwords. Defaults to `true`.\n\nThis has no effect if password login is disabled.",
+          "description": "Whether users are allowed to change their passwords. Defaults to `true`.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
         "password_recovery_enabled": {
-          "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
+          "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
         "account_deactivation_allowed": {
-          "description": "Whether users are allowed to delete their own account. Defaults to `true`.",
+          "description": "Whether users are allowed to delete their own account. Defaults to\n `true`.",
           "type": "boolean"
         },
         "login_with_email_allowed": {
-          "description": "Whether users can log in with their email address. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
+          "description": "Whether users can log in with their email address. Defaults to `false`.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
         "registration_token_required": {
-          "description": "Whether registration tokens are required for password registrations. Defaults to `false`.\n\nWhen enabled, users must provide a valid registration token during password registration. This has no effect if password registration is disabled.",
+          "description": "Whether registration tokens are required for password registrations.\n Defaults to `false`.\n\n When enabled, users must provide a valid registration token during\n password registration. This has no effect if password registration\n is disabled.",
           "type": "boolean"
         }
       }
     },
     "ExperimentalConfig": {
-      "description": "Configuration sections for experimental options\n\nDo not change these options unless you know what you are doing.",
+      "description": "Configuration sections for experimental options\n\n Do not change these options unless you know what you are doing.",
       "type": "object",
       "properties": {
         "access_token_ttl": {
           "description": "Time-to-live of access tokens in seconds. Defaults to 5 minutes.",
           "type": "integer",
           "format": "uint64",
-          "maximum": 86400.0,
-          "minimum": 60.0
+          "minimum": 60,
+          "maximum": 86400
         },
         "compat_token_ttl": {
-          "description": "Time-to-live of compatibility access tokens in seconds. Defaults to 5 minutes.",
+          "description": "Time-to-live of compatibility access tokens in seconds. Defaults to 5\n minutes.",
           "type": "integer",
           "format": "uint64",
-          "maximum": 86400.0,
-          "minimum": 60.0
+          "minimum": 60,
+          "maximum": 86400
         },
         "inactive_session_expiration": {
-          "description": "Experimetal feature to automatically expire inactive sessions\n\nDisabled by default",
-          "allOf": [
+          "description": "Experimetal feature to automatically expire inactive sessions\n\n Disabled by default",
+          "anyOf": [
             {
               "$ref": "#/definitions/InactiveSessionExpirationConfig"
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "plan_management_iframe_uri": {
-          "description": "Experimental feature to show a plan management tab and iframe. This value is passed through \"as is\" to the client without any validation.",
-          "type": "string"
+          "description": "Experimental feature to show a plan management tab and iframe.\n This value is passed through \"as is\" to the client without any\n validation.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
     "InactiveSessionExpirationConfig": {
       "description": "Configuration options for the inactive session expiration feature",
       "type": "object",
-      "required": [
-        "ttl"
-      ],
       "properties": {
         "ttl": {
           "description": "Time after which an inactive session is automatically finished",
           "type": "integer",
           "format": "uint64",
-          "maximum": 7776000.0,
-          "minimum": 600.0
+          "minimum": 600,
+          "maximum": 7776000
         },
         "expire_compat_sessions": {
           "description": "Should compatibility sessions expire after inactivity",
-          "default": true,
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "expire_oauth_sessions": {
           "description": "Should OAuth 2.0 sessions expire after inactivity",
-          "default": true,
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         "expire_user_sessions": {
           "description": "Should user sessions expire after inactivity",
-          "default": true,
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         }
-      }
+      },
+      "required": [
+        "ttl"
+      ]
     }
   }
 }
