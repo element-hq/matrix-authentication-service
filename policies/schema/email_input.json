@@ -22,14 +22,18 @@
       "properties": {
         "ip_address": {
           "description": "IP address of the entity making the request",
-          "type": "string",
-          "format": "ip",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "ip"
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
