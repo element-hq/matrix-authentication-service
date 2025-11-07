@@ -237,18 +237,24 @@
         },
         "client_name": {
           "description": "Name of the `OAuth2` client",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "client_secret_file": {
           "description": "Path to the file containing the client secret. The client secret is used\n by the `client_secret_basic`, `client_secret_post` and\n `client_secret_jwt` authentication methods.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "client_secret": {
           "description": "Alternative to `client_secret_file`: Reads the client secret directly\n from the config.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "jwks": {
           "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication\n method. Mutually exclusive with `jwks_uri`",
@@ -257,16 +263,17 @@
               "$ref": "#/definitions/JsonWebKeySet_for_JsonWebKeyPublicParameters"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "jwks_uri": {
           "description": "The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt`\n authentication method. Mutually exclusive with `jwks`",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "redirect_uris": {
           "description": "List of allowed redirect URIs",
@@ -335,17 +342,18 @@
               "$ref": "#/definitions/JsonWebKeyUse"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "key_ops": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/definitions/JsonWebKeyOperation"
-          },
-          "nullable": true
+          }
         },
         "alg": {
           "anyOf": [
@@ -353,18 +361,21 @@
               "$ref": "#/definitions/JsonWebSignatureAlg"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "kid": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5u": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5c": {
           "type": "array",
@@ -373,12 +384,16 @@
           }
         },
         "x5t": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "x5t#S256": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "oneOf": [
@@ -684,9 +699,11 @@
         },
         "issuer": {
           "description": "OIDC issuer URL. Defaults to `public_base` if not set.",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         }
       },
       "required": [
@@ -699,8 +716,10 @@
       "properties": {
         "name": {
           "description": "A unique name for this listener which will be shown in traces and in\n metrics labels",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "resources": {
           "description": "List of resources to mount",
@@ -711,8 +730,10 @@
         },
         "prefix": {
           "description": "HTTP prefix to mount the resources on",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "binds": {
           "description": "List of sockets to bind",
@@ -733,8 +754,7 @@
               "$ref": "#/definitions/TlsConfig"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         }
@@ -900,8 +920,10 @@
           "properties": {
             "host": {
               "description": "Host on which to listen.\n\n Defaults to listening on all addresses",
-              "type": "string",
-              "nullable": true
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "port": {
               "description": "Port on which to listen.",
@@ -992,33 +1014,45 @@
       "properties": {
         "certificate": {
           "description": "PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "certificate_file": {
           "description": "File containing the PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key": {
           "description": "PEM-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key_file": {
           "description": "File containing a PEM or DER-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
           "description": "Password used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password_file": {
           "description": "Password file used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -1028,10 +1062,12 @@
       "properties": {
         "uri": {
           "description": "Connection URI\n\n This must not be specified if `host`, `port`, `socket`, `username`,\n `password`, or `database` are specified.",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri",
-          "default": "postgresql://",
-          "nullable": true
+          "default": "postgresql://"
         },
         "host": {
           "description": "Name of host to connect to\n\n This must not be specified if `uri` is specified.",
@@ -1040,38 +1076,47 @@
               "$ref": "#/definitions/Hostname"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "port": {
           "description": "Port number to connect at the server host\n\n This must not be specified if `uri` is specified.",
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint16",
           "minimum": 1,
-          "maximum": 65535,
-          "nullable": true
+          "maximum": 65535
         },
         "socket": {
           "description": "Directory containing the UNIX socket to connect to\n\n This must not be specified if `uri` is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "username": {
           "description": "PostgreSQL user name to connect as\n\n This must not be specified if `uri` is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
           "description": "Password to be used if the server demands password authentication\n\n This must not be specified if `uri` is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "database": {
           "description": "The database name\n\n This must not be specified if `uri` is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_mode": {
           "description": "How to handle SSL connections",
@@ -1080,40 +1125,51 @@
               "$ref": "#/definitions/PgSslMode"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "ssl_ca": {
           "description": "The PEM-encoded root certificate for SSL connections\n\n This must not be specified if the `ssl_ca_file` option is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_ca_file": {
           "description": "Path to the root certificate for SSL connections\n\n This must not be specified if the `ssl_ca` option is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_certificate": {
           "description": "The PEM-encoded client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate_file` option is\n specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_certificate_file": {
           "description": "Path to the client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate` option is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_key": {
           "description": "The PEM-encoded client key for SSL connections\n\n This must not be specified if the `ssl_key_file` option is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ssl_key_file": {
           "description": "Path to the client key for SSL connections\n\n This must not be specified if the `ssl_key` option is specified.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "max_connections": {
           "description": "Set the maximum number of connections the pool should maintain",
@@ -1138,11 +1194,13 @@
         },
         "idle_timeout": {
           "description": "Set a maximum idle duration for individual connections",
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
           "minimum": 0,
-          "default": 600,
-          "nullable": true
+          "default": 600
         },
         "max_lifetime": {
           "description": "Set the maximum lifetime of individual connections",
@@ -1237,10 +1295,12 @@
         },
         "endpoint": {
           "description": "OTLP exporter: OTLP over HTTP compatible endpoint",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri",
-          "default": "https://localhost:4318",
-          "nullable": true
+          "default": "https://localhost:4318"
         },
         "propagators": {
           "description": "List of propagation formats to use for incoming and outgoing requests",
@@ -1252,14 +1312,16 @@
         },
         "sample_rate": {
           "description": "Sample rate for traces\n\n Defaults to `1.0` if not set.",
-          "type": "number",
+          "type": [
+            "number",
+            "null"
+          ],
           "format": "double",
           "examples": [
             0.5
           ],
           "minimum": 0.0,
-          "maximum": 1.0,
-          "nullable": true
+          "maximum": 1.0
         }
       }
     },
@@ -1318,10 +1380,12 @@
         },
         "endpoint": {
           "description": "OTLP exporter: OTLP over HTTP compatible endpoint",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri",
-          "default": "https://localhost:4318",
-          "nullable": true
+          "default": "https://localhost:4318"
         }
       }
     },
@@ -1356,42 +1420,50 @@
       "properties": {
         "dsn": {
           "description": "Sentry DSN",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uri",
           "examples": [
             "https://public@host:port/1"
-          ],
-          "nullable": true
+          ]
         },
         "environment": {
           "description": "Environment to use when sending events to Sentry\n\n Defaults to `production` if not set.",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "examples": [
             "production"
-          ],
-          "nullable": true
+          ]
         },
         "sample_rate": {
           "description": "Sample rate for event submissions\n\n Defaults to `1.0` if not set.",
-          "type": "number",
+          "type": [
+            "number",
+            "null"
+          ],
           "format": "float",
           "examples": [
             0.5
           ],
           "minimum": 0.0,
-          "maximum": 1.0,
-          "nullable": true
+          "maximum": 1.0
         },
         "traces_sample_rate": {
           "description": "Sample rate for tracing transactions\n\n Defaults to `0.0` if not set.",
-          "type": "number",
+          "type": [
+            "number",
+            "null"
+          ],
           "format": "float",
           "examples": [
             0.5
           ],
           "minimum": 0.0,
-          "maximum": 1.0,
-          "nullable": true
+          "maximum": 1.0
         }
       }
     },
@@ -1401,18 +1473,24 @@
       "properties": {
         "path": {
           "description": "Path to the folder which holds the templates",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "assets_manifest": {
           "description": "Path to the assets manifest",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "translations_path": {
           "description": "Path to the translations",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -1447,8 +1525,7 @@
               "$ref": "#/definitions/EmailSmtpMode"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
@@ -1459,34 +1536,41 @@
               "$ref": "#/definitions/Hostname"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "port": {
           "description": "SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS\n and 587 for `StartTLS`",
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint16",
           "minimum": 1,
-          "maximum": 65535,
-          "nullable": true
+          "maximum": 65535
         },
         "username": {
           "description": "SMTP transport: Username for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `password` field is set",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
           "description": "SMTP transport: Password for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `username` field is set",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "command": {
           "description": "Sendmail transport: Command to use to send emails",
-          "type": "string",
-          "default": "sendmail",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": "sendmail"
         }
       },
       "required": [
@@ -1539,17 +1623,21 @@
       "properties": {
         "encryption_file": {
           "description": "File containing the encryption key for secure cookies.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "encryption": {
           "description": "Encryption key for secure cookies.",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "examples": [
             "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
           ],
-          "pattern": "[0-9a-fA-F]{64}",
-          "nullable": true
+          "pattern": "[0-9a-fA-F]{64}"
         },
         "keys": {
           "description": "List of private keys to use for signing and encrypting payloads",
@@ -1567,24 +1655,34 @@
       "properties": {
         "kid": {
           "description": "The key ID `kid` of the key as used by JWKs.\n\n If not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password_file": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key_file": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "key": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -1645,21 +1743,27 @@
         },
         "cost": {
           "description": "Cost for the bcrypt algorithm",
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint32",
           "minimum": 0,
-          "default": 12,
-          "nullable": true
+          "default": 12
         },
         "secret": {
           "description": "An optional secret to use when hashing passwords. This makes it harder\n to brute-force the passwords in case of a database leak.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "secret_file": {
           "description": "Same as `secret`, but read from a file.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -1706,12 +1810,16 @@
           "default": "localhost:8008"
         },
         "secret_file": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "secret": {
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "endpoint": {
           "description": "The base URL of the homeserver's client API",
@@ -2021,23 +2129,31 @@
         },
         "synapse_idp_id": {
           "description": "The ID of the provider that was used by Synapse.\n In order to perform a Synapse-to-MAS migration, this must be specified.\n\n ## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n ### For `oidc_providers`:\n This should be specified as `oidc-` followed by the ID that was\n configured as `idp_id` in one of the `oidc_providers` in the Synapse\n configuration.\n For example, if Synapse's configuration contained `idp_id: wombat` for\n this provider, then specify `oidc-wombat` here.\n\n ### For `oidc_config` (legacy):\n Specify `oidc` here.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "issuer": {
           "description": "The OIDC issuer URL\n\n This is required if OIDC discovery is enabled (which is the default)",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "human_name": {
           "description": "A human-readable name for the provider, that will be shown to users",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "brand_name": {
           "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`,\n `github`, etc.\n\n Values supported by the default template are:\n\n  - `apple`\n  - `google`\n  - `facebook`\n  - `github`\n  - `gitlab`\n  - `twitter`\n  - `discord`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "client_id": {
           "description": "The client ID to use when authenticating with the provider",
@@ -2045,8 +2161,10 @@
         },
         "client_secret": {
           "description": "The client secret to use when authenticating with the provider\n\n Used by the `client_secret_basic`, `client_secret_post`, and\n `client_secret_jwt` methods",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "token_endpoint_auth_method": {
           "description": "The method to authenticate the client with the provider",
@@ -2063,8 +2181,7 @@
               "$ref": "#/definitions/SignInWithApple"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
@@ -2075,8 +2192,7 @@
               "$ref": "#/definitions/JsonWebSignatureAlg"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
@@ -2120,34 +2236,41 @@
               "$ref": "#/definitions/JsonWebSignatureAlg"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "authorization_endpoint": {
           "description": "The URL to use for the provider's authorization endpoint\n\n Defaults to the `authorization_endpoint` provided through discovery",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "userinfo_endpoint": {
           "description": "The URL to use for the provider's userinfo endpoint\n\n Defaults to the `userinfo_endpoint` provided through discovery",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "token_endpoint": {
           "description": "The URL to use for the provider's token endpoint\n\n Defaults to the `token_endpoint` provided through discovery",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "jwks_uri": {
           "description": "The URL to use for getting the provider's public keys\n\n Defaults to the `jwks_uri` provided through discovery",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "response_mode": {
           "description": "The response mode we ask the provider to use for the callback",
@@ -2156,8 +2279,7 @@
               "$ref": "#/definitions/ResponseMode"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
@@ -2236,13 +2358,17 @@
       "properties": {
         "private_key_file": {
           "description": "The private key file used to sign the `id_token`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "private_key": {
           "description": "The private key used to sign the `id_token`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "team_id": {
           "description": "The Team ID of the Apple Developer Portal",
@@ -2365,8 +2491,10 @@
       "properties": {
         "template": {
           "description": "The Jinja2 template to use for the subject attribute\n\n If not provided, the default template is `{{ user.sub }}`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2384,8 +2512,10 @@
         },
         "template": {
           "description": "The Jinja2 template to use for the localpart attribute\n\n If not provided, the default template is `{{ user.preferred_username }}`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "on_conflict": {
           "description": "How to handle conflicts on the claim, default value is `Fail`",
@@ -2451,8 +2581,10 @@
         },
         "template": {
           "description": "The Jinja2 template to use for the displayname attribute\n\n If not provided, the default template is `{{ user.name }}`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2470,8 +2602,10 @@
         },
         "template": {
           "description": "The Jinja2 template to use for the email address attribute\n\n If not provided, the default template is `{{ user.email }}`",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2481,8 +2615,10 @@
       "properties": {
         "template": {
           "description": "The Jinja2 template to use for the account name. This name is only used\n for display purposes.\n\n If not provided, it will be ignored.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2512,31 +2648,41 @@
       "properties": {
         "service_name": {
           "description": "A human-readable name. Defaults to the server's address.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "policy_uri": {
           "description": "Link to a privacy policy, displayed in the footer of web pages and\n emails. It is also advertised to clients through the `op_policy_uri`\n OIDC provider metadata.",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "tos_uri": {
           "description": "Link to a terms of service document, displayed in the footer of web\n pages and emails. It is also advertised to clients through the\n `op_tos_uri` OIDC provider metadata.",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         },
         "imprint": {
           "description": "Legal imprint, displayed in the footer in the footer of web pages and\n emails.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "logo_uri": {
           "description": "Logo displayed in some web pages.",
-          "type": "string",
-          "format": "uri",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
         }
       }
     },
@@ -2551,20 +2697,23 @@
               "$ref": "#/definitions/CaptchaServiceKind"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "site_key": {
           "description": "The site key to use",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "secret_key": {
           "description": "The secret key to use",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2655,15 +2804,16 @@
               "$ref": "#/definitions/InactiveSessionExpirationConfig"
             },
             {
-              "const": null,
-              "nullable": true
+              "type": "null"
             }
           ]
         },
         "plan_management_iframe_uri": {
           "description": "Experimental feature to show a plan management tab and iframe.\n This value is passed through \"as is\" to the client without any\n validation.",
-          "type": "string",
-          "nullable": true
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
