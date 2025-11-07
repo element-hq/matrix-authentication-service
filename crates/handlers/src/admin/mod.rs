@@ -29,7 +29,7 @@ use mas_router::{
     UrlBuilder,
 };
 use mas_templates::{ApiDocContext, Templates};
-use schemars::transform::{AddNullable, RecursiveTransform};
+use schemars::transform::AddNullable;
 use tower_http::cors::{Any, CorsLayer};
 
 mod call_context;
@@ -173,8 +173,14 @@ where
 
     aide::generate::in_context(|ctx| {
         ctx.schema = schemars::generate::SchemaGenerator::new(
-            schemars::generate::SchemaSettings::openapi3()
-                .with_transform(RecursiveTransform(AddNullable::default())),
+            schemars::generate::SchemaSettings::openapi3().with(|settings| {
+                // Remove the transform which adds nullable fields, as it's not
+                // valid with OpenAPI 3.1. For some reason, aide/schemars output
+                // an OpenAPI 3.1 schema with this nullable transform.
+                settings
+                    .transforms
+                    .retain(|transform| !transform.is::<AddNullable>());
+            }),
         );
     });
 

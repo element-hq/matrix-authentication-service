@@ -4932,10 +4932,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -4946,26 +4943,27 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "page[first]": {
             "description": "Retrieve the first N items",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint",
-            "minimum": 1,
-            "nullable": true
+            "minimum": 1
           },
           "page[last]": {
             "description": "Retrieve the last N items",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint",
-            "minimum": 1,
-            "nullable": true
+            "minimum": 1
           },
           "count": {
             "description": "Include the total number of items. Defaults to `true`.",
@@ -4974,10 +4972,7 @@
                 "$ref": "#/components/schemas/IncludeCount"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5025,10 +5020,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5039,10 +5031,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5053,10 +5042,7 @@
                 "$ref": "#/components/schemas/CompatSessionStatus"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5080,20 +5066,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_CompatSession"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -5113,10 +5098,12 @@
         "properties": {
           "count": {
             "description": "The total number of results",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           }
         }
       },
@@ -5159,10 +5146,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5204,9 +5188,11 @@
           },
           "redirect_uri": {
             "description": "The redirect URI used to login in the client, if it was an SSO login",
-            "type": "string",
-            "format": "uri",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
           },
           "created_at": {
             "description": "The time this session was created",
@@ -5215,31 +5201,41 @@
           },
           "user_agent": {
             "description": "The user agent string that started this session, if any",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "last_active_at": {
             "description": "The time this session was last active",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "last_active_ip": {
             "description": "The last IP address recorded for this session",
-            "type": "string",
-            "format": "ip",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "ip"
           },
           "finished_at": {
             "description": "The time this session was finished",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "human_name": {
             "description": "The user-provided name, if any",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5280,10 +5276,7 @@
                 "$ref": "#/components/schemas/SingleResourceMetaPage"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5312,23 +5305,31 @@
           },
           "first": {
             "description": "The link to the first page of results",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "last": {
             "description": "The link to the last page of results",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "next": {
             "description": "The link to the next page of results\n\n Only present if there is a next page",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "prev": {
             "description": "The link to the previous page of results\n\n Only present if there is a previous page",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5406,10 +5407,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5420,10 +5418,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5434,10 +5429,7 @@
                 "$ref": "#/components/schemas/OAuth2ClientKind"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5448,10 +5440,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5470,10 +5459,7 @@
                 "$ref": "#/components/schemas/OAuth2SessionStatus"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5504,20 +5490,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_OAuth2Session"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -5571,10 +5556,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5597,9 +5579,11 @@
           },
           "finished_at": {
             "description": "When the session was finished",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "user_id": {
             "description": "The ID of the user who owns the session",
@@ -5608,10 +5592,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5622,10 +5603,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5643,25 +5621,33 @@
           },
           "user_agent": {
             "description": "The user agent string of the client which started this session",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "last_active_at": {
             "description": "The last time the session was active",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "last_active_ip": {
             "description": "The last IP address used by the session",
-            "type": "string",
-            "format": "ip",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "ip"
           },
           "human_name": {
             "description": "The user-provided name, if any",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5696,10 +5682,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5710,10 +5693,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5724,10 +5704,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5746,29 +5723,32 @@
                 "$ref": "#/components/schemas/PersonalSessionStatus"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "filter[expires_before]": {
             "description": "Filter by access token expiry date",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "filter[expires_after]": {
             "description": "Filter by access token expiry date",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "filter[expires]": {
             "description": "Filter by whether the access token has an expiry time",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },
@@ -5790,20 +5770,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_PersonalSession"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -5857,10 +5836,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -5883,9 +5859,11 @@
           },
           "revoked_at": {
             "description": "When the session was revoked, if applicable",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "owner_user_id": {
             "description": "The ID of the user who owns this session (if user-owned)",
@@ -5894,10 +5872,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5908,10 +5883,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -5933,26 +5905,34 @@
           },
           "last_active_at": {
             "description": "When the session was last active",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "last_active_ip": {
             "description": "IP address of last activity",
-            "type": "string",
-            "format": "ip",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "ip"
           },
           "expires_at": {
             "description": "When the current token for this session expires.\n The session will need to be regenerated, producing a new access token,\n after this time.\n None if the current token won't expire or if the session is revoked.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "access_token": {
             "description": "The actual access token (only returned on creation)",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5984,10 +5964,12 @@
           },
           "expires_in": {
             "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint32",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           }
         },
         "required": [
@@ -6018,10 +6000,12 @@
         "properties": {
           "expires_in": {
             "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint32",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           }
         }
       },
@@ -6096,10 +6080,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6134,18 +6115,24 @@
         "properties": {
           "filter[admin]": {
             "description": "Retrieve users with (or without) the `admin` flag set",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[legacy-guest]": {
             "description": "Retrieve users with (or without) the `legacy_guest` flag set",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[search]": {
             "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "filter[status]": {
             "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
@@ -6154,10 +6141,7 @@
                 "$ref": "#/components/schemas/UserStatus"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6182,20 +6166,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_User"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -6249,10 +6232,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6279,15 +6259,19 @@
           },
           "locked_at": {
             "description": "When the user was locked. If null, the user is not locked.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "deactivated_at": {
             "description": "When the user was deactivated. If null, the user is not deactivated.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "admin": {
             "description": "Whether the user can request admin privileges.",
@@ -6350,8 +6334,10 @@
           },
           "skip_password_check": {
             "description": "Skip the password complexity check",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "required": [
@@ -6404,17 +6390,16 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "filter[email]": {
             "description": "Retrieve the user email with the given email address",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -6429,20 +6414,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserEmail"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -6496,10 +6480,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6588,10 +6569,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -6602,10 +6580,7 @@
                 "$ref": "#/components/schemas/UserSessionStatus"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6629,20 +6604,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserSession"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -6696,10 +6670,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6722,9 +6693,11 @@
           },
           "finished_at": {
             "description": "When the session was finished",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "user_id": {
             "description": "The ID of the user who owns the session",
@@ -6736,20 +6709,26 @@
           },
           "user_agent": {
             "description": "The user agent string of the client which started this session",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "last_active_at": {
             "description": "The last time the session was active",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "last_active_ip": {
             "description": "The last IP address used by the session",
-            "type": "string",
-            "format": "ip",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "ip"
           }
         },
         "required": [
@@ -6778,23 +6757,31 @@
         "properties": {
           "filter[used]": {
             "description": "Retrieve tokens that have (or have not) been used at least once",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[revoked]": {
             "description": "Retrieve tokens that are (or are not) revoked",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[expired]": {
             "description": "Retrieve tokens that are (or are not) expired",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[valid]": {
             "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },
@@ -6809,20 +6796,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UserRegistrationToken"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -6876,10 +6862,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -6905,10 +6888,12 @@
           },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint32",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           },
           "times_used": {
             "description": "Number of times this token has been used",
@@ -6923,21 +6908,27 @@
           },
           "last_used_at": {
             "description": "When the token was last used. If null, the token has never been used.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "expires_at": {
             "description": "When the token expires. If null, the token never expires.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "revoked_at": {
             "description": "When the token was revoked. If null, the token is not revoked.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
         "required": [
@@ -6953,21 +6944,27 @@
         "properties": {
           "token": {
             "description": "The token string. If not provided, a random token will be generated.",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "usage_limit": {
             "description": "Maximum number of times this token can be used. If not provided, the\n token can be used an unlimited number of times.",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint32",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           },
           "expires_at": {
             "description": "When the token expires. If not provided, the token never expires.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -6993,16 +6990,20 @@
         "properties": {
           "expires_at": {
             "description": "New expiration date for the token, or null to remove expiration",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "usage_limit": {
             "description": "New usage limit for the token, or null to remove the limit",
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "uint32",
-            "minimum": 0,
-            "nullable": true
+            "minimum": 0
           }
         }
       },
@@ -7016,10 +7017,7 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
@@ -7030,17 +7028,16 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "filter[subject]": {
             "description": "Retrieve the items with the given subject",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -7055,20 +7052,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthLink"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -7122,10 +7118,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -7165,17 +7158,16 @@
                 "$ref": "#/components/schemas/ULID"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "human_account_name": {
             "description": "A human-readable name of the upstream account",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -7210,8 +7202,10 @@
           },
           "human_account_name": {
             "description": "A human readable account name.",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -7241,8 +7235,10 @@
         "properties": {
           "filter[enabled]": {
             "description": "Retrieve providers that are (or are not) enabled",
-            "type": "boolean",
-            "nullable": true
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },
@@ -7257,20 +7253,19 @@
                 "$ref": "#/components/schemas/PaginationMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           },
           "data": {
             "description": "The list of resources",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
-            },
-            "nullable": true
+            }
           },
           "links": {
             "description": "Related links",
@@ -7324,10 +7319,7 @@
                 "$ref": "#/components/schemas/SingleResourceMeta"
               },
               {
-                "nullable": true,
-                "enum": [
-                  null
-                ]
+                "type": "null"
               }
             ]
           }
@@ -7345,18 +7337,24 @@
         "properties": {
           "issuer": {
             "description": "The OIDC issuer of the provider",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "human_name": {
             "description": "A human-readable name for the provider",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "brand_name": {
             "description": "A brand identifier, e.g. \"apple\" or \"google\"",
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "created_at": {
             "description": "When the provider was created",
@@ -7365,9 +7363,11 @@
           },
           "disabled_at": {
             "description": "When the provider was disabled. If null, the provider is enabled.",
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
         "required": [
