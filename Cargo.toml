@@ -151,7 +151,7 @@ version = "0.9.0"
 
 # Terminal formatting
 [workspace.dependencies.console]
-version = "0.15.11"
+version = "0.16.1"
 
 # Cookie store
 [workspace.dependencies.cookie_store]
