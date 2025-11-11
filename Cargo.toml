@@ -100,7 +100,7 @@ version = "0.8.6"
 
 # Extra utilities for Axum
 [workspace.dependencies.axum-extra]
-version = "0.10.3"
+version = "0.12.1"
 features = ["cookie-private", "cookie-key-expansion", "typed-header", "query"]
 
 # Axum macros
