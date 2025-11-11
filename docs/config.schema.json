@@ -2159,8 +2159,15 @@
           "description": "The client ID to use when authenticating with the provider",
           "type": "string"
         },
+        "client_secret_file": {
+          "description": "Path to the file containing the client secret. The client secret is used\n by the `client_secret_basic`, `client_secret_post` and\n `client_secret_jwt` authentication methods.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "client_secret": {
-          "description": "The client secret to use when authenticating with the provider\n\n Used by the `client_secret_basic`, `client_secret_post`, and\n `client_secret_jwt` methods",
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly\n from the config.",
           "type": [
             "string",
             "null"
