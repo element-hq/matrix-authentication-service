@@ -3,15 +3,12 @@
   "title": "AuthorizationGrantInput",
   "description": "Input for the authorization grant policy.",
   "type": "object",
-  "required": [
-    "client",
-    "grant_type",
-    "requester",
-    "scope"
-  ],
   "properties": {
     "user": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": true
     },
     "session_counts": {
@@ -36,6 +33,12 @@
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "client",
+    "scope",
+    "grant_type",
+    "requester"
+  ],
   "definitions": {
     "SessionCounts": {
       "description": "Information about how many sessions the user has",
@@ -83,12 +86,18 @@
       "properties": {
         "ip_address": {
           "description": "IP address of the entity making the request",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "ip"
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

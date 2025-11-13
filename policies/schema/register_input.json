@@ -3,11 +3,6 @@
   "title": "RegisterInput",
   "description": "Input for the user registration policy.",
   "type": "object",
-  "required": [
-    "registration_method",
-    "requester",
-    "username"
-  ],
   "properties": {
     "registration_method": {
       "$ref": "#/definitions/RegistrationMethod"
@@ -16,12 +11,20 @@
       "type": "string"
     },
     "email": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "requester": {
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "registration_method",
+    "username",
+    "requester"
+  ],
   "definitions": {
     "RegistrationMethod": {
       "type": "string",
@@ -36,12 +39,18 @@
       "properties": {
         "ip_address": {
           "description": "IP address of the entity making the request",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "ip"
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

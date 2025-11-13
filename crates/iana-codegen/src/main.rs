@@ -189,6 +189,10 @@ async fn main() -> anyhow::Result<()> {
         .pretty()
         .init();
 
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .unwrap();
+
     #[expect(
         clippy::disallowed_methods,
         reason = "reqwest::Client::new should be disallowed by clippy, but for the codegen it's fine"
