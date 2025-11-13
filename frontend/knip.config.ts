@@ -11,6 +11,8 @@ export default {
     "src/gql/*",
     "src/routeTree.gen.ts",
     ".storybook/locales.ts",
+    "src/external/**",
+
     "tchap/**", //:tchap: add tchap folder
   ],
   ignoreDependencies: [

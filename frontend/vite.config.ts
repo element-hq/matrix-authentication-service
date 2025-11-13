@@ -58,6 +58,8 @@ export default defineConfig((env) => ({
         resolve(__dirname, "src/shared.css"),
         resolve(__dirname, "src/templates.css"),
         resolve(__dirname, "src/swagger.ts"),
+        // external components
+        resolve(__dirname, "src/external/register/PasswordDoubleInput.tsx"),
       ],
     },
   },

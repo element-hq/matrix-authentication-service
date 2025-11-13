@@ -8,21 +8,16 @@ import { zxcvbnAsync, zxcvbnOptions } from "@zxcvbn-ts/core";
 import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
 import type { TFunction } from "i18next";
 
-import wikipedia from "./enwiki.json";
-import namesf from "./namesf.json";
-import namesm from "./namesm.json";
-import namess from "./namess.json";
 import passwords from "./passwords.json";
-import ustvfilm from "./ustvfilm.json";
 
 // These are the dictionaries from zxcvbn-rs, but repackaged
 const dictionary = {
-  wikipedia,
+  //wikipedia, :tchap: only english nouns
   passwords,
-  namesm,
-  namesf,
-  namess,
-  ustvfilm,
+  //namesm,    :tchap: only english nouns
+  //namesf,    :tchap: only english nouns
+  //namess,    :tchap: only english nouns
+  //ustvfilm,  :tchap: only english nouns
 };
 
 // This is the l33tspeak table from zxcvbn-rs, but repackaged
