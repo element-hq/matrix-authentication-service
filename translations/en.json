@@ -499,7 +499,7 @@
         "context": "pages/policy_violation.html:19:25-62",
         "description": "Displayed when an authorization request is denied by the policy"
       },
-      "heading": "The authorization request was denied the policy enforced by this service",
+      "heading": "The authorization request was denied by the policy enforced by this service",
       "@heading": {
         "context": "pages/policy_violation.html:18:27-60",
         "description": "Displayed when an authorization request is denied by the policy"

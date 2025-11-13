@@ -13,7 +13,7 @@ use mas_config::{
     PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
-use mas_data_model::{SessionExpirationConfig, SiteConfig};
+use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
@@ -135,6 +135,7 @@ pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
 pub async fn policy_factory_from_config(
     config: &PolicyConfig,
     matrix_config: &MatrixConfig,
+    experimental_config: &ExperimentalConfig,
 ) -> Result<PolicyFactory, anyhow::Error> {
     let policy_file = tokio::fs::File::open(&config.wasm_module)
         .await
@@ -147,8 +148,17 @@ pub async fn policy_factory_from_config(
         email: config.email_entrypoint.clone(),
     };
 
-    let data =
-        mas_policy::Data::new(matrix_config.homeserver.clone()).with_rest(config.data.clone());
+    let session_limit_config =
+        experimental_config
+            .session_limit
+            .as_ref()
+            .map(|c| SessionLimitConfig {
+                soft_limit: c.soft_limit,
+                hard_limit: c.hard_limit,
+            });
+
+    let data = mas_policy::Data::new(matrix_config.homeserver.clone(), session_limit_config)
+        .with_rest(config.data.clone());
 
     PolicyFactory::load(policy_file, data, entrypoints)
         .await
@@ -225,6 +235,13 @@ pub fn site_config_from_config(
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
         plan_management_iframe_uri: experimental_config.plan_management_iframe_uri.clone(),
+        session_limit: experimental_config
+            .session_limit
+            .as_ref()
+            .map(|c| SessionLimitConfig {
+                soft_limit: c.soft_limit,
+                hard_limit: c.hard_limit,
+            }),
     })
 }
 

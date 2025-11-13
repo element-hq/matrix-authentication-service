@@ -222,3 +222,35 @@ test_mas_scopes if {
 		with input.grant_type as "authorization_code"
 		with input.scope as "urn:mas:admin"
 }
+
+test_session_limiting if {
+	authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 1}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+
+	authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 31}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+
+	not authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 32}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+
+	not authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 42}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+
+	not authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 65}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+
+	# No limit configured
+	authorization_grant.allow with input.user as user
+		with input.session_counts as {"total": 1}
+		with data.session_limit as null
+
+	# Client credentials grant
+	authorization_grant.allow with input.user as user
+		with input.session_counts as null
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+}
