@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "generate": "graphql-codegen && i18next",
-    "lint": "graphql-codegen && biome check && tsc && i18next --fail-on-warnings --fail-on-update",
+    "generate": "graphql-codegen && i18next-cli extract",
+    "lint": "graphql-codegen && biome check && tsc && i18next-cli extract --ci",
     "format": "biome format --write",
     "build": "rimraf ./dist/ && vite build",
     "preview": "vite preview",
@@ -14,7 +14,7 @@
     "coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "i18n": "i18next",
+    "i18n": "i18next-cli",
     "knip": "knip"
   },
   "dependencies": {
@@ -64,7 +64,7 @@
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.11.0",
     "happy-dom": "^20.0.4",
-    "i18next-parser": "^9.3.0",
+    "i18next-cli": "^1.22.1",
     "knip": "^5.66.4",
     "msw": "^2.11.6",
     "msw-storybook-addon": "^2.0.5",

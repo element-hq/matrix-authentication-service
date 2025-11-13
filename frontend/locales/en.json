@@ -287,9 +287,6 @@
       "delete_button_title": "Remove email address",
       "email": "Email"
     },
-    "user_email_list": {
-      "no_primary_email_alert": "No primary email address"
-    },
     "user_sessions_overview": {
       "heading": "Where you're signed in",
       "no_active_sessions": {
