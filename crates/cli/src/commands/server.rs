@@ -182,8 +182,14 @@ impl Options {
         //:tchap: end
 
         // Load and compile the templates
-        let templates =
-            templates_from_config(&config.templates, &site_config, &url_builder).await?;
+        let templates = templates_from_config(
+            &config.templates,
+            &site_config,
+            &url_builder,
+            // Don't use strict mode in production yet
+            false,
+        )
+        .await?;
         shutdown.register_reloadable(&templates);
 
         let http_client = mas_http::reqwest_client();

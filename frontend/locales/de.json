@@ -5,7 +5,7 @@
     "clear": "Löschen",
     "close": "Schließen",
     "collapse": "Zusammenbruch",
-    "confirm": " Bestätigen Sie",
+    "confirm": "Bestätigen",
     "continue": "Weiter",
     "edit": "Bearbeiten",
     "expand": "Erweitern",
@@ -40,16 +40,16 @@
       "account_password": "Kontokennwort",
       "contact_info": "Kontaktinformation",
       "delete_account": {
-        "alert_description": "Dieses Konto wird dauerhaft gelöscht und Sie haben keinen Zugriff mehr auf Ihre Nachrichten.",
-        "alert_title": "Sie sind dabei, alle Ihre Daten zu verlieren",
+        "alert_description": "Dieses Konto wird dauerhaft entfernt und du hast keinen Zugriff mehr auf deine Nachrichten.",
+        "alert_title": "Du bist kurz davor, alle deine Daten zu verlieren.",
         "button": "Account löschen",
-        "dialog_description": "<text>Bestätigen Sie, dass Sie Ihr Konto löschen möchten:</text><profile />\n<list>\n<item>Sie können Ihr Konto nicht reaktivieren</item>\n<item>Sie können sich nicht mehr anmelden</item>\n<item>Niemand kann Ihren Benutzernamen (MXID) wieder verwenden, auch Sie nicht.</item>\n<item>Sie verlassen alle Räume und Direktnachrichten, in denen Sie sich befinden</item>\n<item>Sie werden vom Identitätsserver entfernt und niemand kann Sie mit Ihrer E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Ihre alten Nachrichten sind für Empfänger weiterhin sichtbar. Möchten Sie Ihre gesendeten Nachrichten vor zukünftigen Chatroom-Besuchern verbergen?</text>",
+        "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text><profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Benutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
         "dialog_title": "Dieses Konto löschen?",
         "erase_checkbox_label": "Ja, alle meine Nachrichten vor neuen Mitgliedern verbergen",
-        "incorrect_password": "Falsches Passwort, bitte versuchen Sie es erneut",
-        "mxid_label": "Bestätigen Sie Ihre Matrix-ID ({{ mxid }})",
-        "mxid_mismatch": "Dieser Wert stimmt nicht mit Ihrer Matrix-ID überein",
-        "password_label": "Geben Sie Ihr Passwort ein, um fortzufahren"
+        "incorrect_password": "Falsches Passwort, versuch's nochmal",
+        "mxid_label": "Bestätige deine Matrix-ID ({{ mxid }})",
+        "mxid_mismatch": "Dieser Wert passt nicht zu deiner Matrix-ID.",
+        "password_label": "Gib dein Passwort ein, um weiterzumachen"
       },
       "edit_profile": {
         "display_name_help": "Dies ist der öffentliche Nutzername.",
@@ -79,7 +79,7 @@
         "title": "Diese E-Mailadresse existiert bereits"
       },
       "email_exists_error": "Die eingegebene E-Mail-Adresse ist diesem Konto bereits zugeordnet",
-      "email_field_help": "Fügen Sie eine alternative E-Mail-Adresse hinzu, mit der Sie auf dieses Konto zugreifen können.",
+      "email_field_help": "Gib eine alternative E-Mail-Adresse an, mit der du auf dieses Konto zugreifen kannst.",
       "email_field_label": "E-Mail-Adresse hinzufügen",
       "email_in_use_error": "Die eingegebene E-Mail wird bereits verwendet",
       "email_invalid_alert": {
@@ -87,8 +87,8 @@
         "title": "Ungültige Email-Adresse"
       },
       "email_invalid_error": "Die eingegebene E-Mail-Adresse ist ungültig",
-      "incorrect_password_error": "Falsches Passwort, bitte versuchen Sie es erneut",
-      "password_confirmation": "Bestätigen Sie Ihr Kontopasswort, um diese E-Mail-Adresse hinzuzufügen"
+      "incorrect_password_error": "Falsches Passwort, versuch's nochmal",
+      "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse hinzuzufügen."
     },
     "app_sessions_list": {
       "error": "App-Sitzungen konnten nicht geladen werden",
@@ -103,8 +103,8 @@
       "body:other": "{{count}} aktive Sitzungen",
       "heading": "Browser",
       "no_active_sessions": {
-        "default": "Sie sind bei keinem Webbrowser angemeldet.",
-        "inactive_90_days": "Alle Ihre Sitzungen waren in den letzten 90 Tagen aktiv."
+        "default": "Du bist in keinem Webbrowser angemeldet.",
+        "inactive_90_days": "Alle deine Sitzungen waren in den letzten 90 Tagen aktiv."
       },
       "view_all_button": "Alle anzeigen"
     },
@@ -125,19 +125,19 @@
       "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Sind Sie sicher, dass Sie diese Sitzung abmelden möchten?",
+      "confirmation_modal_title": "Möchtest du diese Sitzung wirklich beenden?",
       "text": "Gerät entfernen"
     },
     "error": {
       "hideDetails": "Details ausblenden",
       "showDetails": "Details anzeigen",
-      "subtitle": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut",
+      "subtitle": "Ein unerwarteter Fehler ist aufgetreten, bitte versuch's nochmal.",
       "title": "Etwas ist schief gelaufen"
     },
     "error_boundary_title": "Etwas ist schief gelaufen",
     "errors": {
       "field_required": "Dieses Feld ist ein Pflichtfeld",
-      "rate_limit_exceeded": "Sie haben in kurzer Zeit zu viele Anfragen gestellt. Bitte warten Sie einige Minuten und versuchen Sie es erneut."
+      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Warte bitte ein paar Minuten und versuch's nochmal."
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -146,13 +146,13 @@
     },
     "nav": {
       "devices": "Geräte",
-      "plan": "Plan",
+      "plan": "Abo",
       "profile": "Profil",
       "sessions": "Sitzungen",
       "settings": "Einstellungen"
     },
     "not_found_alert_title": "Nicht gefunden.",
-    "not_logged_in_alert": "Sie sind nicht angemeldet.",
+    "not_logged_in_alert": "Du bist nicht angemeldet.",
     "oauth2_client_detail": {
       "details_title": "Geräte Information",
       "id": "Client-ID",
@@ -172,15 +172,15 @@
       "current_password_label": "Aktuelles Passwort",
       "failure": {
         "description": {
-          "account_locked": "Ihr Konto ist gesperrt und kann derzeit nicht wiederhergestellt werden. Wenn dies unerwartet auftritt, wenden Sie sich bitte an Ihren Serveradministrator.",
-          "expired_recovery_ticket": "Der Wiederherstellungslink ist abgelaufen. Bitte starten Sie den Kontowiederherstellungsprozess erneut von Anfang an.",
-          "invalid_new_password": "Das neue Passwort, das Sie gewählt haben, ist ungültig; es entspricht möglicherweise nicht der konfigurierten Sicherheitsrichtlinie.",
-          "no_current_password": "Sie haben kein aktuelles Passwort.",
-          "no_such_recovery_ticket": "Der Wiederherstellungslink ist ungültig. Wenn Sie den Link aus der Wiederherstellungs-E-Mail kopiert haben, überprüfen Sie bitte, ob der vollständige Link kopiert wurde.",
+          "account_locked": "Dein Konto ist gesperrt und kann im Moment nicht wiederhergestellt werden. Wenn du das nicht erwartet hast, wende dich bitte an deinen Server-Admin.",
+          "expired_recovery_ticket": "Der Link zur Kontowiederherstellung ist abgelaufen. Bitte fang den Prozess noch mal von vorne an.",
+          "invalid_new_password": "Das neue Passwort, das du gewählt hast, ist ungültig; es entspricht möglicherweise nicht den Sicherheitsrichtlinien.",
+          "no_current_password": "Du hast kein aktuelles Passwort.",
+          "no_such_recovery_ticket": "Der Link zum Wiederherstellen ist nicht gültig. Wenn du den Link aus der E-Mail zum Wiederherstellen kopiert hast, schau bitte nach, ob du den vollständigen Link kopiert hast.",
           "password_changes_disabled": "Passwortänderungen sind deaktiviert.",
           "recovery_ticket_already_used": "Der Wiederherstellungslink wurde bereits verwendet. Er kann nicht erneut verwendet werden.",
-          "unspecified": "Dies könnte ein vorübergehendes Problem sein. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Serveradministrator.",
-          "wrong_password": "Das Passwort, das Sie als Ihr aktuelles Passwort eingegeben haben, ist falsch. Bitte versuchen Sie es erneut."
+          "unspecified": "Das könnte ein vorübergehendes Problem sein, also versuch's später nochmal. Wenn das Problem weiterhin besteht, wende dich bitte an deinen Server-Admin.",
+          "wrong_password": "Das Passwort, das du als dein aktuelles Passwort angegeben hast, ist falsch. Versuch's bitte nochmal."
         },
         "title": "Aktualisierung des Passworts fehlgeschlagen"
       },
@@ -188,25 +188,25 @@
       "new_password_label": "Neues Passwort",
       "passwords_match": "Passwörter stimmen überein!",
       "passwords_no_match": "Passwörter stimmen nicht überein",
-      "subtitle": "Wählen Sie ein neues Passwort für Ihren Account.",
+      "subtitle": "Such dir ein neues Passwort für dein Konto aus.",
       "success": {
-        "description": "Ihr Passwort wurde erfolgreich aktualisiert.",
-        "title": "Passwort aktualisiert"
+        "description": "Dein Passwort wurde geändert.",
+        "title": "Passwort geändert"
       },
-      "title": "Ändern Sie Ihr Passwort"
+      "title": "Ändere dein Passwort"
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "Um ein neues Passwort zu erstellen, beginnen Sie von vorne und wählen Sie „Passwort vergessen“.",
-        "title": "Der Link zum Zurücksetzen Ihres Passworts wurde bereits verwendet"
+        "subtitle": "Um ein neues Passwort zu erstellen, fang einfach von vorne an und wähle „Passwort vergessen“.",
+        "title": "Der Link zum Zurücksetzen deines Passworts wurde bereits verwendet"
       },
       "expired": {
         "resend_email": "E-Mail erneut senden",
-        "subtitle": "Fordern Sie eine neue E-Mail an, die an folgende Adresse gesendet wird: {{email}}",
-        "title": "Der Link zum Zurücksetzen Ihres Passworts ist abgelaufen"
+        "subtitle": "Eine neue E-Mail anfordern, die an folgende Adresse gesendet wird: {{email}}",
+        "title": "Der Link zum Zurücksetzen deines Passworts ist abgelaufen"
       },
-      "subtitle": "Wählen Sie ein neues Passwort für Ihren Account.",
-      "title": "Ihr Passwort zurücksetzen"
+      "subtitle": "Such dir ein neues Passwort für dein Konto aus.",
+      "title": "Setze dein Passwort zurück"
     },
     "password_strength": {
       "placeholder": "Passwortstärke",
@@ -218,20 +218,20 @@
         "4": "Sehr starkes Passwort"
       },
       "suggestion": {
-        "all_uppercase": "Schreiben Sie einige, aber nicht alle Buchstaben groß.",
-        "another_word": "Fügen Sie weitere Wörter hinzu, die weniger gebräuchlich sind.",
-        "associated_years": "Vermeiden Sie Jahre, die mit Ihnen in Verbindung gebracht werden.",
-        "capitalization": "Schreiben Sie mehr als den ersten Buchstaben groß.",
-        "dates": "Vermeiden Sie Daten und Jahre, die mit Ihnen in Verbindung gebracht werden.",
-        "l33t": "Vermeiden Sie vorhersehbare Buchstabenersetzungen wie '@' für 'a'.",
-        "longer_keyboard_pattern": "Verwenden Sie längere Eingaben und ändern Sie die Tipprichtung mehrmals.",
-        "no_need": "Sie können sichere Passwörter erstellen, ohne Symbole, Zahlen oder Großbuchstaben zu verwenden.",
-        "pwned": "Wenn Sie dieses Passwort woanders verwenden, sollten Sie es ändern.",
-        "recent_years": "Vermeiden Sie die letzten Jahre.",
-        "repeated": "Vermeiden Sie Wort- und Zeichenwiederholungen.",
-        "reverse_words": "Vermeiden Sie umgekehrte Schreibweisen gängiger Wörter.",
-        "sequences": "Vermeiden Sie gängige Zeichenfolgen.",
-        "use_words": "Verwenden Sie mehrere Wörter, vermeiden Sie jedoch gebräuchliche Ausdrücke."
+        "all_uppercase": "Schreib ein paar Buchstaben groß, aber nicht alle.",
+        "another_word": "Füge mehr Wörter hinzu, die weniger gebräuchlich sind.",
+        "associated_years": "Vermeide Jahre, die mit dir in Verbindung stehen.",
+        "capitalization": "Schreib mehr als nur den ersten Buchstaben groß.",
+        "dates": "Vermeide Daten und Jahreszahlen, die mit dir in Verbindung stehen.",
+        "l33t": "Vermeide vorhersehbare Buchstabenersetzungen wie „@“ für „a“.",
+        "longer_keyboard_pattern": "Benutz längere Tastaturmuster und wechsel mehrmals die Schreibrichtung.",
+        "no_need": "Du kannst starke Passwörter erstellen, ohne Symbole, Zahlen oder Großbuchstaben zu benutzen.",
+        "pwned": "Wenn du dieses Passwort auch woanders benutzt, solltest du es ändern.",
+        "recent_years": "Vermeide die letzten Jahre.",
+        "repeated": "Vermeide es, Wörter und Zeichen zu wiederholen.",
+        "reverse_words": "Vermeide es, gängige Wörter rückwärts zu schreiben.",
+        "sequences": "Vermeide gängige Zeichenfolgen.",
+        "use_words": "Benutze mehrere Wörter, aber vermeide gängige Redewendungen."
       },
       "too_weak": "Dieses Passwort ist zu schwach",
       "warning": {
@@ -241,12 +241,12 @@
         "extended_repeat": "Wiederholte Zeichenmuster wie „abcabcabc“ sind leicht zu erraten.",
         "key_pattern": "Kurze Eingaben sind leicht zu erraten.",
         "names_by_themselves": "Einzelne Vor- oder Nachnamen sind leicht zu erraten.",
-        "pwned": "Ihr Passwort wurde durch eine Datenpanne im Internet preisgegeben.",
+        "pwned": "Dein Passwort wurde durch eine Datenpanne im Internet preisgegeben.",
         "recent_years": "Die letzten Jahre sind leicht zu erraten.",
         "sequences": "Gängige Zeichenfolgen wie „abc“ sind leicht zu erraten.",
         "similar_to_common": "Dies ähnelt einem häufig verwendeten Passwort.",
         "simple_repeat": "Sich wiederholende Zeichen wie \"aaa\" sind leicht zu erraten.",
-        "straight_row": "Gerade Tastenreihen auf Ihrer Tastatur sind leicht zu erraten.",
+        "straight_row": "Gerade Reihen von Tasten auf deiner Tastatur sind leicht zu erraten.",
         "top_hundred": "Dies ist ein häufig verwendetes Passwort.",
         "top_ten": "Dies ist ein häufig verwendetes Passwort.",
         "user_inputs": "Es sollten keine persönlichen oder seitenbezogenen Daten vorhanden sein.",
@@ -256,32 +256,32 @@
     "reset_cross_signing": {
       "button": "Identität zurücksetzen",
       "cancelled": {
-        "description_1": "Sie können dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
-        "description_2": "Wenn Sie überall abgemeldet sind und Ihren Wiederherstellungscode vergessen haben, müssen Sie Ihre Identität trotzdem zurücksetzen.",
+        "description_1": "Du kannst dieses Fenster schließen und zur App zurückgehen, um weiterzumachen.",
+        "description_2": "Wenn du dich überall abgemeldet hast und deinen Wiederherstellungs-Schlüssel nicht mehr weißt, musst du deine Identität zurücksetzen.",
         "heading": "Identitätszurücksetzung abgebrochen."
       },
-      "description": "Wenn Sie nirgendwo anders angemeldet sind und alle Wiederherstellungsschlüssel verloren haben, müssen Sie Ihre Krypto-Identität zurücksetzen, bevor Sie die App weiterverwenden können",
+      "description": "Wenn du auf keinem anderen Gerät angemeldet bist und deinen Wiederherstellungs-Schlüssel verloren hast, musst du deine Identität zurücksetzen, um die App weiter nutzen zu können.",
       "effect_list": {
-        "negative_1": "Sie werden Ihren bestehenden Nachrichtenverlauf verlieren",
-        "negative_2": "Sie müssen alle Ihre vorhandenen Geräte und Kontakte erneut überprüfen.",
-        "neutral_1": "Sie verlieren jeglichen Nachrichtenverlauf, der nur auf dem Server gespeichert ist",
-        "neutral_2": "Sie müssen alle Ihre vorhandenen Geräte und Kontakte erneut überprüfen.",
-        "positive_1": "Ihre Kontodaten, Kontakte, Einstellungen und Chat-Liste werden gespeichert"
+        "negative_1": "Du verlierst deine bestehenden Chats.",
+        "negative_2": "Du musst alle deine Geräte und Kontakte nochmal verifizieren.",
+        "neutral_1": "Du verlierst alle Nachrichten, die nur auf dem Server gespeichert sind.",
+        "neutral_2": "Du musst alle deine Geräte und Kontakte nochmal verifizieren.",
+        "positive_1": "Deine Kontodaten, Kontakte, Einstellungen und Chat-Liste bleiben erhalten."
       },
       "failure": {
-        "description": "Dies könnte ein vorübergehendes Problem sein. Bitte versuchen Sie es später erneut. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Serveradministrator.",
+        "description": "Das könnte ein vorübergehendes Problem sein, also versuch's später nochmal. Wenn das Problem weiterhin besteht, wende dich bitte an deinen Server-Admin.",
         "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden",
         "title": "Krypto-Identität konnte nicht zugelassen werden"
       },
       "finish_reset": "Reset beenden",
-      "heading": "Setzen Sie Ihre Identität zurück für den Fall, dass Sie sie nicht anders bestätigen können",
+      "heading": "Erstelle eine neue Identität, solltest du sie nicht auf andere Weise bestätigen können.",
       "start_reset": "Reset starten",
       "success": {
-        "description": "Das Zurücksetzen der Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Sie können dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
-        "heading": "Die Identität wurde erfolgreich zurückgesetzt. Kehren Sie zur App zurück, um den Vorgang abzuschließen.",
+        "description": "Das Zurücksetzen der Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Du kannst dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
+        "heading": "Identität erfolgreich zurückgesetzt. Geh zurück zur App, um den Vorgang abzuschließen.",
         "title": "Das Zurücksetzen der Krypto-Identität ist vorübergehend erlaubt"
       },
-      "warning": "Setzen Sie Ihre Identität nur zurück, wenn Sie keinen Zugriff auf ein anderes angemeldetes Gerät haben und Ihren Wiederherstellungsschlüssel verloren haben."
+      "warning": "Setze deine Identität nur zurück, wenn du keinen Zugriff auf ein anderes angemeldetes Gerät hast und deinen Wiederherstellungsschlüssel verloren hast."
     },
     "selectable_session": {
       "label": "Sitzung auswählen"
@@ -301,7 +301,7 @@
       "name_for_platform": "{{name}} für {{platform}}",
       "scopes_label": "Berechtigungsumfang",
       "set_device_name": {
-        "help": "Geben Sie einen Namen ein, der Ihnen hilft, dieses Gerät zu identifizieren.",
+        "help": "Gib einen Namen ein, mit dem du dieses Gerät leicht wiederfindest.",
         "label": "Gerätename",
         "title": "Gerätename bearbeiten"
       },
@@ -324,17 +324,17 @@
     "unknown_route": "Unbekannte Route {{route}}",
     "unverified_email_alert": {
       "button": "Überprüfen und verifizieren",
-      "text:one": "Sie haben {{count}} nicht verifizierte E-Mail-Adresse.",
-      "text:other": "Sie haben {{count}} nicht verifizierte E-Mail-Adressen.",
+      "text:one": "Du hast {{count}} unverifizierte E-Mail-Adresse.",
+      "text:other": "Du hast {{count}} unverifizierte E-Mail-Adressen.",
       "title": "Nicht verifizierte E-Mail-Adresse"
     },
     "user_email": {
-      "cant_delete_primary": "Wählen Sie eine andere primäre E-Mail-Adresse, um diese zu löschen.",
+      "cant_delete_primary": "Wähle eine andere primäre E-Mail-Adresse aus, um diese zu löschen.",
       "delete_button_confirmation_modal": {
         "action": "E-Mail löschen",
         "body": "Diese E-Mail löschen?",
-        "incorrect_password": "Falsches Passwort, bitte versuchen Sie es erneut",
-        "password_confirmation": "Bestätigen Sie Ihr Kontopasswort, um diese E-Mail-Adresse zu löschen"
+        "incorrect_password": "Falsches Passwort, versuch's nochmal",
+        "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse zu löschen."
       },
       "delete_button_title": "E-Mail-Adresse entfernen",
       "email": "E-Mail",
@@ -357,29 +357,29 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktive Sitzung",
       "active_sessions:other": "{{count}} aktive Sitzungen",
-      "heading": "Wo Sie angemeldet sind",
+      "heading": "Wo du angemeldet bist",
       "no_active_sessions": {
-        "default": "Sie sind bei keiner Anwendung angemeldet.",
-        "inactive_90_days": "Alle Ihre Sitzungen waren in den letzten 90 Tagen aktiv."
+        "default": "Du bist bei keiner Anwendung angemeldet.",
+        "inactive_90_days": "Alle deine Sitzungen waren in den letzten 90 Tagen aktiv."
       }
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "Der Code ist abgelaufen. Bitte fordern Sie einen neuen Code an.",
+        "description": "Der Code ist abgelaufen. Bitte fordere einen neuen Code an.",
         "title": "Code abgelaufen"
       },
       "code_field_error": "Code nicht erkannt",
       "code_field_label": "6-stelliger Code",
       "code_field_wrong_shape": "Der Code muss 6-stellig sein",
       "email_sent_alert": {
-        "description": "Geben Sie unten den neuen Code ein.",
+        "description": "Gib den neuen Code unten ein.",
         "title": "Neuer Code gesendet"
       },
-      "enter_code_prompt": "Geben Sie den 6-stelligen Code ein, der an <email>{{email}}</email> gesendet wurde",
-      "heading": "Bestätigen Sie Ihre E-Mail-Adresse",
+      "enter_code_prompt": "Gib den 6-stelligen Code ein, der an <email>{{email}}</email> gesendet wurde",
+      "heading": "Bestätige deine E-Mail",
       "invalid_code_alert": {
-        "description": "Überprüfen Sie den Code, der an Ihre E-Mail-Adresse gesendet wurde, und aktualisieren Sie die folgenden Felder, um fortzufahren.",
-        "title": "Sie haben einen falschen Code eingegeben"
+        "description": "Überprüfe den Code, der an deine E-Mail-Adresse gesendet wurde, und aktualisiere die folgenden Felder, um fortzufahren.",
+        "title": "Du hast den falschen Code eingegeben."
       },
       "resend_code": "Code erneut senden",
       "resend_email": "E-Mail erneut senden",
@@ -389,13 +389,13 @@
   },
   "mas": {
     "scope": {
-      "edit_profile": "Ihr Profil und Ihre Kontaktdaten bearbeiten",
-      "manage_sessions": "Ihre Geräte und Sitzungen verwalten",
+      "edit_profile": "Bearbeite dein Profil und deine Kontaktdaten",
+      "manage_sessions": "Verwalte deine Geräte und Sitzungen",
       "mas_admin": "Beliebige Benutzer verwalten",
-      "send_messages": "Nachrichten in Ihrem Namen senden",
+      "send_messages": "Neue Nachrichten in deinem Namen senden",
       "synapse_admin": "Den Synapse-Homeserver verwalten",
-      "view_messages": "Ihre vorhandenen Nachrichten und Daten anzeigen",
-      "view_profile": "Ihre Profilinformationen und Kontaktdaten anzeigen"
+      "view_messages": "Zeig deine vorhandenen Nachrichten und Daten an",
+      "view_profile": "Deine Profilinfos und Kontaktdaten anzeigen"
     }
   }
 }

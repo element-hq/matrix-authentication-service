@@ -1349,9 +1349,9 @@ mod tests {
             .list(UserEmailFilter::new().for_user(&user), Pagination::first(1))
             .await
             .unwrap();
-        let email = page.edges.first().expect("email exists");
+        let edge = page.edges.first().expect("email exists");
 
-        assert_eq!(email.email, "john@example.com");
+        assert_eq!(edge.node.email, "john@example.com");
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

@@ -12,6 +12,7 @@ use mas_data_model::{
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;
@@ -49,6 +50,12 @@ struct UserEmailLookup {
     user_id: Uuid,
     email: String,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for UserEmailLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_email_id.into()
+    }
 }
 
 impl From<UserEmailLookup> for UserEmail {

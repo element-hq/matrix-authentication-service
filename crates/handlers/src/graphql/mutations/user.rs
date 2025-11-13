@@ -737,13 +737,14 @@ impl UserMutations {
                 ));
             };
 
-            if let Err(_err) = password_manager
+            if !password_manager
                 .verify(
                     active_password.version,
                     Zeroizing::new(current_password_attempt),
                     active_password.hashed_password,
                 )
-                .await
+                .await?
+                .is_success()
             {
                 return Ok(SetPasswordPayload {
                     status: SetPasswordStatus::WrongPassword,

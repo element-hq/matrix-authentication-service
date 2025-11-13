@@ -210,8 +210,9 @@
     "register": {
       "call_to_login": "已有账户？",
       "continue_with_email": "使用邮件地址继续",
+      "continue_with_password": "使用密码继续",
       "create_account": {
-        "description": "请创建一个账户以开始使用：",
+        "description": "选择一个用户名以继续。",
         "heading": "创建账户"
       },
       "sign_in_instead": "去登录",
@@ -237,6 +238,7 @@
       },
       "login_link": {
         "action": "继续",
+        "description": "此用户名（%(username)s）已存在于一个账户，它将与该上游账户关联。",
         "heading": "链接到现有账户"
       },
       "register": {

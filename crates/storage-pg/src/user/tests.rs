@@ -190,7 +190,7 @@ async fn test_user_repo(pool: PgPool) {
     // Check the list method
     let list = repo.user().list(all, Pagination::first(10)).await.unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -205,7 +205,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -227,7 +227,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     repo.save().await.unwrap();
 }
@@ -348,7 +348,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Listing emails from the email address should work
     let emails = repo
@@ -358,7 +358,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Filtering on another email should not return anything
     let emails = repo
@@ -648,7 +648,7 @@ async fn test_user_session(pool: PgPool) {
         .unwrap();
     assert!(!session_list.has_next_page);
     assert_eq!(session_list.edges.len(), 1);
-    assert_eq!(session_list.edges[0], session);
+    assert_eq!(session_list.edges[0].node, session);
 
     let session_lookup = repo
         .browser_session()
@@ -809,7 +809,7 @@ async fn test_user_session(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(page.edges.len(), 1);
-    assert_eq!(page.edges[0].id, session.id);
+    assert_eq!(page.edges[0].node.id, session.id);
 
     // Try counting
     assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);

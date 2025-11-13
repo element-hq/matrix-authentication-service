@@ -156,7 +156,7 @@ exports[`<OAuth2Session /> > renders an active session 1`] = `
       class="_action_6c1027"
     >
       <button
-        aria-controls="radix-«r0»"
+        aria-controls="radix-_r_0_"
         aria-expanded="false"
         aria-haspopup="dialog"
         class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"

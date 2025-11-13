@@ -17,4 +17,6 @@ disallowed-methods = [
 disallowed-types = [
     { path = "std::path::PathBuf", reason = "use camino::Utf8PathBuf instead" },
     { path = "std::path::Path", reason = "use camino::Utf8Path instead" },
+    { path = "axum::extract::Query", reason = "use axum_extra::extract::Query instead. The built-in version doesn't deserialise lists."},
+    { path = "axum::extract::rejection::QueryRejection", reason = "use axum_extra::extract::QueryRejection instead"}
 ]

@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Máte již účet?",
       "continue_with_email": "Pokračujte e-mailovou adresou",
+      "continue_with_password": "Pokračovat s heslem",
       "create_account": {
         "description": "Pokračujte výběrem uživatelského jména.",
         "heading": "Vytvořte si účet"

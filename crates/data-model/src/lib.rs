@@ -11,6 +11,7 @@ use thiserror::Error;
 pub mod clock;
 pub(crate) mod compat;
 pub mod oauth2;
+pub mod personal;
 pub(crate) mod policy_data;
 mod site_config;
 //:tchap:
@@ -21,6 +22,7 @@ pub(crate) mod upstream_oauth2;
 pub(crate) mod user_agent;
 pub(crate) mod users;
 mod utils;
+mod version;
 
 /// Error when an invalid state transition is attempted.
 #[derive(Debug, Error)]
@@ -63,4 +65,5 @@ pub use self::{
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},
+    version::AppVersion,
 };

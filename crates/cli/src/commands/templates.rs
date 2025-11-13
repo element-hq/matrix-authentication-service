@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::process::ExitCode;
+use std::{fmt::Write, process::ExitCode};
 
+use anyhow::{Context as _, bail};
+use camino::Utf8PathBuf;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{
@@ -27,14 +29,19 @@ pub(super) struct Options {
 #[derive(Parser, Debug)]
 enum Subcommand {
     /// Check that the templates specified in the config are valid
-    Check,
+    Check {
+        /// If set, templates will be rendered to this directory.
+        /// The directory must either not exist or be empty.
+        #[arg(long = "out-dir")]
+        out_dir: Option<Utf8PathBuf>,
+    },
 }
 
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         match self.subcommand {
-            SC::Check => {
+            SC::Check { out_dir } => {
                 let _span = info_span!("cli.templates.check").entered();
 
                 let template_config = TemplatesConfig::extract_or_default(figment)
@@ -65,9 +72,54 @@ impl Options {
                     &account_config,
                     &captcha_config,
                 )?;
-                let templates =
-                    templates_from_config(&template_config, &site_config, &url_builder).await?;
-                templates.check_render(clock.now(), &mut rng)?;
+                let templates = templates_from_config(
+                    &template_config,
+                    &site_config,
+                    &url_builder, // Use strict mode in template checks
+                    true,
+                )
+                .await?;
+                let all_renders = templates.check_render(clock.now(), &mut rng)?;
+
+                if let Some(out_dir) = out_dir {
+                    // Save renders to disk.
+                    if out_dir.exists() {
+                        let mut read_dir =
+                            tokio::fs::read_dir(&out_dir).await.with_context(|| {
+                                format!("could not read {out_dir} to check it's empty")
+                            })?;
+                        if read_dir.next_entry().await?.is_some() {
+                            bail!("Render directory {out_dir} is not empty, refusing to write.");
+                        }
+                    } else {
+                        tokio::fs::create_dir(&out_dir)
+                            .await
+                            .with_context(|| format!("could not create {out_dir}"))?;
+                    }
+
+                    for ((template, sample_identifier), template_render) in &all_renders {
+                        let (template_filename_base, template_ext) =
+                            template.rsplit_once('.').unwrap_or((template, "txt"));
+                        let template_filename_base = template_filename_base.replace('/', "_");
+
+                        // Make a string like `-index=0-browser-session=0-locale=fr`
+                        let sample_suffix = {
+                            let mut s = String::new();
+                            for (k, v) in &sample_identifier.components {
+                                write!(s, "-{k}={v}")?;
+                            }
+                            s
+                        };
+
+                        let render_path = out_dir.join(format!(
+                            "{template_filename_base}{sample_suffix}.{template_ext}"
+                        ));
+
+                        tokio::fs::write(&render_path, template_render.as_bytes())
+                            .await
+                            .with_context(|| format!("could not write render to {render_path}"))?;
+                    }
+                }
 
                 Ok(ExitCode::SUCCESS)
             }

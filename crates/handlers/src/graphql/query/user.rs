@@ -143,11 +143,12 @@ impl UserQuery {
                     page.has_next_page,
                     PreloadedTotalCount(count),
                 );
-                connection.edges.extend(
-                    page.edges.into_iter().map(|p| {
-                        Edge::new(OpaqueCursor(NodeCursor(NodeType::User, p.id)), User(p))
-                    }),
-                );
+                connection.edges.extend(page.edges.into_iter().map(|edge| {
+                    Edge::new(
+                        OpaqueCursor(NodeCursor(NodeType::User, edge.cursor)),
+                        User(edge.node),
+                    )
+                }));
 
                 Ok::<_, async_graphql::Error>(connection)
             },

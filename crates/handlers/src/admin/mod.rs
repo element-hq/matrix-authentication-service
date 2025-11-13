@@ -20,7 +20,11 @@ use axum::{
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
+<<<<<<< HEAD
 use mas_data_model::{BoxRng, SiteConfig};
+=======
+use mas_data_model::{AppVersion, BoxRng, SiteConfig};
+>>>>>>> v1.6.0
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -164,6 +168,10 @@ where
     UrlBuilder: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
     SiteConfig: FromRef<S>,
+<<<<<<< HEAD
+=======
+    AppVersion: FromRef<S>,
+>>>>>>> v1.6.0
 {
     // We *always* want to explicitly set the possible responses, beacuse the
     // infered ones are not necessarily correct

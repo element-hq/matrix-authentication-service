@@ -12,6 +12,7 @@ use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User}
 use mas_storage::{
     Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
+    pagination::Node,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
@@ -59,6 +60,12 @@ struct OAuthSessionLookup {
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
     human_name: Option<String>,
+}
+
+impl Node<Ulid> for OAuthSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.oauth2_session_id.into()
+    }
 }
 
 impl TryFrom<OAuthSessionLookup> for Session {

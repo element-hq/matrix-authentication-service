@@ -29,11 +29,15 @@ use opentelemetry_sdk::{
     metrics::{ManualReader, SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{
-        Sampler, SdkTracerProvider, Tracer, span_processor_with_async_runtime::BatchSpanProcessor,
+        IdGenerator, Sampler, SdkTracerProvider, Tracer,
+        span_processor_with_async_runtime::BatchSpanProcessor,
     },
 };
 use opentelemetry_semantic_conventions as semcov;
+<<<<<<< HEAD
 use url::Url;
+=======
+>>>>>>> v1.6.0
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
     InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
@@ -94,50 +98,65 @@ fn propagator(propagators: &[Propagator]) -> TextMapCompositePropagator {
     TextMapCompositePropagator::new(propagators)
 }
 
-fn stdout_tracer_provider() -> SdkTracerProvider {
-    let exporter = opentelemetry_stdout::SpanExporter::default();
-    SdkTracerProvider::builder()
-        .with_simple_exporter(exporter)
-        .build()
+/// An [`IdGenerator`] which always returns an invalid trace ID and span ID
+///
+/// This is used when no exporter is being used, so that we don't log the trace
+/// ID when we're not tracing.
+#[derive(Debug, Clone, Copy)]
+struct InvalidIdGenerator;
+impl IdGenerator for InvalidIdGenerator {
+    fn new_trace_id(&self) -> opentelemetry::TraceId {
+        opentelemetry::TraceId::INVALID
+    }
+    fn new_span_id(&self) -> opentelemetry::SpanId {
+        opentelemetry::SpanId::INVALID
+    }
 }
 
-fn otlp_tracer_provider(
-    endpoint: Option<&Url>,
-    sample_rate: f64,
-) -> anyhow::Result<SdkTracerProvider> {
-    let mut exporter = opentelemetry_otlp::SpanExporter::builder()
-        .with_http()
-        .with_http_client(mas_http::reqwest_client());
-    if let Some(endpoint) = endpoint {
-        exporter = exporter.with_endpoint(endpoint.to_string());
-    }
-    let exporter = exporter
-        .build()
-        .context("Failed to configure OTLP trace exporter")?;
-
-    let batch_processor =
-        BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
+    let sample_rate = config.sample_rate.unwrap_or(1.0);
 
     // We sample traces based on the parent if we have one, and if not, we
     // sample a ratio based on the configured sample rate
     let sampler = Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(sample_rate)));
 
-    let tracer_provider = SdkTracerProvider::builder()
-        .with_span_processor(batch_processor)
+    let tracer_provider_builder = SdkTracerProvider::builder()
         .with_resource(resource())
-        .with_sampler(sampler)
-        .build();
+        .with_sampler(sampler);
 
-    Ok(tracer_provider)
-}
-
-fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
-    let sample_rate = config.sample_rate.unwrap_or(1.0);
     let tracer_provider = match config.exporter {
-        TracingExporterKind::None => return Ok(()),
-        TracingExporterKind::Stdout => stdout_tracer_provider(),
-        TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref(), sample_rate)?,
+        TracingExporterKind::None => tracer_provider_builder
+            .with_id_generator(InvalidIdGenerator)
+            .with_sampler(Sampler::AlwaysOff)
+            .build(),
+
+        TracingExporterKind::Stdout => {
+            let exporter = opentelemetry_stdout::SpanExporter::default();
+            tracer_provider_builder
+                .with_simple_exporter(exporter)
+                .build()
+        }
+
+        TracingExporterKind::Otlp => {
+            let mut exporter = opentelemetry_otlp::SpanExporter::builder()
+                .with_http()
+                .with_http_client(mas_http::reqwest_client());
+            if let Some(endpoint) = &config.endpoint {
+                exporter = exporter.with_endpoint(endpoint.as_str());
+            }
+            let exporter = exporter
+                .build()
+                .context("Failed to configure OTLP trace exporter")?;
+
+            let batch_processor =
+                BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+
+            tracer_provider_builder
+                .with_span_processor(batch_processor)
+                .build()
+        }
     };
+
     TRACER_PROVIDER
         .set(tracer_provider.clone())
         .map_err(|_| anyhow::anyhow!("TRACER_PROVIDER was set twice"))?;

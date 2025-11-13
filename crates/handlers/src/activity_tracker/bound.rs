@@ -6,7 +6,9 @@
 
 use std::net::IpAddr;
 
-use mas_data_model::{BrowserSession, Clock, CompatSession, Session};
+use mas_data_model::{
+    BrowserSession, Clock, CompatSession, Session, personal::session::PersonalSession,
+};
 
 use crate::activity_tracker::ActivityTracker;
 
@@ -34,6 +36,13 @@ impl Bound {
     pub async fn record_oauth2_session(&self, clock: &dyn Clock, session: &Session) {
         self.tracker
             .record_oauth2_session(clock, session, self.ip)
+            .await;
+    }
+
+    /// Record activity in a personal session.
+    pub async fn record_personal_session(&self, clock: &dyn Clock, session: &PersonalSession) {
+        self.tracker
+            .record_personal_session(clock, session, self.ip)
             .await;
     }
 

@@ -149,12 +149,14 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     // Setup OpenTelemetry tracing and metrics
     self::telemetry::setup(&telemetry_config).context("failed to setup OpenTelemetry")?;
 
-    let telemetry_layer = self::telemetry::TRACER.get().map(|tracer| {
-        tracing_opentelemetry::layer()
-            .with_tracer(tracer.clone())
-            .with_tracked_inactivity(false)
-            .with_filter(LevelFilter::INFO)
-    });
+    let tracer = self::telemetry::TRACER
+        .get()
+        .context("TRACER was not set")?;
+
+    let telemetry_layer = tracing_opentelemetry::layer()
+        .with_tracer(tracer.clone())
+        .with_tracked_inactivity(false)
+        .with_filter(LevelFilter::INFO);
 
     let subscriber = Registry::default()
         .with(suppress_layer)

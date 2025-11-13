@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    DELETE FROM personal_sessions\n                    WHERE owner_oauth2_client_id = $1\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dca9b361c4409b14498b85f192b0034201575a49e0240ac6715b55ad8d381d0e"
+}

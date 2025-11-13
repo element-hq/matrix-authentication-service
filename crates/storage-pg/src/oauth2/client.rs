@@ -811,6 +811,49 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             .await?;
         }
 
+        // Delete any personal access tokens & sessions owned
+        // by the client
+        {
+            let span = info_span!(
+                "db.oauth2_client.delete_by_id.personal_access_tokens",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    DELETE FROM personal_access_tokens
+                    WHERE personal_session_id IN (
+                        SELECT personal_session_id
+                        FROM personal_sessions
+                        WHERE owner_oauth2_client_id = $1
+                    )
+                "#,
+                Uuid::from(id),
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+        {
+            let span = info_span!(
+                "db.oauth2_client.delete_by_id.personal_sessions",
+                { DB_QUERY_TEXT } = tracing::field::Empty,
+            );
+
+            sqlx::query!(
+                r#"
+                    DELETE FROM personal_sessions
+                    WHERE owner_oauth2_client_id = $1
+                "#,
+                Uuid::from(id),
+            )
+            .record(&span)
+            .execute(&mut *self.conn)
+            .instrument(span)
+            .await?;
+        }
+
         // Now delete the client itself
         let res = sqlx::query!(
             r#"

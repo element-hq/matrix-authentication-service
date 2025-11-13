@@ -2,18 +2,18 @@
 
 exports[`Account home page > display name edit box > displays an error if the display name is invalid 1`] = `
 <div
-  aria-describedby="radix-«r86»"
-  aria-labelledby="radix-«r85»"
+  aria-describedby="radix-_r_86_"
+  aria-labelledby="radix-_r_85_"
   class="_body_820528"
   data-state="open"
-  id="radix-«r84»"
+  id="radix-_r_84_"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_820528"
-    id="radix-«r85»"
+    id="radix-_r_85_"
   >
     Edit profile
   </h2>
@@ -40,29 +40,29 @@ exports[`Account home page > display name edit box > displays an error if the di
         <label
           class="_label_19upo_59"
           data-invalid="true"
-          for="radix-«r9p»"
+          for="radix-_r_9p_"
         >
           Display name
         </label>
         <div
           class="_container_1s836_8"
-          id="«r9q»"
+          id="_r_9q_"
         >
           <input
-            aria-describedby="radix-«ra0»"
+            aria-describedby="radix-_r_a0_"
             aria-invalid="true"
             autocomplete="name"
             class="_control_sqdq4_10 _control_1s836_13"
             data-invalid="true"
-            id="radix-«r9p»"
+            id="radix-_r_9p_"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls="«r9q»"
-            aria-labelledby="«r9r»"
+            aria-controls="_r_9q_"
+            aria-labelledby="_r_9r_"
             class="_action_1s836_24"
             type="button"
           >
@@ -82,7 +82,7 @@ exports[`Account home page > display name edit box > displays an error if the di
         </div>
         <span
           class="_message_19upo_85 _help-message_19upo_91"
-          id="radix-«ra0»"
+          id="radix-_r_a0_"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -92,13 +92,13 @@ exports[`Account home page > display name edit box > displays an error if the di
       >
         <label
           class="_label_19upo_59"
-          for="radix-«ra1»"
+          for="radix-_r_a1_"
         >
           Username
         </label>
         <input
           class="_control_sqdq4_10"
-          id="radix-«ra1»"
+          id="radix-_r_a1_"
           name="mxid"
           readonly=""
           title=""
@@ -129,7 +129,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     Cancel
   </button>
   <button
-    aria-labelledby="«ra2»"
+    aria-labelledby="_r_a2_"
     class="_close_820528"
     type="button"
   >
@@ -150,18 +150,18 @@ exports[`Account home page > display name edit box > displays an error if the di
 
 exports[`Account home page > display name edit box > lets edit the display name 1`] = `
 <div
-  aria-describedby="radix-«r1n»"
-  aria-labelledby="radix-«r1m»"
+  aria-describedby="radix-_r_1n_"
+  aria-labelledby="radix-_r_1m_"
   class="_body_820528"
   data-state="open"
-  id="radix-«r1l»"
+  id="radix-_r_1l_"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
 >
   <h2
     class="_title_820528"
-    id="radix-«r1m»"
+    id="radix-_r_1m_"
   >
     Edit profile
   </h2>
@@ -186,27 +186,27 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_19upo_59"
-          for="radix-«r3a»"
+          for="radix-_r_3a_"
         >
           Display name
         </label>
         <div
           class="_container_1s836_8"
-          id="«r3b»"
+          id="_r_3b_"
         >
           <input
-            aria-describedby="radix-«r3h»"
+            aria-describedby="radix-_r_3h_"
             autocomplete="name"
             class="_control_sqdq4_10 _control_1s836_13"
-            id="radix-«r3a»"
+            id="radix-_r_3a_"
             name="displayname"
             title=""
             type="text"
             value="Alice"
           />
           <button
-            aria-controls="«r3b»"
-            aria-labelledby="«r3c»"
+            aria-controls="_r_3b_"
+            aria-labelledby="_r_3c_"
             class="_action_1s836_24"
             type="button"
           >
@@ -226,7 +226,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
         </div>
         <span
           class="_message_19upo_85 _help-message_19upo_91"
-          id="radix-«r3h»"
+          id="radix-_r_3h_"
         >
           This is what others will see wherever you’re signed in.
         </span>
@@ -236,13 +236,13 @@ exports[`Account home page > display name edit box > lets edit the display name 
       >
         <label
           class="_label_19upo_59"
-          for="radix-«r3i»"
+          for="radix-_r_3i_"
         >
           Username
         </label>
         <input
           class="_control_sqdq4_10"
-          id="radix-«r3i»"
+          id="radix-_r_3i_"
           name="mxid"
           readonly=""
           title=""
@@ -273,7 +273,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     Cancel
   </button>
   <button
-    aria-labelledby="«r3j»"
+    aria-labelledby="_r_3j_"
     class="_close_820528"
     type="button"
   >
@@ -354,10 +354,10 @@ exports[`Account home page > renders the page 1`] = `
             </p>
           </div>
           <button
-            aria-controls="radix-«r0»"
+            aria-controls="radix-_r_0_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            aria-labelledby="«r3»"
+            aria-labelledby="_r_3_"
             class="_icon-button_1pz9o_8 _editButton_0d9d49"
             data-kind="primary"
             data-state="closed"
@@ -422,7 +422,7 @@ exports[`Account home page > renders the page 1`] = `
       class="flex flex-col gap-6"
     >
       <section
-        aria-labelledby="«r8»"
+        aria-labelledby="_r_8_"
         class="_root_a44bb3"
         data-state="open"
       >
@@ -434,14 +434,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
-              id="«r8»"
+              id="_r_8_"
             >
               Contact info
             </h4>
             <button
-              aria-controls="radix-«ra»"
+              aria-controls="radix-_r_a_"
               aria-expanded="true"
-              aria-labelledby="«rb»"
+              aria-labelledby="_r_b_"
               class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="open"
@@ -472,7 +472,7 @@ exports[`Account home page > renders the page 1`] = `
         <article
           class="_content_a44bb3"
           data-state="open"
-          id="radix-«ra»"
+          id="radix-_r_a_"
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
@@ -483,7 +483,7 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_19upo_59"
-                for="radix-«rj»"
+                for="radix-_r_j_"
               >
                 Email
               </label>
@@ -492,7 +492,7 @@ exports[`Account home page > renders the page 1`] = `
               >
                 <input
                   class="_control_sqdq4_10 _userEmailField_06c85d"
-                  id="radix-«rj»"
+                  id="radix-_r_j_"
                   name="email"
                   readonly=""
                   title=""
@@ -510,7 +510,7 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_19upo_59"
-                for="radix-«rn»"
+                for="radix-_r_n_"
               >
                 Add email
               </label>
@@ -518,9 +518,9 @@ exports[`Account home page > renders the page 1`] = `
                 class="_controls_17lij_8"
               >
                 <input
-                  aria-describedby="radix-«ro»"
+                  aria-describedby="radix-_r_o_"
                   class="_control_sqdq4_10"
-                  id="radix-«rn»"
+                  id="radix-_r_n_"
                   name="input"
                   required=""
                   title=""
@@ -529,7 +529,7 @@ exports[`Account home page > renders the page 1`] = `
               </div>
               <span
                 class="_message_19upo_85 _help-message_19upo_91"
-                id="radix-«ro»"
+                id="radix-_r_o_"
               >
                 Add an alternative email you can use to access this account.
               </span>
@@ -543,7 +543,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <section
-        aria-labelledby="«rp»"
+        aria-labelledby="_r_p_"
         class="_root_a44bb3"
         data-state="open"
       >
@@ -555,14 +555,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
-              id="«rp»"
+              id="_r_p_"
             >
               Account password
             </h4>
             <button
-              aria-controls="radix-«rr»"
+              aria-controls="radix-_r_r_"
               aria-expanded="true"
-              aria-labelledby="«rs»"
+              aria-labelledby="_r_s_"
               class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="open"
@@ -593,7 +593,7 @@ exports[`Account home page > renders the page 1`] = `
         <article
           class="_content_a44bb3"
           data-state="open"
-          id="radix-«rr»"
+          id="radix-_r_r_"
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
@@ -604,14 +604,14 @@ exports[`Account home page > renders the page 1`] = `
             >
               <label
                 class="_label_19upo_59"
-                for="radix-«r11»"
+                for="radix-_r_11_"
               >
                 Password
               </label>
               <input
-                aria-describedby="radix-«r12»"
+                aria-describedby="radix-_r_12_"
                 class="_control_sqdq4_10"
-                id="radix-«r11»"
+                id="radix-_r_11_"
                 name="password_preview"
                 readonly=""
                 title=""
@@ -620,7 +620,7 @@ exports[`Account home page > renders the page 1`] = `
               />
               <span
                 class="_message_19upo_85 _help-message_19upo_91"
-                id="radix-«r12»"
+                id="radix-_r_12_"
               >
                 <a
                   class="_link_2a6fa3"
@@ -639,7 +639,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <section
-        aria-labelledby="«r13»"
+        aria-labelledby="_r_13_"
         class="_root_a44bb3"
         data-state="closed"
       >
@@ -651,14 +651,14 @@ exports[`Account home page > renders the page 1`] = `
           >
             <h4
               class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 _triggerTitle_a44bb3"
-              id="«r13»"
+              id="_r_13_"
             >
               End-to-end encryption
             </h4>
             <button
-              aria-controls="radix-«r15»"
+              aria-controls="radix-_r_15_"
               aria-expanded="false"
-              aria-labelledby="«r16»"
+              aria-labelledby="_r_16_"
               class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="closed"
@@ -693,7 +693,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <button
-        aria-controls="radix-«r1b»"
+        aria-controls="radix-_r_1b_"
         aria-expanded="false"
         aria-haspopup="dialog"
         class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
@@ -724,7 +724,7 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <button
-        aria-controls="radix-«r1e»"
+        aria-controls="radix-_r_1e_"
         aria-expanded="false"
         aria-haspopup="dialog"
         class="_button_vczzf_8 self-center _has-icon_vczzf_57 _destructive_vczzf_107"

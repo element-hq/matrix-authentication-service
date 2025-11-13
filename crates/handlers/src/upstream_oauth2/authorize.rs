@@ -5,9 +5,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     response::{IntoResponse, Redirect},
 };
+use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
 use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProvider};

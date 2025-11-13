@@ -26,7 +26,7 @@ Please see LICENSE files in the repository root for full details.
         </p>
       </div>
     </header>
-  {% elif upstream_oauth_provider.human_name %}
+  {% elif upstream_oauth_provider.human_name is not none %}
     <header class="page-heading">
       <div class="icon">
         {{ icon.user_profile_solid() }}
@@ -55,9 +55,9 @@ Please see LICENSE files in the repository root for full details.
     </header>
   {% endif %}
 
-  {% if upstream_oauth_provider.human_name %}
+  {% if upstream_oauth_provider.human_name is not none %}
     <section class="upstream-oauth2-provider-account">
-      {% if upstream_oauth_provider.brand_name %}
+      {% if upstream_oauth_provider.brand_name is not none %}
         {{ logo(brand=upstream_oauth_provider.brand_name, class="brand") }}
       {% else %}
         {{ icon.user_profile() }}
@@ -67,7 +67,7 @@ Please see LICENSE files in the repository root for full details.
         <h3 class="provider">
           {{- _("mas.upstream_oauth2.register.provider_name", human_name=upstream_oauth_provider.human_name) -}}
         </h3>
-        {% if upstream_oauth_link.human_account_name %}
+        {% if upstream_oauth_link.human_account_name is not none %}
           <p class="account">
             {{- upstream_oauth_link.human_account_name -}}
           </p>
@@ -147,7 +147,7 @@ Please see LICENSE files in the repository root for full details.
           <input {{ field.attributes(f) }} class="cpd-text-control" type="text" value="{{ imported_display_name }}" readonly />
 
           <div class="cpd-form-message cpd-form-help-message">
-            {% if upstream_oauth_provider.human_name %}
+            {% if upstream_oauth_provider.human_name is not none %}
               {{- _("mas.upstream_oauth2.register.imported_from_upstream_with_name", human_name=upstream_oauth_provider.human_name) -}}
             {% else %}
               {{- _("mas.upstream_oauth2.register.imported_from_upstream") -}}
@@ -175,7 +175,7 @@ Please see LICENSE files in the repository root for full details.
       </div>
     {% endif %}
 
-    {% if branding.tos_uri %}
+    {% if branding.tos_uri is not none %}
       {% call(f) field.field(label=_("mas.register.terms_of_service", tos_uri=branding.tos_uri), name="accept_terms", form_state=form_state, inline=true, class="my-4") %}
         <div class="cpd-form-inline-field-control">
           <div class="cpd-checkbox-container">
