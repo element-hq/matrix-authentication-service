@@ -1767,7 +1767,7 @@ mod tests {
         assert_eq!(page.edges.len(), 1);
         let email = page.edges.first().expect("email exists");
 
-        assert_eq!(email.email, oidc_email);
+        assert_eq!(email.node.email, oidc_email);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1947,7 +1947,7 @@ mod tests {
         assert_eq!(page.edges.len(), 1);
         let email = page.edges.first().expect("email exists");
 
-        assert_ne!(email.email, oidc_email);
+        assert_ne!(email.node.email, oidc_email);
     }
 
     fn sign_token(

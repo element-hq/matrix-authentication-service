@@ -13,7 +13,6 @@ use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
 use mas_storage::{BoxRepository, compat::CompatSsoLoginRepository};
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Deserialize;
-use serde_with::serde;
 use thiserror::Error;
 use url::Url;
 

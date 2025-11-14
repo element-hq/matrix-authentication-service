@@ -778,8 +778,6 @@ impl UpstreamOAuthProvider {
         ]
     }
 }
-<<<<<<< HEAD
-=======
 
 /// An error that shouldn't happen in practice, but suggests database
 /// inconsistency.
@@ -956,4 +954,3 @@ impl PersonalSession {
         self
     }
 }
->>>>>>> v1.6.0

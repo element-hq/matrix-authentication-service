@@ -1855,7 +1855,10 @@ export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: st
 export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PasswordChangeQuery = { __typename?: 'Query', viewer: { __typename: 'Anonymous', id: string } | { __typename: 'User', id: string }, siteConfig: (
+export type PasswordChangeQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous', id: string }
+    | { __typename: 'User', id: string }
+  , siteConfig: (
     { __typename?: 'SiteConfig' }
     & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
   ) };
@@ -2007,20 +2010,6 @@ export type ChangePasswordMutationVariables = Exact<{
 
 export type ChangePasswordMutation = { __typename?: 'Mutation', setPassword: { __typename?: 'SetPasswordPayload', status: SetPasswordStatus } };
 
-<<<<<<< HEAD
-=======
-export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PasswordChangeQuery = { __typename?: 'Query', viewer:
-    | { __typename: 'Anonymous', id: string }
-    | { __typename: 'User', id: string }
-  , siteConfig: (
-    { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-  ) };
-
->>>>>>> v1.6.0
 export type RecoverPasswordMutationVariables = Exact<{
   ticket: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];

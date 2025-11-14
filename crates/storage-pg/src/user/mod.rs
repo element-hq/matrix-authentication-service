@@ -76,15 +76,12 @@ mod priv_ {
         pub(super) deactivated_at: Option<DateTime<Utc>>,
         pub(super) can_request_admin: bool,
         pub(super) is_guest: bool,
-<<<<<<< HEAD
-=======
     }
 
     impl Node<Ulid> for UserLookup {
         fn cursor(&self) -> Ulid {
             self.user_id.into()
         }
->>>>>>> v1.6.0
     }
 }
 

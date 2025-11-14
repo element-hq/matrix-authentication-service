@@ -668,7 +668,7 @@
       },
       "mas_admin": "Administer any user on the matrix-authentication-service",
       "@mas_admin": {
-        "context": "components/scope.html:23:42-66",
+        "context": "components/scope.html:23:54-78",
         "description": "Displayed when the 'urn:mas:admin' scope is requested"
       },
       "send_messages": "Send new messages on your behalf",
@@ -677,7 +677,7 @@
       },
       "synapse_admin": "Administer the Synapse homeserver",
       "@synapse_admin": {
-        "context": "components/scope.html:21:42-70",
+        "context": "components/scope.html:21:53-81",
         "description": "Displayed when the 'urn:synapse:admin:*' scope is requested"
       },
       "view_messages": "View your existing messages and data",

@@ -742,24 +742,6 @@ impl TemplateContext for ConsentContext {
     where
         Self: Sized,
     {
-<<<<<<< HEAD
-        Client::samples(now, rng)
-            .into_iter()
-            .map(|client| {
-                let mut grant = AuthorizationGrant::sample(now, rng);
-                let action = PostAuthAction::continue_grant(grant.id);
-                // XXX
-                grant.client_id = client.id;
-                Self {
-                    grant,
-                    client,
-                    action,
-                    // :tchap:
-                    email: None, // :tchap: end
-                }
-            })
-            .collect()
-=======
         sample_list(
             Client::samples(now, rng)
                 .into_iter()
@@ -772,11 +754,12 @@ impl TemplateContext for ConsentContext {
                         grant,
                         client,
                         action,
+                        // :tchap:
+                        email: None, // :tchap: end
                     }
                 })
                 .collect(),
         )
->>>>>>> v1.6.0
     }
 }
 

@@ -190,7 +190,7 @@ pub(crate) async fn post(
 
     //:tchap:
     //let form = cookie_jar.verify_form(&clock, form)?;
-    let mut form = cookie_jar.verify_form(&clock, form)?;
+    let mut form: RegisterForm = cookie_jar.verify_form(&clock, form)?;
     //:tchap:
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -223,41 +223,49 @@ pub(crate) async fn post(
             state.add_error_on_form(FormError::Captcha);
         }
 
-        //:tchap:
-        //verify that email address is allowed in this homeserver
-        let server_name = homeserver.homeserver();
-        let email_result = check_email_allowed(&form.email, server_name, &tchap_config).await;
+        if let Some(email) = &email {
+            // Note that we don't check here if the email is already taken here, as
+            // we don't want to leak the information about other users. Instead, we will
+            // show an error message once the user confirmed their email address.
+            if email.is_empty() {
+                state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
+            } else if Address::from_str(email).is_err() {
+                state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
+            }
 
-        match email_result {
-            EmailAllowedResult::Allowed => {
-                // Email is allowed, continue
+            //verify that email address is allowed in this homeserver
+            let server_name = homeserver.homeserver();
+            let email_result = check_email_allowed(email, server_name, &tchap_config).await;
+
+            match email_result {
+                EmailAllowedResult::Allowed => {
+                    // Email is allowed, continue
+                }
+                EmailAllowedResult::WrongServer => {
+                    state.add_error_on_field(
+                        RegisterFormField::Email,
+                        FieldError::Policy {
+                            code: None,
+                            message: "Votre adresse mail est associée à un autre serveur."
+                                .to_owned(),
+                        },
+                    );
+                }
+                EmailAllowedResult::InvitationMissing => {
+                    state.add_error_on_field(
+                        RegisterFormField::Email,
+                        FieldError::Policy {
+                            code: None,
+                            message: "Vous avez besoin d'une invitation pour accéder à Tchap"
+                                .to_owned(),
+                        },
+                    );
+                }
             }
-            EmailAllowedResult::WrongServer => {
-                state.add_error_on_field(
-                    RegisterFormField::Email,
-                    FieldError::Policy {
-                        code: None,
-                        message: "Votre adresse mail est associée à un autre serveur.".to_owned(),
-                    },
-                );
-            }
-            EmailAllowedResult::InvitationMissing => {
-                state.add_error_on_field(
-                    RegisterFormField::Email,
-                    FieldError::Policy {
-                        code: None,
-                        message: "Vous avez besoin d'une invitation pour accéder à Tchap"
-                            .to_owned(),
-                    },
-                );
-            }
+
+            //mutate the username in the form based on the email
+            form.username = email_to_mxid_localpart(email);
         }
-
-        //substitute the username based on the email
-        form = RegisterForm {
-            username: email_to_mxid_localpart(&form.email),
-            ..form
-        };
 
         let mut homeserver_denied_username = false;
         if form.username.is_empty() {
@@ -279,17 +287,6 @@ pub(crate) async fn post(
             // We defer adding the error on the field, until we know whether we had another
             // error from the policy, to avoid showing both
             homeserver_denied_username = true;
-        }
-
-        if let Some(email) = &email {
-            // Note that we don't check here if the email is already taken here, as
-            // we don't want to leak the information about other users. Instead, we will
-            // show an error message once the user confirmed their email address.
-            if email.is_empty() {
-                state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
-            } else if Address::from_str(email).is_err() {
-                state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
-            }
         }
 
         if form.password.is_empty() {
@@ -433,32 +430,24 @@ pub(crate) async fn post(
         registration
     };
 
-<<<<<<< HEAD
-    //:tchap: set display name automatically - skip display name page
-    let maybe_display_name = Some(email_to_display_name(&form.email));
-
-    let registration = if let Some(display_name) = maybe_display_name {
-        repo.user_registration()
-            .set_display_name(registration, display_name)
-            .await?
-    } else {
-        registration
-    };
-    //:tchap: end
-
-    // Create a new user email authentication session
-    let user_email_authentication = repo
-        .user_email()
-        .add_authentication_for_registration(&mut rng, &clock, form.email, &registration)
-        .await?;
-=======
     let registration = if let Some(email) = email {
+        //:tchap: set display name automatically - skip display name page
+        let maybe_display_name = Some(email_to_display_name(&email));
+
+        let registration = if let Some(display_name) = maybe_display_name {
+            repo.user_registration()
+                .set_display_name(registration, display_name)
+                .await?
+        } else {
+            registration
+        };
+        //:tchap: end
+
         // Create a new user email authentication session
         let user_email_authentication = repo
             .user_email()
             .add_authentication_for_registration(&mut rng, &clock, email, &registration)
             .await?;
->>>>>>> v1.6.0
 
         // Schedule a job to verify the email
         repo.queue_job()
@@ -1011,6 +1000,8 @@ mod tests {
     }
 
     /// Test registration without email when email is not required
+    /// /// :tchap: ignore test
+    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_without_email_when_not_required(pool: PgPool) {
         setup();
@@ -1080,6 +1071,8 @@ mod tests {
 
     /// Test registration with valid email when email is not required
     /// (email input is ignored completely when not required)
+    /// :tchap: ignore test
+    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_email_when_not_required(pool: PgPool) {
         setup();

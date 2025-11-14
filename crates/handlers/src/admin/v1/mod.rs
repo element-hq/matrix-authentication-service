@@ -11,11 +11,7 @@ use aide::axum::{
     routing::{get_with, post_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
-<<<<<<< HEAD
-use mas_data_model::{BoxRng, SiteConfig};
-=======
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
->>>>>>> v1.6.0
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
 
@@ -41,10 +37,7 @@ where
     Arc<dyn HomeserverConnection>: FromRef<S>,
     PasswordManager: FromRef<S>,
     SiteConfig: FromRef<S>,
-<<<<<<< HEAD
-=======
     AppVersion: FromRef<S>,
->>>>>>> v1.6.0
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
@@ -55,13 +48,10 @@ where
             get_with(self::site_config::handler, self::site_config::doc),
         )
         .api_route(
-<<<<<<< HEAD
-=======
             "/version",
             get_with(self::version::handler, self::version::doc),
         )
         .api_route(
->>>>>>> v1.6.0
             "/compat-sessions",
             get_with(self::compat_sessions::list, self::compat_sessions::list_doc),
         )
@@ -262,8 +252,6 @@ where
                 self::upstream_oauth_providers::list_doc,
             ),
         )
-<<<<<<< HEAD
-=======
         .api_route(
             "/upstream-oauth-providers/{id}",
             get_with(
@@ -271,5 +259,4 @@ where
                 self::upstream_oauth_providers::get_doc,
             ),
         )
->>>>>>> v1.6.0
 }

@@ -28,19 +28,7 @@ use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
-<<<<<<< HEAD
-use mas_data_model::{
-    BoxClock,
-    BoxRng,
-    SiteConfig,
-    //:tchap:
-    TchapConfig,
-    //:tchap:end
-    clock::MockClock,
-};
-=======
-use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
->>>>>>> v1.6.0
+use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, TchapConfig, clock::MockClock}; /*  */
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
@@ -600,7 +588,6 @@ impl FromRef<TestState> for reqwest::Client {
     }
 }
 
-<<<<<<< HEAD
 //:tchap:
 impl FromRef<TestState> for TchapConfig {
     fn from_ref(input: &TestState) -> Self {
@@ -608,13 +595,12 @@ impl FromRef<TestState> for TchapConfig {
     }
 }
 //:tchap:end
-=======
+
 impl FromRef<TestState> for AppVersion {
     fn from_ref(_input: &TestState) -> Self {
         AppVersion("v0.0.0-test")
     }
 }
->>>>>>> v1.6.0
 
 impl FromRequestParts<TestState> for ActivityTracker {
     type Rejection = Infallible;

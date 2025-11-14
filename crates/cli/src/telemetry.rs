@@ -34,10 +34,6 @@ use opentelemetry_sdk::{
     },
 };
 use opentelemetry_semantic_conventions as semcov;
-<<<<<<< HEAD
-use url::Url;
-=======
->>>>>>> v1.6.0
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
     InstrumentationScope::builder(env!("CARGO_PKG_NAME"))

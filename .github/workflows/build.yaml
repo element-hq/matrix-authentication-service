@@ -264,11 +264,7 @@ jobs:
             type=sha
 
       - name: Setup Cosign
-<<<<<<< HEAD
-        uses: sigstore/cosign-installer@v3.10.0
-=======
         uses: sigstore/cosign-installer@v4.0.0
->>>>>>> v1.6.0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.11.1
@@ -337,11 +333,7 @@ jobs:
           merge-multiple: true
 
       - name: Prepare a release
-<<<<<<< HEAD
-        uses: softprops/action-gh-release@v2.3.3
-=======
         uses: softprops/action-gh-release@v2.4.1
->>>>>>> v1.6.0
         with:
           generate_release_notes: true
           body: |
@@ -410,11 +402,7 @@ jobs:
             await script({ core, github, context });
 
       - name: Update unstable release
-<<<<<<< HEAD
-        uses: softprops/action-gh-release@v2.3.3
-=======
         uses: softprops/action-gh-release@v2.4.1
->>>>>>> v1.6.0
         with:
           name: "Unstable build"
           tag_name: unstable

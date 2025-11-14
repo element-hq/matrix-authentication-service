@@ -39,7 +39,7 @@ Please see LICENSE in the repository root for full details.
     <!-- :tchap: add lasuite header -->
     {% include "tchap/header.html" %}
 
-    <div class="layout-container{% if consent_page %} consent{% endif %}">
+    <div class="layout-container{% if consent_page is defined%} consent{% endif %}">
       {% block content %}{% endblock content %}
       
       <!-- :tchap: remove default footer {% include "components/footer.html" %} -->

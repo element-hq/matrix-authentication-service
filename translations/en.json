@@ -10,11 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-<<<<<<< HEAD
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:69:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
-=======
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:76:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
->>>>>>> v1.6.0
+      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:69:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:80:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -83,11 +79,7 @@
     },
     "email_address": "Email address",
     "@email_address": {
-<<<<<<< HEAD
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:40:33-58, pages/upstream_oauth2/do_register.html:114:37-62"
-=======
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:39:35-60, pages/upstream_oauth2/do_register.html:114:37-62"
->>>>>>> v1.6.0
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:41:35-60, pages/upstream_oauth2/do_register.html:114:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -99,19 +91,11 @@
     },
     "password": "Password",
     "@password": {
-<<<<<<< HEAD
-      "context": "pages/login.html:57:37-57, pages/reauth.html:28:35-55, pages/register/password.html:44:33-53"
+      "context": "pages/login.html:57:37-57, pages/reauth.html:28:35-55, pages/register/password.html:46:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:49:33-61"
-=======
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:44:33-53"
-    },
-    "password_confirm": "Confirm password",
-    "@password_confirm": {
-      "context": "pages/register/password.html:48:33-61"
->>>>>>> v1.6.0
+      "context": "pages/register/password.html:51:33-61"
     },
     "username": "Username",
     "@username": {
@@ -439,11 +423,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-<<<<<<< HEAD
-        "context": "pages/login.html:82:15-67, pages/register/index.html:53:15-67",
-=======
-        "context": "pages/login.html:81:15-67, pages/register/index.html:57:15-67",
->>>>>>> v1.6.0
+        "context": "pages/login.html:82:15-67, pages/register/index.html:57:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -633,11 +613,7 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-<<<<<<< HEAD
-        "context": "pages/register/index.html:59:35-66, pages/register/password.html:80:33-64",
-=======
-        "context": "pages/register/index.html:63:35-66, pages/register/password.html:79:33-64",
->>>>>>> v1.6.0
+        "context": "pages/register/index.html:63:35-66, pages/register/password.html:83:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
@@ -660,11 +636,7 @@
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-<<<<<<< HEAD
-        "context": "pages/register/password.html:54:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
-=======
-        "context": "pages/register/password.html:53:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
->>>>>>> v1.6.0
+        "context": "pages/register/password.html:57:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
       }
     },
     "registration_token": {

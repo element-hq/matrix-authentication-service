@@ -35,10 +35,7 @@
                   "server_name": "example.com",
                   "password_login_enabled": true,
                   "password_registration_enabled": true,
-<<<<<<< HEAD
-=======
                   "password_registration_email_required": true,
->>>>>>> v1.6.0
                   "registration_token_required": true,
                   "email_change_allowed": true,
                   "displayname_change_allowed": true,
@@ -54,8 +51,6 @@
         }
       }
     },
-<<<<<<< HEAD
-=======
     "/api/admin/v1/version": {
       "get": {
         "tags": [
@@ -80,7 +75,6 @@
         }
       }
     },
->>>>>>> v1.6.0
     "/api/admin/v1/compat-sessions": {
       "get": {
         "tags": [
@@ -4317,8 +4311,6 @@
           },
           {
             "in": "query",
-<<<<<<< HEAD
-=======
             "name": "count",
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
@@ -4330,7 +4322,6 @@
           },
           {
             "in": "query",
->>>>>>> v1.6.0
             "name": "filter[enabled]",
             "description": "Retrieve providers that are (or are not) enabled",
             "schema": {
@@ -4366,14 +4357,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
-<<<<<<< HEAD
-=======
                       },
                       "meta": {
                         "page": {
                           "cursor": "01040G2081040G2081040G2081"
                         }
->>>>>>> v1.6.0
                       }
                     },
                     {
@@ -4388,14 +4376,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
-<<<<<<< HEAD
-=======
                       },
                       "meta": {
                         "page": {
                           "cursor": "02081040G2081040G2081040G2"
                         }
->>>>>>> v1.6.0
                       }
                     },
                     {
@@ -4410,14 +4395,11 @@
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
-<<<<<<< HEAD
-=======
                       },
                       "meta": {
                         "page": {
                           "cursor": "030C1G60R30C1G60R30C1G60R3"
                         }
->>>>>>> v1.6.0
                       }
                     }
                   ],
@@ -4433,8 +4415,6 @@
           }
         }
       }
-<<<<<<< HEAD
-=======
     },
     "/api/admin/v1/upstream-oauth-providers/{id}": {
       "get": {
@@ -4497,7 +4477,6 @@
           }
         }
       }
->>>>>>> v1.6.0
     }
   },
   "components": {
@@ -4540,10 +4519,7 @@
           "minimum_password_complexity",
           "password_change_allowed",
           "password_login_enabled",
-<<<<<<< HEAD
-=======
           "password_registration_email_required",
->>>>>>> v1.6.0
           "password_registration_enabled",
           "registration_token_required",
           "server_name"
@@ -4561,13 +4537,10 @@
             "description": "Whether password registration is enabled.",
             "type": "boolean"
           },
-<<<<<<< HEAD
-=======
           "password_registration_email_required": {
             "description": "Whether a valid email address is required for password registrations.",
             "type": "boolean"
           },
->>>>>>> v1.6.0
           "registration_token_required": {
             "description": "Whether registration tokens are required for password registrations.",
             "type": "boolean"
@@ -4605,8 +4578,6 @@
           }
         }
       },
-<<<<<<< HEAD
-=======
       "Version": {
         "type": "object",
         "required": [
@@ -4619,7 +4590,6 @@
           }
         }
       },
->>>>>>> v1.6.0
       "PaginationParams": {
         "type": "object",
         "properties": {
@@ -6369,35 +6339,21 @@
         "description": "A top-level response with a page of resources",
         "type": "object",
         "required": [
-<<<<<<< HEAD
-          "data",
-          "links",
-          "meta"
-=======
           "links"
->>>>>>> v1.6.0
         ],
         "properties": {
           "meta": {
             "description": "Response metadata",
-<<<<<<< HEAD
-            "$ref": "#/components/schemas/PaginationMeta"
-=======
             "$ref": "#/components/schemas/PaginationMeta",
             "nullable": true
->>>>>>> v1.6.0
           },
           "data": {
             "description": "The list of resources",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SingleResource_for_UpstreamOAuthProvider"
-<<<<<<< HEAD
-            }
-=======
             },
             "nullable": true
->>>>>>> v1.6.0
           },
           "links": {
             "description": "Related links",
@@ -6430,14 +6386,11 @@
           "links": {
             "description": "Related links",
             "$ref": "#/components/schemas/SelfLinks"
-<<<<<<< HEAD
-=======
           },
           "meta": {
             "description": "Metadata about the resource",
             "$ref": "#/components/schemas/SingleResourceMeta",
             "nullable": true
->>>>>>> v1.6.0
           }
         }
       },
@@ -6475,8 +6428,6 @@
             "nullable": true
           }
         }
-<<<<<<< HEAD
-=======
       },
       "SingleResponse_for_UpstreamOAuthProvider": {
         "description": "A top-level response with a single resource",
@@ -6493,7 +6444,6 @@
             "$ref": "#/components/schemas/SelfLinks"
           }
         }
->>>>>>> v1.6.0
       }
     }
   },
