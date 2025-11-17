@@ -189,7 +189,7 @@ version = "0.15.0"
 
 # CSV parsing and writing
 [workspace.dependencies.csv]
-version = "1.3.1"
+version = "1.4.0"
 
 # DER encoding
 [workspace.dependencies.der]
@@ -392,7 +392,7 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.1.7"
+version = "0.1.8"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
@@ -476,7 +476,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.148"
+version = "2.1.162"
 
 # High-precision clock
 [workspace.dependencies.quanta]
