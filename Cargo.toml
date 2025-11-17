@@ -529,7 +529,7 @@ version = "2.2.0"
 
 # PKI types for rustls
 [workspace.dependencies.rustls-pki-types]
-version = "1.12.0"
+version = "1.13.0"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
