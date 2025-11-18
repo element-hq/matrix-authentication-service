@@ -19,6 +19,46 @@ Please see LICENSE files in the repository root for full details.
   {%- if value %} value="{{ value }}" {% endif %}
 {%- endmacro %}
 
+{% macro error(error, hidden=false) %}
+  <div class="cpd-form-message cpd-form-error-message
+    {%- if hidden %} hidden{% endif %}" data-error-kind="{{ error.kind }}"
+    {%- if error.code %}data-error-code="{{ error.code }}"{% endif %}>
+    {% if error.kind == "required" %}
+      {{ _("mas.errors.field_required") }}
+    {% elif error.kind == "exists" and field.name == "username" %}
+      {{ _("mas.errors.username_taken") }}
+    {% elif error.kind == "policy" %}
+      {% if error.code == "username-too-short" %}
+        {{ _("mas.errors.username_too_short") }}
+      {% elif error.code == "username-too-long" %}
+        {{ _("mas.errors.username_too_long") }}
+      {% elif error.code == "username-invalid-chars" %}
+        {{ _("mas.errors.username_invalid_chars") }}
+      {% elif error.code == "username-all-numeric" %}
+        {{ _("mas.errors.username_all_numeric") }}
+      {% elif error.code == "username-banned" %}
+        {{ _("mas.errors.username_banned") }}
+      {% elif error.code == "username-not-allowed" %}
+        {{ _("mas.errors.username_not_allowed") }}
+      {% elif error.code == "email-domain-not-allowed" %}
+        {{ _("mas.errors.email_domain_not_allowed") }}
+      {% elif error.code == "email-domain-banned" %}
+        {{ _("mas.errors.email_domain_banned") }}
+      {% elif error.code == "email-not-allowed" %}
+        {{ _("mas.errors.email_not_allowed") }}
+      {% elif error.code == "email-banned" %}
+        {{ _("mas.errors.email_banned") }}
+      {% else %}
+        {{ _("mas.errors.denied_policy", policy=error.message) }}
+      {% endif %}
+    {% elif error.kind == "password_mismatch" %}
+      {{ _("mas.errors.password_mismatch") }}
+    {% else %}
+      {{ error.kind }}
+    {% endif %}
+  </div>
+{% endmacro %}
+
 {% macro field(label, name, form_state=false, class="", inline=false) %}
   {% set field_id = new_id() %}
   {% if not form_state %}
@@ -55,41 +95,7 @@ Please see LICENSE files in the repository root for full details.
     {% if field.errors is not empty %}
       {% for error in field.errors %}
         {% if error.kind != "unspecified" %}
-          <div class="cpd-form-message cpd-form-error-message">
-            {% if error.kind == "required" %}
-              {{ _("mas.errors.field_required") }}
-            {% elif error.kind == "exists" and field.name == "username" %}
-              {{ _("mas.errors.username_taken") }}
-            {% elif error.kind == "policy" %}
-              {% if error.code == "username-too-short" %}
-                {{ _("mas.errors.username_too_short") }}
-              {% elif error.code == "username-too-long" %}
-                {{ _("mas.errors.username_too_long") }}
-              {% elif error.code == "username-invalid-chars" %}
-                {{ _("mas.errors.username_invalid_chars") }}
-              {% elif error.code == "username-all-numeric" %}
-                {{ _("mas.errors.username_all_numeric") }}
-              {% elif error.code == "username-banned" %}
-                {{ _("mas.errors.username_banned") }}
-              {% elif error.code == "username-not-allowed" %}
-                {{ _("mas.errors.username_not_allowed") }}
-              {% elif error.code == "email-domain-not-allowed" %}
-                {{ _("mas.errors.email_domain_not_allowed") }}
-              {% elif error.code == "email-domain-banned" %}
-                {{ _("mas.errors.email_domain_banned") }}
-              {% elif error.code == "email-not-allowed" %}
-                {{ _("mas.errors.email_not_allowed") }}
-              {% elif error.code == "email-banned" %}
-                {{ _("mas.errors.email_banned") }}
-              {% else %}
-                {{ _("mas.errors.denied_policy", policy=error.message) }}
-              {% endif %}
-            {% elif error.kind == "password_mismatch" %}
-              {{ _("mas.errors.password_mismatch") }}
-            {% else %}
-              {{ error.kind }}
-            {% endif %}
-          </div>
+          {{ error(error) }}
         {% endif %}
       {% endfor %}
     {% endif %}
