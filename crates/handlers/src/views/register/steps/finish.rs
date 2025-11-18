@@ -151,52 +151,62 @@ pub(crate) async fn get(
         None
     };
 
-    // For now, we require an email address on the registration, but this might
-    // change in the future
-    let email_authentication_id = registration
-        .email_authentication_id
-        .context("No email authentication started for this registration")
-        .map_err(InternalError::from_anyhow)?;
-    let email_authentication = repo
-        .user_email()
-        .lookup_authentication(email_authentication_id)
-        .await?
-        .context("Could not load the email authentication")
-        .map_err(InternalError::from_anyhow)?;
-
-    // Check that the email authentication has been completed
-    if email_authentication.completed_at.is_none() {
-        return Ok((
-            cookie_jar,
-            url_builder.redirect(&mas_router::RegisterVerifyEmail::new(id)),
-        )
-            .into_response());
-    }
-
-    // Check that the email address isn't already used
-    // It is important to do that here, as we we're not checking during the
-    // registration, because we don't want to disclose whether an email is
-    // already being used or not before we verified it
-    if repo
-        .user_email()
-        .count(UserEmailFilter::new().for_email(&email_authentication.email))
-        .await?
-        > 0
+    // If there is an email authentication, we need to check that the email
+    // address was verified. If there is no email authentication attached, we
+    // need to make sure the server doesn't require it
+    let email_authentication = if let Some(email_authentication_id) =
+        registration.email_authentication_id
     {
-        let action = registration
-            .post_auth_action
-            .map(serde_json::from_value)
-            .transpose()?;
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(email_authentication_id)
+            .await?
+            .context("Could not load the email authentication")
+            .map_err(InternalError::from_anyhow)?;
 
-        let ctx = RegisterStepsEmailInUseContext::new(email_authentication.email, action)
-            .with_language(lang);
+        // Check that the email authentication has been completed
+        if email_authentication.completed_at.is_none() {
+            return Ok((
+                cookie_jar,
+                url_builder.redirect(&mas_router::RegisterVerifyEmail::new(id)),
+            )
+                .into_response());
+        }
 
-        return Ok((
-            cookie_jar,
-            Html(templates.render_register_steps_email_in_use(&ctx)?),
-        )
-            .into_response());
-    }
+        // Check that the email address isn't already used
+        // It is important to do that here, as we we're not checking during the
+        // registration, because we don't want to disclose whether an email is
+        // already being used or not before we verified it
+        if repo
+            .user_email()
+            .count(UserEmailFilter::new().for_email(&email_authentication.email))
+            .await?
+            > 0
+        {
+            let action = registration
+                .post_auth_action
+                .map(serde_json::from_value)
+                .transpose()?;
+
+            let ctx = RegisterStepsEmailInUseContext::new(email_authentication.email, action)
+                .with_language(lang);
+
+            return Ok((
+                cookie_jar,
+                Html(templates.render_register_steps_email_in_use(&ctx)?),
+            )
+                .into_response());
+        }
+
+        Some(email_authentication)
+    } else if site_config.password_registration_email_required {
+        // This could only happen in theory during a configuration change
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "Server requires an email address to complete the registration, but no email authentication was attached to the user registration"
+        )));
+    } else {
+        None
+    };
 
     // Check that the display name is set
     if registration.display_name.is_none() {
@@ -236,9 +246,11 @@ pub(crate) async fn get(
         .add(&mut rng, &clock, &user, user_agent)
         .await?;
 
-    repo.user_email()
-        .add(&mut rng, &clock, &user, email_authentication.email)
-        .await?;
+    if let Some(email_authentication) = email_authentication {
+        repo.user_email()
+            .add(&mut rng, &clock, &user, email_authentication.email)
+            .await?;
+    }
 
     if let Some(password) = registration.password {
         let user_password = repo

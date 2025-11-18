@@ -4,6 +4,9 @@
 # Please see LICENSE files in the repository root for full details.
 
 rules:
+  imports:
+    unresolved-reference:
+      level: ignore
   style:
     external-reference:
       level: ignore

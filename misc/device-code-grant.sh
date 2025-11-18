@@ -45,7 +45,7 @@ RESP="$(
 {
   "client_name": "CLI tool",
   "client_uri": "https://github.com/element-hq/matrix-authentication-service/",
-  "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
+  "grant_types": ["urn:ietf:params:oauth:grant-type:device_code","refresh_token"],
   "application_type": "native",
   "token_endpoint_auth_method": "none"
 }

@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
 };
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
@@ -51,6 +52,12 @@ struct LinkLookup {
     subject: String,
     human_account_name: Option<String>,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for LinkLookup {
+    fn cursor(&self) -> Ulid {
+        self.upstream_oauth_link_id.into()
+    }
 }
 
 impl From<LinkLookup> for UpstreamOAuthLink {

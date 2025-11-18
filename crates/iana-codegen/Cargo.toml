@@ -23,6 +23,7 @@ camino.workspace = true
 convert_case.workspace = true
 csv.workspace = true
 reqwest.workspace = true
+rustls.workspace = true
 serde.workspace = true
 tokio.workspace = true
 tracing-subscriber.workspace = true

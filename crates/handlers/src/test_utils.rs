@@ -28,7 +28,7 @@ use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
-use mas_data_model::{BoxClock, BoxRng, SiteConfig, clock::MockClock};
+use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
@@ -140,6 +140,7 @@ pub fn test_site_config() -> SiteConfig {
         email_change_allowed: true,
         displayname_change_allowed: true,
         password_change_allowed: true,
+        password_registration_email_required: true,
         account_recovery_allowed: true,
         account_deactivation_allowed: true,
         captcha: None,
@@ -175,6 +176,8 @@ impl TestState {
             workspace_root.join("translations"),
             site_config.templates_branding(),
             site_config.templates_features(),
+            // Strict mode in testing
+            true,
         )
         .await?;
 
@@ -572,6 +575,12 @@ impl FromRef<TestState> for Limiter {
 impl FromRef<TestState> for reqwest::Client {
     fn from_ref(input: &TestState) -> Self {
         input.http_client.clone()
+    }
+}
+
+impl FromRef<TestState> for AppVersion {
+    fn from_ref(_input: &TestState) -> Self {
+        AppVersion("v0.0.0-test")
     }
 }
 

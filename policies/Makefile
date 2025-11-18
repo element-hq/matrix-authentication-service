@@ -6,8 +6,10 @@
 # Set to 1 to run OPA through Docker
 DOCKER := 0
 PODMAN := 0
-OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.1.0-debug
-REGAL_DOCKER_IMAGE := ghcr.io/styrainc/regal:0.31.0
+# Keep in sync with Dockerfile and .github/actions/build-policies/action.yml
+OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.8.0-debug
+# Keep in sync with .github/workflows/ci.yaml
+REGAL_DOCKER_IMAGE := ghcr.io/open-policy-agent/regal:0.36.1
 
 INPUTS := \
 	common/common.rego \
@@ -22,9 +24,9 @@ ifeq ($(DOCKER), 1)
 	REGAL := docker run -i -v $(shell pwd):/policies:ro -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else ifeq ($(PODMAN), 1)
 	# When running rootless, the volume directory may need to be given global write permissions on the host
-	OPA := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
+	OPA := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(OPA_DOCKER_IMAGE)
 	OPA_RW := podman run -i -v $(shell pwd):/policies:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
-	REGAL := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
+	REGAL := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else
 	OPA := opa
 	OPA_RW := opa

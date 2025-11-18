@@ -12,10 +12,13 @@ use thiserror::Error;
 #[derive(serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ManifestEntry {
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     name: Option<String>,
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
+    names: Option<Vec<String>>,
+
+    #[expect(dead_code)]
     src: Option<Utf8PathBuf>,
 
     file: Utf8PathBuf,
@@ -24,15 +27,15 @@ pub struct ManifestEntry {
 
     assets: Option<Vec<Utf8PathBuf>>,
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     is_entry: Option<bool>,
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     is_dynamic_entry: Option<bool>,
 
     imports: Option<Vec<Utf8PathBuf>>,
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     dynamic_imports: Option<Vec<Utf8PathBuf>>,
 
     integrity: Option<String>,

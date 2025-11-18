@@ -384,7 +384,7 @@ impl ExpireInactiveOAuthSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -441,7 +441,7 @@ impl ExpireInactiveCompatSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -498,7 +498,7 @@ impl ExpireInactiveUserSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }

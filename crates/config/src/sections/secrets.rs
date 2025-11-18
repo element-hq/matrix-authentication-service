@@ -20,10 +20,6 @@ use tracing::info;
 
 use super::ConfigurationSection;
 
-fn example_secret() -> &'static str {
-    "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
-}
-
 /// Password config option.
 ///
 /// It either holds the password value directly or references a file where the
@@ -209,7 +205,7 @@ struct EncryptionRaw {
     #[schemars(
         with = "Option<String>",
         regex(pattern = r"[0-9a-fA-F]{64}"),
-        example = "example_secret"
+        example = &"0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
     )]
     #[serde_as(as = "Option<serde_with::hex::Hex>")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -534,7 +530,10 @@ mod tests {
                           keys_dir: keys
                     "},
                 )?;
-                jail.create_file("encryption", example_secret())?;
+                jail.create_file(
+                    "encryption",
+                    "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff",
+                )?;
                 jail.create_dir("keys")?;
                 jail.create_file(
                     "keys/key1",

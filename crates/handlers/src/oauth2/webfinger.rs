@@ -4,12 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use axum::{
-    Json,
-    extract::{Query, State},
-    response::IntoResponse,
-};
-use axum_extra::typed_header::TypedHeader;
+use axum::{Json, extract::State, response::IntoResponse};
+use axum_extra::{extract::Query, typed_header::TypedHeader};
 use headers::ContentType;
 use mas_router::UrlBuilder;
 use oauth2_types::webfinger::WebFingerResponse;

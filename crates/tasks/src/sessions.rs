@@ -110,7 +110,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
         }
 
         for edge in page.edges {
-            if let Some(user_id) = edge.user_id {
+            if let Some(user_id) = edge.node.user_id {
                 let inserted = users_synced.insert(user_id);
                 if inserted {
                     tracing::info!(user.id = %user_id, "Scheduling devices sync for user");
@@ -128,7 +128,7 @@ impl RunnableJob for ExpireInactiveOAuthSessionsJob {
             }
 
             repo.oauth2_session()
-                .finish(clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -174,14 +174,14 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
         }
 
         for edge in page.edges {
-            let inserted = users_synced.insert(edge.user_id);
+            let inserted = users_synced.insert(edge.node.user_id);
             if inserted {
-                tracing::info!(user.id = %edge.user_id, "Scheduling devices sync for user");
+                tracing::info!(user.id = %edge.node.user_id, "Scheduling devices sync for user");
                 repo.queue_job()
                     .schedule_job_later(
                         &mut rng,
                         clock,
-                        SyncDevicesJob::new_for_id(edge.user_id),
+                        SyncDevicesJob::new_for_id(edge.node.user_id),
                         clock.now() + delay,
                     )
                     .await
@@ -190,7 +190,7 @@ impl RunnableJob for ExpireInactiveCompatSessionsJob {
             }
 
             repo.compat_session()
-                .finish(clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }
@@ -230,7 +230,7 @@ impl RunnableJob for ExpireInactiveUserSessionsJob {
 
         for edge in page.edges {
             repo.browser_session()
-                .finish(clock, edge)
+                .finish(clock, edge.node)
                 .await
                 .map_err(JobError::retry)?;
         }

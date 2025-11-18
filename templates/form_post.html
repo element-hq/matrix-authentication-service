@@ -15,7 +15,7 @@ Please see LICENSE files in the repository root for full details.
     </div>
   </header>
 
-  <form method="post" class="flex flex-col"{% if redirect_uri %} action="{{ redirect_uri }}"{% endif %}>
+  <form method="post" class="flex flex-col"{% if redirect_uri is not none %} action="{{ redirect_uri }}"{% endif %}>
     {% for key, value in params|items %}
       <input type="hidden" name="{{ key }}" value="{{ value }}" />
     {% endfor %}

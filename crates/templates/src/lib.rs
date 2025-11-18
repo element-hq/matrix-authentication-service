@@ -9,7 +9,10 @@
 
 //! Templates rendering
 
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashSet},
+    sync::Arc,
+};
 
 use anyhow::Context as _;
 use arc_swap::ArcSwap;
@@ -17,7 +20,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use mas_i18n::Translator;
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
-use minijinja::Value;
+use minijinja::{UndefinedBehavior, Value};
 use rand::Rng;
 use serde::Serialize;
 use thiserror::Error;
@@ -50,6 +53,7 @@ pub use self::{
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
+use crate::context::SampleIdentifier;
 
 /// Escape the given string for use in HTML
 ///
@@ -71,6 +75,9 @@ pub struct Templates {
     vite_manifest_path: Utf8PathBuf,
     translations_path: Utf8PathBuf,
     path: Utf8PathBuf,
+    /// Whether template rendering is in strict mode (for testing,
+    /// until this can be rolled out in production.)
+    strict: bool,
 }
 
 /// There was an issue while loading the templates
@@ -151,6 +158,7 @@ impl Templates {
         translations_path: Utf8PathBuf,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<Self, TemplateLoadingError> {
         let (translator, environment) = Self::load_(
             &path,
@@ -159,6 +167,7 @@ impl Templates {
             &translations_path,
             branding.clone(),
             features,
+            strict,
         )
         .await?;
         Ok(Self {
@@ -170,6 +179,7 @@ impl Templates {
             translations_path,
             branding,
             features,
+            strict,
         })
     }
 
@@ -180,6 +190,7 @@ impl Templates {
         translations_path: &Utf8Path,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<(Arc<Translator>, Arc<minijinja::Environment<'static>>), TemplateLoadingError> {
         let path = path.to_owned();
         let span = tracing::Span::current();
@@ -205,6 +216,15 @@ impl Templates {
             span.in_scope(move || {
                 let mut loaded: HashSet<_> = HashSet::new();
                 let mut env = minijinja::Environment::new();
+                // Don't allow use of undefined variables
+                env.set_undefined_behavior(if strict {
+                    UndefinedBehavior::Strict
+                } else {
+                    // For now, allow semi-strict, because we don't have total test coverage of
+                    // tests and some tests rely on if conditions against sometimes-undefined
+                    // variables
+                    UndefinedBehavior::SemiStrict
+                });
                 let root = path.canonicalize_utf8()?;
                 info!(%root, "Loading templates from filesystem");
                 for entry in walkdir::WalkDir::new(&root)
@@ -275,6 +295,7 @@ impl Templates {
             &self.translations_path,
             self.branding.clone(),
             self.features,
+            self.strict,
         )
         .await?;
 
@@ -383,7 +404,7 @@ register_templates! {
     pub fn render_recovery_disabled(WithLanguage<EmptyContext>) { "pages/recovery/disabled.html" }
 
     /// Render the form used by the `form_post` response mode
-    pub fn render_form_post<T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
+    pub fn render_form_post<#[sample(EmptyContext)] T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
 
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }
@@ -439,7 +460,13 @@ register_templates! {
 
 impl Templates {
     /// Render all templates with the generated samples to check if they render
-    /// properly
+    /// properly.
+    ///
+    /// Returns the renders in a map whose keys are template names
+    /// and the values are lists of renders (according to the list
+    /// of samples).
+    /// Samples are stable across re-runs and can be used for
+    /// acceptance testing.
     ///
     /// # Errors
     ///
@@ -448,47 +475,8 @@ impl Templates {
         &self,
         now: chrono::DateTime<chrono::Utc>,
         rng: &mut impl Rng,
-    ) -> anyhow::Result<()> {
-        check::render_not_found(self, now, rng)?;
-        check::render_app(self, now, rng)?;
-        check::render_swagger(self, now, rng)?;
-        check::render_swagger_callback(self, now, rng)?;
-        check::render_login(self, now, rng)?;
-        check::render_register(self, now, rng)?;
-        check::render_password_register(self, now, rng)?;
-        check::render_register_steps_verify_email(self, now, rng)?;
-        check::render_register_steps_email_in_use(self, now, rng)?;
-        check::render_register_steps_display_name(self, now, rng)?;
-        check::render_register_steps_registration_token(self, now, rng)?;
-        check::render_consent(self, now, rng)?;
-        check::render_policy_violation(self, now, rng)?;
-        check::render_sso_login(self, now, rng)?;
-        check::render_index(self, now, rng)?;
-        check::render_recovery_start(self, now, rng)?;
-        check::render_recovery_progress(self, now, rng)?;
-        check::render_recovery_finish(self, now, rng)?;
-        check::render_recovery_expired(self, now, rng)?;
-        check::render_recovery_consumed(self, now, rng)?;
-        check::render_recovery_disabled(self, now, rng)?;
-        check::render_form_post::<EmptyContext>(self, now, rng)?;
-        check::render_error(self, now, rng)?;
-        check::render_email_recovery_txt(self, now, rng)?;
-        check::render_email_recovery_html(self, now, rng)?;
-        check::render_email_recovery_subject(self, now, rng)?;
-        check::render_email_verification_txt(self, now, rng)?;
-        check::render_email_verification_html(self, now, rng)?;
-        check::render_email_verification_subject(self, now, rng)?;
-        check::render_upstream_oauth2_link_mismatch(self, now, rng)?;
-        check::render_upstream_oauth2_login_link(self, now, rng)?;
-        check::render_upstream_oauth2_suggest_link(self, now, rng)?;
-        check::render_upstream_oauth2_do_register(self, now, rng)?;
-        check::render_device_link(self, now, rng)?;
-        check::render_device_consent(self, now, rng)?;
-        check::render_account_deactivated(self, now, rng)?;
-        check::render_account_locked(self, now, rng)?;
-        check::render_account_logged_out(self, now, rng)?;
-        check::render_device_name(self, now, rng)?;
-        Ok(())
+    ) -> anyhow::Result<BTreeMap<(&'static str, SampleIdentifier), String>> {
+        check::all(self, now, rng)
     }
 }
 
@@ -509,6 +497,7 @@ mod tests {
         let features = SiteFeatures {
             password_login: true,
             password_registration: true,
+            password_registration_email_required: true,
             account_recovery: true,
             login_with_email_allowed: true,
         };
@@ -523,6 +512,8 @@ mod tests {
             translations_path,
             branding,
             features,
+            // Use strict mode in tests
+            true,
         )
         .await
         .unwrap();

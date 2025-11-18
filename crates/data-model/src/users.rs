@@ -21,6 +21,7 @@ pub struct User {
     pub locked_at: Option<DateTime<Utc>>,
     pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    pub is_guest: bool,
 }
 
 impl User {
@@ -28,6 +29,20 @@ impl User {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.locked_at.is_none() && self.deactivated_at.is_none()
+    }
+
+    /// Returns `true` if the user is a valid actor, for example
+    /// of a personal session.
+    ///
+    /// Currently: this is `true` unless the user is deactivated.
+    ///
+    /// This is a weaker form of validity: `is_valid` always implies
+    /// `is_valid_actor`, but some users (currently: locked users)
+    /// can be valid actors for personal sessions but aren't valid
+    /// except through administrative access.
+    #[must_use]
+    pub fn is_valid_actor(&self) -> bool {
+        self.deactivated_at.is_none()
     }
 }
 
@@ -43,6 +58,7 @@ impl User {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: false,
         }]
     }
 }

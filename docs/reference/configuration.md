@@ -307,6 +307,12 @@ account:
   # This has no effect if password login is disabled.
   password_registration_enabled: false
 
+  # Whether self-service registrations require a valid email
+  #
+  # Defaults to `true`
+  # This has no effect if password registration is disabled.
+  password_registration_email_required: true
+
   # Whether users are allowed to change their passwords
   #
   # Defaults to `true`.
@@ -647,7 +653,8 @@ upstream_oauth2:
       # The client secret to use to authenticate to the provider
       # This is only used by the `client_secret_post`, `client_secret_basic`
       # and `client_secret_jwk` authentication methods
-      #client_secret: f4f6bb68a0269264877e9cb23b1856ab
+      client_secret_file: secret
+      # OR client_secret: f4f6bb68a0269264877e9cb23b1856ab
 
       # Which authentication method to use to authenticate to the provider
       # Supported methods are:
@@ -770,7 +777,7 @@ upstream_oauth2:
         localpart:
           #action: force
           #template: "{{ user.preferred_username }}"
-          
+
           # How to handle when localpart already exists.
           # Possible values are (default: fail):
           # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.

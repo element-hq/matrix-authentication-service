@@ -14,6 +14,7 @@ use mas_storage::{
     Pagination, RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
     queue::{
         DeleteDeviceJob, ProvisionDeviceJob, ProvisionUserJob, QueueJobRepositoryExt as _,
         SyncDevicesJob,
@@ -203,11 +204,12 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for (compat_session, _) in page.edges {
+            for edge in page.edges {
+                let (compat_session, _) = edge.node;
                 if let Some(ref device) = compat_session.device {
                     devices.insert(device.as_str().to_owned());
                 }
-                cursor = cursor.after(compat_session.id);
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {
@@ -227,14 +229,44 @@ impl RunnableJob for SyncDevicesJob {
                 .await
                 .map_err(JobError::retry)?;
 
-            for oauth2_session in page.edges {
-                for scope in &*oauth2_session.scope {
+            for edge in page.edges {
+                for scope in &*edge.node.scope {
                     if let Some(device) = Device::from_scope_token(scope) {
                         devices.insert(device.as_str().to_owned());
                     }
                 }
 
-                cursor = cursor.after(oauth2_session.id);
+                cursor = cursor.after(edge.cursor);
+            }
+
+            if !page.has_next_page {
+                break;
+            }
+        }
+
+        // Cycle through all the personal sessions of the user and get the devices
+        let mut cursor = Pagination::first(5000);
+        loop {
+            let page = repo
+                .personal_session()
+                .list(
+                    PersonalSessionFilter::new()
+                        .for_actor_user(&user)
+                        .active_only(),
+                    cursor,
+                )
+                .await
+                .map_err(JobError::retry)?;
+
+            for edge in page.edges {
+                let (session, _) = &edge.node;
+                for scope in &*session.scope {
+                    if let Some(device) = Device::from_scope_token(scope) {
+                        devices.insert(device.as_str().to_owned());
+                    }
+                }
+
+                cursor = cursor.after(edge.cursor);
             }
 
             if !page.has_next_page {

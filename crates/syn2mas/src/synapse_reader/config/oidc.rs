@@ -7,9 +7,9 @@ use std::{collections::BTreeMap, str::FromStr as _};
 
 use chrono::{DateTime, Utc};
 use mas_config::{
-    UpstreamOAuth2ClaimsImports, UpstreamOAuth2DiscoveryMode, UpstreamOAuth2ImportAction,
-    UpstreamOAuth2OnBackchannelLogout, UpstreamOAuth2PkceMethod, UpstreamOAuth2ResponseMode,
-    UpstreamOAuth2TokenAuthMethod,
+    ClientSecret, UpstreamOAuth2ClaimsImports, UpstreamOAuth2DiscoveryMode,
+    UpstreamOAuth2ImportAction, UpstreamOAuth2OnBackchannelLogout, UpstreamOAuth2PkceMethod,
+    UpstreamOAuth2ResponseMode, UpstreamOAuth2TokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::{OPENID, Scope, ScopeToken};
@@ -328,7 +328,7 @@ impl OidcProvider {
             human_name: self.idp_name,
             brand_name: self.idp_brand,
             client_id,
-            client_secret: self.client_secret,
+            client_secret: self.client_secret.map(ClientSecret::Value),
             token_endpoint_auth_method,
             sign_in_with_apple: None,
             token_endpoint_auth_signing_alg: None,

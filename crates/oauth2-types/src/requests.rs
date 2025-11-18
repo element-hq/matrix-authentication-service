@@ -86,11 +86,13 @@ impl core::str::FromStr for ResponseMode {
     Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, SerializeDisplay, DeserializeFromStr,
 )]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum Display {
     /// The Authorization Server should display the authentication and consent
     /// UI consistent with a full User Agent page view.
     ///
     /// This is the default display mode.
+    #[default]
     Page,
 
     /// The Authorization Server should display the authentication and consent
@@ -132,12 +134,6 @@ impl core::str::FromStr for Display {
             "wap" => Ok(Display::Wap),
             s => Ok(Display::Unknown(s.to_owned())),
         }
-    }
-}
-
-impl Default for Display {
-    fn default() -> Self {
-        Self::Page
     }
 }
 
@@ -807,6 +803,7 @@ pub struct IntrospectionResponse {
     pub jti: Option<String>,
 
     /// MAS extension: explicit device ID
+    /// Only used for compatibility access and refresh tokens.
     pub device_id: Option<String>,
 }
 

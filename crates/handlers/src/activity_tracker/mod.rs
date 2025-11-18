@@ -10,7 +10,9 @@ mod worker;
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Clock, CompatSession, Session};
+use mas_data_model::{
+    BrowserSession, Clock, CompatSession, Session, personal::session::PersonalSession,
+};
 use mas_storage::BoxRepositoryFactory;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use ulid::Ulid;
@@ -24,6 +26,8 @@ static MESSAGE_QUEUE_SIZE: usize = 1000;
 enum SessionKind {
     OAuth2,
     Compat,
+    /// Session associated with personal access tokens
+    Personal,
     Browser,
 }
 
@@ -32,6 +36,7 @@ impl SessionKind {
         match self {
             SessionKind::OAuth2 => "oauth2",
             SessionKind::Compat => "compat",
+            SessionKind::Personal => "personal",
             SessionKind::Browser => "browser",
         }
     }
@@ -105,6 +110,28 @@ impl ActivityTracker {
 
         if let Err(e) = res {
             tracing::error!("Failed to record OAuth2 session: {}", e);
+        }
+    }
+
+    /// Record activity in a personal session.
+    pub async fn record_personal_session(
+        &self,
+        clock: &dyn Clock,
+        session: &PersonalSession,
+        ip: Option<IpAddr>,
+    ) {
+        let res = self
+            .channel
+            .send(Message::Record {
+                kind: SessionKind::Personal,
+                id: session.id,
+                date_time: clock.now(),
+                ip,
+            })
+            .await;
+
+        if let Err(e) = res {
+            tracing::error!("Failed to record Personal session: {}", e);
         }
     }
 
