@@ -12,6 +12,7 @@ export default {
     "src/routeTree.gen.ts",
     ".storybook/locales.ts",
     "i18next.config.ts",
+    "src/external/**",
   ],
   ignoreDependencies: [
     // This is used by the tailwind PostCSS plugin, but not detected by knip

@@ -29,6 +29,7 @@
     "loading": "Loading…",
     "next": "Next",
     "password": "Password",
+    "password_confirm": "common.password_confirm",
     "previous": "Previous",
     "saved": "Saved",
     "saving": "Saving…"

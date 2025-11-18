@@ -55,9 +55,17 @@ const usePasswordComplexity = (password: string): PasswordComplexity => {
 export default function PasswordCreationDoubleInput({
   siteConfig,
   forceShowNewPasswordInvalid,
+  newPasswordFieldName,
+  newPasswordLabel,
+  newPasswordAgainFieldName,
+  newPasswordAgainLabel,
 }: {
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
   forceShowNewPasswordInvalid: boolean;
+  newPasswordFieldName: string;
+  newPasswordLabel: string;
+  newPasswordAgainFieldName: string;
+  newPasswordAgainLabel: string;
 }): React.ReactElement {
   const { t } = useTranslation();
   const { minimumPasswordComplexity } = useFragment(
@@ -81,10 +89,8 @@ export default function PasswordCreationDoubleInput({
 
   return (
     <>
-      <Form.Field name="new_password">
-        <Form.Label>
-          {t("frontend.password_change.new_password_label")}
-        </Form.Label>
+      <Form.Field name={newPasswordFieldName}>
+        <Form.Label>{newPasswordLabel}</Form.Label>
 
         <Form.PasswordControl
           required
@@ -128,15 +134,13 @@ export default function PasswordCreationDoubleInput({
         )}
       </Form.Field>
 
-      <Form.Field name="new_password_again">
+      <Form.Field name={newPasswordAgainFieldName}>
         {/*
         TODO This field has validation defects,
         some caused by Radix-UI upstream bugs.
         https://github.com/matrix-org/matrix-authentication-service/issues/2855
       */}
-        <Form.Label>
-          {t("frontend.password_change.new_password_again_label")}
-        </Form.Label>
+        <Form.Label>{newPasswordAgainLabel}</Form.Label>
 
         <Form.PasswordControl
           required
@@ -148,7 +152,9 @@ export default function PasswordCreationDoubleInput({
           {t("frontend.errors.field_required")}
         </Form.ErrorMessage>
 
-        <Form.ErrorMessage match={(v, form) => v !== form.get("new_password")}>
+        <Form.ErrorMessage
+          match={(v, form) => v !== form.get(newPasswordFieldName)}
+        >
           {t("frontend.password_change.passwords_no_match")}
         </Form.ErrorMessage>
 

@@ -189,6 +189,12 @@ function ChangePassword(): React.ReactNode {
                 mutation.data.status === "INVALID_NEW_PASSWORD") ||
               false
             }
+            newPasswordFieldName="new_password"
+            newPasswordLabel={t("frontend.password_change.new_password_label")}
+            newPasswordAgainFieldName="new_password_again"
+            newPasswordAgainLabel={t(
+              "frontend.password_change.new_password_again_label",
+            )}
           />
 
           <Form.Submit kind="primary" disabled={mutation.isPending}>
