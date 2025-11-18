@@ -240,28 +240,6 @@ impl From<Encryption> for EncryptionRaw {
     }
 }
 
-/// Description of signing keys.
-///
-/// It either holds the key config values directly or references a directory
-/// where each file contains a key.
-#[derive(Debug, Clone)]
-pub enum Keys {
-    Values(Vec<KeyConfig>),
-    Directory(Utf8PathBuf),
-}
-
-impl Keys {
-    /// Returns a list of key configs.
-    ///
-    /// If `keys_dir` was given, the keys are read from file.
-    async fn key_configs(&self) -> anyhow::Result<Vec<KeyConfig>> {
-        match self {
-            Keys::Values(key_configs) => Ok(key_configs.clone()),
-            Keys::Directory(path) => key_configs_from_path(path).await,
-        }
-    }
-}
-
 /// Reads all keys from the given directory.
 async fn key_configs_from_path(path: &Utf8PathBuf) -> anyhow::Result<Vec<KeyConfig>> {
     let mut result = vec![];
@@ -279,47 +257,6 @@ async fn key_configs_from_path(path: &Utf8PathBuf) -> anyhow::Result<Vec<KeyConf
     Ok(result)
 }
 
-#[serde_as]
-#[derive(JsonSchema, Serialize, Deserialize, Debug, Clone)]
-struct KeysRaw {
-    /// List of private keys to use for signing and encrypting payloads.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    keys: Option<Vec<KeyConfig>>,
-
-    /// Directory of private keys to use for signing and encrypting payloads.
-    #[schemars(with = "Option<String>")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    keys_dir: Option<Utf8PathBuf>,
-}
-
-impl TryFrom<KeysRaw> for Keys {
-    type Error = anyhow::Error;
-
-    fn try_from(value: KeysRaw) -> Result<Keys, Self::Error> {
-        match (value.keys, value.keys_dir) {
-            (None, None) => bail!("Missing `keys` or `keys_dir`"),
-            (None, Some(path)) => Ok(Keys::Directory(path)),
-            (Some(keys), None) => Ok(Keys::Values(keys)),
-            (Some(_), Some(_)) => bail!("Cannot specify both `keys` and `keys_dir`"),
-        }
-    }
-}
-
-impl From<Keys> for KeysRaw {
-    fn from(value: Keys) -> Self {
-        match value {
-            Keys::Directory(path) => KeysRaw {
-                keys_dir: Some(path),
-                keys: None,
-            },
-            Keys::Values(keys) => KeysRaw {
-                keys_dir: None,
-                keys: Some(keys),
-            },
-        }
-    }
-}
-
 /// Application secrets
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -330,11 +267,14 @@ pub struct SecretsConfig {
     #[serde(flatten)]
     encryption: Encryption,
 
-    /// List of private keys to use for signing and encrypting payloads
-    #[schemars(with = "KeysRaw")]
-    #[serde_as(as = "serde_with::TryFromInto<KeysRaw>")]
-    #[serde(flatten)]
-    keys: Keys,
+    /// List of private keys to use for signing and encrypting payloads.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    keys: Option<Vec<KeyConfig>>,
+
+    /// Directory of private keys to use for signing and encrypting payloads.
+    #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    keys_dir: Option<Utf8PathBuf>,
 }
 
 impl SecretsConfig {
@@ -345,7 +285,7 @@ impl SecretsConfig {
     /// Returns an error when a key could not be imported
     #[tracing::instrument(name = "secrets.load", skip_all)]
     pub async fn key_store(&self) -> anyhow::Result<Keystore> {
-        let key_configs = self.keys.key_configs().await?;
+        let key_configs = self.key_configs().await?;
         let web_keys = try_join_all(key_configs.iter().map(KeyConfig::json_web_key)).await?;
 
         Ok(Keystore::new(JsonWebKeySet::new(web_keys)))
@@ -379,6 +319,21 @@ impl SecretsConfig {
                 Ok(bytes)
             }
         }
+    }
+
+    /// Returns a combined list of key configs given inline and from files.
+    ///
+    /// If `keys_dir` was given, the keys are read from file.
+    async fn key_configs(&self) -> anyhow::Result<Vec<KeyConfig>> {
+        let mut key_configs = match &self.keys_dir {
+            Some(keys_dir) => key_configs_from_path(keys_dir).await?,
+            None => vec![],
+        };
+
+        let inline_key_configs = self.keys.as_deref().unwrap_or_default();
+        key_configs.extend(inline_key_configs.iter().cloned());
+
+        Ok(key_configs)
     }
 }
 
@@ -461,7 +416,8 @@ impl SecretsConfig {
 
         Ok(Self {
             encryption: Encryption::Value(Standard.sample(&mut rng)),
-            keys: Keys::Values(vec![rsa_key, ec_p256_key, ec_p384_key, ec_k256_key]),
+            keys: Some(vec![rsa_key, ec_p256_key, ec_p384_key, ec_k256_key]),
+            keys_dir: None,
         })
     }
 
@@ -502,7 +458,8 @@ impl SecretsConfig {
 
         Self {
             encryption: Encryption::Value([0xEA; 32]),
-            keys: Keys::Values(vec![rsa_key, ecdsa_key]),
+            keys: Some(vec![rsa_key, ecdsa_key]),
+            keys_dir: None,
         }
     }
 }
@@ -619,7 +576,7 @@ mod tests {
                         ]
                     );
 
-                    let mut key_config = config.keys.key_configs().await.unwrap();
+                    let mut key_config = config.key_configs().await.unwrap();
                     key_config.sort_by_key(|a| {
                         if let Key::File(p) = &a.key {
                             Some(p.clone())
@@ -688,6 +645,59 @@ mod tests {
                     let key_store = config.key_store().await.unwrap();
                     assert!(key_store.iter().any(|k| k.kid() == Some("lekid0")));
                     assert!(key_store.iter().any(|k| k.kid() == Some("ONUCn80fsiISFWKrVMEiirNVr-QEvi7uQI0QH9q9q4o")));
+                });
+
+                Ok(())
+            });
+        })
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn load_config_mixed_key_sources() {
+        task::spawn_blocking(|| {
+            Jail::expect_with(|jail| {
+                jail.create_file(
+                    "config.yaml",
+                    indoc::indoc! {r"
+                        secrets:
+                          encryption_file: encryption
+                          keys_dir: keys
+                          keys:
+                            - kid: lekid0
+                              key: |
+                                -----BEGIN EC PRIVATE KEY-----
+                                MHcCAQEEIOtZfDuXZr/NC0V3sisR4Chf7RZg6a2dpZesoXMlsPeRoAoGCCqGSM49
+                                AwEHoUQDQgAECfpqx64lrR85MOhdMxNmIgmz8IfmM5VY9ICX9aoaArnD9FjgkBIl
+                                fGmQWxxXDSWH6SQln9tROVZaduenJqDtDw==
+                                -----END EC PRIVATE KEY-----
+                    "},
+                )?;
+                jail.create_dir("keys")?;
+                jail.create_file(
+                    "keys/key_from_file",
+                    indoc::indoc! {r"
+                        -----BEGIN EC PRIVATE KEY-----
+                        MHcCAQEEIKlZz/GnH0idVH1PnAF4HQNwRafgBaE2tmyN1wjfdOQqoAoGCCqGSM49
+                        AwEHoUQDQgAEHrgPeG+Mt8eahih1h4qaPjhl7jT25cdzBkg3dbVks6gBR2Rx4ug9
+                        h27LAir5RqxByHvua2XsP46rSTChof78uw==
+                        -----END EC PRIVATE KEY-----
+                    "},
+                )?;
+
+                let config = Figment::new()
+                    .merge(Yaml::file("config.yaml"))
+                    .extract_inner::<SecretsConfig>("secrets")?;
+
+                Handle::current().block_on(async move {
+                    let key_config = config.key_configs().await.unwrap();
+                    let key_store = config.key_store().await.unwrap();
+
+                    assert!(key_config[0].kid.is_none());
+                    assert!(matches!(&key_config[0].key, Key::File(p) if p == "keys/key_from_file"));
+                    assert!(key_store.iter().any(|k| k.kid() == Some("ONUCn80fsiISFWKrVMEiirNVr-QEvi7uQI0QH9q9q4o")));
+                    assert!(key_store.iter().any(|k| k.kid() == Some("lekid0")));
                 });
 
                 Ok(())
