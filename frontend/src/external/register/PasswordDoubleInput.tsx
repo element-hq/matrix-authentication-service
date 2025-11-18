@@ -4,8 +4,8 @@ import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import { mountWithProviders } from "../mount";
 import "../../shared.css";
-import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
 import { useTranslation } from "react-i18next";
+import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
 
 const HTML_ID = "#password-double-input";
 
