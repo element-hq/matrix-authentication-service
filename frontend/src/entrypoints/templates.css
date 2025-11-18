@@ -5,18 +5,18 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-@import url("./styles/cpd-button.css");
-@import url("./styles/cpd-form.css");
-@import url("./styles/cpd-link.css");
-@import url("./styles/cpd-text-control.css");
-@import url("./styles/cpd-mfa-control.css");
-@import url("./styles/cpd-checkbox-control.css");
+@import url("../styles/cpd-button.css");
+@import url("../styles/cpd-form.css");
+@import url("../styles/cpd-link.css");
+@import url("../styles/cpd-text-control.css");
+@import url("../styles/cpd-mfa-control.css");
+@import url("../styles/cpd-checkbox-control.css");
 
-@import url("./components/SessionCard/SessionCard.module.css");
-@import url("./components/Session/DeviceTypeIcon.module.css");
-@import url("./components/Layout/Layout.module.css");
-@import url("./components/Footer/Footer.module.css");
-@import url("./components/PageHeading/PageHeading.module.css");
+@import url("../components/SessionCard/SessionCard.module.css");
+@import url("../components/Session/DeviceTypeIcon.module.css");
+@import url("../components/Layout/Layout.module.css");
+@import url("../components/Footer/Footer.module.css");
+@import url("../components/PageHeading/PageHeading.module.css");
 
 .cpd-text-body-lg-regular {
   font: var(--cpd-font-body-lg-regular);

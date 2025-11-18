@@ -7,6 +7,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+import { globSync } from "tinyglobby";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
@@ -53,12 +54,8 @@ export default defineConfig((env) => ({
     cssCodeSplit: true,
 
     rollupOptions: {
-      input: [
-        resolve(__dirname, "src/main.tsx"),
-        resolve(__dirname, "src/shared.css"),
-        resolve(__dirname, "src/templates.css"),
-        resolve(__dirname, "src/swagger.ts"),
-      ],
+      // This uses all the files in the src/entrypoints directory as inputs
+      input: globSync(resolve(__dirname, "src/entrypoints/**/*.{css,ts,tsx}")),
     },
   },
 
