@@ -14,7 +14,7 @@ use mas_storage::{
     queue::{QueueJobRepositoryExt as _, SyncDevicesJob},
     user::BrowserSessionFilter,
 };
-use tracing::error;
+use tracing::{error, info};
 use ulid::Ulid;
 
 use crate::{
@@ -35,9 +35,6 @@ pub enum RouteError {
 
     #[error("User ID {0} not found")]
     NotFound(Ulid),
-
-    #[error("User ID {0} has no session to kill")]
-    NoSession(Ulid),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -48,7 +45,6 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::NoSession(_) => StatusCode::BAD_REQUEST,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -69,11 +65,6 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let id = bob.id();
             let response = SingleResponse::new(bob, format!("/api/admin/v1/users/{id}/kill-sessions"));
             t.description("All sessions were killed").example(response)
-        })
-        .response_with::<404, RouteError, _>(|t| {
-            let response = ErrorResponse::from_error(&RouteError::NoSession(Ulid::nil()));
-            t.description("User has no active sessions")
-                .example(response)
         })
         .response_with::<404, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotFound(Ulid::nil()));
@@ -105,17 +96,16 @@ pub async fn handler(
 
     let filter = BrowserSessionFilter::new().for_user(&user).active_only();
     let browser_session_affected = repo.browser_session().finish_bulk(&clock, filter).await?;
-
-    if compat_session_affected + oauth2_session_affected + browser_session_affected == 0 {
-        return Err(RouteError::NoSession(user.id));
-    }
-
     // Schedule a job to sync the devices of the user with the homeserver
     repo.queue_job()
         .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
         .await?;
 
     repo.save().await?;
+
+    info!("Ended {compat_session_affected} active compatibility sessions");
+    info!("Ended {oauth2_session_affected} active OAuth 2.0 sessions");
+    info!("Ended {browser_session_affected} active browser sessions");
 
     Ok(Json(SingleResponse::new(
         User::from(user),
@@ -210,13 +200,10 @@ mod tests {
             .bearer(&token)
             .empty();
         let response = state.request(request).await;
-        response.assert_status(StatusCode::BAD_REQUEST);
+        response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        assert_eq!(
-            body["errors"][0]["title"],
-            format!("User ID {} has no session to kill", &user.id)
-        );
+        assert_eq!(body["data"]["id"], format!("{}", &user.id));
         let mut repo = state.repository().await.unwrap();
         let expected = repo
             .compat_session()
@@ -238,10 +225,5 @@ mod tests {
             .empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::NOT_FOUND);
-        //         let body: serde_json::Value = response.json();
-        //         assert_eq!(
-        //             body["errors"][0]["title"],
-        //             "Compatibility session with ID 01040G2081040G2081040G2081
-        // not found"         );
     }
 }
