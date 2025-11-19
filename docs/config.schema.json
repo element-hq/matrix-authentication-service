@@ -1640,12 +1640,21 @@
           "pattern": "[0-9a-fA-F]{64}"
         },
         "keys": {
-          "description": "List of private keys to use for signing and encrypting payloads",
-          "type": "array",
+          "description": "List of private keys to use for signing and encrypting payloads.",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/definitions/KeyConfig"
-          },
-          "default": []
+          }
+        },
+        "keys_dir": {
+          "description": "Directory of private keys to use for signing and encrypting payloads.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
