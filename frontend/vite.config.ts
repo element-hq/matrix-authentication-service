@@ -6,11 +6,10 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-
-import { globSync } from "tinyglobby";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
+import { globSync } from "tinyglobby";
 import type { Manifest, PluginOption } from "vite";
 import compression from "vite-plugin-compression";
 import codegen from "vite-plugin-graphql-codegen";

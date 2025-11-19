@@ -64,7 +64,7 @@ function patchUsernameInput(inputElement: HTMLInputElement) {
     );
   }
 
-  inputElement.addEventListener("input", function () {
+  inputElement.addEventListener("input", () => {
     // Simply lowercase things automatically, as this is not too disruptive
     inputElement.value = inputElement.value.toLocaleLowerCase();
 
@@ -85,7 +85,7 @@ function patchUsernameInput(inputElement: HTMLInputElement) {
   });
 
   // Sneakily trim the input on blur
-  inputElement.addEventListener("blur", function () {
+  inputElement.addEventListener("blur", () => {
     inputElement.value = inputElement.value.trim();
   });
 }

@@ -10,11 +10,11 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:76:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:57:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
-      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:191:26-52"
+      "context": "pages/login.html:94:33-59, pages/upstream_oauth2/do_register.html:192:26-52"
     },
     "sign_in": "Sign in",
     "@sign_in": {
@@ -75,11 +75,11 @@
   "common": {
     "display_name": "Display Name",
     "@display_name": {
-      "context": "pages/register/steps/display_name.html:34:35-59, pages/upstream_oauth2/do_register.html:146:37-61"
+      "context": "pages/register/steps/display_name.html:34:35-59, pages/upstream_oauth2/do_register.html:147:37-61"
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:39:35-60, pages/upstream_oauth2/do_register.html:114:37-62"
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:40:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -91,15 +91,15 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:44:33-53"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:45:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:48:33-61"
+      "context": "pages/register/password.html:49:33-61"
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:106:39-59"
+      "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -351,27 +351,27 @@
       },
       "denied_policy": "Denied by policy: %(policy)s",
       "@denied_policy": {
-        "context": "components/errors.html:17:7-58, components/field.html:85:19-70"
+        "context": "components/errors.html:17:7-58, components/field.html:52:11-62"
       },
       "email_banned": "Email is banned by the server policy",
       "@email_banned": {
-        "context": "components/field.html:83:19-47"
+        "context": "components/field.html:50:11-39"
       },
       "email_domain_banned": "Email domain is banned by the server policy",
       "@email_domain_banned": {
-        "context": "components/field.html:79:19-54"
+        "context": "components/field.html:46:11-46"
       },
       "email_domain_not_allowed": "Email domain is not allowed by the server policy",
       "@email_domain_not_allowed": {
-        "context": "components/field.html:77:19-59"
+        "context": "components/field.html:44:11-51"
       },
       "email_not_allowed": "Email is not allowed by the server policy",
       "@email_not_allowed": {
-        "context": "components/field.html:81:19-52"
+        "context": "components/field.html:48:11-44"
       },
       "field_required": "This field is required",
       "@field_required": {
-        "context": "components/field.html:60:17-47"
+        "context": "components/field.html:27:9-39"
       },
       "invalid_credentials": "Invalid credentials",
       "@invalid_credentials": {
@@ -379,7 +379,7 @@
       },
       "password_mismatch": "Password fields don't match",
       "@password_mismatch": {
-        "context": "components/errors.html:13:7-40, components/field.html:88:17-50"
+        "context": "components/errors.html:13:7-40, components/field.html:55:9-42"
       },
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
       "@rate_limit_exceeded": {
@@ -387,33 +387,33 @@
       },
       "username_all_numeric": "Username cannot consist solely of numbers",
       "@username_all_numeric": {
-        "context": "components/field.html:71:19-55"
+        "context": "components/field.html:38:11-47"
       },
       "username_banned": "Username is banned by the server policy",
       "@username_banned": {
-        "context": "components/field.html:73:19-50",
+        "context": "components/field.html:40:11-42",
         "description": "Error message shown on registration, when the username matches a pattern that is banned by the server policy."
       },
       "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
       "@username_invalid_chars": {
-        "context": "components/field.html:69:19-57"
+        "context": "components/field.html:36:11-49"
       },
       "username_not_allowed": "Username is not allowed by the server policy",
       "@username_not_allowed": {
-        "context": "components/field.html:75:19-55",
+        "context": "components/field.html:42:11-47",
         "description": "Error message shown on registration, when the username *does not match* any of the patterns that are allowed by the server policy."
       },
       "username_taken": "This username is already taken",
       "@username_taken": {
-        "context": "components/field.html:62:17-47"
+        "context": "components/field.html:29:9-39"
       },
       "username_too_long": "Username is too long",
       "@username_too_long": {
-        "context": "components/field.html:67:19-52"
+        "context": "components/field.html:34:11-44"
       },
       "username_too_short": "Username is too short",
       "@username_too_short": {
-        "context": "components/field.html:65:19-53"
+        "context": "components/field.html:32:11-45"
       }
     },
     "login": {
@@ -490,7 +490,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:107:10-31",
+      "context": "components/field.html:113:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {
@@ -613,7 +613,7 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:63:35-66, pages/register/password.html:79:33-64",
+        "context": "pages/register/index.html:63:35-66, pages/register/password.html:80:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
@@ -636,7 +636,7 @@
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:53:35-95, pages/upstream_oauth2/do_register.html:179:35-95"
+        "context": "pages/register/password.html:54:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
       }
     },
     "registration_token": {
@@ -755,11 +755,11 @@
         },
         "imported_from_upstream": "Imported from your upstream account",
         "@imported_from_upstream": {
-          "context": "pages/upstream_oauth2/do_register.html:121:18-74, pages/upstream_oauth2/do_register.html:153:18-74"
+          "context": "pages/upstream_oauth2/do_register.html:122:18-74, pages/upstream_oauth2/do_register.html:154:18-74"
         },
         "imported_from_upstream_with_name": "Imported from your %(human_name)s account",
         "@imported_from_upstream_with_name": {
-          "context": "pages/upstream_oauth2/do_register.html:119:18-131, pages/upstream_oauth2/do_register.html:151:18-131"
+          "context": "pages/upstream_oauth2/do_register.html:120:18-131, pages/upstream_oauth2/do_register.html:152:18-131"
         },
         "link_existing": "Link to an existing account",
         "@link_existing": {
@@ -785,7 +785,7 @@
         },
         "use": "Use",
         "@use": {
-          "context": "pages/upstream_oauth2/do_register.html:137:18-55, pages/upstream_oauth2/do_register.html:170:20-57"
+          "context": "pages/upstream_oauth2/do_register.html:138:18-55, pages/upstream_oauth2/do_register.html:171:20-57"
         }
       },
       "suggest_link": {

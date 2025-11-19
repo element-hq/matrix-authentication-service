@@ -22,7 +22,7 @@ Please see LICENSE files in the repository root for full details.
 {% macro error(error, hidden=false) %}
   <div class="cpd-form-message cpd-form-error-message
     {%- if hidden %} hidden{% endif %}" data-error-kind="{{ error.kind }}"
-    {%- if error.code %}data-error-code="{{ error.code }}"{% endif %}>
+    {%- if error.code is defined %}data-error-code="{{ error.code }}"{% endif %}>
     {% if error.kind == "required" %}
       {{ _("mas.errors.field_required") }}
     {% elif error.kind == "exists" and field.name == "username" %}
@@ -93,9 +93,9 @@ Please see LICENSE files in the repository root for full details.
 
 
     {% if field.errors is not empty %}
-      {% for error in field.errors %}
-        {% if error.kind != "unspecified" %}
-          {{ error(error) }}
+      {% for field_error in field.errors %}
+        {% if field_error.kind != "unspecified" %}
+          {{ error(field_error) }}
         {% endif %}
       {% endfor %}
     {% endif %}
