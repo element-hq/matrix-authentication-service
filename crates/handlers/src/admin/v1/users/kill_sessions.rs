@@ -68,7 +68,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let [_alice, bob, ..] = User::samples();
             let id = bob.id();
             let response = SingleResponse::new(bob, format!("/api/admin/v1/users/{id}/kill-sessions"));
-            t.description("All sessions was killed").example(response)
+            t.description("All sessions were killed").example(response)
+        })
+        .response_with::<404, RouteError, _>(|t| {
+            let response = ErrorResponse::from_error(&RouteError::NoSession(Ulid::nil()));
+            t.description("User has no active sessions")
+                .example(response)
         })
         .response_with::<404, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotFound(Ulid::nil()));
