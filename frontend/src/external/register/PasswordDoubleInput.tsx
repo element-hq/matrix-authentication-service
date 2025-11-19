@@ -37,7 +37,6 @@ function PasswordDoubleInput({
   const {
     data: { siteConfig },
   } = useSuspenseQuery(query);
-  const { t } = useTranslation();
 
   return (
     // Form.Root is needed because Form.Field requires to be included into a Form
@@ -47,10 +46,7 @@ function PasswordDoubleInput({
         <PasswordCreationDoubleInput
           siteConfig={siteConfig}
           forceShowNewPasswordInvalid={forceShowNewPasswordInvalid}
-          newPasswordFieldName="password"
-          newPasswordLabel={t("common.password")}
-          newPasswordAgainFieldName="password_confirm"
-          newPasswordAgainLabel={t("common.password_confirm")}
+          variant="register"
         />
       </div>
     </Form.Root>

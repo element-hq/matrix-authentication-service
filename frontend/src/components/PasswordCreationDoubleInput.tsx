@@ -52,26 +52,36 @@ const usePasswordComplexity = (password: string): PasswordComplexity => {
   return result;
 };
 
+type PasswordVariant = "register" | "change";
+
 export default function PasswordCreationDoubleInput({
   siteConfig,
   forceShowNewPasswordInvalid,
-  newPasswordFieldName,
-  newPasswordLabel,
-  newPasswordAgainFieldName,
-  newPasswordAgainLabel,
+  variant="change",
 }: {
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
   forceShowNewPasswordInvalid: boolean;
-  newPasswordFieldName: string;
-  newPasswordLabel: string;
-  newPasswordAgainFieldName: string;
-  newPasswordAgainLabel: string;
+  variant?: PasswordVariant;
 }): React.ReactElement {
   const { t } = useTranslation();
   const { minimumPasswordComplexity } = useFragment(
     CONFIG_FRAGMENT,
     siteConfig,
   );
+  const variantFields = {
+    register: {
+      passwordFieldName: "password",
+      passwordLabel: t("common.password"),
+      passwordConfirmFieldName: "password_confirm",
+      passwordConfirmLabel: t("common.password_confirm"),
+    },
+    change: {
+      passwordFieldName: "new_password",
+      passwordLabel: t("common.password"),
+      passwordConfirmFieldName: "new_password_again",
+      passwordConfirmLabel: t("common.password_confirm"),
+    }
+  }[variant];
 
   const newPasswordRef = useRef<HTMLInputElement>(null);
   const newPasswordAgainRef = useRef<HTMLInputElement>(null);
@@ -89,8 +99,8 @@ export default function PasswordCreationDoubleInput({
 
   return (
     <>
-      <Form.Field name={newPasswordFieldName}>
-        <Form.Label>{newPasswordLabel}</Form.Label>
+      <Form.Field name={variantFields.passwordFieldName}>
+        <Form.Label>{variantFields.passwordLabel}</Form.Label>
 
         <Form.PasswordControl
           required
@@ -134,13 +144,13 @@ export default function PasswordCreationDoubleInput({
         )}
       </Form.Field>
 
-      <Form.Field name={newPasswordAgainFieldName}>
+      <Form.Field name={variantFields.passwordConfirmFieldName}>
         {/*
         TODO This field has validation defects,
         some caused by Radix-UI upstream bugs.
         https://github.com/matrix-org/matrix-authentication-service/issues/2855
       */}
-        <Form.Label>{newPasswordAgainLabel}</Form.Label>
+        <Form.Label>{variantFields.passwordConfirmLabel}</Form.Label>
 
         <Form.PasswordControl
           required
@@ -153,7 +163,7 @@ export default function PasswordCreationDoubleInput({
         </Form.ErrorMessage>
 
         <Form.ErrorMessage
-          match={(v, form) => v !== form.get(newPasswordFieldName)}
+          match={(v, form) => v !== form.get(variantFields.passwordFieldName)}
         >
           {t("frontend.password_change.passwords_no_match")}
         </Form.ErrorMessage>
