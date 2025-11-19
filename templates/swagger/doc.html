@@ -18,7 +18,7 @@ Please see LICENSE files in the repository root for full details.
         callbackUrl: "{{ callback_url | add_slashes | safe }}",
       };
     </script>
-    {{ include_asset('src/swagger.ts') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/swagger.ts') | indent(4) | safe }}
   </head>
 
   <body>
