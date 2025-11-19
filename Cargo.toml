@@ -129,7 +129,7 @@ default-features = true
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.9.4"
+version = "2.10.0"
 
 # Bytes
 [workspace.dependencies.bytes]
