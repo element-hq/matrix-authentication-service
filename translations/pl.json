@@ -1,0 +1,281 @@
+{
+  "action": {
+    "back": "Powrót",
+    "cancel": "Anuluj",
+    "continue": "Kontynuuj",
+    "create_account": "Utwórz konto",
+    "sign_in": "Zaloguj się",
+    "sign_out": "Wyloguj",
+    "skip": "Pomiń",
+    "start_over": "Zacznij od nowa",
+    "submit": "Wyślij"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "Dokument odkrywania OpenID Connect:<a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link do polityki prywatności serwisu",
+      "link": "Polityka prywatności"
+    },
+    "terms_and_conditions": {
+      "alt": "Link do warunków korzystania z usługi",
+      "link": "Warunki korzystania"
+    }
+  },
+  "common": {
+    "display_name": "Nazwa wyświetlana",
+    "email_address": "Adres e-mail",
+    "loading": "Wczytywanie…",
+    "mxid": "Matrix ID",
+    "password": "Hasło",
+    "password_confirm": "Potwierdź hasło",
+    "username": "Nazwa użytkownika"
+  },
+  "error": {
+    "unexpected": "Nieoczekiwany błąd"
+  },
+  "mas": {
+    "account": {
+      "deactivated": {
+        "description": "To konto (<em>%(mxid)s</em>) zostało usunięte. Jeśli jest to nieoczekiwane, skontaktuj się z administratorem serwera.",
+        "heading": "Konto usunięte"
+      },
+      "locked": {
+        "description": "To konto (<em>%(mxid)s</em>) zostało zablokowane. Jeśli jest to nieoczekiwane, skontaktuj się z administratorem serwera.",
+        "heading": "Konto zablokowane"
+      },
+      "logged_out": {
+        "description": "Ta sesja została zakończona. Wyloguj się, aby móc się ponownie zalogować.",
+        "heading": "Sesja zakończona"
+      }
+    },
+    "add_email": {
+      "description": "Podaj adres e-mail, aby odzyskać dostęp do konta, jeśli utracisz do niego dostęp.",
+      "heading": "Dodaj adres e-mail"
+    },
+    "back_to_homepage": "Wróć do strony głównej",
+    "captcha": {
+      "noscript": "Ten formularz jest zabezpieczony kodem CAPTCHA i do jego wysłania wymagana jest włączona obsługa JavaScript. Włącz obsługę JavaScript w przeglądarce i odśwież tę stronę."
+    },
+    "change_password": {
+      "change": "Zmień hasło",
+      "confirm": "Potwierdź hasło",
+      "current": "Aktualne hasło",
+      "description": "Spowoduje to zmianę hasła do Twojego konta.",
+      "heading": "Zmień moje hasło",
+      "new": "Nowe hasło"
+    },
+    "choose_display_name": {
+      "description": "Jest to nazwa widoczna dla innych osób. Można ją zmienić w dowolnym momencie.",
+      "headline": "Wybierz swoją nazwę wyświetlaną"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> z <span>%(redirect_uri)s</span> chce uzyskać dostęp do Twojego konta.",
+      "heading": "Zezwolić na dostęp do konta?",
+      "make_sure_you_trust": "Upewnij się, że ufasz <span>%(client_name)s</span> .",
+      "this_will_allow": "To pozwoli <span>%(client_name)s</span> na:",
+      "you_may_be_sharing": "Możesz udostępniać temu serwisowi lub aplikacji poufne informacje."
+    },
+    "device_card": {
+      "access_requested": "Zażądano dostępu",
+      "device_code": "Kod",
+      "generic_device": "Urządzenie",
+      "ip_address": "Adres IP"
+    },
+    "device_code_link": {
+      "description": "Połącz urządzenie",
+      "headline": "Wprowadź kod wyświetlony na Twoim urządzeniu"
+    },
+    "device_consent": {
+      "another_device_access": "Inne urządzenie chce uzyskać dostęp do Twojego konta.",
+      "denied": {
+        "description": "Odmówiłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
+        "heading": "Odmowa dostępu"
+      },
+      "granted": {
+        "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
+        "heading": "Udzielono dostępu"
+      }
+    },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s na %(device_name)s",
+      "name_for_platform": "%(name)s dla %(platform)s",
+      "unknown_device": "Nieznane urządzenie"
+    },
+    "email_in_use": {
+      "description": "Jeśli zapomniałeś danych logowania do konta, możesz je odzyskać. Możesz też zacząć od nowa, używając innego adresu e-mail.",
+      "title": "Adres e-mail <span>%(email)s</span> jest już używany."
+    },
+    "emails": {
+      "greeting": "Witaj %(username)s,",
+      "recovery": {
+        "click_button": "Kliknij poniższy przycisk, aby utworzyć nowe hasło:",
+        "copy_link": "Skopiuj poniższy link i wklej go do przeglądarki, aby utworzyć nowe hasło:",
+        "create_new_password": "Utwórz nowe hasło",
+        "fallback": "Przycisk nie działa?",
+        "headline": "Poprosiłeś o zresetowanie hasła dla swojego konta %(server_name)s.",
+        "subject": "Zresetuj hasło do swojego konta (%(mxid)s)",
+        "you_can_ignore": "Jeśli nie prosiłeś o nowe hasło, możesz zignorować tę wiadomość. Twoje obecne hasło nadal będzie działać."
+      },
+      "verify": {
+        "body_html": "Kod weryfikacyjny służący do potwierdzenia tego adresu e-mail to:<strong>%(code)s</strong>",
+        "body_text": "Kod weryfikacyjny potwierdzający ten adres e-mail to: %(code)s",
+        "subject": "Twój kod weryfikacyjny adresu e-mail to: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "Weryfikacja CAPTCHA nie powiodła się, spróbuj ponownie",
+      "denied_policy": "Odrzucone przez politykę: %(policy)s",
+      "email_banned": "E-mail jest zabroniony przez politykę serwera",
+      "email_domain_banned": "Domena e-mail jest zablokowana przez politykę serwera",
+      "email_domain_not_allowed": "Domena e-mail nie jest dozwolona przez politykę serwera",
+      "email_not_allowed": "Adres e-mail nie jest dozwolony przez politykę serwera",
+      "field_required": "To pole jest wymagane",
+      "invalid_credentials": "Nieprawidłowe dane uwierzytelniające",
+      "password_mismatch": "Pola hasła nie pasują do siebie",
+      "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie.",
+      "username_all_numeric": "Nazwa użytkownika nie może składać się wyłącznie z cyfr",
+      "username_banned": "Nazwa użytkownika jest zablokowana przez politykę serwera",
+      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr, myślników i podkreśleń.",
+      "username_not_allowed": "Nazwa użytkownika nie jest dozwolona przez politykę serwera",
+      "username_taken": "Ta nazwa użytkownika jest już zajęta",
+      "username_too_long": "Nazwa użytkownika jest za długa",
+      "username_too_short": "Nazwa użytkownika jest za krótka"
+    },
+    "login": {
+      "call_to_register": "Nie masz jeszcze konta?",
+      "continue_with_provider": "Kontynuuj z %(provider)s",
+      "description": "Zaloguj się aby kontynuować:",
+      "forgot_password": "Zapomniałeś hasła?",
+      "headline": "Zaloguj się",
+      "link": {
+        "description": "Łączenie twojego <span class=\"break-keep text-links\">%(provider)s</span> konta",
+        "headline": "Zaloguj się, aby połączyć"
+      },
+      "no_login_methods": "Brak dostępnych metod logowania.",
+      "separator": "Lub",
+      "username_or_email": "Nazwa użytkownika lub adres e-mail"
+    },
+    "navbar": {
+      "my_account": "Moje konto",
+      "register": "Utwórz konto",
+      "signed_in_as": "Zalogowano jako <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Strona, której szukasz, nie istnieje lub została przeniesiona",
+      "heading": "Nie znaleziono strony"
+    },
+    "not_you": "Nie %(username)s?",
+    "or_separator": "Lub",
+    "policy_violation": {
+      "description": "Przyczyną może być klient, który zainicjował to żądanie, aktualnie zalogowany użytkownik lub samo żądanie.",
+      "heading": "Żądanie autoryzacji zostało odrzucone przez politykę egzekwowaną przez tę usługę",
+      "logged_as": "Zalogowany jako <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Aby utworzyć nowe hasło, zacznij od nowa i wybierz „Zapomniałem hasła”.",
+        "heading": "Link do zresetowania hasła został już użyty"
+      },
+      "disabled": {
+        "description": "Jeśli utraciłeś swoje dane logowania, skontaktuj się z administratorem w celu odzyskania konta.",
+        "heading": "Odzyskiwanie konta jest wyłączone"
+      },
+      "expired": {
+        "description": "Poproś o nową wiadomość e-mail, która zostanie wysłana na adres:<span>%(email)s</span> .",
+        "heading": "Link do resetowania hasła wygasł",
+        "resend_email": "Wyślij ponownie wiadomość e-mail"
+      },
+      "finish": {
+        "confirm": "Wprowadź ponownie nowe hasło",
+        "description": "Wybierz nowe hasło do swojego konta.",
+        "heading": "Zresetuj swoje hasło",
+        "new": "Nowe hasło",
+        "save_and_continue": "Zapisz i kontynuuj"
+      },
+      "progress": {
+        "change_email": "Spróbuj innego adresu e-mail",
+        "description": "Wysłaliśmy wiadomość e-mail z linkiem umożliwiającym zresetowanie hasła, jeśli posiadasz konto korzystające z <span>%(email)s</span>.",
+        "heading": "Sprawdź swoją pocztę e-mail",
+        "resend_email": "Wyślij ponownie wiadomość e-mail"
+      },
+      "start": {
+        "description": "Na podany adres e-mail zostanie wysłany link umożliwiający zresetowanie hasła.",
+        "heading": "Wprowadź swój adres e-mail, aby kontynuować"
+      }
+    },
+    "register": {
+      "call_to_login": "Masz już konto?",
+      "continue_with_email": "Kontynuuj z adresem e-mail",
+      "continue_with_password": "Kontynuuj z hasłem",
+      "create_account": {
+        "description": "Wybierz nazwę użytkownika, aby kontynuować.",
+        "heading": "Utwórz konto"
+      },
+      "sign_in_instead": "Zamiast tego zaloguj się",
+      "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"
+    },
+    "registration_token": {
+      "description": "Wprowadź token rejestracyjny dostarczony przez administratora serwera domowego.",
+      "field": "Token rejestracyjny",
+      "headline": "Token rejestracyjny"
+    },
+    "scope": {
+      "edit_profile": "Edytuj swój profil i dane kontaktowe",
+      "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
+      "mas_admin": "Zarządzaj dowolnym użytkownikiem w matrix-authentication-service",
+      "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
+      "synapse_admin": "Administrowanie serwerem domowym Synapse",
+      "view_messages": "Przegląd istniejących wiadomości i danych",
+      "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "To konto nadrzędne jest już powiązane z innym kontem."
+      },
+      "login_link": {
+        "action": "Kontynuuj",
+        "description": "Istnieje konto o tej nazwie użytkownika (%(username)s), zostanie ono powiązane z tym kontem nadrzędnym.",
+        "heading": "Połącz z istniejącym kontem"
+      },
+      "register": {
+        "choose_username": {
+          "description": "Tego ustawienia nie można później zmienić.",
+          "heading": "Wybierz swoją nazwę użytkownika"
+        },
+        "create_account": "Utwórz nowe konto",
+        "enforced_by_policy": "Wymuszane przez politykę serwera",
+        "forced_display_name": "Zostanie użyta następująca nazwa wyświetlana",
+        "forced_email": "Będzie używany następujący adres e-mail",
+        "forced_localpart": "Będzie używana następująca nazwa użytkownika",
+        "import_data": {
+          "description": "Potwierdź informacje, które zostaną powiązane z Twoim nowym kontem %(server_name)s.",
+          "heading": "Importuj swoje dane"
+        },
+        "imported_from_upstream": "Zaimportowano z Twojego konta nadrzędnego",
+        "imported_from_upstream_with_name": "Zaimportowano z Twojego konta %(human_name)s",
+        "link_existing": "Połącz z istniejącym kontem",
+        "provider_name": "Konto %(human_name)s",
+        "signup_with_upstream": {
+          "heading": "Kontynuuj rejestrację za pomocą konta %(human_name)s"
+        },
+        "suggested_display_name": "Importuj nazwę wyświetlaną",
+        "suggested_email": "Importuj adres e-mail",
+        "use": "Użyj"
+      },
+      "suggest_link": {
+        "action": "Połącz",
+        "heading": "Połącz z istniejącym kontem"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6-cyfrowy kod",
+      "code": "Kod",
+      "description": "Wprowadź 6-cyfrowy kod wysłany na adres:<em>%(email)s</em>",
+      "headline": "Zweryfikuj swój adres e-mail"
+    }
+  }
+}
