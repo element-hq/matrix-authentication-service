@@ -19,13 +19,13 @@ Please see LICENSE files in the repository root for full details.
   {%- if value %} value="{{ value }}" {% endif %}
 {%- endmacro %}
 
-{% macro error(error, hidden=false) %}
+{% macro error(error, field_name="", hidden=false) %}
   <div class="cpd-form-message cpd-form-error-message
     {%- if hidden %} hidden{% endif %}" data-error-kind="{{ error.kind }}"
     {%- if error.code is defined %}data-error-code="{{ error.code }}"{% endif %}>
     {% if error.kind == "required" %}
       {{ _("mas.errors.field_required") }}
-    {% elif error.kind == "exists" and field.name == "username" %}
+    {% elif error.kind == "exists" and field_name == "username" %}
       {{ _("mas.errors.username_taken") }}
     {% elif error.kind == "policy" %}
       {% if error.code == "username-too-short" %}
@@ -95,7 +95,7 @@ Please see LICENSE files in the repository root for full details.
     {% if field.errors is not empty %}
       {% for field_error in field.errors %}
         {% if field_error.kind != "unspecified" %}
-          {{ error(field_error) }}
+          {{ error(error=field_error, field_name=field.name) }}
         {% endif %}
       {% endfor %}
     {% endif %}
