@@ -2,9 +2,8 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Form } from "@vector-im/compound-web";
 import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
-import { mountWithProviders } from "../mount";
-import "../../shared.css";
-import { useTranslation } from "react-i18next";
+import { mountWithProviders } from "../../external/mount";
+import "../shared.css";
 import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
 
 const HTML_ID = "#password-double-input";
