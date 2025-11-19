@@ -29,11 +29,7 @@ const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-type PasswordDoubleInputProps = { forceShowNewPasswordInvalid: boolean };
-
-function PasswordDoubleInput({
-  forceShowNewPasswordInvalid,
-}: PasswordDoubleInputProps) {
+function PasswordDoubleInput() {
   const {
     data: { siteConfig },
   } = useSuspenseQuery(query);
@@ -45,7 +41,7 @@ function PasswordDoubleInput({
       <div>
         <PasswordCreationDoubleInput
           siteConfig={siteConfig}
-          forceShowNewPasswordInvalid={forceShowNewPasswordInvalid}
+          forceShowNewPasswordInvalid={false}
           variant="register"
         />
       </div>
