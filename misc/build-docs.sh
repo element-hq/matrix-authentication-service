@@ -14,7 +14,7 @@ set -eux
 # Install the dependencies if we're in the Cloudflare Pages build environment
 # In this environment, the CF_PAGES environment variable is set to 1
 if [ "${CF_PAGES:-""}" = "1" ]; then
-  MDBOOK_VERSION=0.4.32
+  MDBOOK_VERSION=0.5.0
 
   # Install rustup
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain none -y
