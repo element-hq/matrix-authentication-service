@@ -172,7 +172,7 @@ impl TestState {
         let templates = Templates::load(
             workspace_root.join("templates"),
             url_builder.clone(),
-            workspace_root.join("frontend/dist/manifest.json"),
+            Some(workspace_root.join("frontend/dist/manifest.json")),
             workspace_root.join("translations"),
             site_config.templates_branding(),
             site_config.templates_features(),
