@@ -31,6 +31,7 @@
     "loading": "A carregar...",
     "next": "Seguinte",
     "password": "Palavra-passe",
+    "password_confirm": "Confirmar palavra-passe",
     "previous": "Anterior",
     "saved": "Guardado",
     "saving": "A guardar…"
