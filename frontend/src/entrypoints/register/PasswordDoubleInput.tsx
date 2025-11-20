@@ -1,10 +1,21 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Form } from "@vector-im/compound-web";
+import {
+  QueryClient,
+  QueryClientProvider,
+  queryOptions,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { Form, TooltipProvider } from "@vector-im/compound-web";
+import { StrictMode, Suspense } from "react";
+import ReactDOM from "react-dom/client";
+import { I18nextProvider } from "react-i18next";
+import ErrorBoundary from "../../components/ErrorBoundary";
+import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
 import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
-import { mountWithProviders } from "../../external/mount";
+import i18n, { setupI18n } from "../../i18n";
 import "../shared.css";
-import PasswordCreationDoubleInput from "../../components/PasswordCreationDoubleInput";
+
+setupI18n();
 
 const HTML_ID = "#password-double-input";
 
@@ -34,8 +45,6 @@ function PasswordDoubleInput() {
   } = useSuspenseQuery(query);
 
   return (
-    // Form.Root is needed because Form.Field requires to be included into a Form
-    // asChild allows to replace Form.Root component by the child, the <form> used is in the password.html
     <Form.Root asChild>
       <div>
         <PasswordCreationDoubleInput
@@ -48,5 +57,34 @@ function PasswordDoubleInput() {
   );
 }
 
-// Allow mounting under either the new specific id or the legacy #view
-mountWithProviders(HTML_ID, PasswordDoubleInput);
+function mountComponentWithProviders(selector: string) {
+  try {
+    const el = document.querySelector(selector);
+    if (!el) throw new Error(`can not find ${selector} in DOM`);
+
+    const queryClient = new QueryClient();
+
+    ReactDOM.createRoot(el).render(
+      <StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <ErrorBoundary>
+            <TooltipProvider>
+              <Suspense fallback={<div>{`Loading... ${selector}…`}</div>}>
+                <I18nextProvider i18n={i18n}>
+                  <PasswordDoubleInput />
+                </I18nextProvider>
+              </Suspense>
+            </TooltipProvider>
+          </ErrorBoundary>
+        </QueryClientProvider>
+      </StrictMode>,
+    );
+  } catch (err) {
+    console.error(
+      `Cannot mount component PasswordCreationDoubleInput on ${selector}:`,
+      err,
+    );
+  }
+}
+
+mountComponentWithProviders(HTML_ID);

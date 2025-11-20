@@ -57,7 +57,7 @@ type PasswordVariant = "register" | "change";
 export default function PasswordCreationDoubleInput({
   siteConfig,
   forceShowNewPasswordInvalid,
-  variant="change",
+  variant = "change",
 }: {
   siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
   forceShowNewPasswordInvalid: boolean;
@@ -80,7 +80,7 @@ export default function PasswordCreationDoubleInput({
       passwordLabel: t("common.password"),
       passwordConfirmFieldName: "new_password_again",
       passwordConfirmLabel: t("common.password_confirm"),
-    }
+    },
   }[variant];
 
   const newPasswordRef = useRef<HTMLInputElement>(null);
