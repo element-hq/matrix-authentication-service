@@ -31,6 +31,7 @@
     "loading": "Načítání…",
     "next": "Další",
     "password": "Heslo",
+    "password_confirm": "Potvrďte heslo",
     "previous": "Předchozí",
     "saved": "Uloženo",
     "saving": "Ukládání..."

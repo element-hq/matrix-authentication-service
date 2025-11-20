@@ -31,6 +31,7 @@
     "loading": "Laddar …",
     "next": "Nästa",
     "password": "Lösenord",
+    "password_confirm": "Bekräfta lösenordet",
     "previous": "Föregående",
     "saved": "Sparat",
     "saving": "Sparar..."

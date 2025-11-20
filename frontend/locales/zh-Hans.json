@@ -31,6 +31,7 @@
     "loading": "加载中...",
     "next": "下一页",
     "password": "密码",
+    "password_confirm": "确认密码",
     "previous": "上一页",
     "saved": "已保存",
     "saving": "正在保存..."
