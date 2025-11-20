@@ -160,6 +160,12 @@ impl UrlBuilder {
         self.absolute_url_for(&crate::endpoints::OAuth2Revocation)
     }
 
+    /// OAuth 2.0 revocation endpoint
+    #[must_use]
+    pub fn oauth_end_session_endpoint(&self) -> Url {
+        self.absolute_url_for(&crate::endpoints::OAuth2EndSession)
+    }
+
     /// OAuth 2.0 client registration endpoint
     #[must_use]
     pub fn oauth_registration_endpoint(&self) -> Url {
