@@ -17,7 +17,7 @@ import "../shared.css";
 
 setupI18n();
 
-const HTML_ID = "#password-double-input";
+const HTML_CONTAINER_ID = "password-double-input";
 
 const QUERY = graphql(/* GraphQL */ `
   query PasswordChange {
@@ -57,10 +57,10 @@ function PasswordDoubleInput() {
   );
 }
 
-function mountComponentWithProviders(selector: string) {
+function mountComponentWithProviders(containerId: string) {
   try {
-    const el = document.querySelector(selector);
-    if (!el) throw new Error(`can not find ${selector} in DOM`);
+    const el = document.getElementById(containerId);
+    if (!el) throw new Error(`can not find ${containerId} in DOM`);
 
     const queryClient = new QueryClient();
 
@@ -69,7 +69,7 @@ function mountComponentWithProviders(selector: string) {
         <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
             <TooltipProvider>
-              <Suspense fallback={<div>{`Loading... ${selector}…`}</div>}>
+              <Suspense fallback={<div>{`Loading... ${containerId}…`}</div>}>
                 <I18nextProvider i18n={i18n}>
                   <PasswordDoubleInput />
                 </I18nextProvider>
@@ -81,10 +81,10 @@ function mountComponentWithProviders(selector: string) {
     );
   } catch (err) {
     console.error(
-      `Cannot mount component PasswordCreationDoubleInput on ${selector}:`,
+      `Cannot mount component PasswordCreationDoubleInput on ${containerId}:`,
       err,
     );
   }
 }
 
-mountComponentWithProviders(HTML_ID);
+mountComponentWithProviders(HTML_CONTAINER_ID);
