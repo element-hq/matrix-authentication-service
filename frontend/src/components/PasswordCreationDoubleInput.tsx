@@ -77,9 +77,11 @@ export default function PasswordCreationDoubleInput({
     },
     change: {
       passwordFieldName: "new_password",
-      passwordLabel: t("common.password"),
+      passwordLabel: t("frontend.password_change.new_password_label"),
       passwordConfirmFieldName: "new_password_again",
-      passwordConfirmLabel: t("common.password_confirm"),
+      passwordConfirmLabel: t(
+        "frontend.password_change.new_password_again_label",
+      ),
     },
   }[variant];
 

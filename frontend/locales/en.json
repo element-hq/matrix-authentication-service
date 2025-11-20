@@ -156,6 +156,8 @@
         },
         "title": "Failed to update password"
       },
+      "new_password_again_label": "frontend.password_change.new_password_again_label",
+      "new_password_label": "frontend.password_change.new_password_label",
       "passwords_match": "Passwords match!",
       "passwords_no_match": "Passwords don't match",
       "subtitle": "Choose a new password for your account.",
