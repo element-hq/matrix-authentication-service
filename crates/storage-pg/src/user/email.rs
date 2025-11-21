@@ -7,8 +7,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
-    UserRegistration,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession, User, UserEmail,
+    UserEmailAuthentication, UserEmailAuthenticationCode, UserRegistration,
 };
 use mas_storage::{
     Page, Pagination,
@@ -668,7 +668,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.user_email.complete_email_authentication",
+        name = "db.user_email.complete_email_authentication_with_code",
         skip_all,
         fields(
             db.query.text,
@@ -679,7 +679,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         ),
         err,
     )]
-    async fn complete_authentication(
+    async fn complete_authentication_with_code(
         &mut self,
         clock: &dyn Clock,
         mut user_email_authentication: UserEmailAuthentication,
@@ -688,6 +688,51 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         // We technically don't use the authentication code here (other than
         // recording it in the span), but this is to make sure the caller has
         // fetched one before calling this
+        let completed_at = clock.now();
+
+        // We'll assume the caller has checked that completed_at is None, so in case
+        // they haven't, the update will not affect any rows, which will raise
+        // an error
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_email_authentications
+                SET completed_at = $2
+                WHERE user_email_authentication_id = $1
+                  AND completed_at IS NULL
+            "#,
+            Uuid::from(user_email_authentication.id),
+            completed_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user_email_authentication.completed_at = Some(completed_at);
+        Ok(user_email_authentication)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.complete_email_authentication_with_upstream",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            %upstream_oauth_authorization_session.id,
+        ),
+        err,
+    )]
+    async fn complete_authentication_with_upstream(
+        &mut self,
+        clock: &dyn Clock,
+        mut user_email_authentication: UserEmailAuthentication,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        // We technically don't use the upstream_oauth_authorization_session here (other
+        // than recording it in the span), but this is to make sure the caller
+        // has fetched one before calling this
         let completed_at = clock.now();
 
         // We'll assume the caller has checked that completed_at is None, so in case
