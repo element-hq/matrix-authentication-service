@@ -200,7 +200,7 @@ pub(crate) async fn post(
     };
 
     repo.user_email()
-        .complete_authentication(&clock, email_authentication, &code)
+        .complete_authentication_with_code(&clock, email_authentication, &code)
         .await?;
 
     repo.save().await?;

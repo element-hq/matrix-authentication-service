@@ -6,7 +6,10 @@
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{Clock, UserEmailAuthentication, UserRegistration, UserRegistrationToken};
+use mas_data_model::{
+    Clock, UpstreamOAuthAuthorizationSession, UserEmailAuthentication, UserRegistration,
+    UserRegistrationToken,
+};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
@@ -157,6 +160,27 @@ pub trait UserRegistrationRepository: Send + Sync {
         user_registration_token: &UserRegistrationToken,
     ) -> Result<UserRegistration, Self::Error>;
 
+    /// Set an [`UpstreamOAuthAuthorizationSession`] to associate with a
+    /// [`UserRegistration`]
+    ///
+    /// Returns the updated [`UserRegistration`]
+    ///
+    /// # Parameters
+    ///
+    /// * `user_registration`: The [`UserRegistration`] to update
+    /// * `upstream_oauth_authorization_session`: The
+    ///   [`UpstreamOAuthAuthorizationSession`] to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails or if the
+    /// registration is already completed
+    async fn set_upstream_oauth_authorization_session(
+        &mut self,
+        user_registration: UserRegistration,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserRegistration, Self::Error>;
+
     /// Complete a [`UserRegistration`]
     ///
     /// Returns the updated [`UserRegistration`]
@@ -213,6 +237,11 @@ repository_impl!(UserRegistrationRepository:
         &mut self,
         user_registration: UserRegistration,
         user_registration_token: &UserRegistrationToken,
+    ) -> Result<UserRegistration, Self::Error>;
+    async fn set_upstream_oauth_authorization_session(
+        &mut self,
+        user_registration: UserRegistration,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
     ) -> Result<UserRegistration, Self::Error>;
     async fn complete(
         &mut self,
