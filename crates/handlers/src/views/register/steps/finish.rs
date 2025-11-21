@@ -202,6 +202,46 @@ pub(crate) async fn get(
             None
         };
 
+    // If this registration was created from an upstream OAuth session, check
+    // it is still valid and wasn't linked to a user in the meantime
+    let upstream_oauth = if let Some(upstream_oauth_authorization_session_id) =
+        registration.upstream_oauth_authorization_session_id
+    {
+        let upstream_oauth_authorization_session = repo
+            .upstream_oauth_session()
+            .lookup(upstream_oauth_authorization_session_id)
+            .await?
+            .context("Could not load the upstream OAuth authorization session")
+            .map_err(InternalError::from_anyhow)?;
+
+        let link_id = upstream_oauth_authorization_session
+            .link_id()
+            // This should not happen, the session is associated with the user
+            // registration once the link was already created
+            .context("Authorization session as no upstream link associated with it")
+            .map_err(InternalError::from_anyhow)?;
+
+        let upstream_oauth_link = repo
+            .upstream_oauth_link()
+            .lookup(link_id)
+            .await?
+            .context("Could not load the upstream OAuth link")
+            .map_err(InternalError::from_anyhow)?;
+
+        if upstream_oauth_link.user_id.is_some() {
+            // This means the link was already associated to a user. This could
+            // in theory happen if the same user registers concurrently, but
+            // this is not going to happen often enough to have a dedicated page
+            return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                "The upstream identity was already linked to a user. Try logging in again"
+            )));
+        }
+
+        Some((upstream_oauth_authorization_session, upstream_oauth_link))
+    } else {
+        None
+    };
+
     // Check that the display name is set
     if registration.display_name.is_none() {
         return Ok((
@@ -264,6 +304,16 @@ pub(crate) async fn get(
             .await?;
 
         PASSWORD_REGISTER_COUNTER.add(1, &[]);
+    }
+
+    if let Some((upstream_session, upstream_link)) = upstream_oauth {
+        repo.upstream_oauth_link()
+            .associate_to_user(&upstream_link, &user)
+            .await?;
+
+        repo.browser_session()
+            .authenticate_with_upstream(&mut rng, &clock, &user_session, &upstream_session)
+            .await?;
     }
 
     if let Some(terms_url) = registration.terms_url {
