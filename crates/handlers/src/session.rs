@@ -8,9 +8,13 @@
 
 use axum::response::{Html, IntoResponse as _, Response};
 use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
-use mas_data_model::{BrowserSession, Clock};
+use mas_data_model::{BrowserSession, Clock, User};
 use mas_i18n::DataLocale;
-use mas_storage::{BoxRepository, RepositoryError};
+use mas_policy::model::SessionCounts;
+use mas_storage::{
+    BoxRepository, RepositoryError, compat::CompatSessionFilter, oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
+};
 use mas_templates::{AccountInactiveContext, TemplateContext, Templates};
 use rand::RngCore;
 use thiserror::Error;
@@ -100,5 +104,64 @@ pub async fn load_session_or_fallback(
     Ok(SessionOrFallback::MaybeSession {
         cookie_jar,
         maybe_session: Some(session),
+    })
+}
+
+/// Get a count of sessions for the given user, for the purposes of session
+/// limiting.
+///
+/// Includes:
+/// - OAuth 2 sessions
+/// - Compatibility sessions
+/// - Personal sessions (unless owned by a different user)
+///
+/// # Backstory
+///
+/// Originally, we were only intending to count sessions with devices in this
+/// result, because those are the entries that are expensive for Synapse and
+/// also would not hinder use of deviceless clients (like Element Admin, an
+/// admin dashboard).
+///
+/// However, to do so, we would need to count only sessions including device
+/// scopes. To do this efficiently, we'd need a partial index on sessions
+/// including device scopes.
+///
+/// It turns out that this can't be done cleanly (as we need to, in Postgres,
+/// match scope lists where one of the scopes matches one of 2 known prefixes),
+/// at least not without somewhat uncomfortable stored functions.
+///
+/// So for simplicity's sake, we now count all sessions.
+/// For practical use cases, it's not likely to make a noticeable difference
+/// (and maybe it's good that there's an overall limit).
+pub(crate) async fn count_user_sessions_for_limiting(
+    repo: &mut BoxRepository,
+    user: &User,
+) -> Result<SessionCounts, RepositoryError> {
+    let oauth2 = repo
+        .oauth2_session()
+        .count(OAuth2SessionFilter::new().active_only().for_user(user))
+        .await? as u64;
+
+    let compat = repo
+        .compat_session()
+        .count(CompatSessionFilter::new().active_only().for_user(user))
+        .await? as u64;
+
+    // Only include self-owned personal sessions, not administratively-owned ones
+    let personal = repo
+        .personal_session()
+        .count(
+            PersonalSessionFilter::new()
+                .active_only()
+                .for_actor_user(user)
+                .for_owner_user(user),
+        )
+        .await? as u64;
+
+    Ok(SessionCounts {
+        total: oauth2 + compat + personal,
+        oauth2,
+        compat,
+        personal,
     })
 }

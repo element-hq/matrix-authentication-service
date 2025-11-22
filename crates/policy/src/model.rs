@@ -49,6 +49,9 @@ pub enum Code {
 
     /// The email address is banned.
     EmailBanned,
+
+    /// The user has reached their session limit.
+    TooManySessions,
 }
 
 impl Code {
@@ -66,6 +69,7 @@ impl Code {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
+            Self::TooManySessions => "too-many-sessions",
         }
     }
 }
@@ -168,6 +172,10 @@ pub struct AuthorizationGrantInput<'a> {
     #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
     pub user: Option<&'a User>,
 
+    /// How many sessions the user has.
+    /// Not populated if it's not a user logging in.
+    pub session_counts: Option<SessionCounts>,
+
     #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client: &'a Client,
 
@@ -177,6 +185,16 @@ pub struct AuthorizationGrantInput<'a> {
     pub grant_type: GrantType,
 
     pub requester: Requester,
+}
+
+/// Information about how many sessions the user has
+#[derive(Serialize, Debug, JsonSchema)]
+pub struct SessionCounts {
+    pub total: u64,
+
+    pub oauth2: u64,
+    pub compat: u64,
+    pub personal: u64,
 }
 
 /// Input for the email add policy.

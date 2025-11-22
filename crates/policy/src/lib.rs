@@ -9,11 +9,12 @@ pub mod model;
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
-use mas_data_model::Ulid;
+use mas_data_model::{SessionLimitConfig, Ulid};
 use opa_wasm::{
     Runtime,
     wasmtime::{Config, Engine, Module, OptLevel, Store},
 };
+use serde::Serialize;
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
@@ -87,16 +88,29 @@ impl Entrypoints {
 
 #[derive(Debug)]
 pub struct Data {
+    base: BaseData,
+
+    // We will merge this in a custom way, so don't emit as part of the base
+    rest: Option<serde_json::Value>,
+}
+
+#[derive(Serialize, Debug)]
+struct BaseData {
     server_name: String,
 
-    rest: Option<serde_json::Value>,
+    /// Limits on the number of application sessions that each user can have
+    session_limit: Option<SessionLimitConfig>,
 }
 
 impl Data {
     #[must_use]
-    pub fn new(server_name: String) -> Self {
+    pub fn new(server_name: String, session_limit: Option<SessionLimitConfig>) -> Self {
         Self {
-            server_name,
+            base: BaseData {
+                server_name,
+                session_limit,
+            },
+
             rest: None,
         }
     }
@@ -108,9 +122,7 @@ impl Data {
     }
 
     fn to_value(&self) -> Result<serde_json::Value, anyhow::Error> {
-        let base = serde_json::json!({
-            "server_name": self.server_name,
-        });
+        let base = serde_json::to_value(&self.base)?;
 
         if let Some(rest) = &self.rest {
             merge_data(base, rest.clone())
@@ -458,7 +470,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register() {
-        let data = Data::new("example.com".to_owned()).with_rest(serde_json::json!({
+        let data = Data::new("example.com".to_owned(), None).with_rest(serde_json::json!({
             "allowed_domains": ["element.io", "*.element.io"],
             "banned_domains": ["staging.element.io"],
         }));
@@ -528,7 +540,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_dynamic_data() {
-        let data = Data::new("example.com".to_owned());
+        let data = Data::new("example.com".to_owned(), None);
 
         #[allow(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -597,7 +609,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_big_dynamic_data() {
-        let data = Data::new("example.com".to_owned());
+        let data = Data::new("example.com".to_owned(), None);
 
         #[allow(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

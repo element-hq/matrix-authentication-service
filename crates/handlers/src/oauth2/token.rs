@@ -781,6 +781,7 @@ async fn client_credentials_grant(
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: None,
             client,
+            session_counts: None,
             scope: &scope,
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {

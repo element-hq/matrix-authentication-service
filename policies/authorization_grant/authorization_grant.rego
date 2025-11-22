@@ -153,3 +153,20 @@ violation contains {"msg": sprintf(
 )} if {
 	common.requester_banned(input.requester, data.requester)
 }
+
+violation contains {
+	"code": "too-many-sessions",
+	"msg": "user has too many active sessions",
+} if {
+	# Only apply if session limits are enabled in the config
+	data.session_limit != null
+
+	# Only apply if it's a user logging in (who therefore has countable sessions)
+	input.session_counts != null
+
+	# For OAuth 2 login, a violation occurs when the soft limit has already been
+	# reached or exceeded.
+	# We use the soft limit because the user will be able to interactively remove
+	# sessions to return under the limit.
+	data.session_limit.soft_limit <= input.session_counts.total
+}
