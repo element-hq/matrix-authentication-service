@@ -46,10 +46,10 @@ use opentelemetry::{Key, KeyValue, metrics::Counter};
 use serde::{Deserialize, Serialize};
 //:tchap:
 use tchap::{self, EmailAllowedResult};
+//:tchap: end
 use thiserror::Error;
 use ulid::Ulid;
 
-//:tchap: end
 use super::{
     UpstreamSessionsCookie,
     template::{AttributeMappingContext, environment},
@@ -525,6 +525,7 @@ pub(crate) async fn get(
                         // form, but this lead to poor UX. This is why we do
                         // it ahead of time here.
                         //:tchap:
+                        //the only upstream account matching is based on the email
                         let template = provider
                             .claims_imports
                             .email
@@ -539,12 +540,12 @@ pub(crate) async fn get(
                             provider.claims_imports.email.is_required(),
                         );
 
-                        let mut maybe_existing_user = if let Ok(Some(email)) = maybe_email {
+                        let maybe_existing_user = if let Ok(Some(email)) = maybe_email {
                             tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?
                         } else {
                             None
                         };
-
+                        //:tchap:
                         if maybe_existing_user.is_none() {
                             let template = provider
                                 .claims_imports
@@ -559,7 +560,32 @@ pub(crate) async fn get(
                                 // This should never be the case at this point
                                 return Err(RouteError::InvalidFormAction);
                             };
-                            maybe_existing_user = repo.user().find_by_username(&localpart).await?;
+                            //:tchap:
+                            let maybe_existing_user =
+                                repo.user().find_by_username(&localpart).await?;
+
+                            if let Some(existing_user) = maybe_existing_user {
+                                let email = &repo
+                                    .user_email()
+                                    .all(&existing_user)
+                                    .await?
+                                    .first()
+                                    .map(|user_email| user_email.email.clone());
+
+                                let ctx = ErrorContext::new()
+                                    .with_code("Invalid Data")
+                                    .with_description(format!(
+                                        r"Un compte Tchap existe mais l'email associé diffère de votre email Proconnect. 
+                                        Veuillez contacter le support Tchap: support@tchap.beta.gouv.fr. 
+                                        email_tchap:{email:?}, proconnect_username:{localpart}"
+                                    ))
+                                    .with_language(&locale);
+
+                                return Ok((
+                                    cookie_jar,
+                                    Html(templates.render_error(&ctx)?).into_response(),
+                                ));
+                            }
                         }
                         //:tchap: end
                         let is_available = homeserver
@@ -795,7 +821,7 @@ pub(crate) async fn post(
                 provider.claims_imports.email.is_required(),
             );
 
-            let mut maybe_user = if let Ok(Some(email)) = maybe_email {
+            let maybe_user = if let Ok(Some(email)) = maybe_email {
                 tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?
             } else {
                 None
@@ -813,7 +839,14 @@ pub(crate) async fn post(
                     // This should never be the case at this point
                     return Err(RouteError::InvalidFormAction);
                 };
-                maybe_user = repo.user().find_by_username(&localpart).await?;
+                //:tchap:
+                if let Some(_existing_user) = repo.user().find_by_username(&localpart).await? {
+                    //this should never be the case at this point
+                    //if we didnt find user by email we should not find it by localpart (derived
+                    // from email) if we do, there is a problem of email
+                    // binding, raise an error
+                    return Err(RouteError::InvalidFormAction);
+                }
             }
 
             let Some(user) = maybe_user else {
@@ -1353,7 +1386,7 @@ mod tests {
 
         assert_eq!(edge.node.email, "john@example.com");
     }
-
+    #[ignore = "Tchap links existing account by email"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_existing_account(pool: PgPool) {
         let existing_username = "john";
@@ -1493,6 +1526,7 @@ mod tests {
         assert_eq!(link.user_id, Some(user.id));
     }
 
+    #[ignore = "Tchap links existing account by email"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_existing_account_when_not_allowed_by_default(pool: PgPool) {
         let existing_username = "john";
@@ -2009,5 +2043,114 @@ mod tests {
             .await?;
 
         Ok((link, session))
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_link_existing_account_when_emails_do_not_match(pool: PgPool) {
+        let existing_username = "john";
+        let subject = "subject";
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let cookies = CookieHelper::new();
+
+        let claims_imports = UpstreamOAuthProviderClaimsImports {
+            localpart: UpstreamOAuthProviderLocalpartPreference {
+                action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
+                template: None,
+                on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::Add,
+            },
+            email: UpstreamOAuthProviderImportPreference {
+                action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
+                template: None,
+            },
+            ..UpstreamOAuthProviderClaimsImports::default()
+        };
+
+        //`preferred_username` matches an existing user's username
+        let id_token_claims = serde_json::json!({
+            "preferred_username": existing_username,
+            "email": "any@example.com",
+            "email_verified": true,
+        });
+
+        let id_token = sign_token(&mut rng, &state.key_store, id_token_claims.clone()).unwrap();
+
+        // Provision a provider and a link
+        let mut repo = state.repository().await.unwrap();
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &state.clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://example.com/".to_owned()),
+                    human_name: Some("Example Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports,
+                    authorization_endpoint_override: None,
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: None,
+                    discovery_mode: mas_data_model::UpstreamOAuthProviderDiscoveryMode::Oidc,
+                    pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    on_backchannel_logout:
+                        mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    ui_order: 0,
+                },
+            )
+            .await
+            .unwrap();
+
+        //provision upstream authorization session to setup cookies
+        let (link, session) = add_linked_upstream_session(
+            &mut rng,
+            &state.clock,
+            &mut repo,
+            &provider,
+            subject,
+            &id_token.into_string(),
+            id_token_claims,
+        )
+        .await
+        .unwrap();
+
+        let cookie_jar = state.cookie_jar();
+        let upstream_sessions = UpstreamSessionsCookie::default()
+            .add(session.id, provider.id, "state".to_owned(), None)
+            .add_link_to_session(session.id, link.id)
+            .unwrap();
+        let cookie_jar = upstream_sessions.save(cookie_jar, &state.clock);
+        cookies.import(cookie_jar);
+
+        //create use with no email
+        let _user = repo
+            .user()
+            .add(&mut rng, &state.clock, existing_username.to_owned())
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::UpstreamOAuth2Link::new(link.id).path()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
+
+        assert!(response.body().contains("Unexpected error"));
     }
 }
