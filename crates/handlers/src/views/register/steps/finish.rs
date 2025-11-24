@@ -218,7 +218,7 @@ pub(crate) async fn get(
             .link_id()
             // This should not happen, the session is associated with the user
             // registration once the link was already created
-            .context("Authorization session as no upstream link associated with it")
+            .context("Authorization session has no upstream link associated with it")
             .map_err(InternalError::from_anyhow)?;
 
         let upstream_oauth_link = repo
