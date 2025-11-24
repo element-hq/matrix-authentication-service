@@ -25,6 +25,7 @@ http.workspace = true
 minijinja-contrib.workspace = true
 minijinja.workspace = true
 rand.workspace = true
+rand_chacha.workspace = true
 serde_json.workspace = true
 serde_urlencoded.workspace = true
 serde.workspace = true
@@ -42,3 +43,6 @@ mas-i18n.workspace = true
 mas-iana.workspace = true
 mas-router.workspace = true
 mas-spa.workspace = true
+
+[dev-dependencies]
+rand_chacha.workspace = true

@@ -10,7 +10,7 @@
 //! Additional functions, tests and filters used in templates
 
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     fmt::Formatter,
     str::FromStr,
     sync::{Arc, atomic::AtomicUsize},
@@ -30,7 +30,7 @@ use url::Url;
 pub fn register(
     env: &mut minijinja::Environment,
     url_builder: UrlBuilder,
-    vite_manifest: ViteManifest,
+    vite_manifest: Option<ViteManifest>,
     translator: Arc<Translator>,
 ) {
     env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
@@ -43,13 +43,17 @@ pub fn register(
     env.add_filter("parse_user_agent", filter_parse_user_agent);
     env.add_function("add_params_to_url", function_add_params_to_url);
     env.add_function("counter", || Ok(Value::from_object(Counter::default())));
-    env.add_global(
-        "include_asset",
-        Value::from_object(IncludeAsset {
-            url_builder: url_builder.clone(),
-            vite_manifest,
-        }),
-    );
+    if let Some(vite_manifest) = vite_manifest {
+        env.add_global(
+            "include_asset",
+            Value::from_object(IncludeAsset {
+                url_builder: url_builder.clone(),
+                vite_manifest,
+            }),
+        );
+    } else {
+        env.add_global("include_asset", Value::from_object(FakeIncludeAsset {}));
+    }
     env.add_global(
         "translator",
         Value::from_object(TranslatorFunc { translator }),
@@ -182,7 +186,8 @@ fn function_add_params_to_url(
         .unwrap_or_default();
 
     // Merge the exising and the additional parameters together
-    let params: HashMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
+    // Use a BTreeMap for determinism (because it orders keys)
+    let params: BTreeMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
 
     // Transform them back to urlencoded
     let params = serde_urlencoded::to_string(params).map_err(|e| {
@@ -433,10 +438,10 @@ impl Object for IncludeAsset {
 
         let path: &Utf8Path = path.into();
 
-        let (main, imported) = self.vite_manifest.find_assets(path).map_err(|_e| {
+        let (main, imported) = self.vite_manifest.find_assets(path).map_err(|e| {
             Error::new(
                 ErrorKind::InvalidOperation,
-                "Invalid assets manifest while calling function `include_asset`",
+                format!("Invalid assets manifest while calling function `include_asset` with path = {path:?}: {e}"),
             )
         })?;
 
@@ -452,6 +457,30 @@ impl Object for IncludeAsset {
         let tags: Vec<String> = preloads.chain(assets).collect();
 
         Ok(Value::from_safe_string(tags.join("\n")))
+    }
+}
+
+struct FakeIncludeAsset {}
+
+impl std::fmt::Debug for FakeIncludeAsset {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FakeIncludeAsset").finish()
+    }
+}
+
+impl std::fmt::Display for FakeIncludeAsset {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("fake_include_asset")
+    }
+}
+
+impl Object for FakeIncludeAsset {
+    fn call(self: &Arc<Self>, _state: &State, args: &[Value]) -> Result<Value, Error> {
+        let (path,): (&str,) = from_args(args)?;
+
+        Ok(Value::from_safe_string(format!(
+            "<!--- include_asset {path} -->"
+        )))
     }
 }
 

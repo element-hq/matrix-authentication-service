@@ -11,6 +11,7 @@ use minijinja::{
     Value,
     value::{Enumerator, Object},
 };
+use rand::Rng;
 use serde::Serialize;
 
 use crate::{TemplateContext, context::SampleIdentifier};
@@ -58,9 +59,9 @@ impl<T> WithCaptcha<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
-    fn sample(
+    fn sample<R: Rng>(
         now: chrono::DateTime<chrono::prelude::Utc>,
-        rng: &mut impl rand::prelude::Rng,
+        rng: &mut R,
         locales: &[DataLocale],
     ) -> BTreeMap<SampleIdentifier, Self>
     where

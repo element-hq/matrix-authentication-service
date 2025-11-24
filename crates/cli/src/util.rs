@@ -233,11 +233,12 @@ pub async fn templates_from_config(
     site_config: &SiteConfig,
     url_builder: &UrlBuilder,
     strict: bool,
+    stabilise: bool,
 ) -> Result<Templates, anyhow::Error> {
     Templates::load(
         config.path.clone(),
         url_builder.clone(),
-        config.assets_manifest.clone(),
+        (!stabilise).then(|| config.assets_manifest.clone()),
         config.translations_path.clone(),
         site_config.templates_branding(),
         site_config.templates_features(),
