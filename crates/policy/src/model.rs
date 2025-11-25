@@ -187,6 +187,32 @@ pub struct AuthorizationGrantInput<'a> {
     pub requester: Requester,
 }
 
+/// Input for the compatibility login policy.
+#[derive(Serialize, Debug, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct CompatLoginInput<'a> {
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
+    pub user: &'a User,
+
+    /// How many sessions the user has.
+    pub session_counts: SessionCounts,
+
+    // TODO is this actually what we care about? Don't we care a bit more about whether we're in an
+    // interactive context or a non-interactive context? (SSO type has both phases :()
+    pub login_type: CompatLoginType,
+
+    pub requester: Requester,
+}
+
+#[derive(Serialize, Debug, JsonSchema)]
+pub enum CompatLoginType {
+    #[serde(rename = "m.login.sso")]
+    WebSso,
+
+    #[serde(rename = "m.login.password")]
+    Password,
+}
+
 /// Information about how many sessions the user has
 #[derive(Serialize, Debug, JsonSchema)]
 pub struct SessionCounts {

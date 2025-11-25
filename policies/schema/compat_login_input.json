@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CompatLoginInput",
+  "description": "Input for the compatibility login policy.",
+  "type": "object",
+  "required": [
+    "login_type",
+    "requester",
+    "session_counts",
+    "user"
+  ],
+  "properties": {
+    "user": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "session_counts": {
+      "description": "How many sessions the user has.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/SessionCounts"
+        }
+      ]
+    },
+    "login_type": {
+      "$ref": "#/definitions/CompatLoginType"
+    },
+    "requester": {
+      "$ref": "#/definitions/Requester"
+    }
+  },
+  "definitions": {
+    "SessionCounts": {
+      "description": "Information about how many sessions the user has",
+      "type": "object",
+      "required": [
+        "compat",
+        "oauth2",
+        "personal",
+        "total"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "oauth2": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "compat": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "personal": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      }
+    },
+    "CompatLoginType": {
+      "type": "string",
+      "enum": [
+        "m.login.sso",
+        "m.login.password"
+      ]
+    },
+    "Requester": {
+      "description": "Identity of the requester",
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "description": "IP address of the entity making the request",
+          "type": "string",
+          "format": "ip"
+        },
+        "user_agent": {
+          "description": "User agent of the entity making the request",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
