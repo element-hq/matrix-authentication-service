@@ -272,6 +272,7 @@ where
     BoxRepository: FromRequestParts<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
+    Policy: FromRequestParts<S>,
 {
     // A sub-router for human-facing routes with error handling
     let human_router = Router::new()

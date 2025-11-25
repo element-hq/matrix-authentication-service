@@ -16,6 +16,7 @@ use mas_data_model::{
     User,
 };
 use mas_matrix::HomeserverConnection;
+use mas_policy::{Policy, Requester, ViolationCode, model::CompatLoginType};
 use mas_storage::{
     BoxRepository, BoxRepositoryFactory, RepositoryAccess,
     compat::{
@@ -37,6 +38,7 @@ use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
     passwords::{PasswordManager, PasswordVerificationResult},
     rate_limit::PasswordCheckLimitedError,
+    session::count_user_sessions_for_limiting,
 };
 
 static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
@@ -213,9 +215,16 @@ pub enum RouteError {
 
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
+
+    #[error("login rejected by policy")]
+    PolicyRejected,
+
+    #[error("login rejected by policy (hard session limit reached)")]
+    PolicyHardSessionLimitReached,
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
+impl_from_error_for_route!(mas_policy::EvaluationError);
 
 impl From<anyhow::Error> for RouteError {
     fn from(err: anyhow::Error) -> Self {
@@ -274,6 +283,16 @@ impl IntoResponse for RouteError {
                 error: "User account has been locked",
                 status: StatusCode::UNAUTHORIZED,
             },
+            Self::PolicyRejected => MatrixError {
+                errcode: "M_FORBIDDEN",
+                error: "Login denied by the policy enforced by this service",
+                status: StatusCode::FORBIDDEN,
+            },
+            Self::PolicyHardSessionLimitReached => MatrixError {
+                errcode: "M_FORBIDDEN",
+                error: "You have reached your hard device limit. Please visit your account page to sign some out.",
+                status: StatusCode::FORBIDDEN,
+            },
         };
 
         (sentry_event_id, response).into_response()
@@ -290,6 +309,7 @@ pub(crate) async fn post(
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(limiter): State<Limiter>,
+    mut policy: Policy,
     requester: RequesterFingerprint,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     MatrixJsonBody(input): MatrixJsonBody<RequestBody>,
@@ -329,6 +349,11 @@ pub(crate) async fn post(
                 &limiter,
                 requester,
                 &mut repo,
+                &mut policy,
+                Requester {
+                    ip_address: activity_tracker.ip(),
+                    user_agent: user_agent.clone(),
+                },
                 username,
                 password,
                 input.device_id, // TODO check for validity
@@ -342,6 +367,11 @@ pub(crate) async fn post(
                 &mut rng,
                 &clock,
                 &mut repo,
+                &mut policy,
+                Requester {
+                    ip_address: activity_tracker.ip(),
+                    user_agent: user_agent.clone(),
+                },
                 &token,
                 input.device_id,
                 input.initial_device_display_name,
@@ -459,6 +489,8 @@ async fn token_login(
     rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
+    policy: &mut Policy,
+    requester: Requester,
     token: &str,
     requested_device_id: Option<String>,
     initial_device_display_name: Option<String>,
@@ -548,6 +580,27 @@ async fn token_login(
         .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
         .await?;
 
+    let session_counts = count_user_sessions_for_limiting(repo, &browser_session.user).await?;
+
+    let res = policy
+        .evaluate_compat_login(mas_policy::CompatLoginInput {
+            user: &browser_session.user,
+            login_type: CompatLoginType::WebSso,
+            session_counts,
+            requester,
+        })
+        .await?;
+    if !res.valid() {
+        if res.violations.len() == 1 {
+            let violation = &res.violations[0];
+            if violation.code == Some(ViolationCode::TooManySessions) {
+                // The only violation is having reached the session limit.
+                return Err(RouteError::PolicyHardSessionLimitReached);
+            }
+        }
+        return Err(RouteError::PolicyRejected);
+    }
+
     // We first create the session in the database, commit the transaction, then
     // create it on the homeserver, scheduling a device sync job afterwards to
     // make sure we don't end up in an inconsistent state.
@@ -578,6 +631,8 @@ async fn user_password_login(
     limiter: &Limiter,
     requester: RequesterFingerprint,
     repo: &mut BoxRepository,
+    policy: &mut Policy,
+    policy_requester: Requester,
     username: &str,
     password: String,
     requested_device_id: Option<String>,
@@ -650,6 +705,27 @@ async fn user_password_login(
     repo.app_session()
         .finish_sessions_to_replace_device(clock, &user, &device)
         .await?;
+
+    let session_counts = count_user_sessions_for_limiting(repo, &user).await?;
+
+    let res = policy
+        .evaluate_compat_login(mas_policy::CompatLoginInput {
+            user: &user,
+            login_type: CompatLoginType::Password,
+            session_counts,
+            requester: policy_requester,
+        })
+        .await?;
+    if !res.valid() {
+        if res.violations.len() == 1 {
+            let violation = &res.violations[0];
+            if violation.code == Some(ViolationCode::TooManySessions) {
+                // The only violation is having reached the session limit.
+                return Err(RouteError::PolicyHardSessionLimitReached);
+            }
+        }
+        return Err(RouteError::PolicyRejected);
+    }
 
     let session = repo
         .compat_session()

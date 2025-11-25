@@ -17,7 +17,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// A well-known policy code.
-#[derive(Deserialize, Debug, Clone, Copy, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Copy, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Code {
     /// The username is too short.
