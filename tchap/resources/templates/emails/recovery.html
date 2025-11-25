@@ -1,0 +1,16 @@
+{% extends "emails/_mail-base.html" %}
+
+{% set url = recovery_link %}
+
+{% block title %}Réinitialiser mon mot de passe{% endblock %}
+
+<!-- MESSAGE PRINCIPAL -->
+{% block primaryMessage %}
+    <h2>Bonjour,</h2>
+    <p>Une demande de réinitialisation de mot de passe a été reçue pour votre compte Tchap.</p>
+    <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email et contacter immédiatement le support <a href="mailto:support@tchap.beta.gouv.fr">support@tchap.beta.gouv.fr</a></p>
+    <p>Pour continuer la réinitialisation, veuillez cliquer sur le lien suivant (ou le copier-coller dans un navigateur).</p>
+{% endblock %}
+
+<!-- BOUTON -->
+{% set button_title = 'Réinitialiser mon mot de passe' %}

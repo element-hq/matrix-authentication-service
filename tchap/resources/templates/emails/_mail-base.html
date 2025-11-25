@@ -1,93 +1,314 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+	xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	{{ include_asset('tchap/css/base.css') | indent(4) | safe }}
+	<style type="text/css">
+		/* biome-ignore-all lint/correctness/noUnknownProperty: for mso-* properties */
+		table td {
+			border-collapse: collapse;
+			mso-line-height-rule: exactly;
+		}
+
+		body,
+		table,
+		td,
+		a {
+			-webkit-text-size-adjust: 100%;
+			-ms-text-size-adjust: 100%;
+		}
+
+		body {
+			margin: 0;
+			padding: 0;
+			color: #2a2a2a;
+			font-family: Marianne, Helvetica, Arial, sans-serif;
+		}
+
+		.container-padding {
+			padding: 15px 5px;
+		}
+
+		.top-padding {
+			padding-top: 60px;
+		}
+
+		@media screen and (max-width: 600px) {
+			body {
+				padding-left: 25px !important;
+				padding-right: 25px !important;
+			}
+
+			.container-padding {
+				padding: 10px 0 !important;
+			}
+
+			.top-padding {
+				padding-top: 30px !important;
+			}
+
+			.stack-column {
+				display: block !important;
+				width: 100% !important;
+				max-width: 100% !important;
+				text-align: center !important;
+				align-items: center !important;
+				padding: 30px 0 !important;
+			}
+
+			.half-column {
+				display: inline-flex !important;
+				width: 50% !important;
+				max-width: 50% !important;
+				text-align: center !important;
+				align-items: center !important;
+				justify-content: center;
+			}
+
+			.show-mobile {
+				display: table !important;
+				max-height: none !important;
+				visibility: visible !important;
+			}
+
+			.show-desktop {
+				display: none !important;
+				max-height: 0 !important;
+				overflow: hidden !important;
+				visibility: hidden !important;
+				mso-hide: all !important;
+			}
+		}
+
+		img {
+			-ms-interpolation-mode: bicubic;
+			display: block;
+			height: auto;
+		}
+
+		table,
+		td {
+			border-collapse: collapse;
+			mso-line-height-rule: exactly;
+		}
+
+		*[class="gmail-fix"] {
+			display: none !important;
+		}
+
+		/* Mobile-first hiding */
+		.show-desktop {
+			display: none !important;
+			max-height: 0 !important;
+			overflow: hidden !important;
+			visibility: hidden !important;
+			mso-hide: all !important;
+		}
+
+		.show-mobile {
+			display: block !important;
+			width: 100% !important;
+			height: auto !important;
+			overflow: visible !important;
+			visibility: visible !important;
+		}
+
+		@media screen and (min-width: 601px) {
+			.show-desktop {
+				display: table !important;
+				width: 100% !important;
+				height: auto !important;
+				overflow: visible !important;
+				visibility: visible !important;
+			}
+
+			.show-mobile {
+				display: none !important;
+				max-height: 0 !important;
+				overflow: hidden !important;
+				visibility: hidden !important;
+				mso-hide: all !important;
+			}
+		}
+
+		h1,
+		h2 {
+			font-size: 16px;
+		}
+
+		h2 {
+			font-weight: normal;
+		}
+
+		h3,
+		h4 {
+			font-size: 17px;
+			margin-top: 25px;
+			margin-bottom: 0px;
+			word-break: break-word;
+			font-weight: 600;
+		}
+
+		.note {
+			font-style: italic;
+			color: #666666;
+			font-size: 13px;
+		}
+
+		.url {
+			color: #737373;
+			font-size: 10px;
+			line-height: 1.2em;
+		}
+
+		.default-button {
+			color: #ffffff;
+			font-size: 16px;
+			font-style: normal;
+			font-weight: normal;
+			line-height: 1.15;
+			word-break: break-word;
+		}
+
+		a,
+		a:link {
+			color: #222631;
+			text-decoration: underline;
+		}
+
+		a[x-apple-data-detectors] {
+			color: inherit !important;
+			text-decoration: inherit !important;
+			font-size: inherit !important;
+			font-family: inherit !important;
+			font-weight: inherit !important;
+			line-height: inherit !important;
+		}
+
+		p {
+			line-height: 1.4em;
+			font-size: 16px;
+			margin-block-start: 15px;
+			margin-block-end: 15px;
+		}
+	</style>
 
 	<!-- TODO : get server_name depending on the correct HS -->
 	{%- set server_name = "agent.dinum.tchap.gouv.fr" -%}
 	<title>{% block title %}{% endblock %}</title>
-		
-<!--[if mso]>
+
+	<!--[if mso]>
 <xml> <o:OfficeDocumentSettings> <o:AllowPNG/> <o:PixelsPerInch>96</o:PixelsPerInch> </o:OfficeDocumentSettings> </xml>
 <![endif]-->
 </head>
-<body bgcolor="#ffffff" text="#2A2A2A" link="#000091" yahoo="fix" style="background-color: #ffffff; padding-bottom: 0px; padding-top: 0px;" role="article" aria-label="Contenu principal de l’e-mail">
-		<div style="width: 100%; max-width: 600px; margin: 0 auto;">
-			<table cellspacing="0" cellpadding="0" border="0" role="presentation" width="600" align="center" class="r0-o" style="table-layout: fixed; width: 100%;">
-				
-				<tr>
-					<td valign="top" class="container-padding top-padding">
-						<a href="https://tchap.numerique.gouv.fr" target="_blank" title="Aller sur le site de Tchap - nouvelle fenêtre"> 
-							<img src="https://matrix.{{ server_name }}/images/tchap_logo.png" width="206" height="auto" alt="Tchap" border="0" style="display: block; margin: auto;">
-						</a>
-					</td>
-				</tr>
-				<!-- fin de la première ligne du tableau -->
-				
-				<!-- deuxième ligne du   tableau -->
-				<tr>
-					<td class="container-padding">
-						<p style="font-size: 16px; font-family: Marianne, Arial, sans-serif; line-height: 1.4;">
-							{% block primaryMessage %}{% endblock %}
-						</p>
-					</td>
-				</tr>
-				<!-- fin deuxième ligne du tableau-->
+
+<body bgcolor="#ffffff" text="#2A2A2A" link="#3E5DE7" yahoo="fix"
+	style="background-color: #ffffff; padding-bottom: 0px; padding-top: 0px;" role="article"
+	aria-label="Contenu principal de l’e-mail">
+	<div style="width: 100%; max-width: 600px; margin: 0 auto;">
+		<table cellspacing="0" cellpadding="0" border="0" role="presentation" width="600" align="center" class="r0-o"
+			style="table-layout: fixed; width: 100%;">
+
+			<tr>
+				<td valign="top" class="container-padding top-padding">
+					<a href="https://tchap.numerique.gouv.fr" target="_blank"
+						title="Aller sur le site de Tchap - nouvelle fenêtre">
+						<img src="https://matrix.{{ server_name }}/images/tchap_logo.png" width="206" height="auto"
+							alt="Tchap" border="0" style="display: block; margin: auto;">
+					</a>
+				</td>
+			</tr>
+			<!-- fin de la première ligne du tableau -->
+
+			<!-- deuxième ligne du   tableau -->
+			<tr>
+				<td class="container-padding">
+					<p style="font-size: 16px; font-family: Marianne, Arial, sans-serif; line-height: 1.4;">
+						{% block primaryMessage %}{% endblock %}
+					</p>
+				</td>
+			</tr>
+			<!-- fin deuxième ligne du tableau-->
+
+			<!-- troisième ligne du tableau -->
+			<!-- Bouton d'action : affiché uniquement si l'URL est définie -->
+			{% if url is defined and url %}
+			<tr>
+				<td style="text-align: center;" class="container-padding">
+					<a href="{{ url }}" target="_blank" title="{{ button_title }} - nouvelle fenêtre"
+						style="text-decoration:none;display: inline-block;background-color: #3E5DE7;color: #ffffff;font-size: 16px;line-height: 1.15;padding: 15px 20px;border-radius: 4px; text-align: center; font-style: normal; font-weight: 600; word-break: break-word;-webkit-text-size-adjust: none; mso-padding-alt: 0;">
+						{{ button_title }}
+					</a>
+
+					<div
+						style="width: 100%; padding:10px 0; margin: 0; mso-line-height-rule: exactly; -webkit-text-size-adjust: none; -ms-text-size-adjust: none;">
+						<span style="font-size: 10px; line-height: 1.2; color: #737373; word-break: break-word;">
+							{{ url }}
+						</span>
+					</div>
+				</td>
+			</tr>
+			{% endif %}
+			<!-- fin troisième ligne-->
 
 			<!-- ligne grise -->
-				<tr>
-					<td class="container-padding">
-						<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top: 1px solid #eeeeee; margin: 15px 0;">
-							<tr>
-								<td height="1" style="font-size: 0; line-height: 0;">&nbsp;</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
+			<tr>
+				<td class="container-padding">
+					<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+						style="border-top: 1px solid #eeeeee; margin: 15px 0;">
+						<tr>
+							<td height="1" style="font-size: 0; line-height: 0;">&nbsp;</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<!-- fin ligne grise -->
+
 
 			<!-- quatrième ligne-->
-				<tr>
-					<td class="container-padding">
-						<!-- logos-->
-						<!-- Responsive logos (2 colonnes sur desktop, 1 colonne sur mobile) -->
-						<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="padding-left:0; table-layout: fixed; width: 100%;">
-						  <tr>
-						    <!-- Logo 1 -->
-						    <td align="left" valign="top" class="half-column" style="width: 30%;">
-						      <img src="https://matrix.{{ server_name }}/images/rf_logo.png"
-						           alt="République Française"
-						           width="120" 
-						           height="auto"
-						           style="display: block; height: auto;">
-						    </td>
+			<tr>
+				<td class="container-padding">
+					<!-- logos-->
+					<!-- Responsive logos (2 colonnes sur desktop, 1 colonne sur mobile) -->
+					<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"
+						style="padding-left:0; table-layout: fixed; width: 100%;">
+						<tr>
+							<!-- Logo 1 -->
+							<td align="left" valign="top" class="half-column" style="width: 30%;">
+								<img src="https://matrix.{{ server_name }}/images/rf_logo.png"
+									alt="République Française" width="120" height="auto"
+									style="display: block; height: auto;">
+							</td>
 
-						    <!-- Logo 2 -->
-						    <td align="left" valign="top" class="half-column container-padding" style="width: 30%;">
-						      <img src="https://matrix.{{ server_name }}/images/lasuite_logo.png"
-						           alt="La Suite"
-						           width="100" 
-						           height="auto"
-						           style="display: block; height: auto;">
-						    </td>
+							<!-- Logo 2 -->
+							<td align="left" valign="top" class="half-column container-padding" style="width: 30%;">
+								<img src="https://matrix.{{ server_name }}/images/lasuite_logo.png" alt="La Suite"
+									width="100" height="auto" style="display: block; height: auto;">
+							</td>
 
-						    <!-- liens du pied de mail -->
-						    <td align="right" class="stack-column container-padding" style="font-size: 12px; color: #666666; font-family: Marianne, Arial, sans-serif; line-height: 1.5;">
-						        <a href="https://aide.tchap.numerique.gouv.fr" target="_blank" title="Contacter le service support - nouvelle fenêtre" style="color: #666666;">Contacter le service support</a><br>
-						        <a href="https://tchap.numerique.gouv.fr/cgu/" target="_blank" title="CGU (Conditions Générales d'Utilisation) - nouvelle fenêtre" style="color: #666666;">CGU</a>
-						    </td>
-						  </tr>
-						</table>
-					</td>
-				</tr>
-				<!-- fin quatrième ligne -->
+							<!-- liens du pied de mail -->
+							<td align="right" class="stack-column container-padding"
+								style="font-size: 12px; color: #666666; font-family: Marianne, Arial, sans-serif; line-height: 1.5;">
+								<a href="https://aide.tchap.numerique.gouv.fr" target="_blank"
+									title="Contacter le service support - nouvelle fenêtre"
+									style="color: #666666;">Contacter le service support</a><br>
+								<a href="https://tchap.numerique.gouv.fr/cgu/" target="_blank"
+									title="CGU (Conditions Générales d'Utilisation) - nouvelle fenêtre"
+									style="color: #666666;">CGU</a>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<!-- fin quatrième ligne -->
 
-	
-			</table>
-		</div>
+
+		</table>
+	</div>
 </body>
+
 </html>

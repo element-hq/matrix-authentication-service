@@ -304,24 +304,18 @@
       },
       "recovery": {
         "click_button": "Click on the button below to create a new password:",
-        "@click_button": {
-          "context": "emails/recovery.html:28:7-44"
-        },
+        "@click_button": {},
         "copy_link": "Copy the following link and paste it into a browser to create a new password:",
         "@copy_link": {
-          "context": "emails/recovery.html:45:49-83, emails/recovery.txt:12:3-37"
+          "context": "emails/recovery.txt:12:3-37"
         },
         "create_new_password": "Create new password",
-        "@create_new_password": {
-          "context": "emails/recovery.html:43:9-53"
-        },
+        "@create_new_password": {},
         "fallback": "The button doesn't work for you?",
-        "@fallback": {
-          "context": "emails/recovery.html:45:9-42"
-        },
+        "@fallback": {},
         "headline": "You requested a password reset for your %(server_name)s account.",
         "@headline": {
-          "context": "emails/recovery.html:26:7-74, emails/recovery.txt:10:3-70"
+          "context": "emails/recovery.txt:10:3-70"
         },
         "subject": "Reset your account password (%(mxid)s)",
         "@subject": {
@@ -329,13 +323,13 @@
         },
         "you_can_ignore": "If you didn't ask for a new password, you can ignore this email. Your current password will continue to work.",
         "@you_can_ignore": {
-          "context": "emails/recovery.html:50:7-46, emails/recovery.txt:16:3-42"
+          "context": "emails/recovery.txt:16:3-42"
         }
       },
       "verify": {
         "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
         "@body_html": {
-          "context": "emails/verification.html:22:3-66",
+          "context": "emails/verification.html:22:3-44",
           "description": "The body of the email sent to verify an email address (HTML)"
         },
         "body_text": "Your verification code to confirm this email address is: %(code)s",

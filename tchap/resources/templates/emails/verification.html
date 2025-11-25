@@ -10,14 +10,22 @@ Please see LICENSE files in the repository root for full details.
 {%- set _ = translator(lang) -%}
 
 {%- if browser_session is defined -%}
-  {%- set username = browser_session.user.username -%}
+{%- set username = browser_session.user.username -%}
 {%- elif user_registration is defined -%}
-  {%- set username = user_registration.username -%}
+{%- set username = user_registration.username -%}
 {%- endif -%}
 
 <!-- MESSAGE PRINCIPAL -->
 {% block primaryMessage %}
 {{ _("mas.emails.greeting", username="")|replace(" ,", ",") }}<br />
 <br />
-{{ _("mas.emails.verify.body_html", code=authentication_code.code) }}<br />
+{{ _("mas.emails.verify.body_html", code="") }}<br />
+<table border="0" cellspacing="0" class="mcnTextContentContainer" width="100%"
+  style="min-width: 100% !important;padding: 20px;background-color: #EDF0FF; border: 1px solid #C8D3FF; border-radius: 4px; text-align: center;color: #223E9E;font-weight: 700;margin: 20px 0;">
+  <tr>
+    <td valign="top" style="padding: 8px;">
+      <p class="code" style="font-size: 22px;"> {{authentication_code.code}}</p>
+    </td>
+  </tr>
+</table>
 {% endblock %}

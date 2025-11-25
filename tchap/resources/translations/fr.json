@@ -120,10 +120,10 @@
         "subject": "Réinitialisez le mot de passe de votre compte (%(mxid)s)",
         "you_can_ignore": "Si vous n’avez pas demandé à réinitialisation votre mot de passe, vous pouvez ignorer cet e-mail. Votre mot de passe actuel continuera de fonctionner."
       },
-      "verify": {
-        "body_html": "Votre code de vérification pour confirmer cette adresse mail est : <strong>%(code)s</strong>",
+    "verify": {
+        "body_html": "Votre code de vérification pour confirmer cette adresse mail est :",
         "body_text": "Votre code de vérification pour confirmer cette adresse mail est : %(code)s",
-        "subject": "Votre code de vérification est : %(code)s"
+        "subject": "Votre code de vérification est : %(code)s"
       }
     },
     "errors": {
