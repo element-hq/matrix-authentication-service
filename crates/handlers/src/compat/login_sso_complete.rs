@@ -20,12 +20,11 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
 };
 use mas_data_model::{BoxClock, BoxRng, Clock};
-use mas_policy::{Policy, ViolationCode, model::CompatLoginType};
+use mas_policy::{Policy, model::CompatLoginType};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
 use mas_templates::{
-    CompatLoginPolicyViolationContext, CompatSsoContext, EmptyContext, ErrorContext,
-    PolicyViolationContext, TemplateContext, Templates,
+    CompatLoginPolicyViolationContext, CompatSsoContext, ErrorContext, TemplateContext, Templates,
 };
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
@@ -122,6 +121,7 @@ pub async fn get(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
+            is_interactive: true,
             login_type: CompatLoginType::WebSso,
             // TODO should we predict a replacement?
             session_replaced: false,
@@ -251,6 +251,7 @@ pub async fn post(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
+            is_interactive: true,
             login_type: CompatLoginType::WebSso,
             session_counts,
             // TODO should we predict a replacement?

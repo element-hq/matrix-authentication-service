@@ -200,8 +200,15 @@ pub struct CompatLoginInput<'a> {
     /// Whether a session will be replaced by this login
     pub session_replaced: bool,
 
-    // TODO is this actually what we care about? Don't we care a bit more about whether we're in an
-    // interactive context or a non-interactive context? (SSO type has both phases :()
+    /// Whether the user is currently in an interactive context.
+    /// For `m.login.password`: false
+    /// For `m.login.sso`:
+    /// - true when asking for consent,
+    /// - false when actually performing the login (at which point we create the
+    ///   compat session, but it's too late to show a web page)
+    pub is_interactive: bool,
+
+    // TODO I don't know if we should keep this anymore, not used by current policy
     pub login_type: CompatLoginType,
 
     pub requester: Requester,

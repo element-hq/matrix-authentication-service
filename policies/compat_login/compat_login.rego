@@ -33,8 +33,7 @@ violation contains {
 	data.session_limit != null
 
 	# This is a web-based interactive login
-	# TODO not strictly correct...
-	input.login_type == "m.login.sso"
+	input.is_interactive
 
 	# Only apply if this login doesn't replace a session
 	# (As then this login is not actually increasing the number of devices)
@@ -55,7 +54,7 @@ violation contains {
 	data.session_limit != null
 
 	# This is not a web-based interactive login
-	input.login_type == "m.login.password"
+	not input.is_interactive
 
 	# Only apply if this login doesn't replace a session
 	# (As then this login is not actually increasing the number of devices)

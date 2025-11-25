@@ -4,6 +4,7 @@
   "description": "Input for the compatibility login policy.",
   "type": "object",
   "required": [
+    "is_interactive",
     "login_type",
     "requester",
     "session_counts",
@@ -25,6 +26,10 @@
     },
     "session_replaced": {
       "description": "Whether a session will be replaced by this login",
+      "type": "boolean"
+    },
+    "is_interactive": {
+      "description": "Whether the user is currently in an interactive context. For `m.login.password`: false For `m.login.sso`: - true when asking for consent, - false when actually performing the login (at which point we create the compat session, but it's too late to show a web page)",
       "type": "boolean"
     },
     "login_type": {
