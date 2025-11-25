@@ -9,7 +9,8 @@ use std::process::ExitCode;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{
-    ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PolicyConfig,
+    ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, ExperimentalConfig,
+    MatrixConfig, PolicyConfig,
 };
 use mas_storage_pg::PgRepositoryFactory;
 use tracing::{info, info_span};
@@ -45,8 +46,12 @@ impl Options {
                     PolicyConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
                 let matrix_config =
                     MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
+                let experimental_config =
+                    ExperimentalConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 info!("Loading and compiling the policy module");
-                let policy_factory = policy_factory_from_config(&config, &matrix_config).await?;
+                let policy_factory =
+                    policy_factory_from_config(&config, &matrix_config, &experimental_config)
+                        .await?;
 
                 if with_dynamic_data {
                     let database_config =

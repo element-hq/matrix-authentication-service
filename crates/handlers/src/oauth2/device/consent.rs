@@ -27,7 +27,7 @@ use ulid::Ulid;
 
 use crate::{
     BoundActivityTracker, PreferredLanguage,
-    session::{SessionOrFallback, load_session_or_fallback},
+    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
 
 #[derive(Deserialize, Debug)]
@@ -103,11 +103,14 @@ pub(crate) async fn get(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
     // Evaluate the policy
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {
@@ -205,11 +208,14 @@ pub(crate) async fn post(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
     // Evaluate the policy
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {

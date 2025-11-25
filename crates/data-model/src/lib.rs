@@ -39,7 +39,9 @@ pub use self::{
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
     policy_data::PolicyData,
-    site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig, SiteConfig},
+    site_config::{
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+    },
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
     },
