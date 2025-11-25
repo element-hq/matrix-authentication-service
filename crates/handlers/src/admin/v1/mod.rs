@@ -165,6 +165,12 @@ where
             "/users/{id}/unlock",
             post_with(self::users::unlock, self::users::unlock_doc),
         )
+        //:tchap:
+        .api_route(
+            "/users/{id}/kill-sessions",
+            post_with(self::users::kill_sessions, self::users::kill_sessions_doc),
+        )
+        //:tchap:end
         .api_route(
             "/user-emails",
             get_with(self::user_emails::list, self::user_emails::list_doc)
