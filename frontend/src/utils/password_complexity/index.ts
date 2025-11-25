@@ -8,16 +8,22 @@ import { zxcvbnAsync, zxcvbnOptions } from "@zxcvbn-ts/core";
 import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
 import type { TFunction } from "i18next";
 
+import wikipedia from "./enwiki.json";
+import namesf from "./namesf.json";
+import namesm from "./namesm.json";
+import namess from "./namess.json";
 import passwords from "./passwords.json";
+import ustvfilm from "./ustvfilm.json";
 
 // These are the dictionaries from zxcvbn-rs, but repackaged
+//:tchap: TODO deactivate dictionaries on frontend AND backend, or remplace them with french words
 const dictionary = {
-  //wikipedia, :tchap: only english nouns
+  wikipedia,
   passwords,
-  //namesm,    :tchap: only english nouns
-  //namesf,    :tchap: only english nouns
-  //namess,    :tchap: only english nouns
-  //ustvfilm,  :tchap: only english nouns
+  namesm,
+  namesf,
+  namess,
+  ustvfilm,
 };
 
 // This is the l33tspeak table from zxcvbn-rs, but repackaged
