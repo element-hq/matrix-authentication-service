@@ -197,6 +197,9 @@ pub struct CompatLoginInput<'a> {
     /// How many sessions the user has.
     pub session_counts: SessionCounts,
 
+    /// Whether a session will be replaced by this login
+    pub session_replaced: bool,
+
     // TODO is this actually what we care about? Don't we care a bit more about whether we're in an
     // interactive context or a non-interactive context? (SSO type has both phases :()
     pub login_type: CompatLoginType,

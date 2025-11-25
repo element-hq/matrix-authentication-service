@@ -576,7 +576,8 @@ async fn token_login(
         Device::generate(rng)
     };
 
-    repo.app_session()
+    let session_replaced = repo
+        .app_session()
         .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
         .await?;
 
@@ -586,6 +587,7 @@ async fn token_login(
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &browser_session.user,
             login_type: CompatLoginType::WebSso,
+            session_replaced,
             session_counts,
             requester,
         })
@@ -702,7 +704,8 @@ async fn user_password_login(
         Device::generate(&mut rng)
     };
 
-    repo.app_session()
+    let session_replaced = repo
+        .app_session()
         .finish_sessions_to_replace_device(clock, &user, &device)
         .await?;
 
@@ -712,6 +715,7 @@ async fn user_password_login(
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &user,
             login_type: CompatLoginType::Password,
+            session_replaced,
             session_counts,
             requester: policy_requester,
         })

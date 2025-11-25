@@ -36,6 +36,10 @@ violation contains {
 	# TODO not strictly correct...
 	input.login_type == "m.login.sso"
 
+	# Only apply if this login doesn't replace a session
+	# (As then this login is not actually increasing the number of devices)
+	not input.session_replaced
+
 	# For web-based 'compat SSO' login, a violation occurs when the soft limit has already been
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
@@ -52,6 +56,10 @@ violation contains {
 
 	# This is not a web-based interactive login
 	input.login_type == "m.login.password"
+
+	# Only apply if this login doesn't replace a session
+	# (As then this login is not actually increasing the number of devices)
+	not input.session_replaced
 
 	# For `m.login.password` login, a violation occurs when the hard limit has already been
 	# reached or exceeded.

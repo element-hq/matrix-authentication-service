@@ -7,6 +7,7 @@
     "login_type",
     "requester",
     "session_counts",
+    "session_replaced",
     "user"
   ],
   "properties": {
@@ -21,6 +22,10 @@
           "$ref": "#/definitions/SessionCounts"
         }
       ]
+    },
+    "session_replaced": {
+      "description": "Whether a session will be replaced by this login",
+      "type": "boolean"
     },
     "login_type": {
       "$ref": "#/definitions/CompatLoginType"

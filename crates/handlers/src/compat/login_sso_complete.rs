@@ -123,6 +123,8 @@ pub async fn get(
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
             login_type: CompatLoginType::WebSso,
+            // TODO should we predict a replacement?
+            session_replaced: false,
             session_counts,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
@@ -251,6 +253,8 @@ pub async fn post(
             user: &session.user,
             login_type: CompatLoginType::WebSso,
             session_counts,
+            // TODO should we predict a replacement?
+            session_replaced: false,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent,
