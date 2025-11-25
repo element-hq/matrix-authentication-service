@@ -222,7 +222,7 @@ The secret is not updated when the content of the file changes.
 > Changing the encryption secret afterwards will lead to a loss of all encrypted
 > information in the database.
 
-### Singing Keys
+### Signing Keys
 
 The service can use a number of key types for signing.
 The following key types are supported:
