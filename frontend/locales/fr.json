@@ -260,28 +260,28 @@
         "description_2": "Si vous êtes déconnecté partout et que vous ne vous souvenez pas de votre code de récupération, vous devrez tout de même réinitialiser votre identité.",
         "heading": "La réinitialisation d'identité a été annulée."
       },
-      "description": "Si vous n'êtes connecté à aucun autre appareil et que vous avez perdu votre clé de récupération, vous devrez réinitialiser votre identité pour continuer à utiliser l'application.",
+      "description": "Si vous n’êtes connecté sur aucun autre appareil et que vous avez perdu votre code de vérification, vous devez remettre à zéro la vérification d'appareil.",
       "effect_list": {
-        "negative_1": "Vous perdrez votre historique de messages existant",
-        "negative_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
-        "neutral_1": "Vous perdrez l’historique de vos messages",
-        "neutral_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
-        "positive_1": "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussion seront conservés"
+        "negative_1": "Vous pourriez perdre l’historique de vos messages",
+        "negative_2": "Vous devrez vérifier vos autres appareils",
+        "neutral_1": "Vous pourriez perdre l’historique de vos messages",
+        "neutral_2": "Vous devrez vérifier vos autres appareils",
+        "positive_1": "Vos contacts, préférences et discussions seront conservés"
       },
       "failure": {
         "description": "Il s'agit peut-être d'un problème temporaire, veuillez donc réessayer ultérieurement. Si le problème persiste, contactez l'administrateur de votre serveur.",
         "heading": "Impossible d'autoriser la réinitialisation de l'identité cryptographique",
         "title": "Impossible d'autoriser le remplacement de l'identité cryptographique"
       },
-      "finish_reset": "Terminer la réinitialisation",
-      "heading": "Réinitialisez votre identité au cas où vous ne pourriez pas la vérifier autrement",
+      "finish_reset": "Tout réinitialiser",
+      "heading": "Remettre à zéro la vérification d'appareil",
       "start_reset": "Démarrer la réinitialisation",
       "success": {
         "description": "La réinitialisation de l'identité a été approuvée pour les prochaines {{minutes}} minutes. Vous pouvez fermer cette fenêtre et revenir à l'application pour continuer.",
         "heading": "Réinitialisation de l'identité réussie. Retournez dans l'application pour terminer le processus.",
         "title": "Réinitialisation de l'identité cryptographique temporairement autorisée"
       },
-      "warning": "Ne réinitialisez votre identité que si vous n'avez accès à aucun autre appareil connecté et que vous avez perdu votre clé de récupération."
+      "warning": ""
     },
     "selectable_session": {
       "label": "Sélectionner une session"
