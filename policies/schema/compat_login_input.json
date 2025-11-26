@@ -3,14 +3,6 @@
   "title": "CompatLoginInput",
   "description": "Input for the compatibility login policy.",
   "type": "object",
-  "required": [
-    "is_interactive",
-    "login_type",
-    "requester",
-    "session_counts",
-    "session_replaced",
-    "user"
-  ],
   "properties": {
     "user": {
       "type": "object",
@@ -29,7 +21,7 @@
       "type": "boolean"
     },
     "is_interactive": {
-      "description": "Whether the user is currently in an interactive context. For `m.login.password`: false For `m.login.sso`: - true when asking for consent, - false when actually performing the login (at which point we create the compat session, but it's too late to show a web page)",
+      "description": "Whether the user is currently in an interactive context.\n For `m.login.password`: false\n For `m.login.sso`:\n - true when asking for consent,\n - false when actually performing the login (at which point we create the\n   compat session, but it's too late to show a web page)",
       "type": "boolean"
     },
     "login_type": {
@@ -39,38 +31,46 @@
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "user",
+    "session_counts",
+    "session_replaced",
+    "is_interactive",
+    "login_type",
+    "requester"
+  ],
   "definitions": {
     "SessionCounts": {
       "description": "Information about how many sessions the user has",
       "type": "object",
-      "required": [
-        "compat",
-        "oauth2",
-        "personal",
-        "total"
-      ],
       "properties": {
         "total": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         },
         "oauth2": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         },
         "compat": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         },
         "personal": {
           "type": "integer",
           "format": "uint64",
-          "minimum": 0.0
+          "minimum": 0
         }
-      }
+      },
+      "required": [
+        "total",
+        "oauth2",
+        "compat",
+        "personal"
+      ]
     },
     "CompatLoginType": {
       "type": "string",
@@ -85,12 +85,18 @@
       "properties": {
         "ip_address": {
           "description": "IP address of the entity making the request",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "ip"
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
