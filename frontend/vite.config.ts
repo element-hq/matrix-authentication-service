@@ -53,19 +53,8 @@ export default defineConfig((env) => ({
     cssCodeSplit: true,
 
     rollupOptions: {
-<<<<<<< HEAD
-      input: [
-        resolve(__dirname, "src/main.tsx"),
-        resolve(__dirname, "src/shared.css"),
-        resolve(__dirname, "src/templates.css"),
-        resolve(__dirname, "src/swagger.ts"),
-        // external components
-        resolve(__dirname, "src/external/register/PasswordDoubleInput.tsx"),
-      ],
-=======
       // This uses all the files in the src/entrypoints directory as inputs
       input: globSync(resolve(__dirname, "src/entrypoints/**/*.{css,ts,tsx}")),
->>>>>>> v1.7.0
     },
   },
 
