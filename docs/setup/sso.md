@@ -607,13 +607,34 @@ These instructions assume you have a running Shibboleth instance with the OIDC p
 
 Register MAS as a relying party in Shibboleth:
 
-1. Add a metadata file to `%{idp.home}/metadata/` (see the [Shibboleth documentation](https://shibboleth.atlassian.net/wiki/spaces/SC/pages/1912406916/OAuthRPMetadataProfile) for the template).
-   
-   Adjust the following in the metadata file:
-   - Client ID: `entityID="<client-id>"`
-   - Client Secret: `<oidcmd:ClientSecret><client-secret></oidcmd:ClientSecret>`
-   - Redirect URI: `Location="https://<auth-service-domain>/upstream/callback/<id>"`
-   - Scope: `scopes="openid profile email"`
+1. Add a metadata file (e.g. `mas-metadata.xml`) to `%{idp.home}/metadata/` with the following content:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+                     xmlns:oidcmd="urn:mace:shibboleth:metadata:oidc:1.0"
+                     entityID="<client-id>">
+       <Extensions>
+           <oidcmd:ClientInformation>
+               <oidcmd:ClientSecret><client-secret></oidcmd:ClientSecret>
+           </oidcmd:ClientInformation>
+       </Extensions>
+       <SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+           <Extensions>
+               <oidcmd:OIDCClientInformation scopes="openid profile email"
+                                             token_endpoint_auth_method="client_secret_basic">
+                   <oidcmd:GrantType>authorization_code</oidcmd:GrantType>
+                   <oidcmd:ResponseType>code</oidcmd:ResponseType>
+               </oidcmd:OIDCClientInformation>
+           </Extensions>
+           <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                                     Location="https://<auth-service-domain>/upstream/callback/<id>"
+                                     index="1"/>
+       </SPSSODescriptor>
+   </EntityDescriptor>
+   ```
+
+   Replace `<client-id>`, `<client-secret>`, `<auth-service-domain>`, and `<id>` with your values.
 
 2. Reference the metadata file in `%{idp.home}/conf/metadata-providers.xml` and reload services.
 
