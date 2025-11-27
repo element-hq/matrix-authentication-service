@@ -94,7 +94,7 @@ server {
 
     # Forward to Synapse
     # as per https://element-hq.github.io/synapse/latest/reverse_proxy.html#nginx
-    location ~ ^(/_matrix|/_synapse) {
+    location ~ ^(/_matrix|/_synapse/client|/_synapse/mas) {
         proxy_pass http://localhost:8008;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
