@@ -6,7 +6,7 @@
     },
     "cancel": "Cancel",
     "@cancel": {
-      "context": "pages/compat_login_policy_violation.html:32:89-107, pages/consent.html:69:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
+      "context": "pages/consent.html:69:11-29, pages/device_consent.html:127:13-31, pages/policy_violation.html:44:13-31"
     },
     "continue": "Continue",
     "@continue": {
