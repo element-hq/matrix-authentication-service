@@ -902,7 +902,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
-    async fn test_set_upstream_oauth_link(pool: PgPool) {
+    async fn test_set_upstream_oauth_session(pool: PgPool) {
         let mut rng = ChaChaRng::seed_from_u64(42);
         let clock = MockClock::default();
 
