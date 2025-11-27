@@ -636,7 +636,6 @@ upstream_oauth2:
       scope: "openid profile email"
       discovery_mode: insecure
       fetch_userinfo: true
-      userinfo_endpoint: "https://<shibboleth-domain>/idp/profile/oidc/userinfo" # TO BE FILLED, check your /.well-known/openid-configuration
       claims_imports:
         localpart:
           action: require
