@@ -123,7 +123,8 @@ pub async fn get(
             user: &session.user,
             is_interactive: true,
             login_type: CompatLoginType::WebSso,
-            // TODO should we predict a replacement?
+            // We don't know if there's going to be a replacement until we received the device ID,
+            // which happens too late.
             session_replaced: false,
             session_counts,
             requester: mas_policy::Requester {
@@ -254,7 +255,8 @@ pub async fn post(
             is_interactive: true,
             login_type: CompatLoginType::WebSso,
             session_counts,
-            // TODO should we predict a replacement?
+            // We don't know if there's going to be a replacement until we received the device ID,
+            // which happens too late.
             session_replaced: false,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
