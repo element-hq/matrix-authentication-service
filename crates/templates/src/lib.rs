@@ -442,9 +442,6 @@ register_templates! {
     /// Render the upstream link mismatch message
     pub fn render_upstream_oauth2_link_mismatch(WithLanguage<WithCsrf<WithSession<UpstreamExistingLinkContext>>>) { "pages/upstream_oauth2/link_mismatch.html" }
 
-    /// Render the upstream link match
-    pub fn render_upstream_oauth2_login_link(WithLanguage<WithCsrf<UpstreamExistingLinkContext>>) { "pages/upstream_oauth2/login_link.html" }
-
     /// Render the upstream suggest link message
     pub fn render_upstream_oauth2_suggest_link(WithLanguage<WithCsrf<WithSession<UpstreamSuggestLink>>>) { "pages/upstream_oauth2/suggest_link.html" }
 
