@@ -601,3 +601,51 @@ To use a Rauthy-supported [Ephemeral Client](https://sebadob.github.io/rauthy/wo
   "id_token_signed_response_alg": "RS256"
 }
 ```
+
+
+### Shibboleth
+
+[Shibboleth](https://www.shibboleth.net/) is an open-source identity management system commonly used by universities and research institutions.
+It is primarily based on SAML but also supports OIDC via the [OIDC OP Plugin](https://shibboleth.atlassian.net/wiki/spaces/IDPPLUGINS/pages/1376878976/OIDC+OP).
+
+These instructions assume you have a running Shibboleth instance with the OIDC plugin configured.
+
+Register MAS as a relying party in Shibboleth:
+
+1. Add a metadata file to `%{idp.home}/metadata/` (see the [Shibboleth documentation](https://shibboleth.atlassian.net/wiki/spaces/SC/pages/1912406916/OAuthRPMetadataProfile) for the template).
+   
+   Adjust the following in the metadata file:
+   - Client ID: `entityID="<client-id>"`
+   - Client Secret: `<oidcmd:ClientSecret><client-secret></oidcmd:ClientSecret>`
+   - Redirect URI: `Location="https://<auth-service-domain>/upstream/callback/<id>"`
+   - Scope: `scopes="openid profile email"`
+
+2. Reference the metadata file in `%{idp.home}/conf/metadata-providers.xml` and reload services.
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01JB6YS8N7Q2ZM9CPXW6V0KGRT
+      human_name: Shibboleth
+      issuer: "https://<shibboleth-domain>/" # TO BE FILLED
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      token_endpoint_auth_method: client_secret_basic
+      scope: "openid profile email"
+      discovery_mode: insecure
+      fetch_userinfo: true
+      userinfo_endpoint: "https://<shibboleth-domain>/idp/profile/oidc/userinfo" # TO BE FILLED, check your /.well-known/openid-configuration
+      claims_imports:
+        localpart:
+          action: require
+          template: "{{ user.preferred_username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+          set_email_verification: always
+```
