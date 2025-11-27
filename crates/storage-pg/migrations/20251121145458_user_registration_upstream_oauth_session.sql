@@ -8,6 +8,3 @@ ALTER TABLE user_registrations
     ADD COLUMN upstream_oauth_authorization_session_id UUID
       REFERENCES upstream_oauth_authorization_sessions (upstream_oauth_authorization_session_id)
       ON DELETE SET NULL;
-
-CREATE INDEX user_registrations_upstream_oauth_session_id_idx
-    ON user_registrations (upstream_oauth_authorization_session_id);
