@@ -78,7 +78,8 @@ Create a new user registration token.
 
 Options:
 - `--token <token>`: Specific token string to use. If not provided, a random token will be generated.
-- `--usage-limit <usage_limit>`: Limit the number of times the token can be used. If not provided, the token can be used an unlimited number of times.
+- `--usage-limit <usage_limit>`: Limit the number of times the token can be used. If not provided, the token can be can be used only once, unless the `--unlimited` flag is set.
+- `--unlimited` Allow the token to be used an unlimited number of times.
 - `--expires-in <expires_in>`: Time in seconds after which the token expires. If not provided, the token never expires.
 
 ```
