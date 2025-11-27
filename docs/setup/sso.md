@@ -213,7 +213,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -250,7 +249,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -291,7 +289,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
         account_name:
           template: "{{ user.name }}"
 ```
@@ -462,7 +459,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -499,7 +495,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
         account_name:
           template: "{{ user.preferred_username }}"
 ```
@@ -646,5 +641,4 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
