@@ -817,7 +817,7 @@ impl UserEmailMutations {
 
         let authentication = repo
             .user_email()
-            .complete_authentication(&clock, authentication, &code)
+            .complete_authentication_with_code(&clock, authentication, &code)
             .await?;
 
         // Check the email is not already in use by anyone, including the current user

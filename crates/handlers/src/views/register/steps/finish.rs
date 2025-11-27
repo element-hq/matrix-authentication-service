@@ -154,56 +154,90 @@ pub(crate) async fn get(
     // If there is an email authentication, we need to check that the email
     // address was verified. If there is no email authentication attached, we
     // need to make sure the server doesn't require it
-    let email_authentication = if let Some(email_authentication_id) =
-        registration.email_authentication_id
+    let email_authentication =
+        if let Some(email_authentication_id) = registration.email_authentication_id {
+            let email_authentication = repo
+                .user_email()
+                .lookup_authentication(email_authentication_id)
+                .await?
+                .context("Could not load the email authentication")
+                .map_err(InternalError::from_anyhow)?;
+
+            // Check that the email authentication has been completed
+            if email_authentication.completed_at.is_none() {
+                return Ok((
+                    cookie_jar,
+                    url_builder.redirect(&mas_router::RegisterVerifyEmail::new(id)),
+                )
+                    .into_response());
+            }
+
+            // Check that the email address isn't already used
+            // It is important to do that here, as we we're not checking during the
+            // registration, because we don't want to disclose whether an email is
+            // already being used or not before we verified it
+            if repo
+                .user_email()
+                .count(UserEmailFilter::new().for_email(&email_authentication.email))
+                .await?
+                > 0
+            {
+                let action = registration
+                    .post_auth_action
+                    .map(serde_json::from_value)
+                    .transpose()?;
+
+                let ctx = RegisterStepsEmailInUseContext::new(email_authentication.email, action)
+                    .with_language(lang);
+
+                return Ok((
+                    cookie_jar,
+                    Html(templates.render_register_steps_email_in_use(&ctx)?),
+                )
+                    .into_response());
+            }
+
+            Some(email_authentication)
+        } else {
+            None
+        };
+
+    // If this registration was created from an upstream OAuth session, check
+    // it is still valid and wasn't linked to a user in the meantime
+    let upstream_oauth = if let Some(upstream_oauth_authorization_session_id) =
+        registration.upstream_oauth_authorization_session_id
     {
-        let email_authentication = repo
-            .user_email()
-            .lookup_authentication(email_authentication_id)
+        let upstream_oauth_authorization_session = repo
+            .upstream_oauth_session()
+            .lookup(upstream_oauth_authorization_session_id)
             .await?
-            .context("Could not load the email authentication")
+            .context("Could not load the upstream OAuth authorization session")
             .map_err(InternalError::from_anyhow)?;
 
-        // Check that the email authentication has been completed
-        if email_authentication.completed_at.is_none() {
-            return Ok((
-                cookie_jar,
-                url_builder.redirect(&mas_router::RegisterVerifyEmail::new(id)),
-            )
-                .into_response());
-        }
+        let link_id = upstream_oauth_authorization_session
+            .link_id()
+            // This should not happen, the session is associated with the user
+            // registration once the link was already created
+            .context("Authorization session has no upstream link associated with it")
+            .map_err(InternalError::from_anyhow)?;
 
-        // Check that the email address isn't already used
-        // It is important to do that here, as we we're not checking during the
-        // registration, because we don't want to disclose whether an email is
-        // already being used or not before we verified it
-        if repo
-            .user_email()
-            .count(UserEmailFilter::new().for_email(&email_authentication.email))
+        let upstream_oauth_link = repo
+            .upstream_oauth_link()
+            .lookup(link_id)
             .await?
-            > 0
-        {
-            let action = registration
-                .post_auth_action
-                .map(serde_json::from_value)
-                .transpose()?;
+            .context("Could not load the upstream OAuth link")
+            .map_err(InternalError::from_anyhow)?;
 
-            let ctx = RegisterStepsEmailInUseContext::new(email_authentication.email, action)
-                .with_language(lang);
-
-            return Ok((
-                cookie_jar,
-                Html(templates.render_register_steps_email_in_use(&ctx)?),
-            )
-                .into_response());
+        if upstream_oauth_link.user_id.is_some() {
+            // This means the link was already associated to a user. This could
+            // in theory happen if the same user registers concurrently, but
+            // this is not going to happen often enough to have a dedicated page
+            return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                "The upstream identity was already linked to a user. Try logging in again"
+            )));
         }
 
-        Some(email_authentication)
-    } else if site_config.password_registration_email_required {
-        // This could only happen in theory during a configuration change
-        return Err(InternalError::from_anyhow(anyhow::anyhow!(
-            "Server requires an email address to complete the registration, but no email authentication was attached to the user registration"
-        )));
+        Some((upstream_oauth_authorization_session, upstream_oauth_link))
     } else {
         None
     };
@@ -270,6 +304,16 @@ pub(crate) async fn get(
             .await?;
 
         PASSWORD_REGISTER_COUNTER.add(1, &[]);
+    }
+
+    if let Some((upstream_session, upstream_link)) = upstream_oauth {
+        repo.upstream_oauth_link()
+            .associate_to_user(&upstream_link, &user)
+            .await?;
+
+        repo.browser_session()
+            .authenticate_with_upstream(&mut rng, &clock, &user_session, &upstream_session)
+            .await?;
     }
 
     if let Some(terms_url) = registration.terms_url {
