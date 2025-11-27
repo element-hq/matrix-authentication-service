@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use anyhow::bail;
+use camino::Utf8PathBuf;
 use rand::Rng;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -307,5 +309,84 @@ impl ConfigurationSection for SyncConfig {
         self.upstream_oauth2.validate(figment)?;
 
         Ok(())
+    }
+}
+
+/// Client secret config option.
+///
+/// It either holds the client secret value directly or references a file where
+/// the client secret is stored.
+#[derive(Clone, Debug)]
+pub enum ClientSecret {
+    /// Path to the file containing the client secret.
+    File(Utf8PathBuf),
+
+    /// Client secret value.
+    Value(String),
+}
+
+/// Client secret fields as serialized in JSON.
+#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
+pub struct ClientSecretRaw {
+    /// Path to the file containing the client secret. The client secret is used
+    /// by the `client_secret_basic`, `client_secret_post` and
+    /// `client_secret_jwt` authentication methods.
+    #[schemars(with = "Option<String>")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret_file: Option<Utf8PathBuf>,
+
+    /// Alternative to `client_secret_file`: Reads the client secret directly
+    /// from the config.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret: Option<String>,
+}
+
+impl ClientSecret {
+    /// Returns the client secret.
+    ///
+    /// If `client_secret_file` was given, the secret is read from that file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the client secret could not be read from file.
+    pub async fn value(&self) -> anyhow::Result<String> {
+        Ok(match self {
+            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?,
+            ClientSecret::Value(client_secret) => client_secret.clone(),
+        })
+    }
+}
+
+impl TryFrom<ClientSecretRaw> for Option<ClientSecret> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: ClientSecretRaw) -> Result<Self, Self::Error> {
+        match (value.client_secret, value.client_secret_file) {
+            (None, None) => Ok(None),
+            (None, Some(path)) => Ok(Some(ClientSecret::File(path))),
+            (Some(client_secret), None) => Ok(Some(ClientSecret::Value(client_secret))),
+            (Some(_), Some(_)) => {
+                bail!("Cannot specify both `client_secret` and `client_secret_file`")
+            }
+        }
+    }
+}
+
+impl From<Option<ClientSecret>> for ClientSecretRaw {
+    fn from(value: Option<ClientSecret>) -> Self {
+        match value {
+            Some(ClientSecret::File(path)) => ClientSecretRaw {
+                client_secret_file: Some(path),
+                client_secret: None,
+            },
+            Some(ClientSecret::Value(client_secret)) => ClientSecretRaw {
+                client_secret_file: None,
+                client_secret: Some(client_secret),
+            },
+            None => ClientSecretRaw {
+                client_secret_file: None,
+                client_secret: None,
+            },
+        }
     }
 }

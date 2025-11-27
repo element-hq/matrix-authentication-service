@@ -18,7 +18,7 @@ use tracing_subscriber::{
 
 use crate::LogContext;
 
-/// An event formatter usable by the [`tracing-subscriber`] crate, which
+/// An event formatter usable by the [`tracing_subscriber`] crate, which
 /// includes the log context and the OTEL trace ID.
 #[derive(Debug, Default)]
 pub struct EventFormatter;

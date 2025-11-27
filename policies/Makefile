@@ -24,9 +24,9 @@ ifeq ($(DOCKER), 1)
 	REGAL := docker run -i -v $(shell pwd):/policies:ro -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else ifeq ($(PODMAN), 1)
 	# When running rootless, the volume directory may need to be given global write permissions on the host
-	OPA := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
+	OPA := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(OPA_DOCKER_IMAGE)
 	OPA_RW := podman run -i -v $(shell pwd):/policies:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
-	REGAL := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
+	REGAL := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else
 	OPA := opa
 	OPA_RW := opa

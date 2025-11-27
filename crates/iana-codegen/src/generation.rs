@@ -165,11 +165,12 @@ pub fn json_schema_impl(
     write!(
         f,
         r#"impl schemars::JsonSchema for {} {{
-    fn schema_name() -> String {{
-        "{}".to_owned()
+    fn schema_name() -> std::borrow::Cow<'static, str> {{
+        std::borrow::Cow::Borrowed("{}")
     }}
 
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {{
+    #[allow(clippy::too_many_lines)]
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {{
         let enums = vec!["#,
         section.key, section.key,
     )?;
@@ -179,20 +180,14 @@ pub fn json_schema_impl(
             f,
             r"
             // ---
-            schemars::schema::SchemaObject {{",
+            schemars::json_schema!({{",
         )?;
 
         if let Some(description) = &member.description {
             write!(
                 f,
-                r"
-                metadata: Some(Box::new(schemars::schema::Metadata {{
-                    description: Some(
-                        // ---
-                        {}.to_owned(),
-                    ),
-                    ..Default::default()
-                }})),",
+                r#"
+                "description": {},"#,
                 raw_string(description),
             )?;
         }
@@ -200,34 +195,24 @@ pub fn json_schema_impl(
         write!(
             f,
             r#"
-                const_value: Some("{}".into()),
-                ..Default::default()
-            }}
-            .into(),"#,
+                "const": "{}",
+            }}),"#,
             member.value
         )?;
     }
 
     writeln!(
         f,
-        r"
+        r#"
         ];
 
         let description = {};
-        schemars::schema::SchemaObject {{
-            metadata: Some(Box::new(schemars::schema::Metadata {{
-                description: Some(description.to_owned()),
-                ..Default::default()
-            }})),
-            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {{
-                any_of: Some(enums),
-                ..Default::default()
-            }})),
-            ..Default::default()
-        }}
-        .into()
+        schemars::json_schema!({{
+            "description": description,
+            "anyOf": enums,
+        }})
     }}
-}}",
+}}"#,
         raw_string(section.doc),
     )
 }

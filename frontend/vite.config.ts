@@ -6,10 +6,10 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
+import { globSync } from "tinyglobby";
 import type { Manifest, PluginOption } from "vite";
 import compression from "vite-plugin-compression";
 import codegen from "vite-plugin-graphql-codegen";
@@ -53,6 +53,7 @@ export default defineConfig((env) => ({
     cssCodeSplit: true,
 
     rollupOptions: {
+<<<<<<< HEAD
       input: [
         resolve(__dirname, "src/main.tsx"),
         resolve(__dirname, "src/shared.css"),
@@ -61,6 +62,10 @@ export default defineConfig((env) => ({
         // external components
         resolve(__dirname, "src/external/register/PasswordDoubleInput.tsx"),
       ],
+=======
+      // This uses all the files in the src/entrypoints directory as inputs
+      input: globSync(resolve(__dirname, "src/entrypoints/**/*.{css,ts,tsx}")),
+>>>>>>> v1.7.0
     },
   },
 

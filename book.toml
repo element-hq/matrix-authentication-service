@@ -7,9 +7,8 @@
 # https://rust-lang.github.io/mdBook/format/config.html
 [book]
 title = "Matrix Authentication Service"
-authors = ["The Matrix.org Foundation C.I.C."]
+authors = ["Element Backend Team"]
 language = "en"
-multilingual = false
 
 src = "docs"
 

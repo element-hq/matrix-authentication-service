@@ -1,0 +1,404 @@
+{
+  "action": {
+    "back": "Powrót",
+    "cancel": "Anuluj",
+    "clear": "Wyczyść",
+    "close": "Zamknij",
+    "collapse": "Zwiń",
+    "confirm": "Potwierdź",
+    "continue": "Kontynuuj",
+    "edit": "Edytuj",
+    "expand": "Rozwiń",
+    "save": "Zapisz",
+    "save_and_continue": "Zapisz i kontynuuj",
+    "sign_out": "Wyloguj",
+    "start_over": "Zacznij od nowa"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link do polityki prywatności serwisu",
+      "link": "Polityka prywatności"
+    },
+    "terms_and_conditions": {
+      "alt": "Link do warunków korzystania z usługi",
+      "link": "Warunki korzystania"
+    }
+  },
+  "common": {
+    "add": "Dodaj",
+    "e2ee": "Szyfrowanie typu end-to-end",
+    "error": "Błąd",
+    "loading": "Wczytywanie…",
+    "next": "Dalej",
+    "password": "Hasło",
+    "previous": "Poprzedni",
+    "saved": "Zapisano",
+    "saving": "Zapisywanie…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Hasło do konta",
+      "contact_info": "Dane kontaktowe",
+      "delete_account": {
+        "alert_description": "To konto zostanie trwale usunięte i nie będziesz już mieć dostępu do żadnych wiadomości.",
+        "alert_title": "Za chwilę stracisz wszystkie swoje dane",
+        "button": "Usuń konto",
+        "dialog_description": "<text>Potwierdź, że chcesz usunąć swoje konto:</text>\n<profile />\n<list>\n<item>Nie będziesz mógł ponownie aktywować swojego konta</item>\n<item>Nie będziesz już mógł się zalogować</item>\n<item>Nikt nie będzie mógł ponownie wykorzystać Twojej nazwy użytkownika (MXID), łącznie z Tobą</item>\n<item>Opuścisz wszystkie pokoje i wiadomości bezpośrednie, w których uczestniczysz</item>\n<item>Zostaniesz usunięty z serwera tożsamości i nikt nie będzie mógł Cię znaleźć po Twoim adresie e-mail ani numerze telefonu</item>\n</list>\n<text>Twoje stare wiadomości nadal będą widoczne dla osób, które je otrzymały. Czy chcesz ukryć możliwość odczytywania twoich wiadomości przed osobami, które dołączą do pokoi w przyszłości?</text>",
+        "dialog_title": "Usunąć to konto?",
+        "erase_checkbox_label": "Tak, ukryj wszystkie moje wiadomości przed nowymi użytkownikami",
+        "incorrect_password": "Niepoprawne hasło. Spróbuj ponownie.",
+        "mxid_label": "Potwierdź swój identyfikator Matrix ({{ mxid }})",
+        "mxid_mismatch": "Ta wartość nie pasuje do Twojego identyfikatora Matrix",
+        "password_label": "Wprowadź hasło, aby kontynuować"
+      },
+      "edit_profile": {
+        "display_name_help": "To właśnie zobaczą inni użytkownicy, niezależnie od tego, gdzie jesteś zalogowany.",
+        "display_name_label": "Nazwa wyświetlana",
+        "title": "Edytuj profil",
+        "username_label": "Nazwa użytkownika"
+      },
+      "password": {
+        "change": "Zmień hasło",
+        "change_disabled": "Zmiany hasła są wyłączone przez administratora.",
+        "label": "Hasło"
+      },
+      "sign_out": {
+        "button": "Wyloguj się z konta",
+        "dialog": "Wylogować się z tego konta?"
+      },
+      "title": "Twoje konto"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "Wprowadzony adres e-mail nie jest dozwolony przez politykę serwera.",
+        "title": "E-mail odrzucony zgodnie z polityką"
+      },
+      "email_denied_error": "Podany adres e-mail nie jest dozwolony przez politykę serwera",
+      "email_exists_alert": {
+        "text": "Podany adres e-mail został już dodany do tego konta",
+        "title": "Adres e-mail już istnieje"
+      },
+      "email_exists_error": "Podany adres e-mail został już dodany do tego konta",
+      "email_field_help": "Dodaj alternatywny adres e-mail, którego możesz używać do uzyskania dostępu do tego konta.",
+      "email_field_label": "Dodaj adres e-mail",
+      "email_in_use_error": "Podany adres e-mail jest już używany",
+      "email_invalid_alert": {
+        "text": "Podany adres e-mail jest nieprawidłowy",
+        "title": "Nieprawidłowy adres e-mail"
+      },
+      "email_invalid_error": "Podany adres e-mail jest nieprawidłowy",
+      "incorrect_password_error": "Niepoprawne hasło. Spróbuj ponownie.",
+      "password_confirmation": "Potwierdź hasło do swojego konta, aby dodać ten adres e-mail"
+    },
+    "app_sessions_list": {
+      "error": "Nie udało się załadować sesji aplikacji",
+      "heading": "Aplikacje"
+    },
+    "browser_session_details": {
+      "current_badge": "Aktualny",
+      "session_details_title": "Sesja"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktywna sesja",
+      "body:few": "{{count}} aktywne sesje",
+      "body:many": "{{count}} aktywnych sesji",
+      "heading": "Przeglądarki",
+      "no_active_sessions": {
+        "default": "Nie jesteś zalogowany w żadnej przeglądarce internetowej.",
+        "inactive_90_days": "Wszystkie Twoje sesje były aktywne w ciągu ostatnich 90 dni."
+      },
+      "view_all_button": "Zobacz wszystko"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Informacje o kliencie",
+      "name": "Nazwa",
+      "session_details_title": "Sesja"
+    },
+    "device_type_icon_label": {
+      "desktop": "Pulpit",
+      "mobile": "Telefon",
+      "pc": "Komputer",
+      "tablet": "Tablet",
+      "unknown": "Nieznany typ urządzenia",
+      "web": "Przeglądarka"
+    },
+    "email_in_use": {
+      "heading": "Adres e-mail {{email}} jest już używany."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Czy na pewno chcesz zakończyć tę sesję?",
+      "text": "Usuń urządzenie"
+    },
+    "error": {
+      "hideDetails": "Ukryj szczegóły",
+      "showDetails": "Pokaż szczegóły",
+      "subtitle": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
+      "title": "Coś poszło nie tak"
+    },
+    "error_boundary_title": "Coś poszło nie tak",
+    "errors": {
+      "field_required": "To pole jest wymagane",
+      "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie."
+    },
+    "last_active": {
+      "active_date": "Aktywne {{relativeDate}}",
+      "active_now": "Aktywne teraz",
+      "inactive_90_days": "Nieaktywny przez ponad 90 dni"
+    },
+    "nav": {
+      "devices": "Urządzenia",
+      "plan": "Plan",
+      "profile": "Profil",
+      "sessions": "Sesje",
+      "settings": "Ustawienia"
+    },
+    "not_found_alert_title": "Nie znaleziono.",
+    "not_logged_in_alert": "Nie jesteś zalogowany.",
+    "oauth2_client_detail": {
+      "details_title": "Informacje o kliencie",
+      "id": "Identyfikator klienta",
+      "name": "Nazwa",
+      "policy": "Polityka",
+      "terms": "Warunki korzystania z usługi"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Nazwa",
+      "client_title": "Informacje o kliencie",
+      "session_details_title": "Sesja"
+    },
+    "pagination_controls": {
+      "total": "Razem: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Aktualne hasło",
+      "failure": {
+        "description": {
+          "account_locked": "Twoje konto jest zablokowane i nie można go obecnie odzyskać. Jeśli nie jest to oczekiwane, skontaktuj się z administratorem serwera.",
+          "expired_recovery_ticket": "Link do odzyskiwania wygasł. Rozpocznij proces odzyskiwania konta od początku.",
+          "invalid_new_password": "Wybrane nowe hasło jest nieprawidłowe i może nie spełniać skonfigurowanych zasad bezpieczeństwa.",
+          "no_current_password": "Nie masz aktualnego hasła.",
+          "no_such_recovery_ticket": "Link odzyskiwania jest nieprawidłowy. Jeśli skopiowałeś link z e-maila odzyskiwania, sprawdź, czy został skopiowany w całości.",
+          "password_changes_disabled": "Możliwość zmiany hasła jest wyłączona.",
+          "recovery_ticket_already_used": "Link odzyskiwania został już użyty. Nie można go użyć ponownie.",
+          "unspecified": "To może być problem tymczasowy, więc spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z administratorem serwera.",
+          "wrong_password": "Podane hasło jest nieprawidłowe. Spróbuj ponownie."
+        },
+        "title": "Nie udało się zaktualizować hasła"
+      },
+      "new_password_again_label": "Wprowadź ponownie nowe hasło",
+      "new_password_label": "Nowe hasło",
+      "passwords_match": "Hasła są zgodne!",
+      "passwords_no_match": "Hasła nie pasują",
+      "subtitle": "Wybierz nowe hasło do swojego konta.",
+      "success": {
+        "description": "Twoje hasło zostało pomyślnie zaktualizowane.",
+        "title": "Zaktualizowano hasło"
+      },
+      "title": "Zmień swoje hasło"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "Aby utworzyć nowe hasło, zacznij od nowa i wybierz „Zapomniałem hasła”.",
+        "title": "Link do zresetowania hasła został już użyty"
+      },
+      "expired": {
+        "resend_email": "Wyślij ponownie wiadomość e-mail",
+        "subtitle": "Poproś o nową wiadomość e-mail, która zostanie wysłana na adres: {{email}}",
+        "title": "Link do resetowania hasła wygasł"
+      },
+      "subtitle": "Wybierz nowe hasło do swojego konta.",
+      "title": "Zresetuj swoje hasło"
+    },
+    "password_strength": {
+      "placeholder": "Siła hasła",
+      "score": {
+        "0": "Bardzo słabe hasło",
+        "1": "Bardzo słabe hasło",
+        "2": "Słabe hasło",
+        "3": "Silne hasło",
+        "4": "Bardzo silne hasło"
+      },
+      "suggestion": {
+        "all_uppercase": "Pisz wielką literą niektóre, ale nie wszystkie litery.",
+        "another_word": "Dodaj więcej słów, które są mniej popularne.",
+        "associated_years": "Unikaj lat, które kojarzą się z Tobą.",
+        "capitalization": "Wielką literą pisz więcej niż tylko pierwszą literę.",
+        "dates": "Unikaj dat i lat, które są związane z Tobą.",
+        "l33t": "Unikaj przewidywalnych zamian liter, takich jak „@” zamiast „a”.",
+        "longer_keyboard_pattern": "Używaj dłuższych sekwencji klawiszy i wielokrotnie zmieniaj kierunek pisania.",
+        "no_need": "Możesz tworzyć silne hasła bez używania symboli, cyfr i wielkich liter.",
+        "pwned": "Jeżeli używasz tego hasła gdzie indziej, powinieneś je zmienić.",
+        "recent_years": "Unikaj ostatnich lat.",
+        "repeated": "Unikaj powtarzających się słów i znaków.",
+        "reverse_words": "Unikaj odwróconych pisowni popularnych słów.",
+        "sequences": "Unikaj popularnych sekwencji znaków.",
+        "use_words": "Używaj wielu słów, ale unikaj popularnych zwrotów."
+      },
+      "too_weak": "To hasło jest zbyt słabe",
+      "warning": {
+        "common": "To jest powszechnie używane hasło.",
+        "common_names": "Popularne imiona i nazwiska są łatwe do odgadnięcia.",
+        "dates": "Daty są łatwe do odgadnięcia.",
+        "extended_repeat": "Powtarzające się wzory znaków, takie jak „abcabcabc”, są łatwe do odgadnięcia.",
+        "key_pattern": "Krótkie wzory klawiszowe są łatwe do odgadnięcia",
+        "names_by_themselves": "Pojedyncze imiona lub nazwiska są łatwe do odgadnięcia.",
+        "pwned": "Twoje hasło zostało ujawnione w wyniku naruszenia bezpieczeństwa danych w Internecie.",
+        "recent_years": "Ostatnie lata są łatwe do odgadnięcia.",
+        "sequences": "Typowe sekwencje znaków, takie jak „abc”, są łatwe do odgadnięcia.",
+        "similar_to_common": "Jest to podobne do powszechnie używanego hasła.",
+        "simple_repeat": "Powtarzające się znaki, takie jak „aaa”, są łatwe do odgadnięcia.",
+        "straight_row": "Proste rzędy klawiszy na klawiaturze są łatwe do odgadnięcia.",
+        "top_hundred": "To jest często używane hasło.",
+        "top_ten": "To jest bardzo często używane hasło.",
+        "user_inputs": "Nie powinno być żadnych danych osobowych ani związanych ze stroną.",
+        "word_by_itself": "Pojedyncze słowa są łatwe do odgadnięcia."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Zresetuj tożsamość",
+      "cancelled": {
+        "description_1": "Możesz zamknąć to okno i wrócić do aplikacji, aby kontynuować.",
+        "description_2": "Jeśli wylogowałeś się z dowolnego miejsca i nie pamiętasz kodu odzyskiwania, nadal musisz zresetować swoją tożsamość.",
+        "heading": "Resetowanie tożsamości zostało anulowane."
+      },
+      "description": "Jeśli nie zalogowałeś się na żadnym innym urządzeniu i utraciłeś klucz odzyskiwania, musisz zresetować swoją tożsamość, aby móc nadal korzystać z aplikacji.",
+      "effect_list": {
+        "negative_1": "Utracisz istniejącą historię wiadomości",
+        "negative_2": "Będziesz musiał ponownie zweryfikować wszystkie swoje istniejące urządzenia i kontakty",
+        "neutral_1": "Utracisz całą historię wiadomości przechowywaną wyłącznie na serwerze",
+        "neutral_2": "Będziesz musiał ponownie zweryfikować wszystkie swoje istniejące urządzenia i kontakty",
+        "positive_1": "Twoje dane konta, kontakty, preferencje i lista czatów zostaną zachowane"
+      },
+      "failure": {
+        "description": "To może być problem tymczasowy, więc spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z administratorem serwera.",
+        "heading": "Nie udało się zezwolić na zresetowanie tożsamości kryptograficznej",
+        "title": "Nie udało się zezwolić na tożsamość kryptograficzną"
+      },
+      "finish_reset": "Zakończ resetowanie",
+      "heading": "Zresetuj swoją tożsamość, jeśli nie możesz potwierdzić jej w inny sposób",
+      "start_reset": "Rozpocznij resetowanie",
+      "success": {
+        "description": "Resetowanie tożsamości zostało zatwierdzone na najbliższe {{minutes}} minut. Możesz zamknąć to okno i wrócić do aplikacji, aby kontynuować.",
+        "heading": "Tożsamość została zresetowana pomyślnie. Wróć do aplikacji, aby dokończyć proces.",
+        "title": "Resetowanie tożsamości kryptograficznej tymczasowo dozwolone"
+      },
+      "warning": "Zresetuj swoją tożsamość tylko wtedy, gdy nie masz dostępu do innego urządzenia, na którym jesteś zalogowany i utraciłeś klucz odzyskiwania."
+    },
+    "selectable_session": {
+      "label": "Wybierz sesję"
+    },
+    "session": {
+      "client_id_label": "Identyfikator klienta",
+      "current": "Aktualny",
+      "current_badge": "Aktualny",
+      "device_id_label": "Identyfikator urządzenia",
+      "finished_date": "Zakończone <datetime/>",
+      "finished_label": "Zakończone",
+      "generic_browser_session": "Sesja przeglądarki",
+      "id_label": "ID",
+      "ip_label": "Adres IP",
+      "last_active_label": "Ostatnio aktywny",
+      "last_auth_label": "Ostatnie uwierzytelnienie",
+      "name_for_platform": "{{name}} dla {{platform}}",
+      "scopes_label": "Zakresy",
+      "set_device_name": {
+        "help": "Ustaw nazwę, która ułatwi identyfikację tego urządzenia.",
+        "label": "Nazwa urządzenia",
+        "title": "Edytuj nazwę urządzenia"
+      },
+      "signed_in_date": "Zalogowano <datetime/>",
+      "signed_in_label": "Zalogowano",
+      "title": "Szczegóły urządzenia",
+      "unknown_browser": "Nieznana przeglądarka",
+      "unknown_device": "Nieznane urządzenie",
+      "uri_label": "Uri",
+      "user_id_label": "Identyfikator użytkownika",
+      "username_label": "Nazwa użytkownika"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Wróć",
+        "text": "Ta sesja nie istnieje lub nie jest już aktywna.",
+        "title": "Nie można znaleźć sesji: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Nieznana trasa {{route}}",
+    "unverified_email_alert": {
+      "button": "Przejrzyj i zweryfikuj",
+      "text:one": "Masz {{count}} niezweryfikowany adres e-mail.",
+      "text:few": "Masz {{count}} niezweryfikowane adresy e-mail.",
+      "text:many": "Masz {{count}} niezweryfikowanych adresów e-mail.",
+      "title": "Niezweryfikowany adres e-mail"
+    },
+    "user_email": {
+      "cant_delete_primary": "Aby usunąć ten adres, wybierz inny główny adres e-mail.",
+      "delete_button_confirmation_modal": {
+        "action": "Usuń adres e-mail",
+        "body": "Usunąć ten adres e-mail?",
+        "incorrect_password": "Niepoprawne hasło. Spróbuj ponownie.",
+        "password_confirmation": "Potwierdź hasło do swojego konta, aby usunąć ten adres e-mail"
+      },
+      "delete_button_title": "Usuń adres e-mail",
+      "email": "E-mail",
+      "make_primary_button": "Ustaw jako główne",
+      "not_verified": "Nie zweryfikowano",
+      "primary_email": "Główny adres e-mail",
+      "retry_button": "Wyślij ponownie kod",
+      "unverified": "Niezweryfikowany"
+    },
+    "user_email_list": {
+      "heading": "E-maile",
+      "no_primary_email_alert": "Brak głównego adresu e-mail"
+    },
+    "user_greeting": {
+      "error": "Nie udało się załadować użytkownika"
+    },
+    "user_name": {
+      "display_name_field_label": "Nazwa wyświetlana"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} aktywna sesja",
+      "active_sessions:few": "{{count}} aktywne sesje",
+      "active_sessions:many": "{{count}} aktywnych sesji",
+      "heading": "Gdzie jesteś zalogowany",
+      "no_active_sessions": {
+        "default": "Nie jesteś zalogowany w żadnej aplikacji.",
+        "inactive_90_days": "Wszystkie Twoje sesje były aktywne w ciągu ostatnich 90 dni."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "Kod stracił ważność. Poproś o nowy kod.",
+        "title": "Kod wygasł"
+      },
+      "code_field_error": "Kod nie został rozpoznany",
+      "code_field_label": "6-cyfrowy kod",
+      "code_field_wrong_shape": "Kod musi składać się z 6 cyfr",
+      "email_sent_alert": {
+        "description": "Wprowadź nowy kod poniżej.",
+        "title": "Wysłano nowy kod"
+      },
+      "enter_code_prompt": "Wprowadź 6-cyfrowy kod wysłany na adres: <email>{{email}}</email>",
+      "heading": "Zweryfikuj swój adres e-mail",
+      "invalid_code_alert": {
+        "description": "Sprawdź kod wysłany na Twój adres e-mail i zaktualizuj poniższe pola, aby kontynuować.",
+        "title": "Wpisałeś zły kod"
+      },
+      "resend_code": "Wyślij ponownie kod",
+      "resend_email": "Wyślij ponownie wiadomość e-mail",
+      "sent": "Wysłano!",
+      "unknown_email": "Nieznany adres e-mail"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Edytuj swój profil i dane kontaktowe",
+      "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
+      "mas_admin": "Zarządzaj dowolnym użytkownikiem w matrix-authentication-service",
+      "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
+      "synapse_admin": "Administrowanie serwerem domowym Synapse",
+      "view_messages": "Przegląd istniejących wiadomości i danych",
+      "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
+    }
+  }
+}

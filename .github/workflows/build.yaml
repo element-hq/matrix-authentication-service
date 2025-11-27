@@ -90,7 +90,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: assets
           path: assets-dist
@@ -149,7 +149,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -168,19 +168,19 @@ jobs:
 
     steps:
       - name: Download assets
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: assets
           path: assets-dist
 
       - name: Download binary x86_64
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: binary-x86_64-unknown-linux-gnu
           path: binary-x86_64
 
       - name: Download binary aarch64
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: binary-aarch64-unknown-linux-gnu
           path: binary-aarch64
@@ -198,13 +198,13 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
@@ -232,7 +232,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.8.0
+        uses: docker/metadata-action@v5.9.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action
@@ -248,7 +248,7 @@ jobs:
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v5.8.0
+        uses: docker/metadata-action@v5.9.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action-debug
@@ -326,14 +326,14 @@ jobs:
       - build-image
     steps:
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: mas-cli-*
           path: artifacts
           merge-multiple: true
 
       - name: Prepare a release
-        uses: softprops/action-gh-release@v2.4.1
+        uses: softprops/action-gh-release@v2.4.2
         with:
           generate_release_notes: true
           body: |
@@ -388,7 +388,7 @@ jobs:
             .github/scripts
 
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: mas-cli-*
           path: artifacts
@@ -402,7 +402,7 @@ jobs:
             await script({ core, github, context });
 
       - name: Update unstable release
-        uses: softprops/action-gh-release@v2.4.1
+        uses: softprops/action-gh-release@v2.4.2
         with:
           name: "Unstable build"
           tag_name: unstable

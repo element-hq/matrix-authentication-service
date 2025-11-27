@@ -10,11 +10,11 @@ import { TooltipProvider } from "@vector-im/compound-web";
 import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
-import ErrorBoundary from "./components/ErrorBoundary";
-import LoadingScreen from "./components/LoadingScreen";
-import { queryClient } from "./graphql";
-import i18n, { setupI18n } from "./i18n";
-import { router } from "./router";
+import ErrorBoundary from "../components/ErrorBoundary";
+import LoadingScreen from "../components/LoadingScreen";
+import { queryClient } from "../graphql";
+import i18n, { setupI18n } from "../i18n";
+import { router } from "../router";
 import "./shared.css";
 
 setupI18n();
