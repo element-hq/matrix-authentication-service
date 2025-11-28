@@ -20,7 +20,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
 };
 use mas_data_model::{BoxClock, BoxRng, Clock};
-use mas_policy::{Policy, model::CompatLoginType};
+use mas_policy::{Policy, model::CompatLogin};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
 use mas_templates::{
@@ -121,8 +121,9 @@ pub async fn get(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
-            is_interactive: true,
-            login_type: CompatLoginType::WebSso,
+            login: CompatLogin::Sso {
+                redirect_uri: login.redirect_uri.to_string(),
+            },
             // We don't know if there's going to be a replacement until we received the device ID,
             // which happens too late.
             session_replaced: false,
@@ -252,8 +253,9 @@ pub async fn post(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
-            is_interactive: true,
-            login_type: CompatLoginType::WebSso,
+            login: CompatLogin::Sso {
+                redirect_uri: login.redirect_uri.to_string(),
+            },
             session_counts,
             // We don't know if there's going to be a replacement until we received the device ID,
             // which happens too late.

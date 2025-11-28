@@ -20,12 +20,13 @@
       "description": "Whether a session will be replaced by this login",
       "type": "boolean"
     },
-    "is_interactive": {
-      "description": "Whether the user is currently in an interactive context.\n For `m.login.password`: false\n For `m.login.sso`:\n - true when asking for consent,\n - false when actually performing the login (at which point we create the\n   compat session, but it's too late to show a web page)",
-      "type": "boolean"
-    },
-    "login_type": {
-      "$ref": "#/definitions/CompatLoginType"
+    "login": {
+      "description": "What type of login is being performed.\n This also determines whether the login is interactive.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CompatLogin"
+        }
+      ]
     },
     "requester": {
       "$ref": "#/definitions/Requester"
@@ -35,8 +36,7 @@
     "user",
     "session_counts",
     "session_replaced",
-    "is_interactive",
-    "login_type",
+    "login",
     "requester"
   ],
   "definitions": {
@@ -72,11 +72,51 @@
         "personal"
       ]
     },
-    "CompatLoginType": {
-      "type": "string",
-      "enum": [
-        "m.login.sso",
-        "m.login.password"
+    "CompatLogin": {
+      "oneOf": [
+        {
+          "description": "Used as the interactive part of SSO login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.sso"
+            },
+            "redirect_uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "redirect_uri"
+          ]
+        },
+        {
+          "description": "Used as the final (non-interactive) stage of SSO login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.token"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "Non-interactive password-over-the-API login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.password"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
       ]
     },
     "Requester": {
