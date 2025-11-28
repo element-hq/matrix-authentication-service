@@ -860,6 +860,44 @@ impl PolicyViolationContext {
     }
 }
 
+/// Context used by the `compat_login_policy_violation.html` template
+#[derive(Serialize)]
+pub struct CompatLoginPolicyViolationContext {
+    violation_codes: Vec<&'static str>,
+}
+
+impl TemplateContext for CompatLoginPolicyViolationContext {
+    fn sample<R: Rng>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        sample_list(vec![
+            CompatLoginPolicyViolationContext {
+                violation_codes: vec![],
+            },
+            CompatLoginPolicyViolationContext {
+                violation_codes: vec!["too-many-sessions"],
+            },
+        ])
+    }
+}
+
+impl CompatLoginPolicyViolationContext {
+    /// Constructs a context for the compatibility login policy violation page
+    /// given the list of violations' codes.
+    ///
+    /// TODO maybe this is not very nice, not sure what the API boundary should
+    /// be
+    #[must_use]
+    pub const fn for_violations(violation_codes: Vec<&'static str>) -> Self {
+        Self { violation_codes }
+    }
+}
+
 /// Context used by the `sso.html` template
 #[derive(Serialize)]
 pub struct CompatSsoContext {

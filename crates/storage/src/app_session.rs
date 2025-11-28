@@ -196,12 +196,14 @@ pub trait AppSessionRepository: Send + Sync {
     /// replacing a device).
     ///
     /// Should be called *before* creating a new session for the device.
+    ///
+    /// Returns true if a session was finished.
     async fn finish_sessions_to_replace_device(
         &mut self,
         clock: &dyn Clock,
         user: &User,
         device: &Device,
-    ) -> Result<(), Self::Error>;
+    ) -> Result<bool, Self::Error>;
 }
 
 repository_impl!(AppSessionRepository:
@@ -218,5 +220,5 @@ repository_impl!(AppSessionRepository:
         clock: &dyn Clock,
         user: &User,
         device: &Device,
-    ) -> Result<(), Self::Error>;
+    ) -> Result<bool, Self::Error>;
 );

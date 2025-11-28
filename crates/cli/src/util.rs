@@ -145,6 +145,7 @@ pub async fn policy_factory_from_config(
         register: config.register_entrypoint.clone(),
         client_registration: config.client_registration_entrypoint.clone(),
         authorization_grant: config.authorization_grant_entrypoint.clone(),
+        compat_login: config.compat_login_entrypoint.clone(),
         email: config.email_entrypoint.clone(),
     };
 

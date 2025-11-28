@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CompatLoginInput",
+  "description": "Input for the compatibility login policy.",
+  "type": "object",
+  "properties": {
+    "user": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "session_counts": {
+      "description": "How many sessions the user has.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/SessionCounts"
+        }
+      ]
+    },
+    "session_replaced": {
+      "description": "Whether a session will be replaced by this login",
+      "type": "boolean"
+    },
+    "login": {
+      "description": "What type of login is being performed.\n This also determines whether the login is interactive.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CompatLogin"
+        }
+      ]
+    },
+    "requester": {
+      "$ref": "#/definitions/Requester"
+    }
+  },
+  "required": [
+    "user",
+    "session_counts",
+    "session_replaced",
+    "login",
+    "requester"
+  ],
+  "definitions": {
+    "SessionCounts": {
+      "description": "Information about how many sessions the user has",
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "oauth2": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "compat": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "personal": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "oauth2",
+        "compat",
+        "personal"
+      ]
+    },
+    "CompatLogin": {
+      "oneOf": [
+        {
+          "description": "Used as the interactive part of SSO login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.sso"
+            },
+            "redirect_uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "redirect_uri"
+          ]
+        },
+        {
+          "description": "Used as the final (non-interactive) stage of SSO login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.token"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "description": "Non-interactive password-over-the-API login.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "m.login.password"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "Requester": {
+      "description": "Identity of the requester",
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "description": "IP address of the entity making the request",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "ip"
+        },
+        "user_agent": {
+          "description": "User agent of the entity making the request",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

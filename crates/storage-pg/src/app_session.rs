@@ -487,14 +487,15 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         clock: &dyn Clock,
         user: &User,
         device: &Device,
-    ) -> Result<(), Self::Error> {
+    ) -> Result<bool, Self::Error> {
+        let mut affected = false;
         // TODO need to invoke this from all the oauth2 login sites
         let span = tracing::info_span!(
             "db.app_session.finish_sessions_to_replace_device.compat_sessions",
             { DB_QUERY_TEXT } = tracing::field::Empty,
         );
         let finished_at = clock.now();
-        sqlx::query!(
+        let compat_affected = sqlx::query!(
             "
                 UPDATE compat_sessions SET finished_at = $3 WHERE user_id = $1 AND device_id = $2 AND finished_at IS NULL
             ",
@@ -505,7 +506,9 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         .record(&span)
         .execute(&mut *self.conn)
         .instrument(span)
-        .await?;
+        .await?
+        .rows_affected();
+        affected |= compat_affected > 0;
 
         if let Ok([stable_device_as_scope_token, unstable_device_as_scope_token]) =
             device.to_scope_token()
@@ -514,7 +517,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 "db.app_session.finish_sessions_to_replace_device.oauth2_sessions",
                 { DB_QUERY_TEXT } = tracing::field::Empty,
             );
-            sqlx::query!(
+            let oauth2_affected = sqlx::query!(
                 "
                     UPDATE oauth2_sessions
                     SET finished_at = $4
@@ -530,10 +533,12 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             .record(&span)
             .execute(&mut *self.conn)
             .instrument(span)
-            .await?;
+            .await?
+            .rows_affected();
+            affected |= oauth2_affected > 0;
         }
 
-        Ok(())
+        Ok(affected)
     }
 }
 

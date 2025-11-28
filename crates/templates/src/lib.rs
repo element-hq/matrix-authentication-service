@@ -37,14 +37,15 @@ mod macros;
 
 pub use self::{
     context::{
-        AccountInactiveContext, ApiDocContext, AppContext, CompatSsoContext, ConsentContext,
-        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, DeviceNameContext,
-        EmailRecoveryContext, EmailVerificationContext, EmptyContext, ErrorContext,
-        FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
+        CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
+        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
+        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
+        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
+        PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
+        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
+        RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
@@ -390,6 +391,9 @@ register_templates! {
 
     /// Render the policy violation page
     pub fn render_policy_violation(WithLanguage<WithCsrf<WithSession<PolicyViolationContext>>>) { "pages/policy_violation.html" }
+
+    /// Render the compatibility login policy violation page
+    pub fn render_compat_login_policy_violation(WithLanguage<WithCsrf<WithSession<CompatLoginPolicyViolationContext>>>) { "pages/compat_login_policy_violation.html" }
 
     /// Render the legacy SSO login consent page
     pub fn render_sso_login(WithLanguage<WithCsrf<WithSession<CompatSsoContext>>>) { "pages/sso.html" }

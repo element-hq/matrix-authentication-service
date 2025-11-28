@@ -62,6 +62,14 @@ fn is_default_password_entrypoint(value: &String) -> bool {
     *value == default_password_entrypoint()
 }
 
+fn default_compat_login_entrypoint() -> String {
+    "compat_login/violation".to_owned()
+}
+
+fn is_default_compat_login_entrypoint(value: &String) -> bool {
+    *value == default_compat_login_entrypoint()
+}
+
 fn default_email_entrypoint() -> String {
     "email/violation".to_owned()
 }
@@ -111,6 +119,13 @@ pub struct PolicyConfig {
     )]
     pub authorization_grant_entrypoint: String,
 
+    /// Entrypoint to use when evaluating compatibility logins
+    #[serde(
+        default = "default_compat_login_entrypoint",
+        skip_serializing_if = "is_default_compat_login_entrypoint"
+    )]
+    pub compat_login_entrypoint: String,
+
     /// Entrypoint to use when changing password
     #[serde(
         default = "default_password_entrypoint",
@@ -137,6 +152,7 @@ impl Default for PolicyConfig {
             client_registration_entrypoint: default_client_registration_entrypoint(),
             register_entrypoint: default_register_entrypoint(),
             authorization_grant_entrypoint: default_authorization_grant_entrypoint(),
+            compat_login_entrypoint: default_compat_login_entrypoint(),
             password_entrypoint: default_password_entrypoint(),
             email_entrypoint: default_email_entrypoint(),
             data: default_data(),

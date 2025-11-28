@@ -1883,6 +1883,10 @@
           "description": "Entrypoint to use when evaluating authorization grants",
           "type": "string"
         },
+        "compat_login_entrypoint": {
+          "description": "Entrypoint to use when evaluating compatibility logins",
+          "type": "string"
+        },
         "password_entrypoint": {
           "description": "Entrypoint to use when changing password",
           "type": "string"
