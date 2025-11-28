@@ -120,14 +120,14 @@ impl ConfigurationSection for UpstreamOAuth2Config {
 
             if matches!(
                 provider.claims_imports.localpart.on_conflict,
-                OnConflict::Add
+                OnConflict::Add | OnConflict::Replace | OnConflict::Set
             ) && !matches!(
                 provider.claims_imports.localpart.action,
                 ImportAction::Force | ImportAction::Require
             ) {
                 return Err(annotate(figment::Error::custom(
-                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
-                )).into());
+                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`, `replace` or `set`",
+                )).with_path("claims_imports.localpart").into());
             }
         }
 
