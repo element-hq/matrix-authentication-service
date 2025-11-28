@@ -67,7 +67,6 @@ mas-tower = { path = "./crates/tower/", version = "=1.7.0" }
 oauth2-types = { path = "./crates/oauth2-types/", version = "=1.7.0" }
 syn2mas = { path = "./crates/syn2mas", version = "=1.7.0" }
 
-
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
 version = "0.15.1"
