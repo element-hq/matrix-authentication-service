@@ -6,13 +6,12 @@
 import type { KnipConfig } from "knip";
 
 export default {
-  entry: ["src/entrypoints/*", "src/routes/*"],
+  entry: ["src/entrypoints/**", "src/routes/*"],
   ignore: [
     "src/gql/*",
     "src/routeTree.gen.ts",
     ".storybook/locales.ts",
-    "src/external/**",
-    
+
     "tchap/**", //:tchap: add tchap folder
     "i18next.config.ts",
   ],
