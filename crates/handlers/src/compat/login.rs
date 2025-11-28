@@ -16,7 +16,7 @@ use mas_data_model::{
     User,
 };
 use mas_matrix::HomeserverConnection;
-use mas_policy::{Policy, Requester, ViolationCode, model::CompatLoginType};
+use mas_policy::{Policy, Requester, ViolationCode, model::CompatLogin};
 use mas_storage::{
     BoxRepository, BoxRepositoryFactory, RepositoryAccess,
     compat::{
@@ -586,8 +586,7 @@ async fn token_login(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &browser_session.user,
-            is_interactive: false,
-            login_type: CompatLoginType::WebSso,
+            login: CompatLogin::Token,
             session_replaced,
             session_counts,
             requester,
@@ -715,8 +714,7 @@ async fn user_password_login(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &user,
-            is_interactive: false,
-            login_type: CompatLoginType::Password,
+            login: CompatLogin::Password,
             session_replaced,
             session_counts,
             requester: policy_requester,

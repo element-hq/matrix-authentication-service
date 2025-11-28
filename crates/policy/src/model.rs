@@ -200,25 +200,25 @@ pub struct CompatLoginInput<'a> {
     /// Whether a session will be replaced by this login
     pub session_replaced: bool,
 
-    /// Whether the user is currently in an interactive context.
-    /// For `m.login.password`: false
-    /// For `m.login.sso`:
-    /// - true when asking for consent,
-    /// - false when actually performing the login (at which point we create the
-    ///   compat session, but it's too late to show a web page)
-    pub is_interactive: bool,
-
-    // TODO I don't know if we should keep this anymore, not used by current policy
-    pub login_type: CompatLoginType,
+    /// What type of login is being performed.
+    /// This also determines whether the login is interactive.
+    pub login: CompatLogin,
 
     pub requester: Requester,
 }
 
 #[derive(Serialize, Debug, JsonSchema)]
-pub enum CompatLoginType {
+#[serde(tag = "type")]
+pub enum CompatLogin {
+    /// Used as the interactive part of SSO login.
     #[serde(rename = "m.login.sso")]
-    WebSso,
+    Sso { redirect_uri: String },
 
+    /// Used as the final (non-interactive) stage of SSO login.
+    #[serde(rename = "m.login.token")]
+    Token,
+
+    /// Non-interactive password-over-the-API login.
     #[serde(rename = "m.login.password")]
     Password,
 }

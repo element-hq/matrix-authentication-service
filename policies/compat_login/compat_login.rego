@@ -14,6 +14,12 @@ import data.common
 
 default allow := false
 
+is_interactive if {
+	# Only `m.login.sso` (the interactive web form) is interactive;
+	# `m.login.password` and `m.login.token` (including the finalisation of an SSO login) are not
+	input.login.type == "m.login.sso"
+}
+
 allow if {
 	count(violation) == 0
 }
@@ -33,7 +39,7 @@ violation contains {
 	data.session_limit != null
 
 	# This is a web-based interactive login
-	input.is_interactive
+	is_interactive
 
 	# Only apply if this login doesn't replace a session
 	# (As then this login is not actually increasing the number of devices)
@@ -54,7 +60,7 @@ violation contains {
 	data.session_limit != null
 
 	# This is not a web-based interactive login
-	not input.is_interactive
+	not is_interactive
 
 	# Only apply if this login doesn't replace a session
 	# (As then this login is not actually increasing the number of devices)
