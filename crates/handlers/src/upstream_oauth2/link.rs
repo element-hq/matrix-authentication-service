@@ -25,8 +25,10 @@ use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxRepository, RepositoryAccess,
-    upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository},
+    BoxRepository, Pagination, RepositoryAccess,
+    upstream_oauth2::{
+        UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository, UpstreamOAuthSessionRepository,
+    },
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
 };
 use mas_templates::{
@@ -579,6 +581,92 @@ pub(crate) async fn get(
                                 upstream_oauth_link.subject = link.subject,
                                 "Upstream account mapped localpart {localpart:?} matched an existing user, linking"
                             );
+
+                            // Add link to the user
+                            repo.upstream_oauth_link()
+                                .associate_to_user(&link, &existing_user)
+                                .await?;
+                        }
+
+                        // We matched anexisting user and the conflict resolution is to replace any
+                        // link on the existing user with this one
+                        UpstreamOAuthProviderOnConflict::Replace => {
+                            // Find existing links for this provider and user
+                            let filter = UpstreamOAuthLinkFilter::new()
+                                .for_provider(&provider)
+                                .for_user(&existing_user);
+                            let mut cursor = Pagination::first(100);
+                            let mut removed = 0;
+                            loop {
+                                let page = repo.upstream_oauth_link().list(filter, cursor).await?;
+                                for edge in page.edges {
+                                    // Remove any existing links for this provider and user
+                                    repo.upstream_oauth_link().remove(&clock, edge.node).await?;
+                                    cursor = cursor.after(edge.cursor);
+                                    removed += 1;
+                                }
+
+                                if !page.has_next_page {
+                                    break;
+                                }
+                            }
+
+                            if removed > 0 {
+                                tracing::warn!(
+                                    user.id = %existing_user.id,
+                                    upstream_oauth_provider.id = %provider.id,
+                                    upstream_oauth_link.id = %link.id,
+                                    upstream_oauth_link.subject = link.subject,
+                                    "Upstream account mapped localpart {localpart:?} matched an existing user, replaced {removed} links"
+                                );
+                            } else {
+                                tracing::info!(
+                                    user.id = %existing_user.id,
+                                    upstream_oauth_provider.id = %provider.id,
+                                    upstream_oauth_link.id = %link.id,
+                                    upstream_oauth_link.subject = link.subject,
+                                    "Upstream account mapped localpart {localpart:?} matched an existing user, linking"
+                                );
+                            }
+
+                            // Add link to the user
+                            repo.upstream_oauth_link()
+                                .associate_to_user(&link, &existing_user)
+                                .await?;
+                        }
+
+                        // We matched an existing user and the conflict resolution is link to the
+                        // existing user *only if* there is no existing link on that user
+                        UpstreamOAuthProviderOnConflict::Set => {
+                            // Find existing links for this provider and user
+                            let filter = UpstreamOAuthLinkFilter::new()
+                                .for_provider(&provider)
+                                .for_user(&existing_user);
+
+                            let count = repo.upstream_oauth_link().count(filter).await?;
+                            if count > 0 {
+                                tracing::warn!(
+                                    upstream_oauth_provider.id = %provider.id,
+                                    upstream_oauth_link.id = %link.id,
+                                    user.id = %existing_user.id,
+                                    "Upstream provider returned a localpart {localpart:?} which is already used by another user. That user already has a ({count}) link to this provider, which isn't allowed by the conflict resolution"
+                                );
+
+                                // TODO: translate
+                                let ctx = ErrorContext::new()
+                                    .with_code("User exists")
+                                    .with_description(format!(
+                                        r"Upstream account provider returned {localpart:?} as username,
+                                        which is not linked to another existing upstream account.
+                                        Your homeserver does not allow replacing upstream account links automatically."
+                                    ))
+                                    .with_language(&locale);
+
+                                return Ok((
+                                    cookie_jar,
+                                    Html(templates.render_error(&ctx)?).into_response(),
+                                ));
+                            }
 
                             // Add link to the user
                             repo.upstream_oauth_link()

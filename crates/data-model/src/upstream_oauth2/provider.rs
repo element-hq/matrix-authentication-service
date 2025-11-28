@@ -415,11 +415,18 @@ impl ImportAction {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum OnConflict {
-    /// Fails the upstream OAuth 2.0 login
+    /// Fails the upstream OAuth 2.0 login on conflict
     #[default]
     Fail,
 
-    /// Adds the upstream account link, regardless of whether there is an
-    /// existing link or not
+    /// Adds the upstream OAuth 2.0 identity link, regardless of whether there
+    /// is an existing link or not
     Add,
+
+    /// Replace any existing upstream OAuth 2.0 identity link
+    Replace,
+
+    /// Adds the upstream OAuth 2.0 identity link *only* if there is no existing
+    /// link for this provider on the matching user
+    Set,
 }
