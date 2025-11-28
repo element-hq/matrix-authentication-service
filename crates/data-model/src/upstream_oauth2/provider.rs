@@ -313,6 +313,9 @@ pub struct ClaimsImports {
     pub subject: SubjectPreference,
 
     #[serde(default)]
+    pub skip_confirmation: bool,
+
+    #[serde(default)]
     pub localpart: LocalpartPreference,
 
     #[serde(default)]

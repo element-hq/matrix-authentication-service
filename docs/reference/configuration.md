@@ -771,6 +771,14 @@ upstream_oauth2:
         subject:
           #template: "{{ user.sub }}"
 
+        # By default, new users will see a screen confirming the attributes they
+        # are about to have on their account.
+        #
+        # Setting this to `true` allows skipping this screen, but requires the
+        # `localpart.action` to be set to `require` and the other attributes
+        # actions to be set to `ignore`, `force` or `require`.
+        #skip_confirmation: false
+
         # The localpart is the local part of the user's Matrix ID.
         # For example, on the `example.com` server, if the localpart is `alice`,
         #  the user's Matrix ID will be `@alice:example.com`.

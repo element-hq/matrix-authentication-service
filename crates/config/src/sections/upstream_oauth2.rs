@@ -118,6 +118,26 @@ impl ConfigurationSection for UpstreamOAuth2Config {
                 }
             }
 
+            if provider.claims_imports.skip_confirmation {
+                if provider.claims_imports.localpart.action != ImportAction::Require {
+                    return Err(annotate(figment::Error::custom(
+                        "The field `action` must be `require` when `skip_confirmation` is set to `true`",
+                    )).with_path("claims_imports.localpart").into());
+                }
+
+                if provider.claims_imports.email.action == ImportAction::Suggest {
+                    return Err(annotate(figment::Error::custom(
+                        "The field `action` must not be `suggest` when `skip_confirmation` is set to `true`",
+                    )).with_path("claims_imports.email").into());
+                }
+
+                if provider.claims_imports.displayname.action == ImportAction::Suggest {
+                    return Err(annotate(figment::Error::custom(
+                        "The field `action` must not be `suggest` when `skip_confirmation` is set to `true`",
+                    )).with_path("claims_imports.displayname").into());
+                }
+            }
+
             if matches!(
                 provider.claims_imports.localpart.on_conflict,
                 OnConflict::Add | OnConflict::Replace | OnConflict::Set
@@ -333,6 +353,13 @@ pub struct ClaimsImports {
     #[serde(default, skip_serializing_if = "SubjectImportPreference::is_default")]
     pub subject: SubjectImportPreference,
 
+    /// Whether to skip the interactive screen prompting the user to confirm the
+    /// attributes that are being imported. This requires `localpart.action` to
+    /// be `require` and other attribute actions to be either `ignore`, `force`
+    /// or `require`
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub skip_confirmation: bool,
+
     /// Import the localpart of the MXID
     #[serde(default, skip_serializing_if = "LocalpartImportPreference::is_default")]
     pub localpart: LocalpartImportPreference,
@@ -344,8 +371,7 @@ pub struct ClaimsImports {
     )]
     pub displayname: DisplaynameImportPreference,
 
-    /// Import the email address of the user based on the `email` and
-    /// `email_verified` claims
+    /// Import the email address of the user
     #[serde(default, skip_serializing_if = "EmailImportPreference::is_default")]
     pub email: EmailImportPreference,
 
@@ -361,8 +387,10 @@ impl ClaimsImports {
     const fn is_default(&self) -> bool {
         self.subject.is_default()
             && self.localpart.is_default()
+            && !self.skip_confirmation
             && self.displayname.is_default()
             && self.email.is_default()
+            && self.account_name.is_default()
     }
 }
 
