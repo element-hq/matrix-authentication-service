@@ -45,6 +45,12 @@ fn map_import_on_conflict(
         mas_config::UpstreamOAuth2OnConflict::Add => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Add
         }
+        mas_config::UpstreamOAuth2OnConflict::Replace => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Replace
+        }
+        mas_config::UpstreamOAuth2OnConflict::Set => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Set
+        }
         mas_config::UpstreamOAuth2OnConflict::Fail => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Fail
         }

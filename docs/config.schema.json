@@ -2576,14 +2576,24 @@
       "description": "How to handle an existing localpart claim",
       "oneOf": [
         {
-          "description": "Fails the sso login on conflict",
+          "description": "Fails the upstream OAuth 2.0 login on conflict",
           "type": "string",
           "const": "fail"
         },
         {
-          "description": "Adds the oauth identity link, regardless of whether there is an existing\n link or not",
+          "description": "Adds the upstream OAuth 2.0 identity link, regardless of whether there\n is an existing link or not",
           "type": "string",
           "const": "add"
+        },
+        {
+          "description": "Replace any existing upstream OAuth 2.0 identity link",
+          "type": "string",
+          "const": "replace"
+        },
+        {
+          "description": "Adds the upstream OAuth 2.0 identity link *only* if there is no existing\n link for this provider on the matching user",
+          "type": "string",
+          "const": "set"
         }
       ]
     },

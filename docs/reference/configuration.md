@@ -788,8 +788,10 @@ upstream_oauth2:
 
           # How to handle when localpart already exists.
           # Possible values are (default: fail):
-          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
           # - `fail` : Fails the upstream OAuth 2.0 login.
+          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
+          # - `replace` : Replace any existing upstream OAuth 2.0 identity link for this provider on the matching user.
+          # - `set` : Adds the upstream account link *only* if there is no existing link for this provider on the matching user.
           #on_conflict: fail
 
         # The display name is the user's display name.
