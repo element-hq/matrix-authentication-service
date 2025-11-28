@@ -1456,7 +1456,7 @@ impl TemplateContext for RecoveryFinishContext {
     }
 }
 
-/// Context used by the `pages/upstream_oauth2/{link_mismatch,login_link}.html`
+/// Context used by the `pages/upstream_oauth2/link_mismatch.html`
 /// templates
 #[derive(Serialize)]
 pub struct UpstreamExistingLinkContext {
