@@ -31,6 +31,7 @@
     "loading": "Ladataan…",
     "next": "Seuraava",
     "password": "Salasana",
+    "password_confirm": "Vahvista salasana",
     "previous": "Edellinen",
     "saved": "Tallennettu",
     "saving": "Tallennetaan…"
