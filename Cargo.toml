@@ -177,7 +177,7 @@ features = ["std"]
 
 # Utility for converting between different cases
 [workspace.dependencies.convert_case]
-version = "0.8.0"
+version = "0.9.0"
 
 # CRC calculation
 [workspace.dependencies.crc]
