@@ -37,7 +37,9 @@ RUN --network=default \
 COPY ./frontend/ /app/frontend/
 COPY ./templates/ /app/templates/
 RUN --network=none \
+  
   #:tchap:
+  #npm run build
   npm run build-tchap
   #:tchap:
 
