@@ -456,7 +456,7 @@ pub(crate) async fn get(
             }
 
             // We do a bunch of checks for the localpart. Instead of using nested ifs all
-            // the way, we use a labelled block, and use `break` for 'exitting' early when
+            // the way, we use a labelled block, and use `break` for 'exiting' early when
             // needed
             let localpart = 'localpart: {
                 if provider.claims_imports.localpart.ignore() {
@@ -942,7 +942,7 @@ pub(crate) async fn post(
             if let Some(ref display_name) = display_name {
                 ctx = ctx.with_display_name(
                     display_name.clone(),
-                    provider.claims_imports.email.is_forced_or_required(),
+                    provider.claims_imports.displayname.is_forced_or_required(),
                 );
             }
 

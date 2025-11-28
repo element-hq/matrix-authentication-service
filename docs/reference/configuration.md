@@ -796,15 +796,6 @@ upstream_oauth2:
           #action: suggest
           #template: "{{ user.email }}"
 
-          # Whether the email address must be marked as verified.
-          # Possible values are:
-          #  - `import`: mark the email address as verified if the upstream provider
-          #     has marked it as verified, using the `email_verified` claim.
-          #     This is the default.
-          #   - `always`: mark the email address as verified
-          #   - `never`: mark the email address as not verified
-          #set_email_verification: import
-
         # An account name, for display purposes only
         # This helps end user identify what account they are using
         account_name:
