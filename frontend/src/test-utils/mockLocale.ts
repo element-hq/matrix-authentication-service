@@ -14,18 +14,25 @@ import { vi } from "vitest";
 export const mockLocale = (defaultLocale = "en-GB"): void => {
   const OriginalDateTimeFormat = Intl.DateTimeFormat;
 
-  // Vitest 4.x requires function/class implementations for spyOn mocks
+  // Vitest 4.x requires function/class implementations for spyOn mocks.
+  // This function acts as a constructor wrapper that applies the default locale
+  // when no locale is specified. Returning the instance from the constructor
+  // is valid JavaScript - when a constructor returns an object, that object
+  // is used instead of the newly created `this`.
   function MockDateTimeFormat(
-    this: Intl.DateTimeFormat,
     locales?: Intl.LocalesArgument,
     options?: Intl.DateTimeFormatOptions,
   ): Intl.DateTimeFormat {
     return new OriginalDateTimeFormat(locales || defaultLocale, options);
   }
 
-  // Copy static methods and prototype from original
+  // Inherit static methods from the original DateTimeFormat
   Object.setPrototypeOf(MockDateTimeFormat, OriginalDateTimeFormat);
-  MockDateTimeFormat.prototype = OriginalDateTimeFormat.prototype;
+  // Set up prototype chain so instanceof checks work correctly
+  Object.setPrototypeOf(
+    MockDateTimeFormat.prototype,
+    OriginalDateTimeFormat.prototype,
+  );
 
   vi.spyOn(Intl, "DateTimeFormat").mockImplementation(
     MockDateTimeFormat as typeof Intl.DateTimeFormat,
