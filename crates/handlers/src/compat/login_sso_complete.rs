@@ -135,15 +135,10 @@ pub async fn get(
         })
         .await?;
     if !res.valid() {
-        let ctx = CompatLoginPolicyViolationContext::for_violations(
-            res.violations
-                .into_iter()
-                .filter_map(|v| Some(v.code?.as_str()))
-                .collect(),
-        )
-        .with_session(session)
-        .with_csrf(csrf_token.form_value())
-        .with_language(locale);
+        let ctx = CompatLoginPolicyViolationContext::for_violations(res.violations)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
 
         let content = templates.render_compat_login_policy_violation(&ctx)?;
 
@@ -269,15 +264,10 @@ pub async fn post(
 
     if !res.valid() {
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = CompatLoginPolicyViolationContext::for_violations(
-            res.violations
-                .into_iter()
-                .filter_map(|v| Some(v.code?.as_str()))
-                .collect(),
-        )
-        .with_session(session)
-        .with_csrf(csrf_token.form_value())
-        .with_language(locale);
+        let ctx = CompatLoginPolicyViolationContext::for_violations(res.violations)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
 
         let content = templates.render_compat_login_policy_violation(&ctx)?;
 

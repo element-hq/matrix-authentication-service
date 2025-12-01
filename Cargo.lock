@@ -3723,6 +3723,7 @@ dependencies = [
  "mas-data-model",
  "mas-i18n",
  "mas-iana",
+ "mas-policy",
  "mas-router",
  "mas-spa",
  "minijinja",

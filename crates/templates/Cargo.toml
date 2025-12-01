@@ -41,6 +41,7 @@ oauth2-types.workspace = true
 mas-data-model.workspace = true
 mas-i18n.workspace = true
 mas-iana.workspace = true
+mas-policy.workspace = true
 mas-router.workspace = true
 mas-spa.workspace = true
 

@@ -28,6 +28,7 @@ use mas_data_model::{
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
+use mas_policy::{Violation, ViolationCode};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
@@ -863,7 +864,7 @@ impl PolicyViolationContext {
 /// Context used by the `compat_login_policy_violation.html` template
 #[derive(Serialize)]
 pub struct CompatLoginPolicyViolationContext {
-    violation_codes: Vec<&'static str>,
+    violations: Vec<Violation>,
 }
 
 impl TemplateContext for CompatLoginPolicyViolationContext {
@@ -876,11 +877,14 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
         Self: Sized,
     {
         sample_list(vec![
+            CompatLoginPolicyViolationContext { violations: vec![] },
             CompatLoginPolicyViolationContext {
-                violation_codes: vec![],
-            },
-            CompatLoginPolicyViolationContext {
-                violation_codes: vec!["too-many-sessions"],
+                violations: vec![Violation {
+                    msg: "user has too many active sessions".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    code: Some(ViolationCode::TooManySessions),
+                }],
             },
         ])
     }
@@ -888,13 +892,10 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
 
 impl CompatLoginPolicyViolationContext {
     /// Constructs a context for the compatibility login policy violation page
-    /// given the list of violations' codes.
-    ///
-    /// TODO maybe this is not very nice, not sure what the API boundary should
-    /// be
+    /// given the list of violations
     #[must_use]
-    pub const fn for_violations(violation_codes: Vec<&'static str>) -> Self {
-        Self { violation_codes }
+    pub const fn for_violations(violations: Vec<Violation>) -> Self {
+        Self { violations }
     }
 }
 
