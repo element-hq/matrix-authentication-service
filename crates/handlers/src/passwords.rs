@@ -304,7 +304,7 @@ impl Hasher {
         if self.unicode_normalization {
             // This is the normalization method used by Synapse
             let normalizer = icu_normalizer::ComposingNormalizer::new_nfkc();
-            Zeroizing::new(normalizer.normalize(&password))
+            Zeroizing::new(normalizer.normalize(&password).to_string())
         } else {
             password
         }

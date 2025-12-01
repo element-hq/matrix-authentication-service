@@ -10,8 +10,8 @@ mod translator;
 
 pub use icu_calendar;
 pub use icu_datetime;
-pub use icu_locid::locale;
-pub use icu_provider::{DataError, DataLocale};
+pub use icu_locale_core::locale;
+pub use icu_provider::{DataError, prelude::DataLocale};
 
 pub use self::{
     sprintf::{Argument, ArgumentList, Message},

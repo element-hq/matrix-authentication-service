@@ -355,6 +355,8 @@ impl Object for TranslateFunc {
             }
 
             "short_time" => {
+                use chrono::Timelike;
+
                 let (date,): (String,) = from_args(args)?;
                 let date: chrono::DateTime<chrono::Utc> = date.parse().map_err(|e| {
                     Error::new(
@@ -367,9 +369,21 @@ impl Object for TranslateFunc {
                 // TODO: we should use the user's timezone here
                 let time = date.time();
 
+                // Convert chrono time to icu_datetime Time
+                // Use try_new which validates the values
+                let icu_time = mas_i18n::icu_datetime::input::Time::try_new(
+                    time.hour() as u8,
+                    time.minute() as u8,
+                    time.second() as u8,
+                    time.nanosecond(),
+                )
+                .map_err(|_e| {
+                    Error::new(ErrorKind::InvalidOperation, "Failed to create time")
+                })?;
+
                 Ok(Value::from(
                     self.translator
-                        .short_time(&self.lang, &TimeAdapter(time))
+                        .short_time(&self.lang, &icu_time)
                         .map_err(|_e| {
                             Error::new(ErrorKind::InvalidOperation, "Failed to format time")
                         })?,
@@ -381,34 +395,6 @@ impl Object for TranslateFunc {
                 "Invalid method on include_asset",
             )),
         }
-    }
-}
-
-/// An adapter to make a [`Timelike`] implement [`IsoTimeInput`]
-///
-/// [`Timelike`]: chrono::Timelike
-/// [`IsoTimeInput`]: mas_i18n::icu_datetime::input::IsoTimeInput
-struct TimeAdapter<T>(T);
-
-impl<T: chrono::Timelike> mas_i18n::icu_datetime::input::IsoTimeInput for TimeAdapter<T> {
-    fn hour(&self) -> Option<mas_i18n::icu_calendar::types::IsoHour> {
-        let hour: usize = chrono::Timelike::hour(&self.0).try_into().ok()?;
-        hour.try_into().ok()
-    }
-
-    fn minute(&self) -> Option<mas_i18n::icu_calendar::types::IsoMinute> {
-        let minute: usize = chrono::Timelike::minute(&self.0).try_into().ok()?;
-        minute.try_into().ok()
-    }
-
-    fn second(&self) -> Option<mas_i18n::icu_calendar::types::IsoSecond> {
-        let second: usize = chrono::Timelike::second(&self.0).try_into().ok()?;
-        second.try_into().ok()
-    }
-
-    fn nanosecond(&self) -> Option<mas_i18n::icu_calendar::types::NanoSecond> {
-        let nanosecond: usize = chrono::Timelike::nanosecond(&self.0).try_into().ok()?;
-        nanosecond.try_into().ok()
     }
 }
 
