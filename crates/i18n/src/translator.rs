@@ -19,6 +19,17 @@ use writeable::Writeable;
 
 use crate::{sprintf::Message, translations::TranslationTree};
 
+/// Convert a DataLocale to a Locale for use with ICU4X formatters.
+///
+/// Since there's no direct conversion from DataLocale to Locale, we use string
+/// parsing. Falls back to the "und" (undetermined) locale on parse errors.
+fn data_locale_to_locale(locale: &DataLocale) -> Locale {
+    locale
+        .to_string()
+        .parse()
+        .unwrap_or_else(|_| icu_locale_core::locale!("und"))
+}
+
 /// Error type for loading translations
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -251,13 +262,7 @@ impl Translator {
         key: &str,
         count: usize,
     ) -> Result<&Message, DataError> {
-        // Convert DataLocale to Locale for PluralRules
-        // Use the string representation since there's no direct conversion
-        let locale_str = locale.to_string();
-        let locale_for_plurals: Locale = locale_str
-            .parse()
-            .unwrap_or_else(|_| icu_locale_core::locale!("und"));
-        let plurals = PluralRules::try_new_cardinal(locale_for_plurals.into())?;
+        let plurals = PluralRules::try_new_cardinal(data_locale_to_locale(locale).into())?;
         let category = plurals.category_for(count);
 
         let tree = self
@@ -285,13 +290,8 @@ impl Translator {
     /// Returns an error if the requested locale is not found.
     pub fn relative_date(&self, locale: &DataLocale, days: i64) -> Result<String, DataError> {
         // TODO: this is not using the fallbacker
-        // Convert DataLocale to Locale for RelativeTimeFormatter
-        let locale_str = locale.to_string();
-        let locale_for_formatter: Locale = locale_str
-            .parse()
-            .unwrap_or_else(|_| icu_locale_core::locale!("und"));
         let formatter = RelativeTimeFormatter::try_new_long_day(
-            locale_for_formatter.into(),
+            data_locale_to_locale(locale).into(),
             RelativeTimeFormatterOptions {
                 numeric: Numeric::Auto,
             },
@@ -317,13 +317,8 @@ impl Translator {
         time: &icu_datetime::input::Time,
     ) -> Result<String, icu_datetime::DateTimeFormatterLoadError> {
         // TODO: this is not using the fallbacker
-        // Convert DataLocale to Locale for NoCalendarFormatter
-        let locale_str = locale.to_string();
-        let locale_for_formatter: Locale = locale_str
-            .parse()
-            .unwrap_or_else(|_| icu_locale_core::locale!("und"));
         let formatter = icu_datetime::NoCalendarFormatter::try_new(
-            locale_for_formatter.into(),
+            data_locale_to_locale(locale).into(),
             icu_datetime::fieldsets::T::short(),
         )?;
 

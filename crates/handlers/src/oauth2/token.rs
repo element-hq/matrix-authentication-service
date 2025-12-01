@@ -490,12 +490,11 @@ async fn authorization_code_grant(
         .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
 
     // Generate a device name
-    let lang: DataLocale = authz_grant
-        .locale
-        .as_deref()
-        .unwrap_or("en")
-        .parse()
-        .unwrap_or_else(|_| DataLocale::default());
+    let locale_str = authz_grant.locale.as_deref().unwrap_or("en");
+    let lang: DataLocale = locale_str.parse().unwrap_or_else(|e| {
+        tracing::debug!(locale = locale_str, error = ?e, "Failed to parse locale, using default");
+        DataLocale::default()
+    });
     let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
     let device_name = templates.render_device_name(&ctx)?;
 
