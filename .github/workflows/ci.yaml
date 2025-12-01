@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: ./.github/actions/build-policies
 
@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
@@ -85,7 +85,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
@@ -109,7 +109,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
@@ -133,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -156,7 +156,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Run `cargo-deny`
         uses: EmbarkStudios/cargo-deny-action@v2.0.14
@@ -172,7 +172,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         run: |
@@ -213,7 +213,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.89.0
@@ -238,7 +238,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -291,7 +291,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
