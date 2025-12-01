@@ -59,7 +59,7 @@
     "@types/react-dom": "19.2.3",
     "@types/swagger-ui-dist": "^3.30.6",
     "@vitejs/plugin-react": "^5.1.1",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.0.14",
     "autoprefixer": "^10.4.21",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.11.0",
@@ -80,7 +80,7 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-graphql-codegen": "^3.7.0",
     "vite-plugin-manifest-sri": "^0.2.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.14"
   },
   "msw": {
     "workerDirectory": [
