@@ -593,6 +593,11 @@ async fn token_login(
         })
         .await?;
     if !res.valid() {
+        // If the only violation is that we have too many sessions, then handle that
+        // separately.
+        // In the future, we intend to evict some sessions automatically instead. We
+        // don't trigger this if there was some other violation anyway, since that means
+        // that removing a session wouldn't actually unblock the login.
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
             if violation.code == Some(ViolationCode::TooManySessions) {
@@ -721,6 +726,11 @@ async fn user_password_login(
         })
         .await?;
     if !res.valid() {
+        // If the only violation is that we have too many sessions, then handle that
+        // separately.
+        // In the future, we intend to evict some sessions automatically instead. We
+        // don't trigger this if there was some other violation anyway, since that means
+        // that removing a session wouldn't actually unblock the login.
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
             if violation.code == Some(ViolationCode::TooManySessions) {
