@@ -14,12 +14,6 @@ import data.common
 
 default allow := false
 
-is_interactive if {
-	# Only `m.login.sso` (the interactive web form) is interactive;
-	# `m.login.password` and `m.login.token` (including the finalisation of an SSO login) are not
-	input.login.type == "m.login.sso"
-}
-
 allow if {
 	count(violation) == 0
 }
@@ -71,4 +65,10 @@ violation contains {
 	# We don't use the soft limit because the user won't be able to interactively remove
 	# sessions to return under the limit.
 	data.session_limit.hard_limit <= input.session_counts.total
+}
+
+is_interactive if {
+	# Only `m.login.sso` (the interactive web form) is interactive;
+	# `m.login.password` and `m.login.token` (including the finalisation of an SSO login) are not
+	input.login.type == "m.login.sso"
 }
