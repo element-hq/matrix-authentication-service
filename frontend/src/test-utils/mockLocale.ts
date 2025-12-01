@@ -12,11 +12,22 @@ import { vi } from "vitest";
  * Defaults to `en-GB`
  */
 export const mockLocale = (defaultLocale = "en-GB"): void => {
-  const { DateTimeFormat } = Intl;
+  const OriginalDateTimeFormat = Intl.DateTimeFormat;
+
+  // Vitest 4.x requires function/class implementations for spyOn mocks
+  function MockDateTimeFormat(
+    this: Intl.DateTimeFormat,
+    locales?: Intl.LocalesArgument,
+    options?: Intl.DateTimeFormatOptions,
+  ): Intl.DateTimeFormat {
+    return new OriginalDateTimeFormat(locales || defaultLocale, options);
+  }
+
+  // Copy static methods and prototype from original
+  Object.setPrototypeOf(MockDateTimeFormat, OriginalDateTimeFormat);
+  MockDateTimeFormat.prototype = OriginalDateTimeFormat.prototype;
+
   vi.spyOn(Intl, "DateTimeFormat").mockImplementation(
-    (
-      locales?: Intl.LocalesArgument,
-      options?: Intl.DateTimeFormatOptions | undefined,
-    ) => new DateTimeFormat(locales || defaultLocale, options),
+    MockDateTimeFormat as typeof Intl.DateTimeFormat,
   );
 };
