@@ -25,9 +25,15 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
 
       <div class="header">
-        <h1 class="title">{{ _("mas.consent.heading") }}</h1>
+        <h1 class="title">
+          {{ _('mas.consent.continue_to', client_name=client_name) }}
+        </h1>
 
-        <div class="session-card my-4">
+        <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
+          {{ _("mas.device_consent.this_will_setup", client_name=client_name, client_uri=(client.client_uri | simplify_url), server_name=branding.server_name) }}
+        </p>
+
+        <div class="session-card mt-4">
           <div class="card-header" {%- if user_agent %} title="{{ user_agent.raw }}"{% endif %}>
             <div class="device-type-icon">
               {% if user_agent.device_type == "mobile" %}
@@ -88,33 +94,36 @@ Please see LICENSE files in the repository root for full details.
             </div>
           </div>
         </div>
-
-        <p class="text [&>span]:whitespace-nowrap">
-          {{ _("mas.device_consent.another_device_access") }}
-          {{ _("mas.consent.this_will_allow", client_name=client_name) }}
-        </p>
       </div>
     </header>
 
-    <section class="consent-scope-list">
-      {{ scope.list(scopes=grant.scope) }}
-    </section>
-
-    <section class="text-center text-balance cpd-text-secondary cpd-text-body-md-regular [&>span]:whitespace-nowrap">
-      <strong class="font-semibold cpd-text-primary [&>span]:whitespace-nowrap">{{ _("mas.consent.make_sure_you_trust", client_name=client_name) }}</strong>
-      {{ _("mas.consent.you_may_be_sharing") }}
-      {% if client.policy_uri or client.tos_uri %}
-        Find out how <span>{{ client_name }}</span> will handle your data by reviewing its
-        {% if client.policy_uri %}
-          <a target="_blank" href="{{ client.policy_uri }}" class="cpd-link" data-kind="primary">privacy policy</a>{% if not client.tos_uri %}.{% endif %}
-        {% endif %}
-        {% if client.policy_uri and client.tos_uri%}
-          and
-        {% endif %}
-        {% if client.tos_uri %}
-          <a target="_blank" href="{{ client.tos_uri }}" class="cpd-link" data-kind="primary">terms of service</a>.
-        {% endif %}
+    {% call(scopes) scope.unsafe_scopes(scopes=grant.scope.split(" ")) %}
+      {% if scopes is not empty %}
+        <section class="flex flex-col gap-3">
+          <p class="text-center cpd-text-body-md-regular">
+            {{ _('mas.consent.scope_list_preface', client_name=client_name) }}
+          </p>
+          <div class="consent-scope-list">
+            {{ scope.list(scopes=scopes) }}
+          </div>
+        </section>
       {% endif %}
+    {% endcall %}
+
+    {% set initial -%}
+      {%- if matrix_user.display_name -%}
+        {{- matrix_user.display_name[0] | upper -}}
+      {%- else -%}
+        {{- matrix_user.mxid[1] | upper -}}
+      {%- endif -%}
+    {%- endset %}
+
+    <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
+      <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+      <div class="flex flex-col">
+        <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
+        <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
+      </div>
     </section>
 
     <section class="flex flex-col gap-6">
@@ -123,18 +132,20 @@ Please see LICENSE files in the repository root for full details.
         <button type="submit" name="action" value="consent" class="cpd-button" data-kind="primary" data-size="lg">
           {{ _("action.continue") }}
         </button>
-        <button type="submit" name="action" value="reject" class="cpd-button destructive" data-kind="secondary" data-size="lg">
+      </form>
+
+      {% call logout.button(csrf_token=csrf_token, post_logout_action=action) %}
+        <button type="submit" class="cpd-button primary flex-1" data-kind="secondary" data-size="lg" type="submit">
+          {{ _("mas.consent.use_another_account") }}
+        </button>
+      {% endcall %}
+
+      <form method="POST" class="cpd-form-root">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+        <button type="submit" name="action" value="reject" class="cpd-button" data-kind="tertiary" data-size="lg">
           {{ _("action.cancel") }}
         </button>
       </form>
-
-      <div class="flex gap-1 justify-center items-center">
-        <p class="cpd-text-secondary cpd-text-body-md-regular">
-          {{ _("mas.not_you", username=current_session.user.username) }}
-        </p>
-
-        {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
-      </div>
     </section>
   {% elif grant.state == "rejected" %}
     <header class="page-heading">

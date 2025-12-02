@@ -12,6 +12,7 @@ Please see LICENSE files in the repository root for full details.
 
 {% block content %}
   {% set client_name = client.client_name or client.client_id %}
+
   <header class="page-heading">
     {% if client.logo_uri %}
     <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
@@ -22,33 +23,42 @@ Please see LICENSE files in the repository root for full details.
     {% endif %}
 
     <div class="header">
-      <h1 class="title">{{ _("mas.consent.heading") }}</h1>
-      <p class="text [&>span]:whitespace-nowrap">
-        {{ _("mas.consent.client_wants_access", client_name=client_name, redirect_uri=(grant.redirect_uri | simplify_url)) }}
-        {{ _("mas.consent.this_will_allow", client_name=client_name) }}
+      <h1 class="title">
+        {{ _('mas.consent.continue_to', client_name=client_name) }}
+      </h1>
+      <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
+        {{ _("mas.consent.this_will_setup", client_name=client_name, client_uri=(client.client_uri | simplify_url), server_name=branding.server_name) }}
       </p>
     </div>
   </header>
 
-  <section class="consent-scope-list">
-    {{ scope.list(scopes=grant.scope) }}
-  </section>
-
-  <section class="text-center cpd-text-secondary cpd-text-body-md-regular [&>span]:whitespace-nowrap">
-    <strong class="font-semibold cpd-text-primary [&>span]:whitespace-nowrap">{{ _("mas.consent.make_sure_you_trust", client_name=client_name) }}</strong>
-    {{ _("mas.consent.you_may_be_sharing") }}
-    {% if client.policy_uri or client.tos_uri %}
-      Find out how <span>{{ client_name }}</span> will handle your data by reviewing its
-      {% if client.policy_uri %}
-        <a target="_blank" href="{{ client.policy_uri }}" class="cpd-link" data-kind="primary">privacy policy</a>{% if not client.tos_uri %}.{% endif %}
-      {% endif %}
-      {% if client.policy_uri and client.tos_uri%}
-        and
-      {% endif %}
-      {% if client.tos_uri %}
-        <a target="_blank" href="{{ client.tos_uri }}" class="cpd-link" data-kind="primary">terms of service</a>.
-      {% endif %}
+  {% call(scopes) scope.unsafe_scopes(scopes=grant.scope.split(" ")) %}
+    {% if scopes is not empty %}
+      <section class="flex flex-col gap-3">
+        <p class="text-center cpd-text-body-md-regular">
+          {{ _('mas.consent.scope_list_preface', client_name=client_name) }}
+        </p>
+        <div class="consent-scope-list">
+          {{ scope.list(scopes=scopes) }}
+        </div>
+      </section>
     {% endif %}
+  {% endcall %}
+
+  {% set initial -%}
+    {%- if matrix_user.display_name -%}
+      {{- matrix_user.display_name[0] | upper -}}
+    {%- else -%}
+      {{- matrix_user.mxid[1] | upper -}}
+    {%- endif -%}
+  {%- endset %}
+
+  <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
+    <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+    <div class="flex flex-col">
+      <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
+      <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
+    </div>
   </section>
 
   <section class="flex flex-col gap-6">
@@ -57,13 +67,11 @@ Please see LICENSE files in the repository root for full details.
       {{ button.button(text=_("action.continue")) }}
     </form>
 
-    <div class="flex gap-1 justify-center items-center">
-      <p class="cpd-text-secondary cpd-text-body-md-regular">
-        {{ _("mas.not_you", username=current_session.user.username) }}
-      </p>
-
-      {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
-    </div>
+    {% call logout.button(csrf_token=csrf_token, post_logout_action=action) %}
+      <button type="submit" class="cpd-button primary" data-kind="secondary" data-size="lg" type="submit">
+        {{ _("mas.consent.use_another_account") }}
+      </button>
+    {% endcall %}
 
     {{ back_to_client.link(
       text=_("action.cancel"),
