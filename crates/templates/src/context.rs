@@ -21,10 +21,11 @@ use chrono::{DateTime, Duration, Utc};
 use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
-    DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
-    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
-    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod, User,
-    UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    DeviceCodeGrant, MatrixUser, UpstreamOAuthLink, UpstreamOAuthProvider,
+    UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+    UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -732,6 +733,7 @@ pub struct ConsentContext {
     grant: AuthorizationGrant,
     client: Client,
     action: PostAuthAction,
+    matrix_user: MatrixUser,
 }
 
 impl TemplateContext for ConsentContext {
@@ -755,6 +757,10 @@ impl TemplateContext for ConsentContext {
                         grant,
                         client,
                         action,
+                        matrix_user: MatrixUser {
+                            mxid: "@alice:example.com".to_owned(),
+                            display_name: Some("Alice".to_owned()),
+                        },
                     }
                 })
                 .collect(),
@@ -765,12 +771,13 @@ impl TemplateContext for ConsentContext {
 impl ConsentContext {
     /// Constructs a context for the client consent page
     #[must_use]
-    pub fn new(grant: AuthorizationGrant, client: Client) -> Self {
+    pub fn new(grant: AuthorizationGrant, client: Client, matrix_user: MatrixUser) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
             grant,
             client,
             action,
+            matrix_user,
         }
     }
 }
@@ -1748,13 +1755,18 @@ impl TemplateContext for DeviceLinkContext {
 pub struct DeviceConsentContext {
     grant: DeviceCodeGrant,
     client: Client,
+    matrix_user: MatrixUser,
 }
 
 impl DeviceConsentContext {
     /// Constructs a new context with an existing linked user
     #[must_use]
-    pub fn new(grant: DeviceCodeGrant, client: Client) -> Self {
-        Self { grant, client }
+    pub fn new(grant: DeviceCodeGrant, client: Client, matrix_user: MatrixUser) -> Self {
+        Self {
+            grant,
+            client,
+            matrix_user,
+        }
     }
 }
 
@@ -1782,7 +1794,14 @@ impl TemplateContext for DeviceConsentContext {
                     ip_address: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                     user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
                 };
-                Self { grant, client }
+                Self {
+                    grant,
+                    client,
+                    matrix_user: MatrixUser {
+                        mxid: "@alice:example.com".to_owned(),
+                        display_name: Some("Alice".to_owned()),
+                    }
+                }
             })
             .collect())
     }
