@@ -23,14 +23,44 @@
   letter-spacing: var(--cpd-font-letter-spacing-body-lg);
 }
 
-.cpd-text-heading-xl-semibold {
-  font: var(--cpd-font-heading-xl-semibold);
-  letter-spacing: var(--cpd-font-letter-spacing-heading-xl);
+.cpd-text-body-lg-semibold {
+  font: var(--cpd-font-body-lg-semibold);
+  letter-spacing: var(--cpd-font-letter-spacing-body-lg);
 }
 
 .cpd-text-body-md-regular {
   font: var(--cpd-font-body-md-regular);
   letter-spacing: var(--cpd-font-letter-spacing-body-md);
+}
+
+.cpd-text-body-md-semibold {
+  font: var(--cpd-font-body-md-semibold);
+  letter-spacing: var(--cpd-font-letter-spacing-body-md);
+}
+
+.cpd-text-body-sm-regular {
+  font: var(--cpd-font-body-sm-regular);
+  letter-spacing: var(--cpd-font-letter-spacing-body-sm);
+}
+
+.cpd-text-body-sm-semibold {
+  font: var(--cpd-font-body-sm-semibold);
+  letter-spacing: var(--cpd-font-letter-spacing-body-sm);
+}
+
+.cpd-text-body-xs-regular {
+  font: var(--cpd-font-body-xs-regular);
+  letter-spacing: var(--cpd-font-letter-spacing-body-xs);
+}
+
+.cpd-text-body-xs-semibold {
+  font: var(--cpd-font-body-xs-semibold);
+  letter-spacing: var(--cpd-font-letter-spacing-body-xs);
+}
+
+.cpd-text-heading-xl-semibold {
+  font: var(--cpd-font-heading-xl-semibold);
+  letter-spacing: var(--cpd-font-letter-spacing-heading-xl);
 }
 
 .cpd-text-primary {
@@ -184,5 +214,50 @@
       letter-spacing: var(--cpd-font-letter-spacing-body-md);
       color: var(--cpd-color-text-secondary);
     }
+  }
+}
+
+.avatar-placeholder {
+  height: var(--cpd-space-14x);
+  width: var(--cpd-space-14x);
+  border-radius: 50%;
+  overflow: hidden;
+  user-select: none;
+  line-height: var(--cpd-space-14x);
+  font-size: 32px;
+  font-family: var(--cpd-font-family-sans);
+  font-weight: bold;
+  text-align: center;
+  background-color: var(--cpd-avatar-bg);
+  color: var(--cpd-avatar-color);
+
+  &[data-color] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-1);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-1);
+  }
+
+  &[data-color="2"] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-2);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-2);
+  }
+
+  &[data-color="3"] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-3);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-3);
+  }
+
+  &[data-color="4"] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-4);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-4);
+  }
+
+  &[data-color="5"] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-5);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-5);
+  }
+
+  &[data-color="6"] {
+    --cpd-avatar-bg: var(--cpd-color-bg-decorative-6);
+    --cpd-avatar-color: var(--cpd-color-text-decorative-6);
   }
 }
