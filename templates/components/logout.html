@@ -12,7 +12,7 @@ Please see LICENSE files in the repository root for full details.
     {% for key, value in post_logout_action|items %}
       <input type="hidden" name="{{ key }}" value="{{ value }}" />
     {% endfor %}
-    {% if caller %}
+    {% if caller is defined %}
       {{ caller() }}
     {% elif as_link %}
       <button class="cpd-link" data-kind="critical" type="submit">{{ text }}</button>
