@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:67:28-48, pages/device_consent.html:133:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:48:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:67:28-48, pages/device_consent.html:133:13-33, pages/device_link.html:40:26-46, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:50:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -22,7 +22,7 @@
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "pages/account/logged_out.html:22:28-48, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "pages/account/logged_out.html:22:28-48, pages/compat_login_policy_violation.html:28:28-48, pages/index.html:28:28-48, pages/policy_violation.html:38:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
@@ -189,7 +189,7 @@
     "consent": {
       "continue_to": "Continue to <span>%(client_name)s</span>?",
       "@continue_to": {
-        "context": "pages/consent.html:27:11-64, pages/device_consent.html:29:13-66, pages/sso.html:21:11-64"
+        "context": "pages/consent.html:27:11-64, pages/device_consent.html:29:13-66, pages/sso.html:23:11-64"
       },
       "scope_list_preface": "By continuing, you allow <span>%(client_name)s</span> to:",
       "@scope_list_preface": {
@@ -201,7 +201,7 @@
       },
       "use_another_account": "Use another account",
       "@use_another_account": {
-        "context": "pages/consent.html:72:11-47, pages/device_consent.html:139:13-49, pages/sso.html:53:11-47"
+        "context": "pages/consent.html:72:11-47, pages/device_consent.html:139:13-49, pages/sso.html:55:11-47"
       }
     },
     "device_card": {
@@ -413,7 +413,7 @@
     "legacy_consent": {
       "this_will_setup": "This will set up <span>%(client_name)s</span> with your <span>%(server_name)s</span> account.",
       "@this_will_setup": {
-        "context": "pages/sso.html:24:11-109"
+        "context": "pages/sso.html:26:11-109"
       }
     },
     "login": {
@@ -495,17 +495,17 @@
     "policy_violation": {
       "description": "This might be because of the client which authored the request, the currently logged in user, or the request itself.",
       "@description": {
-        "context": "pages/policy_violation.html:19:25-62",
+        "context": "pages/compat_login_policy_violation.html:18:25-62, pages/policy_violation.html:19:25-62",
         "description": "Displayed when an authorization request is denied by the policy"
       },
       "heading": "The authorization request was denied by the policy enforced by this service",
       "@heading": {
-        "context": "pages/policy_violation.html:18:27-60",
+        "context": "pages/compat_login_policy_violation.html:17:27-60, pages/policy_violation.html:18:27-60",
         "description": "Displayed when an authorization request is denied by the policy"
       },
       "logged_as": "Logged as <span class=\"font-semibold\">%(username)s</span>",
       "@logged_as": {
-        "context": "pages/policy_violation.html:35:11-86"
+        "context": "pages/compat_login_policy_violation.html:25:11-86, pages/policy_violation.html:35:11-86"
       }
     },
     "recovery": {
