@@ -82,6 +82,7 @@ pub(crate) async fn policy_factory(
         register: "register/violation".to_owned(),
         client_registration: "client_registration/violation".to_owned(),
         authorization_grant: "authorization_grant/violation".to_owned(),
+        compat_login: "compat_login/violation".to_owned(),
         email: "email/violation".to_owned(),
     };
 
