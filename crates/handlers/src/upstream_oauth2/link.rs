@@ -458,46 +458,6 @@ pub(crate) async fn get(
                     provider.claims_imports.email.is_required(),
                 )? {
                     Some(value) => {
-                        //:tchap:
-                        let server_name = homeserver.homeserver();
-                        let email_result =
-                            check_email_allowed(&value, server_name, &tchap_config).await;
-
-                        match email_result {
-                            EmailAllowedResult::Allowed => {
-                                // Email is allowed, continue
-                            }
-                            EmailAllowedResult::WrongServer => {
-                                // Email is mapped to a different server
-                                let ctx = ErrorContext::new()
-                                    .with_code("wrong_server")
-                                    .with_description(format!("Votre adresse mail {value} est associée à un autre serveur."))
-                                    .with_details("Veuillez-vous contacter le support de Tchap support@tchap.beta.gouv.fr".to_owned())
-                                    .with_language(&locale);
-
-                                //return error template
-                                return Ok((
-                                    cookie_jar,
-                                    Html(templates.render_error(&ctx)?).into_response(),
-                                ));
-                            }
-                            EmailAllowedResult::InvitationMissing => {
-                                // Server requires an invitation that is not present
-                                let ctx = ErrorContext::new()
-                                    .with_code("invitation_missing")
-                                    .with_description("Vous avez besoin d'une invitation pour accéder à Tchap.".to_owned())
-                                    .with_details("Les partenaires externes peuvent accéder à Tchap uniquement avec une invitation d'un agent public.".to_owned())
-                                    .with_language(&locale);
-
-                                //return error template
-                                return Ok((
-                                    cookie_jar,
-                                    Html(templates.render_error(&ctx)?).into_response(),
-                                ));
-                            }
-                        }
-                        //:tchap: end
-
                         ctx.with_email(value, provider.claims_imports.email.is_forced_or_required())
                     }
                     None => ctx,
@@ -525,7 +485,7 @@ pub(crate) async fn get(
                         // form, but this lead to poor UX. This is why we do
                         // it ahead of time here.
                         //:tchap:
-                        //the only upstream account matching is based on the email
+                        //upstream account matching is based on email
                         let template = provider
                             .claims_imports
                             .email
@@ -540,11 +500,59 @@ pub(crate) async fn get(
                             provider.claims_imports.email.is_required(),
                         );
 
-                        let maybe_existing_user = if let Ok(Some(email)) = maybe_email {
-                            tchap::search_user_by_email(&mut repo, &email, &tchap_config).await?
-                        } else {
-                            None
-                        };
+                        let mut maybe_existing_user = None;
+
+                        if let Ok(Some(email)) = maybe_email {
+                            let maybe_user_tchap =
+                                tchap::search_user_by_email(&mut repo, &email, &tchap_config)
+                                    .await?;
+                            if maybe_user_tchap.is_none() {
+                                //:tchap:
+                                //when user is not found, check if acccount creation is allowed for
+                                // this user on this server
+                                let server_name = homeserver.homeserver();
+                                let email_result =
+                                    check_email_allowed(&email, server_name, &tchap_config).await;
+
+                                match email_result {
+                                    EmailAllowedResult::Allowed => {
+                                        // Email is allowed, continue
+                                    }
+                                    EmailAllowedResult::WrongServer => {
+                                        // Email is mapped to a different server
+                                        let ctx = ErrorContext::new()
+                                            .with_code("wrong_server")
+                                            .with_description(format!("Votre adresse mail {email} est associée à un autre serveur."))
+                                            .with_details("Veuillez-vous contacter le support de Tchap support@tchap.beta.gouv.fr".to_owned())
+                                            .with_language(&locale);
+
+                                        //return error template
+                                        return Ok((
+                                            cookie_jar,
+                                            Html(templates.render_error(&ctx)?).into_response(),
+                                        ));
+                                    }
+                                    EmailAllowedResult::InvitationMissing => {
+                                        // Server requires an invitation that is not present
+                                        let ctx = ErrorContext::new()
+                                            .with_code("invitation_missing")
+                                            .with_description("Vous avez besoin d'une invitation pour accéder à Tchap.".to_owned())
+                                            .with_details("Les partenaires externes peuvent accéder à Tchap uniquement avec une invitation d'un agent public.".to_owned())
+                                            .with_language(&locale);
+
+                                        //return error template
+                                        return Ok((
+                                            cookie_jar,
+                                            Html(templates.render_error(&ctx)?).into_response(),
+                                        ));
+                                    }
+                                }
+                                //:tchap: end
+                            } else {
+                                maybe_existing_user = maybe_user_tchap;
+                            }
+                        }
+
                         //:tchap:
                         if maybe_existing_user.is_none() {
                             let template = provider
@@ -561,6 +569,8 @@ pub(crate) async fn get(
                                 return Err(RouteError::InvalidFormAction);
                             };
                             //:tchap:
+                            //if username matches whereas email has not
+                            //throw a invalid data error to solve the situtation manually
                             let maybe_existing_user =
                                 repo.user().find_by_username(&localpart).await?;
 
