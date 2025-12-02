@@ -41,6 +41,7 @@ pub fn register(
     env.add_filter("simplify_url", filter_simplify_url);
     env.add_filter("add_slashes", filter_add_slashes);
     env.add_filter("parse_user_agent", filter_parse_user_agent);
+    env.add_filter("id_color_hash", filter_id_color_hash);
     env.add_function("add_params_to_url", function_add_params_to_url);
     env.add_function("counter", || Ok(Value::from_object(Counter::default())));
     if let Some(vite_manifest) = vite_manifest {
@@ -136,6 +137,12 @@ fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::E
     } else {
         Ok(domain.to_owned())
     }
+}
+
+/// Filter which computes a hash between 1 and 6 of an input string, similar to
+/// compound-web's useIdColorHash
+fn filter_id_color_hash(input: &str) -> u32 {
+    input.chars().fold(0, |hash, c| hash + c as u32) % 6 + 1
 }
 
 /// Filter which parses a user-agent string
