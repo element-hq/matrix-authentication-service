@@ -238,9 +238,12 @@ The following key formats are supported:
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
 
-The signing keys are used for signing ID Tokens (as returned in the [Token Endpoint]
-at `/oauth2/token`) and for signing the response of the [UserInfo Endpoint] at
-`/oauth2/userinfo` if the client requests a signed response.
+The signing keys are used for:
+- signing ID Tokens (as returned in the [Token Endpoint] at `/oauth2/token`);
+- signing the response of the [UserInfo Endpoint] at `/oauth2/userinfo` if the
+  client requests a signed response;
+- (niche) signing a JWT for authenticating to an upstream OAuth provider when
+  the `private_key_jwt` client auth method is configured.
 
 At a minimum, an RSA key must be configured in order to be compliant with the
 [OpenID Connect Core specification][oidc-core-rs256] which specifies the RS256 algorithm
