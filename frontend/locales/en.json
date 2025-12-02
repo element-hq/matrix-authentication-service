@@ -319,9 +319,9 @@
     "scope": {
       "edit_profile": "Edit your profile and contact details",
       "manage_sessions": "Manage your devices and sessions",
-      "mas_admin": "Administer any user on the matrix-authentication-service",
+      "mas_admin": "Manage users (urn:mas:admin)",
       "send_messages": "Send new messages on your behalf",
-      "synapse_admin": "Administer the Synapse homeserver",
+      "synapse_admin": "Administer the server (urn:synapse:admin:*)",
       "view_messages": "View your existing messages and data",
       "view_profile": "See your profile info and contact details"
     }

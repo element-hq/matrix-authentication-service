@@ -664,7 +664,7 @@
         "context": "components/scope.html:16:39-69",
         "description": "Displayed when the 'urn:mas:graphql:*' scope is requested"
       },
-      "mas_admin": "Administer any user on the matrix-authentication-service",
+      "mas_admin": "Manage users (urn:mas:admin)",
       "@mas_admin": {
         "context": "components/scope.html:23:54-78",
         "description": "Displayed when the 'urn:mas:admin' scope is requested"
@@ -673,7 +673,7 @@
       "@send_messages": {
         "context": "components/scope.html:19:35-63"
       },
-      "synapse_admin": "Administer the Synapse homeserver",
+      "synapse_admin": "Administer the server (urn:synapse:admin:*)",
       "@synapse_admin": {
         "context": "components/scope.html:21:53-81",
         "description": "Displayed when the 'urn:synapse:admin:*' scope is requested"
