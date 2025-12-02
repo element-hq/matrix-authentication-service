@@ -872,6 +872,7 @@ impl PolicyViolationContext {
 pub struct CompatSsoContext {
     login: CompatSsoLogin,
     action: PostAuthAction,
+    matrix_user: MatrixUser,
 }
 
 impl TemplateContext for CompatSsoContext {
@@ -884,23 +885,33 @@ impl TemplateContext for CompatSsoContext {
         Self: Sized,
     {
         let id = Ulid::from_datetime_with_source(now.into(), rng);
-        sample_list(vec![CompatSsoContext::new(CompatSsoLogin {
-            id,
-            redirect_uri: Url::parse("https://app.element.io/").unwrap(),
-            login_token: "abcdefghijklmnopqrstuvwxyz012345".into(),
-            created_at: now,
-            state: CompatSsoLoginState::Pending,
-        })])
+        sample_list(vec![CompatSsoContext::new(
+            CompatSsoLogin {
+                id,
+                redirect_uri: Url::parse("https://app.element.io/").unwrap(),
+                login_token: "abcdefghijklmnopqrstuvwxyz012345".into(),
+                created_at: now,
+                state: CompatSsoLoginState::Pending,
+            },
+            MatrixUser {
+                mxid: "@alice:example.com".to_owned(),
+                display_name: Some("Alice".to_owned()),
+            },
+        )])
     }
 }
 
 impl CompatSsoContext {
     /// Constructs a context for the legacy SSO login page
     #[must_use]
-    pub fn new(login: CompatSsoLogin) -> Self
+    pub fn new(login: CompatSsoLogin, matrix_user: MatrixUser) -> Self
 where {
         let action = PostAuthAction::continue_compat_sso_login(login.id);
-        Self { login, action }
+        Self {
+            login,
+            action,
+            matrix_user,
+        }
     }
 }
 
