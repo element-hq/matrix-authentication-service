@@ -31,6 +31,7 @@
     "loading": "Wczytywanie…",
     "next": "Dalej",
     "password": "Hasło",
+    "password_confirm": "Potwierdź hasło",
     "previous": "Poprzedni",
     "saved": "Zapisano",
     "saving": "Zapisywanie…"

@@ -31,6 +31,7 @@
     "loading": "Indlæser...",
     "next": "Næste",
     "password": "Adgangskode",
+    "password_confirm": "Bekræft adgangskode",
     "previous": "Forrige",
     "saved": "Gemt",
     "saving": "Gemmer..."

@@ -31,6 +31,7 @@
     "loading": "Betöltés…",
     "next": "Következő",
     "password": "Jelszó",
+    "password_confirm": "Jelszó megerősítése",
     "previous": "Előző",
     "saved": "Mentve",
     "saving": "Mentés…"
