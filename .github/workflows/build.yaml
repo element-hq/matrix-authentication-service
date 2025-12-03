@@ -226,7 +226,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.9.0
+        uses: docker/metadata-action@v5.10.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action
@@ -242,7 +242,7 @@ jobs:
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v5.9.0
+        uses: docker/metadata-action@v5.10.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action-debug
