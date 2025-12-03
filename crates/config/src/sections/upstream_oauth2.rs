@@ -120,14 +120,14 @@ impl ConfigurationSection for UpstreamOAuth2Config {
 
             if matches!(
                 provider.claims_imports.localpart.on_conflict,
-                OnConflict::Add
+                OnConflict::Add | OnConflict::Replace | OnConflict::Set
             ) && !matches!(
                 provider.claims_imports.localpart.action,
                 ImportAction::Force | ImportAction::Require
             ) {
                 return Err(annotate(figment::Error::custom(
-                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`",
-                )).into());
+                    "The field `action` must be either `force` or `require` when `on_conflict` is set to `add`, `replace` or `set`",
+                )).with_path("claims_imports.localpart").into());
             }
         }
 
@@ -206,13 +206,20 @@ impl ImportAction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum OnConflict {
-    /// Fails the sso login on conflict
+    /// Fails the upstream OAuth 2.0 login on conflict
     #[default]
     Fail,
 
-    /// Adds the oauth identity link, regardless of whether there is an existing
-    /// link or not
+    /// Adds the upstream OAuth 2.0 identity link, regardless of whether there
+    /// is an existing link or not
     Add,
+
+    /// Replace any existing upstream OAuth 2.0 identity link
+    Replace,
+
+    /// Adds the upstream OAuth 2.0 identity link *only* if there is no existing
+    /// link for this provider on the matching user
+    Set,
 }
 
 impl OnConflict {
