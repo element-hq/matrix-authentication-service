@@ -274,7 +274,7 @@
     "verify_email": {
       "6_digit_code": "Code à 6 chiffres",
       "code": "Code",
-      "description": "Veuillez saisir le code à 6 chiffres envoyé à : <em>%(email)s</em>",
+      "description": "Veuillez saisir le code à 6 chiffres envoyé à : <em>%(email)s</em>. Si vous ne recevez pas d'email, vous avez peut-être déjà un compte Tchap. Poursuivez avec une réinitialisation de mot de passe",
       "headline": "Vérifiez votre adresse e-mail"
     }
   }

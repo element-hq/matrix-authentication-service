@@ -616,7 +616,7 @@
         "context": "pages/register/index.html:89:35-66, pages/register/password.html:64:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
-      "continue_with_email": "Continue with email address",
+      "continue_with_email": "Continue with my email address",
       "@continue_with_email": {
         "context": "pages/register/index.html:73:30-67"
       },
