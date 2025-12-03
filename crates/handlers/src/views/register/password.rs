@@ -24,9 +24,13 @@ use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxRepository, RepositoryAccess,
+    BoxRepository,
+    RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
-    user::{UserEmailRepository, UserRepository},
+    //:tchap:
+    //user::{UserEmailRepository, UserRepository},
+    user::UserEmailRepository,
+    //:tchap:end
 };
 use mas_templates::{
     FieldError, FormError, FormState, PasswordRegisterContext, RegisterFormField, TemplateContext,
@@ -268,6 +272,10 @@ pub(crate) async fn post(
         }
 
         let mut homeserver_denied_username = false;
+
+        //:tchap:
+        //we skip username error checks because Tchap account allowance relies on email
+        /*
         if form.username.is_empty() {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
         } else if repo.user().exists(&form.username).await? {
@@ -288,7 +296,8 @@ pub(crate) async fn post(
             // error from the policy, to avoid showing both
             homeserver_denied_username = true;
         }
-
+        */
+        //:tchap:end
         if form.password.is_empty() {
             state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
         }

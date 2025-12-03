@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:74:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:92:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:61:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:74:28-48, pages/device_consent.html:124:13-33, pages/device_link.html:40:26-46, pages/login.html:92:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:61:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/email_in_use.html:28:32-52, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:37:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -30,7 +30,7 @@
     },
     "start_over": "Start over",
     "@start_over": {
-      "context": "pages/recovery/consumed.html:22:32-54, pages/recovery/expired.html:30:32-54, pages/register/steps/email_in_use.html:28:32-54"
+      "context": "pages/recovery/consumed.html:22:32-54, pages/recovery/expired.html:30:32-54"
     }
   },
   "app": {
@@ -287,11 +287,11 @@
       }
     },
     "email_in_use": {
-      "description": "If you have forgotten your account credentials, you can recover your account. You can also start over and use a different email address.",
+      "description": "If you have forgotten your password, proceed to a password reset or connect via Proconnect",
       "@description": {
         "context": "pages/register/steps/email_in_use.html:22:13-46"
       },
-      "title": "The email address <span>%(email)s</span> is already in use",
+      "title": "The Tchap account already exists : <span>%(email)s</span>",
       "@title": {
         "context": "pages/register/steps/email_in_use.html:19:13-53"
       }

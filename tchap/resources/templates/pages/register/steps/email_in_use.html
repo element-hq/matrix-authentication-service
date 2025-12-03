@@ -1,0 +1,30 @@
+{#
+Copyright 2025 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="flex flex-col gap-6">
+    <header class="page-heading">
+      <div class="icon invalid">
+        {{ icon.error_solid() }}
+      </div>
+
+      <div class="header">
+        <h1 class="title">
+          {{ _("mas.email_in_use.title", email=email) }}
+        </h1>
+        <p class="text">
+          {{ _("mas.email_in_use.description") }}
+        </p>
+      </div>
+    </header>
+
+    {% set params = action | default({}) | to_params(prefix="?") %}
+    {{ button.link_outline(text=_("action.continue"), href="/login" ~ params) }}
+  </main>
+{% endblock %}
