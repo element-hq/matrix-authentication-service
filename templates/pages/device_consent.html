@@ -30,7 +30,7 @@ Please see LICENSE files in the repository root for full details.
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {{ _("mas.device_consent.this_will_setup", client_name=client_name, client_uri=(client.client_uri | simplify_url), server_name=branding.server_name) }}
+          {{ _("mas.device_consent.this_will_setup", client_name=client_name, client_uri=((client.client_uri or "") | simplify_url), server_name=branding.server_name) }}
         </p>
 
         <div class="session-card mt-4">

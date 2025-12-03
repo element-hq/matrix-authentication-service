@@ -197,7 +197,7 @@
       },
       "this_will_setup": "This will set up %(client_name)s (<span>%(client_uri)s</span>) with your <span>%(server_name)s</span> account.",
       "@this_will_setup": {
-        "context": "pages/consent.html:30:11-149"
+        "context": "pages/consent.html:30:11-173"
       },
       "use_another_account": "Use another account",
       "@use_another_account": {
@@ -255,7 +255,7 @@
       },
       "this_will_setup": "Another device wants to set up %(client_name)s (<span>%(client_uri)s</span>) with your <span>%(server_name)s</span> account. Make sure you recognise that device.",
       "@this_will_setup": {
-        "context": "pages/device_consent.html:33:13-158"
+        "context": "pages/device_consent.html:33:13-166"
       }
     },
     "device_display_name": {
