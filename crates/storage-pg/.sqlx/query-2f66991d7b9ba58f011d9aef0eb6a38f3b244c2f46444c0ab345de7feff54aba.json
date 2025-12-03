@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT current_database() as \"current_database!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "current_database!",
+        "type_info": "Name"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2f66991d7b9ba58f011d9aef0eb6a38f3b244c2f46444c0ab345de7feff54aba"
+}

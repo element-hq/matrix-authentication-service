@@ -3657,6 +3657,7 @@ version = "1.7.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "crc",
  "futures-util",
  "mas-data-model",
  "mas-iana",
@@ -3673,6 +3674,7 @@ dependencies = [
  "sha2",
  "sqlx",
  "thiserror 2.0.17",
+ "tokio",
  "tracing",
  "ulid",
  "url",
