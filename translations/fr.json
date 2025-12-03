@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> à l'adresse <span>%(redirect_uri)s</span> souhaite accéder à votre compte.",
+      "continue_to": "Continuer vers <span>%(client_name)s</span>?",
       "heading": "Autoriser l'accès à votre compte ?",
       "make_sure_you_trust": "Assurez-vous de faire confiance <span>%(client_name)s</span>.",
+      "scope_list_preface": "En continuant, vous autorisez <span>%(client_name)s</span> à :",
       "this_will_allow": "Cela va permettre à <span>%(client_name)s</span> de :",
+      "this_will_setup": "Continuer connectera %(client_name)s (<span>%(client_uri)s</span>) avec votre compte %(server_name)s<span></span>.",
+      "use_another_account": "Utiliser un autre compte",
       "you_may_be_sharing": "Vous partagez peut-être des informations sensibles avec ce site ou cette application."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Vous avez accordé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès accordé"
-      }
+      },
+      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte %(server_name)s<span></span>. Assurez-vous de reconnaître cet appareil."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s sur %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Ce nom d'utilisateur est déjà utilisé",
       "username_too_long": "Le nom d'utilisateur est trop long",
       "username_too_short": "Le nom d'utilisateur est trop court"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Continuer connectera <span>%(client_name)s</span> avec votre compte <span>%(server_name)s</span>."
     },
     "login": {
       "call_to_register": "Vous n’avez pas encore de compte ?",
@@ -226,9 +234,9 @@
     "scope": {
       "edit_profile": "Modifier votre profil et vos coordonnées",
       "manage_sessions": "Gérer vos appareils et vos sessions",
-      "mas_admin": "Administrer n'importe quel utilisateur dans matrix-authentication-service",
+      "mas_admin": "Administrer les utilisateurs (urn:mas:admin)",
       "send_messages": "Envoyez de nouveaux messages en votre nom",
-      "synapse_admin": "Administrer le serveur d’accueil Synapse",
+      "synapse_admin": "Administrer le serveur (urn:synapse:admin:*)",
       "view_messages": "Afficher vos messages et données existants",
       "view_profile": "Voir les informations de votre profil et vos coordonnées"
     },

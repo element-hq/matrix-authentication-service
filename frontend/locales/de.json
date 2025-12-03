@@ -43,7 +43,7 @@
         "alert_description": "Dieses Konto wird dauerhaft entfernt und du hast keinen Zugriff mehr auf deine Nachrichten.",
         "alert_title": "Du bist kurz davor, alle deine Daten zu verlieren.",
         "button": "Account löschen",
-        "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text><profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Benutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
+        "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text>\n<profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Benutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für die jeweiligen Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
         "dialog_title": "Dieses Konto löschen?",
         "erase_checkbox_label": "Ja, alle meine Nachrichten vor neuen Mitgliedern verbergen",
         "incorrect_password": "Falsches Passwort, versuch's nochmal",
