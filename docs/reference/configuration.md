@@ -196,7 +196,7 @@ secrets:
 
   # Signing keys
   keys:
-    # It needs at least an RSA key to work properly
+    # At least one RSA key must be configured
     - key_file: keys/rsa_key
     - kid: "iv1aShae"
       key: |
@@ -222,7 +222,7 @@ The secret is not updated when the content of the file changes.
 > Changing the encryption secret afterwards will lead to a loss of all encrypted
 > information in the database.
 
-### Singing Keys
+### Signing Keys
 
 The service can use a number of key types for signing.
 The following key types are supported:
@@ -238,8 +238,23 @@ The following key formats are supported:
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
 
+The signing keys are used for:
+- signing ID Tokens (as returned in the [Token Endpoint] at `/oauth2/token`);
+- signing the response of the [UserInfo Endpoint] at `/oauth2/userinfo` if the
+  client requests a signed response;
+- (niche) signing a JWT for authenticating to an upstream OAuth provider when
+  the `private_key_jwt` client auth method is configured.
+
+At a minimum, an RSA key must be configured in order to be compliant with the
+[OpenID Connect Core specification][oidc-core-rs256] which specifies the RS256 algorithm
+as mandatory to implement by servers for interoperability reasons.
+
 The keys can be given as a directory path via `secrets.keys_dir`
 or, alternatively, as an inline configuration list via `secrets.keys`.
+
+[Token Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+[UserInfo Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+[oidc-core-rs256]: https://openid.net/specs/openid-connect-core-1_0.html#ServerMTI
 
 #### `secrets.keys_dir`
 
