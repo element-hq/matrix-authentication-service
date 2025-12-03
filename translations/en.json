@@ -655,36 +655,36 @@
     "scope": {
       "edit_profile": "Edit your profile and contact details",
       "@edit_profile": {
-        "context": "components/scope.html:38:35-62",
+        "context": "components/scope.html:44:35-62",
         "description": "Displayed when the 'urn:mas:graphql:*' scope is requested"
       },
       "manage_sessions": "Manage your devices and sessions",
       "@manage_sessions": {
-        "context": "components/scope.html:39:39-69",
+        "context": "components/scope.html:45:39-69",
         "description": "Displayed when the 'urn:mas:graphql:*' scope is requested"
       },
       "mas_admin": "Manage users (urn:mas:admin)",
       "@mas_admin": {
-        "context": "components/scope.html:46:54-91",
+        "context": "components/scope.html:52:54-91",
         "description": "Displayed when the 'urn:mas:admin' scope is requested"
       },
       "send_messages": "Send new messages on your behalf",
       "@send_messages": {
-        "context": "components/scope.html:42:35-63"
+        "context": "components/scope.html:48:35-63"
       },
       "synapse_admin": "Administer the server (urn:synapse:admin:*)",
       "@synapse_admin": {
-        "context": "components/scope.html:44:53-94",
+        "context": "components/scope.html:50:53-94",
         "description": "Displayed when the 'urn:synapse:admin:*' scope is requested"
       },
       "view_messages": "View your existing messages and data",
       "@view_messages": {
-        "context": "components/scope.html:41:35-63",
+        "context": "components/scope.html:47:35-63",
         "description": "Displayed when the 'urn:matrix:client:api:*' scope is requested"
       },
       "view_profile": "See your profile info and contact details",
       "@view_profile": {
-        "context": "components/scope.html:36:43-70",
+        "context": "components/scope.html:42:43-70",
         "description": "Displayed when the 'openid' scope is requested"
       }
     },

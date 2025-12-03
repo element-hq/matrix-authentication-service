@@ -9,8 +9,13 @@ Please see LICENSE files in the repository root for full details.
 {# Macro to remove 'safe' scope from a scope list. Usage:
 
     {% call(scopes) scope.unsafe_scopes(scopes=["openid", "urn:matrix:client:api:*", "urn:synapse:admin:*", "urn:mas:admin"]) %}
-      {# `scopes` only has unsafe scopes: ["urn:synapse:admin:*", "urn:mas:admin"] #}
-      {{ scopes }}
+      `scopes` only has unsafe scopes: ["urn:synapse:admin:*", "urn:mas:admin"]
+
+      <ul>
+        {% for scope in scopes %}
+          <li>{{ scope }}</li>
+        {% endfor %}
+      </ul>
     {% endcall %}
 #}
 {% macro unsafe_scopes(scopes) -%}
