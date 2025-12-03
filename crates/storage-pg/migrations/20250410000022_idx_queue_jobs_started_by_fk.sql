@@ -4,6 +4,6 @@
 -- SPDX-License-Identifier: AGPL-3.0-only
 -- Please see LICENSE in the repository root for full details.
 
-CREATE INDEX CONCURRENTLY
+CREATE INDEX CONCURRENTLY IF NOT EXISTS
   queue_jobs_started_by_fk
   ON queue_jobs (started_by);

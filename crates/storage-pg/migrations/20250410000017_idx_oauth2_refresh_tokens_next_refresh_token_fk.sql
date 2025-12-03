@@ -4,6 +4,6 @@
 -- SPDX-License-Identifier: AGPL-3.0-only
 -- Please see LICENSE in the repository root for full details.
 
-CREATE INDEX CONCURRENTLY
+CREATE INDEX CONCURRENTLY IF NOT EXISTS
   oauth2_refresh_tokens_next_refresh_token_fk
   ON oauth2_refresh_tokens (next_oauth2_refresh_token_id);
