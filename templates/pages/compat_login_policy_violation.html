@@ -1,0 +1,31 @@
+{#
+Copyright 2025 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="icon invalid">
+      {{ icon.error_solid() }}
+    </div>
+
+    <div class="header">
+      <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
+      <p class="text">{{ _("mas.policy_violation.description") }}</p>
+    </div>
+  </header>
+
+  <main class="flex flex-col gap-10">
+    <div class="flex gap-1 justify-center items-center">
+      <p class="cpd-text-secondary cpd-text-body-md-regular">
+        {{ _("mas.policy_violation.logged_as", username=current_session.user.username) }}
+      </p>
+
+      {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=True) }}
+    </div>
+  </main>
+{% endblock content %}

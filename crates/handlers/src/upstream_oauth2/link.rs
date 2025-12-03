@@ -582,7 +582,7 @@ pub(crate) async fn get(
                                 .await?;
                         }
 
-                        // We matched anexisting user and the conflict resolution is to replace any
+                        // We matched an existing user and the conflict resolution is to replace any
                         // link on the existing user with this one
                         UpstreamOAuthProviderOnConflict::Replace => {
                             // Find existing links for this provider and user
@@ -629,7 +629,7 @@ pub(crate) async fn get(
                                 .await?;
                         }
 
-                        // We matched an existing user and the conflict resolution is link to the
+                        // We matched an existing user and the conflict resolution is to link to the
                         // existing user *only if* there is no existing link on that user
                         UpstreamOAuthProviderOnConflict::Set => {
                             // Find existing links for this provider and user
@@ -643,7 +643,7 @@ pub(crate) async fn get(
                                     upstream_oauth_provider.id = %provider.id,
                                     upstream_oauth_link.id = %link.id,
                                     user.id = %existing_user.id,
-                                    "Upstream provider returned a localpart {localpart:?} which is already used by another user. That user already has a ({count}) link to this provider, which isn't allowed by the conflict resolution"
+                                    "Upstream provider returned a localpart {localpart:?} matching an existing user who already has {count} link(s) to this provider, which isn't allowed by the conflict resolution"
                                 );
 
                                 // TODO: translate
@@ -651,7 +651,7 @@ pub(crate) async fn get(
                                     .with_code("User exists")
                                     .with_description(format!(
                                         r"Upstream account provider returned {localpart:?} as username,
-                                        which is not linked to another existing upstream account.
+                                        but this user already has an existing link to this provider.
                                         Your homeserver does not allow replacing upstream account links automatically."
                                     ))
                                     .with_language(&locale);
