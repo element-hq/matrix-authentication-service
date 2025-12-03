@@ -6,16 +6,18 @@ SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 -#}
 
-{% macro button(text, csrf_token, as_link=false, post_logout_action={}) %}
-  <form method="POST" action="{{ "/logout" | prefix_url }}" class="inline-flex">
+{% macro button(csrf_token, text="", as_link=false, post_logout_action={}) %}
+  <form method="POST" action="{{ "/logout" | prefix_url }}" class="inline-flex [&>button]:flex-1">
     <input type="hidden" name="csrf" value="{{ csrf_token }}" />
     {% for key, value in post_logout_action|items %}
       <input type="hidden" name="{{ key }}" value="{{ value }}" />
     {% endfor %}
-    {% if as_link %}
-      <button class="cpd-link flex-1" data-kind="critical" type="submit">{{ text }}</button>
+    {% if caller is defined %}
+      {{ caller() }}
+    {% elif as_link %}
+      <button class="cpd-link" data-kind="critical" type="submit">{{ text }}</button>
     {% else %}
-      <button class="cpd-button destructive flex-1" data-kind="secondary" data-size="lg" type="submit">{{ text }}</button>
+      <button class="cpd-button destructive" data-kind="secondary" data-size="lg" type="submit">{{ text }}</button>
     {% endif %}
   </form>
 {% endmacro %}
