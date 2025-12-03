@@ -1472,7 +1472,7 @@ mod tests {
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_skip_confirmation(pool: PgPool) {
         // Same test as test_register, but checks that we get straight to the
-        // registration flown skipping the confirmation
+        // registration flow skipping the confirmation
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let mut rng = state.rng();
@@ -1481,7 +1481,7 @@ mod tests {
         let claims_imports = UpstreamOAuthProviderClaimsImports {
             skip_confirmation: true,
             localpart: UpstreamOAuthProviderLocalpartPreference {
-                action: mas_data_model::UpstreamOAuthProviderImportAction::Force,
+                action: mas_data_model::UpstreamOAuthProviderImportAction::Require,
                 template: None,
                 on_conflict: mas_data_model::UpstreamOAuthProviderOnConflict::default(),
             },
