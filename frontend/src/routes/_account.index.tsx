@@ -65,14 +65,26 @@ const actionSchema = v.variant("action", [
     action: v.picklist(["org.matrix.profile", "profile"]),
   }),
   v.object({
-    action: v.picklist(["org.matrix.devices_list", "sessions_list", "org.matrix.sessions_list"]),
+    action: v.picklist([
+      "org.matrix.devices_list",
+      "sessions_list",
+      "org.matrix.sessions_list",
+    ]),
   }),
   v.object({
-    action: v.picklist(["org.matrix.device_view", "session_view", "org.matrix.session_view"]),
+    action: v.picklist([
+      "org.matrix.device_view",
+      "session_view",
+      "org.matrix.session_view",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({
-    action: v.picklist(["org.matrix.device_delete", "session_end", "org.matrix.session_end"]),
+    action: v.picklist([
+      "org.matrix.device_delete",
+      "session_end",
+      "org.matrix.session_end",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({

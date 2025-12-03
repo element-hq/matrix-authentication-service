@@ -187,7 +187,8 @@ pub(crate) async fn get(
             "org.matrix.device_view".to_owned(),
             "org.matrix.device_delete".to_owned(),
             "org.matrix.cross_signing_reset".to_owned(),
-            // These are unstable versions from MSC4191 and we will remove them once the above stable values have enough adoption by clients
+            // These are unstable versions from MSC4191 and we will remove them once the above
+            // stable values have enough adoption by clients
             "org.matrix.sessions_list".to_owned(),
             "org.matrix.session_view".to_owned(),
             "org.matrix.session_end".to_owned(),
