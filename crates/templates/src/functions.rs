@@ -139,8 +139,8 @@ fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::E
     }
 }
 
-/// Filter which computes a hash between 1 and 6 of an input string, similar to
-/// compound-web's useIdColorHash
+/// Filter which computes a hash between 1 and 6 of an input string, identitical
+/// to compound-web's `useIdColorHash`
 fn filter_id_color_hash(input: &str) -> u32 {
     input.chars().fold(0, |hash, c| hash + c as u32) % 6 + 1
 }
