@@ -64,6 +64,7 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
+        skip_confirmation: config.skip_confirmation,
         localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),
