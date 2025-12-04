@@ -431,7 +431,12 @@ pub async fn pending_migrations(
                         .and_then(|bytes| bytes.try_into().ok())
                         .map(u128::from_be_bytes)
                     else {
-                        return Err(MigrateError::VersionMismatch(applied_migration.version));
+                        return Err(MigrateError::ExecuteMigration(
+                            sqlx::Error::InvalidArgument(
+                                "checksum stored in database is invalid".to_owned(),
+                            ),
+                            applied_migration.version,
+                        ));
                     };
 
                     if !alternates.contains(&applied_checksum_prefix) {
