@@ -22,7 +22,7 @@
     "@fontsource/inter": "^5.2.8",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.131.44",
     "@vector-im/compound-design-tokens": "6.4.0",
     "@vector-im/compound-web": "^8.2.5",
