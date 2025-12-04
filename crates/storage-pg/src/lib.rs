@@ -452,8 +452,11 @@ pub async fn pending_migrations(
                 version = applied_migration.version
             );
         } else {
-            // The migration is missing, and not allowed to be missing
-            return Err(MigrateError::VersionMissing(applied_migration.version));
+            // The migration is missing, warn about it
+            warn!(
+                "The database has a migration applied ({version}) that doesn't exist anymore! This should not happen, unless rolling back to an older version of MAS.",
+                version = applied_migration.version
+            );
         }
     }
 
