@@ -53,7 +53,7 @@ Note that migrations are embedded in the final binary and can be run from the se
 
 ### Removing migrations
 
-For various reason, we may want to delete migrations.
+For various reasons, we may want to delete migrations.
 In case we do, we *must* declare that migration version as it is fine to be missing.
 This is because on startup, MAS will validate that all the applied migrations are known, and warn if some are missing.
 

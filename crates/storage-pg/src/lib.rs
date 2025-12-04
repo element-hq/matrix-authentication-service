@@ -324,7 +324,7 @@ async fn migration_table_exists(conn: &mut PgConnection) -> Result<bool, sqlx::E
 /// This function returns an error if the migration fails.
 #[::tracing::instrument(name = "db.migrate", skip_all, err)]
 pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
-    // Get the database name and use it to derivate an advisory lock key. This
+    // Get the database name and use it to derive an advisory lock key. This
     // is the same lock key used by SQLx default migrator, so that it works even
     // with older versions of MAS, and when running through `cargo sqlx migrate run`
     let database_name = sqlx::query_scalar!(r#"SELECT current_database() as "current_database!""#)
