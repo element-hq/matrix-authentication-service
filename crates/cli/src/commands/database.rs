@@ -10,8 +10,7 @@ use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSectionExt, DatabaseConfig};
-use mas_storage_pg::MIGRATOR;
-use tracing::{Instrument, info_span};
+use tracing::info_span;
 
 use crate::util::database_connection_from_config;
 
@@ -35,9 +34,7 @@ impl Options {
         let mut conn = database_connection_from_config(&config).await?;
 
         // Run pending migrations
-        MIGRATOR
-            .run(&mut conn)
-            .instrument(info_span!("db.migrate"))
+        mas_storage_pg::migrate(&mut conn)
             .await
             .context("could not run migrations")?;
 

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{collections::BTreeSet, process::ExitCode, sync::Arc, time::Duration};
+use std::{process::ExitCode, sync::Arc, time::Duration};
 
 use anyhow::Context;
 use clap::Parser;
@@ -18,9 +18,8 @@ use mas_data_model::SystemClock;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
-use mas_storage_pg::{MIGRATOR, PgRepositoryFactory};
-use sqlx::migrate::Migrate;
-use tracing::{Instrument, info, info_span, warn};
+use mas_storage_pg::PgRepositoryFactory;
+use tracing::{info, info_span, warn};
 
 use crate::{
     app_state::AppState,
@@ -73,24 +72,20 @@ impl Options {
         let pool = database_pool_from_config(&config.database).await?;
 
         if self.no_migrate {
-            // Check that we applied all the migrations
             let mut conn = pool.acquire().await?;
-            let applied = conn.list_applied_migrations().await?;
-            let applied: BTreeSet<_> = applied.into_iter().map(|m| m.version).collect();
-            let has_missing_migrations = MIGRATOR.iter().any(|m| !applied.contains(&m.version));
-            if has_missing_migrations {
+            let pending_migrations = mas_storage_pg::pending_migrations(&mut conn).await?;
+            if !pending_migrations.is_empty() {
                 // Refuse to start if there are pending migrations
                 return Err(anyhow::anyhow!(
-                    "The server is running with `--no-migrate` but there are pending. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."
+                    "The server is running with `--no-migrate` but there are pending migrations. Please run them first with `mas-cli database migrate`, or omit the `--no-migrate` flag to apply them automatically on startup."
                 ));
             }
         } else {
             info!("Running pending database migrations");
-            MIGRATOR
-                .run(&pool)
-                .instrument(info_span!("db.migrate"))
+            let mut conn = pool.acquire().await?;
+            mas_storage_pg::migrate(&mut conn)
                 .await
-                .context("could not run database migrations")?;
+                .context("could not run migrations")?;
         }
 
         let encrypter = config.secrets.encrypter().await?;

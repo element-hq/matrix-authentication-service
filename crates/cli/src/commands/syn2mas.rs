@@ -14,13 +14,12 @@ use mas_config::{
     UpstreamOAuth2Config,
 };
 use mas_data_model::SystemClock;
-use mas_storage_pg::MIGRATOR;
 use rand::thread_rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
 use syn2mas::{
     LockedMasDatabase, MasWriter, Progress, ProgressStage, SynapseReader, synapse_config,
 };
-use tracing::{Instrument, error, info, info_span};
+use tracing::{Instrument, error, info};
 
 use crate::util::{DatabaseConnectOptions, database_connection_from_config_with_options};
 
@@ -122,9 +121,7 @@ impl Options {
         )
         .await?;
 
-        MIGRATOR
-            .run(&mut mas_connection)
-            .instrument(info_span!("db.migrate"))
+        mas_storage_pg::migrate(&mut mas_connection)
             .await
             .context("could not run migrations")?;
 

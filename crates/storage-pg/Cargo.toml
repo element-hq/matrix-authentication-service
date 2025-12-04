@@ -19,6 +19,7 @@ workspace = true
 [dependencies]
 async-trait.workspace = true
 chrono.workspace = true
+crc.workspace = true
 futures-util.workspace = true
 opentelemetry-semantic-conventions.workspace = true
 opentelemetry.workspace = true
@@ -31,6 +32,7 @@ sha2.workspace = true
 sqlx.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+tokio.workspace = true
 ulid.workspace = true
 url.workspace = true
 uuid.workspace = true
