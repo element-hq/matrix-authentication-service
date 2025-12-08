@@ -183,11 +183,11 @@
     "password_strength": {
       "placeholder": "Password strength",
       "score": {
-        "0": "Extremely weak password",
-        "1": "Very weak password",
-        "2": "Weak password",
-        "3": "Strong password",
-        "4": "Very strong password"
+        "0": "Password too weak (strengh meter: 0 on 4)",
+        "1": "Password too weak (strengh meter: 1 on 4)",
+        "2": "Password too weak (strengh meter: 2 on 4)",
+        "3": "Password strong enough (strengh meter: 3 on 4)",
+        "4": "Password very strong (strengh meter: 4 on 4)"
       },
       "suggestion": {
         "all_uppercase": "Capitalise some, but not all letters.",

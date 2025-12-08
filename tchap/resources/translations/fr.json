@@ -106,8 +106,8 @@
       "unknown_device": "Appareil inconnu"
     },
     "email_in_use": {
-      "description": "Si vous avez oublié vos identifiants de compte, vous pouvez récupérer votre compte. Vous pouvez également recommencer l'enregistrement et utiliser une adresse mail différente.",
-      "title": "L’adresse mail <span>%(email)s</span> est déjà utilisée"
+      "description": "Si vous avez oublié votre mot de passe, demandez une réinitialisation du mot de passe ou connectez-vous via Proconnect",
+      "title": "Le compte Tchap existe déjà: <span>%(email)s</span>"
     },
     "emails": {
       "greeting": "Bonjour %(username)s,",
@@ -209,7 +209,7 @@
     },
     "register": {
       "call_to_login": "Vous avez déjà un compte ?",
-      "continue_with_email": "Continuer avec une adresse mail",
+      "continue_with_email": "Continuer avec mon adresse mail",
       "create_account": {
         "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
