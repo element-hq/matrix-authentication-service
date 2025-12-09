@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "1.6.0"
+package.version = "1.8.0-rc.0"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -34,42 +34,43 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.6.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.6.0" }
-mas-config = { path = "./crates/config/", version = "=1.6.0" }
-mas-context = { path = "./crates/context/", version = "=1.6.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=1.6.0" }
-mas-email = { path = "./crates/email/", version = "=1.6.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.6.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=1.6.0" }
-mas-http = { path = "./crates/http/", version = "=1.6.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=1.6.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.6.0" }
-mas-iana = { path = "./crates/iana/", version = "=1.6.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.6.0" }
-mas-jose = { path = "./crates/jose/", version = "=1.6.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=1.6.0" }
-mas-listener = { path = "./crates/listener/", version = "=1.6.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=1.6.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.6.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.6.0" }
-mas-policy = { path = "./crates/policy/", version = "=1.6.0" }
-mas-router = { path = "./crates/router/", version = "=1.6.0" }
-mas-spa = { path = "./crates/spa/", version = "=1.6.0" }
-mas-storage = { path = "./crates/storage/", version = "=1.6.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.6.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=1.6.0" }
-mas-templates = { path = "./crates/templates/", version = "=1.6.0" }
-mas-tower = { path = "./crates/tower/", version = "=1.6.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=1.6.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=1.6.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.8.0-rc.0" }
+mas-cli = { path = "./crates/cli/", version = "=1.8.0-rc.0" }
+mas-config = { path = "./crates/config/", version = "=1.8.0-rc.0" }
+mas-context = { path = "./crates/context/", version = "=1.8.0-rc.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=1.8.0-rc.0" }
+mas-email = { path = "./crates/email/", version = "=1.8.0-rc.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=1.8.0-rc.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=1.8.0-rc.0" }
+mas-http = { path = "./crates/http/", version = "=1.8.0-rc.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=1.8.0-rc.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.8.0-rc.0" }
+mas-iana = { path = "./crates/iana/", version = "=1.8.0-rc.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.8.0-rc.0" }
+mas-jose = { path = "./crates/jose/", version = "=1.8.0-rc.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=1.8.0-rc.0" }
+mas-listener = { path = "./crates/listener/", version = "=1.8.0-rc.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=1.8.0-rc.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.8.0-rc.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.8.0-rc.0" }
+mas-policy = { path = "./crates/policy/", version = "=1.8.0-rc.0" }
+mas-router = { path = "./crates/router/", version = "=1.8.0-rc.0" }
+mas-spa = { path = "./crates/spa/", version = "=1.8.0-rc.0" }
+mas-storage = { path = "./crates/storage/", version = "=1.8.0-rc.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.8.0-rc.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=1.8.0-rc.0" }
+mas-templates = { path = "./crates/templates/", version = "=1.8.0-rc.0" }
+mas-tower = { path = "./crates/tower/", version = "=1.8.0-rc.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=1.8.0-rc.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=1.8.0-rc.0" }
+
 #:tchap:
 tchap = { path = "./crates/tchap", version = "=0.1.0" }
 #:tchap:
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
-version = "0.14.2"
+version = "0.15.1"
 features = ["axum", "axum-extra", "axum-extra-query", "axum-json", "macros"]
 
 # An `Arc` that can be atomically updated
@@ -132,7 +133,7 @@ default-features = true
 
 # Packed bitfields
 [workspace.dependencies.bitflags]
-version = "2.9.4"
+version = "2.10.0"
 
 # Bytes
 [workspace.dependencies.bytes]
@@ -180,7 +181,7 @@ features = ["std"]
 
 # Utility for converting between different cases
 [workspace.dependencies.convert_case]
-version = "0.8.0"
+version = "0.9.0"
 
 # CRC calculation
 [workspace.dependencies.crc]
@@ -192,7 +193,7 @@ version = "0.15.0"
 
 # CSV parsing and writing
 [workspace.dependencies.csv]
-version = "1.3.1"
+version = "1.4.0"
 
 # DER encoding
 [workspace.dependencies.der]
@@ -277,7 +278,7 @@ features = ["client", "server", "http1", "http2"]
 
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
-version = "0.1.17"
+version = "0.1.18"
 features = [
     "client",
     "server",
@@ -339,7 +340,7 @@ features = ["yaml", "json"]
 # IP network address types
 [workspace.dependencies.ipnetwork]
 version = "0.20.0"
-features = ["serde", "schemars"]
+features = ["serde"]
 
 # Iterator utilities
 [workspace.dependencies.itertools]
@@ -395,7 +396,7 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.1.7"
+version = "0.1.8"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
@@ -479,7 +480,7 @@ features = ["std", "pkcs5", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
-version = "2.1.148"
+version = "2.1.162"
 
 # High-precision clock
 [workspace.dependencies.quanta]
@@ -524,7 +525,7 @@ version = "0.16.0"
 
 # TLS stack
 [workspace.dependencies.rustls]
-version = "0.23.32"
+version = "0.23.35"
 
 # PEM parsing for rustls
 [workspace.dependencies.rustls-pemfile]
@@ -532,7 +533,7 @@ version = "2.2.0"
 
 # PKI types for rustls
 [workspace.dependencies.rustls-pki-types]
-version = "1.12.0"
+version = "1.13.0"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
@@ -544,8 +545,8 @@ version = "0.4.5"
 
 # JSON Schema generation
 [workspace.dependencies.schemars]
-version = "0.8.22"
-features = ["url", "chrono", "preserve_order"]
+version = "0.9.0"
+features = ["url2", "chrono04", "preserve_order"]
 
 # SEC1 encoding format
 [workspace.dependencies.sec1]
@@ -570,18 +571,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.45.0"
+version = "0.46.0"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.45.0"
+version = "0.46.0"
 features = ["http", "axum-matched-path"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.45.0"
+version = "0.46.0"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]
@@ -691,7 +692,7 @@ version = "0.1.41"
 version = "0.3.20"
 features = ["env-filter"]
 [workspace.dependencies.tracing-appender]
-version = "0.2.3"
+version = "0.2.4"
 
 # URL manipulation
 [workspace.dependencies.url]

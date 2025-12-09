@@ -99,7 +99,8 @@ Please see LICENSE files in the repository root for full details.
       {% endcall %}
     {% else %}
       {% call(f) field.field(label=_("common.username"), name="username", form_state=form_state) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" value="{{ imported_localpart or '' }}" aria-describedby="{{ f.id }}-help" />
+        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" value="{{ imported_localpart or '' }}" aria-describedby="{{ f.id }}-help" data-choose-username />
+        {{ field.error(error={"kind": "policy", "code": "username-invalid-chars"}, hidden=true) }}
 
         {% if f.errors is empty %}
           <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">

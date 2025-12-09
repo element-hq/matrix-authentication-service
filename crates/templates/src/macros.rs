@@ -78,15 +78,18 @@ macro_rules! register_templates {
             /// # Errors
             ///
             /// Returns an error if any template fails to render with any of the sample.
-            pub(crate) fn all(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
+            pub(crate) fn all<R: Rng + Clone>(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &R) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
                 let mut out = ::std::collections::BTreeMap::new();
                 // TODO shouldn't the Rng be independent for each render?
                 $(
-                    out.extend(
-                        $name $(::< $( $generic_default ),*  >)? (templates, now, rng)?
-                            .into_iter()
-                            .map(|(sample_identifier, rendered)| (($template, sample_identifier), rendered))
-                    );
+                    {
+                        let mut rng = rng.clone();
+                        out.extend(
+                            $name $(::< _ $( , $generic_default ),* >)? (templates, now, &mut rng)?
+                                .into_iter()
+                                .map(|(sample_identifier, rendered)| (($template, sample_identifier), rendered))
+                        );
+                    }
                 )*
 
                 Ok(out)
@@ -101,8 +104,8 @@ macro_rules! register_templates {
                 ///
                 /// Returns an error if the template fails to render with any of the sample.
                 pub(crate) fn $name
-                    $(< $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ >)?
-                    (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng)
+                    < __R: Rng + Clone $( , $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ )? >
+                    (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut __R)
                 -> anyhow::Result<BTreeMap<SampleIdentifier, String>> {
                     let locales = templates.translator().available_locales();
                     let samples: BTreeMap<SampleIdentifier, $param > = TemplateContext::sample(now, rng, &locales);

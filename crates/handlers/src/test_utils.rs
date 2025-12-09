@@ -82,10 +82,11 @@ pub(crate) async fn policy_factory(
         register: "register/violation".to_owned(),
         client_registration: "client_registration/violation".to_owned(),
         authorization_grant: "authorization_grant/violation".to_owned(),
+        compat_login: "compat_login/violation".to_owned(),
         email: "email/violation".to_owned(),
     };
 
-    let data = mas_policy::Data::new(server_name.to_owned()).with_rest(data);
+    let data = mas_policy::Data::new(server_name.to_owned(), None).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
@@ -151,6 +152,7 @@ pub fn test_site_config() -> SiteConfig {
         session_expiration: None,
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
+        session_limit: None,
     }
 }
 
@@ -175,7 +177,7 @@ impl TestState {
         let templates = Templates::load(
             workspace_root.join("templates"),
             url_builder.clone(),
-            workspace_root.join("frontend/dist/manifest.json"),
+            Some(workspace_root.join("frontend/dist/manifest.json")),
             workspace_root.join("translations"),
             site_config.templates_branding(),
             site_config.templates_features(),

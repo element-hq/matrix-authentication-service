@@ -37,14 +37,15 @@ mod macros;
 
 pub use self::{
     context::{
-        AccountInactiveContext, ApiDocContext, AppContext, CompatSsoContext, ConsentContext,
-        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, DeviceNameContext,
-        EmailRecoveryContext, EmailVerificationContext, EmptyContext, ErrorContext,
-        FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
+        CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
+        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
+        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
+        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
+        PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
+        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
+        RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
@@ -72,7 +73,7 @@ pub struct Templates {
     url_builder: UrlBuilder,
     branding: SiteBranding,
     features: SiteFeatures,
-    vite_manifest_path: Utf8PathBuf,
+    vite_manifest_path: Option<Utf8PathBuf>,
     translations_path: Utf8PathBuf,
     path: Utf8PathBuf,
     /// Whether template rendering is in strict mode (for testing,
@@ -143,6 +144,11 @@ fn is_hidden(entry: &DirEntry) -> bool {
 impl Templates {
     /// Load the templates from the given config
     ///
+    /// # Parameters
+    ///
+    /// - `vite_manifest_path`: None if we are rendering resources for
+    ///   reproducibility, in which case a dummy Vite manifest will be used.
+    ///
     /// # Errors
     ///
     /// Returns an error if the templates could not be loaded from disk.
@@ -154,7 +160,7 @@ impl Templates {
     pub async fn load(
         path: Utf8PathBuf,
         url_builder: UrlBuilder,
-        vite_manifest_path: Utf8PathBuf,
+        vite_manifest_path: Option<Utf8PathBuf>,
         translations_path: Utf8PathBuf,
         branding: SiteBranding,
         features: SiteFeatures,
@@ -163,7 +169,7 @@ impl Templates {
         let (translator, environment) = Self::load_(
             &path,
             url_builder.clone(),
-            &vite_manifest_path,
+            vite_manifest_path.as_deref(),
             &translations_path,
             branding.clone(),
             features,
@@ -186,7 +192,7 @@ impl Templates {
     async fn load_(
         path: &Utf8Path,
         url_builder: UrlBuilder,
-        vite_manifest_path: &Utf8Path,
+        vite_manifest_path: Option<&Utf8Path>,
         translations_path: &Utf8Path,
         branding: SiteBranding,
         features: SiteFeatures,
@@ -196,13 +202,20 @@ impl Templates {
         let span = tracing::Span::current();
 
         // Read the assets manifest from disk
-        let vite_manifest = tokio::fs::read(vite_manifest_path)
-            .await
-            .map_err(TemplateLoadingError::ViteManifestIO)?;
+        let vite_manifest = if let Some(vite_manifest_path) = vite_manifest_path {
+            let raw_vite_manifest = tokio::fs::read(vite_manifest_path)
+                .await
+                .map_err(TemplateLoadingError::ViteManifestIO)?;
+
+            Some(
+                serde_json::from_slice::<ViteManifest>(&raw_vite_manifest)
+                    .map_err(TemplateLoadingError::ViteManifest)?,
+            )
+        } else {
+            None
+        };
 
         // Parse it
-        let vite_manifest: ViteManifest =
-            serde_json::from_slice(&vite_manifest).map_err(TemplateLoadingError::ViteManifest)?;
 
         let translations_path = translations_path.to_owned();
         let translator =
@@ -291,7 +304,7 @@ impl Templates {
         let (translator, environment) = Self::load_(
             &self.path,
             self.url_builder.clone(),
-            &self.vite_manifest_path,
+            self.vite_manifest_path.as_deref(),
             &self.translations_path,
             self.branding.clone(),
             self.features,
@@ -379,6 +392,9 @@ register_templates! {
     /// Render the policy violation page
     pub fn render_policy_violation(WithLanguage<WithCsrf<WithSession<PolicyViolationContext>>>) { "pages/policy_violation.html" }
 
+    /// Render the compatibility login policy violation page
+    pub fn render_compat_login_policy_violation(WithLanguage<WithCsrf<WithSession<CompatLoginPolicyViolationContext>>>) { "pages/compat_login_policy_violation.html" }
+
     /// Render the legacy SSO login consent page
     pub fn render_sso_login(WithLanguage<WithCsrf<WithSession<CompatSsoContext>>>) { "pages/sso.html" }
 
@@ -430,9 +446,6 @@ register_templates! {
     /// Render the upstream link mismatch message
     pub fn render_upstream_oauth2_link_mismatch(WithLanguage<WithCsrf<WithSession<UpstreamExistingLinkContext>>>) { "pages/upstream_oauth2/link_mismatch.html" }
 
-    /// Render the upstream link match
-    pub fn render_upstream_oauth2_login_link(WithLanguage<WithCsrf<UpstreamExistingLinkContext>>) { "pages/upstream_oauth2/login_link.html" }
-
     /// Render the upstream suggest link message
     pub fn render_upstream_oauth2_suggest_link(WithLanguage<WithCsrf<WithSession<UpstreamSuggestLink>>>) { "pages/upstream_oauth2/suggest_link.html" }
 
@@ -471,10 +484,10 @@ impl Templates {
     /// # Errors
     ///
     /// Returns an error if any of the templates fails to render
-    pub fn check_render(
+    pub fn check_render<R: Rng + Clone>(
         &self,
         now: chrono::DateTime<chrono::Utc>,
-        rng: &mut impl Rng,
+        rng: &R,
     ) -> anyhow::Result<BTreeMap<(&'static str, SampleIdentifier), String>> {
         check::all(self, now, rng)
     }
@@ -482,14 +495,15 @@ impl Templates {
 
 #[cfg(test)]
 mod tests {
+    use rand::SeedableRng;
+
     use super::*;
 
     #[tokio::test]
     async fn check_builtin_templates() {
         #[allow(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = rand::thread_rng();
+        let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
 
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
@@ -505,18 +519,28 @@ mod tests {
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");
         let translations_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../translations");
-        let templates = Templates::load(
-            path,
-            url_builder,
-            vite_manifest_path,
-            translations_path,
-            branding,
-            features,
-            // Use strict mode in tests
-            true,
-        )
-        .await
-        .unwrap();
-        templates.check_render(now, &mut rng).unwrap();
+
+        for use_real_vite_manifest in [true, false] {
+            let templates = Templates::load(
+                path.clone(),
+                url_builder.clone(),
+                // Check both renders against the real vite manifest and the 'dummy' vite manifest
+                // used for reproducible renders.
+                use_real_vite_manifest.then_some(vite_manifest_path.clone()),
+                translations_path.clone(),
+                branding.clone(),
+                features,
+                // Use strict mode in tests
+                true,
+            )
+            .await
+            .unwrap();
+
+            // Check the renders are deterministic, when given the same rng
+            let render1 = templates.check_render(now, &rng).unwrap();
+            let render2 = templates.check_render(now, &rng).unwrap();
+
+            assert_eq!(render1, render2);
+        }
     }
 }

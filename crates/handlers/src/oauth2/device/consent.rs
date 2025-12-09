@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::{sync::Arc, time::Duration};
+
 use anyhow::Context;
 use axum::{
     Form,
@@ -16,7 +18,8 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, MatrixUser};
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::BoxRepository;
@@ -27,7 +30,7 @@ use ulid::Ulid;
 
 use crate::{
     BoundActivityTracker, PreferredLanguage,
-    session::{SessionOrFallback, load_session_or_fallback},
+    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
 
 #[derive(Deserialize, Debug)]
@@ -49,6 +52,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -103,11 +107,17 @@ pub(crate) async fn get(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
+    // We can close the repository early, we don't need it at this point
+    repo.save().await?;
+
     // Evaluate the policy
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {
@@ -130,7 +140,37 @@ pub(crate) async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    let ctx = DeviceConsentContext::new(grant, client)
+    // Fetch informations about the user. This is purely cosmetic, so we let it
+    // fail and put a 1s timeout to it in case we fail to query it
+    // XXX: we're likely to need this in other places
+    let localpart = &session.user.username;
+    let display_name = match tokio::time::timeout(
+        Duration::from_secs(1),
+        homeserver.query_user(localpart),
+    )
+    .await
+    {
+        Ok(Ok(user)) => user.displayname,
+        Ok(Err(err)) => {
+            tracing::warn!(
+                error = &*err as &dyn std::error::Error,
+                localpart,
+                "Failed to query user"
+            );
+            None
+        }
+        Err(_) => {
+            tracing::warn!(localpart, "Timed out while querying user");
+            None
+        }
+    };
+
+    let matrix_user = MatrixUser {
+        mxid: homeserver.mxid(localpart),
+        display_name,
+    };
+
+    let ctx = DeviceConsentContext::new(grant, client, matrix_user)
         .with_session(session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -150,6 +190,7 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -205,11 +246,14 @@ pub(crate) async fn post(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
     // Evaluate the policy
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {
@@ -259,7 +303,37 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
-    let ctx = DeviceConsentContext::new(grant, client)
+    // Fetch informations about the user. This is purely cosmetic, so we let it
+    // fail and put a 1s timeout to it in case we fail to query it
+    // XXX: we're likely to need this in other places
+    let localpart = &session.user.username;
+    let display_name = match tokio::time::timeout(
+        Duration::from_secs(1),
+        homeserver.query_user(localpart),
+    )
+    .await
+    {
+        Ok(Ok(user)) => user.displayname,
+        Ok(Err(err)) => {
+            tracing::warn!(
+                error = &*err as &dyn std::error::Error,
+                localpart,
+                "Failed to query user"
+            );
+            None
+        }
+        Err(_) => {
+            tracing::warn!(localpart, "Timed out while querying user");
+            None
+        }
+    };
+
+    let matrix_user = MatrixUser {
+        mxid: homeserver.mxid(localpart),
+        display_name,
+    };
+
+    let ctx = DeviceConsentContext::new(grant, client, matrix_user)
         .with_session(session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);

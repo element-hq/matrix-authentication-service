@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::{sync::Arc, time::Duration};
+
 use axum::{
     extract::{Form, Path, State},
     response::{Html, IntoResponse, Response},
@@ -15,8 +17,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng};
+use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
 use mas_keystore::Keystore;
+use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
@@ -32,7 +35,7 @@ use super::callback::CallbackDestination;
 use crate::{
     BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
     oauth2::generate_id_token,
-    session::{SessionOrFallback, load_session_or_fallback},
+    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
 
 #[derive(Debug, Error)]
@@ -87,6 +90,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -136,10 +140,25 @@ pub(crate) async fn get(
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
+    // :tchap:
+    let email = repo
+        .user_email()
+        .all(&session.user)
+        .await?
+        .first()
+        .map(|user_email| user_email.email.clone());
+    // :tchap: end
+
+    // We can close the repository early, we don't need it at this point
+    repo.save().await?;
+
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&session.user),
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {
@@ -159,16 +178,37 @@ pub(crate) async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // :tchap:
-    let email = repo
-        .user_email()
-        .all(&session.user)
-        .await?
-        .first()
-        .map(|user_email| user_email.email.clone());
-    // :tchap: end
+    // Fetch informations about the user. This is purely cosmetic, so we let it
+    // fail and put a 1s timeout to it in case we fail to query it
+    // XXX: we're likely to need this in other places
+    let localpart = &session.user.username;
+    let display_name = match tokio::time::timeout(
+        Duration::from_secs(1),
+        homeserver.query_user(localpart),
+    )
+    .await
+    {
+        Ok(Ok(user)) => user.displayname,
+        Ok(Err(err)) => {
+            tracing::warn!(
+                error = &*err as &dyn std::error::Error,
+                localpart,
+                "Failed to query user"
+            );
+            None
+        }
+        Err(_) => {
+            tracing::warn!(localpart, "Timed out while querying user");
+            None
+        }
+    };
 
-    let ctx = ConsentContext::new(grant, client)
+    let matrix_user = MatrixUser {
+        mxid: homeserver.mxid(localpart),
+        display_name,
+    };
+
+    let ctx = ConsentContext::new(grant, client, matrix_user)
         // :tchap:
         .with_email(email)
         // :tchap: end
@@ -247,10 +287,13 @@ pub(crate) async fn post(
         return Err(RouteError::GrantNotPending(grant.id));
     }
 
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &browser_session.user).await?;
+
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&browser_session.user),
             client: &client,
+            session_counts: Some(session_counts),
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {

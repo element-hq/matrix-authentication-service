@@ -6,14 +6,14 @@
 import type { KnipConfig } from "knip";
 
 export default {
-  entry: ["src/main.tsx", "src/swagger.ts", "src/routes/*"],
+  entry: ["src/entrypoints/**", "src/routes/*"],
   ignore: [
     "src/gql/*",
     "src/routeTree.gen.ts",
     ".storybook/locales.ts",
-    "src/external/**",
 
     "tchap/**", //:tchap: add tchap folder
+    "i18next.config.ts",
   ],
   ignoreDependencies: [
     // This is used by the tailwind PostCSS plugin, but not detected by knip

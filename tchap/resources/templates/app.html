@@ -42,7 +42,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
     <script>
       window.APP_CONFIG = JSON.parse("{{ config | tojson | add_slashes | safe }}");
     </script>
-    {{ include_asset('src/main.tsx') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/main.tsx') | indent(4) | safe }}
   </head>
 
   <body>

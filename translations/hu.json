@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Már van fiókja?",
       "continue_with_email": "Folytatás az e-mail-címével",
+      "continue_with_password": "Folytatás jelszóval",
       "create_account": {
         "description": "A folytatáshoz válasszon felhasználónevet.",
         "heading": "Fiók létrehozása"

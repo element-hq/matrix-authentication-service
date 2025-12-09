@@ -9,7 +9,7 @@ import { TooltipProvider } from "@vector-im/compound-web";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { useEffect, useLayoutEffect } from "react";
 import { I18nextProvider } from "react-i18next";
-import "../src/shared.css";
+import "../src/entrypoints/shared.css";
 import i18n, { setupI18n } from "../src/i18n";
 import { DummyRouter } from "../src/test-utils/router";
 import { handlers } from "../tests/mocks/handlers";

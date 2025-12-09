@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import ErrorBoundary from "../components/ErrorBoundary";
 import i18n, { setupI18n } from "../i18n";
-import "../shared.css";
+import "./shared.css";
 
 setupI18n();
 

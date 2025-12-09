@@ -17,7 +17,7 @@
 ARG DEBIAN_VERSION=12
 ARG DEBIAN_VERSION_NAME=bookworm
 ARG RUSTC_VERSION=1.89.0
-ARG NODEJS_VERSION=22.19.0
+ARG NODEJS_VERSION=24.11.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
 ARG OPA_VERSION=1.8.0 
 ARG CARGO_AUDITABLE_VERSION=0.7.0
@@ -37,7 +37,9 @@ RUN --network=default \
 COPY ./frontend/ /app/frontend/
 COPY ./templates/ /app/templates/
 RUN --network=none \
+  
   #:tchap:
+  #npm run build
   npm run build-tchap
   #:tchap:
 

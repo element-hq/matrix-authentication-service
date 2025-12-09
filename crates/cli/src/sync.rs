@@ -45,6 +45,12 @@ fn map_import_on_conflict(
         mas_config::UpstreamOAuth2OnConflict::Add => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Add
         }
+        mas_config::UpstreamOAuth2OnConflict::Replace => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Replace
+        }
+        mas_config::UpstreamOAuth2OnConflict::Set => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Set
+        }
         mas_config::UpstreamOAuth2OnConflict::Fail => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Fail
         }
@@ -58,6 +64,7 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
+        skip_confirmation: config.skip_confirmation,
         localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),
@@ -202,25 +209,24 @@ pub async fn config_sync(
                 continue;
             }
 
-            let encrypted_client_secret =
-                if let Some(client_secret) = provider.client_secret.as_deref() {
-                    Some(encrypter.encrypt_to_string(client_secret.as_bytes())?)
-                } else if let Some(mut siwa) = provider.sign_in_with_apple.clone() {
-                    // if private key file is defined and not private key (raw), we populate the
-                    // private key to hold the content of the private key file.
-                    // private key (raw) takes precedence so both can be defined
-                    // without issues
-                    if siwa.private_key.is_none()
-                        && let Some(private_key_file) = siwa.private_key_file.take()
-                    {
-                        let key = tokio::fs::read_to_string(private_key_file).await?;
-                        siwa.private_key = Some(key);
-                    }
-                    let encoded = serde_json::to_vec(&siwa)?;
-                    Some(encrypter.encrypt_to_string(&encoded)?)
-                } else {
-                    None
-                };
+            let encrypted_client_secret = if let Some(client_secret) = provider.client_secret {
+                Some(encrypter.encrypt_to_string(client_secret.value().await?.as_bytes())?)
+            } else if let Some(mut siwa) = provider.sign_in_with_apple.clone() {
+                // if private key file is defined and not private key (raw), we populate the
+                // private key to hold the content of the private key file.
+                // private key (raw) takes precedence so both can be defined
+                // without issues
+                if siwa.private_key.is_none()
+                    && let Some(private_key_file) = siwa.private_key_file.take()
+                {
+                    let key = tokio::fs::read_to_string(private_key_file).await?;
+                    siwa.private_key = Some(key);
+                }
+                let encoded = serde_json::to_vec(&siwa)?;
+                Some(encrypter.encrypt_to_string(&encoded)?)
+            } else {
+                None
+            };
 
             let discovery_mode = match provider.discovery_mode {
                 mas_config::UpstreamOAuth2DiscoveryMode::Oidc => {

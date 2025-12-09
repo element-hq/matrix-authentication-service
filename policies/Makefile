@@ -16,6 +16,7 @@ INPUTS := \
 	client_registration/client_registration.rego \
 	register/register.rego \
 	authorization_grant/authorization_grant.rego \
+	compat_login/compat_login.rego \
 	email/email.rego
 
 ifeq ($(DOCKER), 1)
@@ -24,9 +25,9 @@ ifeq ($(DOCKER), 1)
 	REGAL := docker run -i -v $(shell pwd):/policies:ro -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else ifeq ($(PODMAN), 1)
 	# When running rootless, the volume directory may need to be given global write permissions on the host
-	OPA := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
+	OPA := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(OPA_DOCKER_IMAGE)
 	OPA_RW := podman run -i -v $(shell pwd):/policies:Z -w /policies --rm $(OPA_DOCKER_IMAGE)
-	REGAL := podman run -i -v $(shell pwd):/policies:ro:Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
+	REGAL := podman run -i -v $(shell pwd):/policies:ro,Z -w /policies --rm $(REGAL_DOCKER_IMAGE)
 else
 	OPA := opa
 	OPA_RW := opa
@@ -38,6 +39,7 @@ policy.wasm: $(INPUTS)
 		-e "client_registration/violation" \
 		-e "register/violation" \
 		-e "authorization_grant/violation" \
+		-e "compat_login/violation" \
 		-e "email/violation" \
 		$^
 	tar xzf bundle.tar.gz /policy.wasm

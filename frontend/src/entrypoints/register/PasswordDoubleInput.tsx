@@ -3,7 +3,7 @@ import { Form } from "@vector-im/compound-web";
 import { graphql } from "../../gql";
 import { graphqlRequest } from "../../graphql";
 import { mountWithProviders } from "../mount";
-import "../../shared.css";
+import "../shared.css";
 import PasswordCreationDoubleInput from "./PasswordCreationDoubleInput";
 
 const HTML_ID = "#password-double-input";

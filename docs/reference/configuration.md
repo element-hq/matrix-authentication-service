@@ -196,7 +196,7 @@ secrets:
 
   # Signing keys
   keys:
-    # It needs at least an RSA key to work properly
+    # At least one RSA key must be configured
     - key_file: keys/rsa_key
     - kid: "iv1aShae"
       key: |
@@ -222,7 +222,7 @@ The secret is not updated when the content of the file changes.
 > Changing the encryption secret afterwards will lead to a loss of all encrypted
 > information in the database.
 
-### `secrets.keys`
+### Signing Keys
 
 The service can use a number of key types for signing.
 The following key types are supported:
@@ -232,14 +232,40 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry in the list corresponds to one signing key used by MAS.
-The key can either be specified inline (with the `key` property),
-or loaded from a file (with the `key_file` property).
 The following key formats are supported:
 
 - PKCS#1 PEM or DER-encoded RSA private key
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
+
+The signing keys are used for:
+- signing ID Tokens (as returned in the [Token Endpoint] at `/oauth2/token`);
+- signing the response of the [UserInfo Endpoint] at `/oauth2/userinfo` if the
+  client requests a signed response;
+- (niche) signing a JWT for authenticating to an upstream OAuth provider when
+  the `private_key_jwt` client auth method is configured.
+
+At a minimum, an RSA key must be configured in order to be compliant with the
+[OpenID Connect Core specification][oidc-core-rs256] which specifies the RS256 algorithm
+as mandatory to implement by servers for interoperability reasons.
+
+The keys can be given as a directory path via `secrets.keys_dir`
+or, alternatively, as an inline configuration list via `secrets.keys`.
+
+[Token Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+[UserInfo Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+[oidc-core-rs256]: https://openid.net/specs/openid-connect-core-1_0.html#ServerMTI
+
+#### `secrets.keys_dir`
+
+Path to the directory containing MAS signing key files.
+Only keys that don’t require a password are supported.
+
+#### `secrets.keys`
+
+Each entry in the list corresponds to one signing key used by MAS.
+The key can either be specified inline (with the `key` property),
+or loaded from a file (with the `key_file` property).
 
 A [JWK Key ID] is automatically derived from each key.
 To override this default, set `kid` to a custom value.
@@ -642,7 +668,8 @@ upstream_oauth2:
       # The client secret to use to authenticate to the provider
       # This is only used by the `client_secret_post`, `client_secret_basic`
       # and `client_secret_jwk` authentication methods
-      #client_secret: f4f6bb68a0269264877e9cb23b1856ab
+      client_secret_file: secret
+      # OR client_secret: f4f6bb68a0269264877e9cb23b1856ab
 
       # Which authentication method to use to authenticate to the provider
       # Supported methods are:
@@ -759,6 +786,14 @@ upstream_oauth2:
         subject:
           #template: "{{ user.sub }}"
 
+        # By default, new users will see a screen confirming the attributes they
+        # are about to have on their account.
+        #
+        # Setting this to `true` allows skipping this screen, but requires the
+        # `localpart.action` to be set to `require` and the other attributes
+        # actions to be set to `ignore`, `force` or `require`.
+        #skip_confirmation: false
+
         # The localpart is the local part of the user's Matrix ID.
         # For example, on the `example.com` server, if the localpart is `alice`,
         #  the user's Matrix ID will be `@alice:example.com`.
@@ -768,8 +803,10 @@ upstream_oauth2:
 
           # How to handle when localpart already exists.
           # Possible values are (default: fail):
-          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
           # - `fail` : Fails the upstream OAuth 2.0 login.
+          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
+          # - `replace` : Replace any existing upstream OAuth 2.0 identity link for this provider on the matching user.
+          # - `set` : Adds the upstream account link *only* if there is no existing link for this provider on the matching user.
           #on_conflict: fail
 
         # The display name is the user's display name.
@@ -781,15 +818,6 @@ upstream_oauth2:
         email:
           #action: suggest
           #template: "{{ user.email }}"
-
-          # Whether the email address must be marked as verified.
-          # Possible values are:
-          #  - `import`: mark the email address as verified if the upstream provider
-          #     has marked it as verified, using the `email_verified` claim.
-          #     This is the default.
-          #   - `always`: mark the email address as verified
-          #   - `never`: mark the email address as not verified
-          #set_email_verification: import
 
         # An account name, for display purposes only
         # This helps end user identify what account they are using

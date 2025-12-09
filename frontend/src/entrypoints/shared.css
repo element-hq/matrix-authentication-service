@@ -14,7 +14,7 @@
 @import url("@vector-im/compound-design-tokens/assets/web/css/compound-design-tokens.css");
 @import url("@vector-im/compound-web/dist/style.css");
 
-@import url("../tchap/css/tchap.css");
+@import url("../../tchap/css/tchap.css");
 
 @tailwind base;
 @tailwind components;

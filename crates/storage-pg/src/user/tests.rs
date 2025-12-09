@@ -488,7 +488,7 @@ async fn test_user_email_repo_authentications(pool: PgPool) {
     // Complete the authentication
     let authentication = repo
         .user_email()
-        .complete_authentication(&clock, authentication, &code)
+        .complete_authentication_with_code(&clock, authentication, &code)
         .await
         .unwrap();
 
@@ -514,7 +514,7 @@ async fn test_user_email_repo_authentications(pool: PgPool) {
     // Completing a second time should fail
     let res = repo
         .user_email()
-        .complete_authentication(&clock, authentication, &code)
+        .complete_authentication_with_code(&clock, authentication, &code)
         .await;
     assert!(res.is_err());
 }

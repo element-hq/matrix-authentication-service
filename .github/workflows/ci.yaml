@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: ./.github/actions/build-policies
 
@@ -61,12 +61,12 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install Node dependencies
         working-directory: ./frontend
@@ -85,12 +85,12 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install Node dependencies
         working-directory: ./frontend
@@ -109,12 +109,12 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
         uses: actions/setup-node@v6.0.0
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install Node dependencies
         working-directory: ./frontend
@@ -133,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -156,10 +156,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Run `cargo-deny`
-        uses: EmbarkStudios/cargo-deny-action@v2.0.13
+        uses: EmbarkStudios/cargo-deny-action@v2.0.14
         with:
           rust-version: stable
 
@@ -172,7 +172,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         run: |
@@ -213,7 +213,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.89.0
@@ -238,7 +238,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -257,7 +257,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
@@ -291,7 +291,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -305,7 +305,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Download archive
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: nextest-archive
 

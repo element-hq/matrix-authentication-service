@@ -24,8 +24,9 @@ Please see LICENSE in the repository root for full details.
     <meta charset="utf-8">
     <title>{% block title %}{{ _("app.name") }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {{ include_asset('src/shared.css') | indent(4) | safe }}
-    {{ include_asset('src/templates.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/shared.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/templates.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/templates.ts') | indent(4) | safe }}
 
     <!-- :tchap: -->
     <link rel="icon" href="https://www.tchap.gouv.fr/vector-icons/favicon.e336df8.ico">

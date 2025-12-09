@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Вже маєте обліковий запис?",
       "continue_with_email": "Продовжити за допомогою е-пошти",
+      "continue_with_password": "Продовжити з паролем",
       "create_account": {
         "description": "Виберіть ім'я користувача, щоб продовжити.",
         "heading": "Створити обліковий запис"

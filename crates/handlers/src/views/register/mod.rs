@@ -21,6 +21,8 @@ mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
 
+pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie;
+
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,

@@ -69,20 +69,25 @@ The template has the following variables available:
 
 ## Allow linking existing user accounts
 
-The authentication service supports linking external provider identities to existing local user accounts.
+The authentication service supports linking external provider identities to existing local user accounts if the `localpart` matches.
 
-To enable this behavior, the following option must be explicitly set in the provider configuration:
+If the `localpart` given by the upstream provider matches an existing user and the `claims_imports.localpart.action` is set to `force` or `require`, by default the service will refuse to link to that existing account.
+This behaviour is controlled by the `claims_imports.localpart.on_conflict` option, which can be set to:
+
+  * `fail` *(default)*: fails the upstream OAuth 2.0 login
+  * `add`: automatically adds the upstream account to the existing user, regardless of whether the existing user already has another upstream account or not
+  * `set`: automatically adds the upstream account to the existing user only if there are no other upstream accounts for that provider linked to the user
+  * `replace`: automatically replaces any upstream account for that provider linked to the user
 
 ```yaml
-claims_imports:
-  localpart:
-    on_conflict: add
+upstream_oauth2:
+  providers:
+   - id: …
+     claims_imports:
+       localpart:
+         action: force
+         on_conflict: set
 ```
-`on_conflict` configuration is specific to `localpart` claim_imports, it can be either:
-* `add` : when a user authenticates with the provider for the first time, the system checks whether a local user already exists with a `localpart` matching the attribute mapping `localpart` , _by default `{{ user.preferred_username }}`_. If a match is found, the external identity is linked to the existing local account.
-* `fail` *(default)* : fails the sso login.
-
-To enable this option, the `localpart` mapping must be set to either `force` or `require`.
 
 > ⚠️ **Security Notice**
 > Enabling this option can introduce a risk of account takeover.
@@ -213,7 +218,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -250,7 +254,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -291,7 +294,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
         account_name:
           template: "{{ user.name }}"
 ```
@@ -462,7 +464,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
 ```
 
 
@@ -499,7 +500,6 @@ upstream_oauth2:
         email:
           action: suggest
           template: "{{ user.email }}"
-          set_email_verification: always
         account_name:
           template: "{{ user.preferred_username }}"
 ```
@@ -600,4 +600,71 @@ To use a Rauthy-supported [Ephemeral Client](https://sebadob.github.io/rauthy/wo
   "access_token_signed_response_alg": "RS256",
   "id_token_signed_response_alg": "RS256"
 }
+```
+
+
+### Shibboleth
+
+[Shibboleth](https://www.shibboleth.net/) is an open-source identity management system commonly used by universities and research institutions.
+It is primarily based on SAML but also supports OIDC via the [OIDC OP Plugin](https://shibboleth.atlassian.net/wiki/spaces/IDPPLUGINS/pages/1376878976/OIDC+OP).
+
+These instructions assume you have a running Shibboleth instance with the OIDC plugin configured.
+
+Register MAS as a relying party in Shibboleth:
+
+1. Add a metadata file (e.g. `mas-metadata.xml`) to `%{idp.home}/metadata/` with the following content:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata"
+                     xmlns:oidcmd="urn:mace:shibboleth:metadata:oidc:1.0"
+                     entityID="<client-id>">
+       <Extensions>
+           <oidcmd:ClientInformation>
+               <oidcmd:ClientSecret><client-secret></oidcmd:ClientSecret>
+           </oidcmd:ClientInformation>
+       </Extensions>
+       <SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+           <Extensions>
+               <oidcmd:OIDCClientInformation scopes="openid profile email"
+                                             token_endpoint_auth_method="client_secret_basic">
+                   <oidcmd:GrantType>authorization_code</oidcmd:GrantType>
+                   <oidcmd:ResponseType>code</oidcmd:ResponseType>
+               </oidcmd:OIDCClientInformation>
+           </Extensions>
+           <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                                     Location="https://<auth-service-domain>/upstream/callback/<id>"
+                                     index="1"/>
+       </SPSSODescriptor>
+   </EntityDescriptor>
+   ```
+
+   Replace `<client-id>`, `<client-secret>`, `<auth-service-domain>`, and `<id>` with your values.
+
+2. Reference the metadata file in `%{idp.home}/conf/metadata-providers.xml` and reload services.
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01JB6YS8N7Q2ZM9CPXW6V0KGRT
+      human_name: Shibboleth
+      issuer: "https://<shibboleth-domain>/" # TO BE FILLED
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      token_endpoint_auth_method: client_secret_basic
+      scope: "openid profile email"
+      discovery_mode: insecure
+      fetch_userinfo: true
+      claims_imports:
+        localpart:
+          action: require
+          template: "{{ user.preferred_username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
 ```
