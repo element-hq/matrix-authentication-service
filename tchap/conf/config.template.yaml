@@ -200,8 +200,9 @@ upstream_oauth2:
       client_secret: "HrJ1NZ0AbkHuWWjyRHh7X2lzn3S8eagt"
       scope: "openid profile email"
       claims_imports:
+        skip_confirmation: true
         localpart:
-          action: force 
+          action: require 
           #template: "{{ user.preferred_username }}"
           on_conflict: add
           #action: require
