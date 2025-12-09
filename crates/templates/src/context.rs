@@ -734,12 +734,9 @@ pub struct ConsentContext {
     grant: AuthorizationGrant,
     client: Client,
     action: PostAuthAction,
-<<<<<<< HEAD
     // :tchap:
     email: Option<String>, // :tchap:end
-=======
     matrix_user: MatrixUser,
->>>>>>> v1.8.0-rc.0
 }
 
 impl TemplateContext for ConsentContext {
@@ -763,15 +760,12 @@ impl TemplateContext for ConsentContext {
                         grant,
                         client,
                         action,
-<<<<<<< HEAD
                         // :tchap:
                         email: None, // :tchap: end
-=======
                         matrix_user: MatrixUser {
                             mxid: "@alice:example.com".to_owned(),
                             display_name: Some("Alice".to_owned()),
                         },
->>>>>>> v1.8.0-rc.0
                     }
                 })
                 .collect(),
@@ -788,13 +782,10 @@ impl ConsentContext {
             grant,
             client,
             action,
-<<<<<<< HEAD
             // :tchap:
             email: None,
             // :tchap: end
-=======
             matrix_user,
->>>>>>> v1.8.0-rc.0
         }
     }
 

@@ -142,6 +142,15 @@ pub(crate) async fn get(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
+     // :tchap:
+    let email = repo
+        .user_email()
+        .all(&session.user)
+        .await?
+        .first()
+        .map(|user_email| user_email.email.clone());
+    // :tchap: end
+
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
 
@@ -168,22 +177,7 @@ pub(crate) async fn get(
 
         return Ok((cookie_jar, Html(content)).into_response());
     }
-
-<<<<<<< HEAD
-    // :tchap:
-    let email = repo
-        .user_email()
-        .all(&session.user)
-        .await?
-        .first()
-        .map(|user_email| user_email.email.clone());
-    // :tchap: end
-
-    let ctx = ConsentContext::new(grant, client)
-        // :tchap:
-        .with_email(email)
-        // :tchap: end
-=======
+    
     // Fetch informations about the user. This is purely cosmetic, so we let it
     // fail and put a 1s timeout to it in case we fail to query it
     // XXX: we're likely to need this in other places
@@ -214,8 +208,12 @@ pub(crate) async fn get(
         display_name,
     };
 
+   
+
     let ctx = ConsentContext::new(grant, client, matrix_user)
->>>>>>> v1.8.0-rc.0
+        // :tchap:
+        .with_email(email)
+        // :tchap: end
         .with_session(session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
