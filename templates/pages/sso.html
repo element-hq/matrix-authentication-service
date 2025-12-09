@@ -6,6 +6,8 @@ SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 -#}
 
+{% set consent_page = true %}
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -17,18 +19,29 @@ Please see LICENSE files in the repository root for full details.
     </div>
 
     <div class="header">
-      <h1 class="title">Allow access to your account?</h1>
-      <p class="text"><span class="whitespace-nowrap">{{ client_name }}</span> wants to access your account. This will allow <span class="whitespace-nowrap">{{ client_name }}</span> to:</p>
+      <h1 class="title">
+        {{ _('mas.consent.continue_to', client_name=client_name) }}
+      </h1>
+      <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
+        {{ _("mas.legacy_consent.this_will_setup", client_name=client_name, server_name=branding.server_name) }}
+      </p>
     </div>
   </header>
 
-  <section class="consent-scope-list">
-    {{ scope.list(scopes="openid urn:matrix:client:api:*") }}
-  </section>
+  {% set initial -%}
+    {%- if matrix_user.display_name -%}
+      {{- matrix_user.display_name[0] | upper -}}
+    {%- else -%}
+      {{- matrix_user.mxid[1] | upper -}}
+    {%- endif -%}
+  {%- endset %}
 
-  <section class="text-center cpd-text-secondary cpd-text-body-md-regular">
-    <span class="font-semibold cpd-text-primary">Make sure that you trust <span class="whitespace-nowrap">{{ client_name }}</span>.</span>
-    You may be sharing sensitive information with this site or app.
+  <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
+    <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+    <div class="flex flex-col">
+      <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
+      <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
+    </div>
   </section>
 
   <section class="flex flex-col gap-6">
@@ -37,12 +50,10 @@ Please see LICENSE files in the repository root for full details.
       {{ button.button(text=_("action.continue")) }}
     </form>
 
-    <div class="flex gap-1 justify-center items-center">
-      <p class="cpd-text-secondary cpd-text-body-md-regular">
-        {{ _("mas.not_you", username=current_session.user.username) }}
-      </p>
-
-      {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=true) }}
-    </div>
+    {% call logout.button(csrf_token=csrf_token, post_logout_action=action) %}
+      <button type="submit" class="cpd-button primary" data-kind="secondary" data-size="lg" type="submit">
+        {{ _("mas.consent.use_another_account") }}
+      </button>
+    {% endcall %}
   </section>
 {% endblock content %}

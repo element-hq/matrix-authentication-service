@@ -42,10 +42,16 @@ pub use self::{
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
     policy_data::PolicyData,
+<<<<<<< HEAD
     site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig, SiteConfig},
     //:tchap:
     tchap_config::*,
     //:tchap:end
+=======
+    site_config::{
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+    },
+>>>>>>> v1.8.0-rc.0
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
     },
@@ -60,8 +66,8 @@ pub use self::{
     },
     user_agent::{DeviceType, UserAgent},
     users::{
-        Authentication, AuthenticationMethod, BrowserSession, Password, User, UserEmail,
-        UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
+        Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
+        UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},

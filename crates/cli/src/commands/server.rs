@@ -150,7 +150,9 @@ impl Options {
 
         // Load and compile the WASM policies (and fallback to the default embedded one)
         info!("Loading and compiling the policy module");
-        let policy_factory = policy_factory_from_config(&config.policy, &config.matrix).await?;
+        let policy_factory =
+            policy_factory_from_config(&config.policy, &config.matrix, &config.experimental)
+                .await?;
         let policy_factory = Arc::new(policy_factory);
 
         load_policy_factory_dynamic_data_continuously(
@@ -187,6 +189,8 @@ impl Options {
             &site_config,
             &url_builder,
             // Don't use strict mode in production yet
+            false,
+            // Don't stabilise in production
             false,
         )
         .await?;

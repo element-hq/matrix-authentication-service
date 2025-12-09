@@ -52,7 +52,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           # Need a full clone so that `git describe` reports the right version
           fetch-depth: 0
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: ./.github/actions/build-frontend
       - uses: ./.github/actions/build-policies
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -232,7 +232,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.9.0
+        uses: docker/metadata-action@v5.10.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action
@@ -248,7 +248,7 @@ jobs:
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v5.9.0
+        uses: docker/metadata-action@v5.10.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action-debug
@@ -282,7 +282,7 @@ jobs:
 
       - name: Build and push
         id: bake
-        uses: docker/bake-action@v6.9.0
+        uses: docker/bake-action@v6.10.0
         with:
           files: |
             ./docker-bake.hcl
@@ -333,7 +333,7 @@ jobs:
           merge-multiple: true
 
       - name: Prepare a release
-        uses: softprops/action-gh-release@v2.4.2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           generate_release_notes: true
           body: |
@@ -382,7 +382,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts
@@ -402,7 +402,7 @@ jobs:
             await script({ core, github, context });
 
       - name: Update unstable release
-        uses: softprops/action-gh-release@v2.4.2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           name: "Unstable build"
           tag_name: unstable
@@ -460,7 +460,7 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts

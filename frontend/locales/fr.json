@@ -391,9 +391,9 @@
     "scope": {
       "edit_profile": "Modifier votre profil et vos coordonnées",
       "manage_sessions": "Gérer vos appareils et vos sessions",
-      "mas_admin": "Administrer n'importe quel utilisateur dans matrix-authentication-service",
+      "mas_admin": "Administrer les utilisateurs (urn:mas:admin)",
       "send_messages": "Envoyez de nouveaux messages en votre nom",
-      "synapse_admin": "Administrer le serveur d’accueil Synapse",
+      "synapse_admin": "Administrer le serveur (urn:synapse:admin:*)",
       "view_messages": "Afficher vos messages et données existants",
       "view_profile": "Voir les informations de votre profil et vos coordonnées"
     }

@@ -9,17 +9,19 @@ pub mod model;
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
-use mas_data_model::Ulid;
+use mas_data_model::{SessionLimitConfig, Ulid};
 use opa_wasm::{
     Runtime,
     wasmtime::{Config, Engine, Module, OptLevel, Store},
 };
+use serde::Serialize;
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
 pub use self::model::{
-    AuthorizationGrantInput, ClientRegistrationInput, Code as ViolationCode, EmailInput,
-    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
+    AuthorizationGrantInput, ClientRegistrationInput, Code as ViolationCode, CompatLoginInput,
+    EmailInput, EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester,
+    Violation,
 };
 
 #[derive(Debug, Error)]
@@ -71,15 +73,17 @@ pub struct Entrypoints {
     pub register: String,
     pub client_registration: String,
     pub authorization_grant: String,
+    pub compat_login: String,
     pub email: String,
 }
 
 impl Entrypoints {
-    fn all(&self) -> [&str; 4] {
+    fn all(&self) -> [&str; 5] {
         [
             self.register.as_str(),
             self.client_registration.as_str(),
             self.authorization_grant.as_str(),
+            self.compat_login.as_str(),
             self.email.as_str(),
         ]
     }
@@ -87,16 +91,29 @@ impl Entrypoints {
 
 #[derive(Debug)]
 pub struct Data {
+    base: BaseData,
+
+    // We will merge this in a custom way, so don't emit as part of the base
+    rest: Option<serde_json::Value>,
+}
+
+#[derive(Serialize, Debug)]
+struct BaseData {
     server_name: String,
 
-    rest: Option<serde_json::Value>,
+    /// Limits on the number of application sessions that each user can have
+    session_limit: Option<SessionLimitConfig>,
 }
 
 impl Data {
     #[must_use]
-    pub fn new(server_name: String) -> Self {
+    pub fn new(server_name: String, session_limit: Option<SessionLimitConfig>) -> Self {
         Self {
-            server_name,
+            base: BaseData {
+                server_name,
+                session_limit,
+            },
+
             rest: None,
         }
     }
@@ -108,9 +125,7 @@ impl Data {
     }
 
     fn to_value(&self) -> Result<serde_json::Value, anyhow::Error> {
-        let base = serde_json::json!({
-            "server_name": self.server_name,
-        });
+        let base = serde_json::to_value(&self.base)?;
 
         if let Some(rest) = &self.rest {
             merge_data(base, rest.clone())
@@ -447,6 +462,30 @@ impl Policy {
 
         Ok(res)
     }
+
+    /// Evaluate the `compat_login` entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
+    #[tracing::instrument(
+        name = "policy.evaluate.compat_login",
+        skip_all,
+        fields(
+            %input.user.id,
+        ),
+    )]
+    pub async fn evaluate_compat_login(
+        &mut self,
+        input: CompatLoginInput<'_>,
+    ) -> Result<EvaluationResult, EvaluationError> {
+        let [res]: [EvaluationResult; 1] = self
+            .instance
+            .evaluate(&mut self.store, &self.entrypoints.compat_login, &input)
+            .await?;
+
+        Ok(res)
+    }
 }
 
 #[cfg(test)]
@@ -456,9 +495,19 @@ mod tests {
 
     use super::*;
 
+    fn make_entrypoints() -> Entrypoints {
+        Entrypoints {
+            register: "register/violation".to_owned(),
+            client_registration: "client_registration/violation".to_owned(),
+            authorization_grant: "authorization_grant/violation".to_owned(),
+            compat_login: "compat_login/violation".to_owned(),
+            email: "email/violation".to_owned(),
+        }
+    }
+
     #[tokio::test]
     async fn test_register() {
-        let data = Data::new("example.com".to_owned()).with_rest(serde_json::json!({
+        let data = Data::new("example.com".to_owned(), None).with_rest(serde_json::json!({
             "allowed_domains": ["element.io", "*.element.io"],
             "banned_domains": ["staging.element.io"],
         }));
@@ -472,14 +521,9 @@ mod tests {
 
         let file = tokio::fs::File::open(path).await.unwrap();
 
-        let entrypoints = Entrypoints {
-            register: "register/violation".to_owned(),
-            client_registration: "client_registration/violation".to_owned(),
-            authorization_grant: "authorization_grant/violation".to_owned(),
-            email: "email/violation".to_owned(),
-        };
-
-        let factory = PolicyFactory::load(file, data, entrypoints).await.unwrap();
+        let factory = PolicyFactory::load(file, data, make_entrypoints())
+            .await
+            .unwrap();
 
         let mut policy = factory.instantiate().await.unwrap();
 
@@ -528,7 +572,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_dynamic_data() {
-        let data = Data::new("example.com".to_owned());
+        let data = Data::new("example.com".to_owned(), None);
 
         #[allow(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -539,14 +583,9 @@ mod tests {
 
         let file = tokio::fs::File::open(path).await.unwrap();
 
-        let entrypoints = Entrypoints {
-            register: "register/violation".to_owned(),
-            client_registration: "client_registration/violation".to_owned(),
-            authorization_grant: "authorization_grant/violation".to_owned(),
-            email: "email/violation".to_owned(),
-        };
-
-        let factory = PolicyFactory::load(file, data, entrypoints).await.unwrap();
+        let factory = PolicyFactory::load(file, data, make_entrypoints())
+            .await
+            .unwrap();
 
         let mut policy = factory.instantiate().await.unwrap();
 
@@ -597,7 +636,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_big_dynamic_data() {
-        let data = Data::new("example.com".to_owned());
+        let data = Data::new("example.com".to_owned(), None);
 
         #[allow(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -608,14 +647,9 @@ mod tests {
 
         let file = tokio::fs::File::open(path).await.unwrap();
 
-        let entrypoints = Entrypoints {
-            register: "register/violation".to_owned(),
-            client_registration: "client_registration/violation".to_owned(),
-            authorization_grant: "authorization_grant/violation".to_owned(),
-            email: "email/violation".to_owned(),
-        };
-
-        let factory = PolicyFactory::load(file, data, entrypoints).await.unwrap();
+        let factory = PolicyFactory::load(file, data, make_entrypoints())
+            .await
+            .unwrap();
 
         // That is around 1 MB of JSON data. Each element is a 5-digit string, so 8
         // characters including the quotes and a comma.
