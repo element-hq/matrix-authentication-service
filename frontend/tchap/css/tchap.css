@@ -222,7 +222,7 @@ footer {
     font-size: 30px !important;
     margin-left: 10px !important;
     margin-bottom: var(--text-spacing) !important;
-    color: #2845C1 !important;
+    color: #2845c1 !important;
   }
   :where(.lasuite) .fr-header__brand {
     justify-content: center !important;
