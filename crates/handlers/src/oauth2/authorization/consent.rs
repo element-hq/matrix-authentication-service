@@ -142,7 +142,7 @@ pub(crate) async fn get(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
-     // :tchap:
+    // :tchap:
     let email = repo
         .user_email()
         .all(&session.user)
@@ -177,7 +177,7 @@ pub(crate) async fn get(
 
         return Ok((cookie_jar, Html(content)).into_response());
     }
-    
+
     // Fetch informations about the user. This is purely cosmetic, so we let it
     // fail and put a 1s timeout to it in case we fail to query it
     // XXX: we're likely to need this in other places
@@ -207,8 +207,6 @@ pub(crate) async fn get(
         mxid: homeserver.mxid(localpart),
         display_name,
     };
-
-   
 
     let ctx = ConsentContext::new(grant, client, matrix_user)
         // :tchap:

@@ -23,7 +23,8 @@ use mas_axum_utils::{
     record_error,
 };
 use mas_data_model::{
-    BoxClock, BoxRng, TchapConfig, UpstreamOAuthAuthorizationSession, UpstreamOAuthProviderOnConflict, UserRegistration
+    BoxClock, BoxRng, TchapConfig, UpstreamOAuthAuthorizationSession,
+    UpstreamOAuthProviderOnConflict, UserRegistration,
 };
 use mas_jose::jwt::Jwt;
 use mas_matrix::HomeserverConnection;
@@ -479,7 +480,6 @@ pub(crate) async fn get(
                     break 'localpart None;
                 };
 
-
                 let forced_or_required = provider.claims_imports.localpart.is_forced_or_required();
 
                 // We've got a localpart from the template. Let's run the policy
@@ -536,7 +536,6 @@ pub(crate) async fn get(
                 // available, and if it's not apply the conflict resolution setup in
                 // the config
 
-                
                 let template = provider
                     .claims_imports
                     .email
@@ -550,15 +549,17 @@ pub(crate) async fn get(
                     &context,
                     provider.claims_imports.email.is_required(),
                 )?;
-                
+
                 //let maybe_existing_user = repo.user().find_by_username(&localpart).await?;
 
                 //search user by email instead of username
                 let maybe_existing_user =
-                    tchap::search_user_by_email(&mut repo, &maybe_email.unwrap(), &tchap_config).await?;
-                
-                // if user was not found by email but searching by username match, we have a conflict on the email in Tchap
-                if maybe_existing_user.is_none(){
+                    tchap::search_user_by_email(&mut repo, &maybe_email.unwrap(), &tchap_config)
+                        .await?;
+
+                // if user was not found by email but searching by username match, we have a
+                // conflict on the email in Tchap
+                if maybe_existing_user.is_none() {
                     let maybe_existing_user = repo.user().find_by_username(&localpart).await?;
 
                     if let Some(existing_user) = maybe_existing_user {
@@ -585,7 +586,6 @@ pub(crate) async fn get(
                     }
                 }
                 //:tchap: end
-                    
 
                 if let Some(existing_user) = maybe_existing_user {
                     if !forced_or_required {
@@ -790,7 +790,8 @@ pub(crate) async fn get(
                     ));
                 }
 
-                // when user is not found, verify that the email is allowed on the server for account creation
+                // when user is not found, verify that the email is allowed on the server for
+                // account creation
                 //:tchap:
                 let template = provider
                     .claims_imports
@@ -806,16 +807,13 @@ pub(crate) async fn get(
                     provider.claims_imports.email.is_required(),
                 )?;
 
-
-                if let Some(error_ctx) = validate_email_for_server(
-                    &email.unwrap(),
-                    &homeserver,
-                    &tchap_config,
-                    &locale,
-                ).await? {
+                if let Some(error_ctx) =
+                    validate_email_for_server(&email.unwrap(), &homeserver, &tchap_config, &locale)
+                        .await?
+                {
                     return Ok((
-                            cookie_jar,
-                            Html(templates.render_error(&error_ctx)?).into_response(),
+                        cookie_jar,
+                        Html(templates.render_error(&error_ctx)?).into_response(),
                     ));
                 }
                 //:tchap: end
@@ -1132,7 +1130,6 @@ pub(crate) async fn post(
             }
             .unwrap_or_default();
 
-
             // Validate the form
             let form_state = {
                 let mut form_state = form_state;
@@ -1337,12 +1334,11 @@ async fn prepare_user_registration(
         .await?;
 
     Ok(registration)
-
 }
 
 //:tchap:
 /// Validates if an email is allowed to register on this Tchap server.
-/// 
+///
 /// # Returns
 /// - `Ok(Some(ErrorContext))` - An error context if email is not allowed
 /// - `Ok(None)` - Email is allowed, user can proceed
@@ -1364,8 +1360,13 @@ async fn validate_email_for_server(
             // Email is mapped to a different server
             let ctx = ErrorContext::new()
                 .with_code("wrong_server")
-                .with_description(format!("Votre adresse mail {email} est associée à un autre serveur."))
-                .with_details("Veuillez-vous contacter le support de Tchap support@tchap.beta.gouv.fr".to_owned())
+                .with_description(format!(
+                    "Votre adresse mail {email} est associée à un autre serveur."
+                ))
+                .with_details(
+                    "Veuillez-vous contacter le support de Tchap support@tchap.beta.gouv.fr"
+                        .to_owned(),
+                )
                 .with_language(locale);
 
             Ok(Some(ctx))
@@ -1384,7 +1385,6 @@ async fn validate_email_for_server(
 }
 //:tchap: end
 
-
 //:tchap:
 ///real function used when not testing
 #[cfg(not(test))]
@@ -1398,11 +1398,11 @@ async fn check_email_allowed(
 ///mock function used when testing
 #[cfg(test)]
 async fn check_email_allowed(
-    _email: &str,
+    email: &str,
     _server_name: &str,
     _tchap_config: &TchapConfig,
 ) -> EmailAllowedResult {
-    if _email == "wrong_server@example.com" {
+    if email == "wrong_server@example.com" {
         EmailAllowedResult::WrongServer
     } else {
         EmailAllowedResult::Allowed
@@ -1767,10 +1767,9 @@ mod tests {
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
         assert!(response.body().contains("wrong_server"));
-        
     }
     //:tchap: end
-    
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_skip_confirmation(pool: PgPool) {
         // Same test as test_register, but checks that we get straight to the
@@ -1942,7 +1941,7 @@ mod tests {
         assert_eq!(email_auth.email, "john@example.com");
         assert!(email_auth.completed_at.is_some());
     }
-    
+
     //#[ignore = "Tchap links existing account by email"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_link_existing_account(pool: PgPool) {
@@ -2043,15 +2042,10 @@ mod tests {
             .unwrap();
 
         //:tchap:
-        // matching is done on the email 
+        // matching is done on the email
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                "any@example.com".to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, "any@example.com".to_owned())
             .await;
         //:tchap:
 
@@ -2208,7 +2202,7 @@ mod tests {
             },
             ..UpstreamOAuthProviderClaimsImports::default()
         };
-        
+
         //in Tchap, matching is based on Email
         let id_token_claims = serde_json::json!({
             "preferred_username": existing_oidc,
@@ -2285,12 +2279,7 @@ mod tests {
         //in Tchap, matching is based on Email
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                email.to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, email.to_owned())
             .await;
 
         repo.save().await.unwrap();
@@ -2410,12 +2399,7 @@ mod tests {
 
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                existing_email.to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, existing_email.to_owned())
             .await;
 
         let cookie_jar = state.cookie_jar();
@@ -2458,10 +2442,7 @@ mod tests {
         //check that the user email is not updated with oidc email
         let page = repo
             .user_email()
-            .list(
-                UserEmailFilter::new().for_user(&user),
-                Pagination::first(1),
-            )
+            .list(UserEmailFilter::new().for_user(&user), Pagination::first(1))
             .await
             .unwrap();
 
@@ -2609,19 +2590,14 @@ mod tests {
             .add(&mut rng, &state.clock, existing_username.to_owned())
             .await
             .unwrap();
-        
+
         //:tchap:
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                "any@example.com".to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, "any@example.com".to_owned())
             .await;
         //:tchap: end
-        
+
         // Create an existing link for this user and provider with a different subject
         let old_link = repo
             .upstream_oauth_link()
@@ -2771,15 +2747,10 @@ mod tests {
             .unwrap();
 
         //:tchap:
-        // matching is done on the email 
+        // matching is done on the email
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                "any@example.com".to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, "any@example.com".to_owned())
             .await;
         //:tchap:
 
@@ -2903,15 +2874,10 @@ mod tests {
             .unwrap();
 
         //:tchap:
-        // matching is done on the email 
+        // matching is done on the email
         let _user_email = repo
             .user_email()
-            .add(
-                &mut rng,
-                &state.clock,
-                &user,
-                "any@example.com".to_owned(),
-            )
+            .add(&mut rng, &state.clock, &user, "any@example.com".to_owned())
             .await;
         //:tchap:
 

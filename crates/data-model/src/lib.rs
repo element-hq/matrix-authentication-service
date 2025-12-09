@@ -42,7 +42,12 @@ pub use self::{
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
     policy_data::PolicyData,
-    site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig,SessionLimitConfig, SiteConfig},
+    site_config::{
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+    },
+    //:tchap:
+    tchap_config::*,
+    //:tchap:end
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
     },
@@ -63,7 +68,4 @@ pub use self::{
     },
     utils::{BoxClock, BoxRng},
     version::AppVersion,
-    //:tchap:
-    tchap_config::*,
-    //:tchap:end
 };
