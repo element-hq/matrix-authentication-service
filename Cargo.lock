@@ -3222,7 +3222,6 @@ dependencies = [
  "pem-rfc7468",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
- "rustls-pemfile",
  "rustls-pki-types",
  "schemars 0.9.0",
  "serde",
@@ -3516,7 +3515,6 @@ dependencies = [
  "hyper-util",
  "mas-context",
  "pin-project-lite",
- "rustls-pemfile",
  "socket2",
  "thiserror 2.0.17",
  "tokio",
@@ -5131,15 +5129,6 @@ dependencies = [
  "rustls-pki-types",
  "schannel",
  "security-framework",
-]
-
-[[package]]
-name = "rustls-pemfile"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
-dependencies = [
- "rustls-pki-types",
 ]
 
 [[package]]

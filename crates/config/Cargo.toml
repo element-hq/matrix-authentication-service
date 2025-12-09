@@ -30,7 +30,6 @@ lettre.workspace = true
 pem-rfc7468.workspace = true
 rand_chacha.workspace = true
 rand.workspace = true
-rustls-pemfile.workspace = true
 rustls-pki-types.workspace = true
 schemars.workspace = true
 serde_json.workspace = true
