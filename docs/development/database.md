@@ -54,7 +54,7 @@ Note that migrations are embedded in the final binary and can be run from the se
 ### Removing migrations
 
 For various reasons, we may want to delete migrations.
-In case we do, we *must* declare that migration version as it is fine to be missing.
+In case we do, we *must* declare that migration version as allowed to be missing.
 This is because on startup, MAS will validate that all the applied migrations are known, and warn if some are missing.
 
 To do so, get the migration version and add it to the `ALLOWED_MISSING_MIGRATIONS` array in the `mas-storage-pg` crate.
