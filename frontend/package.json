@@ -60,7 +60,7 @@
     "@types/swagger-ui-dist": "^3.30.6",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.22",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.11.0",
     "happy-dom": "^20.0.4",
