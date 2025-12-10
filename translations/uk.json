@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> за <span>%(redirect_uri)s</span> хоче отримати доступ до вашого облікового запису.",
+      "continue_to": "Продовжити в <span>%(client_name)s</span>?",
       "heading": "Дозволити доступ до свого облікового запису?",
       "make_sure_you_trust": "Переконайтеся, що ви довіряєте <span> %(client_name)s</span>.",
+      "scope_list_preface": "Продовжуючи, ви дозволяєте <span>%(client_name)s</span>:",
       "this_will_allow": "Це дозволить <span>%(client_name)s</span>:",
+      "this_will_setup": "Це налаштує %(client_name)s (<span>%(client_uri)s</span>) з вашим обліковим записом <span>%(server_name)s</span>.",
+      "use_another_account": "Використати інший обліковий запис",
       "you_may_be_sharing": "Можливо, ви ділитеся конфіденційною інформацією з цим сайтом або застосунком."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Ви надали доступ до %(client_name)s. Ви можете закрити це вікно.",
         "heading": "Доступ надано"
-      }
+      },
+      "this_will_setup": "Інший пристрій хоче налаштувати %(client_name)s (<span>%(client_uri)s</span>) з вашим обліковим записом <span>%(server_name)s</span>. Переконайтеся, що ви розпізнаєте цей пристрій."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s на %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Це ім'я користувача вже зайнято",
       "username_too_long": "Ім'я користувача задовге",
       "username_too_short": "Ім'я користувача закоротке"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Це налаштує <span>%(client_name)s</span> з вашим обліковим записом <span>%(server_name)s</span>."
     },
     "login": {
       "call_to_register": "У вас ще немає облікового запису?",
@@ -210,6 +218,7 @@
     "register": {
       "call_to_login": "Вже маєте обліковий запис?",
       "continue_with_email": "Продовжити за допомогою е-пошти",
+      "continue_with_password": "Продовжити з паролем",
       "create_account": {
         "description": "Виберіть ім'я користувача, щоб продовжити.",
         "heading": "Створити обліковий запис"
@@ -225,9 +234,9 @@
     "scope": {
       "edit_profile": "Редагування профілю та контактних даних",
       "manage_sessions": "Керування пристроями та сеансами",
-      "mas_admin": "Адміністрування будь-якого користувача на matrix-authentication-service",
+      "mas_admin": "Керування користувачами (urn:mas:admin)",
       "send_messages": "Надсилати нові повідомлення від вашого імені",
-      "synapse_admin": "Адміністрування домашнього сервера Synapse",
+      "synapse_admin": "Адмініструвати сервер (urn:synapse:admin:*)",
       "view_messages": "Перегляд наявних повідомлень і даних",
       "view_profile": "Перегляд інформації профілю та контактних даних"
     },

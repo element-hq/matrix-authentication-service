@@ -45,6 +45,12 @@ fn map_import_on_conflict(
         mas_config::UpstreamOAuth2OnConflict::Add => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Add
         }
+        mas_config::UpstreamOAuth2OnConflict::Replace => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Replace
+        }
+        mas_config::UpstreamOAuth2OnConflict::Set => {
+            mas_data_model::UpstreamOAuthProviderOnConflict::Set
+        }
         mas_config::UpstreamOAuth2OnConflict::Fail => {
             mas_data_model::UpstreamOAuthProviderOnConflict::Fail
         }
@@ -58,6 +64,7 @@ fn map_claims_imports(
         subject: mas_data_model::UpstreamOAuthProviderSubjectPreference {
             template: config.subject.template.clone(),
         },
+        skip_confirmation: config.skip_confirmation,
         localpart: mas_data_model::UpstreamOAuthProviderLocalpartPreference {
             action: map_import_action(config.localpart.action),
             template: config.localpart.template.clone(),

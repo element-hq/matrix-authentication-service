@@ -4,30 +4,35 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
 use axum::{
     extract::{Form, Path, State},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use axum_extra::extract::Query;
+use axum_extra::{TypedHeader, extract::Query};
 use chrono::Duration;
+use hyper::StatusCode;
 use mas_axum_utils::{
     InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, Clock};
+use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser};
+use mas_matrix::HomeserverConnection;
+use mas_policy::{Policy, model::CompatLogin};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
 use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
-use mas_templates::{CompatSsoContext, ErrorContext, TemplateContext, Templates};
+use mas_templates::{
+    CompatLoginPolicyViolationContext, CompatSsoContext, ErrorContext, TemplateContext, Templates,
+};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
 use crate::{
-    PreferredLanguage,
-    session::{SessionOrFallback, load_session_or_fallback},
+    BoundActivityTracker, PreferredLanguage,
+    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
 
 #[derive(Serialize)]
@@ -56,10 +61,16 @@ pub async fn get(
     mut repo: BoxRepository,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    mut policy: Policy,
+    activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
 ) -> Result<Response, InternalError> {
+    let user_agent = user_agent.map(|ua| ua.to_string());
+
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -107,7 +118,69 @@ pub async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    let ctx = CompatSsoContext::new(login)
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
+    // We can close the repository early, we don't need it at this point
+    repo.save().await?;
+
+    let res = policy
+        .evaluate_compat_login(mas_policy::CompatLoginInput {
+            user: &session.user,
+            login: CompatLogin::Sso {
+                redirect_uri: login.redirect_uri.to_string(),
+            },
+            // We don't know if there's going to be a replacement until we received the device ID,
+            // which happens too late.
+            session_replaced: false,
+            session_counts,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
+        .await?;
+    if !res.valid() {
+        let ctx = CompatLoginPolicyViolationContext::for_violations(res.violations)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_compat_login_policy_violation(&ctx)?;
+
+        return Ok((StatusCode::FORBIDDEN, cookie_jar, Html(content)).into_response());
+    }
+
+    // Fetch informations about the user. This is purely cosmetic, so we let it
+    // fail and put a 1s timeout to it in case we fail to query it
+    // XXX: we're likely to need this in other places
+    let localpart = &session.user.username;
+    let display_name = match tokio::time::timeout(
+        std::time::Duration::from_secs(1),
+        homeserver.query_user(localpart),
+    )
+    .await
+    {
+        Ok(Ok(user)) => user.displayname,
+        Ok(Err(err)) => {
+            tracing::warn!(
+                error = &*err as &dyn std::error::Error,
+                localpart,
+                "Failed to query user"
+            );
+            None
+        }
+        Err(_) => {
+            tracing::warn!(localpart, "Timed out while querying user");
+            None
+        }
+    };
+
+    let matrix_user = MatrixUser {
+        mxid: homeserver.mxid(localpart),
+        display_name,
+    };
+
+    let ctx = CompatSsoContext::new(login, matrix_user)
         .with_session(session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -129,11 +202,16 @@ pub async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    mut policy: Policy,
+    activity_tracker: BoundActivityTracker,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(id): Path<Ulid>,
     Query(params): Query<Params>,
     Form(form): Form<ProtectedForm<()>>,
 ) -> Result<Response, InternalError> {
+    let user_agent = user_agent.map(|ua| ua.to_string());
+
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -199,6 +277,37 @@ pub async fn post(
         redirect_uri.set_query(Some(&query));
         redirect_uri
     };
+
+    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+
+    let res = policy
+        .evaluate_compat_login(mas_policy::CompatLoginInput {
+            user: &session.user,
+            login: CompatLogin::Sso {
+                redirect_uri: login.redirect_uri.to_string(),
+            },
+            session_counts,
+            // We don't know if there's going to be a replacement until we received the device ID,
+            // which happens too late.
+            session_replaced: false,
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
+        .await?;
+
+    if !res.valid() {
+        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+        let ctx = CompatLoginPolicyViolationContext::for_violations(res.violations)
+            .with_session(session)
+            .with_csrf(csrf_token.form_value())
+            .with_language(locale);
+
+        let content = templates.render_compat_login_policy_violation(&ctx)?;
+
+        return Ok((StatusCode::FORBIDDEN, cookie_jar, Html(content)).into_response());
+    }
 
     // Note that if the login is not Pending,
     // this fails and aborts the transaction.

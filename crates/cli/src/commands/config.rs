@@ -12,10 +12,9 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSection, RootConfig, SyncConfig};
 use mas_data_model::{Clock as _, SystemClock};
-use mas_storage_pg::MIGRATOR;
 use rand::SeedableRng;
 use tokio::io::AsyncWriteExt;
-use tracing::{Instrument, info, info_span};
+use tracing::{info, info_span};
 
 use crate::util::database_connection_from_config;
 
@@ -129,9 +128,7 @@ impl Options {
                 // Grab a connection to the database
                 let mut conn = database_connection_from_config(&config.database).await?;
 
-                MIGRATOR
-                    .run(&mut conn)
-                    .instrument(info_span!("db.migrate"))
+                mas_storage_pg::migrate(&mut conn)
                     .await
                     .context("could not run migrations")?;
 

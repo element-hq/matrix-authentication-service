@@ -34,7 +34,7 @@ jobs:
         run: exit 1
 
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -61,10 +61,10 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v6.0.0
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: 24
 
@@ -106,7 +106,7 @@ jobs:
     needs: [tag, compute-version, localazy]
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts

@@ -21,13 +21,15 @@ use chrono::{DateTime, Duration, Utc};
 use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
-    DeviceCodeGrant, UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
-    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
-    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod, User,
-    UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    DeviceCodeGrant, MatrixUser, UpstreamOAuthLink, UpstreamOAuthProvider,
+    UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+    UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+    UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
+use mas_policy::{Violation, ViolationCode};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
@@ -732,6 +734,7 @@ pub struct ConsentContext {
     grant: AuthorizationGrant,
     client: Client,
     action: PostAuthAction,
+    matrix_user: MatrixUser,
 }
 
 impl TemplateContext for ConsentContext {
@@ -755,6 +758,10 @@ impl TemplateContext for ConsentContext {
                         grant,
                         client,
                         action,
+                        matrix_user: MatrixUser {
+                            mxid: "@alice:example.com".to_owned(),
+                            display_name: Some("Alice".to_owned()),
+                        },
                     }
                 })
                 .collect(),
@@ -765,12 +772,13 @@ impl TemplateContext for ConsentContext {
 impl ConsentContext {
     /// Constructs a context for the client consent page
     #[must_use]
-    pub fn new(grant: AuthorizationGrant, client: Client) -> Self {
+    pub fn new(grant: AuthorizationGrant, client: Client, matrix_user: MatrixUser) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
             grant,
             client,
             action,
+            matrix_user,
         }
     }
 }
@@ -860,11 +868,50 @@ impl PolicyViolationContext {
     }
 }
 
+/// Context used by the `compat_login_policy_violation.html` template
+#[derive(Serialize)]
+pub struct CompatLoginPolicyViolationContext {
+    violations: Vec<Violation>,
+}
+
+impl TemplateContext for CompatLoginPolicyViolationContext {
+    fn sample<R: Rng>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        sample_list(vec![
+            CompatLoginPolicyViolationContext { violations: vec![] },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
+                    msg: "user has too many active sessions".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    code: Some(ViolationCode::TooManySessions),
+                }],
+            },
+        ])
+    }
+}
+
+impl CompatLoginPolicyViolationContext {
+    /// Constructs a context for the compatibility login policy violation page
+    /// given the list of violations
+    #[must_use]
+    pub const fn for_violations(violations: Vec<Violation>) -> Self {
+        Self { violations }
+    }
+}
+
 /// Context used by the `sso.html` template
 #[derive(Serialize)]
 pub struct CompatSsoContext {
     login: CompatSsoLogin,
     action: PostAuthAction,
+    matrix_user: MatrixUser,
 }
 
 impl TemplateContext for CompatSsoContext {
@@ -877,23 +924,33 @@ impl TemplateContext for CompatSsoContext {
         Self: Sized,
     {
         let id = Ulid::from_datetime_with_source(now.into(), rng);
-        sample_list(vec![CompatSsoContext::new(CompatSsoLogin {
-            id,
-            redirect_uri: Url::parse("https://app.element.io/").unwrap(),
-            login_token: "abcdefghijklmnopqrstuvwxyz012345".into(),
-            created_at: now,
-            state: CompatSsoLoginState::Pending,
-        })])
+        sample_list(vec![CompatSsoContext::new(
+            CompatSsoLogin {
+                id,
+                redirect_uri: Url::parse("https://app.element.io/").unwrap(),
+                login_token: "abcdefghijklmnopqrstuvwxyz012345".into(),
+                created_at: now,
+                state: CompatSsoLoginState::Pending,
+            },
+            MatrixUser {
+                mxid: "@alice:example.com".to_owned(),
+                display_name: Some("Alice".to_owned()),
+            },
+        )])
     }
 }
 
 impl CompatSsoContext {
     /// Constructs a context for the legacy SSO login page
     #[must_use]
-    pub fn new(login: CompatSsoLogin) -> Self
+    pub fn new(login: CompatSsoLogin, matrix_user: MatrixUser) -> Self
 where {
         let action = PostAuthAction::continue_compat_sso_login(login.id);
-        Self { login, action }
+        Self {
+            login,
+            action,
+            matrix_user,
+        }
     }
 }
 
@@ -1748,13 +1805,18 @@ impl TemplateContext for DeviceLinkContext {
 pub struct DeviceConsentContext {
     grant: DeviceCodeGrant,
     client: Client,
+    matrix_user: MatrixUser,
 }
 
 impl DeviceConsentContext {
     /// Constructs a new context with an existing linked user
     #[must_use]
-    pub fn new(grant: DeviceCodeGrant, client: Client) -> Self {
-        Self { grant, client }
+    pub fn new(grant: DeviceCodeGrant, client: Client, matrix_user: MatrixUser) -> Self {
+        Self {
+            grant,
+            client,
+            matrix_user,
+        }
     }
 }
 
@@ -1782,7 +1844,14 @@ impl TemplateContext for DeviceConsentContext {
                     ip_address: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                     user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
                 };
-                Self { grant, client }
+                Self {
+                    grant,
+                    client,
+                    matrix_user: MatrixUser {
+                        mxid: "@alice:example.com".to_owned(),
+                        display_name: Some("Alice".to_owned()),
+                    }
+                }
             })
             .collect())
     }

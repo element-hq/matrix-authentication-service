@@ -13,6 +13,12 @@ use ulid::Ulid;
 use url::Url;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MatrixUser {
+    pub mxid: String,
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct User {
     pub id: Ulid,
     pub username: String,
