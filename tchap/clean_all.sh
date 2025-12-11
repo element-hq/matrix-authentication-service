@@ -11,7 +11,7 @@ rm -rf ../policies/policy.wasm
 #echo "Step 3/6: Removing Rust build artifacts..."
 #rm -rf ../target/
 
-echo "Step 4/6: Removing temporary files..."
+echo "Step 4/6: Removing temporary files including data in postgres..."
 rm -rf tmp/
 
 echo "Step 5/6: Removing frontend dependencies..."
