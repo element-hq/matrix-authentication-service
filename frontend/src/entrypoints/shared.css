@@ -5,14 +5,14 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-@import url("@fontsource/inter/400.css");
-@import url("@fontsource/inter/500.css");
-@import url("@fontsource/inter/600.css");
-@import url("@fontsource/inter/700.css");
-@import url("@fontsource/inconsolata/400.css");
-@import url("@fontsource/inconsolata/700.css");
-@import url("@vector-im/compound-design-tokens/assets/web/css/compound-design-tokens.css");
-@import url("@vector-im/compound-web/dist/style.css");
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inconsolata/400.css";
+@import "@fontsource/inconsolata/700.css";
+@import "@vector-im/compound-design-tokens/assets/web/css/compound-design-tokens.css";
+@import "@vector-im/compound-web/dist/style.css";
 
 @tailwind base;
 @tailwind components;
