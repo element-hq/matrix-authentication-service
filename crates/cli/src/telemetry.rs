@@ -61,6 +61,9 @@ pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     init_tracer(&config.tracing).context("Failed to configure traces exporter")?;
     init_meter(&config.metrics).context("Failed to configure metrics exporter")?;
 
+    opentelemetry_instrumentation_process::init()
+        .context("Failed to configure process instrumentation")?;
+
     let handle = ::tokio::runtime::Handle::current();
     self::tokio::observe(handle.metrics());
 
