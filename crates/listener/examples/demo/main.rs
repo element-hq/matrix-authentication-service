@@ -6,7 +6,6 @@
 
 use std::{
     convert::Infallible,
-    io::BufReader,
     net::{Ipv4Addr, TcpListener},
     sync::Arc,
     time::Duration,
@@ -15,7 +14,11 @@ use std::{
 use anyhow::Context;
 use hyper::{Request, Response};
 use mas_listener::{ConnectionInfo, server::Server};
-use tokio_rustls::rustls::{RootCertStore, ServerConfig, server::WebPkiClientVerifier};
+use tokio_rustls::rustls::{
+    RootCertStore, ServerConfig,
+    pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs1KeyDer, pem::PemObject},
+    server::WebPkiClientVerifier,
+};
 use tokio_util::sync::CancellationToken;
 use tower::service_fn;
 
@@ -77,23 +80,18 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 
 fn load_tls_config() -> Result<Arc<ServerConfig>, anyhow::Error> {
-    let mut ca_cert_reader = BufReader::new(CA_CERT_PEM);
-    let ca_cert = rustls_pemfile::certs(&mut ca_cert_reader)
+    let ca_cert = CertificateDer::pem_slice_iter(CA_CERT_PEM)
         .collect::<Result<Vec<_>, _>>()
         .context("Invalid CA certificate")?;
     let mut ca_cert_store = RootCertStore::empty();
     ca_cert_store.add_parsable_certificates(ca_cert);
 
-    let mut server_cert_reader = BufReader::new(SERVER_CERT_PEM);
-    let server_cert: Vec<_> = rustls_pemfile::certs(&mut server_cert_reader)
+    let server_cert: Vec<_> = CertificateDer::pem_slice_iter(SERVER_CERT_PEM)
         .collect::<Result<Vec<_>, _>>()
         .context("Invalid server certificate")?;
 
-    let mut server_key_reader = BufReader::new(SERVER_KEY_PEM);
-    let server_key = rustls_pemfile::rsa_private_keys(&mut server_key_reader)
-        .next()
-        .context("No RSA private key found")?
-        .context("Invalid server TLS keys")?;
+    let server_key =
+        PrivatePkcs1KeyDer::from_pem_slice(SERVER_KEY_PEM).context("Invalid server TLS keys")?;
 
     let client_cert_verifier = WebPkiClientVerifier::builder(Arc::new(ca_cert_store))
         .allow_unauthenticated()
@@ -101,7 +99,7 @@ fn load_tls_config() -> Result<Arc<ServerConfig>, anyhow::Error> {
 
     let mut config = ServerConfig::builder()
         .with_client_cert_verifier(client_cert_verifier)
-        .with_single_cert(server_cert, server_key.into())?;
+        .with_single_cert(server_cert, PrivateKeyDer::Pkcs1(server_key))?;
     config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
     Ok(Arc::new(config))

@@ -6,13 +6,13 @@
 
 #![allow(deprecated)]
 
-use std::{borrow::Cow, io::Cursor};
+use std::borrow::Cow;
 
 use anyhow::bail;
 use camino::Utf8PathBuf;
 use ipnetwork::IpNetwork;
 use mas_keystore::PrivateKey;
-use rustls_pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
+use rustls_pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer, pem::PemObject};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -238,10 +238,8 @@ impl TlsConfig {
             (None, Some(path)) => Cow::Owned(std::fs::read_to_string(path)?),
         };
 
-        let mut certificate_chain_reader = Cursor::new(certificate_chain_pem.as_bytes());
-        let certificate_chain: Result<Vec<_>, _> =
-            rustls_pemfile::certs(&mut certificate_chain_reader).collect();
-        let certificate_chain = certificate_chain?;
+        let certificate_chain = CertificateDer::pem_slice_iter(certificate_chain_pem.as_bytes())
+            .collect::<Result<Vec<_>, _>>()?;
 
         if certificate_chain.is_empty() {
             bail!("TLS certificate chain is empty (or invalid)")

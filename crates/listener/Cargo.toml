@@ -36,7 +36,6 @@ mas-context.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
-rustls-pemfile.workspace = true
 tokio-test.workspace = true
 tokio.workspace = true
 tracing-subscriber.workspace = true
