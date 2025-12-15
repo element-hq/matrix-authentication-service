@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-mod tokio;
-
 use std::sync::{LazyLock, OnceLock};
 
 use anyhow::Context as _;
@@ -61,8 +59,7 @@ pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     init_tracer(&config.tracing).context("Failed to configure traces exporter")?;
     init_meter(&config.metrics).context("Failed to configure metrics exporter")?;
 
-    let handle = ::tokio::runtime::Handle::current();
-    self::tokio::observe(handle.metrics());
+    opentelemetry_instrumentation_tokio::observe_current_runtime();
 
     Ok(())
 }
