@@ -391,9 +391,9 @@
     "scope": {
       "edit_profile": "Muuta sinu kasutajaprofiili ning kontaktandmeid",
       "manage_sessions": "Hallata sinu seadmeid ja sessioone",
-      "mas_admin": "Hallata iga kasutajat teenuses matrix-authentication-service",
+      "mas_admin": "Hallata kasutajaid (urn:mas:admin)",
       "send_messages": "Saata sõnumeid sinu nimel",
-      "synapse_admin": "Hallata seda Synapse koduserverit",
+      "synapse_admin": "Hallata seda Synapse koduserverit (urn:synapse:admin:*)",
       "view_messages": "Vaadata sinu sõnumeid ja andmeid",
       "view_profile": "Vaadata sinu profiili teavet ja kontaktadmeid"
     }

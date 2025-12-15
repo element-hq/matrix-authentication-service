@@ -103,7 +103,7 @@
         "description": "Vous avez accordé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès accordé"
       },
-      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte %(server_name)s<span></span>. Assurez-vous de reconnaître cet appareil."
+      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s sur %(device_name)s",
