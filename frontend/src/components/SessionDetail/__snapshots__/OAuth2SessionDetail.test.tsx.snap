@@ -42,7 +42,7 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
           type="button"
         >
           <div
-            class="_indicator-icon_zr2a0_17"
+            class="_indicator-icon_147l5_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg
@@ -172,14 +172,14 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
           Scopes
         </h5>
         <ul
-          class="_visual-list_15wzx_8 mt-1"
+          class="_visual-list_1mgc1_8 mt-1"
         >
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -199,11 +199,11 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
             See your profile info and contact details
           </li>
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -217,11 +217,11 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
             View your existing messages and data
           </li>
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -353,7 +353,7 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
           type="button"
         >
           <div
-            class="_indicator-icon_zr2a0_17"
+            class="_indicator-icon_147l5_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg
@@ -465,14 +465,14 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
           Scopes
         </h5>
         <ul
-          class="_visual-list_15wzx_8 mt-1"
+          class="_visual-list_1mgc1_8 mt-1"
         >
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -492,11 +492,11 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
             See your profile info and contact details
           </li>
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -510,11 +510,11 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
             View your existing messages and data
           </li>
           <li
-            class="_visual-list-item_1ma3e_8"
+            class="_visual-list-item_1nc1y_8"
           >
             <svg
               aria-hidden="true"
-              class="_visual-list-item-icon_1ma3e_17"
+              class="_visual-list-item-icon_1nc1y_17"
               fill="currentColor"
               height="24px"
               viewBox="0 0 24 24"
@@ -604,7 +604,7 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
       aria-controls="radix-_r_8_"
       aria-expanded="false"
       aria-haspopup="dialog"
-      class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
+      class="_button_187yx_8 _has-icon_187yx_57 _destructive_187yx_107"
       data-kind="secondary"
       data-size="lg"
       data-state="closed"
