@@ -3171,6 +3171,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-instrumentation-process",
+ "opentelemetry-instrumentation-tokio",
  "opentelemetry-jaeger-propagator",
  "opentelemetry-otlp",
  "opentelemetry-prometheus-text-exporter",
@@ -3658,6 +3659,7 @@ version = "1.8.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "crc",
  "futures-util",
  "mas-data-model",
  "mas-iana",
@@ -3674,6 +3676,7 @@ dependencies = [
  "sha2",
  "sqlx",
  "thiserror 2.0.17",
+ "tokio",
  "tracing",
  "ulid",
  "url",
@@ -4142,6 +4145,16 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-semantic-conventions",
  "procfs",
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-tokio"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fbe5cbcb32e33e68fd7a3a60d47c3b0a00cd40a4d012cec2f862f463dc0c296"
+dependencies = [
+ "opentelemetry",
+ "tokio",
 ]
 
 [[package]]

@@ -403,6 +403,8 @@ version = "0.31.0"
 features = ["reqwest"]
 [workspace.dependencies.opentelemetry-instrumentation-process]
 version = "0.1.2"
+[workspace.dependencies.opentelemetry-instrumentation-tokio]
+version = "0.1.2"
 [workspace.dependencies.opentelemetry-jaeger-propagator]
 version = "0.31.0"
 [workspace.dependencies.opentelemetry-otlp]

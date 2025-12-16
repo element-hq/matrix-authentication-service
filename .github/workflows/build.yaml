@@ -84,7 +84,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: assets
           path: assets-dist
@@ -143,7 +143,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -162,19 +162,19 @@ jobs:
 
     steps:
       - name: Download assets
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: assets
           path: assets-dist
 
       - name: Download binary x86_64
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: binary-x86_64-unknown-linux-gnu
           path: binary-x86_64
 
       - name: Download binary aarch64
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: binary-aarch64-unknown-linux-gnu
           path: binary-aarch64
@@ -192,13 +192,13 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
@@ -320,7 +320,7 @@ jobs:
       - build-image
     steps:
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: mas-cli-*
           path: artifacts
@@ -382,7 +382,7 @@ jobs:
             .github/scripts
 
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: mas-cli-*
           path: artifacts

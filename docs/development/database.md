@@ -40,7 +40,7 @@ cargo sqlx prepare
 
 ## Migrations
 
-Migration files live in the `migrations` folder in the `mas-core` crate.
+Migration files live in the `migrations` folder in the `mas-storage-pg` crate.
 
 ```sh
 cd crates/storage-pg/ # Again, in the mas-storage-pg crate folder
@@ -50,3 +50,29 @@ cargo sqlx migrate add [description] # Add new migration files
 ```
 
 Note that migrations are embedded in the final binary and can be run from the service CLI tool.
+
+### Removing migrations
+
+For various reasons, we may want to delete migrations.
+In case we do, we *must* declare that migration version as allowed to be missing.
+This is because on startup, MAS will validate that all the applied migrations are known, and warn if some are missing.
+
+To do so, get the migration version and add it to the `ALLOWED_MISSING_MIGRATIONS` array in the `mas-storage-pg` crate.
+
+### Modifying existing migrations
+
+We may want to modify existing migrations to fix mistakes.
+In case we do, we *must* save the hash of the original migration file so that MAS can validate it on startup.
+
+To do so, extract the first 16 bytes of the existing applied migration and append it to the `ALLOWED_ALTERNATE_CHECKSUMS` array in the `mas-storage-pg` crate.
+
+```sql
+SELECT version, ENCODE(SUBSTRING(checksum FOR 16), 'hex') AS short_checksum
+FROM _sqlx_migrations
+WHERE version = 20250410000002;
+```
+```
+    version     |          short_checksum
+----------------+----------------------------------
+ 20250410000002 | f2b8f120deae27e760d079a30b77eea3
+```
