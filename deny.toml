@@ -19,9 +19,6 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-    # This is a newly unmaintained package that we can allow temporarily.
-    # Remove ASAP once https://github.com/element-hq/matrix-authentication-service/issues/5337 is fixed.
-    "RUSTSEC-2025-0134",
 ]
 
 [licenses]

@@ -525,10 +525,6 @@ version = "0.16.0"
 [workspace.dependencies.rustls]
 version = "0.23.35"
 
-# PEM parsing for rustls
-[workspace.dependencies.rustls-pemfile]
-version = "2.2.0"
-
 # PKI types for rustls
 [workspace.dependencies.rustls-pki-types]
 version = "1.13.0"
