@@ -257,7 +257,7 @@ tchap:
   # old email in mail.numerique.gouv.fr
   - match_with : '@numerique.gouv.fr'
     search: '@beta.gouv.fr'
-
+  tchap_app_link: 'https://element.tchapgouv.com'
 
 
 

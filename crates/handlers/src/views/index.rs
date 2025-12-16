@@ -9,7 +9,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar, csrf::CsrfExt};
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, TchapConfig};
 use mas_router::UrlBuilder;
 use mas_storage::BoxRepository;
 use mas_templates::{IndexContext, TemplateContext, Templates};
@@ -28,6 +28,9 @@ pub async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     mut repo: BoxRepository,
+    //:tchap:
+    State(tchap_config): State<TchapConfig>,
+    //:tchap:end
     cookie_jar: CookieJar,
     PreferredLanguage(locale): PreferredLanguage,
 ) -> Result<Response, InternalError> {
@@ -52,10 +55,12 @@ pub async fn get(
             .await;
     }
 
-    let ctx = IndexContext::new(url_builder.oidc_discovery())
+    //:tchap:
+    let ctx = IndexContext::new(url_builder.oidc_discovery(), tchap_config.tchap_app_link)
         .maybe_with_session(maybe_session)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
+    //:tchap:
 
     let content = templates.render_index(&ctx)?;
 

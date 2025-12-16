@@ -1,0 +1,48 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2021-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="flex flex-col justify-center gap-6">
+    <header class="page-heading">
+      <div class="header">
+        <h1 class="title">Authentification à {{ _("app.human_name") }}</h1>
+        <!--
+        <p class="text">
+          {{ _("app.technical_description", discovery_url=discovery_url) }}
+        </p>
+        -->
+        <p class="text">
+            Tchap utilise désormais un service d'authentification plus robuste et standardisé pour sécuriser davantage vos échanges. Continuer pour accèder à votre compte Tchap.
+        </p>
+      </div>
+    </header>
+
+    {% if current_session is not none %}
+      <p class="cpd-text-body-md-regular">
+        {{ _("mas.navbar.signed_in_as", username=current_session.user.username) }}
+      </p>
+      <!--
+        {{ button.link(text=_("mas.navbar.my_account"), href="/account/") }}
+        -->
+        {{ button.link(text="Continuer dans Tchap", href=tchap_app_link) }}
+      <!--    
+        do not show Tchap Windows before official release     
+        {{ button.link(text="Continuer dans Tchap Windows", href="tchap://connect") }}
+      -->        
+        {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token) }} 
+    {% else %}
+      {{ button.link(text="Continuer dans Tchap", href=tchap_app_link) }}
+      <!-- 
+        do not show Tchap Windows before official release     
+        {{ button.link(text="Continuer dans Tchap Windows", href="tchap://connect") }} 
+      -->
+    {% endif %}
+  </main>
+{% endblock content %}

@@ -225,7 +225,12 @@ const EmailRecovery: React.FC<{
         // The MAS backend will then redirect to the login page
         // Unfortunately this won't work in dev mode (`npm run dev`)
         // as the backend isn't involved there.
-        await navigate({ to: "/", reloadDocument: true });
+        //:tchap:
+        //await navigate({ to: "/", reloadDocument: true });
+        // instead of navigating to the root of the app, naviage to the root of the domain
+        // ie: the MAS welcome page
+        window.location.href = "/";
+        //:tchap: end
       }
 
       return response.setPasswordByRecovery;

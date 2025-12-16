@@ -45,6 +45,9 @@ pub struct TchapAppConfig {
     /// Fallback Rules to use when linking an upstream account
     #[serde(default)]
     pub email_lookup_fallback_rules: Vec<EmailLookupFallbackRule>,
+
+    /// Tchap Web Url
+    pub tchap_app_link: Url,
 }
 
 /// When linking the localpart, the email can be used to find the correct
@@ -93,6 +96,7 @@ mod tests {
                       email_lookup_fallback_rules:
                         - match_with : '@upstream.domain.tld'
                           search: '@matrix.domain.tld'
+                      tchap_app_link: http://localhost:9999
                 ",
             )?;
 
@@ -111,6 +115,11 @@ mod tests {
                     match_with: "@upstream.domain.tld".to_string(),
                     search: "@matrix.domain.tld".to_string(),
                 }]
+            );
+
+            assert_eq!(
+                &config.tchap_app_link.as_str().to_owned(),
+                "http://localhost:9999/"
             );
 
             Ok(())

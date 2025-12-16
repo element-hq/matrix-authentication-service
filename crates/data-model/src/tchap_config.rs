@@ -34,6 +34,9 @@ pub struct TchapConfig {
 
     /// Fallback Rules to use when linking an upstream account
     pub email_lookup_fallback_rules: Vec<EmailLookupFallbackRule>,
+
+    /// Tchap Web URL
+    pub tchap_app_link: Url,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
