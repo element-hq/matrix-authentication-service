@@ -305,4 +305,4 @@ rate_limiting:
   # This limit can protect against e-mail spam and against people registering too many accounts.
   registration:
     burst: 500
-    per_second: 0.0008
+    per_second: 0.05
