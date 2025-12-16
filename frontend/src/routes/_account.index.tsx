@@ -156,17 +156,19 @@ const SignOutButton: React.FC<{ id: string }> = ({ id }) => {
     >
       <Dialog.Title>{t("frontend.account.sign_out.dialog")}</Dialog.Title>
 
-      <Button
-        type="button"
-        kind="primary"
-        destructive
-        onClick={() => mutation.mutate()}
-        disabled={mutation.isPending}
-        Icon={mutation.isPending ? undefined : IconSignOut}
-      >
-        {mutation.isPending && <LoadingSpinner inline />}
-        {t("action.sign_out")}
-      </Button>
+      <Dialog.Description asChild>
+        <Button
+          type="button"
+          kind="primary"
+          destructive
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+          Icon={mutation.isPending ? undefined : IconSignOut}
+        >
+          {mutation.isPending && <LoadingSpinner inline />}
+          {t("action.sign_out")}
+        </Button>
+      </Dialog.Description>
 
       <Dialog.Close asChild>
         <Button kind="tertiary">{t("action.cancel")}</Button>

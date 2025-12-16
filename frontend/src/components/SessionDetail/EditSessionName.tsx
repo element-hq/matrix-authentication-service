@@ -67,27 +67,31 @@ const EditSessionName: React.FC<Props> = ({ mutation, deviceName }) => {
     >
       <Dialog.Title>{t("frontend.session.set_device_name.title")}</Dialog.Title>
 
-      <Form.Root onSubmit={onSubmit}>
-        <Form.Field name="name">
-          <Form.Label>{t("frontend.session.set_device_name.label")}</Form.Label>
+      <Dialog.Description asChild>
+        <Form.Root onSubmit={onSubmit}>
+          <Form.Field name="name">
+            <Form.Label>
+              {t("frontend.session.set_device_name.label")}
+            </Form.Label>
 
-          <Form.TextControl
-            type="text"
-            required
-            defaultValue={deviceName}
-            ref={fieldRef}
-          />
+            <Form.TextControl
+              type="text"
+              required
+              defaultValue={deviceName}
+              ref={fieldRef}
+            />
 
-          <Form.HelpMessage>
-            {t("frontend.session.set_device_name.help")}
-          </Form.HelpMessage>
-        </Form.Field>
+            <Form.HelpMessage>
+              {t("frontend.session.set_device_name.help")}
+            </Form.HelpMessage>
+          </Form.Field>
 
-        <Form.Submit disabled={mutation.isPending}>
-          {mutation.isPending && <LoadingSpinner inline />}
-          {t("action.save")}
-        </Form.Submit>
-      </Form.Root>
+          <Form.Submit disabled={mutation.isPending}>
+            {mutation.isPending && <LoadingSpinner inline />}
+            {t("action.save")}
+          </Form.Submit>
+        </Form.Root>
+      </Dialog.Description>
 
       <Dialog.Close asChild>
         <Button kind="tertiary">{t("action.cancel")}</Button>

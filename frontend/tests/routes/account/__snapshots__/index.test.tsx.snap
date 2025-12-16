@@ -29,6 +29,7 @@ exports[`Account home page > display name edit box > displays an error if the di
   </span>
   <form
     class="_root_19upo_16"
+    id="radix-_r_86_"
   >
     <div
       class="_dialogForm_0d9d49"
@@ -177,6 +178,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
   </span>
   <form
     class="_root_19upo_16"
+    id="radix-_r_1n_"
   >
     <div
       class="_dialogForm_0d9d49"
