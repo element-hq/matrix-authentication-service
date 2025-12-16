@@ -25,7 +25,7 @@
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.131.44",
     "@vector-im/compound-design-tokens": "6.4.2",
-    "@vector-im/compound-web": "^8.2.5",
+    "@vector-im/compound-web": "^8.3.1",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "classnames": "^2.5.1",
@@ -39,7 +39,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.8",
+    "@biomejs/biome": "^2.3.9",
     "@browser-logos/chrome": "^2.0.0",
     "@browser-logos/firefox": "^3.0.10",
     "@browser-logos/safari": "^2.1.0",
@@ -60,7 +60,7 @@
     "@types/swagger-ui-dist": "^3.30.6",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
-    "autoprefixer": "^10.4.22",
+    "autoprefixer": "^10.4.23",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.12.0",
     "happy-dom": "^20.0.4",

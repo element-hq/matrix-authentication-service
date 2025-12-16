@@ -19,7 +19,7 @@ exports[`Account home page > display name edit box > displays an error if the di
   </h2>
   <span
     aria-label="@alice:example.com"
-    class="_avatar_1qbcf_8 self-center _avatar-imageless_1qbcf_52"
+    class="_avatar_zysgz_8 self-center _avatar-imageless_zysgz_55"
     data-color="6"
     data-type="round"
     role="img"
@@ -108,7 +108,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     </div>
     <button
       aria-disabled="false"
-      class="_button_vczzf_8"
+      class="_button_187yx_8"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -119,7 +119,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     </button>
   </form>
   <button
-    class="_button_vczzf_8"
+    class="_button_187yx_8"
     data-kind="tertiary"
     data-size="lg"
     role="button"
@@ -167,7 +167,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
   </h2>
   <span
     aria-label="@alice:example.com"
-    class="_avatar_1qbcf_8 self-center _avatar-imageless_1qbcf_52"
+    class="_avatar_zysgz_8 self-center _avatar-imageless_zysgz_55"
     data-color="6"
     data-type="round"
     role="img"
@@ -252,7 +252,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     </div>
     <button
       aria-disabled="false"
-      class="_button_vczzf_8"
+      class="_button_187yx_8"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -263,7 +263,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     </button>
   </form>
   <button
-    class="_button_vczzf_8"
+    class="_button_187yx_8"
     data-kind="tertiary"
     data-size="lg"
     role="button"
@@ -313,7 +313,7 @@ exports[`Account home page > renders the page 1`] = `
         >
           <span
             aria-label="@alice:example.com"
-            class="_avatar_1qbcf_8 _avatar_0d9d49 _avatar-imageless_1qbcf_52"
+            class="_avatar_zysgz_8 _avatar_0d9d49 _avatar-imageless_zysgz_55"
             data-color="6"
             data-type="round"
             role="img"
@@ -349,7 +349,7 @@ exports[`Account home page > renders the page 1`] = `
             type="button"
           >
             <div
-              class="_indicator-icon_zr2a0_17"
+              class="_indicator-icon_147l5_17"
               style="--cpd-icon-button-size: 100%;"
             >
               <svg
@@ -433,7 +433,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_zr2a0_17"
+                class="_indicator-icon_147l5_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -554,7 +554,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_zr2a0_17"
+                class="_indicator-icon_147l5_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -650,7 +650,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_zr2a0_17"
+                class="_indicator-icon_147l5_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -678,7 +678,7 @@ exports[`Account home page > renders the page 1`] = `
         aria-controls="radix-_r_1b_"
         aria-expanded="false"
         aria-haspopup="dialog"
-        class="_button_vczzf_8 _has-icon_vczzf_57 _destructive_vczzf_107"
+        class="_button_187yx_8 _has-icon_187yx_57 _destructive_187yx_107"
         data-kind="primary"
         data-size="lg"
         data-state="closed"
@@ -709,7 +709,7 @@ exports[`Account home page > renders the page 1`] = `
         aria-controls="radix-_r_1e_"
         aria-expanded="false"
         aria-haspopup="dialog"
-        class="_button_vczzf_8 self-center _has-icon_vczzf_57 _destructive_vczzf_107"
+        class="_button_187yx_8 self-center _has-icon_187yx_57 _destructive_187yx_107"
         data-kind="tertiary"
         data-size="sm"
         data-state="closed"
