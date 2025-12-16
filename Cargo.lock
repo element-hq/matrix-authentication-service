@@ -3170,6 +3170,7 @@ dependencies = [
  "mas-tower",
  "opentelemetry",
  "opentelemetry-http",
+ "opentelemetry-instrumentation-process",
  "opentelemetry-instrumentation-tokio",
  "opentelemetry-jaeger-propagator",
  "opentelemetry-otlp",
@@ -4134,6 +4135,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry-instrumentation-process"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a81f1738bbdcf58eae20bd85ab0973f9c1f700ba37789e3253dc4e7ba61855c"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry-semantic-conventions",
+ "procfs",
+]
+
+[[package]]
 name = "opentelemetry-instrumentation-tokio"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4657,6 +4669,27 @@ dependencies = [
  "syn",
  "version_check",
  "yansi",
+]
+
+[[package]]
+name = "procfs"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25485360a54d6861439d60facef26de713b1e126bf015ec8f98239467a2b82f7"
+dependencies = [
+ "bitflags",
+ "procfs-core",
+ "rustix",
+]
+
+[[package]]
+name = "procfs-core"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6401bf7b6af22f78b563665d15a22e9aef27775b79b149a66ca022468a4e405"
+dependencies = [
+ "bitflags",
+ "hex",
 ]
 
 [[package]]
