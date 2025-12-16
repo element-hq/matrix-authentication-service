@@ -451,7 +451,7 @@ features = ["password-hash", "std", "simple", "parallel"]
 
 # PEM encoding/decoding
 [workspace.dependencies.pem-rfc7468]
-version = "0.7.0"
+version = "1.0.0"
 features = ["std"]
 
 # Parser generator
