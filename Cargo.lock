@@ -3170,6 +3170,7 @@ dependencies = [
  "mas-tower",
  "opentelemetry",
  "opentelemetry-http",
+ "opentelemetry-instrumentation-tokio",
  "opentelemetry-jaeger-propagator",
  "opentelemetry-otlp",
  "opentelemetry-prometheus-text-exporter",
@@ -4132,6 +4133,16 @@ dependencies = [
  "http",
  "opentelemetry",
  "reqwest",
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-tokio"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fbe5cbcb32e33e68fd7a3a60d47c3b0a00cd40a4d012cec2f862f463dc0c296"
+dependencies = [
+ "opentelemetry",
+ "tokio",
 ]
 
 [[package]]

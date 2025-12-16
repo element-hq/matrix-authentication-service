@@ -57,6 +57,7 @@ tracing-subscriber.workspace = true
 tracing-opentelemetry.workspace = true
 opentelemetry.workspace = true
 opentelemetry-http.workspace = true
+opentelemetry-instrumentation-tokio.workspace = true
 opentelemetry-jaeger-propagator.workspace = true
 opentelemetry-otlp.workspace = true
 opentelemetry-prometheus-text-exporter.workspace = true
