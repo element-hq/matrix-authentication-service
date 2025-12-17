@@ -522,6 +522,19 @@ impl Object for IncludeAsset {
                 }
             }
 
+            mas_spa::FileType::Json => {
+                // When a JSON is included at the top level (a translation), we preload it
+                let integrity = main.integrity_attr();
+                let src = main.src(assets_base);
+                if tracker.mark_preloaded(&src) {
+                    writeln!(
+                        output,
+                        r#"<link rel="preload" href="{src}" as="fetch" crossorigin{integrity} />"#,
+                    )
+                    .unwrap();
+                }
+            }
+
             file_type => {
                 return Err(Error::new(
                     ErrorKind::InvalidOperation,
@@ -566,7 +579,9 @@ impl Object for IncludeAsset {
                 }
                 mas_spa::FileType::Woff | mas_spa::FileType::Woff2 | mas_spa::FileType::Json => {
                     // Skip pre-loading fonts and JSON (translations) as it will
-                    // lead to many wasted preloads.
+                    // lead to many wasted preloads. For translations, we only
+                    // include them as preload if they are included on the
+                    // top-level
                 }
             }
         }
