@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { readFile, writeFile } from "node:fs/promises";
+import { type FileHandle, open } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import zlib from "node:zlib";
@@ -138,34 +138,46 @@ export default defineConfig((env) => ({
         async handler({ dir }): Promise<void> {
           const manifestPath = resolve(dir, "manifest.json");
 
-          const manifest: Manifest | undefined = await readFile(
-            manifestPath,
-            "utf-8",
-          ).then(JSON.parse, () => undefined);
-
-          if (manifest) {
-            const existing: Set<string> = new Set();
-            const needs: Set<string> = new Set();
-
-            for (const chunk of Object.values(manifest)) {
-              existing.add(chunk.file);
-              for (const css of chunk.css ?? []) needs.add(css);
-              for (const sub of chunk.assets ?? []) needs.add(sub);
-            }
-
-            const missing = Array.from(needs).filter((a) => !existing.has(a));
-
-            if (missing.length > 0) {
-              for (const asset of missing) {
-                manifest[asset] = {
-                  file: asset,
-                  integrity: "",
-                };
-              }
-
-              await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-            }
+          let manifestHandle: FileHandle;
+          try {
+            manifestHandle = await open(manifestPath, "r+");
+          } catch (error) {
+            // Manifest does not exist, nothing to do but still warn about
+            this.warn(`Failed to open manifest at ${manifestPath}: ${error}`);
+            return;
           }
+          const rawManifest = await manifestHandle.readFile("utf-8");
+          const manifest = JSON.parse(rawManifest) as Manifest;
+
+          const existing: Set<string> = new Set();
+          const needs: Set<string> = new Set();
+
+          for (const chunk of Object.values(manifest)) {
+            existing.add(chunk.file);
+            for (const css of chunk.css ?? []) needs.add(css);
+            for (const sub of chunk.assets ?? []) needs.add(sub);
+          }
+
+          const missing = Array.from(needs).filter((a) => !existing.has(a));
+
+          if (missing.length > 0) {
+            for (const asset of missing) {
+              manifest[asset] = {
+                file: asset,
+                integrity: "",
+              };
+            }
+
+            // Overwrite the manifest with the new entries
+            await manifestHandle.truncate(0);
+            await manifestHandle.write(
+              JSON.stringify(manifest, null, 2),
+              0,
+              "utf-8",
+            );
+          }
+
+          await manifestHandle.close();
         },
       },
     },
