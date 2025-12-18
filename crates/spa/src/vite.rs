@@ -48,7 +48,7 @@ pub struct Manifest {
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-enum FileType {
+pub enum FileType {
     Script,
     Stylesheet,
     Woff,
@@ -104,83 +104,24 @@ impl<'a> Asset<'a> {
         })
     }
 
-    fn src(&self, assets_base: &Utf8Path) -> Utf8PathBuf {
+    /// Get the source path of this asset, relative to the assets base path
+    #[must_use]
+    pub fn src(&self, assets_base: &Utf8Path) -> Utf8PathBuf {
         assets_base.join(self.name)
     }
 
-    /// Generate a `<link rel="preload">` tag to preload this entry
-    pub fn preload_tag(&self, assets_base: &Utf8Path) -> String {
-        let href = self.src(assets_base);
-        let integrity = self
-            .integrity
-            .map(|i| format!(r#"integrity="{i}" "#))
-            .unwrap_or_default();
-        match self.file_type {
-            FileType::Stylesheet => {
-                format!(r#"<link rel="preload" href="{href}" as="style" crossorigin {integrity}/>"#)
-            }
-            FileType::Script => {
-                format!(r#"<link rel="modulepreload" href="{href}" crossorigin {integrity}/>"#)
-            }
-            FileType::Woff | FileType::Woff2 => {
-                format!(r#"<link rel="preload" href="{href}" as="font" crossorigin {integrity}/>"#,)
-            }
-            FileType::Json => {
-                format!(r#"<link rel="preload" href="{href}" as="fetch" crossorigin {integrity}/>"#,)
-            }
-            FileType::Png => {
-                format!(r#"<link rel="preload" href="{href}" as="image" crossorigin {integrity}/>"#,)
-            }
-        }
-    }
-
-    /// Generate a `<link>` or `<script>` tag to include this entry
-    pub fn include_tag(&self, assets_base: &Utf8Path) -> Option<String> {
-        let src = self.src(assets_base);
-        let integrity = self
-            .integrity
-            .map(|i| format!(r#"integrity="{i}" "#))
-            .unwrap_or_default();
-
-        match self.file_type {
-            FileType::Stylesheet => Some(format!(
-                r#"<link rel="stylesheet" href="{src}" crossorigin {integrity}/>"#
-            )),
-            FileType::Script => Some(format!(
-                r#"<script type="module" src="{src}" crossorigin {integrity}></script>"#
-            )),
-            FileType::Woff | FileType::Woff2 | FileType::Json | FileType::Png => None,
-        }
-    }
-
-    /// Returns `true` if the asset type is a script
+    /// Get the file type of this asset
     #[must_use]
-    pub fn is_script(&self) -> bool {
-        self.file_type == FileType::Script
+    pub fn file_type(&self) -> FileType {
+        self.file_type
     }
 
-    /// Returns `true` if the asset type is a stylesheet
+    /// Get the integrity HTML tag attribute, with a leading space, if any
     #[must_use]
-    pub fn is_stylesheet(&self) -> bool {
-        self.file_type == FileType::Stylesheet
-    }
-
-    /// Returns `true` if the asset type is JSON
-    #[must_use]
-    pub fn is_json(&self) -> bool {
-        self.file_type == FileType::Json
-    }
-
-    /// Returns `true` if the asset type is a font
-    #[must_use]
-    pub fn is_font(&self) -> bool {
-        self.file_type == FileType::Woff || self.file_type == FileType::Woff2
-    }
-
-    /// Returns `true` if the asset type is image
-    #[must_use]
-    pub fn is_image(&self) -> bool {
-        self.file_type == FileType::Png
+    pub fn integrity_attr(&self) -> String {
+        self.integrity
+            .map(|i| format!(r#" integrity="{i}""#))
+            .unwrap_or_default()
     }
 }
 

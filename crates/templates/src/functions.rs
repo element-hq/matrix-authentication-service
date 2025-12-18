@@ -10,13 +10,13 @@
 //! Additional functions, tests and filters used in templates
 
 use std::{
-    collections::{BTreeMap, HashMap},
-    fmt::Formatter,
+    collections::{BTreeMap, HashMap, HashSet},
+    fmt::{Formatter, Write as _},
     str::FromStr,
-    sync::{Arc, atomic::AtomicUsize},
+    sync::{Arc, Mutex, atomic::AtomicUsize},
 };
 
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use mas_i18n::{Argument, ArgumentList, DataLocale, Translator, sprintf::FormattedMessagePart};
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
@@ -419,6 +419,41 @@ impl<T: chrono::Timelike> mas_i18n::icu_datetime::input::IsoTimeInput for TimeAd
     }
 }
 
+#[derive(Default, Debug)]
+struct IncludedAssetsTrackerInner {
+    preloaded: HashSet<Utf8PathBuf>,
+    included: HashSet<Utf8PathBuf>,
+}
+
+impl IncludedAssetsTrackerInner {
+    /// Mark an asset as preloaded. Returns true if it was not already marked.
+    fn mark_preloaded(&mut self, asset: &Utf8Path) -> bool {
+        self.preloaded.insert(asset.to_owned())
+    }
+
+    /// Mark an asset as included. Returns true if it was not already marked.
+    fn mark_included(&mut self, asset: &Utf8Path) -> bool {
+        self.preloaded.insert(asset.to_owned());
+        self.included.insert(asset.to_owned())
+    }
+}
+
+/// Helper to track included assets during a template render
+#[derive(Default, Debug)]
+struct IncludedAssetsTracker {
+    inner: Mutex<IncludedAssetsTrackerInner>,
+}
+
+impl IncludedAssetsTracker {
+    fn lock(&self) -> std::sync::MutexGuard<'_, IncludedAssetsTrackerInner> {
+        // There is no reason for this mutex to ever get poisoned, so it's fine
+        // to unwrap here
+        self.inner.lock().unwrap()
+    }
+}
+
+impl Object for IncludedAssetsTracker {}
+
 struct IncludeAsset {
     url_builder: UrlBuilder,
     vite_manifest: ViteManifest,
@@ -440,11 +475,20 @@ impl std::fmt::Display for IncludeAsset {
 }
 
 impl Object for IncludeAsset {
-    fn call(self: &Arc<Self>, _state: &State, args: &[Value]) -> Result<Value, Error> {
+    fn call(self: &Arc<Self>, state: &State, args: &[Value]) -> Result<Value, Error> {
         let (path,): (&str,) = from_args(args)?;
-
         let path: &Utf8Path = path.into();
 
+        let assets_base: &Utf8Path = self.url_builder.assets_base().into();
+
+        // We store the list of assets we've already included and already preloaded in a
+        // 'temp' object. Those live throughout the template render and reset on each
+        // new render.
+        let tracker =
+            state.get_or_set_temp_object("included_assets_tracker", IncludedAssetsTracker::default);
+        let mut tracker = tracker.lock();
+
+        // Grab the main asset and its imports from the manifest
         let (main, imported) = self.vite_manifest.find_assets(path).map_err(|e| {
             Error::new(
                 ErrorKind::InvalidOperation,
@@ -452,18 +496,97 @@ impl Object for IncludeAsset {
             )
         })?;
 
-        let assets = std::iter::once(main)
-            .chain(imported.iter().filter(|a| a.is_stylesheet()).copied())
-            .filter_map(|asset| asset.include_tag(self.url_builder.assets_base().into()));
+        // We'll accumulate the output in this string
+        let mut output = String::new();
+        match main.file_type() {
+            mas_spa::FileType::Script => {
+                let integrity = main.integrity_attr();
+                let src = main.src(assets_base);
+                if tracker.mark_included(&src) {
+                    writeln!(
+                        output,
+                        r#"<script type="module" src="{src}" crossorigin{integrity}></script>"#
+                    )
+                    .unwrap();
+                }
+            }
+            mas_spa::FileType::Stylesheet => {
+                let integrity = main.integrity_attr();
+                let src = main.src(assets_base);
+                if tracker.mark_included(&src) {
+                    writeln!(
+                        output,
+                        r#"<link rel="stylesheet" href="{src}" crossorigin{integrity} />"#
+                    )
+                    .unwrap();
+                }
+            }
 
-        let preloads = imported
-            .iter()
-            .filter(|a| a.is_script())
-            .map(|asset| asset.preload_tag(self.url_builder.assets_base().into()));
+            mas_spa::FileType::Json => {
+                // When a JSON is included at the top level (a translation), we preload it
+                let integrity = main.integrity_attr();
+                let src = main.src(assets_base);
+                if tracker.mark_preloaded(&src) {
+                    writeln!(
+                        output,
+                        r#"<link rel="preload" href="{src}" as="fetch" crossorigin{integrity} />"#,
+                    )
+                    .unwrap();
+                }
+            }
 
-        let tags: Vec<String> = preloads.chain(assets).collect();
+            file_type => {
+                return Err(Error::new(
+                    ErrorKind::InvalidOperation,
+                    format!(
+                        "The target asset is a {file_type:?} file, which is not supported by `include_asset`"
+                    ),
+                ));
+            }
+        }
 
-        Ok(Value::from_safe_string(tags.join("\n")))
+        for asset in imported {
+            let integrity = asset.integrity_attr();
+            let src = asset.src(assets_base);
+            match asset.file_type() {
+                mas_spa::FileType::Stylesheet => {
+                    // Imported stylesheets are inserted directly, not just preloaded
+                    if tracker.mark_included(&src) {
+                        writeln!(
+                            output,
+                            r#"<link rel="stylesheet" href="{src}" crossorigin{integrity} />"#
+                        )
+                        .unwrap();
+                    }
+                }
+                mas_spa::FileType::Script => {
+                    if tracker.mark_preloaded(&src) {
+                        writeln!(
+                            output,
+                            r#"<link rel="modulepreload" href="{src}" crossorigin{integrity} />"#,
+                        )
+                        .unwrap();
+                    }
+                }
+                mas_spa::FileType::Png => {
+                    if tracker.mark_preloaded(&src) {
+                        writeln!(
+                            output,
+                            r#"<link rel="preload" href="{src}" as="image" fetchpriority="low" crossorigin{integrity} />"#,
+                        )
+                        .unwrap();
+                    }
+                }
+                mas_spa::FileType::Woff | mas_spa::FileType::Woff2 | mas_spa::FileType::Json => {
+                    // Skip pre-loading fonts and JSON (translations) as it will
+                    // lead to many wasted preloads. For translations, we only
+                    // include them as preload if they are included on the
+                    // top-level
+                }
+            }
+        }
+
+        Ok(Value::from_safe_string(output.trim_end().to_owned()))
     }
 }
 
