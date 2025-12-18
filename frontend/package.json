@@ -78,7 +78,6 @@
     "typescript": "^5.9.3",
     "vite": "7.3.0",
     "vite-plugin-graphql-codegen": "^3.7.0",
-    "vite-plugin-manifest-sri": "^0.2.0",
     "vitest": "^4.0.15"
   },
   "msw": {
