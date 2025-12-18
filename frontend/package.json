@@ -65,7 +65,7 @@
     "graphql": "^16.12.0",
     "happy-dom": "^20.0.11",
     "i18next-cli": "^1.32.0",
-    "knip": "^5.74.0",
+    "knip": "^5.75.1",
     "msw": "^2.12.4",
     "msw-storybook-addon": "^2.0.6",
     "postcss": "^8.5.6",
