@@ -4,16 +4,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { readFile, writeFile } from "node:fs/promises";
+import { type FileHandle, open } from "node:fs/promises";
 import { resolve } from "node:path";
+import { promisify } from "node:util";
+import zlib from "node:zlib";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import { globSync } from "tinyglobby";
-import type { Manifest, PluginOption } from "vite";
-import compression from "vite-plugin-compression";
+import type { Environment, Manifest, PluginOption } from "vite";
 import codegen from "vite-plugin-graphql-codegen";
-import manifestSRI from "vite-plugin-manifest-sri";
 import { defineConfig } from "vitest/config";
 
 function i18nHotReload(): PluginOption {
@@ -27,6 +27,154 @@ function i18nHotReload(): PluginOption {
           event: "locales-update",
         });
       }
+    },
+  };
+}
+
+// Pre-compress the assets, so that the server can serve them directly
+function compression(): PluginOption {
+  const gzip = promisify(zlib.gzip);
+  const brotliCompress = promisify(zlib.brotliCompress);
+
+  return {
+    name: "asset-compression",
+    apply: "build",
+    enforce: "post",
+
+    async generateBundle(_outputOptions, bundle) {
+      const promises = Object.entries(bundle).flatMap(
+        ([fileName, assetOrChunk]) => {
+          const source =
+            assetOrChunk.type === "asset"
+              ? assetOrChunk.source
+              : assetOrChunk.code;
+
+          // Don't compress empty files, only compress CSS, JS and JSON files
+          if (
+            !source ||
+            !(
+              fileName.endsWith(".js") ||
+              fileName.endsWith(".css") ||
+              fileName.endsWith(".json")
+            )
+          ) {
+            return [];
+          }
+
+          const uncompressed = Buffer.from(source);
+
+          // We pre-compress assets with brotli as it offers the best
+          // compression ratios compared to even zstd, and gzip as a fallback
+          return [
+            { compress: gzip, ext: "gz" },
+            { compress: brotliCompress, ext: "br" },
+          ].map(async ({ compress, ext }) => {
+            const compressed = await compress(uncompressed);
+
+            this.emitFile({
+              type: "asset",
+              fileName: `${fileName}.${ext}`,
+              source: compressed,
+            });
+          });
+        },
+      );
+
+      await Promise.all(promises);
+    },
+  };
+}
+
+declare module "vite" {
+  interface ManifestChunk {
+    integrity: string;
+  }
+}
+
+// Custom plugin to make sure that each asset has an entry in the manifest
+// This is needed so that the preloading & asset integrity generation works
+// It also calculates integrity hashes for the assets
+function augmentManifest(): PluginOption {
+  // Store a per-environment state, in case the build is run multiple times, like in watch mode
+  const state = new Map<Environment, Record<string, Promise<string>>>();
+  return {
+    name: "augment-manifest",
+    apply: "build",
+    enforce: "post",
+
+    perEnvironmentStartEndDuringDev: true,
+    buildStart() {
+      state.set(this.environment, {});
+    },
+
+    generateBundle(_outputOptions, bundle) {
+      const envState = state.get(this.environment);
+      if (!envState) throw new Error("No state for environment");
+
+      for (const [fileName, assetOrChunk] of Object.entries(bundle)) {
+        // Start calculating hash of the asset. We can let that run in the
+        // background
+        const source =
+          assetOrChunk.type === "asset"
+            ? assetOrChunk.source
+            : assetOrChunk.code;
+
+        envState[fileName] = (async (): Promise<string> => {
+          const digest = await crypto.subtle.digest(
+            "SHA-384",
+            Buffer.from(source),
+          );
+          return `sha384-${Buffer.from(digest).toString("base64")}`;
+        })();
+      }
+    },
+
+    async writeBundle({ dir }): Promise<void> {
+      const envState = state.get(this.environment);
+      if (!envState) throw new Error("No state for environment");
+      state.delete(this.environment);
+
+      const manifestPath = resolve(dir, "manifest.json");
+
+      let manifestHandle: FileHandle;
+      try {
+        manifestHandle = await open(manifestPath, "r+");
+      } catch (error) {
+        // Manifest does not exist, nothing to do but still warn about
+        this.warn(`Failed to open manifest at ${manifestPath}: ${error}`);
+        return;
+      }
+      const rawManifest = await manifestHandle.readFile("utf-8");
+      const manifest = JSON.parse(rawManifest) as Manifest;
+
+      const existing: Set<string> = new Set();
+      const needs: Set<string> = new Set();
+
+      for (const chunk of Object.values(manifest)) {
+        existing.add(chunk.file);
+        chunk.integrity = await envState[chunk.file];
+        for (const css of chunk.css ?? []) needs.add(css);
+        for (const sub of chunk.assets ?? []) needs.add(sub);
+      }
+
+      const missing = Array.from(needs).filter((a) => !existing.has(a));
+
+      for (const asset of missing) {
+        manifest[asset] = {
+          file: asset,
+          integrity: await envState[asset],
+        };
+      }
+
+      // Overwrite the manifest with the augmented entries
+      // XXX: you'd think that doing `manifestHandle.writeFile` would work, as
+      // the docs says that it 'overwrites the file if it exists'. Turns out, it
+      // reuses the previous position from `readFile`, so that would append on
+      // the existing, so we have to use `write` with an explicit position.
+      // Truncating the file just in case the output is smaller than before.
+      await manifestHandle.truncate(0);
+      await manifestHandle.write(JSON.stringify(manifest, null, 2), 0, "utf-8");
+      await manifestHandle.close();
     },
   };
 }
@@ -69,67 +217,9 @@ export default defineConfig((env) => ({
 
     react(),
 
-    // Custom plugin to make sure that each asset has an entry in the manifest
-    // This is needed so that the preloading & asset integrity generation works
-    {
-      name: "manifest-missing-assets",
+    augmentManifest(),
 
-      apply: "build",
-      enforce: "post",
-      writeBundle: {
-        // This needs to be executed sequentially before the manifestSRI plugin
-        sequential: true,
-        order: "pre",
-        async handler({ dir }): Promise<void> {
-          const manifestPath = resolve(dir, "manifest.json");
-
-          const manifest: Manifest | undefined = await readFile(
-            manifestPath,
-            "utf-8",
-          ).then(JSON.parse, () => undefined);
-
-          if (manifest) {
-            const existing: Set<string> = new Set();
-            const needs: Set<string> = new Set();
-
-            for (const chunk of Object.values(manifest)) {
-              existing.add(chunk.file);
-              for (const css of chunk.css ?? []) needs.add(css);
-              for (const sub of chunk.assets ?? []) needs.add(sub);
-            }
-
-            const missing = Array.from(needs).filter((a) => !existing.has(a));
-
-            if (missing.length > 0) {
-              for (const asset of missing) {
-                manifest[asset] = {
-                  file: asset,
-                  integrity: "",
-                };
-              }
-
-              await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-            }
-          }
-        },
-      },
-    },
-
-    manifestSRI(),
-
-    // Pre-compress the assets, so that the server can serve them directly
-    compression({
-      algorithm: "gzip",
-      ext: ".gz",
-    }),
-    compression({
-      algorithm: "brotliCompress",
-      ext: ".br",
-    }),
-    compression({
-      algorithm: "deflate",
-      ext: ".zz",
-    }),
+    compression(),
 
     i18nHotReload(),
   ],

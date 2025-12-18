@@ -248,9 +248,9 @@ pub fn build_router(
             mas_config::HttpResource::Assets { path } => {
                 let static_service = ServeDir::new(path)
                     .append_index_html_on_directories(false)
+                    // The vite build pre-compresses assets with brotli and gzip
                     .precompressed_br()
-                    .precompressed_gzip()
-                    .precompressed_deflate();
+                    .precompressed_gzip();
 
                 let add_cache_headers = axum::middleware::map_response(
                     async |mut res: Response<ServeFileSystemResponseBody>| {
