@@ -77,7 +77,6 @@
     "tinyglobby": "^0.2.15",
     "typescript": "^5.9.3",
     "vite": "7.3.0",
-    "vite-plugin-compression": "^0.5.1",
     "vite-plugin-graphql-codegen": "^3.7.0",
     "vite-plugin-manifest-sri": "^0.2.0",
     "vitest": "^4.0.15"

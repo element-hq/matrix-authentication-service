@@ -6,12 +6,13 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { promisify } from "node:util";
+import zlib from "node:zlib";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import { globSync } from "tinyglobby";
 import type { Manifest, PluginOption } from "vite";
-import compression from "vite-plugin-compression";
 import codegen from "vite-plugin-graphql-codegen";
 import manifestSRI from "vite-plugin-manifest-sri";
 import { defineConfig } from "vitest/config";
@@ -27,6 +28,60 @@ function i18nHotReload(): PluginOption {
           event: "locales-update",
         });
       }
+    },
+  };
+}
+
+// Pre-compress the assets, so that the server can serve them directly
+function compression(): PluginOption {
+  const gzip = promisify(zlib.gzip);
+  const brotliCompress = promisify(zlib.brotliCompress);
+
+  return {
+    name: "asset-compression",
+    apply: "build",
+    enforce: "post",
+
+    async generateBundle(_outputOptions, bundle) {
+      const promises = Object.entries(bundle).flatMap(
+        ([fileName, assetOrChunk]) => {
+          const source =
+            assetOrChunk.type === "asset"
+              ? assetOrChunk.source
+              : assetOrChunk.code;
+
+          // Don't compress empty files, only compress CSS, JS and JSON files
+          if (
+            !source ||
+            !(
+              fileName.endsWith(".js") ||
+              fileName.endsWith(".css") ||
+              fileName.endsWith(".json")
+            )
+          ) {
+            return [];
+          }
+
+          const uncompressed = Buffer.from(source);
+
+          // We pre-compress assets with brotli as it offers the best
+          // compression ratios compared to even zstd, and gzip as a fallback
+          return [
+            { compress: gzip, ext: "gz" },
+            { compress: brotliCompress, ext: "br" },
+          ].map(async ({ compress, ext }) => {
+            const compressed = await compress(uncompressed);
+
+            this.emitFile({
+              type: "asset",
+              fileName: `${fileName}.${ext}`,
+              source: compressed,
+            });
+          });
+        },
+      );
+
+      await Promise.all(promises);
     },
   };
 }
@@ -117,19 +172,7 @@ export default defineConfig((env) => ({
 
     manifestSRI(),
 
-    // Pre-compress the assets, so that the server can serve them directly
-    compression({
-      algorithm: "gzip",
-      ext: ".gz",
-    }),
-    compression({
-      algorithm: "brotliCompress",
-      ext: ".br",
-    }),
-    compression({
-      algorithm: "deflate",
-      ext: ".zz",
-    }),
+    compression(),
 
     i18nHotReload(),
   ],
