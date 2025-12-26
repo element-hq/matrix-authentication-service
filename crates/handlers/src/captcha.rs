@@ -285,7 +285,10 @@ mod tests {
 
     #[test]
     fn hostname_matches_exact() {
-        assert!(hostname_matches_site("mauth.example.com", "mauth.example.com"));
+        assert!(hostname_matches_site(
+            "mauth.example.com",
+            "mauth.example.com"
+        ));
     }
 
     #[test]
