@@ -4,8 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+import { createWriteStream } from "node:fs";
 import { type FileHandle, open } from "node:fs/promises";
 import path, { resolve } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import zlib from "node:zlib";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -14,9 +17,6 @@ import { globSync } from "tinyglobby";
 import type { Manifest, PluginOption } from "vite";
 import codegen from "vite-plugin-graphql-codegen";
 import { defineConfig } from "vitest/config";
-import { createWriteStream } from "node:fs";
-import { pipeline } from "node:stream/promises";
-import { Readable } from "node:stream";
 
 function i18nHotReload(): PluginOption {
   return {
