@@ -267,14 +267,18 @@ pub async fn post(
         let existing_params = redirect_uri
             .query()
             .map(serde_urlencoded::from_str)
-            .transpose()?
+            .transpose()
+            .context("Failed to parse query parameters in redirect URI")
+            .map_err(InternalError::from_anyhow)?
             .unwrap_or_default();
 
         let params = AllParams {
             existing_params,
             login_token: &login.login_token,
         };
-        let query = serde_urlencoded::to_string(params)?;
+        let query = serde_urlencoded::to_string(params)
+            .context("Failed to serialize back query parameters in redirect URI")
+            .map_err(InternalError::from_anyhow)?;
         redirect_uri.set_query(Some(&query));
         redirect_uri
     };
