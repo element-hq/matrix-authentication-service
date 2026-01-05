@@ -75,7 +75,8 @@ function compression(): PluginOption {
                   params: {
                     [zlib.constants.BROTLI_PARAM_MODE]:
                       zlib.constants.BROTLI_MODE_TEXT,
-                    [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+                    // 10 yields better results and is quicker than 11
+                    [zlib.constants.BROTLI_PARAM_QUALITY]: 10,
                     [zlib.constants.BROTLI_PARAM_SIZE_HINT]:
                       uncompressed.length,
                   },
