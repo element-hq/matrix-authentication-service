@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{collections::HashMap, sync::Arc};
+use std::{borrow::Cow, sync::Arc};
 
 use anyhow::Context;
 use axum::{
@@ -14,6 +14,7 @@ use axum::{
 use axum_extra::{TypedHeader, extract::Query};
 use chrono::Duration;
 use hyper::StatusCode;
+use indexmap::IndexMap;
 use mas_axum_utils::{
     InternalError,
     cookies::CookieJar,
@@ -37,8 +38,8 @@ use crate::{
 
 #[derive(Serialize)]
 struct AllParams<'s> {
-    #[serde(flatten)]
-    existing_params: HashMap<&'s str, &'s str>,
+    #[serde(flatten, borrow)]
+    existing_params: IndexMap<Cow<'s, str>, Cow<'s, str>>,
 
     #[serde(rename = "loginToken")]
     login_token: &'s str,
