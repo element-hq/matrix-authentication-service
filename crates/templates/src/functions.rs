@@ -505,7 +505,7 @@ impl Object for IncludeAsset {
                 if tracker.mark_included(&src) {
                     writeln!(
                         output,
-                        r#"<script type="module" src="{src}" crossorigin{integrity}></script>"#
+                        r#"<script type="module" src="{src}" crossorigin="anonymous"{integrity}></script>"#
                     )
                     .unwrap();
                 }
@@ -516,7 +516,7 @@ impl Object for IncludeAsset {
                 if tracker.mark_included(&src) {
                     writeln!(
                         output,
-                        r#"<link rel="stylesheet" href="{src}" crossorigin{integrity} />"#
+                        r#"<link rel="stylesheet" href="{src}" crossorigin="anonymous"{integrity} />"#
                     )
                     .unwrap();
                 }
@@ -524,14 +524,9 @@ impl Object for IncludeAsset {
 
             mas_spa::FileType::Json => {
                 // When a JSON is included at the top level (a translation), we preload it
-                let integrity = main.integrity_attr();
                 let src = main.src(assets_base);
                 if tracker.mark_preloaded(&src) {
-                    writeln!(
-                        output,
-                        r#"<link rel="preload" href="{src}" as="fetch" crossorigin{integrity} />"#,
-                    )
-                    .unwrap();
+                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#,).unwrap();
                 }
             }
 
@@ -546,24 +541,25 @@ impl Object for IncludeAsset {
         }
 
         for asset in imported {
-            let integrity = asset.integrity_attr();
             let src = asset.src(assets_base);
             match asset.file_type() {
                 mas_spa::FileType::Stylesheet => {
                     // Imported stylesheets are inserted directly, not just preloaded
                     if tracker.mark_included(&src) {
+                        let integrity = asset.integrity_attr();
                         writeln!(
                             output,
-                            r#"<link rel="stylesheet" href="{src}" crossorigin{integrity} />"#
+                            r#"<link rel="stylesheet" href="{src}" crossorigin="anonymous"{integrity} />"#
                         )
                         .unwrap();
                     }
                 }
                 mas_spa::FileType::Script => {
                     if tracker.mark_preloaded(&src) {
+                        let integrity = asset.integrity_attr();
                         writeln!(
                             output,
-                            r#"<link rel="modulepreload" href="{src}" crossorigin{integrity} />"#,
+                            r#"<link rel="modulepreload" href="{src}" crossorigin="anonymous"{integrity} />"#,
                         )
                         .unwrap();
                     }
@@ -572,7 +568,7 @@ impl Object for IncludeAsset {
                     if tracker.mark_preloaded(&src) {
                         writeln!(
                             output,
-                            r#"<link rel="preload" href="{src}" as="image" fetchpriority="low" crossorigin{integrity} />"#,
+                            r#"<link rel="preload" href="{src}" as="image" crossorigin="anonymous" fetchpriority="low" />"#,
                         )
                         .unwrap();
                     }
