@@ -33,7 +33,7 @@
     "i18next": "^25.7.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-i18next": "^16.5.0",
+    "react-i18next": "^16.5.1",
     "swagger-ui-dist": "^5.31.0",
     "valibot": "^1.2.0",
     "vaul": "^1.1.2"
@@ -64,7 +64,7 @@
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.12.0",
     "happy-dom": "^20.0.11",
-    "i18next-cli": "^1.32.0",
+    "i18next-cli": "^1.34.1",
     "knip": "^5.75.1",
     "msw": "^2.12.4",
     "msw-storybook-addon": "^2.0.6",
