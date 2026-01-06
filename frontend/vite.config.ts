@@ -4,15 +4,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+import { createWriteStream } from "node:fs";
 import { type FileHandle, open } from "node:fs/promises";
-import { resolve } from "node:path";
-import { promisify } from "node:util";
+import path, { resolve } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import zlib from "node:zlib";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import { globSync } from "tinyglobby";
-import type { Environment, Manifest, PluginOption } from "vite";
+import type { Manifest, PluginOption } from "vite";
 import codegen from "vite-plugin-graphql-codegen";
 import { defineConfig } from "vitest/config";
 
@@ -33,54 +35,66 @@ function i18nHotReload(): PluginOption {
 
 // Pre-compress the assets, so that the server can serve them directly
 function compression(): PluginOption {
-  const gzip = promisify(zlib.gzip);
-  const brotliCompress = promisify(zlib.brotliCompress);
-
   return {
     name: "asset-compression",
     apply: "build",
     enforce: "post",
 
-    async generateBundle(_outputOptions, bundle) {
-      const promises = Object.entries(bundle).flatMap(
-        ([fileName, assetOrChunk]) => {
-          const source =
-            assetOrChunk.type === "asset"
-              ? assetOrChunk.source
-              : assetOrChunk.code;
+    writeBundle: {
+      // We need to run after Vite's plugins, as it will do some final touches
+      // to the files in this phase
+      order: "post",
+      async handler({ dir }, bundle) {
+        const promises = Object.entries(bundle).flatMap(
+          ([fileName, assetOrChunk]) => {
+            const source =
+              assetOrChunk.type === "asset"
+                ? assetOrChunk.source
+                : assetOrChunk.code;
 
-          // Don't compress empty files, only compress CSS, JS and JSON files
-          if (
-            !source ||
-            !(
-              fileName.endsWith(".js") ||
-              fileName.endsWith(".css") ||
-              fileName.endsWith(".json")
-            )
-          ) {
-            return [];
-          }
+            // Don't compress empty files, only compress CSS, JS and JSON files
+            if (
+              !source ||
+              !(
+                fileName.endsWith(".js") ||
+                fileName.endsWith(".css") ||
+                fileName.endsWith(".json")
+              )
+            ) {
+              return [];
+            }
 
-          const uncompressed = Buffer.from(source);
+            const uncompressed = Buffer.from(source);
 
-          // We pre-compress assets with brotli as it offers the best
-          // compression ratios compared to even zstd, and gzip as a fallback
-          return [
-            { compress: gzip, ext: "gz" },
-            { compress: brotliCompress, ext: "br" },
-          ].map(async ({ compress, ext }) => {
-            const compressed = await compress(uncompressed);
+            // We pre-compress assets with brotli as it offers the best
+            // compression ratios compared to even zstd, and gzip as a fallback
+            return [
+              { compressor: zlib.createGzip(), ext: "gz" },
+              {
+                compressor: zlib.createBrotliCompress({
+                  params: {
+                    [zlib.constants.BROTLI_PARAM_MODE]:
+                      zlib.constants.BROTLI_MODE_TEXT,
+                    // 10 yields better results and is quicker than 11
+                    [zlib.constants.BROTLI_PARAM_QUALITY]: 10,
+                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]:
+                      uncompressed.length,
+                  },
+                }),
+                ext: "br",
+              },
+            ].map(async ({ compressor, ext }) => {
+              const output = path.join(dir, `${fileName}.${ext}`);
+              const readStream = Readable.from(uncompressed);
+              const writeStream = createWriteStream(output);
 
-            this.emitFile({
-              type: "asset",
-              fileName: `${fileName}.${ext}`,
-              source: compressed,
+              await pipeline(readStream, compressor, writeStream);
             });
-          });
-        },
-      );
+          },
+        );
 
-      await Promise.all(promises);
+        await Promise.all(promises);
+      },
     },
   };
 }
@@ -95,22 +109,13 @@ declare module "vite" {
 // This is needed so that the preloading & asset integrity generation works
 // It also calculates integrity hashes for the assets
 function augmentManifest(): PluginOption {
-  // Store a per-environment state, in case the build is run multiple times, like in watch mode
-  const state = new Map<Environment, Record<string, Promise<string>>>();
   return {
     name: "augment-manifest",
     apply: "build",
     enforce: "post",
 
-    perEnvironmentStartEndDuringDev: true,
-    buildStart() {
-      state.set(this.environment, {});
-    },
-
-    generateBundle(_outputOptions, bundle) {
-      const envState = state.get(this.environment);
-      if (!envState) throw new Error("No state for environment");
-
+    async writeBundle({ dir }, bundle): Promise<void> {
+      const hashes: Record<string, Promise<string>> = {};
       for (const [fileName, assetOrChunk] of Object.entries(bundle)) {
         // Start calculating hash of the asset. We can let that run in the
         // background
@@ -119,7 +124,7 @@ function augmentManifest(): PluginOption {
             ? assetOrChunk.source
             : assetOrChunk.code;
 
-        envState[fileName] = (async (): Promise<string> => {
+        hashes[fileName] = (async (): Promise<string> => {
           const digest = await crypto.subtle.digest(
             "SHA-384",
             Buffer.from(source),
@@ -127,12 +132,6 @@ function augmentManifest(): PluginOption {
           return `sha384-${Buffer.from(digest).toString("base64")}`;
         })();
       }
-    },
-
-    async writeBundle({ dir }): Promise<void> {
-      const envState = state.get(this.environment);
-      if (!envState) throw new Error("No state for environment");
-      state.delete(this.environment);
 
       const manifestPath = resolve(dir, "manifest.json");
 
@@ -152,7 +151,7 @@ function augmentManifest(): PluginOption {
 
       for (const chunk of Object.values(manifest)) {
         existing.add(chunk.file);
-        chunk.integrity = await envState[chunk.file];
+        chunk.integrity = await hashes[chunk.file];
         for (const css of chunk.css ?? []) needs.add(css);
         for (const sub of chunk.assets ?? []) needs.add(sub);
       }
@@ -162,7 +161,7 @@ function augmentManifest(): PluginOption {
       for (const asset of missing) {
         manifest[asset] = {
           file: asset,
-          integrity: await envState[asset],
+          integrity: await hashes[asset],
         };
       }
 
@@ -199,6 +198,7 @@ export default defineConfig((env) => ({
     sourcemap: true,
     target: browserslistToEsbuild(),
     cssCodeSplit: true,
+    reportCompressedSize: false,
 
     rollupOptions: {
       // This uses all the files in the src/entrypoints directory as inputs
