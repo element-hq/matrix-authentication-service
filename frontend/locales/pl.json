@@ -43,7 +43,7 @@
         "alert_description": "To konto zostanie trwale usunięte i nie będziesz już mieć dostępu do żadnych wiadomości.",
         "alert_title": "Za chwilę stracisz wszystkie swoje dane",
         "button": "Usuń konto",
-        "dialog_description": "<text>Potwierdź, że chcesz usunąć swoje konto:</text>\n<profile />\n<list>\n<item>Nie będziesz mógł ponownie aktywować swojego konta</item>\n<item>Nie będziesz już mógł się zalogować</item>\n<item>Nikt nie będzie mógł ponownie wykorzystać Twojej nazwy użytkownika (MXID), łącznie z Tobą</item>\n<item>Opuścisz wszystkie pokoje i wiadomości bezpośrednie, w których uczestniczysz</item>\n<item>Zostaniesz usunięty z serwera tożsamości i nikt nie będzie mógł Cię znaleźć po Twoim adresie e-mail ani numerze telefonu</item>\n</list>\n<text>Twoje stare wiadomości nadal będą widoczne dla osób, które je otrzymały. Czy chcesz ukryć możliwość odczytywania twoich wiadomości przed osobami, które dołączą do pokoi w przyszłości?</text>",
+        "dialog_description": "<text>Potwierdź, że chcesz usunąć swoje konto:</text>\n<profile />\n<list>\n<item>Nie będziesz mógł ponownie aktywować swojego konta</item>\n<item>Nie będziesz już mógł się zalogować</item>\n<item> Nikt nie będzie mógł ponownie wykorzystać Twojej nazwy użytkownika (MXID), łącznie z Tobą</item>\n<item>Opuścisz wszystkie pokoje i wiadomości bezpośrednie, w których uczestniczysz</item>\n<item>Zostaniesz usunięty z serwera tożsamości i nikt nie będzie mógł Cię znaleźć po Twoim adresie e-mail ani numerze telefonu</item>\n</list>\n<text>Twoje stare wiadomości nadal będą widoczne dla osób, które je otrzymały. Czy chcesz ukryć wysłane wiadomości przed osobami, które dołączą do pokoi w przyszłości?</text>",
         "dialog_title": "Usunąć to konto?",
         "erase_checkbox_label": "Tak, ukryj wszystkie moje wiadomości przed nowymi użytkownikami",
         "incorrect_password": "Niepoprawne hasło. Spróbuj ponownie.",
@@ -394,9 +394,9 @@
     "scope": {
       "edit_profile": "Edytuj swój profil i dane kontaktowe",
       "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
-      "mas_admin": "Zarządzaj dowolnym użytkownikiem w matrix-authentication-service",
+      "mas_admin": "Zarządzaj użytkownikami (urn:mas:admin)",
       "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
-      "synapse_admin": "Administrowanie serwerem domowym Synapse",
+      "synapse_admin": "Administrowanie serwerem (urn:synapse:admin:*)",
       "view_messages": "Przegląd istniejących wiadomości i danych",
       "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
     }
