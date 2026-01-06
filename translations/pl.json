@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> z <span>%(redirect_uri)s</span> chce uzyskać dostęp do Twojego konta.",
+      "continue_to": "Przejść do <span>%(client_name)s</span>?",
       "heading": "Zezwolić na dostęp do konta?",
       "make_sure_you_trust": "Upewnij się, że ufasz <span>%(client_name)s</span> .",
+      "scope_list_preface": "Kontynuując, wyrażasz zgodę dla <span>%(client_name)s</span> na:",
       "this_will_allow": "To pozwoli <span>%(client_name)s</span> na:",
+      "this_will_setup": "Spowoduje to skonfigurowanie usługi %(client_name)s (<span>%(client_uri)s</span>) z kontem <span>%(server_name)s</span>.",
+      "use_another_account": "Użyj innego konta",
       "you_may_be_sharing": "Możesz udostępniać temu serwisowi lub aplikacji poufne informacje."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Udzielono dostępu"
-      }
+      },
+      "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Ta nazwa użytkownika jest już zajęta",
       "username_too_long": "Nazwa użytkownika jest za długa",
       "username_too_short": "Nazwa użytkownika jest za krótka"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Spowoduje to skonfigurowanie <span>%(client_name)s</span> z kontem <span>%(server_name)s</span>."
     },
     "login": {
       "call_to_register": "Nie masz jeszcze konta?",
@@ -226,9 +234,9 @@
     "scope": {
       "edit_profile": "Edytuj swój profil i dane kontaktowe",
       "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
-      "mas_admin": "Zarządzaj dowolnym użytkownikiem w matrix-authentication-service",
+      "mas_admin": "Zarządzaj użytkownikami (urn:mas:admin)",
       "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
-      "synapse_admin": "Administrowanie serwerem domowym Synapse",
+      "synapse_admin": "Administrowanie serwerem (urn:synapse:admin:*)",
       "view_messages": "Przegląd istniejących wiadomości i danych",
       "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
     },

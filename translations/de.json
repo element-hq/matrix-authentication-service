@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf dein Konto zugreifen.",
+      "continue_to": "Weiter zu <span>%(client_name)s</span>?",
       "heading": "Zugriff auf dein Konto zulassen?",
       "make_sure_you_trust": "Stelle sicher, dass du <span>%(client_name)s</span> vertraust.",
+      "scope_list_preface": "Wenn du fortfährst, gestattest du <span>%(client_name)s</span> folgendes:",
       "this_will_allow": "Dies wird <span>%(client_name)s</span> ermöglichen:",
+      "this_will_setup": "Dadurch wird %(client_name)s (<span>%(client_uri)s</span>) mit deinem %(server_name)s<span></span> Konto eingerichtet.",
+      "use_another_account": "Anderes Konto verwenden",
       "you_may_be_sharing": "Du gibst vielleicht sensible Infos an diese Website oder App weiter."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Du hast %(client_name)s Zugriff gegeben. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff gewährt"
-      }
+      },
+      "this_will_setup": "Ein anderes Gerät möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto einrichten. Stelle sicher, dass du dieses Gerät kennst."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s auf %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Dieser Benutzername ist bereits vergeben",
       "username_too_long": "Der Benutzername ist zu lang",
       "username_too_short": "Der Benutzername ist zu kurz"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Dadurch wird <span>%(client_name)s</span> mit deinem <span>%(server_name)s</span> Konto eingerichtet."
     },
     "login": {
       "call_to_register": "Du hast noch kein Konto?",
