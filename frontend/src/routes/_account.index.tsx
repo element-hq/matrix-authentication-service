@@ -62,17 +62,29 @@ const query = queryOptions({
 
 const actionSchema = v.variant("action", [
   v.object({
-    action: v.picklist(["profile", "org.matrix.profile"]),
+    action: v.picklist(["org.matrix.profile", "profile"]),
   }),
   v.object({
-    action: v.picklist(["sessions_list", "org.matrix.sessions_list"]),
+    action: v.picklist([
+      "org.matrix.devices_list",
+      "sessions_list",
+      "org.matrix.sessions_list",
+    ]),
   }),
   v.object({
-    action: v.picklist(["session_view", "org.matrix.session_view"]),
+    action: v.picklist([
+      "org.matrix.device_view",
+      "session_view",
+      "org.matrix.session_view",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({
-    action: v.picklist(["session_end", "org.matrix.session_end"]),
+    action: v.picklist([
+      "org.matrix.device_delete",
+      "session_end",
+      "org.matrix.session_end",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({
@@ -93,16 +105,18 @@ export const Route = createFileRoute({
 
   beforeLoad({ search }) {
     switch (search.action) {
-      case "profile": // This is an unspecced alias for org.matrix.profile that can be removed
-      case "org.matrix.profile": // This is from unstable MSC4191
+      case "org.matrix.profile":
+      case "profile": // This is an unspecced alias that can be removed
         throw redirect({ to: "/", search: {} });
 
-      case "sessions_list": // This is an unspecced alias for org.matrix.sessions_list that can be removed
-      case "org.matrix.sessions_list": // This is from unstable MSC4191
+      case "org.matrix.devices_list":
+      case "sessions_list": // This is an unspecced alias that can be removed
+      case "org.matrix.sessions_list": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         throw redirect({ to: "/sessions" });
 
-      case "session_view": // This is an unspecced alias for org.matrix.session_view that can be removed
-      case "org.matrix.session_view": // This is from unstable MSC4191
+      case "org.matrix.device_view":
+      case "session_view": // This is an unspecced alias that can be removed
+      case "org.matrix.session_view": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -110,8 +124,9 @@ export const Route = createFileRoute({
           });
         throw redirect({ to: "/sessions" });
 
+      case "org.matrix.device_delete":
       case "session_end": // This is the unstable MSC3824 alias for org.matrix.session_end
-      case "org.matrix.session_end": // This is from unstable MSC4191
+      case "org.matrix.session_end": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -119,14 +134,14 @@ export const Route = createFileRoute({
           });
         throw redirect({ to: "/sessions" });
 
-      case "org.matrix.cross_signing_reset": // This is from unstable MSC4191
+      case "org.matrix.cross_signing_reset":
         throw redirect({
           to: "/reset-cross-signing",
           search: { deepLink: true },
         });
       case "org.matrix.plan_management": {
         // This is an unspecced experimental value
-        // We don't both checking if the plan management iframe is actually available and
+        // We don't bother checking if the plan management iframe is actually available and
         // instead rely on the plan tab handling it.
         throw redirect({ to: "/plan" });
       }
