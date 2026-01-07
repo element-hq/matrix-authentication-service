@@ -227,6 +227,7 @@ pub(crate) async fn post(
             state.add_error_on_form(FormError::Captcha);
         }
 
+        //:tchap:
         if let Some(email) = &email {
             // Note that we don't check here if the email is already taken here, as
             // we don't want to leak the information about other users. Instead, we will
@@ -270,6 +271,7 @@ pub(crate) async fn post(
             //mutate the username in the form based on the email
             form.username = email_to_mxid_localpart(email);
         }
+        //:tchap: end
 
         let mut homeserver_denied_username = false;
 
@@ -281,7 +283,10 @@ pub(crate) async fn post(
         } else if repo.user().exists(&form.username).await? {
             // The user already exists in the database
             state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
-        } else if !homeserver
+        } else
+        */
+        //:tchap:end
+        if !homeserver
             .is_localpart_available(&form.username)
             .await
             .map_err(InternalError::from_anyhow)?
@@ -296,8 +301,6 @@ pub(crate) async fn post(
             // error from the policy, to avoid showing both
             homeserver_denied_username = true;
         }
-        */
-        //:tchap:end
         if form.password.is_empty() {
             state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
         }
@@ -604,8 +607,8 @@ mod tests {
 
     /// :tchap:
     /// Test the registration happy path with `oauth2_authorization_grant` and
-    /// `login_hint``. this test is specific to Tchap, in upstream there is
-    /// no oauth2_authorization_grant in the fixture
+    /// `login_hint``. this test is specific to Tchap beacause in the upstream
+    /// register there is no oauth2_authorization_grant in the fixture
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_login_hint(pool: PgPool) {
         setup();
@@ -740,6 +743,7 @@ mod tests {
     }
 
     /// Test the registration happy path
+    #[ignore = "use the test test_register_with_login_hint instead"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register(pool: PgPool) {
         setup();
@@ -793,11 +797,7 @@ mod tests {
         // There should be a new registration in the database
         let mut repo = state.repository().await.unwrap();
         let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
-        //:tchap:
-        //assert_eq!(registration.username, "john".to_owned());
-        let expected_username = "john-example.com";
-        assert_eq!(registration.username, expected_username.to_owned());
-        //:tchap:end
+        assert_eq!(registration.username, "john".to_owned());
         assert!(registration.password.is_some());
 
         let email_authentication = repo
@@ -851,7 +851,7 @@ mod tests {
         assert!(response.body().contains("Password fields don't match"));
     }
 
-    #[ignore = "tchap does not need it"]
+    #[ignore = "Tchap does not check username lenght because it is generated from the email"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_username_too_long(pool: PgPool) {
         setup();
@@ -898,25 +898,20 @@ mod tests {
     }
 
     /// When the user already exists in the database, it should give an error
-    #[ignore = "tchap does not need it"]
+    #[ignore = "Tchap does not check user existance by username but by email"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_user_exists(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let mut rng = state.rng();
         let cookies = CookieHelper::new();
-        //:tchap:
-        let email = "john@example.com";
-        let expected_username = "john-example.com";
 
         // Insert a user in the database first
         let mut repo = state.repository().await.unwrap();
         repo.user()
-            //          .add(&mut rng, &state.clock, "john".to_owned())
-            .add(&mut rng, &state.clock, expected_username.to_owned())
+            .add(&mut rng, &state.clock, "john".to_owned())
             .await
             .unwrap();
-        //:tchap:end
         repo.save().await.unwrap();
 
         // Render the registration page and get the CSRF token
@@ -941,10 +936,8 @@ mod tests {
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
             .form(serde_json::json!({
                 "csrf": csrf_token,
-                //:tchap:
-                "username": "--",
-                "email": email,
-                //:tchap:end
+                "username": "john",
+                "email": "john@example.com",
                 "password": "hunter2",
                 "password_confirm": "hunter2",
                 "accept_terms": "on",
@@ -958,7 +951,6 @@ mod tests {
 
     /// When the username is already reserved on the homeserver, it should give
     /// an error
-    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_user_reserved(pool: PgPool) {
         setup();
@@ -983,22 +975,17 @@ mod tests {
             .next()
             .unwrap();
 
-        //:tchap:
         // Reserve "john" on the homeserver
-        //state.homeserver_connection.reserve_localpart("john").await;
-        let expected_username = "john-example.com";
-        state
-            .homeserver_connection
-            .reserve_localpart(expected_username)
-            .await;
-        //:tchap:end
+        state.homeserver_connection.reserve_localpart("john").await;
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
             .form(serde_json::json!({
                 "csrf": csrf_token,
-                "username": "--",//:tchap:
-                "email": "john@example.com",
+                "username": "john",
+                //:tchap:
+                //"email": "john@example.com",
+                "email": "john",
                 "password": "hunter2",
                 "password_confirm": "hunter2",
                 "accept_terms": "on",
@@ -1011,8 +998,6 @@ mod tests {
     }
 
     /// Test registration without email when email is not required
-    /// /// :tchap: ignore test
-    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_without_email_when_not_required(pool: PgPool) {
         setup();
@@ -1082,8 +1067,6 @@ mod tests {
 
     /// Test registration with valid email when email is not required
     /// (email input is ignored completely when not required)
-    /// :tchap: ignore test
-    #[ignore = "tchap does not need it"]
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_email_when_not_required(pool: PgPool) {
         setup();

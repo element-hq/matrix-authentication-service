@@ -22,7 +22,7 @@
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "pages/account/logged_out.html:22:28-48, pages/compat_login_policy_violation.html:28:28-48, pages/consent.html:77:26-46, pages/index.html:63:30-50, pages/policy_violation.html:38:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "pages/account/logged_out.html:22:28-48, pages/compat_login_policy_violation.html:28:28-48, pages/consent.html:77:26-46, pages/index.html:65:30-50, pages/policy_violation.html:38:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
@@ -36,7 +36,7 @@
   "app": {
     "human_name": "Tchap",
     "@human_name": {
-      "context": "pages/index.html:39:48-67",
+      "context": "pages/index.html:41:48-67",
       "description": "Human readable name of the application"
     },
     "name": "Tchap",
@@ -46,7 +46,7 @@
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
     "@technical_description": {
-      "context": "pages/index.html:42:13-72",
+      "context": "pages/index.html:44:13-72",
       "description": "Introduction text displayed on the home page"
     }
   },
@@ -475,13 +475,13 @@
     "navbar": {
       "my_account": "My account",
       "@my_account": {
-        "context": "pages/index.html:56:28-54"
+        "context": "pages/index.html:58:28-54"
       },
       "register": "Create an account",
       "@register": {},
       "signed_in_as": "Signed in as <span class=\"font-semibold\">%(username)s</span>.",
       "@signed_in_as": {
-        "context": "pages/index.html:53:11-79",
+        "context": "pages/index.html:55:11-79",
         "description": "Displayed in the navbar when the user is signed in"
       }
     },

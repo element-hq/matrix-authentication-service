@@ -98,17 +98,25 @@ pub(crate) async fn get(
         )));
     }
 
-    // Let's perform last minute checks on the registration, especially to avoid
-    // race conditions where multiple users register with the same username or email
-    // address
+    //:tchap: deactivate this username checks because it raises a 500 error which is
+    //:tchap: caught by our WAF furthermore user existance is covered by email
+    //:tchap: checks below
+    if false {
+        //:tchap:end
+        // Let's perform last minute checks on the registration, especially to avoid
+        // race conditions where multiple users register with the same username or email
+        // address
 
-    if repo.user().exists(&registration.username).await? {
-        // XXX: this could have a better error message, but as this is unlikely to
-        // happen, we're fine with a vague message for now
-        return Err(InternalError::from_anyhow(anyhow::anyhow!(
-            "Username is already taken"
-        )));
+        if repo.user().exists(&registration.username).await? {
+            // XXX: this could have a better error message, but as this is unlikely to
+            // happen, we're fine with a vague message for now
+            return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                "Username is already taken"
+            )));
+        }
+        //:tchap:
     }
+    //:tchap:end
 
     if !homeserver
         .is_localpart_available(&registration.username)
