@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                    to_delete AS (\n                        SELECT oauth2_access_token_id\n                        FROM oauth2_access_tokens\n                        WHERE revoked_at IS NOT NULL\n                          AND ($1::timestamptz IS NULL OR revoked_at >= $1::timestamptz)\n                          AND revoked_at < $2::timestamptz\n                        ORDER BY revoked_at ASC\n                        LIMIT $3\n                        FOR UPDATE\n                    ),\n\n                    deleted AS (\n                        DELETE FROM oauth2_access_tokens\n                        USING to_delete\n                        WHERE oauth2_access_tokens.oauth2_access_token_id = to_delete.oauth2_access_token_id\n                        RETURNING oauth2_access_tokens.revoked_at\n                    )\n\n                SELECT\n                    COUNT(*) as \"count!\",\n                    MAX(revoked_at) as last_revoked_at\n                FROM deleted\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "cf2eeca6d8dbc2cc72160a26e81f6e963096edb610183ba13cbbbd3d95c4134b"
+}
