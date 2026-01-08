@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -432,6 +433,30 @@ impl UserRepository for PgUserRepository<'_> {
         user.deactivated_at = None;
 
         Ok(user)
+    }
+
+    #[tracing::instrument(
+        name = "db.user.delete_unsupported_threepids",
+        skip_all,
+        fields(
+            db.query.text,
+            %user.id,
+        ),
+        err,
+    )]
+    async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                DELETE FROM user_unsupported_third_party_ids
+                WHERE user_id = $1
+            "#,
+            Uuid::from(user.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(res.rows_affected().try_into().unwrap_or(usize::MAX))
     }
 
     #[tracing::instrument(

@@ -119,6 +119,17 @@ impl RunnableJob for DeactivateUserJob {
             .map_err(JobError::retry)?;
         info!(affected = n, "Removed all email addresses for user");
 
+        // Delete all unsupported third-party IDs for the user
+        let n = repo
+            .user()
+            .delete_unsupported_threepids(&user)
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Removed all unsupported third-party IDs for user"
+        );
+
         // Before calling back to the homeserver, commit the changes to the database, as
         // we want the user to be locked out as soon as possible
         repo.save().await.map_err(JobError::retry)?;
