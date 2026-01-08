@@ -725,26 +725,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             .await?;
         }
 
-        // Delete the user consents
-        {
-            let span = info_span!(
-                "db.oauth2_client.delete_by_id.consents",
-                { DB_QUERY_TEXT } = tracing::field::Empty,
-            );
-
-            sqlx::query!(
-                r#"
-                    DELETE FROM oauth2_consents
-                    WHERE oauth2_client_id = $1
-                "#,
-                Uuid::from(id),
-            )
-            .record(&span)
-            .execute(&mut *self.conn)
-            .instrument(span)
-            .await?;
-        }
-
         // Delete the OAuth 2 sessions related data
         {
             let span = info_span!(
