@@ -33,6 +33,5 @@ users:
     deactivated_at: ~
     is_guest: "false"
     locked_at: ~
-    primary_user_email_id: ~
     user_id: 00000000-0000-0000-0000-000000000001
     username: alice
