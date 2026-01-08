@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -43,11 +44,6 @@ pub struct JobContext {
     pub queue_name: String,
     pub attempt: usize,
     pub start: Instant,
-
-    #[expect(
-        dead_code,
-        reason = "we're not yet using this, but will be in the future"
-    )]
     pub cancellation_token: CancellationToken,
 }
 
@@ -126,6 +122,13 @@ where
 #[async_trait]
 pub trait RunnableJob: FromJob + Send + 'static {
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError>;
+
+    /// Allows the job to set a timeout for its execution. Jobs should then look
+    /// at the cancellation token passed in the [`JobContext`] to handle
+    /// graceful shutdowns.
+    fn timeout(&self) -> Option<std::time::Duration> {
+        None
+    }
 }
 
 fn box_runnable_job<T: RunnableJob + 'static>(job: T) -> Box<dyn RunnableJob> {
@@ -849,13 +852,45 @@ impl JobTracker {
                     // We should never crash, but in case we do, we do that in the task and
                     // don't crash the worker
                     let job = factory.expect("unknown job factory")(payload);
+
+                    let timeout = job.timeout();
+                    // If there is a timeout set on the job, spawn a task which will cancel the
+                    // CancellationToken once the timeout is reached
+                    if let Some(timeout) = timeout {
+                        let context = context.clone();
+
+                        // It's fine to spawn this task without tracking it, as it is quite
+                        // lightweight and has no reason to crash.
+                        tokio::spawn(
+                            context
+                                .cancellation_token
+                                .clone()
+                                // This makes sure the task gets cancelled as soon as the job
+                                // finishes
+                                .run_until_cancelled_owned(async move {
+                                    tokio::time::sleep(timeout).await;
+                                    tracing::warn!(
+                                        job.id = %context.id,
+                                        job.queue.name = %context.queue_name,
+                                        "Job reached timeout, asking for cancellation"
+                                    );
+                                    context.cancellation_token.cancel();
+                                }),
+                        );
+                    }
+
                     tracing::info!(
                         job.id = %context.id,
                         job.queue.name = %context.queue_name,
                         job.attempt = %context.attempt,
+                        job.timeout = timeout.map(tracing::field::debug),
                         "Running job"
                     );
                     let result = job.run(&state, context.clone()).await;
+
+                    // Cancel the cancellation token to stop any timeout task
+                    // that may be running
+                    context.cancellation_token.cancel();
 
                     let Some(context_stats) =
                         LogContext::maybe_with(mas_context::LogContext::stats)
