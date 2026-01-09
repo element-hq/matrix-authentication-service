@@ -129,6 +129,28 @@ pub trait OAuth2AccessTokenRepository: Send + Sync {
         until: DateTime<Utc>,
         limit: usize,
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    /// Cleanup expired access tokens
+    ///
+    /// Returns the number of access tokens that were cleaned up, as well as the
+    /// timestamp of the last access token expiration
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional datetime since which to clean up expired access
+    ///   tokens. This is useful to call this method multiple times in a row
+    /// * `until`: The datetime until which to clean up expired access tokens
+    /// * `limit`: The maximum number of access tokens to clean up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_expired(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(OAuth2AccessTokenRepository:
@@ -161,6 +183,13 @@ repository_impl!(OAuth2AccessTokenRepository:
     ) -> Result<AccessToken, Self::Error>;
 
     async fn cleanup_revoked(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    async fn cleanup_expired(
         &mut self,
         since: Option<DateTime<Utc>>,
         until: DateTime<Utc>,

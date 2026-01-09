@@ -303,4 +303,58 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             res.last_revoked_at,
         ))
     }
+
+    #[tracing::instrument(
+        name = "db.oauth2_access_token.cleanup_expired",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_expired(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT oauth2_access_token_id
+                        FROM oauth2_access_tokens
+                        WHERE expires_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR expires_at >= $1::timestamptz)
+                          AND expires_at < $2::timestamptz
+                        ORDER BY expires_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+
+                    deleted AS (
+                        DELETE FROM oauth2_access_tokens
+                        USING to_delete
+                        WHERE oauth2_access_tokens.oauth2_access_token_id = to_delete.oauth2_access_token_id
+                        RETURNING oauth2_access_tokens.expires_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(expires_at) as last_expires_at
+                FROM deleted
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_expires_at,
+        ))
+    }
 }
