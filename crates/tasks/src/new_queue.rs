@@ -750,6 +750,9 @@ impl QueueWorker {
     ///
     /// This function can fail if the database connection fails.
     pub async fn process_all_jobs_in_tests(&mut self) -> Result<(), QueueRunnerError> {
+        // In case we haven't setup the schedules yet
+        self.setup_schedules().await?;
+
         // I swear, I'm the leader!
         self.am_i_leader = true;
 
