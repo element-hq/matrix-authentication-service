@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -317,12 +318,12 @@ impl InsertableJob for SendAccountRecoveryEmailsJob {
     const QUEUE_NAME: &'static str = "send-account-recovery-email";
 }
 
-/// Cleanup expired tokens
+/// Cleanup revoked OAuth 2.0 access tokens
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CleanupExpiredTokensJob;
+pub struct CleanupRevokedOAuthAccessTokensJob;
 
-impl InsertableJob for CleanupExpiredTokensJob {
-    const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
+impl InsertableJob for CleanupRevokedOAuthAccessTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-revoked-oauth-access-tokens";
 }
 
 /// Scheduled job to expire inactive sessions

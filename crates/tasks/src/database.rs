@@ -10,7 +10,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use mas_storage::queue::{CleanupExpiredTokensJob, PruneStalePolicyDataJob};
+use mas_storage::queue::{CleanupRevokedOAuthAccessTokensJob, PruneStalePolicyDataJob};
 use tracing::{debug, info};
 
 use crate::{
@@ -21,8 +21,8 @@ use crate::{
 const BATCH_SIZE: usize = 1000;
 
 #[async_trait]
-impl RunnableJob for CleanupExpiredTokensJob {
-    #[tracing::instrument(name = "job.cleanup_expired_tokens", skip_all)]
+impl RunnableJob for CleanupRevokedOAuthAccessTokensJob {
+    #[tracing::instrument(name = "job.cleanup_revoked_oauth_access_tokens", skip_all)]
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
         // Cleanup tokens that were revoked more than an hour ago
         let until = state.clock.now() - chrono::Duration::hours(1);
@@ -45,7 +45,7 @@ impl RunnableJob for CleanupExpiredTokensJob {
             since = last_revoked_at;
             total += count;
 
-            // Check how many we deleted. If we deleted exactly BATCH_COUNT,
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
             // there might be more to delete
             if count != BATCH_SIZE {
                 break;
