@@ -72,10 +72,14 @@ impl RunnableJob for CleanupRevokedOAuthAccessTokensJob {
 impl RunnableJob for CleanupExpiredOAuthAccessTokensJob {
     #[tracing::instrument(name = "job.cleanup_expired_oauth_access_tokens", skip_all)]
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
-        // Cleanup tokens that expired more than a week ago
-        // We keep expired tokens around longer than revoked tokens, so that we
-        // can possibly give a nice 'token expired' error if that token is used
-        let until = state.clock.now() - chrono::Duration::weeks(1);
+        // Cleanup tokens that expired more than a month ago
+        // It is important to keep them around for a bit because of refresh
+        // token idempotency. When we see a refresh token twice, we allow
+        // reusing it *only* if both the next refresh token and the next access
+        // tokens were not used. By keeping expired access tokens around for a
+        // month, we cannot make the *correct* decision, we will assume that the
+        // token wasn't used. Refer to the token refresh logic for details.
+        let until = state.clock.now() - chrono::Duration::days(30);
         let mut total = 0;
 
         // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
