@@ -131,6 +131,7 @@ pub async fn init(
     worker
         .register_handler::<mas_storage::queue::CleanupRevokedOAuthAccessTokensJob>()
         .register_handler::<mas_storage::queue::CleanupExpiredOAuthAccessTokensJob>()
+        .register_handler::<mas_storage::queue::CleanupRevokedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::DeactivateUserJob>()
         .register_handler::<mas_storage::queue::DeleteDeviceJob>()
         .register_handler::<mas_storage::queue::ProvisionDeviceJob>()
@@ -151,6 +152,12 @@ pub async fn init(
             // Run this job every hour
             "0 0 * * * *".parse()?,
             mas_storage::queue::CleanupRevokedOAuthAccessTokensJob,
+        )
+        .add_schedule(
+            "cleanup-revoked-oauth-refresh-tokens",
+            // Run this job every hour
+            "0 10 * * * *".parse()?,
+            mas_storage::queue::CleanupRevokedOAuthRefreshTokensJob,
         )
         .add_schedule(
             "cleanup-expired-oauth-access-tokens",

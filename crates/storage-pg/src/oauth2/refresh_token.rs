@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -280,5 +281,59 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
         refresh_token
             .revoke(revoked_at)
             .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_refresh_token.cleanup_revoked",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT oauth2_refresh_token_id
+                        FROM oauth2_refresh_tokens
+                        WHERE revoked_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR revoked_at >= $1::timestamptz)
+                          AND revoked_at < $2::timestamptz
+                        ORDER BY revoked_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+
+                    deleted AS (
+                        DELETE FROM oauth2_refresh_tokens
+                        USING to_delete
+                        WHERE oauth2_refresh_tokens.oauth2_refresh_token_id = to_delete.oauth2_refresh_token_id
+                        RETURNING oauth2_refresh_tokens.revoked_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(revoked_at) as last_revoked_at
+                FROM deleted
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_revoked_at,
+        ))
     }
 }
