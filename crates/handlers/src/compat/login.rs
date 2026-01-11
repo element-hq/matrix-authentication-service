@@ -66,8 +66,11 @@ enum LoginType {
     Sso {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         identity_providers: Vec<SsoIdentityProvider>,
+        oauth_aware_preferred: bool,
+        /// DEPRECATED: Use `oauth_aware_preferred` instead. We will remove this
+        /// once enough clients support the stable name `oauth_aware_preferred`.
         #[serde(rename = "org.matrix.msc3824.delegated_oidc_compatibility")]
-        delegated_oidc_compatibility: bool,
+        unstable_delegated_oidc_compatibility: bool,
     },
 }
 
@@ -89,7 +92,8 @@ pub(crate) async fn get(State(password_manager): State<PasswordManager>) -> impl
             LoginType::Password,
             LoginType::Sso {
                 identity_providers: vec![],
-                delegated_oidc_compatibility: true,
+                oauth_aware_preferred: true,
+                unstable_delegated_oidc_compatibility: true,
             },
             LoginType::Token,
         ]
@@ -97,7 +101,8 @@ pub(crate) async fn get(State(password_manager): State<PasswordManager>) -> impl
         vec![
             LoginType::Sso {
                 identity_providers: vec![],
-                delegated_oidc_compatibility: true,
+                oauth_aware_preferred: true,
+                unstable_delegated_oidc_compatibility: true,
             },
             LoginType::Token,
         ]
@@ -787,6 +792,7 @@ mod tests {
             },
             {
               "type": "m.login.sso",
+              "oauth_aware_preferred": true,
               "org.matrix.msc3824.delegated_oidc_compatibility": true
             },
             {
@@ -872,6 +878,7 @@ mod tests {
           "flows": [
             {
               "type": "m.login.sso",
+              "oauth_aware_preferred": true,
               "org.matrix.msc3824.delegated_oidc_compatibility": true
             },
             {
