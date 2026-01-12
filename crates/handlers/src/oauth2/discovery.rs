@@ -29,7 +29,7 @@ struct DiscoveryResponse {
     #[serde(rename = "org.matrix.matrix-authentication-service.graphql_endpoint")]
     graphql_endpoint: url::Url,
 
-    // As per MSC2965
+    // As per MSC4191
     account_management_uri: url::Url,
     account_management_actions_supported: Vec<String>,
 }
@@ -183,10 +183,15 @@ pub(crate) async fn get(
         // see frontend/src/routes/__root.tsx
         account_management_actions_supported: vec![
             "org.matrix.profile".to_owned(),
+            "org.matrix.devices_list".to_owned(),
+            "org.matrix.device_view".to_owned(),
+            "org.matrix.device_delete".to_owned(),
+            "org.matrix.cross_signing_reset".to_owned(),
+            // These are unstable versions from MSC4191 and we will remove them once the above
+            // stable values have enough adoption by clients
             "org.matrix.sessions_list".to_owned(),
             "org.matrix.session_view".to_owned(),
             "org.matrix.session_end".to_owned(),
-            "org.matrix.cross_signing_reset".to_owned(),
         ],
     })
 }
