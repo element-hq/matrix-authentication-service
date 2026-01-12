@@ -267,3 +267,8 @@ footer {
 }
 
 /* end fix footer dark mode */
+
+/* fix header title color for desktop */
+.lasuite-header__service-title {
+  color: #2845c1 !important;
+}

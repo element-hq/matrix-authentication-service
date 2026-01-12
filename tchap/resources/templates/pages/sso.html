@@ -1,0 +1,74 @@
+{#
+Copyright 2024, 2025 New Vector Ltd.
+Copyright 2022-2024 The Matrix.org Foundation C.I.C.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% set consent_page = true %}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <!-- {% set client_name = login.redirect_uri | simplify_url %} -->
+  {% set client_name = "Tchap" %}
+
+  <header class="page-heading">
+    <div class="consent-client-icon generic">
+      {{ icon.web_browser() }}
+    </div>
+
+  <!-- :tchap: -->
+  {% set initial -%}
+    {%- if matrix_user.display_name -%}
+      {{- matrix_user.display_name[0] | upper -}}
+    {%- else -%}
+      {{- matrix_user.mxid[1] | upper -}}
+    {%- endif -%}
+  {%- endset %}
+
+    <div class="header">
+      <h1 class="title">{{ _("mas.consent.heading") }}</h1>
+      <span class="email-box">
+        {{ matrix_user.display_name or current_session.user.username }}
+      </span>
+      <p class="text [&>span]:whitespace-nowrap">
+        {{ _("mas.consent.client_wants_access", client_name=client_name) }}
+        <!-- :tchap:end -->
+      </p>
+    </div>
+  </header>
+
+
+  <!--
+  :tchap:
+  {% set initial -%}
+    {%- if matrix_user.display_name -%}
+      {{- matrix_user.display_name[0] | upper -}}
+    {%- else -%}
+      {{- matrix_user.mxid[1] | upper -}}
+    {%- endif -%}
+  {%- endset %}
+
+  <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
+    <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+    <div class="flex flex-col">
+      <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
+    </div>
+  </section>
+  :tchap:end
+-->
+  <section class="flex flex-col gap-6">
+    <form method="POST" class="cpd-form-root">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      {{ button.button(text=_("action.continue")) }}
+    </form>
+
+    {% call logout.button(csrf_token=csrf_token, post_logout_action=action) %}
+      <button type="submit" class="cpd-button primary" data-kind="secondary" data-size="lg" type="submit">
+        {{ _("mas.consent.use_another_account") }}
+      </button>
+    {% endcall %}
+  </section>
+{% endblock content %}

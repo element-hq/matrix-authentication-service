@@ -39,7 +39,6 @@ Please see LICENSE in the repository root for full details.
       {% endif %}
       <p class="text [&>span]:whitespace-nowrap">
         {{ _("mas.consent.client_wants_access", client_name=client_name, redirect_uri=(grant.redirect_uri | simplify_url)) }}
-        {{ _("mas.consent.this_will_allow", client_name=client_name) }}
       </p>
     </div>
   </header>
