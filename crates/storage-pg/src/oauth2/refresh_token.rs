@@ -336,4 +336,65 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
             res.last_revoked_at,
         ))
     }
+
+    #[tracing::instrument(
+        name = "db.oauth2_refresh_token.cleanup_consumed",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_consumed(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        // We only consider a token as consumed if also the next token has its
+        // `consumed_at` set. This makes the query a bit expensive to compute,
+        // but is optimised to two index scans and a nested join using the
+        // `oauth2_refresh_token_not_consumed_idx` and
+        // `oauth2_refresh_token_consumed_at_idx` indexes.
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT rts_to_del.oauth2_refresh_token_id
+                        FROM oauth2_refresh_tokens rts_to_del
+                        LEFT JOIN oauth2_refresh_tokens next_rts
+                          ON rts_to_del.next_oauth2_refresh_token_id = next_rts.oauth2_refresh_token_id
+                        WHERE rts_to_del.consumed_at IS NOT NULL
+                          AND (rts_to_del.next_oauth2_refresh_token_id IS NULL OR next_rts.consumed_at IS NOT NULL)
+                          AND ($1::timestamptz IS NULL OR rts_to_del.consumed_at >= $1::timestamptz)
+                          AND rts_to_del.consumed_at < $2::timestamptz
+                        ORDER BY rts_to_del.consumed_at ASC
+                        LIMIT $3
+                    ),
+
+                    deleted AS (
+                        DELETE FROM oauth2_refresh_tokens
+                        USING to_delete
+                        WHERE oauth2_refresh_tokens.oauth2_refresh_token_id = to_delete.oauth2_refresh_token_id
+                        RETURNING oauth2_refresh_tokens.consumed_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(consumed_at) as last_consumed_at
+                FROM deleted
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_consumed_at,
+        ))
+    }
 }

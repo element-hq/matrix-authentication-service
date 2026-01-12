@@ -342,6 +342,14 @@ impl InsertableJob for CleanupRevokedOAuthRefreshTokensJob {
     const QUEUE_NAME: &'static str = "cleanup-revoked-oauth-refresh-tokens";
 }
 
+/// Cleanup consumed OAuth 2.0 refresh tokens
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupConsumedOAuthRefreshTokensJob;
+
+impl InsertableJob for CleanupConsumedOAuthRefreshTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-consumed-oauth-refresh-tokens";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user
