@@ -355,10 +355,15 @@ Error details: {e}
 
                     let has_compatibility_sso = flows.iter().any(|flow| {
                         flow.get("type").and_then(|t| t.as_str()) == Some("m.login.sso")
-                            && flow
-                                .get("org.matrix.msc3824.delegated_oidc_compatibility")
+                            && (flow
+                                .get("oauth_aware_preferred")
                                 .and_then(serde_json::Value::as_bool)
                                 == Some(true)
+                                // we check for the unstable name too:
+                                || flow
+                                    .get("org.matrix.msc3824.delegated_oidc_compatibility")
+                                    .and_then(serde_json::Value::as_bool)
+                                    == Some(true))
                     });
 
                     if has_compatibility_sso {
