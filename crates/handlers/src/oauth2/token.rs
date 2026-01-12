@@ -716,7 +716,7 @@ async fn refresh_token_grant(
                 return Err(RouteError::RefreshTokenInvalid(next_refresh_token.id));
             }
 
-            // This could be a double-refresh, see bellow
+            // This could be a double-refresh, see below
             repo.oauth2_access_token()
                 .revoke(clock, next_access_token)
                 .await?;

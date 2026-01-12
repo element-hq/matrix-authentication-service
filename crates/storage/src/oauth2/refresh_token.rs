@@ -146,8 +146,8 @@ pub trait OAuth2RefreshTokenRepository: Send + Sync {
     /// # Parameters
     ///
     /// * `since`: An optional timestamp to start from
-    /// * `until`: The timestamp before which to revoke tokens
-    /// * `limit`: The maximum number of tokens to revoke
+    /// * `until`: The timestamp before which to delete tokens
+    /// * `limit`: The maximum number of tokens to delete
     ///
     /// # Errors
     ///
