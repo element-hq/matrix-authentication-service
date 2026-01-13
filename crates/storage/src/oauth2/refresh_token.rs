@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -111,6 +112,52 @@ pub trait OAuth2RefreshTokenRepository: Send + Sync {
         clock: &dyn Clock,
         refresh_token: RefreshToken,
     ) -> Result<RefreshToken, Self::Error>;
+
+    /// Cleanup revoked refresh tokens that were revoked before a certain time
+    ///
+    /// Returns the number of deleted tokens and the last `revoked_at` timestamp
+    /// processed
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional timestamp to start from
+    /// * `until`: The timestamp before which to delete tokens
+    /// * `limit`: The maximum number of tokens to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<chrono::DateTime<chrono::Utc>>,
+        until: chrono::DateTime<chrono::Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<chrono::DateTime<chrono::Utc>>), Self::Error>;
+
+    /// Cleanup consumed refresh tokens that were consumed before a certain time
+    ///
+    /// A token is considered as fully consumed only if both the `consumed_at`
+    /// column is set and the next refresh token in the chain also has its
+    /// `consumed_at` set.
+    ///
+    /// Returns the number of deleted tokens and the last `consumed_at`
+    /// timestamp processed
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional timestamp to start from
+    /// * `until`: The timestamp before which to delete tokens
+    /// * `limit`: The maximum number of tokens to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_consumed(
+        &mut self,
+        since: Option<chrono::DateTime<chrono::Utc>>,
+        until: chrono::DateTime<chrono::Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<chrono::DateTime<chrono::Utc>>), Self::Error>;
 }
 
 repository_impl!(OAuth2RefreshTokenRepository:
@@ -142,4 +189,18 @@ repository_impl!(OAuth2RefreshTokenRepository:
         clock: &dyn Clock,
         refresh_token: RefreshToken,
     ) -> Result<RefreshToken, Self::Error>;
+
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<chrono::DateTime<chrono::Utc>>,
+        until: chrono::DateTime<chrono::Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<chrono::DateTime<chrono::Utc>>), Self::Error>;
+
+    async fn cleanup_consumed(
+        &mut self,
+        since: Option<chrono::DateTime<chrono::Utc>>,
+        until: chrono::DateTime<chrono::Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<chrono::DateTime<chrono::Utc>>), Self::Error>;
 );

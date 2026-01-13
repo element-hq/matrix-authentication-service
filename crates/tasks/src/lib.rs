@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -128,7 +129,10 @@ pub async fn init(
     let mut worker = QueueWorker::new(state, cancellation_token).await?;
 
     worker
-        .register_handler::<mas_storage::queue::CleanupExpiredTokensJob>()
+        .register_handler::<mas_storage::queue::CleanupRevokedOAuthAccessTokensJob>()
+        .register_handler::<mas_storage::queue::CleanupExpiredOAuthAccessTokensJob>()
+        .register_handler::<mas_storage::queue::CleanupRevokedOAuthRefreshTokensJob>()
+        .register_handler::<mas_storage::queue::CleanupConsumedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::DeactivateUserJob>()
         .register_handler::<mas_storage::queue::DeleteDeviceJob>()
         .register_handler::<mas_storage::queue::ProvisionDeviceJob>()
@@ -143,10 +147,30 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveUserSessionsJob>()
         .register_handler::<mas_storage::queue::PruneStalePolicyDataJob>()
+        .register_deprecated_queue("cleanup-expired-tokens")
         .add_schedule(
-            "cleanup-expired-tokens",
+            "cleanup-revoked-oauth-access-tokens",
+            // Run this job every hour
             "0 0 * * * *".parse()?,
-            mas_storage::queue::CleanupExpiredTokensJob,
+            mas_storage::queue::CleanupRevokedOAuthAccessTokensJob,
+        )
+        .add_schedule(
+            "cleanup-revoked-oauth-refresh-tokens",
+            // Run this job every hour
+            "0 10 * * * *".parse()?,
+            mas_storage::queue::CleanupRevokedOAuthRefreshTokensJob,
+        )
+        .add_schedule(
+            "cleanup-consumed-oauth-refresh-tokens",
+            // Run this job every hour
+            "0 20 * * * *".parse()?,
+            mas_storage::queue::CleanupConsumedOAuthRefreshTokensJob,
+        )
+        .add_schedule(
+            "cleanup-expired-oauth-access-tokens",
+            // Run this job every 4 hours
+            "0 5 */4 * * *".parse()?,
+            mas_storage::queue::CleanupExpiredOAuthAccessTokensJob,
         )
         .add_schedule(
             "expire-inactive-sessions",

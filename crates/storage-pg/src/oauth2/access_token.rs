@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -257,20 +258,103 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
         ),
         err,
     )]
-    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
-        // Cleanup token that were revoked more than an hour ago
-        let threshold = clock.now() - Duration::microseconds(60 * 60 * 1000 * 1000);
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
         let res = sqlx::query!(
             r#"
-                DELETE FROM oauth2_access_tokens
-                WHERE revoked_at < $1
+                WITH
+                    to_delete AS (
+                        SELECT oauth2_access_token_id
+                        FROM oauth2_access_tokens
+                        WHERE revoked_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR revoked_at >= $1::timestamptz)
+                          AND revoked_at < $2::timestamptz
+                        ORDER BY revoked_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+
+                    deleted AS (
+                        DELETE FROM oauth2_access_tokens
+                        USING to_delete
+                        WHERE oauth2_access_tokens.oauth2_access_token_id = to_delete.oauth2_access_token_id
+                        RETURNING oauth2_access_tokens.revoked_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(revoked_at) as last_revoked_at
+                FROM deleted
             "#,
-            threshold,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
         )
         .traced()
-        .execute(&mut *self.conn)
+        .fetch_one(&mut *self.conn)
         .await?;
 
-        Ok(res.rows_affected().try_into().unwrap_or(usize::MAX))
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_revoked_at,
+        ))
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_access_token.cleanup_expired",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_expired(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT oauth2_access_token_id
+                        FROM oauth2_access_tokens
+                        WHERE expires_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR expires_at >= $1::timestamptz)
+                          AND expires_at < $2::timestamptz
+                        ORDER BY expires_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+
+                    deleted AS (
+                        DELETE FROM oauth2_access_tokens
+                        USING to_delete
+                        WHERE oauth2_access_tokens.oauth2_access_token_id = to_delete.oauth2_access_token_id
+                        RETURNING oauth2_access_tokens.expires_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(expires_at) as last_expires_at
+                FROM deleted
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_expires_at,
+        ))
     }
 }
