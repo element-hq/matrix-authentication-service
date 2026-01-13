@@ -299,7 +299,7 @@ pub trait UserRepository: Send + Sync {
     /// Delete all the unsupported third-party IDs of a [`User`].
     ///
     /// Those were imported by syn2mas and kept in case we wanted to support
-    /// them later. They still need to be cleaned up when a user deactivate
+    /// them later. They still need to be cleaned up when a user deactivates
     /// their account.
     ///
     /// Returns the number of deleted third-party IDs.
