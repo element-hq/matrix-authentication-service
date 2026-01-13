@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -295,6 +296,24 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
 
+    /// Delete all the unsupported third-party IDs of a [`User`].
+    ///
+    /// Those were imported by syn2mas and kept in case we wanted to support
+    /// them later. They still need to be cleaned up when a user deactivates
+    /// their account.
+    ///
+    /// Returns the number of deleted third-party IDs.
+    ///
+    /// # Parameters
+    ///
+    /// * `user`: The [`User`] whose unsupported third-party IDs should be
+    ///   deleted
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error>;
+
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -367,6 +386,7 @@ repository_impl!(UserRepository:
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
+    async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,
