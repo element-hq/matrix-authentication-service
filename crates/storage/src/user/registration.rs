@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -199,6 +200,27 @@ pub trait UserRegistrationRepository: Send + Sync {
         clock: &dyn Clock,
         user_registration: UserRegistration,
     ) -> Result<UserRegistration, Self::Error>;
+
+    /// Cleanup [`UserRegistration`]s between the given IDs.
+    ///
+    /// Returns the number of registrations deleted, as well as the ID of the
+    /// last registration deleted.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional ID to start from
+    /// * `until`: The ID until which to clean up registrations
+    /// * `limit`: The maximum number of registrations to clean up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(UserRegistrationRepository:
@@ -248,4 +270,10 @@ repository_impl!(UserRegistrationRepository:
         clock: &dyn Clock,
         user_registration: UserRegistration,
     ) -> Result<UserRegistration, Self::Error>;
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );
