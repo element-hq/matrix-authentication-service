@@ -219,8 +219,9 @@ impl RunnableJob for CleanupConsumedOAuthRefreshTokensJob {
 impl RunnableJob for CleanupUserRegistrationsJob {
     #[tracing::instrument(name = "job.cleanup_user_registrations", skip_all)]
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
-        // Remove user registrations after 24h. They are in practice only valid for 1h
-        let until = state.clock.now() - chrono::Duration::hours(24);
+        // Remove user registrations after 30 days. They are in practice only
+        // valid for 1h, but keeping them around helps investigate abuse patterns.
+        let until = state.clock.now() - chrono::Duration::days(30);
         // We use the fact that ULIDs include the creation time in their first 48 bits
         // as a cursor
         let until = Ulid::from_parts(
