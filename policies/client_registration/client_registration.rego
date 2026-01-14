@@ -38,6 +38,14 @@ secure_url(x) if {
 	url.host != "[::1]"
 }
 
+# :TCHAP: Accept tauri.localhost for Tchap Desktop
+secure_url(x) if {
+	url := parse_uri(x)
+	url.host == "tauri.localhost"
+}
+
+# :TCHAP: end
+
 host_matches_client_uri(_) if {
 	# Do not check we allow host mismatch
 	data.client_registration.allow_host_mismatch
@@ -123,6 +131,13 @@ valid_native_redirector(x) if {
 	is_localhost(url.host)
 	url.scheme == "http"
 }
+
+# :TCHAP: allow "tchap:/" deep link
+valid_native_redirector(x) if {
+	startswith(x, "tchap:/")
+}
+
+# :TCHAP: end
 
 # Custom schemes should match the client_uri, reverse-dns style
 # e.g. io.element.app:/ matches https://app.element.io/

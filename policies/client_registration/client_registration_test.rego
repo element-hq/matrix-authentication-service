@@ -233,6 +233,13 @@ test_web_redirect_uri if {
 		"client_uri": "https://example.com/",
 		"redirect_uris": ["https://example.com:8443/callback"],
 	}
+
+	# :TCHAP: Allow Tchap Desktop
+	client_registration.allow with input.client_metadata as {
+		"application_type": "native",
+		"client_uri": "https://tauri.localhost/",
+		"redirect_uris": ["tchap:/tauri.localhost/"],
+	}
 }
 
 test_web_redirect_uri_insecure if {

@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:73:28-48, pages/device_consent.html:133:13-33, pages/device_link.html:40:26-46, pages/login.html:92:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:61:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/email_in_use.html:28:32-52, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:65:28-48, sso.html:62:28-48"
+      "context": "form_post.html:25:28-48, pages/consent.html:73:28-48, pages/device_consent.html:133:13-33, pages/device_link.html:40:26-46, pages/login.html:92:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:61:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/email_in_use.html:28:32-52, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:65:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -191,7 +191,7 @@
     "consent": {
       "client_wants_access": "",
       "@client_wants_access": {
-        "context": "pages/consent.html:41:11-122, pages/sso.html:37:11-72, sso.html:36:11-122"
+        "context": "pages/consent.html:41:11-122, pages/sso.html:37:11-72"
       },
       "continue_to": "Continue to <span>%(client_name)s</span>?",
       "@continue_to": {
@@ -199,7 +199,7 @@
       },
       "heading": "Connect this new device to your Tchap account",
       "@heading": {
-        "context": "pages/consent.html:30:27-51, pages/sso.html:32:27-51, sso.html:31:27-51"
+        "context": "pages/consent.html:30:27-51, pages/sso.html:32:27-51"
       },
       "make_sure_you_trust": "",
       "@make_sure_you_trust": {
@@ -210,14 +210,12 @@
         "context": "pages/device_consent.html:104:15-75"
       },
       "this_will_allow": "",
-      "@this_will_allow": {
-        "context": "sso.html:37:11-68"
-      },
+      "@this_will_allow": {},
       "this_will_setup": "This will set up %(client_name)s (<span>%(client_uri)s</span>) with your <span>%(server_name)s</span> account.",
       "@this_will_setup": {},
       "use_another_account": "Use another account",
       "@use_another_account": {
-        "context": "pages/device_consent.html:139:13-49, pages/sso.html:70:11-47, sso.html:67:11-47"
+        "context": "pages/device_consent.html:139:13-49, pages/sso.html:70:11-47"
       },
       "you_may_be_sharing": "",
       "@you_may_be_sharing": {
@@ -702,6 +700,20 @@
         "@heading": {
           "context": "pages/upstream_oauth2/link_mismatch.html:19:11-57",
           "description": "Page shown when the user tries to link an upstream account that is already linked to another account"
+        }
+      },
+      "login_link": {
+        "action": "",
+        "@action": {
+          "context": "pages/upstream_oauth2/login_link.html:27:28-70"
+        },
+        "description": "",
+        "@description": {
+          "context": "pages/upstream_oauth2/login_link.html:21:7-85"
+        },
+        "heading": "",
+        "@heading": {
+          "context": "pages/upstream_oauth2/login_link.html:17:27-70"
         }
       },
       "register": {
