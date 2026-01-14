@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -468,6 +469,53 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
         user_registration.completed_at = Some(completed_at);
 
         Ok(user_registration)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_registration.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // `MAX(uuid)` isn't a thing in Postgres, so we can't just re-select the
+        // deleted rows and do a MAX on the `user_registration_id`.
+        // Instead, we do the aggregation on the client side, which is a little
+        // less efficient, but good enough.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT user_registration_id
+                    FROM user_registrations
+                    WHERE ($1::uuid IS NULL OR user_registration_id > $1)
+                    AND user_registration_id <= $2
+                    ORDER BY user_registration_id
+                    LIMIT $3
+                )
+                DELETE FROM user_registrations
+                USING to_delete
+                WHERE user_registrations.user_registration_id = to_delete.user_registration_id
+                RETURNING user_registrations.user_registration_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }
 
