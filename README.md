@@ -51,7 +51,7 @@ Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
 Copyright 2024, 2025 New Vector Ltd.
 
-Copyright 2025, 2026 Element Creations Ltd
+Copyright 2025, 2026 Element Creations Ltd.
 
 This software is dual-licensed by Element Creations Ltd (Element). It can be used either:
 
