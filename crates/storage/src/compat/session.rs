@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -361,6 +362,30 @@ pub trait CompatSessionRepository: Send + Sync {
         compat_session: CompatSession,
         human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
+
+    /// Cleanup finished [`CompatSession`]s and their associated tokens.
+    ///
+    /// This deletes compat sessions that have been finished, along with their
+    /// associated access tokens, refresh tokens, and SSO logins.
+    ///
+    /// Returns the number of sessions deleted and the timestamp of the last
+    /// deleted session's `finished_at`, which can be used for pagination.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: Only delete sessions finished at or after this timestamp
+    /// * `until`: Only delete sessions finished before this timestamp
+    /// * `limit`: Maximum number of sessions to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(CompatSessionRepository:
@@ -413,4 +438,11 @@ repository_impl!(CompatSessionRepository:
         compat_session: CompatSession,
         human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error>;
+
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 );

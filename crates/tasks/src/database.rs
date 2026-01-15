@@ -12,8 +12,8 @@ use std::time::Duration;
 use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
-    CleanupRevokedOAuthAccessTokensJob, CleanupRevokedOAuthRefreshTokensJob,
-    CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
+    CleanupFinishedCompatSessionsJob, CleanupRevokedOAuthAccessTokensJob,
+    CleanupRevokedOAuthRefreshTokensJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -257,6 +257,53 @@ impl RunnableJob for CleanupUserRegistrationsJob {
             debug!("no user registrations to clean up");
         } else {
             info!(count = total, "cleaned up user registrations");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupFinishedCompatSessionsJob {
+    #[tracing::instrument(name = "job.cleanup_finished_compat_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Cleanup compat sessions that were finished more than 30 days ago
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+            // This returns the number of deleted sessions, and the last finished_at
+            // timestamp
+            let (count, last_finished_at) = repo
+                .compat_session()
+                .cleanup_finished(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+
+            since = last_finished_at;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no finished compat sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up finished compat sessions");
         }
 
         Ok(())
