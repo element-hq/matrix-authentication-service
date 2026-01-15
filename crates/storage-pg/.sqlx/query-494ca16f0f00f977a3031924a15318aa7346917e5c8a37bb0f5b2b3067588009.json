@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                    to_delete AS (\n                        SELECT compat_session_id, finished_at\n                        FROM compat_sessions\n                        WHERE finished_at IS NOT NULL\n                          AND ($1::timestamptz IS NULL OR finished_at >= $1)\n                          AND finished_at < $2\n                        ORDER BY finished_at ASC\n                        LIMIT $3\n                        FOR UPDATE\n                    ),\n\n                    -- Delete refresh tokens first because they reference access tokens\n                    deleted_refresh_tokens AS (\n                        DELETE FROM compat_refresh_tokens\n                        USING to_delete\n                        WHERE compat_refresh_tokens.compat_session_id = to_delete.compat_session_id\n                    ),\n\n                    deleted_access_tokens AS (\n                        DELETE FROM compat_access_tokens\n                        USING to_delete\n                        WHERE compat_access_tokens.compat_session_id = to_delete.compat_session_id\n                    ),\n\n                    deleted_sso_logins AS (\n                        DELETE FROM compat_sso_logins\n                        USING to_delete\n                        WHERE compat_sso_logins.compat_session_id = to_delete.compat_session_id\n                    ),\n\n                    deleted_sessions AS (\n                        DELETE FROM compat_sessions\n                        USING to_delete\n                        WHERE compat_sessions.compat_session_id = to_delete.compat_session_id\n                        RETURNING compat_sessions.finished_at\n                    )\n\n                SELECT\n                    COUNT(*) as \"count!\",\n                    MAX(finished_at) as last_finished_at\n                FROM deleted_sessions\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_finished_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "494ca16f0f00f977a3031924a15318aa7346917e5c8a37bb0f5b2b3067588009"
+}

@@ -358,6 +358,14 @@ impl InsertableJob for CleanupUserRegistrationsJob {
     const QUEUE_NAME: &'static str = "cleanup-user-registrations";
 }
 
+/// Cleanup finished compat sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupFinishedCompatSessionsJob;
+
+impl InsertableJob for CleanupFinishedCompatSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-finished-compat-sessions";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user

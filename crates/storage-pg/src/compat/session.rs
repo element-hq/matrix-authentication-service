@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -683,5 +684,78 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         Ok(compat_session)
+    }
+
+    #[tracing::instrument(
+        name = "db.compat_session.cleanup_finished",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT compat_session_id, finished_at
+                        FROM compat_sessions
+                        WHERE finished_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR finished_at >= $1)
+                          AND finished_at < $2
+                        ORDER BY finished_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+
+                    -- Delete refresh tokens first because they reference access tokens
+                    deleted_refresh_tokens AS (
+                        DELETE FROM compat_refresh_tokens
+                        USING to_delete
+                        WHERE compat_refresh_tokens.compat_session_id = to_delete.compat_session_id
+                    ),
+
+                    deleted_access_tokens AS (
+                        DELETE FROM compat_access_tokens
+                        USING to_delete
+                        WHERE compat_access_tokens.compat_session_id = to_delete.compat_session_id
+                    ),
+
+                    deleted_sso_logins AS (
+                        DELETE FROM compat_sso_logins
+                        USING to_delete
+                        WHERE compat_sso_logins.compat_session_id = to_delete.compat_session_id
+                    ),
+
+                    deleted_sessions AS (
+                        DELETE FROM compat_sessions
+                        USING to_delete
+                        WHERE compat_sessions.compat_session_id = to_delete.compat_session_id
+                        RETURNING compat_sessions.finished_at
+                    )
+
+                SELECT
+                    COUNT(*) as "count!",
+                    MAX(finished_at) as last_finished_at
+                FROM deleted_sessions
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_finished_at,
+        ))
     }
 }

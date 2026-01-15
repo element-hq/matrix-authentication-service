@@ -134,6 +134,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::CleanupRevokedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::CleanupConsumedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::CleanupUserRegistrationsJob>()
+        .register_handler::<mas_storage::queue::CleanupFinishedCompatSessionsJob>()
         .register_handler::<mas_storage::queue::DeactivateUserJob>()
         .register_handler::<mas_storage::queue::DeleteDeviceJob>()
         .register_handler::<mas_storage::queue::ProvisionDeviceJob>()
@@ -172,6 +173,12 @@ pub async fn init(
             // Run this job every hour
             "0 30 * * * *".parse()?,
             mas_storage::queue::CleanupUserRegistrationsJob,
+        )
+        .add_schedule(
+            "cleanup-finished-compat-sessions",
+            // Run this job every hour
+            "0 40 * * * *".parse()?,
+            mas_storage::queue::CleanupFinishedCompatSessionsJob,
         )
         .add_schedule(
             "cleanup-expired-oauth-access-tokens",
