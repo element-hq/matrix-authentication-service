@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -640,5 +641,62 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, ids.len().try_into().unwrap_or(u64::MAX))?;
 
         Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.user_session.cleanup_finished",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        // Use timestamp cursor-based pagination for finished sessions.
+        // First delete authentications in a CTE, then delete the sessions.
+        let res = sqlx::query!(
+            r#"
+                WITH to_delete AS (
+                    SELECT user_session_id, finished_at
+                    FROM user_sessions
+                    WHERE finished_at IS NOT NULL
+                    AND ($1::timestamptz IS NULL OR finished_at > $1)
+                    AND finished_at <= $2
+                    ORDER BY finished_at
+                    LIMIT $3
+                ),
+                delete_authentications AS (
+                    DELETE FROM user_session_authentications
+                    USING to_delete
+                    WHERE user_session_authentications.user_session_id = to_delete.user_session_id
+                ),
+                deleted AS (
+                    DELETE FROM user_sessions
+                    USING to_delete
+                    WHERE user_sessions.user_session_id = to_delete.user_session_id
+                    RETURNING user_sessions.finished_at
+                )
+                SELECT COUNT(*) AS count, MAX(finished_at) AS "max_finished_at?" FROM deleted
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        let count = usize::try_from(res.count.unwrap_or(0)).unwrap_or(0);
+        let max_finished_at = res.max_finished_at;
+
+        Ok((count, max_finished_at))
     }
 }

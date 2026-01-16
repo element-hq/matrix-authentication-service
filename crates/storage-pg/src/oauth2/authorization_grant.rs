@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -447,5 +448,55 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             .map_err(DatabaseError::to_invalid_operation)?;
 
         Ok(grant)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_authorization_grant.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // `MAX(uuid)` isn't a thing in Postgres, so we can't just re-select the
+        // deleted rows and do a MAX on the `oauth2_authorization_grant_id`.
+        // Instead, we do the aggregation on the client side, which is a little
+        // less efficient, but good enough.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT oauth2_authorization_grant_id
+                    FROM oauth2_authorization_grants
+                    WHERE ($1::uuid IS NULL OR oauth2_authorization_grant_id > $1)
+                    AND oauth2_authorization_grant_id <= $2
+                    ORDER BY oauth2_authorization_grant_id
+                    LIMIT $3
+                )
+                DELETE FROM oauth2_authorization_grants
+                USING to_delete
+                WHERE oauth2_authorization_grants.oauth2_authorization_grant_id = to_delete.oauth2_authorization_grant_id
+                RETURNING oauth2_authorization_grants.oauth2_authorization_grant_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }

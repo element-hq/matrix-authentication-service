@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT queue_job_id\n                    FROM queue_jobs\n                    WHERE (status = 'completed' OR status = 'failed')\n                      AND ($1::uuid IS NULL OR queue_job_id > $1)\n                      AND queue_job_id <= $2\n                    ORDER BY queue_job_id\n                    LIMIT $3\n                )\n                DELETE FROM queue_jobs\n                USING to_delete\n                WHERE queue_jobs.queue_job_id = to_delete.queue_job_id\n                RETURNING queue_jobs.queue_job_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "queue_job_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5d0d4699aa82b3976c6c1fcb0d77559da26def223b8954cf32959cce777577d7"
+}

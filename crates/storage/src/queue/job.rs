@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -213,6 +214,30 @@ pub trait QueueJobRepository: Send + Sync {
     ///
     /// Returns an error if the underlying repository fails.
     async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+
+    /// Cleanup old completed and failed jobs
+    ///
+    /// This will delete jobs with status 'completed' or 'failed' and IDs up to
+    /// and including `until`. Uses ULID cursor-based pagination for efficiency.
+    ///
+    /// Returns the number of jobs deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum ULID to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of jobs to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(QueueJobRepository:
@@ -261,6 +286,13 @@ repository_impl!(QueueJobRepository:
     ) -> Result<(), Self::Error>;
 
     async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );
 
 /// Extension trait for [`QueueJobRepository`] to help adding a job to the queue

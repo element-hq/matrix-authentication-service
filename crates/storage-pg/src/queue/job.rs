@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -443,5 +444,55 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
 
         let count = res.rows_affected();
         Ok(usize::try_from(count).unwrap_or(usize::MAX))
+    }
+
+    #[tracing::instrument(
+        name = "db.queue_job.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination for completed and failed jobs.
+        // We delete both completed and failed jobs in the same batch.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT queue_job_id
+                    FROM queue_jobs
+                    WHERE (status = 'completed' OR status = 'failed')
+                      AND ($1::uuid IS NULL OR queue_job_id > $1)
+                      AND queue_job_id <= $2
+                    ORDER BY queue_job_id
+                    LIMIT $3
+                )
+                DELETE FROM queue_jobs
+                USING to_delete
+                WHERE queue_jobs.queue_job_id = to_delete.queue_job_id
+                RETURNING queue_jobs.queue_job_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }

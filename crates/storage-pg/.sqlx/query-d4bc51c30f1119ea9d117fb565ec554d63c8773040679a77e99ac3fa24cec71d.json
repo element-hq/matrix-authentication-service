@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT oauth2_authorization_grant_id\n                    FROM oauth2_authorization_grants\n                    WHERE ($1::uuid IS NULL OR oauth2_authorization_grant_id > $1)\n                    AND oauth2_authorization_grant_id <= $2\n                    ORDER BY oauth2_authorization_grant_id\n                    LIMIT $3\n                )\n                DELETE FROM oauth2_authorization_grants\n                USING to_delete\n                WHERE oauth2_authorization_grants.oauth2_authorization_grant_id = to_delete.oauth2_authorization_grant_id\n                RETURNING oauth2_authorization_grants.oauth2_authorization_grant_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "oauth2_authorization_grant_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d4bc51c30f1119ea9d117fb565ec554d63c8773040679a77e99ac3fa24cec71d"
+}

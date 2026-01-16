@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT user_recovery_session_id\n                    FROM user_recovery_sessions\n                    WHERE ($1::uuid IS NULL OR user_recovery_session_id > $1)\n                    AND user_recovery_session_id <= $2\n                    ORDER BY user_recovery_session_id\n                    LIMIT $3\n                )\n                DELETE FROM user_recovery_sessions\n                USING to_delete\n                WHERE user_recovery_sessions.user_recovery_session_id = to_delete.user_recovery_session_id\n                RETURNING user_recovery_sessions.user_recovery_session_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_recovery_session_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8ef977487429f84c557dc62272c47e411b96b2376288a90c242034295e1a147e"
+}

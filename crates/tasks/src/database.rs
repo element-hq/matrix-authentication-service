@@ -12,8 +12,12 @@ use std::time::Duration;
 use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
-    CleanupFinishedCompatSessionsJob, CleanupRevokedOAuthAccessTokensJob,
-    CleanupRevokedOAuthRefreshTokensJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
+    CleanupFinishedCompatSessionsJob, CleanupOAuth2SessionsJob,
+    CleanupOAuthAuthorizationGrantsJob, CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob,
+    CleanupRevokedOAuthAccessTokensJob, CleanupRevokedOAuthRefreshTokensJob,
+    CleanupUpstreamOAuthLinksJob, CleanupUpstreamOAuthSessionsJob,
+    CleanupUserEmailAuthenticationsJob, CleanupUserRecoverySessionsJob,
+    CleanupUserRegistrationsJob, CleanupUserSessionsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -219,6 +223,323 @@ impl RunnableJob for CleanupConsumedOAuthRefreshTokensJob {
 }
 
 #[async_trait]
+impl RunnableJob for CleanupUserRecoverySessionsJob {
+    #[tracing::instrument(name = "job.cleanup_user_recovery_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove recovery sessions after 7 days. They are in practice only
+        // valid for a short time (tickets expire after 10 minutes), but keeping
+        // them around helps investigate abuse patterns.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        // We use the fact that ULIDs include the creation time in their first 48 bits
+        // as a cursor
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            // This returns the number of deleted sessions, and the greatest ULID processed
+            let (count, cursor) = repo
+                .user_recovery()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no user recovery sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up user recovery sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUserEmailAuthenticationsJob {
+    #[tracing::instrument(name = "job.cleanup_user_email_authentications", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove email authentications after 7 days. They are in practice only
+        // valid for a short time (codes expire after 10 minutes), but keeping
+        // them around helps investigate abuse patterns.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        // We use the fact that ULIDs include the creation time in their first 48 bits
+        // as a cursor
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            // This returns the number of deleted authentications, and the greatest ULID
+            // processed
+            let (count, cursor) = repo
+                .user_email()
+                .cleanup_authentications(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no user email authentications to clean up");
+        } else {
+            info!(count = total, "cleaned up user email authentications");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUpstreamOAuthSessionsJob {
+    #[tracing::instrument(name = "job.cleanup_upstream_oauth_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove pending upstream OAuth authorization sessions after 7 days.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .upstream_oauth_session()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no pending upstream OAuth sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up pending upstream OAuth sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUpstreamOAuthLinksJob {
+    #[tracing::instrument(name = "job.cleanup_upstream_oauth_links", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove orphaned upstream OAuth links after 7 days.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .upstream_oauth_link()
+                .cleanup_orphaned(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no orphaned upstream OAuth links to clean up");
+        } else {
+            info!(count = total, "cleaned up orphaned upstream OAuth links");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupQueueJobsJob {
+    #[tracing::instrument(name = "job.cleanup_queue_jobs", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove completed and failed queue jobs after 30 days.
+        // Keep them for debugging purposes.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .queue_job()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no queue jobs to clean up");
+        } else {
+            info!(count = total, "cleaned up queue jobs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUserSessionsJob {
+    #[tracing::instrument(name = "job.cleanup_user_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove finished user sessions after 30 days.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .browser_session()
+                .cleanup_finished(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no finished user sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up finished user sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOAuth2SessionsJob {
+    #[tracing::instrument(name = "job.cleanup_oauth2_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove finished OAuth2 sessions after 30 days.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .oauth2_session()
+                .cleanup_finished(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no finished OAuth2 sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up finished OAuth2 sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
 impl RunnableJob for CleanupUserRegistrationsJob {
     #[tracing::instrument(name = "job.cleanup_user_registrations", skip_all)]
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
@@ -308,6 +629,112 @@ impl RunnableJob for CleanupFinishedCompatSessionsJob {
             debug!("no finished compat sessions to clean up");
         } else {
             info!(count = total, "cleaned up finished compat sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOAuthAuthorizationGrantsJob {
+    #[tracing::instrument(name = "job.cleanup_oauth_authorization_grants", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove authorization grants after 7 days. They are in practice only
+        // valid for a short time, but keeping them around helps investigate abuse
+        // patterns.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        // We use the fact that ULIDs include the creation time in their first 48 bits
+        // as a cursor
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            // This returns the number of deleted grants, and the greatest ULID processed
+            let (count, cursor) = repo
+                .oauth2_authorization_grant()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no authorization grants to clean up");
+        } else {
+            info!(count = total, "cleaned up authorization grants");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOAuthDeviceCodeGrantsJob {
+    #[tracing::instrument(name = "job.cleanup_oauth_device_code_grants", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove device code grants after 7 days. They are in practice only
+        // valid for a short time, but keeping them around helps investigate abuse
+        // patterns.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        // We use the fact that ULIDs include the creation time in their first 48 bits
+        // as a cursor
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            // This returns the number of deleted grants, and the greatest ULID processed
+            let (count, cursor) = repo
+                .oauth2_device_code_grant()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no device code grants to clean up");
+        } else {
+            info!(count = total, "cleaned up device code grants");
         }
 
         Ok(())

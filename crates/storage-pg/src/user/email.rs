@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -756,5 +757,61 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
 
         user_email_authentication.completed_at = Some(completed_at);
         Ok(user_email_authentication)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.cleanup_authentications",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_authentications(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination. Since ULIDs contain a timestamp,
+        // we can efficiently delete old authentications without needing an index.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH
+                  to_delete AS (
+                    SELECT user_email_authentication_id
+                    FROM user_email_authentications
+                    WHERE ($1::uuid IS NULL OR user_email_authentication_id > $1)
+                      AND user_email_authentication_id <= $2
+                    ORDER BY user_email_authentication_id
+                    LIMIT $3
+                  ),
+                  deleted_codes AS (
+                    DELETE FROM user_email_authentication_codes
+                    USING to_delete
+                    WHERE user_email_authentication_codes.user_email_authentication_id = to_delete.user_email_authentication_id
+                    RETURNING user_email_authentication_codes.user_email_authentication_code_id
+                  )
+                DELETE FROM user_email_authentications
+                USING to_delete
+                WHERE user_email_authentications.user_email_authentication_id = to_delete.user_email_authentication_id
+                RETURNING user_email_authentications.user_email_authentication_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }

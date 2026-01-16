@@ -135,6 +135,15 @@ pub async fn init(
         .register_handler::<mas_storage::queue::CleanupConsumedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::CleanupUserRegistrationsJob>()
         .register_handler::<mas_storage::queue::CleanupFinishedCompatSessionsJob>()
+        .register_handler::<mas_storage::queue::CleanupOAuthAuthorizationGrantsJob>()
+        .register_handler::<mas_storage::queue::CleanupOAuthDeviceCodeGrantsJob>()
+        .register_handler::<mas_storage::queue::CleanupUserRecoverySessionsJob>()
+        .register_handler::<mas_storage::queue::CleanupUserEmailAuthenticationsJob>()
+        .register_handler::<mas_storage::queue::CleanupUpstreamOAuthSessionsJob>()
+        .register_handler::<mas_storage::queue::CleanupUpstreamOAuthLinksJob>()
+        .register_handler::<mas_storage::queue::CleanupQueueJobsJob>()
+        .register_handler::<mas_storage::queue::CleanupUserSessionsJob>()
+        .register_handler::<mas_storage::queue::CleanupOAuth2SessionsJob>()
         .register_handler::<mas_storage::queue::DeactivateUserJob>()
         .register_handler::<mas_storage::queue::DeleteDeviceJob>()
         .register_handler::<mas_storage::queue::ProvisionDeviceJob>()
@@ -179,6 +188,60 @@ pub async fn init(
             // Run this job every hour
             "0 40 * * * *".parse()?,
             mas_storage::queue::CleanupFinishedCompatSessionsJob,
+        )
+        .add_schedule(
+            "cleanup-oauth-authorization-grants",
+            // Run this job every hour
+            "0 50 * * * *".parse()?,
+            mas_storage::queue::CleanupOAuthAuthorizationGrantsJob,
+        )
+        .add_schedule(
+            "cleanup-oauth-device-code-grants",
+            // Run this job every hour
+            "0 55 * * * *".parse()?,
+            mas_storage::queue::CleanupOAuthDeviceCodeGrantsJob,
+        )
+        .add_schedule(
+            "cleanup-user-recovery-sessions",
+            // Run this job every hour
+            "0 56 * * * *".parse()?,
+            mas_storage::queue::CleanupUserRecoverySessionsJob,
+        )
+        .add_schedule(
+            "cleanup-user-email-authentications",
+            // Run this job every hour
+            "0 57 * * * *".parse()?,
+            mas_storage::queue::CleanupUserEmailAuthenticationsJob,
+        )
+        .add_schedule(
+            "cleanup-upstream-oauth-sessions",
+            // Run this job every hour
+            "0 58 * * * *".parse()?,
+            mas_storage::queue::CleanupUpstreamOAuthSessionsJob,
+        )
+        .add_schedule(
+            "cleanup-upstream-oauth-links",
+            // Run this job every hour
+            "0 59 * * * *".parse()?,
+            mas_storage::queue::CleanupUpstreamOAuthLinksJob,
+        )
+        .add_schedule(
+            "cleanup-queue-jobs",
+            // Run this job every hour
+            "0 45 * * * *".parse()?,
+            mas_storage::queue::CleanupQueueJobsJob,
+        )
+        .add_schedule(
+            "cleanup-user-sessions",
+            // Run this job every hour
+            "0 46 * * * *".parse()?,
+            mas_storage::queue::CleanupUserSessionsJob,
+        )
+        .add_schedule(
+            "cleanup-oauth2-sessions",
+            // Run this job every hour
+            "0 47 * * * *".parse()?,
+            mas_storage::queue::CleanupOAuth2SessionsJob,
         )
         .add_schedule(
             "cleanup-expired-oauth-access-tokens",

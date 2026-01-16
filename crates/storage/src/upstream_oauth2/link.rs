@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -216,6 +217,30 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
         clock: &dyn Clock,
         upstream_oauth_link: UpstreamOAuthLink,
     ) -> Result<(), Self::Error>;
+
+    /// Cleanup orphaned upstream OAuth links
+    ///
+    /// This will delete orphaned links (where `user_id IS NULL`) with IDs up to
+    /// and including `until`. Uses ULID cursor-based pagination for efficiency.
+    ///
+    /// Returns the number of links deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum ULID to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of links to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_orphaned(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthLinkRepository:
@@ -251,4 +276,11 @@ repository_impl!(UpstreamOAuthLinkRepository:
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error>;
 
     async fn remove(&mut self, clock: &dyn Clock, upstream_oauth_link: UpstreamOAuthLink) -> Result<(), Self::Error>;
+
+    async fn cleanup_orphaned(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );
