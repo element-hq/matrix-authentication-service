@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -461,6 +462,32 @@ pub trait OAuth2SessionRepository: Send + Sync {
         session: Session,
         human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
+
+    /// Cleanup old finished OAuth2 sessions
+    ///
+    /// This will delete finished sessions (where `finished_at IS NOT NULL` and
+    /// older than `until`). Uses `finished_at` timestamp-based pagination.
+    /// Child access tokens, refresh tokens, and authorization grants are
+    /// deleted in the same query via explicit CTEs.
+    ///
+    /// Returns the number of sessions deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum timestamp to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of sessions to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(OAuth2SessionRepository:
@@ -526,4 +553,11 @@ repository_impl!(OAuth2SessionRepository:
         session: Session,
         human_name: Option<String>,
     ) -> Result<Session, Self::Error>;
+
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 );

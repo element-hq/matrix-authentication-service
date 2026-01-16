@@ -430,6 +430,14 @@ impl InsertableJob for CleanupUserSessionsJob {
     const QUEUE_NAME: &'static str = "cleanup-user-sessions";
 }
 
+/// Cleanup old finished OAuth2 sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupOAuth2SessionsJob;
+
+impl InsertableJob for CleanupOAuth2SessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-oauth2-sessions";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user

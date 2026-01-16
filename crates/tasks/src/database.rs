@@ -501,6 +501,45 @@ impl RunnableJob for CleanupUserSessionsJob {
 }
 
 #[async_trait]
+impl RunnableJob for CleanupOAuth2SessionsJob {
+    #[tracing::instrument(name = "job.cleanup_oauth2_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove finished OAuth2 sessions after 30 days.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .oauth2_session()
+                .cleanup_finished(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no finished OAuth2 sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up finished OAuth2 sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
 impl RunnableJob for CleanupUserRegistrationsJob {
     #[tracing::instrument(name = "job.cleanup_user_registrations", skip_all)]
     async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {

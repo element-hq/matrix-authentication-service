@@ -662,8 +662,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
         // Use timestamp cursor-based pagination for finished sessions.
         // First delete authentications in a CTE, then delete the sessions.
-        // `MAX(timestamp)` isn't a thing in Postgres, so we aggregate on the client side.
-        let res = sqlx::query_scalar!(
+        let res = sqlx::query!(
             r#"
                 WITH to_delete AS (
                     SELECT user_session_id, finished_at
@@ -685,18 +684,18 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                     WHERE user_sessions.user_session_id = to_delete.user_session_id
                     RETURNING user_sessions.finished_at
                 )
-                SELECT finished_at FROM deleted
+                SELECT COUNT(*) AS count, MAX(finished_at) AS "max_finished_at?" FROM deleted
             "#,
             since,
             until,
             i64::try_from(limit).unwrap_or(i64::MAX)
         )
         .traced()
-        .fetch_all(&mut *self.conn)
+        .fetch_one(&mut *self.conn)
         .await?;
 
-        let count = res.len();
-        let max_finished_at = res.into_iter().flatten().max();
+        let count = usize::try_from(res.count.unwrap_or(0)).unwrap_or(0);
+        let max_finished_at = res.max_finished_at;
 
         Ok((count, max_finished_at))
     }
