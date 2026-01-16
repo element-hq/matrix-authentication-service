@@ -67,7 +67,8 @@ impl RunnableJob for CleanupRevokedOAuthAccessTokensJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(60))
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -165,7 +166,8 @@ impl RunnableJob for CleanupRevokedOAuthRefreshTokensJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(60))
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -211,7 +213,8 @@ impl RunnableJob for CleanupConsumedOAuthRefreshTokensJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(60))
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -263,7 +266,8 @@ impl RunnableJob for CleanupUserRegistrationsJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(60))
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -310,7 +314,8 @@ impl RunnableJob for CleanupFinishedCompatSessionsJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(60))
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
