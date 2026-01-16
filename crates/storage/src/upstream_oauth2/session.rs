@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -205,6 +206,29 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>)
     -> Result<usize, Self::Error>;
+
+    /// Cleanup old authorization sessions
+    ///
+    /// This will delete sessions with IDs up to and including `until`.
+    ///
+    /// Returns the number of sessions deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum ULID to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of sessions to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthSessionRepository:
@@ -247,4 +271,11 @@ repository_impl!(UpstreamOAuthSessionRepository:
     ) -> Result<Page<UpstreamOAuthAuthorizationSession>, Self::Error>;
 
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>) -> Result<usize, Self::Error>;
+
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );
