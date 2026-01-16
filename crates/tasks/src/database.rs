@@ -13,8 +13,8 @@ use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
     CleanupFinishedCompatSessionsJob, CleanupOAuthAuthorizationGrantsJob,
-    CleanupRevokedOAuthAccessTokensJob, CleanupRevokedOAuthRefreshTokensJob,
-    CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
+    CleanupOAuthDeviceCodeGrantsJob, CleanupRevokedOAuthAccessTokensJob,
+    CleanupRevokedOAuthRefreshTokensJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -362,6 +362,59 @@ impl RunnableJob for CleanupOAuthAuthorizationGrantsJob {
             debug!("no authorization grants to clean up");
         } else {
             info!(count = total, "cleaned up authorization grants");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOAuthDeviceCodeGrantsJob {
+    #[tracing::instrument(name = "job.cleanup_oauth_device_code_grants", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove device code grants after 7 days. They are in practice only
+        // valid for a short time, but keeping them around helps investigate abuse
+        // patterns.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        // We use the fact that ULIDs include the creation time in their first 48 bits
+        // as a cursor
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        // Run until we get cancelled. We don't schedule a retry if we get cancelled, as
+        // this is a scheduled job and it will end up being rescheduled later anyway.
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            // This returns the number of deleted grants, and the greatest ULID processed
+            let (count, cursor) = repo
+                .oauth2_device_code_grant()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            // Check how many we deleted. If we deleted exactly BATCH_SIZE,
+            // there might be more to delete
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no device code grants to clean up");
+        } else {
+            info!(count = total, "cleaned up device code grants");
         }
 
         Ok(())

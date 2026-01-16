@@ -374,6 +374,14 @@ impl InsertableJob for CleanupOAuthAuthorizationGrantsJob {
     const QUEUE_NAME: &'static str = "cleanup-oauth-authorization-grants";
 }
 
+/// Cleanup old OAuth 2.0 device code grants
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupOAuthDeviceCodeGrantsJob;
+
+impl InsertableJob for CleanupOAuthDeviceCodeGrantsJob {
+    const QUEUE_NAME: &'static str = "cleanup-oauth-device-code-grants";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user
