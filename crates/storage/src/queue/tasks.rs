@@ -414,6 +414,14 @@ impl InsertableJob for CleanupUpstreamOAuthLinksJob {
     const QUEUE_NAME: &'static str = "cleanup-upstream-oauth-links";
 }
 
+/// Cleanup old completed and failed queue jobs
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupQueueJobsJob;
+
+impl InsertableJob for CleanupQueueJobsJob {
+    const QUEUE_NAME: &'static str = "cleanup-queue-jobs";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user
