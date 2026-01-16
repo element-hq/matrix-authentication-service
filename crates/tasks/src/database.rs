@@ -12,11 +12,12 @@ use std::time::Duration;
 use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
-    CleanupFinishedCompatSessionsJob, CleanupOAuthAuthorizationGrantsJob,
-    CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob, CleanupRevokedOAuthAccessTokensJob,
-    CleanupRevokedOAuthRefreshTokensJob, CleanupUpstreamOAuthLinksJob,
-    CleanupUpstreamOAuthSessionsJob, CleanupUserEmailAuthenticationsJob,
-    CleanupUserRecoverySessionsJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
+    CleanupFinishedCompatSessionsJob, CleanupOAuth2SessionsJob,
+    CleanupOAuthAuthorizationGrantsJob, CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob,
+    CleanupRevokedOAuthAccessTokensJob, CleanupRevokedOAuthRefreshTokensJob,
+    CleanupUpstreamOAuthLinksJob, CleanupUpstreamOAuthSessionsJob,
+    CleanupUserEmailAuthenticationsJob, CleanupUserRecoverySessionsJob,
+    CleanupUserRegistrationsJob, CleanupUserSessionsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -450,6 +451,45 @@ impl RunnableJob for CleanupQueueJobsJob {
             debug!("no queue jobs to clean up");
         } else {
             info!(count = total, "cleaned up queue jobs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUserSessionsJob {
+    #[tracing::instrument(name = "job.cleanup_user_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove finished user sessions after 30 days.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .browser_session()
+                .cleanup_finished(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no finished user sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up finished user sessions");
         }
 
         Ok(())
