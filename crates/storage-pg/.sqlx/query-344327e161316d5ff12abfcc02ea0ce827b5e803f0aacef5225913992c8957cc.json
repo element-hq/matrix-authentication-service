@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT oauth2_session_id, finished_at\n                    FROM oauth2_sessions\n                    WHERE finished_at IS NOT NULL\n                    AND ($1::timestamptz IS NULL OR finished_at > $1)\n                    AND finished_at <= $2\n                    ORDER BY finished_at\n                    LIMIT $3\n                ),\n                delete_access_tokens AS (\n                    DELETE FROM oauth2_access_tokens\n                    USING to_delete\n                    WHERE oauth2_access_tokens.oauth2_session_id = to_delete.oauth2_session_id\n                ),\n                delete_refresh_tokens AS (\n                    DELETE FROM oauth2_refresh_tokens\n                    USING to_delete\n                    WHERE oauth2_refresh_tokens.oauth2_session_id = to_delete.oauth2_session_id\n                ),\n                delete_authorization_grants AS (\n                    DELETE FROM oauth2_authorization_grants\n                    USING to_delete\n                    WHERE oauth2_authorization_grants.oauth2_session_id = to_delete.oauth2_session_id\n                ),\n                deleted AS (\n                    DELETE FROM oauth2_sessions\n                    USING to_delete\n                    WHERE oauth2_sessions.oauth2_session_id = to_delete.oauth2_session_id\n                    RETURNING oauth2_sessions.finished_at\n                )\n                SELECT COUNT(*) AS count, MAX(finished_at) AS \"max_finished_at?\" FROM deleted\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "max_finished_at?",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "344327e161316d5ff12abfcc02ea0ce827b5e803f0aacef5225913992c8957cc"
+}
