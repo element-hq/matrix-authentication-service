@@ -390,6 +390,14 @@ impl InsertableJob for CleanupUserRecoverySessionsJob {
     const QUEUE_NAME: &'static str = "cleanup-user-recovery-sessions";
 }
 
+/// Cleanup old user email authentications
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUserEmailAuthenticationsJob;
+
+impl InsertableJob for CleanupUserEmailAuthenticationsJob {
+    const QUEUE_NAME: &'static str = "cleanup-user-email-authentications";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user
