@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT user_session_id, finished_at\n                    FROM user_sessions\n                    WHERE finished_at IS NOT NULL\n                    AND ($1::timestamptz IS NULL OR finished_at > $1)\n                    AND finished_at <= $2\n                    ORDER BY finished_at\n                    LIMIT $3\n                ),\n                delete_authentications AS (\n                    DELETE FROM user_session_authentications\n                    USING to_delete\n                    WHERE user_session_authentications.user_session_id = to_delete.user_session_id\n                ),\n                deleted AS (\n                    DELETE FROM user_sessions\n                    USING to_delete\n                    WHERE user_sessions.user_session_id = to_delete.user_session_id\n                    RETURNING user_sessions.finished_at\n                )\n                SELECT finished_at FROM deleted\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "finished_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "1792c832f36c6d421c68ffa54dd9fdd99193886ebf80f6b157c9c26c4a9bea17"
+}
