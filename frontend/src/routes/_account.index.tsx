@@ -24,6 +24,11 @@ import UserEmailList, {
 } from "../components/UserProfile/UserEmailList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import {
+  HCaptchaWidget,
+  ReCaptchaWidget,
+  TurnstileWidget,
+} from "../components/Captcha";
 
 const QUERY = graphql(/* GraphQL */ `
   query UserProfile {
@@ -230,6 +235,20 @@ function Index(): React.ReactElement {
           <Separator kind="section" />
         </>
       )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const data = new FormData(e.currentTarget);
+          const str = new URLSearchParams(data);
+          console.log(str.toString());
+        }}
+      >
+        <ReCaptchaWidget />
+        <TurnstileWidget />
+        <HCaptchaWidget />
+        <input type="submit" />
+      </form>
 
       {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
         <>

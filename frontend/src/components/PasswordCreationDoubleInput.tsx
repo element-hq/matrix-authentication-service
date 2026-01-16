@@ -8,15 +8,7 @@ import { Form, Progress } from "@vector-im/compound-web";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { type FragmentType, graphql, useFragment } from "../gql";
 import type { PasswordComplexity } from "../utils/password_complexity";
-
-const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
-  fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-    id
-    minimumPasswordComplexity
-  }
-`);
 
 // This will load the password complexity module lazily,
 // so that it doesn't block the initial render and can be code-split
@@ -53,18 +45,13 @@ const usePasswordComplexity = (password: string): PasswordComplexity => {
 };
 
 export default function PasswordCreationDoubleInput({
-  siteConfig,
+  minimumPasswordComplexity,
   forceShowNewPasswordInvalid,
 }: {
-  siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
+  minimumPasswordComplexity: number;
   forceShowNewPasswordInvalid: boolean;
 }): React.ReactElement {
   const { t } = useTranslation();
-  const { minimumPasswordComplexity } = useFragment(
-    CONFIG_FRAGMENT,
-    siteConfig,
-  );
-
   const newPasswordRef = useRef<HTMLInputElement>(null);
   const newPasswordAgainRef = useRef<HTMLInputElement>(null);
   const [newPassword, setNewPassword] = useState("");
