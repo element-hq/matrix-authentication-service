@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -325,5 +326,54 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         Ok(user_recovery_session)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_recovery.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination. Since ULIDs contain a timestamp,
+        // we can efficiently delete old sessions without needing an index.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT user_recovery_session_id
+                    FROM user_recovery_sessions
+                    WHERE ($1::uuid IS NULL OR user_recovery_session_id > $1)
+                    AND user_recovery_session_id <= $2
+                    ORDER BY user_recovery_session_id
+                    LIMIT $3
+                )
+                DELETE FROM user_recovery_sessions
+                USING to_delete
+                WHERE user_recovery_sessions.user_recovery_session_id = to_delete.user_recovery_session_id
+                RETURNING user_recovery_sessions.user_recovery_session_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }
