@@ -14,7 +14,8 @@ use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
     CleanupFinishedCompatSessionsJob, CleanupOAuthAuthorizationGrantsJob,
     CleanupOAuthDeviceCodeGrantsJob, CleanupRevokedOAuthAccessTokensJob,
-    CleanupRevokedOAuthRefreshTokensJob, CleanupUserEmailAuthenticationsJob,
+    CleanupRevokedOAuthRefreshTokensJob, CleanupUpstreamOAuthLinksJob,
+    CleanupUpstreamOAuthSessionsJob, CleanupUserEmailAuthenticationsJob,
     CleanupUserRecoverySessionsJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
@@ -316,6 +317,94 @@ impl RunnableJob for CleanupUserEmailAuthenticationsJob {
             debug!("no user email authentications to clean up");
         } else {
             info!(count = total, "cleaned up user email authentications");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUpstreamOAuthSessionsJob {
+    #[tracing::instrument(name = "job.cleanup_upstream_oauth_sessions", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove pending upstream OAuth authorization sessions after 7 days.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .upstream_oauth_session()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no pending upstream OAuth sessions to clean up");
+        } else {
+            info!(count = total, "cleaned up pending upstream OAuth sessions");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupUpstreamOAuthLinksJob {
+    #[tracing::instrument(name = "job.cleanup_upstream_oauth_links", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove orphaned upstream OAuth links after 7 days.
+        let until = state.clock.now() - chrono::Duration::days(7);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .upstream_oauth_link()
+                .cleanup_orphaned(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no orphaned upstream OAuth links to clean up");
+        } else {
+            info!(count = total, "cleaned up orphaned upstream OAuth links");
         }
 
         Ok(())

@@ -398,6 +398,22 @@ impl InsertableJob for CleanupUserEmailAuthenticationsJob {
     const QUEUE_NAME: &'static str = "cleanup-user-email-authentications";
 }
 
+/// Cleanup old pending upstream OAuth authorization sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUpstreamOAuthSessionsJob;
+
+impl InsertableJob for CleanupUpstreamOAuthSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-upstream-oauth-sessions";
+}
+
+/// Cleanup orphaned upstream OAuth links
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUpstreamOAuthLinksJob;
+
+impl InsertableJob for CleanupUpstreamOAuthLinksJob {
+    const QUEUE_NAME: &'static str = "cleanup-upstream-oauth-links";
+}
+
 /// Scheduled job to expire inactive sessions
 ///
 /// This job will trigger jobs to expire inactive compat, oauth and user

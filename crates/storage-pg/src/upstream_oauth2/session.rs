@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -563,5 +564,54 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         count
             .try_into()
             .map_err(DatabaseError::to_invalid_operation)
+    }
+
+    #[tracing::instrument(
+        name = "db.upstream_oauth_authorization_session.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination for pending sessions only.
+        // We only delete sessions that are not yet completed.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT upstream_oauth_authorization_session_id
+                    FROM upstream_oauth_authorization_sessions
+                    WHERE ($1::uuid IS NULL OR upstream_oauth_authorization_session_id > $1)
+                      AND upstream_oauth_authorization_session_id <= $2
+                    ORDER BY upstream_oauth_authorization_session_id
+                    LIMIT $3
+                )
+                DELETE FROM upstream_oauth_authorization_sessions
+                USING to_delete
+                WHERE upstream_oauth_authorization_sessions.upstream_oauth_authorization_session_id = to_delete.upstream_oauth_authorization_session_id
+                RETURNING upstream_oauth_authorization_sessions.upstream_oauth_authorization_session_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }
