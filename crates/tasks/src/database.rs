@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
     CleanupFinishedCompatSessionsJob, CleanupOAuthAuthorizationGrantsJob,
-    CleanupOAuthDeviceCodeGrantsJob, CleanupRevokedOAuthAccessTokensJob,
+    CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob, CleanupRevokedOAuthAccessTokensJob,
     CleanupRevokedOAuthRefreshTokensJob, CleanupUpstreamOAuthLinksJob,
     CleanupUpstreamOAuthSessionsJob, CleanupUserEmailAuthenticationsJob,
     CleanupUserRecoverySessionsJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
@@ -412,6 +412,50 @@ impl RunnableJob for CleanupUpstreamOAuthLinksJob {
 
     fn timeout(&self) -> Option<Duration> {
         // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupQueueJobsJob {
+    #[tracing::instrument(name = "job.cleanup_queue_jobs", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Remove completed and failed queue jobs after 30 days.
+        // Keep them for debugging purposes.
+        let until = state.clock.now() - chrono::Duration::days(30);
+        let until = Ulid::from_parts(
+            u64::try_from(until.timestamp_millis()).unwrap_or(u64::MIN),
+            u128::MAX,
+        );
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let (count, cursor) = repo
+                .queue_job()
+                .cleanup(since, until, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+            since = cursor;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no queue jobs to clean up");
+        } else {
+            info!(count = total, "cleaned up queue jobs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
         Some(Duration::from_secs(10 * 60))
     }
 }
