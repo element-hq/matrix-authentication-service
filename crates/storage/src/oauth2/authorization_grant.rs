@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -127,6 +128,30 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         clock: &dyn Clock,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
+
+    /// Cleanup old authorization grants
+    ///
+    /// This will delete authorization grants with IDs up to and including
+    /// `until`. Uses ULID cursor-based pagination for efficiency.
+    ///
+    /// Returns the number of grants deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum ULID to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of grants to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(OAuth2AuthorizationGrantRepository:
@@ -163,4 +188,11 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         clock: &dyn Clock,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
+
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );
