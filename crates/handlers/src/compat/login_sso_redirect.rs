@@ -24,6 +24,9 @@ pub struct Params {
     #[serde(rename = "redirectUrl")]
     redirect_url: Option<String>,
     action: Option<CompatLoginSsoAction>,
+
+    #[serde(rename = "org.matrix.msc3824.action")]
+    unstable_action: Option<CompatLoginSsoAction>,
 }
 
 #[derive(Debug, Error)]
@@ -81,5 +84,41 @@ pub async fn get(
 
     repo.save().await?;
 
-    Ok(url_builder.absolute_redirect(&CompatLoginSsoComplete::new(login.id, params.action)))
+    Ok(url_builder.absolute_redirect(&CompatLoginSsoComplete::new(
+        login.id,
+        params.action.or(params.unstable_action),
+    )))
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState};
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unstable_action_fallback(pool: PgPool) {
+        let state: TestState = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::get(
+            "/_matrix/client/v3/login/sso/redirect?\
+             redirectUrl=http://example.com/\
+             &org.matrix.msc3824.action=register",
+        )
+        .empty();
+
+        let response = state.request(request).await;
+
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let location = response
+            .headers()
+            .get("Location")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(location.contains("org.matrix.msc3824.action=register"));
+        assert!(location.contains("action=register"));
+    }
 }
