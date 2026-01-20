@@ -109,7 +109,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     </div>
     <button
       aria-disabled="false"
-      class="_button_187yx_8"
+      class="_button_13vu4_8"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -120,7 +120,7 @@ exports[`Account home page > display name edit box > displays an error if the di
     </button>
   </form>
   <button
-    class="_button_187yx_8"
+    class="_button_13vu4_8"
     data-kind="tertiary"
     data-size="lg"
     role="button"
@@ -254,7 +254,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     </div>
     <button
       aria-disabled="false"
-      class="_button_187yx_8"
+      class="_button_13vu4_8"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -265,7 +265,7 @@ exports[`Account home page > display name edit box > lets edit the display name 
     </button>
   </form>
   <button
-    class="_button_187yx_8"
+    class="_button_13vu4_8"
     data-kind="tertiary"
     data-size="lg"
     role="button"
@@ -342,7 +342,7 @@ exports[`Account home page > renders the page 1`] = `
             aria-expanded="false"
             aria-haspopup="dialog"
             aria-labelledby="_r_3_"
-            class="_icon-button_1pz9o_8 _editButton_0d9d49"
+            class="_icon-button_1215g_8 _editButton_0d9d49"
             data-kind="primary"
             data-state="closed"
             role="button"
@@ -426,7 +426,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-_r_a_"
               aria-expanded="true"
               aria-labelledby="_r_b_"
-              class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
+              class="_icon-button_1215g_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="open"
               role="button"
@@ -547,7 +547,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-_r_r_"
               aria-expanded="true"
               aria-labelledby="_r_s_"
-              class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
+              class="_icon-button_1215g_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="open"
               role="button"
@@ -643,7 +643,7 @@ exports[`Account home page > renders the page 1`] = `
               aria-controls="radix-_r_15_"
               aria-expanded="false"
               aria-labelledby="_r_16_"
-              class="_icon-button_1pz9o_8 _triggerIcon_a44bb3"
+              class="_icon-button_1215g_8 _triggerIcon_a44bb3"
               data-kind="primary"
               data-state="closed"
               role="button"
@@ -680,7 +680,7 @@ exports[`Account home page > renders the page 1`] = `
         aria-controls="radix-_r_1b_"
         aria-expanded="false"
         aria-haspopup="dialog"
-        class="_button_187yx_8 _has-icon_187yx_57 _destructive_187yx_107"
+        class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
         data-kind="primary"
         data-size="lg"
         data-state="closed"
@@ -711,7 +711,7 @@ exports[`Account home page > renders the page 1`] = `
         aria-controls="radix-_r_1e_"
         aria-expanded="false"
         aria-haspopup="dialog"
-        class="_button_187yx_8 self-center _has-icon_187yx_57 _destructive_187yx_107"
+        class="_button_13vu4_8 self-center _has-icon_13vu4_60 _destructive_13vu4_110"
         data-kind="tertiary"
         data-size="sm"
         data-state="closed"
