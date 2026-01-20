@@ -14,6 +14,7 @@ use mas_storage::{
 };
 use mas_templates::{PostAuthContext, PostAuthContextInner};
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub(crate) struct OptionalPostAuthAction {
@@ -52,31 +53,28 @@ impl OptionalPostAuthAction {
         };
         let ctx = match action {
             PostAuthAction::ContinueAuthorizationGrant { id } => {
-                let grant = repo
-                    .oauth2_authorization_grant()
-                    .lookup(id)
-                    .await?
-                    .context("Failed to load authorization grant")?;
+                let Some(grant) = repo.oauth2_authorization_grant().lookup(id).await? else {
+                    warn!(%id, "Failed to load authorization grant, it was likely deleted or is an invalid ID");
+                    return Ok(None);
+                };
                 let grant = Box::new(grant);
                 PostAuthContextInner::ContinueAuthorizationGrant { grant }
             }
 
             PostAuthAction::ContinueDeviceCodeGrant { id } => {
-                let grant = repo
-                    .oauth2_device_code_grant()
-                    .lookup(id)
-                    .await?
-                    .context("Failed to load device code grant")?;
+                let Some(grant) = repo.oauth2_device_code_grant().lookup(id).await? else {
+                    warn!(%id, "Failed to load device code grant, it was likely deleted or is an invalid ID");
+                    return Ok(None);
+                };
                 let grant = Box::new(grant);
                 PostAuthContextInner::ContinueDeviceCodeGrant { grant }
             }
 
             PostAuthAction::ContinueCompatSsoLogin { id } => {
-                let login = repo
-                    .compat_sso_login()
-                    .lookup(id)
-                    .await?
-                    .context("Failed to load compat SSO login")?;
+                let Some(login) = repo.compat_sso_login().lookup(id).await? else {
+                    warn!(%id, "Failed to load compat SSO login, it was likely deleted or is an invalid ID");
+                    return Ok(None);
+                };
                 let login = Box::new(login);
                 PostAuthContextInner::ContinueCompatSsoLogin { login }
             }
@@ -84,11 +82,10 @@ impl OptionalPostAuthAction {
             PostAuthAction::ChangePassword => PostAuthContextInner::ChangePassword,
 
             PostAuthAction::LinkUpstream { id } => {
-                let link = repo
-                    .upstream_oauth_link()
-                    .lookup(id)
-                    .await?
-                    .context("Failed to load upstream OAuth 2.0 link")?;
+                let Some(link) = repo.upstream_oauth_link().lookup(id).await? else {
+                    warn!(%id, "Failed to load upstream OAuth 2.0 link, it was likely deleted or is an invalid ID");
+                    return Ok(None);
+                };
 
                 let provider = repo
                     .upstream_oauth_provider()
