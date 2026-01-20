@@ -130,7 +130,7 @@ pub(crate) async fn get(
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
 
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = PolicyViolationContext::for_device_code_grant(grant, client)
+        let ctx = PolicyViolationContext::for_device_code_grant(grant, client, res.violations)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
             .with_language(locale);
@@ -266,7 +266,7 @@ pub(crate) async fn post(
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
 
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = PolicyViolationContext::for_device_code_grant(grant, client)
+        let ctx = PolicyViolationContext::for_device_code_grant(grant, client, res.violations)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
             .with_language(locale);
