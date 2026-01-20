@@ -466,7 +466,8 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
         let res = sqlx::query_scalar!(
             r#"
-                WITH to_delete AS (
+                WITH
+                  to_delete AS (
                     SELECT upstream_oauth_link_id
                     FROM upstream_oauth_links
                     WHERE user_id IS NULL
@@ -474,7 +475,12 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
                     AND upstream_oauth_link_id <= $2
                     ORDER BY upstream_oauth_link_id
                     LIMIT $3
-                )
+                  ),
+                  deleted_sessions AS (
+                    DELETE FROM upstream_oauth_authorization_sessions
+                    USING to_delete
+                    WHERE upstream_oauth_authorization_sessions.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
+                  )
                 DELETE FROM upstream_oauth_links
                 USING to_delete
                 WHERE upstream_oauth_links.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
