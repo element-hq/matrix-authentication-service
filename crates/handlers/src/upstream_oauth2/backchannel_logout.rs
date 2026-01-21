@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -249,14 +250,14 @@ pub(crate) async fn post(
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly => {
             let filter = BrowserSessionFilter::new()
-                .authenticated_by_upstream_sessions_only(auth_session_filter)
+                .linked_to_upstream_sessions_only(auth_session_filter)
                 .active_only();
             let affected = repo.browser_session().finish_bulk(&clock, filter).await?;
             tracing::info!("Finished {affected} browser sessions");
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutAll => {
-            let browser_session_filter = BrowserSessionFilter::new()
-                .authenticated_by_upstream_sessions_only(auth_session_filter);
+            let browser_session_filter =
+                BrowserSessionFilter::new().linked_to_upstream_sessions_only(auth_session_filter);
 
             // We need to loop through all the browser sessions to find all the
             // users affected so that we can trigger a device sync job for them
