@@ -580,7 +580,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         ),
         err,
     )]
-    async fn cleanup(
+    async fn cleanup_orphaned(
         &mut self,
         since: Option<Ulid>,
         until: Ulid,
@@ -596,6 +596,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
                     FROM upstream_oauth_authorization_sessions
                     WHERE ($1::uuid IS NULL OR upstream_oauth_authorization_session_id > $1)
                       AND upstream_oauth_authorization_session_id <= $2
+                      AND user_session_id IS NULL
                     ORDER BY upstream_oauth_authorization_session_id
                     LIMIT $3
                 )

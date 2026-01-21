@@ -345,7 +345,7 @@ impl RunnableJob for CleanupUpstreamOAuthSessionsJob {
             let mut repo = state.repository().await.map_err(JobError::retry)?;
             let (count, cursor) = repo
                 .upstream_oauth_session()
-                .cleanup(since, until, BATCH_SIZE)
+                .cleanup_orphaned(since, until, BATCH_SIZE)
                 .await
                 .map_err(JobError::retry)?;
             repo.save().await.map_err(JobError::retry)?;

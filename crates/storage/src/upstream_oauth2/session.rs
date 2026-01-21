@@ -211,9 +211,11 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>)
     -> Result<usize, Self::Error>;
 
-    /// Cleanup old authorization sessions
+    /// Cleanup old authorization sessions that are not linked to a user session
     ///
     /// This will delete sessions with IDs up to and including `until`.
+    /// Authorization sessions with a user session linked must be kept around to
+    /// avoid breaking features like OIDC Backchannel Logout.
     ///
     /// Returns the number of sessions deleted and the cursor for the next batch
     ///
@@ -227,7 +229,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    async fn cleanup(
+    async fn cleanup_orphaned(
         &mut self,
         since: Option<Ulid>,
         until: Ulid,
@@ -277,7 +279,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
 
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>) -> Result<usize, Self::Error>;
 
-    async fn cleanup(
+    async fn cleanup_orphaned(
         &mut self,
         since: Option<Ulid>,
         until: Ulid,
