@@ -221,6 +221,18 @@ pub(crate) async fn get(
             .context("Authorization session has no upstream link associated with it")
             .map_err(InternalError::from_anyhow)?;
 
+        if upstream_oauth_authorization_session.is_consumed() {
+            // This means an authorization session was used to create multiple
+            // user registrations. This can happen if the user goes back in
+            // their navigation history and basically registers twice. We also
+            // used to consume the session earlier in the flow, so it's also
+            // possible that it happens during the rollout of that version. This
+            // is not going to happen often enough to have a dedicated page
+            return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                "The upstream authorization session was already used. Try registering again"
+            )));
+        }
+
         let upstream_oauth_link = repo
             .upstream_oauth_link()
             .lookup(link_id)
@@ -307,6 +319,11 @@ pub(crate) async fn get(
     }
 
     if let Some((upstream_session, upstream_link)) = upstream_oauth {
+        let upstream_session = repo
+            .upstream_oauth_session()
+            .consume(&clock, upstream_session)
+            .await?;
+
         repo.upstream_oauth_link()
             .associate_to_user(&upstream_link, &user)
             .await?;

@@ -1246,10 +1246,6 @@ async fn prepare_user_registration(
         .set_upstream_oauth_authorization_session(registration, &upstream_session)
         .await?;
 
-    repo.upstream_oauth_session()
-        .consume(clock, upstream_session)
-        .await?;
-
     Ok(registration)
 }
 
