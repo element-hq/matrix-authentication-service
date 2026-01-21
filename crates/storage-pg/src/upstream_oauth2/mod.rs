@@ -167,11 +167,24 @@ mod tests {
         assert!(!session.is_consumed());
         assert_eq!(session.link_id(), Some(link.id));
 
-        let session = repo
-            .upstream_oauth_session()
-            .consume(&clock, session)
+        // We need to create a user and start a browser session to consume the session
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "john".to_owned())
             .await
             .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &clock, &user, None)
+            .await
+            .unwrap();
+
+        let session = repo
+            .upstream_oauth_session()
+            .consume(&clock, session, &browser_session)
+            .await
+            .unwrap();
+
         // Reload the session
         let session = repo
             .upstream_oauth_session()
@@ -181,11 +194,6 @@ mod tests {
             .expect("session to be found in the database");
         assert!(session.is_consumed());
 
-        let user = repo
-            .user()
-            .add(&mut rng, &clock, "john".to_owned())
-            .await
-            .unwrap();
         repo.upstream_oauth_link()
             .associate_to_user(&link, &user)
             .await

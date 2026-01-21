@@ -278,7 +278,7 @@ pub(crate) async fn get(
             // user. Mark the session as consumed and renew the authentication.
             let upstream_session = repo
                 .upstream_oauth_session()
-                .consume(&clock, upstream_session)
+                .consume(&clock, upstream_session, &session)
                 .await?;
 
             repo.browser_session()
@@ -358,7 +358,7 @@ pub(crate) async fn get(
 
             let upstream_session = repo
                 .upstream_oauth_session()
-                .consume(&clock, upstream_session)
+                .consume(&clock, upstream_session, &session)
                 .await?;
 
             repo.browser_session()
@@ -697,7 +697,7 @@ pub(crate) async fn get(
 
                     let upstream_session = repo
                         .upstream_oauth_session()
-                        .consume(&clock, upstream_session)
+                        .consume(&clock, upstream_session, &session)
                         .await?;
 
                     repo.browser_session()
@@ -905,7 +905,7 @@ pub(crate) async fn post(
 
             let upstream_session = repo
                 .upstream_oauth_session()
-                .consume(&clock, upstream_session)
+                .consume(&clock, upstream_session, &session)
                 .await?;
 
             repo.browser_session()

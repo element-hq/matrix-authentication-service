@@ -7,7 +7,8 @@
 
 use async_trait::async_trait;
 use mas_data_model::{
-    Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProvider,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink,
+    UpstreamOAuthProvider,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -167,6 +168,8 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     ///
     /// * `clock`: the clock source
     /// * `upstream_oauth_authorization_session`: the session to consume
+    /// * `browser_session`: the browser session that was authenticated with
+    ///   this authorization session
     ///
     /// # Errors
     ///
@@ -175,6 +178,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
+        browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     /// List [`UpstreamOAuthAuthorizationSession`] with the given filter and
@@ -262,6 +266,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
+        browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     async fn list(

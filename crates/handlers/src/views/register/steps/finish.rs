@@ -321,7 +321,7 @@ pub(crate) async fn get(
     if let Some((upstream_session, upstream_link)) = upstream_oauth {
         let upstream_session = repo
             .upstream_oauth_session()
-            .consume(&clock, upstream_session)
+            .consume(&clock, upstream_session, &user_session)
             .await?;
 
         repo.upstream_oauth_link()

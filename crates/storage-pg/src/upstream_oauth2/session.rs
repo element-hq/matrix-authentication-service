@@ -8,8 +8,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState,
-    UpstreamOAuthLink, UpstreamOAuthProvider,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession,
+    UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink, UpstreamOAuthProvider,
 };
 use mas_storage::{
     Page, Pagination,
@@ -375,15 +375,18 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
+        browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error> {
         let consumed_at = clock.now();
         sqlx::query!(
             r#"
                 UPDATE upstream_oauth_authorization_sessions
-                SET consumed_at = $1
-                WHERE upstream_oauth_authorization_session_id = $2
+                SET consumed_at = $1,
+                    user_session_id = $2
+                WHERE upstream_oauth_authorization_session_id = $3
             "#,
             consumed_at,
+            Uuid::from(browser_session.id),
             Uuid::from(upstream_oauth_authorization_session.id),
         )
         .traced()
