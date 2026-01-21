@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> ønsker å få tilgang til kontoen din.",
+      "continue_to": "Fortsett til <span>%(client_name)s</span>?",
       "heading": "Vil du gi tilgang til kontoen din?",
       "make_sure_you_trust": "Vær sikker på at du stoler på <span>%(client_name)s</span>.",
+      "scope_list_preface": "Ved å fortsette gir du <span>%(client_name)s</span> tillatelse til å:",
       "this_will_allow": "Dette vil tillate <span> %(client_name)s </span> å:",
+      "this_will_setup": "Dette vil konfigurere %(client_name)s (<span>%(client_uri)s</span>) med din %(server_name)s<span></span> -konto.",
+      "use_another_account": "Bruk en annen konto",
       "you_may_be_sharing": "Det kan hende du deler sensitiv informasjon med denne siden eller appen."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Du har gitt tilgang til %(client_name)s. Du kan lukke dette vinduet.",
         "heading": "Tilgang gitt"
-      }
+      },
+      "this_will_setup": "En annen enhet ønsker å konfigurere %(client_name)s (<span>%(client_uri)s</span>) med din %(server_name)s<span></span> -konto. Forsikre deg om at du kjenner igjen denne enheteten."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s på %(device_name)s",
@@ -145,6 +150,9 @@
       "username_too_long": "Brukernavnet er for langt",
       "username_too_short": "Brukernavnet er for kort"
     },
+    "legacy_consent": {
+      "this_will_setup": "Dette vil konfigurere <span>%(client_name)s</span> med din <span>%(server_name)s</span> konto."
+    },
     "login": {
       "call_to_register": "Har du ikke en konto ennå?",
       "continue_with_provider": "Fortsett med %(provider)s",
@@ -172,7 +180,7 @@
     "or_separator": "Eller",
     "policy_violation": {
       "description": "Dette kan skyldes klienten som har opprettet forespørselen, den påloggede brukeren eller selve forespørselen.",
-      "heading": "Autorisasjonsforespørselen ble avvist av policyen som håndheves av denne tjenesten",
+      "heading": "Autorisasjonsforespørselen ble avslått av policyen som håndheves av denne tjenesten",
       "logged_as": "Logget inn som <span class=\"font-semibold\">%(username)s</span>"
     },
     "recovery": {
@@ -226,9 +234,9 @@
     "scope": {
       "edit_profile": "Rediger din profil og kontaktdetaljer",
       "manage_sessions": "Administrer enhetene og sesjonene dine",
-      "mas_admin": "Administrer alle brukere på matrix-authentication-service",
+      "mas_admin": "Administrer brukere (urn:mas:admin)",
       "send_messages": "Send nye meldinger på dine vegne",
-      "synapse_admin": "Administrer Synapse-hjemmeserveren",
+      "synapse_admin": "Administrer serveren (urn:synapse:admin:*)",
       "view_messages": "Se dine eksisterende meldinger og data",
       "view_profile": "Se din profilinformasjon og kontaktdetaljer"
     },

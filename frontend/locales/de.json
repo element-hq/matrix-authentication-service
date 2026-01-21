@@ -391,9 +391,9 @@
     "scope": {
       "edit_profile": "Bearbeite dein Profil und deine Kontaktdaten",
       "manage_sessions": "Verwalte deine Geräte und Sitzungen",
-      "mas_admin": "Beliebige Benutzer verwalten",
+      "mas_admin": "Beliebige Benutzer verwalten (urn:mas:admin)",
       "send_messages": "Neue Nachrichten in deinem Namen senden",
-      "synapse_admin": "Den Synapse-Homeserver verwalten",
+      "synapse_admin": "Den Synapse-Homeserver verwalten (urn:synapse:admin:*)",
       "view_messages": "Zeig deine vorhandenen Nachrichten und Daten an",
       "view_profile": "Deine Profilinfos und Kontaktdaten anzeigen"
     }

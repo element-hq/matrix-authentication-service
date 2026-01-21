@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "A(z) <span>%(client_name)s</span> (itt: <span>%(redirect_uri)s</span>) hozzá akar férni a fiókjához.",
+      "continue_to": "Továbblép ide: <span>%(client_name)s</span>?",
       "heading": "Engedélyezi a hozzáférést a fiókjához?",
       "make_sure_you_trust": "Győződjön meg arról, hogy megbízik a(z) <span>%(client_name)s</span> kliensben.",
+      "scope_list_preface": "A folytatással engedélyezi ezeket a(z) <span>%(client_name)s</span> számára:",
       "this_will_allow": "Ez lehetővé teszi, hogy a(z) <span>%(client_name)s</span> a következőket tegye:",
+      "this_will_setup": "Ez beállítja a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával.",
+      "use_another_account": "Másik fiók használata",
       "you_may_be_sharing": "Bizalmas információkat oszthat meg ezzel az oldallal vagy alkalmazással."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megadva"
-      }
+      },
+      "this_will_setup": "Egy másik eszköz szeretné beállítani a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával. Győződjön meg arról, hogy felismeri az eszközt."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s ezen: %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "A felhasználónév már foglalt",
       "username_too_long": "A felhasználónév túl hosszú",
       "username_too_short": "A felhasználónév túl rövid"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Egy beállítja a(z) <span>%(client_name)s</span> klienst a(z) <span>%(server_name)s</span> fiókjával."
     },
     "login": {
       "call_to_register": "Még nincs fiókja?",
@@ -226,9 +234,9 @@
     "scope": {
       "edit_profile": "Profil és elérhetőségek szerkesztése",
       "manage_sessions": "Eszközök és munkamenetek kezelése",
-      "mas_admin": "Bármely felhasználó kezelése a matrix-authentication-service szolgáltatásban",
+      "mas_admin": "Felhasználók kezelése (urn:mas:admin)",
       "send_messages": "Új üzenetek küldése az Ön nevében",
-      "synapse_admin": "A Synapse Matrix-kiszolgáló kezelése",
+      "synapse_admin": "A kiszolgáló kezelése (urn:synapse:admin:*)",
       "view_messages": "Meglévő üzenetek és adatok megtekintése",
       "view_profile": "Saját profilinformációk és kapcsolati részletek megtekintése"
     },
