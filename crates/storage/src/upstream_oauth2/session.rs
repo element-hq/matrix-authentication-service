@@ -7,7 +7,8 @@
 
 use async_trait::async_trait;
 use mas_data_model::{
-    Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink, UpstreamOAuthProvider,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink,
+    UpstreamOAuthProvider,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -167,6 +168,8 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     ///
     /// * `clock`: the clock source
     /// * `upstream_oauth_authorization_session`: the session to consume
+    /// * `browser_session`: the browser session that was authenticated with
+    ///   this authorization session
     ///
     /// # Errors
     ///
@@ -175,6 +178,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
+        browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     /// List [`UpstreamOAuthAuthorizationSession`] with the given filter and
@@ -207,9 +211,11 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>)
     -> Result<usize, Self::Error>;
 
-    /// Cleanup old authorization sessions
+    /// Cleanup old authorization sessions that are not linked to a user session
     ///
     /// This will delete sessions with IDs up to and including `until`.
+    /// Authorization sessions with a user session linked must be kept around to
+    /// avoid breaking features like OIDC Backchannel Logout.
     ///
     /// Returns the number of sessions deleted and the cursor for the next batch
     ///
@@ -223,7 +229,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    async fn cleanup(
+    async fn cleanup_orphaned(
         &mut self,
         since: Option<Ulid>,
         until: Ulid,
@@ -262,6 +268,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
         &mut self,
         clock: &dyn Clock,
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
+        browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
     async fn list(
@@ -272,7 +279,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
 
     async fn count(&mut self, filter: UpstreamOAuthSessionFilter<'_>) -> Result<usize, Self::Error>;
 
-    async fn cleanup(
+    async fn cleanup_orphaned(
         &mut self,
         since: Option<Ulid>,
         until: Ulid,
