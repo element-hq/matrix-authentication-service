@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                    to_delete AS (\n                        SELECT oauth2_session_id, finished_at\n                        FROM oauth2_sessions\n                        WHERE finished_at IS NOT NULL\n                          AND ($1::timestamptz IS NULL OR finished_at >= $1)\n                          AND finished_at < $2\n                        ORDER BY finished_at ASC\n                        LIMIT $3\n                        FOR UPDATE\n                    ),\n                    deleted_refresh_tokens AS (\n                        DELETE FROM oauth2_refresh_tokens USING to_delete\n                        WHERE oauth2_refresh_tokens.oauth2_session_id = to_delete.oauth2_session_id\n                    ),\n                    deleted_access_tokens AS (\n                        DELETE FROM oauth2_access_tokens USING to_delete\n                        WHERE oauth2_access_tokens.oauth2_session_id = to_delete.oauth2_session_id\n                    ),\n                    deleted_sessions AS (\n                        DELETE FROM oauth2_sessions USING to_delete\n                        WHERE oauth2_sessions.oauth2_session_id = to_delete.oauth2_session_id\n                        RETURNING oauth2_sessions.finished_at\n                    )\n                SELECT COUNT(*) as \"count!\", MAX(finished_at) as last_finished_at FROM deleted_sessions\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_finished_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d8f0b02952e786dd4309eac9de04a359aea3a46e5d4e07764cec56ce5d6609c0"
+}

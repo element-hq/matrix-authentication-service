@@ -135,6 +135,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::CleanupConsumedOAuthRefreshTokensJob>()
         .register_handler::<mas_storage::queue::CleanupUserRegistrationsJob>()
         .register_handler::<mas_storage::queue::CleanupFinishedCompatSessionsJob>()
+        .register_handler::<mas_storage::queue::CleanupFinishedOAuth2SessionsJob>()
         .register_handler::<mas_storage::queue::CleanupOAuthAuthorizationGrantsJob>()
         .register_handler::<mas_storage::queue::CleanupOAuthDeviceCodeGrantsJob>()
         .register_handler::<mas_storage::queue::CleanupUserRecoverySessionsJob>()
@@ -186,6 +187,12 @@ pub async fn init(
             // Run this job every hour
             "0 40 * * * *".parse()?,
             mas_storage::queue::CleanupFinishedCompatSessionsJob,
+        )
+        .add_schedule(
+            "cleanup-finished-oauth2-sessions",
+            // Run this job every hour
+            "0 42 * * * *".parse()?,
+            mas_storage::queue::CleanupFinishedOAuth2SessionsJob,
         )
         .add_schedule(
             "cleanup-oauth-authorization-grants",
