@@ -374,6 +374,14 @@ impl InsertableJob for CleanupFinishedOAuth2SessionsJob {
     const QUEUE_NAME: &'static str = "cleanup-finished-oauth2-sessions";
 }
 
+/// Cleanup finished user/browser sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupFinishedUserSessionsJob;
+
+impl InsertableJob for CleanupFinishedUserSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-finished-user-sessions";
+}
+
 /// Cleanup old OAuth 2.0 authorization grants
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CleanupOAuthAuthorizationGrantsJob;

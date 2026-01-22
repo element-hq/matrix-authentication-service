@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                    to_delete AS (\n                        SELECT user_session_id, finished_at\n                        FROM user_sessions us\n                        WHERE us.finished_at IS NOT NULL\n                          AND ($1::timestamptz IS NULL OR us.finished_at >= $1)\n                          AND us.finished_at < $2\n                          -- Only delete if no oauth2_sessions reference this user_session\n                          AND NOT EXISTS (\n                              SELECT 1 FROM oauth2_sessions os\n                              WHERE os.user_session_id = us.user_session_id\n                          )\n                          -- Only delete if no compat_sessions reference this user_session\n                          AND NOT EXISTS (\n                              SELECT 1 FROM compat_sessions cs\n                              WHERE cs.user_session_id = us.user_session_id\n                          )\n                        ORDER BY us.finished_at ASC\n                        LIMIT $3\n                        FOR UPDATE OF us\n                    ),\n                    deleted_authentications AS (\n                        DELETE FROM user_session_authentications USING to_delete\n                        WHERE user_session_authentications.user_session_id = to_delete.user_session_id\n                    ),\n                    deleted_sessions AS (\n                        DELETE FROM user_sessions USING to_delete\n                        WHERE user_sessions.user_session_id = to_delete.user_session_id\n                        RETURNING user_sessions.finished_at\n                    )\n                SELECT COUNT(*) as \"count!\", MAX(finished_at) as last_finished_at FROM deleted_sessions\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_finished_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d95cd1b4bcfa1d7bb236d49e1956fcc9a684609956972fe4f95aac13f30b2530"
+}
