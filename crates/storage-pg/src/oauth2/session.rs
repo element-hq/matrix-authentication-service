@@ -592,4 +592,43 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
 
         Ok(session)
     }
+
+    #[tracing::instrument(
+        name = "db.oauth2_session.find_by_browser_session",
+        skip_all,
+        fields(
+            db.query.text,
+            session.id = %id,
+        ),
+        err,
+    )]
+    async fn find_by_browser_session(&mut self, id: Ulid) -> Result<Option<Session>, Self::Error> {
+        let res = sqlx::query_as!(
+            OAuthSessionLookup,
+            r#"
+                SELECT oauth2_session_id
+                     , user_id
+                     , user_session_id
+                     , oauth2_client_id
+                     , scope_list
+                     , created_at
+                     , finished_at
+                     , user_agent
+                     , last_active_at
+                     , last_active_ip as "last_active_ip: IpAddr"
+                     , human_name
+                FROM oauth2_sessions
+
+                WHERE user_session_id = $1
+            "#,
+            Uuid::from(id),
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        let Some(session) = res else { return Ok(None) };
+
+        Ok(Some(session.try_into()?))
+    }
 }
