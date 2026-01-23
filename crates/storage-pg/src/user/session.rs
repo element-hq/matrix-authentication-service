@@ -630,4 +630,69 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
 
         Ok(())
     }
+
+    #[tracing::instrument(
+        name = "db.browser_session.cleanup_finished",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT user_session_id, finished_at
+                        FROM user_sessions us
+                        WHERE us.finished_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR us.finished_at >= $1)
+                          AND us.finished_at < $2
+                          -- Only delete if no oauth2_sessions reference this user_session
+                          AND NOT EXISTS (
+                              SELECT 1 FROM oauth2_sessions os
+                              WHERE os.user_session_id = us.user_session_id
+                          )
+                          -- Only delete if no compat_sessions reference this user_session
+                          AND NOT EXISTS (
+                              SELECT 1 FROM compat_sessions cs
+                              WHERE cs.user_session_id = us.user_session_id
+                          )
+                        ORDER BY us.finished_at ASC
+                        LIMIT $3
+                        FOR UPDATE OF us
+                    ),
+                    deleted_authentications AS (
+                        DELETE FROM user_session_authentications USING to_delete
+                        WHERE user_session_authentications.user_session_id = to_delete.user_session_id
+                    ),
+                    deleted_sessions AS (
+                        DELETE FROM user_sessions USING to_delete
+                        WHERE user_sessions.user_session_id = to_delete.user_session_id
+                        RETURNING user_sessions.finished_at
+                    )
+                SELECT COUNT(*) as "count!", MAX(finished_at) as last_finished_at FROM deleted_sessions
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_finished_at,
+        ))
+    }
 }
