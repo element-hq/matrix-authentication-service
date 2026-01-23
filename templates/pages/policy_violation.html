@@ -8,16 +8,25 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% set is_too_many_sessions = violations | length == 1 and violations[0].code == "too-many-sessions" %}
+
 {% block content %}
   <header class="page-heading">
     <div class="icon invalid">
       {{ icon.error_solid() }}
     </div>
 
-    <div class="header">
-      <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
-      <p class="text">{{ _("mas.policy_violation.description") }}</p>
-    </div>
+    {% if is_too_many_sessions %}
+      <div class="header">
+        <h1 class="title">{{ _("mas.policy_violation.too_many_sessions.heading") }}</h1>
+        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description") }}</p>
+      </div>
+    {% else %}
+      <div class="header">
+        <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
+        <p class="text">{{ _("mas.policy_violation.description") }}</p>
+      </div>
+    {% endif %}
   </header>
 
   <main class="flex flex-col gap-10">
@@ -37,6 +46,10 @@ Please see LICENSE files in the repository root for full details.
 
       {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=True) }}
     </div>
+
+    {% if is_too_many_sessions %}
+      {{ button.link(text=_("mas.policy_violation.too_many_sessions.manage_devices"), href="/account/sessions") }}
+    {% endif %}
 
     {# We only show the cancel button if we're in an authorization code flow, not in the device code flow. #}
     {% if grant.grant_type == "authorization_code" %}

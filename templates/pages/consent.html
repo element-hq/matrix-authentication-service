@@ -68,9 +68,7 @@ Please see LICENSE files in the repository root for full details.
     </form>
 
     {% call logout.button(csrf_token=csrf_token, post_logout_action=action) %}
-      <button type="submit" class="cpd-button primary" data-kind="secondary" data-size="lg" type="submit">
-        {{ _("mas.consent.use_another_account") }}
-      </button>
+      {{ button.button(text=_("mas.consent.use_another_account"), kind="secondary", type="submit") }}
     {% endcall %}
 
     {{ back_to_client.link(
