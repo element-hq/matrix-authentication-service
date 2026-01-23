@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -41,7 +42,7 @@ pub struct BrowserSessionFilter<'a> {
     state: Option<BrowserSessionState>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
-    authenticated_by_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
+    linked_to_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
 }
 
 impl<'a> BrowserSessionFilter<'a> {
@@ -114,21 +115,20 @@ impl<'a> BrowserSessionFilter<'a> {
         self.state
     }
 
-    /// Only return browser sessions authenticated by the given upstream OAuth
-    /// sessions
+    /// Only return browser sessions linked to the given upstream OAuth sessions
     #[must_use]
-    pub fn authenticated_by_upstream_sessions_only(
+    pub fn linked_to_upstream_sessions_only(
         mut self,
         filter: UpstreamOAuthSessionFilter<'a>,
     ) -> Self {
-        self.authenticated_by_upstream_sessions = Some(filter);
+        self.linked_to_upstream_sessions = Some(filter);
         self
     }
 
     /// Get the upstream OAuth session filter
     #[must_use]
-    pub fn authenticated_by_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
-        self.authenticated_by_upstream_sessions
+    pub fn linked_to_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
+        self.linked_to_upstream_sessions
     }
 }
 

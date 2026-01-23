@@ -211,16 +211,12 @@ pub async fn init(
             "0 57 * * * *".parse()?,
             mas_storage::queue::CleanupUserEmailAuthenticationsJob,
         )
-        // This job is currently disabled, as it needs a database backfill to
-        // happen, which will happen in the next release. Some context in
-        // https://github.com/element-hq/matrix-authentication-service/issues/5435
-        //
-        //.add_schedule(
-        //    "cleanup-upstream-oauth-sessions",
-        //    // Run this job every hour
-        //    "0 58 * * * *".parse()?,
-        //    mas_storage::queue::CleanupUpstreamOAuthSessionsJob,
-        //)
+        .add_schedule(
+            "cleanup-upstream-oauth-sessions",
+            // Run this job every hour
+            "0 58 * * * *".parse()?,
+            mas_storage::queue::CleanupUpstreamOAuthSessionsJob,
+        )
         .add_schedule(
             "cleanup-upstream-oauth-links",
             // Run this job every hour

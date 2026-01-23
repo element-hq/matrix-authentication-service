@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -799,8 +800,8 @@ async fn test_user_session(pool: PgPool) {
     // This will match all authorization sessions, which matches exactly that one
     // authorization session
     let upstream_oauth_session_filter = UpstreamOAuthSessionFilter::new();
-    let filter = BrowserSessionFilter::new()
-        .authenticated_by_upstream_sessions_only(upstream_oauth_session_filter);
+    let filter =
+        BrowserSessionFilter::new().linked_to_upstream_sessions_only(upstream_oauth_session_filter);
 
     // Now try to look it up
     let page = repo
