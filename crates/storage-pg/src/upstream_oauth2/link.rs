@@ -449,9 +449,9 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         skip_all,
         fields(
             db.query.text,
-            since,
-            until,
-            limit,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
         ),
         err,
     )]

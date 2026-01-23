@@ -44,6 +44,7 @@
 - [Releasing](./development/releasing.md)
 - [Architecture](./development/architecture.md)
 - [Database](./development/database.md)
+- [Cleanup jobs](./development/cleanup-jobs.md)
 - [Internal GraphQL API](./development/graphql.md)
 
 ---

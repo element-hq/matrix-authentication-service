@@ -255,6 +255,9 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
         skip_all,
         fields(
             db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
         ),
         err,
     )]
@@ -309,6 +312,9 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
         skip_all,
         fields(
             db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
         ),
         err,
     )]
