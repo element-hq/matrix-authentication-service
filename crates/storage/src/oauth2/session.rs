@@ -485,6 +485,26 @@ pub trait OAuth2SessionRepository: Send + Sync {
         until: DateTime<Utc>,
         limit: usize,
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    /// Clear IP addresses from sessions inactive since the threshold
+    ///
+    /// Sets `last_active_ip` to `NULL` for sessions where `last_active_at` is
+    /// before the threshold. Returns the number of sessions affected.
+    ///
+    /// # Parameters
+    ///
+    /// * `threshold`: Clear IPs for sessions with `last_active_at` before this
+    ///   time
+    /// * `limit`: Maximum number of sessions to update in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_inactive_ips(
+        &mut self,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(OAuth2SessionRepository:
@@ -557,4 +577,10 @@ repository_impl!(OAuth2SessionRepository:
         until: DateTime<Utc>,
         limit: usize,
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    async fn cleanup_inactive_ips(
+        &mut self,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 );

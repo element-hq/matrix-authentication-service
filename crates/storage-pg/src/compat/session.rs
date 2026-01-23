@@ -758,4 +758,48 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             res.last_finished_at,
         ))
     }
+
+    #[tracing::instrument(
+        name = "db.compat_session.cleanup_inactive_ips",
+        skip_all,
+        fields(
+            db.query.text,
+            threshold = %threshold,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_inactive_ips(
+        &mut self,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error> {
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_update AS (
+                    SELECT compat_session_id
+                    FROM compat_sessions
+                    WHERE last_active_ip IS NOT NULL
+                      AND last_active_at IS NOT NULL
+                      AND last_active_at < $1
+                    LIMIT $2
+                ),
+                updated AS (
+                    UPDATE compat_sessions
+                    SET last_active_ip = NULL
+                    FROM to_update
+                    WHERE compat_sessions.compat_session_id = to_update.compat_session_id
+                    RETURNING 1
+                )
+                SELECT COUNT(*) AS "count!" FROM updated
+            "#,
+            threshold,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok(res.try_into().unwrap_or(usize::MAX))
+    }
 }

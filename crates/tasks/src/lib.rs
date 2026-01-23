@@ -158,6 +158,9 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveUserSessionsJob>()
         .register_handler::<mas_storage::queue::PruneStalePolicyDataJob>()
+        .register_handler::<mas_storage::queue::CleanupInactiveOAuth2SessionIpsJob>()
+        .register_handler::<mas_storage::queue::CleanupInactiveCompatSessionIpsJob>()
+        .register_handler::<mas_storage::queue::CleanupInactiveUserSessionIpsJob>()
         .register_deprecated_queue("cleanup-expired-tokens")
         .add_schedule(
             "cleanup-revoked-oauth-access-tokens",
@@ -264,6 +267,24 @@ pub async fn init(
             // Run once a day
             "0 0 2 * * *".parse()?,
             mas_storage::queue::PruneStalePolicyDataJob,
+        )
+        .add_schedule(
+            "cleanup-inactive-oauth2-session-ips",
+            // Run this job every hour
+            "0 46 * * * *".parse()?,
+            mas_storage::queue::CleanupInactiveOAuth2SessionIpsJob,
+        )
+        .add_schedule(
+            "cleanup-inactive-compat-session-ips",
+            // Run this job every hour
+            "0 47 * * * *".parse()?,
+            mas_storage::queue::CleanupInactiveCompatSessionIpsJob,
+        )
+        .add_schedule(
+            "cleanup-inactive-user-session-ips",
+            // Run this job every hour
+            "0 48 * * * *".parse()?,
+            mas_storage::queue::CleanupInactiveUserSessionIpsJob,
         );
 
     Ok(worker)

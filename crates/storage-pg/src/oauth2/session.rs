@@ -652,4 +652,48 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             res.last_finished_at,
         ))
     }
+
+    #[tracing::instrument(
+        name = "db.oauth2_session.cleanup_inactive_ips",
+        skip_all,
+        fields(
+            db.query.text,
+            threshold = %threshold,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_inactive_ips(
+        &mut self,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error> {
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_update AS (
+                    SELECT oauth2_session_id
+                    FROM oauth2_sessions
+                    WHERE last_active_ip IS NOT NULL
+                      AND last_active_at IS NOT NULL
+                      AND last_active_at < $1
+                    LIMIT $2
+                ),
+                updated AS (
+                    UPDATE oauth2_sessions
+                    SET last_active_ip = NULL
+                    FROM to_update
+                    WHERE oauth2_sessions.oauth2_session_id = to_update.oauth2_session_id
+                    RETURNING 1
+                )
+                SELECT COUNT(*) AS "count!" FROM updated
+            "#,
+            threshold,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok(res.try_into().unwrap_or(usize::MAX))
+    }
 }
