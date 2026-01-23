@@ -800,16 +800,18 @@ impl RunnableJob for CleanupInactiveOAuth2SessionIpsJob {
         let threshold = state.clock.now() - chrono::Duration::days(30);
         let mut total = 0;
 
+        let mut since = None;
         while !context.cancellation_token.is_cancelled() {
             let mut repo = state.repository().await.map_err(JobError::retry)?;
 
-            let count = repo
+            let (count, last_active_at) = repo
                 .oauth2_session()
-                .cleanup_inactive_ips(threshold, BATCH_SIZE)
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
                 .await
                 .map_err(JobError::retry)?;
             repo.save().await.map_err(JobError::retry)?;
 
+            since = last_active_at;
             total += count;
 
             if count != BATCH_SIZE {
@@ -839,16 +841,18 @@ impl RunnableJob for CleanupInactiveCompatSessionIpsJob {
         let threshold = state.clock.now() - chrono::Duration::days(30);
         let mut total = 0;
 
+        let mut since = None;
         while !context.cancellation_token.is_cancelled() {
             let mut repo = state.repository().await.map_err(JobError::retry)?;
 
-            let count = repo
+            let (count, last_active_at) = repo
                 .compat_session()
-                .cleanup_inactive_ips(threshold, BATCH_SIZE)
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
                 .await
                 .map_err(JobError::retry)?;
             repo.save().await.map_err(JobError::retry)?;
 
+            since = last_active_at;
             total += count;
 
             if count != BATCH_SIZE {
@@ -878,16 +882,18 @@ impl RunnableJob for CleanupInactiveUserSessionIpsJob {
         let threshold = state.clock.now() - chrono::Duration::days(30);
         let mut total = 0;
 
+        let mut since = None;
         while !context.cancellation_token.is_cancelled() {
             let mut repo = state.repository().await.map_err(JobError::retry)?;
 
-            let count = repo
+            let (count, last_active_at) = repo
                 .browser_session()
-                .cleanup_inactive_ips(threshold, BATCH_SIZE)
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
                 .await
                 .map_err(JobError::retry)?;
             repo.save().await.map_err(JobError::retry)?;
 
+            since = last_active_at;
             total += count;
 
             if count != BATCH_SIZE {

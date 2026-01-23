@@ -764,6 +764,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         skip_all,
         fields(
             db.query.text,
+            since = since.map(tracing::field::display),
             threshold = %threshold,
             limit = limit,
         ),
@@ -771,28 +772,33 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     )]
     async fn cleanup_inactive_ips(
         &mut self,
+        since: Option<DateTime<Utc>>,
         threshold: DateTime<Utc>,
         limit: usize,
-    ) -> Result<usize, Self::Error> {
-        let res = sqlx::query_scalar!(
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
             r#"
                 WITH to_update AS (
-                    SELECT compat_session_id
+                    SELECT compat_session_id, last_active_at
                     FROM compat_sessions
                     WHERE last_active_ip IS NOT NULL
                       AND last_active_at IS NOT NULL
-                      AND last_active_at < $1
-                    LIMIT $2
+                      AND ($1::timestamptz IS NULL OR last_active_at >= $1)
+                      AND last_active_at < $2
+                    ORDER BY last_active_at ASC
+                    LIMIT $3
+                    FOR UPDATE
                 ),
                 updated AS (
                     UPDATE compat_sessions
                     SET last_active_ip = NULL
                     FROM to_update
                     WHERE compat_sessions.compat_session_id = to_update.compat_session_id
-                    RETURNING 1
+                    RETURNING compat_sessions.last_active_at
                 )
-                SELECT COUNT(*) AS "count!" FROM updated
+                SELECT COUNT(*) AS "count!", MAX(last_active_at) AS last_active_at FROM updated
             "#,
+            since,
             threshold,
             i64::try_from(limit).unwrap_or(i64::MAX),
         )
@@ -800,6 +806,9 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         .fetch_one(&mut *self.conn)
         .await?;
 
-        Ok(res.try_into().unwrap_or(usize::MAX))
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_active_at,
+        ))
     }
 }
