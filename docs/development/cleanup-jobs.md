@@ -1,6 +1,6 @@
 # Cleanup Jobs
 
-In MAS, most of the data only soft-deleted, through setting a `deleted_at`, `finished_at`, `consumed_at` timestamp on the row, instead of actually deleting the row.
+In MAS, most of the data are initially only soft-deleted, by setting a `deleted_at`, `finished_at`, `consumed_at` timestamp on the row, instead of actually deleting the row.
 They are kept around for a short period of time, for audit purposes or to help with the user experience in some case.
 This document describes the cleanup jobs in MAS which delete those stale rows after some time, including how to add new cleanup jobs and understand the existing ones.
 
