@@ -46,6 +46,7 @@ impl Default for DatabaseConfig {
             socket: None,
             username: None,
             password: None,
+            password_file: None,
             database: None,
             ssl_mode: None,
             ssl_ca: None,
@@ -135,6 +136,15 @@ pub struct DatabaseConfig {
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
+
+    /// Path to the password to be used if the server demands password
+    /// authentication
+    ///
+    /// This must not be specified if the `password` or `uri` option is
+    /// specified.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<String>")]
+    pub password_file: Option<Utf8PathBuf>,
 
     /// The database name
     ///
@@ -241,12 +251,20 @@ impl ConfigurationSection for DatabaseConfig {
             || self.socket.is_some()
             || self.username.is_some()
             || self.password.is_some()
+            || self.password_file.is_some()
             || self.database.is_some();
 
         if self.uri.is_some() && has_split_options {
             return Err(annotate(figment::error::Error::from(
-                "uri must not be specified if host, port, socket, username, password, or database are specified".to_owned(),
+                "uri must not be specified if host, port, socket, username, password, password_file, or database are specified".to_owned(),
             )).into());
+        }
+
+        if self.password.is_some() && self.password_file.is_some() {
+            return Err(annotate(figment::error::Error::from(
+                "password must not be specified if password_file is specified".to_owned(),
+            ))
+            .into());
         }
 
         if self.ssl_ca.is_some() && self.ssl_ca_file.is_some() {

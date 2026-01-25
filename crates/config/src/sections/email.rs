@@ -8,6 +8,7 @@
 
 use std::{num::NonZeroU16, str::FromStr};
 
+use camino::Utf8PathBuf;
 use lettre::message::Mailbox;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
@@ -95,16 +96,24 @@ pub struct EmailConfig {
     /// SMTP transport: Username for use to authenticate when connecting to the
     /// SMTP server
     ///
-    /// Must be set if the `password` field is set
+    /// Must be set if the `password` or `password_file` field is set
     #[serde(skip_serializing_if = "Option::is_none")]
     username: Option<String>,
 
     /// SMTP transport: Password for use to authenticate when connecting to the
     /// SMTP server
     ///
-    /// Must be set if the `username` field is set
+    /// Must be set if the `username` but not `password_file` field is set
     #[serde(skip_serializing_if = "Option::is_none")]
     password: Option<String>,
+
+    /// SMTP transport: Path to the password for use to authenticate when
+    /// connecting to the SMTP server
+    ///
+    /// Must be set if the `username` but not `password` field is set
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<String>")]
+    password_file: Option<Utf8PathBuf>,
 
     /// Sendmail transport: Command to use to send emails
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -145,8 +154,12 @@ impl EmailConfig {
 
     /// Password for use to authenticate when connecting to the SMTP server
     #[must_use]
-    pub fn password(&self) -> Option<&str> {
-        self.password.as_deref()
+    pub fn password(&self) -> Option<String> {
+        if let Some(password_file) = &self.password_file {
+            return std::fs::read_to_string(password_file).ok();
+        }
+
+        self.password.clone()
     }
 
     /// Command to use to send emails
@@ -167,6 +180,7 @@ impl Default for EmailConfig {
             port: None,
             username: None,
             password: None,
+            password_file: None,
             command: None,
         }
     }
@@ -192,6 +206,10 @@ impl ConfigurationSection for EmailConfig {
             error_on_field(figment::error::Error::missing_field(field), field)
         };
 
+        let duplicate_field = |field: &'static str, duplicate: &'static str| {
+            error_on_field(figment::error::Error::duplicate_field(duplicate), field)
+        };
+
         let unexpected_field = |field: &'static str, expected_fields: &'static [&'static str]| {
             error_on_field(
                 figment::error::Error::unknown_field(field, expected_fields),
@@ -211,7 +229,10 @@ impl ConfigurationSection for EmailConfig {
                     return Err(error_on_field(figment::error::Error::custom(e), "reply_to").into());
                 }
 
-                match (self.username.is_some(), self.password.is_some()) {
+                match (
+                    self.username.is_some(),
+                    self.password.is_some() || self.password_file.is_some(),
+                ) {
                     (true, true) | (false, false) => {}
                     (true, false) => {
                         return Err(missing_field("password").into());
@@ -219,6 +240,10 @@ impl ConfigurationSection for EmailConfig {
                     (false, true) => {
                         return Err(missing_field("username").into());
                     }
+                }
+
+                if self.password.is_some() && self.password_file.is_some() {
+                    return Err(duplicate_field("password", "password_file").into());
                 }
 
                 if self.mode.is_none() {
