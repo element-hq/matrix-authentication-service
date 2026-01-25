@@ -177,7 +177,7 @@ impl Options {
             homeserver_connection_from_config(&config.matrix, http_client.clone()).await?;
 
         if !self.no_worker {
-            let mailer = mailer_from_config(&config.email, &templates)?;
+            let mailer = mailer_from_config(&config.email, &templates).await?;
             test_mailer_in_background(&mailer, Duration::from_secs(30));
 
             info!("Starting task worker");
