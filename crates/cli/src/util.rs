@@ -86,7 +86,7 @@ pub fn mailer_from_config(
             let credentials = match (config.username(), config.password()) {
                 (Some(username), Some(password)) => Some(mas_email::SmtpCredentials::new(
                     username.to_owned(),
-                    password.to_owned(),
+                    password.clone(),
                 )),
                 (None, None) => None,
                 _ => {
@@ -315,6 +315,10 @@ fn database_connect_options_from_config(
 
         if let Some(password) = config.password.as_deref() {
             opts = opts.password(password);
+        }
+
+        if let Some(password_file) = config.password_file.as_deref() {
+            opts = opts.password(std::fs::read_to_string(password_file)?.trim());
         }
 
         if let Some(database) = config.database.as_deref() {
