@@ -13,11 +13,13 @@ use async_trait::async_trait;
 use mas_storage::queue::{
     CleanupConsumedOAuthRefreshTokensJob, CleanupExpiredOAuthAccessTokensJob,
     CleanupFinishedCompatSessionsJob, CleanupFinishedOAuth2SessionsJob,
-    CleanupFinishedUserSessionsJob, CleanupOAuthAuthorizationGrantsJob,
-    CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob, CleanupRevokedOAuthAccessTokensJob,
-    CleanupRevokedOAuthRefreshTokensJob, CleanupUpstreamOAuthLinksJob,
-    CleanupUpstreamOAuthSessionsJob, CleanupUserEmailAuthenticationsJob,
-    CleanupUserRecoverySessionsJob, CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
+    CleanupFinishedUserSessionsJob, CleanupInactiveCompatSessionIpsJob,
+    CleanupInactiveOAuth2SessionIpsJob, CleanupInactiveUserSessionIpsJob,
+    CleanupOAuthAuthorizationGrantsJob, CleanupOAuthDeviceCodeGrantsJob, CleanupQueueJobsJob,
+    CleanupRevokedOAuthAccessTokensJob, CleanupRevokedOAuthRefreshTokensJob,
+    CleanupUpstreamOAuthLinksJob, CleanupUpstreamOAuthSessionsJob,
+    CleanupUserEmailAuthenticationsJob, CleanupUserRecoverySessionsJob,
+    CleanupUserRegistrationsJob, PruneStalePolicyDataJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -787,5 +789,128 @@ impl RunnableJob for PruneStalePolicyDataJob {
         }
 
         Ok(())
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupInactiveOAuth2SessionIpsJob {
+    #[tracing::instrument(name = "job.cleanup_inactive_oauth2_session_ips", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Clear IPs from sessions inactive for 30+ days
+        let threshold = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+            let (count, last_active_at) = repo
+                .oauth2_session()
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+
+            since = last_active_at;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no OAuth2 session IPs to clean up");
+        } else {
+            info!(count = total, "cleaned up inactive OAuth2 session IPs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupInactiveCompatSessionIpsJob {
+    #[tracing::instrument(name = "job.cleanup_inactive_compat_session_ips", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Clear IPs from sessions inactive for 30+ days
+        let threshold = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+            let (count, last_active_at) = repo
+                .compat_session()
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+
+            since = last_active_at;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no compat session IPs to clean up");
+        } else {
+            info!(count = total, "cleaned up inactive compat session IPs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupInactiveUserSessionIpsJob {
+    #[tracing::instrument(name = "job.cleanup_inactive_user_session_ips", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        // Clear IPs from sessions inactive for 30+ days
+        let threshold = state.clock.now() - chrono::Duration::days(30);
+        let mut total = 0;
+
+        let mut since = None;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+            let (count, last_active_at) = repo
+                .browser_session()
+                .cleanup_inactive_ips(since, threshold, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+            repo.save().await.map_err(JobError::retry)?;
+
+            since = last_active_at;
+            total += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if total == 0 {
+            debug!("no user session IPs to clean up");
+        } else {
+            info!(count = total, "cleaned up inactive user session IPs");
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
+        Some(Duration::from_secs(10 * 60))
     }
 }

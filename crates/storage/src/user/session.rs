@@ -331,6 +331,30 @@ pub trait BrowserSessionRepository: Send + Sync {
         until: DateTime<Utc>,
         limit: usize,
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    /// Clear IP addresses from sessions inactive since the threshold
+    ///
+    /// Sets `last_active_ip` to `NULL` for sessions where `last_active_at` is
+    /// before the threshold. Returns the number of sessions affected and the
+    /// last `last_active_at` timestamp processed for pagination.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: Only process sessions with `last_active_at` at or after this
+    ///   timestamp (exclusive). If `None`, starts from the beginning.
+    /// * `threshold`: Clear IPs for sessions with `last_active_at` before this
+    ///   time
+    /// * `limit`: Maximum number of sessions to update in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(BrowserSessionRepository:
@@ -392,6 +416,13 @@ repository_impl!(BrowserSessionRepository:
         &mut self,
         since: Option<DateTime<Utc>>,
         until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
         limit: usize,
     ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 );

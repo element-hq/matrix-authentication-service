@@ -627,3 +627,27 @@ pub struct PruneStalePolicyDataJob;
 impl InsertableJob for PruneStalePolicyDataJob {
     const QUEUE_NAME: &'static str = "prune-stale-policy-data";
 }
+
+/// Cleanup IP addresses from inactive OAuth 2.0 sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveOAuth2SessionIpsJob;
+
+impl InsertableJob for CleanupInactiveOAuth2SessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-oauth2-session-ips";
+}
+
+/// Cleanup IP addresses from inactive compat sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveCompatSessionIpsJob;
+
+impl InsertableJob for CleanupInactiveCompatSessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-compat-session-ips";
+}
+
+/// Cleanup IP addresses from inactive user/browser sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveUserSessionIpsJob;
+
+impl InsertableJob for CleanupInactiveUserSessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
+}

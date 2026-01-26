@@ -695,4 +695,57 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             res.last_finished_at,
         ))
     }
+
+    #[tracing::instrument(
+        name = "db.browser_session.cleanup_inactive_ips",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            threshold = %threshold,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH to_update AS (
+                    SELECT user_session_id, last_active_at
+                    FROM user_sessions
+                    WHERE last_active_ip IS NOT NULL
+                      AND last_active_at IS NOT NULL
+                      AND ($1::timestamptz IS NULL OR last_active_at >= $1)
+                      AND last_active_at < $2
+                    ORDER BY last_active_at ASC
+                    LIMIT $3
+                    FOR UPDATE
+                ),
+                updated AS (
+                    UPDATE user_sessions
+                    SET last_active_ip = NULL
+                    FROM to_update
+                    WHERE user_sessions.user_session_id = to_update.user_session_id
+                    RETURNING user_sessions.last_active_at
+                )
+                SELECT COUNT(*) AS "count!", MAX(last_active_at) AS last_active_at FROM updated
+            "#,
+            since,
+            threshold,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_active_at,
+        ))
+    }
 }
