@@ -61,6 +61,14 @@ pub(super) struct Options {
     /// configure all values through those environment variables.
     #[clap(long = "synapse-database-uri", global = true)]
     synapse_database_uri: Option<PgConnectOptions>,
+
+    /// Make missing auth providers in Synapse config warnings instead of
+    /// errors. If this flag is set, and we find `auth_provider` values in
+    /// the Synapse `user_external_ids` table, that are not configured in
+    /// the Synapse OIDC configuration, instead of erroring we will just
+    /// output warnings.
+    #[clap(long = "ignore-missing-auth-providers", global = true)]
+    ignore_missing_auth_providers: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -169,8 +177,13 @@ impl Options {
         // Check databases
         syn2mas::mas_pre_migration_checks(&mut mas_connection).await?;
         {
-            let (extra_warnings, extra_errors) =
-                syn2mas::synapse_database_check(&mut syn_conn, &synapse_config, figment).await?;
+            let (extra_warnings, extra_errors) = syn2mas::synapse_database_check(
+                &mut syn_conn,
+                &synapse_config,
+                figment,
+                self.ignore_missing_auth_providers,
+            )
+            .await?;
             check_warnings.extend(extra_warnings);
             check_errors.extend(extra_errors);
         }
@@ -261,6 +274,7 @@ impl Options {
                     &mut rng,
                     provider_id_mappings,
                     &progress,
+                    self.ignore_missing_auth_providers,
                 )
                 .await?;
 

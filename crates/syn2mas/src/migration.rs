@@ -141,6 +141,7 @@ struct MigrationState {
 /// - An underlying database access error, either to MAS or to Synapse.
 /// - Invalid data in the Synapse database.
 #[expect(clippy::implicit_hasher)]
+#[allow(clippy::too_many_arguments)]
 pub async fn migrate(
     mut synapse: SynapseReader<'_>,
     mas: MasWriter,
@@ -149,6 +150,7 @@ pub async fn migrate(
     rng: &mut impl RngCore,
     provider_id_mapping: std::collections::HashMap<String, Uuid>,
     progress: &Progress,
+    ignore_missing_auth_providers: bool,
 ) -> Result<(), Error> {
     let counts = synapse.count_rows().await.into_synapse("counting users")?;
 
@@ -171,8 +173,15 @@ pub async fn migrate(
     let (mas, state) = migrate_threepids(&mut synapse, mas, rng, state, progress_counter).await?;
 
     let progress_counter = progress.migrating_data(EntityType::ExternalIds, counts.external_ids);
-    let (mas, state) =
-        migrate_external_ids(&mut synapse, mas, rng, state, progress_counter).await?;
+    let (mas, state) = migrate_external_ids(
+        &mut synapse,
+        mas,
+        rng,
+        state,
+        progress_counter,
+        ignore_missing_auth_providers,
+    )
+    .await?;
 
     let progress_counter = progress.migrating_data(
         EntityType::NonRefreshableAccessTokens,
@@ -452,6 +461,7 @@ async fn migrate_external_ids(
     rng: &mut impl RngCore,
     state: MigrationState,
     progress_counter: ProgressCounter,
+    ignore_missing_auth_providers: bool,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
     let progress_counter_ = progress_counter.clone();
@@ -489,6 +499,10 @@ async fn migrate_external_ids(
 
                 let Some(&upstream_provider_id) = state.provider_id_mapping.get(&auth_provider)
                 else {
+                    if ignore_missing_auth_providers {
+                        progress_counter.increment_skipped();
+                        continue;
+                    }
                     return Err(Error::MissingAuthProviderMapping {
                         synapse_id: auth_provider,
                         user: synapse_user_id,

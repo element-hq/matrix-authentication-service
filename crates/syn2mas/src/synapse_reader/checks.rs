@@ -130,6 +130,11 @@ pub enum CheckWarning {
         "Synapse database contains {num_non_email_3pids} non-email 3PIDs (probably phone numbers), which will be migrated but are not supported by MAS."
     )]
     NonEmailThreepidsInDatabase { num_non_email_3pids: i64 },
+
+    #[error(
+        "Synapse database contains {num_users} users associated to the OpenID Connect or OAuth2 provider '{provider}' but the Synapse configuration does not contain this provider."
+    )]
+    SynapseMissingOAuthProvider { provider: String, num_users: i64 },
 }
 
 /// Check that the Synapse configuration is sane for migration.
@@ -257,6 +262,7 @@ pub async fn synapse_database_check(
     synapse_connection: &mut PgConnection,
     synapse: &Config,
     mas: &Figment,
+    ignore_missing_auth_providers: bool,
 ) -> Result<(Vec<CheckWarning>, Vec<CheckError>), Error> {
     #[derive(FromRow)]
     struct UpstreamOAuthProvider {
@@ -309,10 +315,17 @@ pub async fn synapse_database_check(
             let matching_syn = syn_oauth2.get(&row.auth_provider);
 
             let Some(matching_syn) = matching_syn else {
-                errors.push(CheckError::SynapseMissingOAuthProvider {
-                    provider: row.auth_provider,
-                    num_users: row.num_users,
-                });
+                if ignore_missing_auth_providers {
+                    warnings.push(CheckWarning::SynapseMissingOAuthProvider {
+                        provider: row.auth_provider,
+                        num_users: row.num_users,
+                    });
+                } else {
+                    errors.push(CheckError::SynapseMissingOAuthProvider {
+                        provider: row.auth_provider,
+                        num_users: row.num_users,
+                    });
+                }
                 continue;
             };
 
