@@ -423,6 +423,7 @@ Create a OAuth2 Client following the [OAuth2 Setup](https://kanidm.github.io/kan
 upstream_oauth2:
   providers:
     - id: "[ulid]" # randomly generated ulid (https://www.ulidtools.com/)
+      id_token_signed_response_alg: ES256 # This is important since Kanidm doesn't support RS256 by default  
       issuer: "https://<kanidm_instance>/oauth2/openid/<client_id>" # TO BE FILLED
       token_endpoint_auth_method: client_secret_basic
       client_id: "<client-id>" # TO BE FILLED
