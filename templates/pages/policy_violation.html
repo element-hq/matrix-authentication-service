@@ -48,7 +48,13 @@ Please see LICENSE files in the repository root for full details.
     </div>
 
     {% if is_too_many_sessions %}
-      {{ button.link(text=_("mas.policy_violation.too_many_sessions.manage_devices"), href="/account/sessions") }}
+    {# TODO!!! #}
+    {%- set render_data = {'to_delete': 1} -%}
+    <script>
+    window.RENDER_DATA = JSON.parse("{{ render_data | tojson | add_slashes | safe }}");
+    </script>
+    <div id="interactive-device-deletion"></div>
+    {{ include_asset('src/entrypoints/interactive-device-deletion.tsx') | indent(8) | safe }}
     {% endif %}
 
     {# We only show the cancel button if we're in an authorization code flow, not in the device code flow. #}

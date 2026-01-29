@@ -1852,6 +1852,40 @@ export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emai
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
+export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | (
+      { __typename: 'User', id: string }
+      & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
+    )
+   };
+
+export type AppSessionsListQueryVariables = Exact<{
+  before?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  lastActive?: InputMaybe<DateFilter>;
+}>;
+
+
+export type AppSessionsListQuery = { __typename?: 'Query', viewer:
+    | { __typename: 'Anonymous' }
+    | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node:
+            | (
+              { __typename: 'CompatSession' }
+              & { ' $fragmentRefs'?: { 'CompatSession_SessionFragment': CompatSession_SessionFragment } }
+            )
+            | (
+              { __typename: 'Oauth2Session' }
+              & { ' $fragmentRefs'?: { 'OAuth2Session_SessionFragment': OAuth2Session_SessionFragment } }
+            )
+           }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } }
+   };
+
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1888,40 +1922,6 @@ export type BrowserSessionListQuery = { __typename?: 'Query', viewerSession:
               & { ' $fragmentRefs'?: { 'BrowserSession_SessionFragment': BrowserSession_SessionFragment } }
             ) }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null } } } }
     | { __typename: 'Oauth2Session' }
-   };
-
-export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
-    | { __typename: 'Anonymous' }
-    | (
-      { __typename: 'User', id: string }
-      & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
-    )
-   };
-
-export type AppSessionsListQueryVariables = Exact<{
-  before?: InputMaybe<Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  lastActive?: InputMaybe<DateFilter>;
-}>;
-
-
-export type AppSessionsListQuery = { __typename?: 'Query', viewer:
-    | { __typename: 'Anonymous' }
-    | { __typename: 'User', id: string, appSessions: { __typename?: 'AppSessionConnection', totalCount: number, edges: Array<{ __typename?: 'AppSessionEdge', cursor: string, node:
-            | (
-              { __typename: 'CompatSession' }
-              & { ' $fragmentRefs'?: { 'CompatSession_SessionFragment': CompatSession_SessionFragment } }
-            )
-            | (
-              { __typename: 'Oauth2Session' }
-              & { ' $fragmentRefs'?: { 'OAuth2Session_SessionFragment': OAuth2Session_SessionFragment } }
-            )
-           }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } }
    };
 
 export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>;
@@ -2580,124 +2580,6 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
-export const UserProfileDocument = new TypedDocumentString(`
-    query UserProfile {
-  viewerSession {
-    __typename
-    ... on BrowserSession {
-      id
-      user {
-        ...AddEmailForm_user
-        ...UserEmailList_user
-        ...AccountDeleteButton_user
-        hasPassword
-        emails(first: 0) {
-          totalCount
-        }
-      }
-    }
-  }
-  siteConfig {
-    emailChangeAllowed
-    passwordLoginEnabled
-    accountDeactivationAllowed
-    ...AddEmailForm_siteConfig
-    ...UserEmailList_siteConfig
-    ...PasswordChange_siteConfig
-    ...AccountDeleteButton_siteConfig
-  }
-}
-    fragment AccountDeleteButton_user on User {
-  username
-  hasPassword
-  matrix {
-    mxid
-    displayName
-  }
-}
-fragment AccountDeleteButton_siteConfig on SiteConfig {
-  passwordLoginEnabled
-}
-fragment PasswordChange_siteConfig on SiteConfig {
-  passwordChangeAllowed
-}
-fragment AddEmailForm_user on User {
-  hasPassword
-}
-fragment AddEmailForm_siteConfig on SiteConfig {
-  passwordLoginEnabled
-}
-fragment UserEmailList_user on User {
-  hasPassword
-}
-fragment UserEmailList_siteConfig on SiteConfig {
-  emailChangeAllowed
-  passwordLoginEnabled
-}`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
-export const PlanManagementTabDocument = new TypedDocumentString(`
-    query PlanManagementTab {
-  siteConfig {
-    planManagementIframeUri
-  }
-}
-    `) as unknown as TypedDocumentString<PlanManagementTabQuery, PlanManagementTabQueryVariables>;
-export const BrowserSessionListDocument = new TypedDocumentString(`
-    query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
-  viewerSession {
-    __typename
-    ... on BrowserSession {
-      id
-      user {
-        id
-        browserSessions(
-          first: $first
-          after: $after
-          last: $last
-          before: $before
-          lastActive: $lastActive
-          state: ACTIVE
-        ) {
-          totalCount
-          edges {
-            cursor
-            node {
-              id
-              ...BrowserSession_session
-            }
-          }
-          pageInfo {
-            hasNextPage
-            hasPreviousPage
-            startCursor
-            endCursor
-          }
-        }
-      }
-    }
-  }
-}
-    fragment BrowserSession_session on BrowserSession {
-  id
-  createdAt
-  finishedAt
-  ...EndBrowserSessionButton_session
-  userAgent {
-    deviceType
-    name
-    os
-    model
-  }
-  lastActiveAt
-}
-fragment EndBrowserSessionButton_session on BrowserSession {
-  id
-  userAgent {
-    name
-    os
-    model
-    deviceType
-  }
-}`) as unknown as TypedDocumentString<BrowserSessionListQuery, BrowserSessionListQueryVariables>;
 export const SessionsOverviewDocument = new TypedDocumentString(`
     query SessionsOverview {
   viewer {
@@ -2818,6 +2700,124 @@ fragment EndOAuth2SessionButton_session on Oauth2Session {
     logoUri
   }
 }`) as unknown as TypedDocumentString<AppSessionsListQuery, AppSessionsListQueryVariables>;
+export const UserProfileDocument = new TypedDocumentString(`
+    query UserProfile {
+  viewerSession {
+    __typename
+    ... on BrowserSession {
+      id
+      user {
+        ...AddEmailForm_user
+        ...UserEmailList_user
+        ...AccountDeleteButton_user
+        hasPassword
+        emails(first: 0) {
+          totalCount
+        }
+      }
+    }
+  }
+  siteConfig {
+    emailChangeAllowed
+    passwordLoginEnabled
+    accountDeactivationAllowed
+    ...AddEmailForm_siteConfig
+    ...UserEmailList_siteConfig
+    ...PasswordChange_siteConfig
+    ...AccountDeleteButton_siteConfig
+  }
+}
+    fragment AccountDeleteButton_user on User {
+  username
+  hasPassword
+  matrix {
+    mxid
+    displayName
+  }
+}
+fragment AccountDeleteButton_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment PasswordChange_siteConfig on SiteConfig {
+  passwordChangeAllowed
+}
+fragment AddEmailForm_user on User {
+  hasPassword
+}
+fragment AddEmailForm_siteConfig on SiteConfig {
+  passwordLoginEnabled
+}
+fragment UserEmailList_user on User {
+  hasPassword
+}
+fragment UserEmailList_siteConfig on SiteConfig {
+  emailChangeAllowed
+  passwordLoginEnabled
+}`) as unknown as TypedDocumentString<UserProfileQuery, UserProfileQueryVariables>;
+export const PlanManagementTabDocument = new TypedDocumentString(`
+    query PlanManagementTab {
+  siteConfig {
+    planManagementIframeUri
+  }
+}
+    `) as unknown as TypedDocumentString<PlanManagementTabQuery, PlanManagementTabQueryVariables>;
+export const BrowserSessionListDocument = new TypedDocumentString(`
+    query BrowserSessionList($first: Int, $after: String, $last: Int, $before: String, $lastActive: DateFilter) {
+  viewerSession {
+    __typename
+    ... on BrowserSession {
+      id
+      user {
+        id
+        browserSessions(
+          first: $first
+          after: $after
+          last: $last
+          before: $before
+          lastActive: $lastActive
+          state: ACTIVE
+        ) {
+          totalCount
+          edges {
+            cursor
+            node {
+              id
+              ...BrowserSession_session
+            }
+          }
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+          }
+        }
+      }
+    }
+  }
+}
+    fragment BrowserSession_session on BrowserSession {
+  id
+  createdAt
+  finishedAt
+  ...EndBrowserSessionButton_session
+  userAgent {
+    deviceType
+    name
+    os
+    model
+  }
+  lastActiveAt
+}
+fragment EndBrowserSessionButton_session on BrowserSession {
+  id
+  userAgent {
+    name
+    os
+    model
+    deviceType
+  }
+}`) as unknown as TypedDocumentString<BrowserSessionListQuery, BrowserSessionListQueryVariables>;
 export const CurrentUserGreetingDocument = new TypedDocumentString(`
     query CurrentUserGreeting {
   viewer {
@@ -3331,6 +3331,49 @@ export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEma
  * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
  * @see https://mswjs.io/docs/basics/response-resolver
  * @example
+ * mockSessionsOverviewQuery(
+ *   ({ query, variables }) => {
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockSessionsOverviewQuery = (resolver: GraphQLResponseResolver<SessionsOverviewQuery, SessionsOverviewQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<SessionsOverviewQuery, SessionsOverviewQueryVariables>(
+    'SessionsOverview',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockAppSessionsListQuery(
+ *   ({ query, variables }) => {
+ *     const { before, after, first, last, lastActive } = variables;
+ *     return HttpResponse.json({
+ *       data: { viewer }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockAppSessionsListQuery = (resolver: GraphQLResponseResolver<AppSessionsListQuery, AppSessionsListQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<AppSessionsListQuery, AppSessionsListQueryVariables>(
+    'AppSessionsList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
  * mockUserProfileQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
@@ -3386,49 +3429,6 @@ export const mockPlanManagementTabQuery = (resolver: GraphQLResponseResolver<Pla
 export const mockBrowserSessionListQuery = (resolver: GraphQLResponseResolver<BrowserSessionListQuery, BrowserSessionListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<BrowserSessionListQuery, BrowserSessionListQueryVariables>(
     'BrowserSessionList',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockSessionsOverviewQuery(
- *   ({ query, variables }) => {
- *     return HttpResponse.json({
- *       data: { viewer }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockSessionsOverviewQuery = (resolver: GraphQLResponseResolver<SessionsOverviewQuery, SessionsOverviewQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<SessionsOverviewQuery, SessionsOverviewQueryVariables>(
-    'SessionsOverview',
-    resolver,
-    options
-  )
-
-/**
- * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
- * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
- * @see https://mswjs.io/docs/basics/response-resolver
- * @example
- * mockAppSessionsListQuery(
- *   ({ query, variables }) => {
- *     const { before, after, first, last, lastActive } = variables;
- *     return HttpResponse.json({
- *       data: { viewer }
- *     })
- *   },
- *   requestOptions
- * )
- */
-export const mockAppSessionsListQuery = (resolver: GraphQLResponseResolver<AppSessionsListQuery, AppSessionsListQueryVariables>, options?: RequestHandlerOptions) =>
-  graphql.query<AppSessionsListQuery, AppSessionsListQueryVariables>(
-    'AppSessionsList',
     resolver,
     options
   )
